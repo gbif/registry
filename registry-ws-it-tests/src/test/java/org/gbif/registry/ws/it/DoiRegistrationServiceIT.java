@@ -17,7 +17,6 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
-import org.gbif.api.vocabulary.UserRole;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
@@ -28,31 +27,14 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Collections;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -65,37 +47,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *   <li>The WS service client layer
  * </ol>
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class DoiRegistrationServiceIT {
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
+public class DoiRegistrationServiceIT  extends BaseItTest {
 
   private final DoiRegistrationService doiRegistrationService;
 
   @Autowired
-  public DoiRegistrationServiceIT(DoiRegistrationService doiRegistrationService) {
+  public DoiRegistrationServiceIT(DoiRegistrationService doiRegistrationService,
+                                  SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.doiRegistrationService = doiRegistrationService;
-  }
-
-  @BeforeEach
-  public void setup() {
-    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-    SecurityContextHolder.setContext(ctx);
-    ctx.setAuthentication(
-        new UsernamePasswordAuthenticationToken(
-            TestConstants.TEST_ADMIN,
-            "",
-            Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
   }
 
   /** Generates a new DOI. */

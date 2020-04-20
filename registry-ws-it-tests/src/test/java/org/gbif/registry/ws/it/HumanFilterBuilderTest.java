@@ -21,9 +21,9 @@ import org.gbif.api.vocabulary.Country;
 
 import java.util.ResourceBundle;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HumanFilterBuilderTest {
   // make sure this is the right bundle as used by the human query builder
@@ -43,10 +43,8 @@ public class HumanFilterBuilderTest {
           Class<Enum<?>> vocab = (Class<Enum<?>>) p.type();
           // make sure we have en entry for all possible enum values
           for (Enum<?> e : vocab.getEnumConstants()) {
-            assertTrue(
-                "Missing enum resource bundle entry for " + vocab.getSimpleName() + "." + e.name(),
-                resourceBundle.containsKey(
-                    "enum." + vocab.getSimpleName().toLowerCase() + "." + e.name()));
+            assertTrue( resourceBundle.containsKey("enum." + vocab.getSimpleName().toLowerCase() + "." + e.name()),
+                        "Missing enum resource bundle entry for " + vocab.getSimpleName() + "." + e.name());
           }
         }
       }

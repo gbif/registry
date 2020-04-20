@@ -17,7 +17,6 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserAdminView;
 import org.gbif.registry.domain.ws.UserCreation;
@@ -26,30 +25,15 @@ import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.ResultActions;
-
 import com.google.common.collect.ImmutableMap;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.ResultActions;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
@@ -57,6 +41,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATE_USERNAME;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -67,12 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * registry-identity module). Due to the fact that all user management operations are not available
  * in the Java ws client, the tests use a direct HTTP client.
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {UserManagementIT.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class UserManagementIT {
+public class UserManagementIT extends BaseItTest {
 
   private static final String CHANGED_PASSWORD = "123456";
 
@@ -80,47 +60,14 @@ public class UserManagementIT {
   private UserTestFixture userTestFixture;
   private RequestTestFixture requestTestFixture;
 
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
-
   @Autowired
   public UserManagementIT(
-      UserTestFixture userTestFixture,
-      RequestTestFixture requestTestFixture,
-      IdentitySuretyTestHelper identitySuretyTestHelper) {
+    UserTestFixture userTestFixture,
+    RequestTestFixture requestTestFixture,
+    IdentitySuretyTestHelper identitySuretyTestHelper,
+    SimplePrincipalProvider simplePrincipalProvider
+    ) {
+    super(simplePrincipalProvider);
     this.identitySuretyTestHelper = identitySuretyTestHelper;
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;

@@ -19,81 +19,36 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 /**
  * A test that will populate a sample registry database. This class should be removed when
  * development progresses. This is only used to help those developing the web console.
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    classes = RegistryIntegrationTestsConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {BootstrapTest.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class BootstrapTest {
+public class BootstrapTest extends BaseItTest {
 
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+  private final TestDataFactory testDataFactory;
 
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
+  private final NodeService nodeService;
 
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
+  private final OrganizationService organizationService;
 
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
+  @Autowired
+  public BootstrapTest(
+    SimplePrincipalProvider simplePrincipalProvider,
+    TestDataFactory testDataFactory,
+    NodeService nodeService,
+    OrganizationService organizationService
+  ) {
+    super(simplePrincipalProvider);
+    this.testDataFactory = testDataFactory;
+    this.nodeService = nodeService;
+    this.organizationService = organizationService;
   }
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  @Autowired private TestDataFactory testDataFactory;
-
-  @Autowired private NodeService nodeService;
-
-  @Autowired private OrganizationService organizationService;
 
   @Test
   public void run() {
