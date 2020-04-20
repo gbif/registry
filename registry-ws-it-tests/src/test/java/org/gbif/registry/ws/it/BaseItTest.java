@@ -48,7 +48,7 @@ import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {NetworkEntityTest.ContextInitializer.class})
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class BaseItTest {

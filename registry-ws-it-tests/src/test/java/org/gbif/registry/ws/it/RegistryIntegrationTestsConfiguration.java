@@ -22,6 +22,7 @@ import org.gbif.registry.events.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
+import org.gbif.registry.ws.it.enumeration.EnumerationResourceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
