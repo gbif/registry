@@ -20,10 +20,8 @@ import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
-import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.ws.surety.OrganizationEmailEndorsementService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -95,8 +93,6 @@ import org.springframework.test.context.ActiveProfiles;
             VarnishPurgeConfiguration.class,
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
-            OrganizationEmailManager.class,
-            OrganizationEmailEndorsementService.class,
             ChecklistbankPersistenceServiceImpl.class
           })
     })
