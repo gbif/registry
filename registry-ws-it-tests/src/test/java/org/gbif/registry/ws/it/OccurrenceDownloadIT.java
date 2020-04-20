@@ -25,8 +25,6 @@ import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -39,28 +37,8 @@ import java.util.UUID;
 
 import javax.validation.ValidationException;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -78,59 +56,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {OccurrenceDownloadIT.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class OccurrenceDownloadIT {
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
+public class OccurrenceDownloadIT extends BaseItTest {
 
   private final OccurrenceDownloadService occurrenceDownloadService;
-
-  private final SimplePrincipalProvider simplePrincipalProvider;
 
   @Autowired
   public OccurrenceDownloadIT(
       OccurrenceDownloadService occurrenceDownloadService,
       SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.occurrenceDownloadService = occurrenceDownloadService;
-    this.simplePrincipalProvider = simplePrincipalProvider;
   }
 
   /**
@@ -181,21 +116,6 @@ public class OccurrenceDownloadIT {
             true,
             DownloadFormat.DWCA));
     return download;
-  }
-
-  @BeforeEach
-  public void setup() {
-    // reset SimplePrincipleProvider, configured for web service client tests only
-    if (simplePrincipalProvider != null) {
-      simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
-      SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-      SecurityContextHolder.setContext(ctx);
-      ctx.setAuthentication(
-          new UsernamePasswordAuthenticationToken(
-              simplePrincipalProvider.get().getName(),
-              "",
-              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
-    }
   }
 
   /** Persists a valid {@link Download} instance. */
@@ -280,7 +200,7 @@ public class OccurrenceDownloadIT {
   @Test
   public void testListByUnauthorizedUser() {
     // This test applies to web service calls only, requires a security context.
-    if (simplePrincipalProvider != null) {
+    if (getSimplePrincipalProvider() != null) {
       for (int i = 1; i <= 5; i++) {
         occurrenceDownloadService.create(getTestInstancePredicateDownload());
       }

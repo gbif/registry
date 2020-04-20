@@ -19,10 +19,9 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
-import org.gbif.registry.ws.surety.OrganizationEmailEndorsementService;
 
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -69,8 +68,17 @@ public class TestMocksConfiguration {
   }
 
   @Bean
-  public OrganizationEmailEndorsementService organizationEndorsementServiceMock() {
-    return Mockito.mock(OrganizationEmailEndorsementService.class);
+  public OrganizationSuretyMailConfigurationProperties
+      organizationSuretyMailConfigurationProperties() {
+    OrganizationSuretyMailConfigurationProperties configurationProperties =
+        new OrganizationSuretyMailConfigurationProperties();
+    configurationProperties.setHelpdesk("test@mailinator.com");
+    OrganizationSuretyMailConfigurationProperties.UrlTemplateProperties urlTemplateProperties =
+        new OrganizationSuretyMailConfigurationProperties.UrlTemplateProperties();
+    urlTemplateProperties.setConfirmOrganization("confirm");
+    urlTemplateProperties.setOrganization("organization");
+    configurationProperties.setUrlTemplate(urlTemplateProperties);
+    return configurationProperties;
   }
 
   @Bean

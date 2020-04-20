@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ContactTests {
 
@@ -38,8 +38,8 @@ public class ContactTests {
 
     // check there are none on a newly created entity
     List<Contact> contacts = service.listContacts(entity.getKey());
-    assertNotNull("Contact list should be empty, not null when no contacts exist", contacts);
-    assertTrue("Contact should be empty when none added", contacts.isEmpty());
+    assertNotNull(contacts, "Contact list should be empty, not null when no contacts exist");
+    assertTrue(contacts.isEmpty(), "Contact should be empty when none added");
 
     // test additions, both being primary
     Integer key1 = service.addContact(entity.getKey(), testDataFactory.newContact());
@@ -48,20 +48,20 @@ public class ContactTests {
     // ordered by ascending created date (first contact appears first)
     contacts = service.listContacts(entity.getKey());
     assertNotNull(contacts);
-    assertEquals("2 contacts have been added", 2, contacts.size());
+    assertEquals(2, contacts.size(), "2 contacts have been added");
 
     assertEquals(key1, contacts.get(0).getKey());
     assertEquals(key2, contacts.get(1).getKey());
 
     assertFalse(
-        "Older contact (added first) should not be primary anymore", contacts.get(0).isPrimary());
-    assertTrue("Newer contact (added second) should now be primary", contacts.get(1).isPrimary());
+        contacts.get(0).isPrimary(), "Older contact (added first) should not be primary anymore");
+    assertTrue(contacts.get(1).isPrimary(), "Newer contact (added second) should now be primary");
 
     // test deletion, ensuring non-primary contact is deleted, and primary contact remains
     service.deleteContact(entity.getKey(), contacts.get(0).getKey());
     contacts = service.listContacts(entity.getKey());
     assertNotNull(contacts);
-    assertEquals("1 primary contact should remain after the deletion", 1, contacts.size());
+    assertEquals(1, contacts.size(), "1 primary contact should remain after the deletion");
     Contact expected = testDataFactory.newContact();
     Contact created = contacts.get(0);
     assertLenientEquals("Created contact does not read as expected", expected, created);
@@ -73,7 +73,7 @@ public class ContactTests {
     contacts = service.listContacts(entity.getKey());
     assertNotNull(contacts);
     assertEquals(
-        "The update does not reflect the change", "Timmay", contacts.get(0).getFirstName());
+        "Timmay", contacts.get(0).getFirstName(), "The update does not reflect the change");
 
     try {
       service.updateContact(UUID.randomUUID(), contacts.get(0));
@@ -90,15 +90,15 @@ public class ContactTests {
       T entity,
       TestDataFactory testDataFactory) {
     assertEquals(
-        "There should be no results for this search",
         Long.valueOf(0),
-        networkService.search("Frankie", null).getCount());
+        networkService.search("Frankie", null).getCount(),
+        "There should be no results for this search");
     Contact c = testDataFactory.newContact();
     c.setLastName("Frankie");
     service.addContact(entity.getKey(), c);
     assertEquals(
-        "There should a search result for Frankie",
         Long.valueOf(1),
-        networkService.search("Frankie", null).getCount());
+        networkService.search("Frankie", null).getCount(),
+        "There should a search result for Frankie");
   }
 }

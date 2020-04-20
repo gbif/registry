@@ -23,9 +23,9 @@ import org.gbif.registry.test.TestDataFactory;
 import java.util.List;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EndpointTests {
 
@@ -34,23 +34,23 @@ public class EndpointTests {
 
     // check there are none on a newly created entity
     List<Endpoint> endpoints = service.listEndpoints(entity.getKey());
-    assertNotNull("Endpoint list should be empty, not null when no endpoints exist", endpoints);
-    assertTrue("Endpoint should be empty when none added", endpoints.isEmpty());
+    assertNotNull(endpoints, "Endpoint list should be empty, not null when no endpoints exist");
+    assertTrue(endpoints.isEmpty(), "Endpoint should be empty when none added");
 
     // test additions
     service.addEndpoint(entity.getKey(), testDataFactory.newEndpoint());
     service.addEndpoint(entity.getKey(), testDataFactory.newEndpoint());
     endpoints = service.listEndpoints(entity.getKey());
     assertNotNull(endpoints);
-    assertEquals("2 endpoints have been added", 2, endpoints.size());
+    assertEquals(2, endpoints.size(), "2 endpoints have been added");
     assertEquals(
-        "The endpoint should have 1 machine tag", 1, endpoints.get(0).getMachineTags().size());
+        1, endpoints.get(0).getMachineTags().size(), "The endpoint should have 1 machine tag");
 
     // test deletion, ensuring correct one is deleted
     service.deleteEndpoint(entity.getKey(), endpoints.get(0).getKey());
     endpoints = service.listEndpoints(entity.getKey());
     assertNotNull(endpoints);
-    assertEquals("1 endpoint should remain after the deletion", 1, endpoints.size());
+    assertEquals(1, endpoints.size(), "1 endpoint should remain after the deletion");
     Endpoint expected = testDataFactory.newEndpoint();
     Endpoint created = endpoints.get(0);
     assertLenientEquals("Created entity does not read as expected", expected, created);

@@ -16,33 +16,20 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.ResultActions;
+import javax.annotation.Nullable;
 
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.ResultActions;
 
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
@@ -59,54 +46,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>Due to the fact that login and changePassword are not directly available in the Java ws
  * client, most of the tests use a direct HTTP client.
  */
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {UserIT.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class UserIT {
+public class UserIT extends BaseItTest {
 
   private UserTestFixture userTestFixture;
   private RequestTestFixture requestTestFixture;
 
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
-
   @Autowired
-  public UserIT(UserTestFixture userTestFixture, RequestTestFixture requestTestFixture) {
+  public UserIT(
+      UserTestFixture userTestFixture,
+      RequestTestFixture requestTestFixture,
+      @Nullable SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
   }
