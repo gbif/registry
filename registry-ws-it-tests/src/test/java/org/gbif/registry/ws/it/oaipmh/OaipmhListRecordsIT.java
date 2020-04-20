@@ -57,7 +57,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhListRecordsIT(
-      SimplePrincipalProvider pp,
+      SimplePrincipalProvider principalProvider,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -65,7 +65,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
     super(
-        pp,
+        principalProvider,
         environment,
         nodeService,
         organizationService,

@@ -82,7 +82,7 @@ public class BaseItTest {
   }
 
   @RegisterExtension
-  static PreparedDbExtension database =
+  public static PreparedDbExtension database =
       EmbeddedPostgresExtension.preparedDatabase(
           LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
 
