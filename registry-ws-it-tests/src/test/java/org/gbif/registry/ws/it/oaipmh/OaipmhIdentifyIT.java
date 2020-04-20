@@ -37,7 +37,7 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhIdentifyIT(
-      SimplePrincipalProvider pp,
+      SimplePrincipalProvider principalProvider,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -45,7 +45,7 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
     super(
-        pp,
+        principalProvider,
         environment,
         nodeService,
         organizationService,

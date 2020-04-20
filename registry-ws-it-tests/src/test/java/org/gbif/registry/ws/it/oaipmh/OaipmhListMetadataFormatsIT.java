@@ -51,7 +51,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhListMetadataFormatsIT(
-      SimplePrincipalProvider pp,
+      SimplePrincipalProvider principalProvider,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -59,7 +59,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
     super(
-        pp,
+        principalProvider,
         environment,
         nodeService,
         organizationService,

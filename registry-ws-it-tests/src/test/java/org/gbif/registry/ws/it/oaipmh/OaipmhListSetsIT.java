@@ -54,7 +54,7 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhListSetsIT(
-      SimplePrincipalProvider pp,
+      SimplePrincipalProvider principalProvider,
       Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -62,7 +62,7 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
     super(
-        pp,
+        principalProvider,
         environment,
         nodeService,
         organizationService,
