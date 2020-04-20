@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.oaipmh;
+package org.gbif.registry.ws.it.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -26,8 +26,10 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.utils.file.FileUtils;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.apache.commons.io.IOUtils;
@@ -35,53 +37,69 @@ import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.exceptions.CannotDisseminateFormatException;
 import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test the OAI-PMH endpoint using the XOAI OAI-PMH client library. Test the GetRecord verb of the
  * OAI-PMH endpoint.
  */
-@RunWith(Parameterized.class)
 public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
 
+  @Autowired
   public OaipmhGetRecordIT(
+      SimplePrincipalProvider pp,
+      Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
-    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
+    super(
+        pp,
+        environment,
+        nodeService,
+        organizationService,
+        installationService,
+        datasetService,
+        testDataFactory);
   }
 
-  @Test(expected = IdDoesNotExistException.class)
-  public void getRecordNotFound() throws Throwable {
-
-    serviceProvider.getRecord(
-        GetRecordParameters.request()
-            .withIdentifier("non-existent-record-identifier")
-            .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
+  @Test
+  public void getRecordNotFound() {
+    assertThrows(
+        IdDoesNotExistException.class,
+        () ->
+            serviceProvider.getRecord(
+                GetRecordParameters.request()
+                    .withIdentifier("non-existent-record-identifier")
+                    .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix())));
   }
 
-  @Test(expected = CannotDisseminateFormatException.class)
+  @Test
   public void getRecordUnsupportedMetadataFormat() throws Exception {
     Organization org1 = createOrganization(Country.UNITED_KINGDOM);
     Installation org1Installation1 = createInstallation(org1.getKey());
     Dataset org1Installation1Dataset1 =
         createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+    assertNotNull(org1Installation1Dataset1.getKey());
 
     String key = org1Installation1Dataset1.getKey().toString();
 
-    serviceProvider.getRecord(
-        GetRecordParameters.request()
-            .withIdentifier(key)
-            .withMetadataFormatPrefix("made-up-metadata-format"));
+    assertThrows(
+        CannotDisseminateFormatException.class,
+        () ->
+            serviceProvider.getRecord(
+                GetRecordParameters.request()
+                    .withIdentifier(key)
+                    .withMetadataFormatPrefix("made-up-metadata-format")));
   }
 
   @Test
@@ -90,6 +108,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
     Installation org1Installation1 = createInstallation(org1.getKey());
     Dataset org1Installation1Dataset1 =
         createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+    assertNotNull(org1Installation1Dataset1.getKey());
 
     String key = org1Installation1Dataset1.getKey().toString();
 
@@ -107,6 +126,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
     Installation org1Installation1 = createInstallation(org1.getKey());
     Dataset org1Installation1Dataset1 =
         createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+    assertNotNull(org1Installation1Dataset1.getKey());
 
     insertMetadata(
         org1Installation1Dataset1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
@@ -129,15 +149,15 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
                         + "?verb=GetRecord&metadataPrefix="
                         + EML_FORMAT.getMetadataPrefix()
                         + "&identifier="
-                        + record.getHeader().getIdentifier().toString())
+                        + record.getHeader().getIdentifier())
                 .toURL(),
-            "UTF-8");
+            StandardCharsets.UTF_8);
 
     // ensure we get the augmented metadata data
     assertTrue(
-        "GetRecord verb returns augmented metadata",
         result.contains(
-            "<citation identifier=\"doi:tims-ident.2136.ex43.33.d\">title 1</citation>"));
+            "<citation identifier=\"doi:tims-ident.2136.ex43.33.d\">title 1</citation>"),
+        "GetRecord verb returns augmented metadata");
   }
 
   @Test
@@ -146,6 +166,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
     Installation org1Installation1 = createInstallation(org1.getKey());
     Dataset org1Installation1Dataset1 =
         createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+    assertNotNull(org1Installation1Dataset1.getKey());
 
     String key = org1Installation1Dataset1.getKey().toString();
 
@@ -156,8 +177,8 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
                 .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
     assertEquals(key, record.getHeader().getIdentifier());
     assertFalse(
-        "An active record is returned and not identified as deleted",
-        record.getHeader().isDeleted());
+        record.getHeader().isDeleted(),
+        "An active record is returned and not identified as deleted");
 
     // deleted the record and make sure it is flagged as 'deleted'
     deleteDataset(org1Installation1Dataset1.getKey());
@@ -169,8 +190,8 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
                 .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
     assertEquals(key, record.getHeader().getIdentifier());
     assertTrue(
-        "A deleted record is returned and is identified as deleted",
-        record.getHeader().isDeleted());
+        record.getHeader().isDeleted(),
+        "A deleted record is returned and is identified as deleted");
 
     // restore the dataset
     org1Installation1Dataset1 = getDataset(org1Installation1Dataset1.getKey());
@@ -185,7 +206,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
                 .withMetadataFormatPrefix(EML_FORMAT.getMetadataPrefix()));
     assertEquals(key, record.getHeader().getIdentifier());
     assertFalse(
-        "A restored record is returned and not identified as deleted",
-        record.getHeader().isDeleted());
+        record.getHeader().isDeleted(),
+        "A restored record is returned and not identified as deleted");
   }
 }
