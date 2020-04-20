@@ -47,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
       "spring.liquibase.enabled=false",
       "spring.flyway.enabled=false"
     })
-@Import(EnumerationResource.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class EnumerationResourceIT {
 
