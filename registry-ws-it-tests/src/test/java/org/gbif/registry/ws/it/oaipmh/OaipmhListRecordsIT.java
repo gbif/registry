@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.oaipmh;
+package org.gbif.registry.ws.it.oaipmh;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
@@ -24,11 +24,14 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.oaipmh.OaipmhSetRepository;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.utils.file.FileUtils;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -38,60 +41,54 @@ import org.apache.commons.io.IOUtils;
 import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
 import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 
 import com.google.common.collect.Lists;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Test the ListRecords verb of the OAI-PMH endpoint. */
 public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
+  @Autowired
   public OaipmhListRecordsIT(
+      SimplePrincipalProvider pp,
+      Environment environment,
       NodeService nodeService,
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory) {
-    super(nodeService, organizationService, installationService, datasetService, testDataFactory);
-  }
-
-  /**
-   * Prepare test data
-   *
-   * @throws Throwable
-   */
-  public void prepareData() throws Exception {
-    Organization org1 = createOrganization(Country.ICELAND);
-    Installation org1Installation1 = createInstallation(org1.getKey());
-    Dataset org1Installation1Dataset1 =
-        createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
-
-    Installation org1Installation2 = createInstallation(org1.getKey());
-    Dataset org1Installation2Dataset1 =
-        createDataset(
-            org1.getKey(), org1Installation2.getKey(), DatasetType.OCCURRENCE, new Date());
-
-    Organization org2 = createOrganization(Country.NEW_ZEALAND);
-    Installation org2Installation1 = createInstallation(org2.getKey());
-    Dataset org2Installation1Dataset1 =
-        createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+    super(
+        pp,
+        environment,
+        nodeService,
+        organizationService,
+        installationService,
+        datasetService,
+        testDataFactory);
   }
 
   @Test
   public void testListRecordsBySets() throws Exception {
     Calendar calendar = Calendar.getInstance();
-    calendar.set(2015, 9, 16);
+    calendar.set(2015, Calendar.OCTOBER, 16);
     Organization orgIceland = createOrganization(Country.ICELAND);
     Installation orgIcelandInstallation1 = createInstallation(orgIceland.getKey());
+    assertNotNull(orgIcelandInstallation1.getKey());
+
     Dataset orgIcelandInstallation1Dataset1 =
         createDataset(
             orgIceland.getKey(),
             orgIcelandInstallation1.getKey(),
             DatasetType.CHECKLIST,
             calendar.getTime());
+    assertNotNull(orgIcelandInstallation1Dataset1.getKey());
 
     Installation orgIcelandInstallation2 = createInstallation(orgIceland.getKey());
     Dataset orgIcelandInstallation2Dataset1 =
@@ -100,6 +97,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
             orgIcelandInstallation2.getKey(),
             DatasetType.OCCURRENCE,
             new Date());
+    assertNotNull(orgIcelandInstallation2Dataset1.getKey());
 
     Organization org2 = createOrganization(Country.NEW_ZEALAND);
     Installation org2Installation1 = createInstallation(org2.getKey());
@@ -113,7 +111,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
                 .withSetSpec(
                     OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
                         + Country.ICELAND.getIso2LetterCode()));
-    assertTrue("ListRecords verb with set Country return at least 1 record", records.hasNext());
+    assertTrue(records.hasNext(), "ListRecords verb with set Country return at least 1 record");
 
     // SetType.INSTALLATION
     records =
@@ -124,7 +122,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
                     OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
                         + orgIcelandInstallation1.getKey().toString()));
     assertTrue(
-        "ListRecords verb with set Installation return at least 1 record", records.hasNext());
+        records.hasNext(), "ListRecords verb with set Installation return at least 1 record");
     assertEquals(
         orgIcelandInstallation1Dataset1.getKey().toString(),
         records.next().getHeader().getIdentifier());
@@ -137,7 +135,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
                 .withSetSpec(
                     OaipmhSetRepository.SetType.DATASET_TYPE.getSubsetPrefix()
                         + DatasetType.OCCURRENCE.toString()));
-    assertTrue("ListRecords verb with set DatasetType return at least 1 record", records.hasNext());
+    assertTrue(records.hasNext(), "ListRecords verb with set DatasetType return at least 1 record");
     assertEquals(
         orgIcelandInstallation2Dataset1.getKey().toString(),
         records.next().getHeader().getIdentifier());
@@ -149,15 +147,13 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
                 .withMetadataPrefix(EML_FORMAT.getMetadataPrefix())
                 .withSetSpec("non-existing-set"));
     assertFalse(
-        "ListRecords verb with non-existing set should return no record", records.hasNext());
+        records.hasNext(), "ListRecords verb with non-existing set should return no record");
   }
 
   /**
    * Test that ListRecords verb return all records when the number of records is higher than
    * 'MaxListRecords'. When the number of records is higher than 'MaxListRecords', at least 2
    * requests will be sent and a 'resumptionToken' will be used.
-   *
-   * @throws Exception
    */
   @Test
   public void testListRecordsPaging() throws Exception {
@@ -176,18 +172,19 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
     createDataset(org2.getKey(), org2Installation1.getKey(), DatasetType.CHECKLIST, new Date());
 
     // ensure the test will run under the expected configuration
+    //noinspection ConstantConditions
     assertTrue(
-        "'MaxListRecords' should be set to a value less than " + numberOfDataset,
-        numberOfDataset > OaipmhTestConfiguration.MAX_LIST_RECORDS);
+        numberOfDataset > OaipmhTestConfiguration.MAX_LIST_RECORDS,
+        "'MaxListRecords' should be set to a value less than " + numberOfDataset);
 
     Iterator<Record> records =
         serviceProvider.listRecords(
             ListRecordsParameters.request().withMetadataPrefix(EML_FORMAT.getMetadataPrefix()));
     List<Record> recordList = Lists.newArrayList(records);
     assertEquals(
-        "ListRecords verb return all records when the number of records is higher than 'MaxListRecords'",
         numberOfDataset,
-        recordList.size());
+        recordList.size(),
+        "ListRecords verb return all records when the number of records is higher than 'MaxListRecords'");
   }
 
   @Test
@@ -196,6 +193,7 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
     Installation org1Installation1 = createInstallation(org1.getKey());
     Dataset org1Installation1Dataset1 =
         createDataset(org1.getKey(), org1Installation1.getKey(), DatasetType.CHECKLIST, new Date());
+    assertNotNull(org1Installation1Dataset1.getKey());
 
     insertMetadata(
         org1Installation1Dataset1.getKey(), FileUtils.classpathStream("metadata/sample.xml"));
@@ -215,12 +213,12 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
         IOUtils.toString(
             new URI(baseUrl + "?verb=ListRecords&metadataPrefix=" + EML_FORMAT.getMetadataPrefix())
                 .toURL(),
-            "UTF-8");
+            StandardCharsets.UTF_8);
 
     // ensure we get the augmented metadata data
     assertTrue(
-        "ListRecords verb returns augmented metadata",
         result.contains(
-            "<citation identifier=\"doi:tims-ident.2136.ex43.33.d\">title 1</citation>"));
+            "<citation identifier=\"doi:tims-ident.2136.ex43.33.d\">title 1</citation>"),
+        "ListRecords verb returns augmented metadata");
   }
 }
