@@ -20,11 +20,11 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-motherpom</artifactId>
-    <version>2.153-SNAPSHOT</version>
+    <version>2.153</version>
   </parent>
 
   <artifactId>registry-metasync</artifactId>
-  <version>2.153-SNAPSHOT</version>
+  <version>2.153</version>
 
   <name>Registry Metadata Synchroniser</name>
 

@@ -9,7 +9,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-motherpom</artifactId>
-  <version>2.153-SNAPSHOT</version>
+  <version>2.153</version>
   <packaging>pom</packaging>
 
   <name>GBIF Registry</name>
@@ -20,7 +20,7 @@
     <connection>scm:git:git@github.com:gbif/registry.git</connection>
     <url>https://github.com/gbif/registry</url>
     <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>registry-2.153</tag>
   </scm>
 
   <distributionManagement>
