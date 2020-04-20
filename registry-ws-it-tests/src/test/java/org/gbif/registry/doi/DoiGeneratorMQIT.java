@@ -16,39 +16,44 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.generator.DoiGeneratorMQ;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import com.beust.jcommander.internal.Nullable;
 import com.beust.jcommander.internal.Sets;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class DoiGeneratorMQIT {
+@ExtendWith(SpringExtension.class)
+@Import({DoiGeneratorMQ.class, DoiGeneratorMQIT.DoiGeneratorMQITConfiguration.class})
+public class DoiGeneratorMQIT extends BaseItTest {
+
   private DoiGenerator generator;
 
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
+  @Autowired
+  public DoiGeneratorMQIT(
+      DoiGenerator generator, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
+    this.generator = generator;
+  }
 
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  @Before
-  public void setup(DoiGenerator doiGenerator) {
-    this.generator = doiGenerator;
+  @SpringBootConfiguration
+  @MapperScan("org.gbif.registry.persistence.mapper")
+  static class DoiGeneratorMQITConfiguration {
+    // NOTHING
   }
 
   @Test

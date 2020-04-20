@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.ws.it;
 
-import org.gbif.registry.ws.resources.EnumerationResource;
 
 import java.util.List;
 
