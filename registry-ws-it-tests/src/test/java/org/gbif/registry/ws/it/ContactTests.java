@@ -53,7 +53,8 @@ public class ContactTests {
     assertEquals(key1, contacts.get(0).getKey());
     assertEquals(key2, contacts.get(1).getKey());
 
-    assertFalse(contacts.get(0).isPrimary(), "Older contact (added first) should not be primary anymore");
+    assertFalse(
+        contacts.get(0).isPrimary(), "Older contact (added first) should not be primary anymore");
     assertTrue(contacts.get(1).isPrimary(), "Newer contact (added second) should now be primary");
 
     // test deletion, ensuring non-primary contact is deleted, and primary contact remains
@@ -88,14 +89,16 @@ public class ContactTests {
       NetworkEntityService<T> networkService,
       T entity,
       TestDataFactory testDataFactory) {
-    assertEquals(Long.valueOf(0),
-                 networkService.search("Frankie", null).getCount(),
-                "There should be no results for this search");
+    assertEquals(
+        Long.valueOf(0),
+        networkService.search("Frankie", null).getCount(),
+        "There should be no results for this search");
     Contact c = testDataFactory.newContact();
     c.setLastName("Frankie");
     service.addContact(entity.getKey(), c);
-    assertEquals(Long.valueOf(1),
-                 networkService.search("Frankie", null).getCount(),
-                 "There should a search result for Frankie");
+    assertEquals(
+        Long.valueOf(1),
+        networkService.search("Frankie", null).getCount(),
+        "There should a search result for Frankie");
   }
 }

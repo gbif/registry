@@ -23,7 +23,6 @@ import org.gbif.registry.test.TestDataFactory;
 import java.util.List;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;

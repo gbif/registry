@@ -33,8 +33,6 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -99,9 +97,6 @@ import org.springframework.test.context.ActiveProfiles;
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 @ActiveProfiles("test")
 public class RegistryIntegrationTestsConfiguration {
-
-  private static final Logger LOG =
-      LoggerFactory.getLogger(RegistryIntegrationTestsConfiguration.class);
 
   public static final String TEST_PROPERTIES = "classpath:application-test.yml";
 

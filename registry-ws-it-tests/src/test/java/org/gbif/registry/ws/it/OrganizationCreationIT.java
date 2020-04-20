@@ -33,6 +33,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -44,8 +45,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

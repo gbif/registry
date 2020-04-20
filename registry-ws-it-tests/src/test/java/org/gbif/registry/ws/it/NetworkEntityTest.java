@@ -47,13 +47,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -62,8 +59,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
+import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -75,9 +76,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * BaseNetworkEntityResource.
  */
 public abstract class NetworkEntityTest<
-    T extends
-        NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
-            & Identifiable & LenientEquals<T>> extends BaseItTest {
+        T extends
+            NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
+                & Identifiable & LenientEquals<T>>
+    extends BaseItTest {
 
   private final NetworkEntityService<T> service; // under test
 

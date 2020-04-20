@@ -15,18 +15,24 @@
  */
 package org.gbif.registry.ws.it;
 
+import org.gbif.registry.ws.resources.EnumerationResource;
+
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,38 +41,39 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Simple test to make sure we can produce the Enumeration response. We use a simple Jersey Client
  * since it's not available in the Java client.
  */
+@SpringBootTest(
+    properties = {
+      "spring.jpa.hibernate.ddl-auto=create-drop",
+      "spring.liquibase.enabled=false",
+      "spring.flyway.enabled=false"
+    })
+@Import(EnumerationResource.class)
+@AutoConfigureMockMvc(addFilters = false)
 public class EnumerationResourceIT {
 
-  @LocalServerPort private int localServerPort;
+  @Autowired private MockMvc mockMvc;
 
-  private Client publicClient;
-
-  @BeforeEach
-  public void setupBase() {
-    publicClient = buildPublicClient();
-  }
-
-  @AfterEach
-  public void destroyBase() {
-    publicClient.destroy();
-  }
-
-  private Client buildPublicClient() {
-    ClientConfig clientConfig = new DefaultClientConfig();
-    clientConfig.getFeatures().put("com.sun.jersey.api.json.POJOMappingFeature", Boolean.TRUE);
-    return Client.create(clientConfig);
-  }
+  @Autowired private ObjectMapper objectMapper;
 
   @Test
-  public void testTermEnumeration() {
-    ClientResponse res =
-        publicClient
-            .resource("http://localhost:" + localServerPort)
-            .path("enumeration/basic")
-            .get(ClientResponse.class);
-
-    List<String> responseContent = res.getEntity(new GenericType<List<String>>() {});
+  public void testTermEnumeration() throws Exception {
+    MvcResult result =
+        mockMvc.perform(MockMvcRequestBuilders.get("/enumeration/basic")).andReturn();
+    List<String> responseContent =
+        objectMapper.readValue(
+            result.getResponse().getContentAsByteArray(),
+            objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
     assertNotNull(responseContent);
     assertTrue(responseContent.size() > 0);
+  }
+
+  @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+  @ComponentScan(
+      basePackages = "org.gbif.registry.ws.resources",
+      resourcePattern = "**/EnumerationResource.class")
+  public static class TestItApp {
+    public static void main(String[] args) throws Exception {
+      SpringApplication.run(TestItApp.class, args);
+    }
   }
 }

@@ -24,6 +24,7 @@ import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -52,9 +52,10 @@ public class UserIT extends BaseItTest {
   private RequestTestFixture requestTestFixture;
 
   @Autowired
-  public UserIT(UserTestFixture userTestFixture, RequestTestFixture requestTestFixture, @Nullable
-                SimplePrincipalProvider simplePrincipalProvider
-                ) {
+  public UserIT(
+      UserTestFixture userTestFixture,
+      RequestTestFixture requestTestFixture,
+      @Nullable SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;

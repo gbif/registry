@@ -68,14 +68,17 @@ public class TestMocksConfiguration {
   }
 
   @Bean
-  public OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties() {
-    OrganizationSuretyMailConfigurationProperties configurationProperties = new OrganizationSuretyMailConfigurationProperties();
+  public OrganizationSuretyMailConfigurationProperties
+      organizationSuretyMailConfigurationProperties() {
+    OrganizationSuretyMailConfigurationProperties configurationProperties =
+        new OrganizationSuretyMailConfigurationProperties();
     configurationProperties.setHelpdesk("test@mailinator.com");
-    OrganizationSuretyMailConfigurationProperties.UrlTemplateProperties urlTemplateProperties = new OrganizationSuretyMailConfigurationProperties.UrlTemplateProperties();
+    OrganizationSuretyMailConfigurationProperties.UrlTemplateProperties urlTemplateProperties =
+        new OrganizationSuretyMailConfigurationProperties.UrlTemplateProperties();
     urlTemplateProperties.setConfirmOrganization("confirm");
     urlTemplateProperties.setOrganization("organization");
     configurationProperties.setUrlTemplate(urlTemplateProperties);
-    return  configurationProperties;
+    return configurationProperties;
   }
 
   @Bean

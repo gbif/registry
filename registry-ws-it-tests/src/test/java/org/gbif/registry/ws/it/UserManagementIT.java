@@ -30,10 +30,11 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Map;
 import java.util.UUID;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
+
+import com.google.common.collect.ImmutableMap;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
@@ -41,7 +42,6 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATE_USERNAME;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -62,11 +62,10 @@ public class UserManagementIT extends BaseItTest {
 
   @Autowired
   public UserManagementIT(
-    UserTestFixture userTestFixture,
-    RequestTestFixture requestTestFixture,
-    IdentitySuretyTestHelper identitySuretyTestHelper,
-    SimplePrincipalProvider simplePrincipalProvider
-    ) {
+      UserTestFixture userTestFixture,
+      RequestTestFixture requestTestFixture,
+      IdentitySuretyTestHelper identitySuretyTestHelper,
+      SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.identitySuretyTestHelper = identitySuretyTestHelper;
     this.userTestFixture = userTestFixture;

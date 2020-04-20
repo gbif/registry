@@ -39,11 +39,10 @@ public class BootstrapTest extends BaseItTest {
 
   @Autowired
   public BootstrapTest(
-    SimplePrincipalProvider simplePrincipalProvider,
-    TestDataFactory testDataFactory,
-    NodeService nodeService,
-    OrganizationService organizationService
-  ) {
+      SimplePrincipalProvider simplePrincipalProvider,
+      TestDataFactory testDataFactory,
+      NodeService nodeService,
+      OrganizationService organizationService) {
     super(simplePrincipalProvider);
     this.testDataFactory = testDataFactory;
     this.nodeService = nodeService;
