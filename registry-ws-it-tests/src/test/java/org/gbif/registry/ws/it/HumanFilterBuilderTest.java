@@ -43,8 +43,10 @@ public class HumanFilterBuilderTest {
           Class<Enum<?>> vocab = (Class<Enum<?>>) p.type();
           // make sure we have en entry for all possible enum values
           for (Enum<?> e : vocab.getEnumConstants()) {
-            assertTrue( resourceBundle.containsKey("enum." + vocab.getSimpleName().toLowerCase() + "." + e.name()),
-                        "Missing enum resource bundle entry for " + vocab.getSimpleName() + "." + e.name());
+            assertTrue(
+                resourceBundle.containsKey(
+                    "enum." + vocab.getSimpleName().toLowerCase() + "." + e.name()),
+                "Missing enum resource bundle entry for " + vocab.getSimpleName() + "." + e.name());
           }
         }
       }

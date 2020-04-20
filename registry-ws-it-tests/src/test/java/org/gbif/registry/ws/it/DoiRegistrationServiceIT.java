@@ -47,13 +47,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *   <li>The WS service client layer
  * </ol>
  */
-public class DoiRegistrationServiceIT  extends BaseItTest {
+public class DoiRegistrationServiceIT extends BaseItTest {
 
   private final DoiRegistrationService doiRegistrationService;
 
   @Autowired
-  public DoiRegistrationServiceIT(DoiRegistrationService doiRegistrationService,
-                                  SimplePrincipalProvider simplePrincipalProvider) {
+  public DoiRegistrationServiceIT(
+      DoiRegistrationService doiRegistrationService,
+      SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.doiRegistrationService = doiRegistrationService;
   }

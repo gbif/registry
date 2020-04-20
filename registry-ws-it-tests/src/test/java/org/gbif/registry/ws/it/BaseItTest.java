@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
@@ -7,9 +22,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
 
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -27,42 +39,42 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-/**
- * Base class for IT tests that initializes data sources and basic security settings.
- */
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+
+/** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-  classes = RegistryIntegrationTestsConfiguration.class,
-  webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    classes = RegistryIntegrationTestsConfiguration.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = {NetworkEntityTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class BaseItTest {
 
-  /**
-   * Custom ContextInitializer to expose the registry DB data source and search flags.
-   */
+  /** Custom ContextInitializer to expose the registry DB data source and search flags. */
   public static class ContextInitializer
-    implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of(dbTestPropertyPairs())
-        .applyTo(configurableApplicationContext.getEnvironment());
+          .applyTo(configurableApplicationContext.getEnvironment());
       withSearchEnabled(false, configurableApplicationContext.getEnvironment());
     }
 
     protected static void withSearchEnabled(
-      boolean enabled, ConfigurableEnvironment configurableEnvironment) {
+        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
       TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
     }
 
     protected String[] dbTestPropertyPairs() {
       return new String[] {
         "registry.datasource.url=jdbc:postgresql://localhost:"
-        + database.getConnectionInfo().getPort()
-        + "/"
-        + database.getConnectionInfo().getDbName(),
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
         "registry.datasource.username=" + database.getConnectionInfo().getUser(),
         "registry.datasource.password="
       };
@@ -71,13 +83,12 @@ public class BaseItTest {
 
   @RegisterExtension
   static PreparedDbExtension database =
-    EmbeddedPostgresExtension.preparedDatabase(
-      LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
+      EmbeddedPostgresExtension.preparedDatabase(
+          LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
 
   @RegisterExtension
   public final DatabaseInitializer databaseRule =
-    new DatabaseInitializer(database.getTestDatabase());
-
+      new DatabaseInitializer(database.getTestDatabase());
 
   private final SimplePrincipalProvider simplePrincipalProvider;
 
@@ -93,10 +104,10 @@ public class BaseItTest {
       SecurityContext ctx = SecurityContextHolder.createEmptyContext();
       SecurityContextHolder.setContext(ctx);
       ctx.setAuthentication(
-        new UsernamePasswordAuthenticationToken(
-          simplePrincipalProvider.get().getName(),
-          "",
-          Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+          new UsernamePasswordAuthenticationToken(
+              simplePrincipalProvider.get().getName(),
+              "",
+              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
     }
   }
 

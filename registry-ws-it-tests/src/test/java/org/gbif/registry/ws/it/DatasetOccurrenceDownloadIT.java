@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *   <li>The WS service client layer
  * </ol>
  */
-public class DatasetOccurrenceDownloadIT  extends BaseItTest {
+public class DatasetOccurrenceDownloadIT extends BaseItTest {
 
   private TestDataFactory testDataFactory;
   private final OccurrenceDownloadService occurrenceDownloadService;

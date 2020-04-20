@@ -39,8 +39,8 @@ public class IdentifierTests {
 
     // check there are none on a newly created entity
     List<Identifier> identifiers = service.listIdentifiers(entity.getKey());
-    assertNotNull(identifiers,
-        "Identifier list should be empty, not null when no identifiers exist");
+    assertNotNull(
+        identifiers, "Identifier list should be empty, not null when no identifiers exist");
     assertTrue(identifiers.isEmpty(), "Identifiers should be empty when none added");
 
     // test additions
