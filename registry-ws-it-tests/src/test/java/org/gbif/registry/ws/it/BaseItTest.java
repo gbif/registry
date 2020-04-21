@@ -35,6 +35,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -51,6 +52,7 @@ import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 @ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
+@DirtiesContext
 public class BaseItTest {
 
   /** Custom ContextInitializer to expose the registry DB data source and search flags. */
