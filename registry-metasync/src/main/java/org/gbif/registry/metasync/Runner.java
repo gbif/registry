@@ -15,4 +15,47 @@
  */
 package org.gbif.registry.metasync;
 
-public class Runner {}
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public final class Runner {
+
+  private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
+
+  public static void main(String[] args) {
+    //    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    //    SLF4JBridgeHandler.install();
+    //
+    //    ClientFactory clientFactory = new ClientFactory("username", "http://localhost:8080",
+    // "username",
+    //      "password");
+    //    InstallationService installationService =
+    // clientFactory.newInstance(InstallationClient.class);
+    //
+    //    MetadataSynchroniserImpl synchroniser = new MetadataSynchroniserImpl(installationService);
+    //
+    //    synchroniser
+    //      .registerProtocolHandler(new
+    // DigirMetadataSynchroniser(clientFactory.provideHttpClient()));
+    //    synchroniser
+    //      .registerProtocolHandler(new
+    // TapirMetadataSynchroniser(clientFactory.provideHttpClient()));
+    //    synchroniser
+    //      .registerProtocolHandler(new
+    // BiocaseMetadataSynchroniser(clientFactory.provideHttpClient()));
+    //
+    //    DatasetService datasetService = clientFactory.newInstance(DatasetClient.class);
+    //
+    //    List<SyncResult> syncResults = synchroniser.synchroniseAllInstallations(100);
+    //    LOG.info("Done syncing. Processing results");
+    //    DebugHandler.processResults(syncResults);
+    //
+    //    RegistryUpdater updater = new RegistryUpdater(datasetService,
+    //      ((MetasyncHistoryService) installationService));
+    //    updater.saveSyncResultsToRegistry(syncResults);
+  }
+
+  private Runner() {
+    throw new UnsupportedOperationException("Can't initialize class");
+  }
+}
