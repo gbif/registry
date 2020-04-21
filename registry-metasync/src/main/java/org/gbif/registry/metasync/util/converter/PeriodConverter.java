@@ -38,11 +38,11 @@ public class PeriodConverter implements Converter {
     checkArgument(
         type.equals(Period.class),
         "Conversion target should be org.joda.time.Duration, but is %s",
-        type.getClass());
+        type);
     checkArgument(
         String.class.isAssignableFrom(value.getClass()),
         "Value should be a string, but is a %s",
-        value.getClass());
+        value);
 
     return formatter.parsePeriod((String) value);
   }

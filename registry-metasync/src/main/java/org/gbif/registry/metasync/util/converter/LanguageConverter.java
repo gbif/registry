@@ -40,7 +40,7 @@ public class LanguageConverter implements Converter {
     checkArgument(
         type.equals(Language.class),
         "Conversion target should be org.gbif.api.vocabulary.Language, but is %s",
-        type.getClass());
+        type);
     checkArgument(
         String.class.isAssignableFrom(value.getClass()),
         "Value should be a string, but is a %s",
