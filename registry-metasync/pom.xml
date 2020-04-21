@@ -12,7 +12,7 @@
   <artifactId>registry-metasync</artifactId>
   <name>Registry Metadata Synchronizer</name>
 
-  <!--todo remove guice, use mockito version 3 -->
+  <!--todo use mockito version 3 -->
   <distributionManagement>
     <site>
       <id>gh-pages</id>
@@ -57,11 +57,6 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.inject</groupId>
-      <artifactId>guice</artifactId>
-      <version>4.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

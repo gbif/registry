@@ -241,7 +241,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
       // support the nev inventory
       // style, if it is less than three we don't support it. If it is equal to 3 we need to check
       // the "minor" component
-      int majorVersion = Integer.valueOf(versionParts[0]);
+      int majorVersion = Integer.parseInt(versionParts[0]);
       if (majorVersion < 3) {
         return false;
       }
@@ -255,7 +255,7 @@ public class BiocaseMetadataSynchroniser extends BaseProtocolHandler {
       }
 
       // Check whether the "minor" version is greater than or equal to 4
-      int minorVersion = Integer.valueOf(versionParts[1]);
+      int minorVersion = Integer.parseInt(versionParts[1]);
       return minorVersion >= 4;
     } catch (NumberFormatException ignored) {
       return false;
