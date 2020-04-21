@@ -74,6 +74,7 @@
     <module>registry-security</module>
     <module>registry-cli</module>
     <module>registry-ws-client</module>
+    <module>registry-metasync</module>
   </modules>
 
   <properties>
