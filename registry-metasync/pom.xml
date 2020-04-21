@@ -12,6 +12,7 @@
   <artifactId>registry-metasync</artifactId>
   <name>Registry Metadata Synchronizer</name>
 
+  <!--todo remove guice, use mockito version 3 -->
   <distributionManagement>
     <site>
       <id>gh-pages</id>
