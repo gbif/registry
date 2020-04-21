@@ -10,7 +10,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-metasync</artifactId>
-  <name>Registry Metadata Synchronizer</name>
+  <name>GBIF Registry Metadata Synchronizer</name>
 
   <!--todo use mockito version 3 -->
   <distributionManagement>

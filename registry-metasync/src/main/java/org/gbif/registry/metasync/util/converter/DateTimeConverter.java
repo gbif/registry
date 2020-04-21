@@ -53,7 +53,7 @@ public class DateTimeConverter implements Converter {
     checkArgument(
         type.equals(DateTime.class),
         "Conversion target should be org.joda.time.DateTime, but is %s",
-        type.getClass());
+        type);
     checkArgument(
         String.class.isAssignableFrom(value.getClass()),
         "Value should be a string, but is a %s",
