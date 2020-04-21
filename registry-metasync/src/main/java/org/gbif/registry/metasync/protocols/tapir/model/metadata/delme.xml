@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="174" height="18">
+<linearGradient id="a" x2="0" y2="100%">
+  <stop offset="0" stop-color="#fff" stop-opacity=".7"/>
+  <stop offset=".1" stop-color="#aaa" stop-opacity=".1"/>
+  <stop offset=".9" stop-opacity=".3"/>
+  <stop offset="1" stop-opacity=".5"/>
+</linearGradient>
+<rect rx="4" width="174" height="18" fill="#555"/>
+<rect rx="4" x="33" width="141" height="18" fill="#00A7DE"/>
+<path fill="#00A7DE" d="M33 0h4v18h-4z"/>
+<rect rx="4" width="174" height="18" fill="url(#a)"/>
+<g fill="#fff" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="11">
+  <text x="17.5" y="14" fill="#010101" fill-opacity=".3">DOI</text>
+  <text x="17.5" y="13">DOI</text>
+  <text x="35" y="14" fill="#010101" fill-opacity=".3" text-anchor="start">10.5281/X4DC1S</text>
+  <text x="35" y="13" text-anchor="start">10.5281/X4DC1S</text>
+</g>
+</svg>

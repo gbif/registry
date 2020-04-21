@@ -69,6 +69,7 @@ For more information see [documentation](https://github.com/diffplug/spotless/tr
  - [**registry-mail**](registry-mail/README.md)
  - [**registry-messaging**](registry-messaging/README.md)
  - [**registry-metadata**](registry-metadata/README.md)
+ - [**registry-metasync**](registry-metasync/README.md)
  - [**registry-oaipmh**](registry-oaipmh/README.md)
  - [**registry-occurrence-client**](registry-occurrence-client/README.md)
  - [**registry-persistence**](registry-persistence/README.md)

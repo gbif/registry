@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<response xmlns='http://digir.net/schema/protocol/2003/1.0'>
+  <header>
+    <version>$Revision: 1.17 $</version>
+    <sendTime>2013-05-02T14:36:45+00:00</sendTime>
+    <source>http://digir.pangaea.de:80/index.php</source>
+    <destination>85.176.116.191</destination>
+    <type>metadata</type>
+  </header>
+  <content>
+    <metadata>
+      <provider>
+        <name>PANGAEA DiGIR provider</name>
+        <accessPoint>http://digir.pangaea.de:80/index.php</accessPoint>
+        <implementation>$Revision: 1.17 $</implementation>
+        <host>
+          <name>PANGAEA - Publishing Network for Geoscientific and Environmental Data</name>
+          <code>PANGAEA</code>
+          <relatedInformation>http://www.pangaea.de</relatedInformation>
+          <contact type='administrative'>
+            <name>Hannes Grobe</name>
+            <title>Dr.</title>
+            <emailAddress>hgrobe@pangaea.de</emailAddress>
+            <phone></phone>
+          </contact>
+          <contact type='technical'>
+            <name>Michael Diepenbroek</name>
+            <title>Dr.</title>
+            <emailAddress>mdiepenbroek@pangaea.de</emailAddress>
+            <phone></phone>
+          </contact>
+          <contact type='technical'>
+            <name>Robert Huber</name>
+            <title>Dr.</title>
+            <emailAddress>rhuber@pangaea.de</emailAddress>
+            <phone></phone>
+          </contact>
+          <abstract>PANGAEA - Publishing Network for Geoscientific and Environmental Data - DIGIR Provider</abstract>
+        </host>
+        <resource>
+          <name>Distribution of benthic foraminifera of sediment core PS1388-3</name>
+          <code>doi:10.1594/PANGAEA.51131</code>
+          <relatedInformation>http://doi.pangaea.de/doi:10.1594/PANGAEA.51131</relatedInformation>
+          <contact/>
+          <abstract/>
+          <keywords>project: Paleoenvironmental Reconstructions from Marine Sediments @ AWI, project: South Atlantic in Late Quaternary: Reconstruction of Budget and Currents, topotype: vertical profile, geartype: Gravity corer</keywords>
+          <citation>Mackensen, Andreas; Grobe, Hannes; Hubberten, Hans-Wolfgang; Spieß, Volkhard; Fütterer, Dieter K (1989): Distribution of benthic foraminifera of sediment core PS1388-3, doi:10.1594/PANGAEA.51131</citation>
+          <useRestrictions/>
+          <conceptualSchema
+            schemaLocation="http://digir.net/schema/conceptual/darwin/2003/1.0/darwin2.xsd">http://digir.net/schema/conceptual/darwin/2003/1.0
+          </conceptualSchema>
+          <conceptualSchema schemaLocation="http://www.iobis.org/obis/obis.xsd">http://www.iobis.org/obis
+          </conceptualSchema>
+          <recordIdentifier>doi:10.1594/PANGAEA.51131</recordIdentifier>
+          <recordBasis>observation</recordBasis>
+          <numberOfRecords>2443</numberOfRecords>
+          <dateLastUpdated>1989-07-20T11:10:51</dateLastUpdated>
+          <minQueryTermLength/>
+          <maxSearchResponseRecords>1000</maxSearchResponseRecords>
+          <maxInventoryResponseRecords>1000</maxInventoryResponseRecords>
+        </resource>
+      </provider>
+    </metadata>
+  </content>
+</response>
