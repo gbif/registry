@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.ws.it.enumeration;
 
-
-
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -68,8 +66,7 @@ public class EnumerationResourceIT {
   @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
   @ComponentScan(
       basePackages = "org.gbif.registry.ws.resources",
-      resourcePattern = "**/EnumerationResource.class"
-  )
+      resourcePattern = "**/EnumerationResource.class")
   protected static class TestItApp {
     public static void main(String[] args) throws Exception {
       SpringApplication.run(TestItApp.class, args);

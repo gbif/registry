@@ -37,18 +37,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
 
 /** Tests that the builders in this package provide valid objects. */
-@SpringBootTest(
-  classes = RegistryIntegrationTestsConfiguration.class)
+@SpringBootTest(classes = EntityBuilderTest.EntityBuilderTestConfiguration.class)
 public class EntityBuilderTest extends BaseItTest {
+
+  @Configuration
+  static class EntityBuilderTestConfiguration extends RegistryIntegrationTestsConfiguration {}
 
   private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderTest.class);
 
   private final TestDataFactory testDataFactory;
 
   @Autowired
-  public EntityBuilderTest(TestDataFactory testDataFactory, @Nullable  SimplePrincipalProvider simplePrincipalProvider) {
+  public EntityBuilderTest(
+      TestDataFactory testDataFactory, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.testDataFactory = testDataFactory;
   }
