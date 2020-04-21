@@ -22,8 +22,9 @@ import org.gbif.registry.search.dataset.indexing.TimeSeriesExtractor;
 import java.util.Calendar;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Lists;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

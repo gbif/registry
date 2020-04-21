@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.surety;
+package org.gbif.registry.surety;
 
 import org.gbif.api.model.directory.Person;
 import org.gbif.api.model.registry.Comment;
@@ -22,7 +22,6 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.mail.BaseEmailModel;
-import org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties;
 import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.mail.identity.IdentityEmailDataProvider;
@@ -31,31 +30,41 @@ import org.gbif.registry.mail.organization.OrganizationEmailDataProvider;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.organization.OrganizationEmailTemplateProcessor;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.fail;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /** Unit tests related to {@link OrganizationEmailManager}. */
-public class OrganizationEmailTemplateManagerTest {
+@SpringBootTest(classes = OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration.class)
+public class OrganizationEmailTemplateManagerTest extends BaseItTest {
+
+  @Configuration
+  public static class OrganizationEmailTemplateManagerTestConfiguration extends RegistryIntegrationTestsConfiguration {
+
+  }
+
 
   private static final String TEST_NODE_MANAGER_EMAIL = "nodemanager@b.com";
 
   private OrganizationSuretyMailConfigurationProperties
       organizationSuretyMailConfigurationProperties;
-
-  private IdentitySuretyMailConfigurationProperties identitySuretyMailConfigurationProperties;
 
   private MailConfigurationProperties mailConfigurationProperties;
 
@@ -69,23 +78,24 @@ public class OrganizationEmailTemplateManagerTest {
 
   @Autowired
   public OrganizationEmailTemplateManagerTest(
-      MailConfigurationProperties mailConfigurationProperties,
-      OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
-      IdentitySuretyMailConfigurationProperties identitySuretyMailConfigurationProperties,
-      OrganizationEmailDataProvider organizationEmailDataProvider,
-      IdentityEmailDataProvider identityEmailDataProvider,
-      TestDataFactory testDataFactory) {
+    MailConfigurationProperties mailConfigurationProperties,
+    OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
+    OrganizationEmailDataProvider organizationEmailDataProvider,
+    IdentityEmailDataProvider identityEmailDataProvider,
+    TestDataFactory testDataFactory,
+    SimplePrincipalProvider simplePrincipalProvider
+    ) {
+    super(simplePrincipalProvider);
     this.mailConfigurationProperties = mailConfigurationProperties;
     this.organizationSuretyMailConfigurationProperties =
         organizationSuretyMailConfigurationProperties;
-    this.identitySuretyMailConfigurationProperties = identitySuretyMailConfigurationProperties;
     this.organizationEmailDataProvider = organizationEmailDataProvider;
     this.identityEmailDataProvider = identityEmailDataProvider;
     this.testDataFactory = testDataFactory;
   }
 
-  @Before
-  public void setup() throws IOException {
+  @BeforeEach
+  public void init() throws IOException {
 
     IdentityEmailTemplateProcessor newOrganizationTP =
         new IdentityEmailTemplateProcessor(identityEmailDataProvider);
@@ -114,7 +124,7 @@ public class OrganizationEmailTemplateManagerTest {
         organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
             org, null, UUID.randomUUID(), endorsingNode);
 
-    assertNotNull("We can generate the model from the template", baseEmail);
+    assertNotNull(baseEmail, "We can generate the model from the template");
     // since there is no NodeManager we should not CC helpdesk (we send the email to helpdesk)
     assertNull(baseEmail.getCcAddress());
 
@@ -128,7 +138,7 @@ public class OrganizationEmailTemplateManagerTest {
         organizationEmailTemplateManager.generateOrganizationEndorsementEmailModel(
             org, nodeManager, UUID.randomUUID(), endorsingNode);
 
-    assertNotNull("We can generate the model from the template", baseEmail);
+    assertNotNull(baseEmail, "We can generate the model from the template");
     assertEquals(TEST_NODE_MANAGER_EMAIL, baseEmail.getEmailAddress());
     // we should have a CC to helpdesk
     assertNotNull(baseEmail.getCcAddress());
@@ -159,23 +169,23 @@ public class OrganizationEmailTemplateManagerTest {
       List<BaseEmailModel> baseEmails =
           organizationEmailTemplateManager.generateOrganizationEndorsedEmailModel(
               org, endorsingNode);
-      assertNotNull("We can generate the model from the template", baseEmails);
+      assertNotNull(baseEmails, "We can generate the model from the template");
       assertEquals(2, baseEmails.size());
       assertTrue(
-          "Email to Helpdesk is there",
           baseEmails.stream()
               .anyMatch(
                   be ->
                       organizationSuretyMailConfigurationProperties
                           .getHelpdesk()
-                          .equals(be.getEmailAddress())));
+                          .equals(be.getEmailAddress())),
+          "Email to Helpdesk is there");
       assertTrue(
-          "Email to Point of Contact is there",
-          baseEmails.stream().anyMatch(be -> pocEmail.equals(be.getEmailAddress())));
+          baseEmails.stream().anyMatch(be -> pocEmail.equals(be.getEmailAddress())),
+          "Email to Point of Contact is there");
       assertTrue(
-          "Point of Contact name is there",
           baseEmails.stream()
-              .anyMatch(be -> be.getBody().contains(pointOfContact.computeCompleteName())));
+              .anyMatch(be -> be.getBody().contains(pointOfContact.computeCompleteName())),
+          "Point of Contact name is there");
     } catch (IOException e) {
       fail(e.getMessage());
     }
