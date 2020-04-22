@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -63,7 +64,8 @@ public class EnumerationResourceIT {
     assertTrue(responseContent.size() > 0);
   }
 
-  @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+  @SpringBootApplication(
+      exclude = {DataSourceAutoConfiguration.class, RabbitAutoConfiguration.class})
   @ComponentScan(
       basePackages = "org.gbif.registry.ws.resources",
       resourcePattern = "**/EnumerationResource.class")

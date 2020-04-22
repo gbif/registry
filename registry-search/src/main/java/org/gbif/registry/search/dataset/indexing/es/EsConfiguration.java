@@ -16,7 +16,8 @@
 package org.gbif.registry.search.dataset.indexing.es;
 
 import org.elasticsearch.client.RestHighLevelClient;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -24,34 +25,29 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 public class EsConfiguration {
 
+  @ConfigurationProperties(prefix = "elasticsearch.registry")
+  @Bean("registryEsClientConfig")
+  @Primary
+  public EsClient.EsClientConfiguration registryEsClientConfiguration() {
+    return new EsClient.EsClientConfiguration();
+  }
+
   @Bean
   @Primary
   public RestHighLevelClient restHighLevelClient(
-      @Value("${elasticsearch.registry.hosts}") String hosts,
-      @Value("${elasticsearch.registry.connectionTimeOut}") int connectionTimeOut,
-      @Value("${elasticsearch.registry.socketTimeOut}") int socketTimeOut,
-      @Value("${elasticsearch.registry.connectionRequestTimeOut}") int connectionRequestTimeOut,
-      @Value("${elasticsearch.registry.maxRetryTimeOut}") int maxRetryTimeOut) {
-    return EsClient.provideEsClient(
-        hosts.split(","),
-        connectionTimeOut,
-        socketTimeOut,
-        connectionRequestTimeOut,
-        maxRetryTimeOut);
+      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
+    return EsClient.provideEsClient(esClientConfiguration);
+  }
+
+  @ConfigurationProperties(prefix = "elasticsearch.occurrence")
+  @Bean("esOccurrenceClientConfig")
+  public EsClient.EsClientConfiguration occurrenceEsClientConfiguration() {
+    return new EsClient.EsClientConfiguration();
   }
 
   @Bean(name = "occurrenceEsClient")
   public RestHighLevelClient occurrenceRestHighLevelClient(
-      @Value("${elasticsearch.occurrence.hosts}") String hosts,
-      @Value("${elasticsearch.occurrence.connectionTimeOut}") int connectionTimeOut,
-      @Value("${elasticsearch.occurrence.socketTimeOut}") int socketTimeOut,
-      @Value("${elasticsearch.occurrence.connectionRequestTimeOut}") int connectionRequestTimeOut,
-      @Value("${elasticsearch.occurrence.maxRetryTimeOut}") int maxRetryTimeOut) {
-    return EsClient.provideEsClient(
-        hosts.split(","),
-        connectionTimeOut,
-        socketTimeOut,
-        connectionRequestTimeOut,
-        maxRetryTimeOut);
+      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration) {
+    return EsClient.provideEsClient(esClientConfiguration);
   }
 }

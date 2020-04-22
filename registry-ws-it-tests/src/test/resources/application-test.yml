@@ -38,6 +38,24 @@ pipelines:
   esHost: https://test.com
   doAllThreads: 1
 
+# Elasticsearch
+
+elasticsearch:
+  registry:
+    hosts: none
+    index: none
+    connectionTimeOut: 0
+    socketTimeOut: 0
+    connectionRequestTimeOut: 0
+    maxRetryTimeOut: 0
+  occurrence:
+    hosts:
+    index:
+    connectionTimeOut:
+    socketTimeOut:
+    connectionRequestTimeOut:
+    maxRetryTimeOut:
+
 # file with all application keys & secrets
 appkeys:
   file: @appkeys.testfile@
@@ -56,6 +74,9 @@ oaipmh:
   adminEmail: gbifregistry@mailinator.com
 
 spring:
+  #RabbitMQ
+  rabbitmq:
+    enabled: false
   # Liquibase
   liquibase:
     default-schema: public
