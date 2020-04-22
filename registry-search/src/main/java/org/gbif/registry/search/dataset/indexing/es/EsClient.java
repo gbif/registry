@@ -43,9 +43,20 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import lombok.Data;
+
 /** Generic ElasticSearch wrapper client to encapsulate indexing and admin operations. */
 @Component
 public class EsClient implements Closeable {
+
+  @Data
+  public static class EsClientConfiguration {
+    private String hosts;
+    private int connectionTimeOut;
+    private int socketTimeOut;
+    private int connectionRequestTimeOut;
+    private int maxRetryTimeOut;
+  }
 
   private final RestHighLevelClient restHighLevelClient;
 
@@ -121,13 +132,8 @@ public class EsClient implements Closeable {
   }
 
   /** Creates ElasticSearch client using default connection settings. */
-  public static RestHighLevelClient provideEsClient(
-      String[] hostsUrl,
-      int connectionTimeOut,
-      int socketTimeOut,
-      int connectionRequestTimeOut,
-      int maxRetryTimeOut) {
-
+  public static RestHighLevelClient provideEsClient(EsClientConfiguration esClientConfiguration) {
+    String[] hostsUrl = esClientConfiguration.hosts.split(",");
     HttpHost[] hosts = new HttpHost[hostsUrl.length];
     int i = 0;
     for (String host : hostsUrl) {
@@ -145,10 +151,11 @@ public class EsClient implements Closeable {
             .setRequestConfigCallback(
                 requestConfigBuilder ->
                     requestConfigBuilder
-                        .setConnectTimeout(connectionTimeOut)
-                        .setSocketTimeout(socketTimeOut)
-                        .setConnectionRequestTimeout(connectionRequestTimeOut))
-            .setMaxRetryTimeoutMillis(maxRetryTimeOut)
+                        .setConnectTimeout(esClientConfiguration.getConnectionTimeOut())
+                        .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
+                        .setConnectionRequestTimeout(
+                            esClientConfiguration.getConnectionRequestTimeOut()))
+            .setMaxRetryTimeoutMillis(esClientConfiguration.getMaxRetryTimeOut())
             .setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS));
   }
 

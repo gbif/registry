@@ -65,10 +65,10 @@ public class BaseItTest {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of(
-        Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
-          .flatMap(Stream::of)
-          .toArray(String[]::new))
-        .applyTo(configurableApplicationContext.getEnvironment());
+              Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
+                  .flatMap(Stream::of)
+                  .toArray(String[]::new))
+          .applyTo(configurableApplicationContext.getEnvironment());
     }
 
     protected String[] dbTestPropertyPairs() {
@@ -112,11 +112,11 @@ public class BaseItTest {
 
   @RegisterExtension
   static EsServer esServer =
-    new EsServer(
-      Paths.get(
-        DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
-      "dataset",
-      "dataset");
+      new EsServer(
+          Paths.get(
+              DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
+          "dataset",
+          "dataset");
 
   @RegisterExtension
   ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);

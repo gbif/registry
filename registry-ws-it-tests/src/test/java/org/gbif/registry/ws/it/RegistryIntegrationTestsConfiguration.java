@@ -19,6 +19,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
+import org.gbif.registry.mail.EmailSenderImpl;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
@@ -36,11 +37,11 @@ import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -48,9 +49,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 
-@Lazy
 @TestConfiguration
-@SpringBootApplication
+@SpringBootApplication(exclude = RabbitAutoConfiguration.class)
 @MapperScan("org.gbif.registry.persistence.mapper")
 @ComponentScan(
     basePackages = {
@@ -87,6 +87,7 @@ import org.springframework.test.context.ActiveProfiles;
       @ComponentScan.Filter(
           type = FilterType.ASSIGNABLE_TYPE,
           classes = {
+            EmailSenderImpl.class,
             DatasetBatchIndexBuilder.class,
             GbifWsClient.class,
             VarnishPurgeConfiguration.class,
