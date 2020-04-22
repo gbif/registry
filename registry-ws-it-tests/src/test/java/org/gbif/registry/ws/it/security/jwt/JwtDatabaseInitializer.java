@@ -17,19 +17,17 @@ package org.gbif.registry.ws.it.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.identity.service.IdentityService;
 
 import java.util.Set;
 
-import javax.sql.DataSource;
-
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.common.collect.Sets;
 
 /** DB initialization needed for JWT tests. */
-public class JwtDatabaseInitializer extends DatabaseInitializer {
+public class JwtDatabaseInitializer implements BeforeEachCallback {
 
   static final String ADMIN_USER = "administrator";
   static final String TEST_USER = "testuser";
@@ -37,16 +35,12 @@ public class JwtDatabaseInitializer extends DatabaseInitializer {
 
   private final IdentityService identityService;
 
-  public JwtDatabaseInitializer(DataSource dataSource, IdentityService identityService) {
-    super(dataSource);
+  public JwtDatabaseInitializer(IdentityService identityService) {
     this.identityService = identityService;
   }
 
   @Override
-  public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    // clean db
-    super.beforeEach(extensionContext);
-
+  public void beforeEach(ExtensionContext extensionContext) {
     // add users
     createUser(
         ADMIN_USER,
