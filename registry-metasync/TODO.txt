@@ -1,0 +1,11 @@
+DiGIR:
+* DOI Identifier is created but not merged with existing one or persisted yet
+
+TAPIR:
+* Tapir & BioCASe: Think about what we want to do when there is an exception during processing one Endpoint. Currently the sync is aborted which might be bad behavior.
+
+MetadataSynchroniserImpl:
+* Mavenize: E.g. remove hardcoded reference to registry
+
+RegistryUpdater:
+* Mavenize: E.g. remove hardcoded reference to registry
