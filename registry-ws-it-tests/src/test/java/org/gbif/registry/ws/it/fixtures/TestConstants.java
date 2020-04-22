@@ -15,15 +15,31 @@
  */
 package org.gbif.registry.ws.it.fixtures;
 
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.UserRole;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 /** Constants related to unit and integration testing of the registry. */
 public class TestConstants {
+
+  public static final BiFunction<Integer, Long, Pageable> PAGE =
+      (limit, offset) ->
+          new Pageable() {
+            @Override
+            public int getLimit() {
+              return limit;
+            }
+
+            @Override
+            public long getOffset() {
+              return offset;
+            }
+          };
 
   public static final String LIQUIBASE_MASTER_FILE = "liquibase/master.xml";
 
