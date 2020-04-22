@@ -13,50 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper;
+package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.persistence.mapper.DoiMapper;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-public class DoiMapperTest {
+public class DoiMapperTest extends BaseItTest {
 
   private DoiMapper mapper;
 
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
-  @Before
-  public void setup(DoiMapper doiMapper) {
+  @Autowired
+  public DoiMapperTest(DoiMapper doiMapper, SimplePrincipalProvider principalProvider) {
+    super(principalProvider);
     this.mapper = doiMapper;
   }
 
   @Test
-  public void testCreate() throws Exception {
+  public void testCreate() {
     DOI doi = new DOI("10.998/dead.moon");
     assertNull(mapper.get(doi));
     mapper.create(doi, DoiType.DOWNLOAD);
@@ -67,7 +56,7 @@ public class DoiMapperTest {
   }
 
   @Test
-  public void testList() throws Exception {
+  public void testList() {
     DOI doi = new DOI("10.998/dead.pool");
     assertNull(mapper.get(doi));
     mapper.create(doi, DoiType.DATASET);
@@ -79,7 +68,7 @@ public class DoiMapperTest {
   }
 
   @Test
-  public void testUpdate() throws Exception {
+  public void testUpdate() {
     DOI doi = new DOI("10.998/dead.kennedys");
     mapper.create(doi, DoiType.DOWNLOAD);
 
@@ -101,7 +90,7 @@ public class DoiMapperTest {
   }
 
   @Test
-  public void testDelete() throws Exception {
+  public void testDelete() {
     DOI doi = new DOI("10.998/dead.kennedys");
     mapper.create(doi, DoiType.DOWNLOAD);
     assertNotNull(mapper.get(doi));

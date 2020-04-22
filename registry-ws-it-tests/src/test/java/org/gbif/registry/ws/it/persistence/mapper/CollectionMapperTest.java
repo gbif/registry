@@ -13,67 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper;
+package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
-import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiFunction;
 
-import org.junit.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-public class CollectionMapperTest {
-
-  private static final BiFunction<Integer, Long, Pageable> PAGE =
-      (limit, offset) ->
-          new Pageable() {
-            @Override
-            public int getLimit() {
-              return limit;
-            }
-
-            @Override
-            public long getOffset() {
-              return offset;
-            }
-          };
+public class CollectionMapperTest extends BaseItTest {
 
   private CollectionMapper collectionMapper;
   private AddressMapper addressMapper;
 
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));;
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
   @Autowired
-  public CollectionMapperTest(CollectionMapper collectionMapper, AddressMapper addressMapper) {
+  public CollectionMapperTest(
+      CollectionMapper collectionMapper,
+      AddressMapper addressMapper,
+      SimplePrincipalProvider principalProvider) {
+    super(principalProvider);
     this.collectionMapper = collectionMapper;
     this.addressMapper = addressMapper;
   }
@@ -120,6 +97,7 @@ public class CollectionMapperTest {
     assertTrue(collection.lenientEquals(collectionStored));
 
     // assert address
+    assertNotNull(collectionStored.getAddress());
     assertNotNull(collectionStored.getAddress().getKey());
     assertEquals("dummy address", collectionStored.getAddress().getAddress());
 
@@ -132,6 +110,7 @@ public class CollectionMapperTest {
     assertTrue(collection.lenientEquals(collectionStored));
 
     // assert address
+    assertNotNull(collectionStored.getAddress());
     assertEquals("dummy address", collectionStored.getAddress().getAddress());
 
     // delete address

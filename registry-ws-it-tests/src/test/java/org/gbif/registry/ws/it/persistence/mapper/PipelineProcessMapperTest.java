@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper;
+package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.pipelines.PipelineExecution;
@@ -31,53 +31,35 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
-import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.InstallationMapper;
+import org.gbif.registry.persistence.mapper.NodeMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.function.BiFunction;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 import static org.gbif.api.model.pipelines.PipelineStep.Status;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PipelineProcessMapperTest {
+public class PipelineProcessMapperTest extends BaseItTest {
 
   private static final String TEST_USER = "test";
   private static final String UPDATER_USER = "updater";
 
-  private static final BiFunction<Integer, Long, Pageable> PAGE_FN =
-      (limit, offset) ->
-          new Pageable() {
-            @Override
-            public int getLimit() {
-              return limit;
-            }
-
-            @Override
-            public long getOffset() {
-              return offset;
-            }
-          };
-
-  private static final Pageable DEFAULT_PAGE = PAGE_FN.apply(10, 0L);
-
-  @Rule public ExpectedException expectedException = ExpectedException.none();
+  private static final Pageable DEFAULT_PAGE = PAGE.apply(10, 0L);
 
   private PipelineProcessMapper pipelineProcessMapper;
   private DatasetMapper datasetMapper;
@@ -85,22 +67,15 @@ public class PipelineProcessMapperTest {
   private OrganizationMapper organizationMapper;
   private NodeMapper nodeMapper;
 
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));;
-
-  @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
-
   @Autowired
   public PipelineProcessMapperTest(
       PipelineProcessMapper pipelineProcessMapper,
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper,
       OrganizationMapper organizationMapper,
-      NodeMapper nodeMapper) {
+      NodeMapper nodeMapper,
+      SimplePrincipalProvider principalProvider) {
+    super(principalProvider);
     this.pipelineProcessMapper = pipelineProcessMapper;
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
