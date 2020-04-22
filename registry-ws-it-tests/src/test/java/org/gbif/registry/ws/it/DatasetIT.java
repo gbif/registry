@@ -96,47 +96,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@ContextConfiguration(initializers = {DatasetIT.ContextInitializer.class})
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DatasetIT extends NetworkEntityTest<Dataset> {
-
-  @RegisterExtension
-  static EsServer esServer =
-      new EsServer(
-          Paths.get(
-              DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
-          "dataset",
-          "dataset");
-
-  @RegisterExtension
-  ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
-
-  static class ContextInitializer extends NetworkEntityTest.ContextInitializer {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      withSearchEnabled(true, configurableApplicationContext.getEnvironment());
-      TestPropertyValues.of(
-              Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
-                  .flatMap(Stream::of)
-                  .toArray(String[]::new))
-          .applyTo(configurableApplicationContext.getEnvironment());
-    }
-
-    public String[] elasticTestPropertiesPairs() {
-
-      return new String[] {
-        "elasticsearch.registry.hosts=" + esServer.getServerAddress(),
-        "elasticsearch.registry.index=dataset",
-        "elasticsearch.registry.connectionTimeOut=60000",
-        "elasticsearch.registry.socketTimeOut=60000",
-        "elasticsearch.registry.connectionRequestTimeOut=120000",
-        "elasticsearch.registry.maxRetryTimeOut=120000"
-      };
-    }
-  }
 
   private final DatasetService service;
   private final DatasetSearchService searchService;

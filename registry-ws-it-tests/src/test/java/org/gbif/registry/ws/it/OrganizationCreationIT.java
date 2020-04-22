@@ -80,7 +80,7 @@ public class OrganizationCreationIT extends BaseItTest {
   }
 
   @BeforeEach
-  public void setup() {
+  public void init() {
     // reset SimplePrincipleProvider, configured for web service client tests only
     setupPrincipal(TestConstants.TEST_ADMIN, UserRole.REGISTRY_ADMIN.name(), AppRole.APP.name());
   }

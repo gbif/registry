@@ -74,21 +74,22 @@ doi:
   datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
 # ElasticSearch
+
 elasticsearch:
   registry:
-    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
-    index: dataset
-    connectionTimeOut: 60000
-    socketTimeOut: 60000
-    connectionRequestTimeOut: 120000
-    maxRetryTimeOut: 120000
+    hosts: @elasticsearch.registry.hosts@
+    index: @elasticsearch.registry.index@
+    connectionTimeOut: @elasticsearch.registry.connectionTimeOut@
+    socketTimeOut: @elasticsearch.registry.socketTimeOut@
+    connectionRequestTimeOut: @elasticsearch.registry.connectionRequestTimeOut@
+    maxRetryTimeOut: @elasticsearch.registry.maxRetryTimeOut@
   occurrence:
-    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
-    index: occurrence
-    connectionTimeOut: 60000
-    socketTimeOut: 60000
-    connectionRequestTimeOut: 120000
-    maxRetryTimeOut: 120000
+    hosts: @elasticsearch.occurrence.hosts@
+    index: @elasticsearch.occurrence.index@
+    connectionTimeOut: @elasticsearch.occurrence.connectionTimeOut@
+    socketTimeOut: @elasticsearch.occurrence.socketTimeOut@
+    connectionRequestTimeOut: @elasticsearch.occurrence.connectionRequestTimeOut@
+    maxRetryTimeOut: @elasticsearch.occurrence.maxRetryTimeOut@
 indexing:
   datasource:
     checklistbank:

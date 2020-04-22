@@ -93,7 +93,8 @@ import org.springframework.test.context.ActiveProfiles;
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
             ChecklistbankPersistenceServiceImpl.class,
-            OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration.class
+            OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration
+                .class
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
