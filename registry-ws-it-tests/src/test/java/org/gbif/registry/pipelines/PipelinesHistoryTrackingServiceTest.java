@@ -24,17 +24,19 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class PipelinesHistoryTrackingServiceTest {
 
   @Mock private PipelineProcessMapper pipelineProcessMapper;
@@ -63,10 +65,12 @@ public class PipelinesHistoryTrackingServiceTest {
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
             .setStarted(LocalDateTime.now().minusMinutes(60));
-    execution.addStep(s1);
+    execution.addStep(s2);
 
-    assertEquals(
-        s1, trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM).get());
+    Optional<PipelineStep> actual =
+        trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM);
+    assertTrue(actual.isPresent());
+    assertEquals(s1, actual.get());
 
     // add newer step
     PipelineStep s3 =
@@ -74,8 +78,10 @@ public class PipelinesHistoryTrackingServiceTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setStarted(LocalDateTime.now().minusMinutes(40));
     execution.addStep(s3);
-    assertEquals(
-        s3, trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM).get());
+
+    actual = trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM);
+    assertTrue(actual.isPresent());
+    assertEquals(s3, actual.get());
 
     // add older execution with newer step
     PipelineExecution execution2 =
@@ -87,7 +93,9 @@ public class PipelinesHistoryTrackingServiceTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setStarted(LocalDateTime.now().minusMinutes(30));
     execution2.addStep(s4);
-    assertEquals(
-        s4, trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM).get());
+
+    actual = trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM);
+    assertTrue(actual.isPresent());
+    assertEquals(s4, actual.get());
   }
 }
