@@ -34,11 +34,13 @@ import java.sql.PreparedStatement;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
 import static org.gbif.registry.cli.util.RegistryCliUtils.prepareConnection;
 
+@Ignore
 @SuppressWarnings("ConstantConditions")
 public class DoiSynchronizerCommandIT {
 

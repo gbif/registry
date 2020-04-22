@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -55,6 +56,7 @@ import static org.mockito.Mockito.verify;
 
 /** Test DoiUpdateListener for different cases. */
 @RunWith(MockitoJUnitRunner.class)
+@Ignore
 public class DoiUpdaterListenerIT {
 
   private static final String PREFIX = "10.21373";
