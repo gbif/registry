@@ -75,6 +75,7 @@
     <module>registry-cli</module>
     <module>registry-ws-client</module>
     <module>registry-ws-it-tests</module>
+    <module>registry-metasync</module>
   </modules>
 
   <properties>
@@ -88,6 +89,7 @@
     <spring-cloud-zookeeper.version>2.2.0.RELEASE</spring-cloud-zookeeper.version>
     <spring-cloud-openfeign.version>2.2.1.RELEASE</spring-cloud-openfeign.version>
     <zookeeper.version>3.4.14</zookeeper.version>
+    <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
     <gbif-doi.version>2.10-SNAPSHOT</gbif-doi.version>
@@ -387,6 +389,11 @@
       </dependency>
 
       <!-- Third party dependencies -->
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${commons-beanutils.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>woodstox-core-asl</artifactId>
