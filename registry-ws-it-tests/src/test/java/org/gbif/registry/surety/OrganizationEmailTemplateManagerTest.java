@@ -52,14 +52,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /** Unit tests related to {@link OrganizationEmailManager}. */
-@SpringBootTest(classes = OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration.class)
+@SpringBootTest(
+    classes =
+        OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration
+            .class)
 public class OrganizationEmailTemplateManagerTest extends BaseItTest {
 
   @Configuration
-  public static class OrganizationEmailTemplateManagerTestConfiguration extends RegistryIntegrationTestsConfiguration {
-
-  }
-
+  public static class OrganizationEmailTemplateManagerTestConfiguration
+      extends RegistryIntegrationTestsConfiguration {}
 
   private static final String TEST_NODE_MANAGER_EMAIL = "nodemanager@b.com";
 
@@ -78,13 +79,12 @@ public class OrganizationEmailTemplateManagerTest extends BaseItTest {
 
   @Autowired
   public OrganizationEmailTemplateManagerTest(
-    MailConfigurationProperties mailConfigurationProperties,
-    OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
-    OrganizationEmailDataProvider organizationEmailDataProvider,
-    IdentityEmailDataProvider identityEmailDataProvider,
-    TestDataFactory testDataFactory,
-    SimplePrincipalProvider simplePrincipalProvider
-    ) {
+      MailConfigurationProperties mailConfigurationProperties,
+      OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
+      OrganizationEmailDataProvider organizationEmailDataProvider,
+      IdentityEmailDataProvider identityEmailDataProvider,
+      TestDataFactory testDataFactory,
+      SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.mailConfigurationProperties = mailConfigurationProperties;
     this.organizationSuretyMailConfigurationProperties =

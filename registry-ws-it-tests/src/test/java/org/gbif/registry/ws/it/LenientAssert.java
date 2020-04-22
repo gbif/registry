@@ -19,7 +19,10 @@ import org.gbif.api.model.registry.LenientEquals;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-/** Provides a lenient equals assertion, borrowing shamelessly from {@link org.junit.Assert}. */
+/**
+ * Provides a lenient equals assertion, borrowing shamelessly from {@link
+ * org.junit.jupiter.api.Assertions}.
+ */
 public class LenientAssert {
 
   /**

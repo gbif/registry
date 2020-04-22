@@ -17,10 +17,14 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.search.test.ElasticsearchInitializer;
+import org.gbif.registry.search.test.EsServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +34,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -61,14 +64,11 @@ public class BaseItTest {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
+      TestPropertyValues.of(
+        Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
+          .flatMap(Stream::of)
+          .toArray(String[]::new))
+        .applyTo(configurableApplicationContext.getEnvironment());
     }
 
     protected String[] dbTestPropertyPairs() {
@@ -81,6 +81,24 @@ public class BaseItTest {
         "registry.datasource.password="
       };
     }
+
+    public String[] elasticTestPropertiesPairs() {
+
+      return new String[] {
+        "elasticsearch.registry.hosts=" + esServer.getServerAddress(),
+        "elasticsearch.registry.index=dataset",
+        "elasticsearch.registry.connectionTimeOut=60000",
+        "elasticsearch.registry.socketTimeOut=60000",
+        "elasticsearch.registry.connectionRequestTimeOut=120000",
+        "elasticsearch.registry.maxRetryTimeOut=120000",
+        "elasticsearch.occurrence.hosts=" + esServer.getServerAddress(),
+        "elasticsearch.occurrence.index=dataset",
+        "elasticsearch.occurrence.connectionTimeOut=60000",
+        "elasticsearch.occurrence.socketTimeOut=60000",
+        "elasticsearch.occurrence.connectionRequestTimeOut=120000",
+        "elasticsearch.occurrence.maxRetryTimeOut=120000"
+      };
+    }
   }
 
   @RegisterExtension
@@ -91,6 +109,17 @@ public class BaseItTest {
   @RegisterExtension
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
+
+  @RegisterExtension
+  static EsServer esServer =
+    new EsServer(
+      Paths.get(
+        DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
+      "dataset",
+      "dataset");
+
+  @RegisterExtension
+  ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
 
   private final SimplePrincipalProvider simplePrincipalProvider;
 
