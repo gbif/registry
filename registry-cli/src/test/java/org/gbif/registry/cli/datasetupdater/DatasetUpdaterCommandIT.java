@@ -26,7 +26,6 @@ import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,7 +38,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(Parameterized.class)
-@Ignore
 public class DatasetUpdaterCommandIT {
 
   private static final UUID DATASET_KEY = UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a");
