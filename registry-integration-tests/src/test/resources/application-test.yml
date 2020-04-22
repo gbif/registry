@@ -1,28 +1,11 @@
-# application.yml
-
-api:
-  root:
-    url: http://api.gbif-dev.org/v1/
-  cache:
-    purge:
-      url: http://api.gbif-dev.org/v1
-      threads: 1
-
-portal:
-  url: https://www.gbif-dev.org/
-
-occurrence:
-  ws:
-    url: http://api.gbif-dev.org/v1/occurrence/
+# application-test.yml
+url:
+  grscicollPortal: https://www.gbif-dev.org/grscicoll/
 
 # Mail Properties
 mail:
-  cc: @mail.cc@
-  bcc: @mail.bcc@
   enabled: false
-  devemail:
-    address: gbifregistry@mailinator.com
-    enabled: @mail.devemail.enabled@
+
 message:
   enabled: false
 
@@ -31,16 +14,8 @@ identity:
   surety:
     mail:
       urlTemplate:
-        confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-        resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-
-organization:
-  surety:
-    mail:
-      helpdesk: @mail.helpdesk@
-      urlTemplate:
-        organization: https://www.demo.gbif-dev.org/publisher/{0}
-        confirmOrganization: https://demo.gbif-dev.org/organization/confirm?key={0}&code={1}
+        confirmUser: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
+        resetPassword: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
 
 application:
   key: gbif.app.it
@@ -63,6 +38,24 @@ pipelines:
   esHost: https://test.com
   doAllThreads: 1
 
+# Elasticsearch
+
+elasticsearch:
+  registry:
+    hosts: none
+    index: none
+    connectionTimeOut: 0
+    socketTimeOut: 0
+    connectionRequestTimeOut: 0
+    maxRetryTimeOut: 0
+  occurrence:
+    hosts:
+    index:
+    connectionTimeOut:
+    socketTimeOut:
+    connectionRequestTimeOut:
+    maxRetryTimeOut:
+
 # file with all application keys & secrets
 appkeys:
   file: @appkeys.testfile@
@@ -74,52 +67,6 @@ doi:
   prefix: 10.21373
   datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 
-elasticsearch:
-  registry:
-    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
-    index: dataset
-    connectionTimeOut: 60000
-    socketTimeOut: 60000
-    connectionRequestTimeOut: 120000
-    maxRetryTimeOut: 120000
-  occurrence:
-    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
-    index: occurrence
-    connectionTimeOut: 60000
-    socketTimeOut: 60000
-    connectionRequestTimeOut: 120000
-    maxRetryTimeOut: 120000
-indexing:
-  datasource:
-    checklistbank:
-      url: @checklistbank-it-spring.db.url@
-      username: @checklistbank-it-spring.db.username@
-      password: @checklistbank-it-spring.db.password@
-      hikari:
-        maximumPoolSize: 10
-        minimumIdle: 1
-        idleTimeout: 60000
-        connectionTimeout: 5000
-
-# Database
-registry:
-  datasource:
-    url: @registry-it-spring.db.url@
-    password: @registry-it-spring.db.password@
-    username: @registry-it-spring.db.username@
-    hikari:
-      idleTimeout: 60000
-      maximumPoolSize: 10
-      minimumIdle: 1
-
-# GBIF Directory configuration
-directory:
-  app:
-    key: @directory.app.key@
-    secret: @directory.app.secret@
-  ws:
-    url: @directory.ws.url@
-
 # OAI-PMH repositories expose their base URL as the value of the baseURL element in the Identify response
 # this value will be used as the baseURL element in the Identify response
 oaipmh:
@@ -127,30 +74,14 @@ oaipmh:
   adminEmail: gbifregistry@mailinator.com
 
 spring:
-  # DOI messaging properties
-  # queue 'registry-doi' should be used
+  #RabbitMQ
   rabbitmq:
-    host: @registry.messaging.hostname@
-    port: @registry.messaging.port@
-    username: @registry.messaging.username@
-    password: @registry.messaging.password@
-    virtual-host: @registry.messaging.virtualhost@
+    enabled: false
   # Liquibase
   liquibase:
     default-schema: public
     change-log: classpath:liquibase/master.xml
-    enabled: true
-  # Mail
-  mail:
-    default-encoding: UTF-8
-    host: @mail.smtp.host@
-    username: @mail.username@
-    password: @mail.password@
-    port: @mail.smtp.port@
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-    test-connection: false
+    enabled: false
+  #flyway
+  flyway:
+    enabled: false
