@@ -19,31 +19,16 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.security.jwt.JwtConfiguration;
-import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.jwt.JwtUtils;
-
-import java.util.function.Function;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.http.HttpHeaders;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.ResultActions;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.ADMIN_USER;
 import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.GRSCICOLL_ADMIN;
@@ -55,66 +40,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {JwtIT.ContextInitializer.class})
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-public class JwtIT {
-
-  @RegisterExtension
-  static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation("liquibase/master.xml"));
-
-  @RegisterExtension public JwtDatabaseInitializer databaseRule;
-
-  static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of(dbTestPropertyPairs())
-          .applyTo(configurableApplicationContext.getEnvironment());
-      withSearchEnabled(false, configurableApplicationContext.getEnvironment());
-    }
-
-    protected static void withSearchEnabled(
-        boolean enabled, ConfigurableEnvironment configurableEnvironment) {
-      TestPropertyValues.of("searchEnabled=" + enabled).applyTo(configurableEnvironment);
-    }
-
-    protected String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
-      };
-    }
-  }
-
-  private static final Function<String, String> BASIC_AUTH_HEADER =
-      username ->
-          "Basic "
-              + java.util.Base64.getEncoder()
-                  .encodeToString(String.format("%s:%s", username, username).getBytes());
+public class JwtIT extends BaseItTest {
 
   private static final String PATH = "/grscicoll/person";
 
   private JwtConfiguration jwtConfiguration;
   private final RequestTestFixture requestTestFixture;
 
+  @RegisterExtension public JwtDatabaseInitializer databaseRule;
+
   @Autowired
   public JwtIT(
       JwtConfiguration jwtConfiguration,
       RequestTestFixture requestTestFixture,
-      IdentityService identityService) {
+      IdentityService identityService,
+      SimplePrincipalProvider principalProvider) {
+    super(principalProvider);
     this.jwtConfiguration = jwtConfiguration;
     this.requestTestFixture = requestTestFixture;
-    databaseRule = new JwtDatabaseInitializer(database.getTestDatabase(), identityService);
+    databaseRule = new JwtDatabaseInitializer(identityService);
   }
 
   @Test

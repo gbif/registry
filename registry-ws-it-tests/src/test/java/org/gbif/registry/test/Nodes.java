@@ -18,21 +18,11 @@ package org.gbif.registry.test;
 import org.gbif.api.model.registry.Node;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Set;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Component
 public class Nodes extends JsonBackedData<Node> {
@@ -40,14 +30,5 @@ public class Nodes extends JsonBackedData<Node> {
   @Autowired
   public Nodes(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
     super("data/node.json", new TypeReference<Node>() {}, objectMapper, simplePrincipalProvider);
-  }
-
-  @Test
-  public void testConstraints() {
-    ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
-    Validator validator = validatorFactory.getValidator();
-
-    Set<ConstraintViolation<Node>> violations = validator.validate(newInstance());
-    assertTrue(violations.isEmpty());
   }
 }

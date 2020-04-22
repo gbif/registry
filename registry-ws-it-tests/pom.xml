@@ -15,7 +15,6 @@
     <main.basedir>${project.parent.basedir}</main.basedir>
   </properties>
 
-
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -164,6 +163,5 @@
       </plugin>
     </plugins>
   </build>
-
 
 </project>
