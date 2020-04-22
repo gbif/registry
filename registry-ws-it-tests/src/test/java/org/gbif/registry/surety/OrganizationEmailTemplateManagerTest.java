@@ -24,8 +24,6 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
-import org.gbif.registry.mail.identity.IdentityEmailDataProvider;
-import org.gbif.registry.mail.identity.IdentityEmailTemplateProcessor;
 import org.gbif.registry.mail.organization.OrganizationEmailDataProvider;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.organization.OrganizationEmailTemplateProcessor;
@@ -68,13 +66,8 @@ public class OrganizationEmailTemplateManagerTest extends BaseItTest {
       organizationSuretyMailConfigurationProperties;
 
   private MailConfigurationProperties mailConfigurationProperties;
-
   private OrganizationEmailManager organizationEmailTemplateManager;
-
   private OrganizationEmailDataProvider organizationEmailDataProvider;
-
-  private IdentityEmailDataProvider identityEmailDataProvider;
-
   private final TestDataFactory testDataFactory;
 
   @Autowired
@@ -82,7 +75,6 @@ public class OrganizationEmailTemplateManagerTest extends BaseItTest {
       MailConfigurationProperties mailConfigurationProperties,
       OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
       OrganizationEmailDataProvider organizationEmailDataProvider,
-      IdentityEmailDataProvider identityEmailDataProvider,
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
@@ -90,22 +82,17 @@ public class OrganizationEmailTemplateManagerTest extends BaseItTest {
     this.organizationSuretyMailConfigurationProperties =
         organizationSuretyMailConfigurationProperties;
     this.organizationEmailDataProvider = organizationEmailDataProvider;
-    this.identityEmailDataProvider = identityEmailDataProvider;
     this.testDataFactory = testDataFactory;
   }
 
   @BeforeEach
-  public void init() throws IOException {
-
-    IdentityEmailTemplateProcessor newOrganizationTP =
-        new IdentityEmailTemplateProcessor(identityEmailDataProvider);
-
-    OrganizationEmailTemplateProcessor endorsementConfirmationTP =
+  public void init() {
+    OrganizationEmailTemplateProcessor organizationEmailTP =
         new OrganizationEmailTemplateProcessor(organizationEmailDataProvider);
 
     organizationEmailTemplateManager =
         new OrganizationEmailManager(
-            newOrganizationTP,
+            organizationEmailTP,
             mailConfigurationProperties,
             organizationSuretyMailConfigurationProperties);
   }
