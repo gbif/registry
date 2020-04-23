@@ -52,9 +52,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 /** Unit tests related to {@link OrganizationEmailManager}. */
 @SpringBootTest(
     classes =
-        OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration
-            .class)
-public class OrganizationEmailTemplateManagerTest extends BaseItTest {
+        OrganizationEmailTemplateManagerIT.OrganizationEmailTemplateManagerTestConfiguration.class)
+public class OrganizationEmailTemplateManagerIT extends BaseItTest {
 
   @Configuration
   public static class OrganizationEmailTemplateManagerTestConfiguration
@@ -71,7 +70,7 @@ public class OrganizationEmailTemplateManagerTest extends BaseItTest {
   private final TestDataFactory testDataFactory;
 
   @Autowired
-  public OrganizationEmailTemplateManagerTest(
+  public OrganizationEmailTemplateManagerIT(
       MailConfigurationProperties mailConfigurationProperties,
       OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
       OrganizationEmailDataProvider organizationEmailDataProvider,

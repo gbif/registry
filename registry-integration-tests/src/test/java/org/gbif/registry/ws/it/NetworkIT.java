@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *   <li>The WS service client layer
  * </ol>
  */
-public class NetworkIT extends NetworkEntityTest<Network> {
+public class NetworkIT extends NetworkEntityIT<Network> {
 
   private final TestDataFactory testDataFactory;
 

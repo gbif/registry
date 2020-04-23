@@ -26,12 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 
-public class LenientAssertTest extends BaseItTest {
+public class LenientAssertIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
 
   @Autowired
-  public LenientAssertTest(
+  public LenientAssertIT(
       TestDataFactory testDataFactory, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.testDataFactory = testDataFactory;

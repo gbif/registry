@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *   <li>The WS service client layer
  * </ol>
  */
-public class OrganizationIT extends NetworkEntityTest<Organization> {
+public class OrganizationIT extends NetworkEntityIT<Organization> {
 
   private final OrganizationService service;
   private final NodeService nodeService;
