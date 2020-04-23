@@ -24,11 +24,13 @@ import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperti
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerTest;
+import org.gbif.registry.ws.config.DataSourcesConfiguration;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
 import java.util.Date;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
@@ -38,10 +40,13 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -94,6 +99,7 @@ import org.springframework.test.context.ActiveProfiles;
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
             ChecklistbankPersistenceServiceImpl.class,
+            DataSourcesConfiguration.class,
             OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration
                 .class
           })
@@ -125,6 +131,23 @@ public class RegistryIntegrationTestsConfiguration {
     convertUtilsBean.register(dateConverter, Date.class);
 
     return new BeanUtilsBean(convertUtilsBean);
+  }
+
+  @Bean
+  @Primary
+  @ConfigurationProperties(DataSourcesConfiguration.REGISTRY_DATASOURCE_PREFIX + ".datasource")
+  public DataSourceProperties registryDataSourceProperties() {
+    return new DataSourceProperties();
+  }
+
+  @Bean
+  @Primary
+  @ConfigurationProperties("registry.datasource.hikari")
+  public HikariDataSource registryDataSource() {
+    return registryDataSourceProperties()
+      .initializeDataSourceBuilder()
+      .type(HikariDataSource.class)
+      .build();
   }
 
   @Bean
