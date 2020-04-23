@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>42</version>
+    <version>43</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -157,9 +157,6 @@
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    <!-- In order to launch JUnit 5 tests -->
-    <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>3.0.0-M4</maven-failsafe-plugin.version>
   </properties>
 
   <dependencyManagement>
