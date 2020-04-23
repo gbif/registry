@@ -93,7 +93,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class DatasetIT extends NetworkEntityTest<Dataset> {
+public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   private final DatasetService service;
   private final DatasetSearchService searchService;

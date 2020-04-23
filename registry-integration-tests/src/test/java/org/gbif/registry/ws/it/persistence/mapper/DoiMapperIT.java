@@ -34,12 +34,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class DoiMapperTest extends BaseItTest {
+public class DoiMapperIT extends BaseItTest {
 
   private DoiMapper mapper;
 
   @Autowired
-  public DoiMapperTest(DoiMapper doiMapper, SimplePrincipalProvider principalProvider) {
+  public DoiMapperIT(DoiMapper doiMapper, SimplePrincipalProvider principalProvider) {
     super(principalProvider);
     this.mapper = doiMapper;
   }

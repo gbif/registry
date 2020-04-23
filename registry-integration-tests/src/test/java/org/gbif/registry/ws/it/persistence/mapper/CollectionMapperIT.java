@@ -40,13 +40,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class CollectionMapperTest extends BaseItTest {
+public class CollectionMapperIT extends BaseItTest {
 
   private CollectionMapper collectionMapper;
   private AddressMapper addressMapper;
 
   @Autowired
-  public CollectionMapperTest(
+  public CollectionMapperIT(
       CollectionMapper collectionMapper,
       AddressMapper addressMapper,
       SimplePrincipalProvider principalProvider) {

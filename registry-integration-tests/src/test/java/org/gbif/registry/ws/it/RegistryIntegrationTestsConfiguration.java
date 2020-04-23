@@ -23,7 +23,7 @@ import org.gbif.registry.mail.EmailSenderImpl;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.surety.OrganizationEmailTemplateManagerTest;
+import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -94,7 +94,7 @@ import org.springframework.test.context.ActiveProfiles;
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
             ChecklistbankPersistenceServiceImpl.class,
-            OrganizationEmailTemplateManagerTest.OrganizationEmailTemplateManagerTestConfiguration
+            OrganizationEmailTemplateManagerIT.OrganizationEmailTemplateManagerTestConfiguration
                 .class
           })
     })
