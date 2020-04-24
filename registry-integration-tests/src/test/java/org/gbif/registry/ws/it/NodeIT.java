@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-public class NodeIT extends NetworkEntityTest<Node> {
+public class NodeIT extends NetworkEntityIT<Node> {
 
   private final NodeService nodeService;
   private final OrganizationService organizationService;

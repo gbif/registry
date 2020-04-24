@@ -75,7 +75,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A generic test for all network entities that implement all interfaces required by the
  * BaseNetworkEntityResource.
  */
-public abstract class NetworkEntityTest<
+public abstract class NetworkEntityIT<
         T extends
             NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
                 & Identifiable & LenientEquals<T>>
@@ -91,7 +91,7 @@ public abstract class NetworkEntityTest<
   private final IdentifierService identifierService;
   private final TestDataFactory testDataFactory;
 
-  public NetworkEntityTest(
+  public NetworkEntityIT(
       NetworkEntityService<T> service,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory) {

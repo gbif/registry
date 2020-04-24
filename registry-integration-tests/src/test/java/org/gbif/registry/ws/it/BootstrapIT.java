@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * A test that will populate a sample registry database. This class should be removed when
  * development progresses. This is only used to help those developing the web console.
  */
-public class BootstrapTest extends BaseItTest {
+public class BootstrapIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
 
@@ -38,7 +38,7 @@ public class BootstrapTest extends BaseItTest {
   private final OrganizationService organizationService;
 
   @Autowired
-  public BootstrapTest(
+  public BootstrapIT(
       SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
       NodeService nodeService,

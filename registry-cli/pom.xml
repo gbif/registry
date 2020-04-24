@@ -26,6 +26,10 @@
     <metainf-services.version>1.5</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
     <javax.mail.version>1.4.7</javax.mail.version>
+
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.basedir}/../registry-integration-tests/target/site/jacoco-aggregate/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <build>

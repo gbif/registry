@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>42</version>
+    <version>43</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -61,6 +61,7 @@
     <module>registry-messaging</module>
     <module>registry-doi</module>
     <module>registry-metadata</module>
+    <module>registry-metasync</module>
     <module>registry-persistence</module>
     <module>registry-pipelines</module>
     <module>registry-surety</module>
@@ -74,7 +75,6 @@
     <module>registry-security</module>
     <module>registry-cli</module>
     <module>registry-ws-client</module>
-    <module>registry-metasync</module>
   </modules>
 
   <properties>
@@ -154,12 +154,12 @@
     <sonar.exclusions>**/*Stub.java</sonar.exclusions>
     <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
     <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
+    <sonar.coverage.jacoco.xmlReportPaths>
+      registry-integration-tests/target/site/jacoco-aggregate/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
-    <!-- In order to launch JUnit 5 tests -->
-    <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
-    <maven-failsafe-plugin.version>3.0.0-M4</maven-failsafe-plugin.version>
   </properties>
 
   <dependencyManagement>

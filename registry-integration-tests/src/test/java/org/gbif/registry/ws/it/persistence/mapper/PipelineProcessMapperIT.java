@@ -54,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PipelineProcessMapperTest extends BaseItTest {
+public class PipelineProcessMapperIT extends BaseItTest {
 
   private static final String TEST_USER = "test";
   private static final String UPDATER_USER = "updater";
@@ -68,7 +68,7 @@ public class PipelineProcessMapperTest extends BaseItTest {
   private NodeMapper nodeMapper;
 
   @Autowired
-  public PipelineProcessMapperTest(
+  public PipelineProcessMapperIT(
       PipelineProcessMapper pipelineProcessMapper,
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper,
