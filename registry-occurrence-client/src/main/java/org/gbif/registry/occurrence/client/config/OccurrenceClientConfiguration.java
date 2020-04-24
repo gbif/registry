@@ -27,7 +27,7 @@ public class OccurrenceClientConfiguration {
 
   private ClientFactory clientFactory;
 
-  public OccurrenceClientConfiguration(@Value("${occurrence.ws.url}") String url) {
+  public OccurrenceClientConfiguration(@Value("${api.root.url}") String url) {
     this.clientFactory = new ClientFactory(url);
   }
 

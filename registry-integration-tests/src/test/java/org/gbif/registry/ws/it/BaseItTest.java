@@ -58,6 +58,8 @@ import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 @DirtiesContext
 public class BaseItTest {
 
+  public static final String DB_LOCK = "db_lock";
+
   /** Custom ContextInitializer to expose the registry DB data source and search flags. */
   public static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
