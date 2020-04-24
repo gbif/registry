@@ -40,18 +40,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 
 /** Tests that the builders in this package provide valid objects. */
-@SpringBootTest(classes = EntityBuilderTest.EntityBuilderTestConfiguration.class)
-public class EntityBuilderTest extends BaseItTest {
+@SpringBootTest(classes = EntityBuilderIT.EntityBuilderTestConfiguration.class)
+public class EntityBuilderIT extends BaseItTest {
 
   @Configuration
   static class EntityBuilderTestConfiguration extends RegistryIntegrationTestsConfiguration {}
 
-  private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EntityBuilderIT.class);
 
   private final TestDataFactory testDataFactory;
 
   @Autowired
-  public EntityBuilderTest(
+  public EntityBuilderIT(
       TestDataFactory testDataFactory, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
     super(simplePrincipalProvider);
     this.testDataFactory = testDataFactory;
