@@ -13,6 +13,7 @@ registry:
   user: user
   password: pw
 datacite:
+  api: https://test.com/
   username: dataciteuser
   password: datacitepassword
 
