@@ -32,14 +32,12 @@ public class DoiSynchronizerCommand extends BaseCommand {
   public DoiSynchronizerCommand() {
     super("doi-synchronizer");
     this.config = new DoiSynchronizerConfiguration();
-    synchronizer = new DoiSynchronizer(config);
   }
 
   // constructor for tests
   public DoiSynchronizerCommand(DoiSynchronizerConfiguration config) {
     super("doi-synchronizer");
     this.config = config;
-    synchronizer = new DoiSynchronizer(config);
   }
 
   @Override
@@ -49,6 +47,7 @@ public class DoiSynchronizerCommand extends BaseCommand {
 
   @Override
   protected void doRun() {
+    synchronizer = new DoiSynchronizer(config);
     if (isConfigurationValid(config)) {
       if (StringUtils.isNotBlank(config.doi)) {
         synchronizer.handleDOI();

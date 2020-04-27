@@ -3,8 +3,9 @@ db:
   databaseName: dev_registry
   user: registry
   password: blablabla
-directoryWsUrl: http://api.gbif-dev.org/v1/directory/
-directoryAppKey: my-appkey
-directoryAppSecret: my-secret
+directory:
+  wsUrl: http://api.gbif-dev.org/v1/directory/
+  appKey: my-appkey
+  appSecret: my-secret
 frequencyInHour: 24
 startTime: "5:34"
