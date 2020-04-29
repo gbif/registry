@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -55,8 +56,9 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
       OrganizationService service,
       NodeService nodeService,
       @Nullable SimplePrincipalProvider pp,
-      TestDataFactory testDataFactory) {
-    super(service, pp, testDataFactory);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(service, pp, testDataFactory, esServer);
     this.service = service;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;

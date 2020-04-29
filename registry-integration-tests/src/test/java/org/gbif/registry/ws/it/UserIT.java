@@ -19,6 +19,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -55,8 +56,9 @@ public class UserIT extends BaseItTest {
   public UserIT(
       UserTestFixture userTestFixture,
       RequestTestFixture requestTestFixture,
-      @Nullable SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      @Nullable SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
   }

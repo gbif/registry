@@ -17,12 +17,10 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
-import org.gbif.registry.search.test.ElasticsearchInitializer;
-import org.gbif.registry.search.test.EsServer;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.stream.Stream;
 
@@ -67,7 +65,7 @@ public class BaseItTest {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of(
-              Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
+              Stream.of(dbTestPropertyPairs())
                   .flatMap(Stream::of)
                   .toArray(String[]::new))
           .applyTo(configurableApplicationContext.getEnvironment());
@@ -112,21 +110,13 @@ public class BaseItTest {
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
 
-  @RegisterExtension
-  static EsServer esServer =
-      new EsServer(
-          Paths.get(
-              DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
-          "dataset",
-          "dataset");
-
-  @RegisterExtension
-  ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
 
   private final SimplePrincipalProvider simplePrincipalProvider;
+  protected static EsManageServer esServer;
 
-  public BaseItTest(SimplePrincipalProvider simplePrincipalProvider) {
+  public BaseItTest(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
     this.simplePrincipalProvider = simplePrincipalProvider;
+    BaseItTest.esServer = esServer;
   }
 
   @BeforeEach

@@ -24,6 +24,7 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -52,8 +53,9 @@ public class LegacyOrganizationResourceIT extends BaseItTest {
       NodeService nodeService,
       TestDataFactory testDataFactory,
       RequestTestFixture requestTestFixture,
-      SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;

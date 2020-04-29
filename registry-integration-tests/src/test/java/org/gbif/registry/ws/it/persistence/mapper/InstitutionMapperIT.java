@@ -21,6 +21,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -48,8 +49,9 @@ public class InstitutionMapperIT extends BaseItTest {
   public InstitutionMapperIT(
       InstitutionMapper institutionMapper,
       AddressMapper addressMapper,
-      SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.institutionMapper = institutionMapper;
     this.addressMapper = addressMapper;
   }

@@ -26,6 +26,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -63,8 +64,9 @@ public class MetasyncHistoryIT extends BaseItTest {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      TestDataFactory testDataFactory) {
-    super(simplePrincipalProvider);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.metasyncHistoryService = metasyncHistoryService;
     this.organizationService = organizationService;
     this.nodeService = nodeService;

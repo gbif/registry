@@ -20,9 +20,9 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 public class ElasticsearchInitializer implements BeforeEachCallback {
 
-  private final EsServer esServer;
+  private final EsManageServer esServer;
 
-  public ElasticsearchInitializer(EsServer esServer) {
+  public ElasticsearchInitializer(EsManageServer esServer) {
     this.esServer = esServer;
   }
 

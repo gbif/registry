@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -42,8 +43,9 @@ public class BootstrapIT extends BaseItTest {
       SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
       NodeService nodeService,
-      OrganizationService organizationService) {
-    super(simplePrincipalProvider);
+      OrganizationService organizationService,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.testDataFactory = testDataFactory;
     this.nodeService = nodeService;
     this.organizationService = organizationService;

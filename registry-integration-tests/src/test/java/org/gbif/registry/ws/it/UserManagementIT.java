@@ -23,6 +23,7 @@ import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -65,8 +66,9 @@ public class UserManagementIT extends BaseItTest {
       UserTestFixture userTestFixture,
       RequestTestFixture requestTestFixture,
       IdentitySuretyTestHelper identitySuretyTestHelper,
-      SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.identitySuretyTestHelper = identitySuretyTestHelper;
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;

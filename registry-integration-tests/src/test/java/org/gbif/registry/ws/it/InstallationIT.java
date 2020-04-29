@@ -24,6 +24,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -60,8 +61,9 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
       OrganizationService organizationService,
       NodeService nodeService,
       @Nullable SimplePrincipalProvider pp,
-      TestDataFactory testDataFactory) {
-    super(service, pp, testDataFactory);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(service, pp, testDataFactory, esServer);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;

@@ -69,6 +69,7 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.search.dataset.indexing",
       "org.gbif.registry.search.dataset.service",
       "org.gbif.registry.search",
+      "org.gbif.registry.search.test",
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",

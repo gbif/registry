@@ -31,6 +31,7 @@ import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -79,13 +80,15 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @Autowired
   public NodeIT(
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
-      @Nullable SimplePrincipalProvider pp,
-      TestDataFactory testDataFactory) {
-    super(nodeService, pp, testDataFactory);
+    NodeService nodeService,
+    OrganizationService organizationService,
+    InstallationService installationService,
+    DatasetService datasetService,
+    @Nullable SimplePrincipalProvider pp,
+    TestDataFactory testDataFactory,
+    EsManageServer esServer
+    ) {
+    super(nodeService, pp, testDataFactory, esServer);
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;

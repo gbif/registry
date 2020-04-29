@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.registry.Contact;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -32,8 +33,10 @@ public class LenientAssertIT extends BaseItTest {
 
   @Autowired
   public LenientAssertIT(
-      TestDataFactory testDataFactory, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      TestDataFactory testDataFactory,
+      @Nullable SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.testDataFactory = testDataFactory;
   }
 
