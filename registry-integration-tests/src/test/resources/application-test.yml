@@ -4,7 +4,12 @@ url:
 
 # Mail Properties
 mail:
+  cc: @mail.cc@
+  bcc: @mail.bcc@
   enabled: false
+  devemail:
+    address: gbifregistry@mailinator.com
+    enabled: @mail.devemail.enabled@
 
 message:
   enabled: false
