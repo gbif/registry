@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.ClassPathResource;
 
 @Configuration
 public class DatasetElasticsearchConfiguration {
@@ -15,7 +16,8 @@ public class DatasetElasticsearchConfiguration {
   @Bean("datasetElasticCluster")
   public EsManageServer esManageServer() {
     try {
-      return new EsManageServer(Paths.get(DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
+
+      return new EsManageServer(new ClassPathResource("dataset-es-mapping.json").getFile().toPath(),
                                 "dataset",
                                 "dataset");
     } catch (Exception ex) {
