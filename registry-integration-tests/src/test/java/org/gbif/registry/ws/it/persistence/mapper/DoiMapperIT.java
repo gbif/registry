@@ -20,6 +20,7 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -39,8 +40,8 @@ public class DoiMapperIT extends BaseItTest {
   private DoiMapper mapper;
 
   @Autowired
-  public DoiMapperIT(DoiMapper doiMapper, SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+  public DoiMapperIT(DoiMapper doiMapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.mapper = doiMapper;
   }
 

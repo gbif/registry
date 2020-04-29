@@ -1,0 +1,131 @@
+package org.gbif.registry.search.test;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
+import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
+import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
+
+
+public class EsManageServer implements InitializingBean, DisposableBean {
+
+  private static final String CLUSTER_NAME = "EsITCluster";
+
+  private EmbeddedElastic embeddedElastic;
+
+  private final Path mappingFile;
+
+  private final String indexName;
+
+  private final String typeName;
+
+  // needed to assert results against ES server directly
+  private RestHighLevelClient restClient;
+
+  public EsManageServer(Path mappingFile, String indexName, String typeName) {
+    this.mappingFile = mappingFile;
+    this.indexName = indexName;
+    this.typeName = typeName;
+  }
+
+  @Override
+  public void destroy() throws Exception {
+    if (embeddedElastic != null) {
+      embeddedElastic.stop();
+    }
+
+  }
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    embeddedElastic =
+      EmbeddedElastic.builder()
+        .withElasticVersion(getEsVersion())
+        .withEsJavaOpts("-Xms128m -Xmx512m")
+        .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
+        .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
+        .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
+        .withStartTimeout(120, TimeUnit.SECONDS)
+        .build();
+
+    embeddedElastic.start();
+    restClient = buildRestClient();
+    createIndex();
+  }
+
+
+  public RestHighLevelClient getRestClient() {
+    return restClient;
+  }
+
+  public String getServerAddress() {
+    return "http://localhost:" + embeddedElastic.getHttpPort();
+  }
+
+  public void refresh() {
+    try {
+      restClient.indices().refresh(new RefreshRequest().indices(indexName), RequestOptions.DEFAULT);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  /** Utility method to create an index. */
+  private void createIndex() throws IOException {
+    String mapping = new String(Files.readAllBytes(mappingFile));
+    restClient
+      .indices()
+      .create(
+        new CreateIndexRequest().index(indexName).mapping(typeName, mapping, XContentType.JSON),
+        RequestOptions.DEFAULT);
+  }
+
+  private RestHighLevelClient buildRestClient() {
+    HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
+    return new RestHighLevelClient(RestClient.builder(host));
+  }
+
+  private static int getAvailablePort() throws IOException {
+    ServerSocket serverSocket = new ServerSocket(0);
+    int port = serverSocket.getLocalPort();
+    serverSocket.close();
+
+    return port;
+  }
+
+  private String getEsVersion() throws IOException {
+    Properties properties = new Properties();
+    properties.load(this.getClass().getClassLoader().getResourceAsStream("maven.properties"));
+    return properties.getProperty("elasticsearch.version");
+  }
+
+  public void reCreateIndex() {
+    try {
+      restClient
+        .indices()
+        .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
+      createIndex();
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+}

@@ -30,6 +30,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -73,8 +74,9 @@ public class DatasetProcessStatusIT extends BaseItTest {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      TestDataFactory testDataFactory) {
-    super(simplePrincipalProvider);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.datasetProcessStatusService = datasetProcessStatusService;
     this.datasetService = datasetService;
     this.organizationService = organizationService;

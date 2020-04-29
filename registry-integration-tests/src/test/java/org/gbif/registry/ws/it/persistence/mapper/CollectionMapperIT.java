@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -49,8 +50,9 @@ public class CollectionMapperIT extends BaseItTest {
   public CollectionMapperIT(
       CollectionMapper collectionMapper,
       AddressMapper addressMapper,
-      SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.collectionMapper = collectionMapper;
     this.addressMapper = addressMapper;
   }

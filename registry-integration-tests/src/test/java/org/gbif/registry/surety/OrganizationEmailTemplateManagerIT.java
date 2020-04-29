@@ -27,6 +27,7 @@ import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperti
 import org.gbif.registry.mail.organization.OrganizationEmailDataProvider;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.organization.OrganizationEmailTemplateProcessor;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
@@ -75,8 +76,9 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
       OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
       OrganizationEmailDataProvider organizationEmailDataProvider,
       TestDataFactory testDataFactory,
-      SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.mailConfigurationProperties = mailConfigurationProperties;
     this.organizationSuretyMailConfigurationProperties =
         organizationSuretyMailConfigurationProperties;

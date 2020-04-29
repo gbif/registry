@@ -23,6 +23,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.LegacyEndpointResponse;
 import org.gbif.registry.domain.ws.LegacyEndpointResponseListWrapper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -61,8 +62,9 @@ public class LegacyEndpointResourceIT extends BaseItTest {
       RequestTestFixture requestTestFixture,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.requestTestFixture = requestTestFixture;
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;

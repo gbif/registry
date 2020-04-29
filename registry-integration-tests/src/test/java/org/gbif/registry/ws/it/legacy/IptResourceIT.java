@@ -28,6 +28,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.domain.ws.IptEntityResponse;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.Organizations;
 import org.gbif.registry.test.TestDataFactory;
@@ -102,8 +103,9 @@ public class IptResourceIT extends BaseItTest {
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.installationService = installationService;
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;

@@ -26,6 +26,7 @@ import org.gbif.api.vocabulary.AppRole;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -70,8 +71,9 @@ public class OrganizationCreationIT extends BaseItTest {
       ChallengeCodeMapper challengeCodeMapper,
       ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper,
       TestDataFactory testDataFactory,
-      SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.challengeCodeMapper = challengeCodeMapper;

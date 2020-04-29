@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -74,8 +75,9 @@ public class PipelineProcessMapperIT extends BaseItTest {
       InstallationMapper installationMapper,
       OrganizationMapper organizationMapper,
       NodeMapper nodeMapper,
-      SimplePrincipalProvider principalProvider) {
-    super(principalProvider);
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.pipelineProcessMapper = pipelineProcessMapper;
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;

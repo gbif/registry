@@ -19,6 +19,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -43,7 +44,8 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
-      TestDataFactory testDataFactory) {
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
     super(
         principalProvider,
         environment,
@@ -51,7 +53,8 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
         organizationService,
         installationService,
         datasetService,
-        testDataFactory);
+        testDataFactory,
+        esServer);
   }
 
   /**

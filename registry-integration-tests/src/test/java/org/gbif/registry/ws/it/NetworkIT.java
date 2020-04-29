@@ -17,6 +17,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.service.registry.NetworkService;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -43,8 +44,9 @@ public class NetworkIT extends NetworkEntityIT<Network> {
   public NetworkIT(
       NetworkService service,
       @Nullable SimplePrincipalProvider pp,
-      TestDataFactory testDataFactory) {
-    super(service, pp, testDataFactory);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(service, pp, testDataFactory, esServer);
     this.testDataFactory = testDataFactory;
   }
 

@@ -25,6 +25,7 @@ import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -63,8 +64,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
   @Autowired
   public OccurrenceDownloadIT(
       OccurrenceDownloadService occurrenceDownloadService,
-      SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.occurrenceDownloadService = occurrenceDownloadService;
   }
 

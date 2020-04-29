@@ -16,6 +16,7 @@
 package org.gbif.registry.utils;
 
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
@@ -52,8 +53,10 @@ public class EntityBuilderIT extends BaseItTest {
 
   @Autowired
   public EntityBuilderIT(
-      TestDataFactory testDataFactory, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      TestDataFactory testDataFactory,
+      @Nullable SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.testDataFactory = testDataFactory;
   }
 

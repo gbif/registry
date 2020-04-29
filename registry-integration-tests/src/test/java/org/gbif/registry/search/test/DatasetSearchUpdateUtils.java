@@ -34,7 +34,7 @@ public class DatasetSearchUpdateUtils {
   private static final Logger LOG = LoggerFactory.getLogger(DatasetSearchUpdateUtils.class);
 
   /** Waits for ElasticSearch update threads to finish. */
-  public static void awaitUpdates(DatasetRealtimeIndexer indexService, EsServer esServer) {
+  public static void awaitUpdates(DatasetRealtimeIndexer indexService, EsManageServer esServer) {
     Preconditions.checkNotNull(indexService, "Index service is required");
     Preconditions.checkNotNull(esServer, "EsServer is required");
     try {

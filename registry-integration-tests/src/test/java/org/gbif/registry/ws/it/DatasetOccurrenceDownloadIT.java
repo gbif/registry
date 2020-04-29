@@ -26,6 +26,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -69,8 +70,9 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService,
-      TestDataFactory testDataFactory) {
-    super(simplePrincipalProvider);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.occurrenceDownloadService = occurrenceDownloadService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;

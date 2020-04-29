@@ -42,13 +42,15 @@ pipelines:
 
 elasticsearch:
   registry:
+    enabled: false
     hosts: none
-    index: none
+    index: dataset
     connectionTimeOut: 0
     socketTimeOut: 0
     connectionRequestTimeOut: 0
     maxRetryTimeOut: 0
   occurrence:
+    enabled: false
     hosts:
     index:
     connectionTimeOut:

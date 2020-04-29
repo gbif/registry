@@ -17,6 +17,7 @@ package org.gbif.registry.search.dataset.indexing.es;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,7 @@ public class EsConfiguration {
 
   @ConfigurationProperties(prefix = "elasticsearch.registry")
   @Bean("registryEsClientConfig")
+  @ConditionalOnProperty("elasticsearch.registry.enabled")
   @Primary
   public EsClient.EsClientConfiguration registryEsClientConfiguration() {
     return new EsClient.EsClientConfiguration();
@@ -41,6 +43,7 @@ public class EsConfiguration {
 
   @ConfigurationProperties(prefix = "elasticsearch.occurrence")
   @Bean("esOccurrenceClientConfig")
+  @ConditionalOnProperty("elasticsearch.occurrence.enabled")
   public EsClient.EsClientConfiguration occurrenceEsClientConfiguration() {
     return new EsClient.EsClientConfiguration();
   }

@@ -40,6 +40,8 @@ import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
+import org.gbif.registry.search.test.ElasticsearchInitializer;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.DatasetResource;
@@ -62,6 +64,7 @@ import javax.validation.ValidationException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -103,6 +106,11 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   private final DatasetRealtimeIndexer datasetRealtimeIndexer;
   private final TestDataFactory testDataFactory;
 
+  @RegisterExtension
+  ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
+
+
+
   @Autowired
   public DatasetIT(
       DatasetService service,
@@ -112,8 +120,9 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
       InstallationService installationService,
       DatasetRealtimeIndexer datasetRealtimeIndexer,
       @Nullable SimplePrincipalProvider pp,
-      TestDataFactory testDataFactory) {
-    super(service, pp, testDataFactory);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(service, pp, testDataFactory, esServer);
     this.service = service;
     this.searchService = searchService;
     this.organizationService = organizationService;

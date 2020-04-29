@@ -36,6 +36,7 @@ import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -94,8 +95,9 @@ public abstract class NetworkEntityIT<
   public NetworkEntityIT(
       NetworkEntityService<T> service,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      TestDataFactory testDataFactory) {
-    super(simplePrincipalProvider);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.service = service;
     // not so nice, but we know what we deal with in the tests
     // and this bundles most basic tests into one base test class without copy paste redundancy

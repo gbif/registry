@@ -30,6 +30,7 @@ import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -54,8 +55,9 @@ public class DoiRegistrationServiceIT extends BaseItTest {
   @Autowired
   public DoiRegistrationServiceIT(
       DoiRegistrationService doiRegistrationService,
-      SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.doiRegistrationService = doiRegistrationService;
   }
 

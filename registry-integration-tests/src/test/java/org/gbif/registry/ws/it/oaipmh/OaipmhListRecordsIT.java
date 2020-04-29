@@ -25,6 +25,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
 import org.gbif.utils.file.FileUtils;
@@ -63,7 +64,8 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
-      TestDataFactory testDataFactory) {
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
     super(
         principalProvider,
         environment,
@@ -71,7 +73,8 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
         organizationService,
         installationService,
         datasetService,
-        testDataFactory);
+        testDataFactory,
+        esServer);
   }
 
   @Test

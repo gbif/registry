@@ -18,6 +18,7 @@ package org.gbif.registry.doi;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.generator.DoiGeneratorMQ;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -45,8 +46,8 @@ public class DoiGeneratorMQIT extends BaseItTest {
 
   @Autowired
   public DoiGeneratorMQIT(
-      DoiGenerator generator, @Nullable SimplePrincipalProvider simplePrincipalProvider) {
-    super(simplePrincipalProvider);
+      DoiGenerator generator, @Nullable SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+    super(simplePrincipalProvider, esServer);
     this.generator = generator;
   }
 

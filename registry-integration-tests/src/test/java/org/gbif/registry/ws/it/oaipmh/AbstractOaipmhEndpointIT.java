@@ -24,6 +24,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -75,8 +76,9 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
       OrganizationService organizationService,
       InstallationService installationService,
       DatasetService datasetService,
-      TestDataFactory testDataFactory) {
-    super(principalProvider);
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
+    super(principalProvider, esServer);
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
