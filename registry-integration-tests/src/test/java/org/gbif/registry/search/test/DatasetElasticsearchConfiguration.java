@@ -26,16 +26,13 @@ import org.springframework.core.io.ResourceLoader;
 @Configuration
 public class DatasetElasticsearchConfiguration {
 
-  @Autowired
-  private ResourceLoader resourceLoader;
+  @Autowired private ResourceLoader resourceLoader;
 
   @Bean("datasetElasticCluster")
   public EsManageServer esManageServer() {
     try {
-      return new EsManageServer( resourceLoader.getResource("classpath:dataset-es-mapping.json"),
-
-          "dataset",
-          "dataset");
+      return new EsManageServer(
+          resourceLoader.getResource("classpath:dataset-es-mapping.json"), "dataset", "dataset");
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
