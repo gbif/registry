@@ -17,24 +17,23 @@ package org.gbif.registry.search.test;
 
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 
-import java.nio.file.Paths;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.ResourceLoader;
 
 @Configuration
 public class DatasetElasticsearchConfiguration {
 
+  @Autowired
+  private ResourceLoader resourceLoader;
+
   @Bean("datasetElasticCluster")
   public EsManageServer esManageServer() {
     try {
-      return new EsManageServer(
-          Paths.get(
-              DatasetElasticsearchConfiguration.class
-                  .getClassLoader()
-                  .getResource("dataset-es-mapping.json")
-                  .getPath()),
+      return new EsManageServer( resourceLoader.getResource("classpath:dataset-es-mapping.json"),
+
           "dataset",
           "dataset");
     } catch (Exception ex) {
