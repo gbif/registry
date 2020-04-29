@@ -109,8 +109,6 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   @RegisterExtension
   ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
 
-
-
   @Autowired
   public DatasetIT(
       DatasetService service,

@@ -40,7 +40,8 @@ public class DoiMapperIT extends BaseItTest {
   private DoiMapper mapper;
 
   @Autowired
-  public DoiMapperIT(DoiMapper doiMapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
+  public DoiMapperIT(
+      DoiMapper doiMapper, SimplePrincipalProvider principalProvider, EsManageServer esServer) {
     super(principalProvider, esServer);
     this.mapper = doiMapper;
   }
