@@ -58,6 +58,27 @@ elasticsearch:
     connectionRequestTimeOut:
     maxRetryTimeOut:
 
+directory:
+  app:
+    key: @directory.app.key@
+    secret: @directory.app.secret@
+  ws:
+    url: @directory.ws.url@
+
+api:
+  root:
+    url: http://api.gbif-dev.org/v1/
+  cache:
+    purge:
+      url: http://api.gbif-dev.org/v1
+      threads: 1
+portal:
+  url: https://www.gbif-dev.org/
+
+occurrence:
+  ws:
+    url: http://api.gbif-dev.org/v1/occurrence/
+
 # file with all application keys & secrets
 appkeys:
   file: @appkeys.testfile@
