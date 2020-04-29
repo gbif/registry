@@ -80,14 +80,13 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @Autowired
   public NodeIT(
-    NodeService nodeService,
-    OrganizationService organizationService,
-    InstallationService installationService,
-    DatasetService datasetService,
-    @Nullable SimplePrincipalProvider pp,
-    TestDataFactory testDataFactory,
-    EsManageServer esServer
-    ) {
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      @Nullable SimplePrincipalProvider pp,
+      TestDataFactory testDataFactory,
+      EsManageServer esServer) {
     super(nodeService, pp, testDataFactory, esServer);
     this.nodeService = nodeService;
     this.organizationService = organizationService;

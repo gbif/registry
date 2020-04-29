@@ -65,9 +65,7 @@ public class BaseItTest {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of(
-              Stream.of(dbTestPropertyPairs())
-                  .flatMap(Stream::of)
-                  .toArray(String[]::new))
+              Stream.of(dbTestPropertyPairs()).flatMap(Stream::of).toArray(String[]::new))
           .applyTo(configurableApplicationContext.getEnvironment());
     }
 
@@ -81,24 +79,6 @@ public class BaseItTest {
         "registry.datasource.password="
       };
     }
-
-    public String[] elasticTestPropertiesPairs() {
-
-      return new String[] {
-        "elasticsearch.registry.hosts=" + esServer.getServerAddress(),
-        "elasticsearch.registry.index=dataset",
-        "elasticsearch.registry.connectionTimeOut=60000",
-        "elasticsearch.registry.socketTimeOut=60000",
-        "elasticsearch.registry.connectionRequestTimeOut=120000",
-        "elasticsearch.registry.maxRetryTimeOut=120000",
-        "elasticsearch.occurrence.hosts=" + esServer.getServerAddress(),
-        "elasticsearch.occurrence.index=dataset",
-        "elasticsearch.occurrence.connectionTimeOut=60000",
-        "elasticsearch.occurrence.socketTimeOut=60000",
-        "elasticsearch.occurrence.connectionRequestTimeOut=120000",
-        "elasticsearch.occurrence.maxRetryTimeOut=120000"
-      };
-    }
   }
 
   @RegisterExtension
@@ -109,7 +89,6 @@ public class BaseItTest {
   @RegisterExtension
   public final DatabaseInitializer databaseRule =
       new DatabaseInitializer(database.getTestDatabase());
-
 
   private final SimplePrincipalProvider simplePrincipalProvider;
   protected static EsManageServer esServer;

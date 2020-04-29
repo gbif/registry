@@ -64,7 +64,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
   @Autowired
   public OccurrenceDownloadIT(
       OccurrenceDownloadService occurrenceDownloadService,
-      SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
     super(simplePrincipalProvider, esServer);
     this.occurrenceDownloadService = occurrenceDownloadService;
   }

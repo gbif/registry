@@ -1,10 +1,24 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.search.test;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -18,13 +32,9 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.StandardEnvironment;
+
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
-
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
@@ -52,26 +62,24 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     if (embeddedElastic != null) {
       embeddedElastic.stop();
     }
-
   }
 
   @Override
   public void afterPropertiesSet() throws Exception {
     embeddedElastic =
-      EmbeddedElastic.builder()
-        .withElasticVersion(getEsVersion())
-        .withEsJavaOpts("-Xms128m -Xmx512m")
-        .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
-        .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
-        .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
-        .withStartTimeout(120, TimeUnit.SECONDS)
-        .build();
+        EmbeddedElastic.builder()
+            .withElasticVersion(getEsVersion())
+            .withEsJavaOpts("-Xms128m -Xmx512m")
+            .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
+            .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
+            .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
+            .withStartTimeout(120, TimeUnit.SECONDS)
+            .build();
 
     embeddedElastic.start();
     restClient = buildRestClient();
     createIndex();
   }
-
 
   public RestHighLevelClient getRestClient() {
     return restClient;
@@ -93,10 +101,10 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private void createIndex() throws IOException {
     String mapping = new String(Files.readAllBytes(mappingFile));
     restClient
-      .indices()
-      .create(
-        new CreateIndexRequest().index(indexName).mapping(typeName, mapping, XContentType.JSON),
-        RequestOptions.DEFAULT);
+        .indices()
+        .create(
+            new CreateIndexRequest().index(indexName).mapping(typeName, mapping, XContentType.JSON),
+            RequestOptions.DEFAULT);
   }
 
   private RestHighLevelClient buildRestClient() {
@@ -121,8 +129,8 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   public void reCreateIndex() {
     try {
       restClient
-        .indices()
-        .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
+          .indices()
+          .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
       createIndex();
     } catch (Exception ex) {
       throw new RuntimeException(ex);

@@ -46,7 +46,9 @@ public class DoiGeneratorMQIT extends BaseItTest {
 
   @Autowired
   public DoiGeneratorMQIT(
-      DoiGenerator generator, @Nullable SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+      DoiGenerator generator,
+      @Nullable SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer) {
     super(simplePrincipalProvider, esServer);
     this.generator = generator;
   }
