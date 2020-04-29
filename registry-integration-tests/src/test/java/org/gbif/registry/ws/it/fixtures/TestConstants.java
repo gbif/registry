@@ -55,7 +55,8 @@ public class TestConstants {
   public static final String TEST_ADMIN = "admin";
   public static final String TEST_EDITOR = "editor";
   public static final String TEST_USER = "user";
-  public static final String TEST_GRSCICOLL_ADMIN = "grscicollAdmin";
+  public static final String TEST_GRSCICOLL_ADMIN = "grscicoll_admin";
+  public static final String TEST_PASSWORD = "password";
 
   public static final String DATASET_NAME = "Test Dataset Registry2 Sjælland";
   public static final String DOI = "http://dx.doi.org/10.1234/timbo";
