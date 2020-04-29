@@ -17,11 +17,13 @@ package org.gbif.registry.search.test;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -33,6 +35,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
+import org.springframework.core.io.Resource;
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -42,7 +45,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private EmbeddedElastic embeddedElastic;
 
-  private final Path mappingFile;
+  private final Resource mappingFile;
 
   private final String indexName;
 
@@ -51,7 +54,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
-  public EsManageServer(Path mappingFile, String indexName, String typeName) {
+  public EsManageServer(Resource mappingFile, String indexName, String typeName) {
     this.mappingFile = mappingFile;
     this.indexName = indexName;
     this.typeName = typeName;
@@ -99,7 +102,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   /** Utility method to create an index. */
   private void createIndex() throws IOException {
-    String mapping = new String(Files.readAllBytes(mappingFile));
+    String mapping = IOUtils.toString(mappingFile.getInputStream(), StandardCharsets.UTF_8);
     restClient
         .indices()
         .create(
