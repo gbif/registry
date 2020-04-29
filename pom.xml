@@ -154,9 +154,6 @@
     <sonar.exclusions>**/*Stub.java</sonar.exclusions>
     <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
     <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
-    <sonar.coverage.jacoco.xmlReportPaths>
-      registry-integration-tests/target/site/jacoco-aggregate/jacoco.xml
-    </sonar.coverage.jacoco.xmlReportPaths>
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
