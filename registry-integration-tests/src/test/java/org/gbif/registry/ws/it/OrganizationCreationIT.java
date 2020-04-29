@@ -44,6 +44,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -55,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * behavior is different based on the credentials, the injectors are created inside the specific
  * tests.
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class OrganizationCreationIT extends BaseItTest {
 
   private OrganizationService organizationService;

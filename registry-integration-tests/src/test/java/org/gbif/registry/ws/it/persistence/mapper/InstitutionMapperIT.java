@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class InstitutionMapperIT extends BaseItTest {
 
   private InstitutionMapper institutionMapper;

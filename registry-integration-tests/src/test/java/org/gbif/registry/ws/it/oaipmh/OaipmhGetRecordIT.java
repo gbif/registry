@@ -25,6 +25,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -40,6 +41,7 @@ import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -51,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Test the OAI-PMH endpoint using the XOAI OAI-PMH client library. Test the GetRecord verb of the
  * OAI-PMH endpoint.
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
 
   @Autowired

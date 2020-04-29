@@ -35,6 +35,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *   <li>The WS service client layer
  * </ol>
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class DatasetOccurrenceDownloadIT extends BaseItTest {
 
   private TestDataFactory testDataFactory;

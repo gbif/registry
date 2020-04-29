@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class InstallationIT extends NetworkEntityIT<Installation> {
 
   private final OrganizationService organizationService;

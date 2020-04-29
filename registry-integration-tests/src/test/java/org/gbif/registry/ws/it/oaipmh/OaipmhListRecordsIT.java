@@ -27,6 +27,7 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.utils.OaipmhTestConfiguration;
+import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -44,6 +45,7 @@ import org.dspace.xoai.serviceprovider.parameters.ListRecordsParameters;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.collect.Lists;
 
@@ -53,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Test the ListRecords verb of the OAI-PMH endpoint. */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired

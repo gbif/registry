@@ -24,11 +24,13 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * A test that will populate a sample registry database. This class should be removed when
  * development progresses. This is only used to help those developing the web console.
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class BootstrapIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;

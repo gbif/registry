@@ -25,6 +25,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  *   <li>The WS service client layer
  * </ol>
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class NetworkIT extends NetworkEntityIT<Network> {
 
   private final TestDataFactory testDataFactory;

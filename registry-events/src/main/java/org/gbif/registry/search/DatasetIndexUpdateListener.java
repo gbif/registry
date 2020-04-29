@@ -27,16 +27,19 @@ import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
+import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.ws.NotFoundException;
 
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.google.common.eventbus.Subscribe;
 
+@ConditionalOnBean(EsConfiguration.class)
 @SuppressWarnings("UnstableApiUsage")
 @Service
 public class DatasetIndexUpdateListener {

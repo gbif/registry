@@ -23,9 +23,11 @@ import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class LenientAssertIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;

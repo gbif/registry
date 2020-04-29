@@ -39,6 +39,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *   <li>The WS service client layer
  * </ol>
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class DatasetProcessStatusIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;

@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.EMAIL;
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>Due to the fact that login and changePassword are not directly available in the Java ws
  * client, most of the tests use a direct HTTP client.
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class UserIT extends BaseItTest {
 
   private UserTestFixture userTestFixture;

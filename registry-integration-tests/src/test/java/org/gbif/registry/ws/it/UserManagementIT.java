@@ -32,6 +32,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.ResultActions;
 
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * registry-identity module). Due to the fact that all user management operations are not available
  * in the Java ws client, the tests use a direct HTTP client.
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class UserManagementIT extends BaseItTest {
 
   private static final String CHANGED_PASSWORD = "123456";

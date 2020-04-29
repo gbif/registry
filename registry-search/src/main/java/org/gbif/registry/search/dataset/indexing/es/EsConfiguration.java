@@ -15,13 +15,17 @@
  */
 package org.gbif.registry.search.dataset.indexing.es;
 
+import org.gbif.registry.search.dataset.utils.OptionalInTestsCondition;
+
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+@Conditional(OptionalInTestsCondition.class)
 @Configuration
 public class EsConfiguration {
 

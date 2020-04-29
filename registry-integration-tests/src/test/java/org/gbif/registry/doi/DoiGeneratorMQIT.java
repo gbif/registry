@@ -29,6 +29,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.beust.jcommander.internal.Nullable;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 @ExtendWith(SpringExtension.class)
 @Import({DoiGeneratorMQ.class, DoiGeneratorMQIT.DoiGeneratorMQITConfiguration.class})
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class DoiGeneratorMQIT extends BaseItTest {
 
   private DoiGenerator generator;

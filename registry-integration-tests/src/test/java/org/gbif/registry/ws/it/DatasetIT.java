@@ -40,6 +40,8 @@ import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
+import org.gbif.registry.search.test.ElasticsearchInitializer;
+import org.gbif.registry.search.test.EsServer;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.DatasetResource;
@@ -51,9 +53,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
@@ -62,9 +66,13 @@ import javax.validation.ValidationException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Charsets;
@@ -89,11 +97,63 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
-@SpringBootTest(
-    classes = RegistryIntegrationTestsConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(initializers = {DatasetIT.ContextInitializer.class})
+@ActiveProfiles("esTest")
 public class DatasetIT extends NetworkEntityIT<Dataset> {
+
+  @RegisterExtension
+  static EsServer esServer =
+      new EsServer(
+          Paths.get(
+              DatasetIT.class.getClassLoader().getResource("dataset-es-mapping.json").getPath()),
+          "dataset",
+          "dataset");
+
+  @RegisterExtension
+  ElasticsearchInitializer elasticsearchInitializer = new ElasticsearchInitializer(esServer);
+
+  /** Custom ContextInitializer to expose the registry DB data source and search flags. */
+  public static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of(
+              Stream.of(dbTestPropertyPairs(), elasticTestPropertiesPairs())
+                  .flatMap(Stream::of)
+                  .toArray(String[]::new))
+          .applyTo(configurableApplicationContext.getEnvironment());
+    }
+
+    protected String[] dbTestPropertyPairs() {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+
+    public String[] elasticTestPropertiesPairs() {
+
+      return new String[] {
+        "elasticsearch.registry.hosts=" + esServer.getServerAddress(),
+        "elasticsearch.registry.index=dataset",
+        "elasticsearch.registry.connectionTimeOut=60000",
+        "elasticsearch.registry.socketTimeOut=60000",
+        "elasticsearch.registry.connectionRequestTimeOut=120000",
+        "elasticsearch.registry.maxRetryTimeOut=120000",
+        "elasticsearch.occurrence.hosts=" + esServer.getServerAddress(),
+        "elasticsearch.occurrence.index=dataset",
+        "elasticsearch.occurrence.connectionTimeOut=60000",
+        "elasticsearch.occurrence.socketTimeOut=60000",
+        "elasticsearch.occurrence.connectionRequestTimeOut=120000",
+        "elasticsearch.occurrence.maxRetryTimeOut=120000"
+      };
+    }
+  }
 
   private final DatasetService service;
   private final DatasetSearchService searchService;

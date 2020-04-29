@@ -42,6 +42,7 @@ import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -60,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class NodeIT extends NetworkEntityIT<Node> {
 
   private final NodeService nodeService;

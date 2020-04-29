@@ -25,6 +25,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Date;
@@ -36,6 +37,7 @@ import org.dspace.xoai.serviceprovider.parameters.ListMetadataParameters;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.collect.Lists;
 
@@ -46,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Test the ListMetadataFormats verb of the OAI-PMH endpoint. */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @SuppressWarnings("unchecked")
 public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
 

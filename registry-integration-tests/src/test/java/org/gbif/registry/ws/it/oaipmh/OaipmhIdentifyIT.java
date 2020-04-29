@@ -20,6 +20,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
@@ -28,11 +29,13 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Test the Identify verb of the OAI-PMH endpoint. */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
