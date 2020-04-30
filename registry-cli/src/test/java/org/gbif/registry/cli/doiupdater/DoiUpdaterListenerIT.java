@@ -33,19 +33,26 @@ import org.gbif.registry.persistence.mapper.DoiMapper;
 import java.io.IOException;
 import java.net.URI;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+
 import static org.gbif.api.model.common.DoiStatus.FAILED;
 import static org.gbif.api.model.common.DoiStatus.NEW;
 import static org.gbif.api.model.common.DoiStatus.REGISTERED;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -54,7 +61,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /** Test DoiUpdateListener for different cases. */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DoiUpdaterListenerIT {
 
   private static final String PREFIX = "10.21373";
@@ -72,11 +79,17 @@ public class DoiUpdaterListenerIT {
 
   private static ObjectMapper objectMapper = new ObjectMapper();
 
-  @BeforeClass
+  @RegisterExtension
+  public static PreparedDbExtension database =
+      EmbeddedPostgresExtension.preparedDatabase(
+          LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
+
+  @BeforeAll
   public static void setup() throws Exception {
     DoiUpdaterConfiguration doiUpdaterConfiguration =
         RegistryCliUtils.loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
-    System.out.println(doiUpdaterConfiguration);
+
+    doiUpdaterConfiguration.registry = toDbConfig(database);
 
     ApplicationContext context =
         SpringContextBuilder.create().withDbConfiguration(doiUpdaterConfiguration.registry).build();

@@ -28,22 +28,22 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
 import com.google.common.collect.ImmutableMap;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DoiSynchronizerTest {
 
   @Mock private ApplicationContext contextMock;
@@ -57,17 +57,17 @@ public class DoiSynchronizerTest {
   private final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
   private final PrintStream originalOut = System.out;
 
-  @Before
+  @BeforeEach
   public void setUpStreams() {
     System.setOut(new PrintStream(outContent));
   }
 
-  @After
+  @AfterEach
   public void restoreStreams() {
     System.setOut(originalOut);
   }
 
-  @Before
+  @BeforeEach
   public void before() {
     when(contextMock.getBean(DoiMapper.class)).thenReturn(doiMapperMock);
     when(contextMock.getBean(DataCiteDoiHandlerStrategy.class))

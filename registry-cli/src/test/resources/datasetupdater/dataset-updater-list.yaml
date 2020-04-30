@@ -1,6 +1,1 @@
-db:
-  serverName: ${registry-it-spring.db.host}
-  databaseName: ${registry-it-spring.db.name}
-  user: ${registry-it-spring.db.username}
-  password: ${registry-it-spring.db.password}
 keyFilePath: ${project.basedir}/src/test/resources/datasetupdater/datasetKeys.txt

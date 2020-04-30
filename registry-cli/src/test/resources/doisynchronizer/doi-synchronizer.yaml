@@ -1,18 +1,13 @@
-apiRoot: ${api.url}
-portalurl: ${portal.url}
+apiRoot: ${registry-cli-it.api.url}
+portalurl: ${registry-cli-it.portal.url}
 doiPrefix: 10.21373
-registry:
-  serverName: ${registry-it.db.host}
-  databaseName: ${registry-it.db.name}
-  user: ${registry-it.db.username}
-  password: ${registry-it.db.password}
 datacite:
-  username: ${datacite.user}
-  password: ${datacite.password}
-  api: ${datacite.api.base.url}
+  username: ${registry-cli-it.datacite.user}
+  password: ${registry-cli-it.datacite.password}
+  api: ${registry-cli-it.datacite.api.base.url}
 messaging:
-  host: ${registry.messaging.hostname}
-  port: ${registry.messaging.port}
-  username: ${registry.messaging.username}
-  password: ${registry.messaging.password}
+  host: ${registry-cli-it.messaging.hostname}
+  port: ${registry-cli-it.messaging.port}
+  username: ${registry-cli-it.messaging.username}
+  password: ${registry-cli-it.messaging.password}
   virtualHost: /test
