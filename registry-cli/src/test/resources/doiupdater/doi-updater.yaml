@@ -1,10 +1,5 @@
 queueName: registry-doi
-registry:
-  serverName: ${registry-it-spring.db.host}
-  databaseName: ${registry-it-spring.db.name}
-  user: ${registry-it-spring.db.username}
-  password: ${registry-it-spring.db.password}
 datacite:
-  username: ${datacite.user}
-  password: ${datacite.password}
-  api: ${datacite.api.base.url}
+  username: ${registry-cli-it.datacite.user}
+  password: ${registry-cli-it.datacite.password}
+  api: ${registry-cli-it.datacite.api.base.url}

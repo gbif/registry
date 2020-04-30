@@ -15,11 +15,11 @@
  */
 package org.gbif.registry.cli.doisynchronizer;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfigurationValidator.isConfigurationValid;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DoiSynchronizerConfigurationValidatorTest {
 

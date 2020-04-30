@@ -28,15 +28,22 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /** Test Registry updates from the Directory */
 @SuppressWarnings("UnstableApiUsage")
@@ -48,32 +55,34 @@ public class DirectoryUpdateServiceIT {
   private static DirectoryUpdateConfiguration directoryUpdateConfig;
   private static Connection registryDbConnection;
 
-  @BeforeClass
-  public static void beforeClass() throws Exception {
+  @RegisterExtension
+  public static PreparedDbExtension database =
+      EmbeddedPostgresExtension.preparedDatabase(
+          LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
+
+  @BeforeAll
+  public static void beforeAll() throws Exception {
     directoryUpdateConfig =
         RegistryCliUtils.loadConfig(
             "directoryupdate/directory-update.yaml", DirectoryUpdateConfiguration.class);
-    registryDbConnection =
-        RegistryCliUtils.prepareConnection(
-            directoryUpdateConfig.db.serverName,
-            directoryUpdateConfig.db.databaseName,
-            directoryUpdateConfig.db.user,
-            directoryUpdateConfig.db.password);
+    directoryUpdateConfig.db = toDbConfig(database);
+
+    registryDbConnection = database.getTestDatabase().getConnection();
   }
 
-  @AfterClass
-  public static void afterClass() throws Exception {
+  @AfterAll
+  public static void afterAll() throws Exception {
     registryDbConnection.close();
   }
 
-  @Before
+  @BeforeEach
   public void before() throws Exception {
     String registrySql = RegistryCliUtils.getFileData("directoryupdate/prepare_registry.sql");
     PreparedStatement registryPS = registryDbConnection.prepareStatement(registrySql);
     registryPS.executeUpdate();
   }
 
-  @After
+  @AfterEach
   public void after() throws Exception {
     String registrySql = RegistryCliUtils.getFileData("directoryupdate/clean_registry.sql");
     PreparedStatement registryPS = registryDbConnection.prepareStatement(registrySql);
@@ -111,16 +120,16 @@ public class DirectoryUpdateServiceIT {
     Node ugandaNode = nodeMapper.getByCountry(Country.UGANDA);
 
     assertNotEquals(
-        "After updating from the Directory total amount of nodes must be more than initial 2",
         2,
-        registryNodes.size());
+        registryNodes.size(),
+        "After updating from the Directory total amount of nodes must be more than initial 2");
     assertEquals(
-        "The Uganda node is created with the name of the Node from the Directory",
         "GBIF Uganda",
-        ugandaNode.getTitle());
+        ugandaNode.getTitle(),
+        "The Uganda node is created with the name of the Node from the Directory");
     assertEquals(
-        "The Togo node is updated with the name of the Node from the Directory",
         "GBIF Togo",
-        togoNode.getTitle());
+        togoNode.getTitle(),
+        "The Togo node is updated with the name of the Node from the Directory");
   }
 }

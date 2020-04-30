@@ -1,6 +1,1 @@
-db:
-  serverName: ${registry-it-spring.db.host}
-  databaseName: ${registry-it-spring.db.name}
-  user: ${registry-it-spring.db.username}
-  password: ${registry-it-spring.db.password}
 key: 38f06820-08c5-42b2-94f6-47cc3e83a54a

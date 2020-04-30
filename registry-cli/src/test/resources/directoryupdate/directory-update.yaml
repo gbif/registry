@@ -1,10 +1,5 @@
-db:
-  serverName: ${registry-it.db.host}
-  databaseName: ${registry-it.db.name}
-  user: ${registry-it.db.username}
-  password: ${registry-it.db.password}
 directory:
-  wsUrl: ${directory.ws.url}
-  appKey: ${directory.app.key}
-  appSecret: ${directory.app.secret}
+  wsUrl: ${registry-cli-it.directory.ws.url}
+  appKey: ${registry-cli-it.directory.app.key}
+  appSecret: ${registry-cli-it.directory.app.secret}
 frequencyInHour: 24

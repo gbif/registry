@@ -20,46 +20,43 @@ import org.gbif.api.vocabulary.License;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.UUID;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
+import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
 import static org.gbif.registry.cli.util.RegistryCliUtils.loadConfig;
-import static org.gbif.registry.cli.util.RegistryCliUtils.prepareConnection;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@RunWith(Parameterized.class)
 public class DatasetUpdaterCommandIT {
 
   private static final UUID DATASET_KEY = UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a");
 
-  private DatasetUpdaterConfiguration cfg;
+  @RegisterExtension
+  public static PreparedDbExtension database =
+      EmbeddedPostgresExtension.preparedDatabase(
+          LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
 
-  @Parameters
-  public static Collection<Object[]> data() {
-    return Arrays.asList(
-        new Object[][] {
-          {"datasetupdater/dataset-updater.yaml"}, {"datasetupdater/dataset-updater-list.yaml"}
-        });
+  private DatasetUpdaterConfiguration getConfig(String configFile) {
+    DatasetUpdaterConfiguration cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
+    cfg.db = toDbConfig(database);
+    return cfg;
   }
 
-  public DatasetUpdaterCommandIT(String configFile) {
-    cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
-  }
-
-  @Before
+  @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con =
-        prepareConnection(cfg.db.serverName, cfg.db.databaseName, cfg.db.user, cfg.db.password);
+    Connection con = database.getTestDatabase().getConnection();
     String sql = getFileData("datasetupdater/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -67,10 +64,9 @@ public class DatasetUpdaterCommandIT {
     con.close();
   }
 
-  @After
+  @AfterEach
   public void after() throws Exception {
-    Connection con =
-        prepareConnection(cfg.db.serverName, cfg.db.databaseName, cfg.db.user, cfg.db.password);
+    Connection con = database.getTestDatabase().getConnection();
     String sql = getFileData("datasetupdater/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -82,9 +78,11 @@ public class DatasetUpdaterCommandIT {
    * Test checks single dataset/list of datasets reinterpreted from preferred metadata document by
    * ensuring license was updated properly.
    */
-  @Test
-  public void testUpdate() {
-    DatasetUpdaterCommand command = new DatasetUpdaterCommand(cfg);
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"datasetupdater/dataset-updater.yaml", "datasetupdater/dataset-updater-list.yaml"})
+  public void testUpdate(String configFile) {
+    DatasetUpdaterCommand command = new DatasetUpdaterCommand(getConfig(configFile));
     command.doRun();
     Dataset dataset = command.getDatasetUpdater().getDatasetResource().get(DATASET_KEY);
     assertNotNull(dataset);
