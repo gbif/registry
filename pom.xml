@@ -692,16 +692,6 @@
         <artifactId>embedded-database-spring-test</artifactId>
         <version>${embedded-database-spring-test.version}</version>
         <scope>test</scope>
-        <exclusions>
-          <exclusion>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.flywaydb.flyway-test-extensions</groupId>
-            <artifactId>flyway-spring-test</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
