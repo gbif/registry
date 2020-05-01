@@ -54,6 +54,7 @@ import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -81,6 +82,7 @@ import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @Validated
+@Primary
 @RestController
 @RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OrganizationResource extends BaseNetworkEntityResource<Organization>

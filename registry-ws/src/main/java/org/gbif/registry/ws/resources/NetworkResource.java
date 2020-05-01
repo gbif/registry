@@ -33,6 +33,7 @@ import java.util.UUID;
 
 import javax.validation.Valid;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
@@ -48,6 +49,7 @@ import com.google.common.base.Strings;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @Validated
+@Primary
 @RestController
 @RequestMapping(value = "network", produces = MediaType.APPLICATION_JSON_VALUE)
 public class NetworkResource extends BaseNetworkEntityResource<Network> implements NetworkService {
