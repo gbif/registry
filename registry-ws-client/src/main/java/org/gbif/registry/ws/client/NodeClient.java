@@ -28,6 +28,7 @@ import org.gbif.api.vocabulary.Country;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+@FeignClient(name = "nodeClient", primary = false)
 @RequestMapping("node")
 public interface NodeClient extends NetworkEntityClient<Node>, NodeService {
 

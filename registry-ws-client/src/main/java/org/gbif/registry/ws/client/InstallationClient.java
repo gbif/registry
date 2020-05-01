@@ -28,6 +28,7 @@ import org.gbif.api.vocabulary.InstallationType;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+@FeignClient(name = "installationClient", primary = false)
 @RequestMapping("installation")
 public interface InstallationClient
     extends NetworkEntityClient<Installation>, InstallationService, MetasyncHistoryService {
