@@ -23,6 +23,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
@@ -32,6 +33,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -53,12 +55,13 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
 
   @Autowired
   public OrganizationIT(
-      OrganizationService service,
-      NodeService nodeService,
+      @Qualifier("organizationResource") OrganizationService service,
+      @Qualifier("organizationClient") OrganizationClient client,
+      @Qualifier("nodeResource") NodeService nodeService,
       @Nullable SimplePrincipalProvider pp,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
-    super(service, pp, testDataFactory, esServer);
+    super(service, client, pp, testDataFactory, esServer);
     this.service = service;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;

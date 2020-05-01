@@ -25,6 +25,7 @@ import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPers
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
+import org.gbif.ws.client.ClientContract;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -37,23 +38,35 @@ import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.openfeign.FeignAutoConfiguration;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.ribbon.FeignRibbonClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.zaxxer.hikari.HikariDataSource;
+
+import feign.Contract;
 
 @TestConfiguration
 @SpringBootApplication(exclude = RabbitAutoConfiguration.class)
@@ -70,6 +83,7 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.search.dataset.service",
       "org.gbif.registry.search",
       "org.gbif.registry.search.test",
+      "org.gbif.registry.ws.client",
       "org.gbif.registry.ws.advice",
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
@@ -107,6 +121,13 @@ import com.zaxxer.hikari.HikariDataSource;
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
+@EnableFeignClients(basePackages = "org.gbif.registry.ws.client")
+@ImportAutoConfiguration({
+  HttpMessageConvertersAutoConfiguration.class,
+  RibbonAutoConfiguration.class,
+  FeignRibbonClientAutoConfiguration.class,
+  FeignAutoConfiguration.class
+})
 @ActiveProfiles("test")
 public class RegistryIntegrationTestsConfiguration {
 
@@ -158,6 +179,30 @@ public class RegistryIntegrationTestsConfiguration {
     simplePrincipalProvider.setPrincipal("WS TEST");
     setSecurityPrincipal(simplePrincipalProvider, UserRole.REGISTRY_ADMIN);
     return simplePrincipalProvider;
+  }
+
+  @Bean
+  public Contract clientContract() {
+    return new ClientContract();
+  }
+
+  @Bean
+  public WebMvcRegistrations feignWebRegistrations() {
+    return new WebMvcRegistrations() {
+      @Override
+      public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
+        return new FeignFilterRequestMappingHandlerMapping();
+      }
+    };
+  }
+
+  private static class FeignFilterRequestMappingHandlerMapping
+      extends RequestMappingHandlerMapping {
+    @Override
+    protected boolean isHandler(Class<?> beanType) {
+      return super.isHandler(beanType)
+          && (AnnotationUtils.findAnnotation(beanType, FeignClient.class) == null);
+    }
   }
 
   public static void setSecurityPrincipal(
