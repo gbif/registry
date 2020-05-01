@@ -108,31 +108,33 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
           bulkRequest.add(toIndexRequest(dataset));
           updatesCount.incrementAndGet();
         });
-    pendingUpdates.getAndAdd(updatesCount.get());
-    try {
-      restHighLevelClient.bulkAsync(
-          bulkRequest,
-          RequestOptions.DEFAULT,
-          new ActionListener<BulkResponse>() {
-            @Override
-            public void onResponse(BulkResponse bulkItemResponses) {
-              if (bulkItemResponses.hasFailures()) {
-                log.error(
-                    "Eror indexing datasets indexed {}", bulkItemResponses.buildFailureMessage());
-              } else {
-                log.info("Datasets indexed");
+    if (updatesCount.get() > 0) {
+      pendingUpdates.getAndAdd(updatesCount.get());
+      try {
+        restHighLevelClient.bulkAsync(
+            bulkRequest,
+            RequestOptions.DEFAULT,
+            new ActionListener<BulkResponse>() {
+              @Override
+              public void onResponse(BulkResponse bulkItemResponses) {
+                if (bulkItemResponses.hasFailures()) {
+                  log.error(
+                      "Eror indexing datasets indexed {}", bulkItemResponses.buildFailureMessage());
+                } else {
+                  log.info("Datasets indexed");
+                }
+                pendingUpdates.addAndGet(-updatesCount.get());
               }
-              pendingUpdates.addAndGet(-updatesCount.get());
-            }
 
-            @Override
-            public void onFailure(Exception e) {
-              log.error("Error indexing datasets", e);
-            }
-          });
-    } catch (Exception ex) {
-      log.error("Error indexing datasets", ex);
-      pendingUpdates.addAndGet(-updatesCount.get());
+              @Override
+              public void onFailure(Exception e) {
+                log.error("Error indexing datasets", e);
+              }
+            });
+      } catch (Exception ex) {
+        log.error("Error indexing datasets", ex);
+        pendingUpdates.addAndGet(-updatesCount.get());
+      }
     }
   }
 
