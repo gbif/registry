@@ -26,6 +26,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
@@ -35,6 +36,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -57,13 +59,14 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
 
   @Autowired
   public InstallationIT(
-      InstallationService service,
-      OrganizationService organizationService,
-      NodeService nodeService,
+      @Qualifier("installationResource") InstallationService service,
+      InstallationClient client,
+      @Qualifier("organizationResource") OrganizationService organizationService,
+      @Qualifier("nodeResource") NodeService nodeService,
       @Nullable SimplePrincipalProvider pp,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
-    super(service, pp, testDataFactory, esServer);
+    super(service, client, pp, testDataFactory, esServer);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;

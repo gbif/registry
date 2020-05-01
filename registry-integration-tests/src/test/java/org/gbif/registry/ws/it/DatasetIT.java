@@ -44,6 +44,7 @@ import org.gbif.registry.search.test.ElasticsearchInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.Datasets;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
@@ -111,16 +112,17 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   @Autowired
   public DatasetIT(
-      DatasetService service,
+      @Qualifier("datasetResource") DatasetService service,
+      @Qualifier("datasetClient") DatasetClient client,
       @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
-      OrganizationService organizationService,
-      NodeService nodeService,
+      @Qualifier("organizationResource") OrganizationService organizationService,
+      @Qualifier("nodeResource") NodeService nodeService,
       InstallationService installationService,
       DatasetRealtimeIndexer datasetRealtimeIndexer,
       @Nullable SimplePrincipalProvider pp,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
-    super(service, pp, testDataFactory, esServer);
+    super(service, client, pp, testDataFactory, esServer);
     this.service = service;
     this.searchService = searchService;
     this.organizationService = organizationService;

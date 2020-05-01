@@ -33,6 +33,7 @@ import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.List;
@@ -42,7 +43,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -64,6 +68,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NodeIT extends NetworkEntityIT<Node> {
 
   private final NodeService nodeService;
+  private final NodeClient nodeClient;
   private final OrganizationService organizationService;
   private final InstallationService installationService;
   private final DatasetService datasetService;
@@ -80,15 +85,17 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @Autowired
   public NodeIT(
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
+      @Qualifier("nodeResource") NodeService nodeService,
+      NodeClient nodeClient,
+      @Qualifier("organizationResource") OrganizationService organizationService,
+      @Qualifier("installationResource") InstallationService installationService,
+      @Qualifier("datasetResource") DatasetService datasetService,
       @Nullable SimplePrincipalProvider pp,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
-    super(nodeService, pp, testDataFactory, esServer);
+    super(nodeService, nodeClient, pp, testDataFactory, esServer);
     this.nodeService = nodeService;
+    this.nodeClient = nodeClient;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
@@ -163,10 +170,12 @@ public class NodeIT extends NetworkEntityIT<Node> {
     }
   }
 
-  @Test
-  public void testActiveCountries() {
+  @ParameterizedTest
+  @EnumSource(TestType.class)
+  public void testActiveCountries(TestType param) {
+    NodeService service = (NodeService) getService(param);
     initVotingCountryNodes();
-    List<Country> countries = nodeService.listActiveCountries();
+    List<Country> countries = service.listActiveCountries();
     assertEquals(TEST_COUNTRIES.size() + 1, countries.size());
     for (Country c : countries) {
       assertTrue(
@@ -178,7 +187,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     insertTestNode(Country.BOTSWANA, ParticipationStatus.OBSERVER, NodeType.COUNTRY);
     insertTestNode(Country.HONG_KONG, ParticipationStatus.FORMER, NodeType.COUNTRY);
 
-    List<Country> countries2 = nodeService.listActiveCountries();
+    List<Country> countries2 = service.listActiveCountries();
     assertEquals(countries, countries2);
   }
 

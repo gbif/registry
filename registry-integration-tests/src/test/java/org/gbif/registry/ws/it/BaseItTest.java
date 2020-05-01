@@ -116,4 +116,9 @@ public class BaseItTest {
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
   }
+
+  public enum TestType {
+    RESOURCE,
+    CLIENT
+  }
 }

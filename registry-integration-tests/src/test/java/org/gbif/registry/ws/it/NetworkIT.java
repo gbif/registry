@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Network;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
@@ -26,6 +27,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -42,11 +44,12 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
   @Autowired
   public NetworkIT(
-      NetworkService service,
+      @Qualifier("networkResource") NetworkService service,
+      NetworkClient client,
       @Nullable SimplePrincipalProvider pp,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
-    super(service, pp, testDataFactory, esServer);
+    super(service, client, pp, testDataFactory, esServer);
     this.testDataFactory = testDataFactory;
   }
 

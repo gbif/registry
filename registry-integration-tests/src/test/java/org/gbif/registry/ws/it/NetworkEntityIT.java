@@ -83,6 +83,7 @@ public abstract class NetworkEntityIT<
     extends BaseItTest {
 
   private final NetworkEntityService<T> service; // under test
+  private final NetworkEntityService<T> client; // under test
 
   private final ContactService contactService;
   private final EndpointService endpointService;
@@ -94,11 +95,13 @@ public abstract class NetworkEntityIT<
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,
+      NetworkEntityService<T> client,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
     super(simplePrincipalProvider, esServer);
     this.service = service;
+    this.client = client;
     // not so nice, but we know what we deal with in the tests
     // and this bundles most basic tests into one base test class without copy paste redundancy
     contactService = service;
@@ -112,6 +115,17 @@ public abstract class NetworkEntityIT<
 
   public TestDataFactory getTestDataFactory() {
     return testDataFactory;
+  }
+
+  public NetworkEntityService<T> getService(TestType param) {
+    switch (param) {
+      case CLIENT:
+        return client;
+      case RESOURCE:
+        return service;
+      default:
+        throw new IllegalStateException("Must be resource or client");
+    }
   }
 
   @Test
