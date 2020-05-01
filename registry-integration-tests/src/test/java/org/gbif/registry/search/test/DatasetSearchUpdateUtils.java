@@ -30,7 +30,7 @@ public class DatasetSearchUpdateUtils {
 
   // how often to poll and wait for SOLR to update
   private static final int UPDATE_TIMEOUT_SECS = 10;
-  private static final int UPDATE_POLL_MSECS = 10;
+  private static final int UPDATE_POLL_MSECS = 20;
   private static final Logger LOG = LoggerFactory.getLogger(DatasetSearchUpdateUtils.class);
 
   /** Waits for ElasticSearch update threads to finish. */
@@ -43,7 +43,7 @@ public class DatasetSearchUpdateUtils {
         Thread.sleep(UPDATE_POLL_MSECS);
         if (stopWatch.elapsed(TimeUnit.SECONDS) > UPDATE_TIMEOUT_SECS) {
           throw new IllegalStateException(
-              "Failing test due to unreasonable timeout on SOLR update");
+              "Failing test due to unreasonable timeout on ElasticSearch update");
         }
       }
       esServer.refresh();
