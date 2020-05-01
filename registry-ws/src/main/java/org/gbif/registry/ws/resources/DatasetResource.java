@@ -92,6 +92,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -119,6 +120,7 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @Validated
+@Primary
 @RestController
 @RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetResource extends BaseNetworkEntityResource<Dataset>

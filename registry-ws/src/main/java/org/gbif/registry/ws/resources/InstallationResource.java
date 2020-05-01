@@ -54,6 +54,7 @@ import org.codehaus.jettison.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
@@ -76,6 +77,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @Validated
+@Primary
 @RestController
 @RequestMapping(value = "installation", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstallationResource extends BaseNetworkEntityResource<Installation>
