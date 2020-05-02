@@ -121,3 +121,9 @@ spring:
   #flyway
   flyway:
     enabled: false
+
+server:
+  port: 8080
+registry:
+  ws:
+    url: http://localhost:8080

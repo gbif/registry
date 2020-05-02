@@ -102,33 +102,36 @@ public class NodeIT extends NetworkEntityIT<Node> {
     this.testDataFactory = testDataFactory;
   }
 
-  // @Ignore("Problems with IMS connection. See issue: http://dev.gbif.org/issues/browse/REG-407")
-  @Test
-  public void testGetByCountry() {
-    initVotingCountryNodes();
-    insertTestNode(Country.TAIWAN, ParticipationStatus.ASSOCIATE, NodeType.OTHER);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testGetByCountry(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
+    initVotingCountryNodes(serviceType);
+    insertTestNode(Country.TAIWAN, ParticipationStatus.ASSOCIATE, NodeType.OTHER, serviceType);
 
-    Node n = nodeService.getByCountry(Country.ANGOLA);
+    Node n = service.getByCountry(Country.ANGOLA);
     assertNull(n);
 
     for (Country c : TEST_COUNTRIES.keySet()) {
-      n = nodeService.getByCountry(c);
+      n = service.getByCountry(c);
       assertEquals(c, n.getCountry());
     }
 
     // test taiwan hack
-    n = nodeService.getByCountry(Country.TAIWAN);
+    n = service.getByCountry(Country.TAIWAN);
     assertEquals(Country.TAIWAN, n.getCountry());
   }
 
-  private void initVotingCountryNodes() {
+  private void initVotingCountryNodes(ServiceType serviceType) {
     count = 0;
     for (Country c : TEST_COUNTRIES.keySet()) {
-      insertTestNode(c, ParticipationStatus.VOTING, NodeType.COUNTRY);
+      insertTestNode(c, ParticipationStatus.VOTING, NodeType.COUNTRY, serviceType);
     }
   }
 
-  private void insertTestNode(Country c, ParticipationStatus status, NodeType nodeType) {
+  private void insertTestNode(
+      Country c, ParticipationStatus status, NodeType nodeType, ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
     Node n = newEntity();
     n.setCountry(c);
     n.setTitle("GBIF Node " + c.getTitle());
@@ -144,12 +147,15 @@ public class NodeIT extends NetworkEntityIT<Node> {
       id.setType(IdentifierType.GBIF_PARTICIPANT);
       id.setIdentifier(TEST_COUNTRIES.get(c).toString());
       id.setCreatedBy(getSimplePrincipalProvider().get().getName());
-      nodeService.addIdentifier(n.getKey(), id);
+      service.addIdentifier(n.getKey(), id);
     }
   }
 
-  @Test
-  public void testAffiliateNode() {
+  // TODO: 02/05/2020 create?
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testAffiliateNode(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
     Node n = newEntity();
     n.setTitle("GBIF Affiliate Node");
     n.setType(NodeType.OTHER);
@@ -159,11 +165,12 @@ public class NodeIT extends NetworkEntityIT<Node> {
     create(n, 1);
   }
 
-  // @Ignore("Problems with IMS connection. See issue: http://dev.gbif.org/issues/browse/REG-407")
-  @Test
-  public void testCountries() {
-    initVotingCountryNodes();
-    List<Country> countries = nodeService.listNodeCountries();
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCountries(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
+    initVotingCountryNodes(serviceType);
+    List<Country> countries = service.listNodeCountries();
     assertEquals(TEST_COUNTRIES.size(), countries.size());
     for (Country c : countries) {
       assertTrue(TEST_COUNTRIES.containsKey(c), "Unexpected node country" + c);
@@ -171,10 +178,10 @@ public class NodeIT extends NetworkEntityIT<Node> {
   }
 
   @ParameterizedTest
-  @EnumSource(TestType.class)
-  public void testActiveCountries(TestType param) {
-    NodeService service = (NodeService) getService(param);
-    initVotingCountryNodes();
+  @EnumSource(ServiceType.class)
+  public void testActiveCountries(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
+    initVotingCountryNodes(serviceType);
     List<Country> countries = service.listActiveCountries();
     assertEquals(TEST_COUNTRIES.size() + 1, countries.size());
     for (Country c : countries) {
@@ -184,15 +191,17 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertTrue(countries.contains(Country.TAIWAN), "Taiwan missing");
 
     // insert extra observer nodes and make sure we get the same list
-    insertTestNode(Country.BOTSWANA, ParticipationStatus.OBSERVER, NodeType.COUNTRY);
-    insertTestNode(Country.HONG_KONG, ParticipationStatus.FORMER, NodeType.COUNTRY);
+    insertTestNode(Country.BOTSWANA, ParticipationStatus.OBSERVER, NodeType.COUNTRY, serviceType);
+    insertTestNode(Country.HONG_KONG, ParticipationStatus.FORMER, NodeType.COUNTRY, serviceType);
 
     List<Country> countries2 = service.listActiveCountries();
     assertEquals(countries, countries2);
   }
 
-  @Test
-  public void testDatasets() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasets(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
     // endorsing node for the organization
     Node node = create(newEntity(), 1);
     // publishing organization (required field)
@@ -210,7 +219,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     UUID d2Key = datasetService.create(d2);
 
     // test node service
-    PagingResponse<Dataset> resp = nodeService.endorsedDatasets(node.getKey(), null);
+    PagingResponse<Dataset> resp = service.endorsedDatasets(node.getKey(), null);
     assertEquals(2, resp.getResults().size());
     assertEquals(Long.valueOf(2), resp.getCount(), "Paging is not returning the correct count");
 
@@ -218,14 +227,15 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertEquals(d2Key, resp.getResults().get(0).getKey());
   }
 
-  // @Ignore("Problems with IMS connection. See issue: http://dev.gbif.org/issues/browse/REG-407")
   /**
    * A test that requires a configured IMS with real spanish data. Jenkins is configured for this,
    * so we activate this test to make sure IMS connections are working!
    */
-  @Test
-  public void testIms() {
-    initVotingCountryNodes();
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testIms(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
+    initVotingCountryNodes(serviceType);
     Node es = nodeService.getByCountry(Country.SPAIN);
     assertEquals((Integer) 2001, es.getParticipantSince());
     assertEquals(ParticipationStatus.VOTING, es.getParticipationStatus());
@@ -237,16 +247,18 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertEquals("Real Jardín Botánico - CSIC", es.getOrganization());
     assertTrue(es.getContacts().size() > 5);
 
-    Node notInIms = nodeService.getByCountry(Country.AFGHANISTAN);
+    Node notInIms = service.getByCountry(Country.AFGHANISTAN);
     assertNotNull(notInIms);
   }
 
+  // TODO: 02/05/2020 client must throw UnsupportedOperationException
   /** Node contacts are IMS managed and the service throws exceptions */
   @Override
   @Test
   public void testContacts() {
+    NodeService service = (NodeService) getService(ServiceType.CLIENT);
     Node n = create(newEntity(), 1);
-    assertThrows(UnsupportedOperationException.class, () -> nodeService.listContacts(n.getKey()));
+    assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
 
   /** Node contacts are IMS managed and the service throws exceptions */
@@ -289,15 +301,15 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @Test
   public void testSuggest() {
+    NodeClient service = nodeClient;
     Node node1 = testDataFactory.newNode();
     node1.setTitle("The Node");
-    UUID key1 = nodeService.create(node1);
+    service.create(node1);
 
     Node node2 = testDataFactory.newNode();
     node2.setTitle("The Great Node");
-    UUID key2 = nodeService.create(node2);
+    service.create(node2);
 
-    NodeService service = (NodeService) this.getService();
     assertEquals(1, service.suggest("Great").size(), "Should find only The Great Node");
     assertEquals(2, service.suggest("the").size(), "Should find both nodes");
   }
