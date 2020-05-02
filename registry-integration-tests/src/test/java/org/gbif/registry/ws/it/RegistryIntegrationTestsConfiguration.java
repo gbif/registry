@@ -26,7 +26,14 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
 import org.gbif.ws.client.ClientContract;
+import org.gbif.ws.client.ClientDecoder;
+import org.gbif.ws.client.ClientEncoder;
+import org.gbif.ws.client.ClientErrorDecoder;
+import org.gbif.ws.client.GbifAuthRequestInterceptor;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
+import org.gbif.ws.security.Md5EncodeService;
+import org.gbif.ws.security.SigningService;
 
 import java.util.Collections;
 import java.util.Date;
@@ -37,6 +44,8 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -64,9 +73,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
 
 import feign.Contract;
+import feign.RequestInterceptor;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
 
 @TestConfiguration
 @SpringBootApplication(exclude = RabbitAutoConfiguration.class)
@@ -184,6 +198,31 @@ public class RegistryIntegrationTestsConfiguration {
   @Bean
   public Contract clientContract() {
     return new ClientContract();
+  }
+
+  @Bean
+  public Decoder clientDecoder(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
+    return new ClientDecoder(objectMapper);
+  }
+
+  @Bean
+  public Encoder clientEncoder(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
+    return new ClientEncoder(objectMapper);
+  }
+
+  @Bean
+  public ErrorDecoder clientErrorDecoder() {
+    return new ClientErrorDecoder();
+  }
+
+  @Bean
+  public RequestInterceptor requestInterceptor(
+      @Value("${application.key}") String appKey,
+      @Qualifier("secretKeySigningService") SigningService signingService,
+      KeyStore keyStore,
+      Md5EncodeService encodeService) {
+    return new GbifAuthRequestInterceptor(
+        appKey, appKey, keyStore.getPrivateKey(appKey), signingService, encodeService);
   }
 
   @Bean
