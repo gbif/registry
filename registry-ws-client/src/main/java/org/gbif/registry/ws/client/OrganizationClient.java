@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@FeignClient(name = "organizationClient", primary = false)
+@FeignClient(name = "organizationClient", url = "${registry.ws.url}", primary = false)
 @RequestMapping("organization")
 public interface OrganizationClient extends OrganizationService {
 
