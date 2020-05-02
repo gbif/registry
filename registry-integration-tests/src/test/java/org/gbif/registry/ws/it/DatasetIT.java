@@ -96,7 +96,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   private final DatasetService service;

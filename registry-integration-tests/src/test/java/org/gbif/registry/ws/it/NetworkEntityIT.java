@@ -117,7 +117,7 @@ public abstract class NetworkEntityIT<
     return testDataFactory;
   }
 
-  public NetworkEntityService<T> getService(TestType param) {
+  public NetworkEntityService<T> getService(ServiceType param) {
     switch (param) {
       case CLIENT:
         return client;
