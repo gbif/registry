@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@FeignClient(name = "networkClient", primary = false)
+@FeignClient(name = "networkClient", url = "${registry.ws.url}", primary = false)
 @RequestMapping("network")
 public interface NetworkClient extends NetworkEntityClient<Network>, NetworkService {
 

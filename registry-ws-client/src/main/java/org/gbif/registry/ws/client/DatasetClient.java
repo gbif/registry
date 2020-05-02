@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@FeignClient(name = "datasetClient", primary = false)
+@FeignClient(name = "datasetClient", url = "${registry.ws.url}", primary = false)
 public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetService {
 
   @RequestMapping(
