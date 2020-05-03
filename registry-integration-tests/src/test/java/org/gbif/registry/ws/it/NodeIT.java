@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.it;
 
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -218,8 +219,9 @@ public class NodeIT extends NetworkEntityIT<Node> {
     Dataset d2 = testDataFactory.newDataset(organizationKey, installationKey);
     UUID d2Key = datasetService.create(d2);
 
+    // TODO: 03/05/2020 fix null pageable query params
     // test node service
-    PagingResponse<Dataset> resp = service.endorsedDatasets(node.getKey(), null);
+    PagingResponse<Dataset> resp = service.endorsedDatasets(node.getKey(), new PagingRequest());
     assertEquals(2, resp.getResults().size());
     assertEquals(Long.valueOf(2), resp.getCount(), "Paging is not returning the correct count");
 
@@ -256,7 +258,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @Override
   @Test
   public void testContacts() {
-    NodeService service = (NodeService) getService(ServiceType.CLIENT);
+    NodeService service = (NodeService) getService(ServiceType.RESOURCE);
     Node n = create(newEntity(), 1);
     assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
@@ -290,7 +292,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   }
 
   @Override
-  protected Node duplicateForCreateAsEditorTest(Node entity) throws Exception {
+  protected Node duplicateForCreateAsEditorTest(Node entity) {
     throw new UnsupportedOperationException();
   }
 
@@ -301,7 +303,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @Test
   public void testSuggest() {
-    NodeClient service = nodeClient;
+    NodeService service = (NodeService) getService(ServiceType.CLIENT);
     Node node1 = testDataFactory.newNode();
     node1.setTitle("The Node");
     service.create(node1);

@@ -107,6 +107,13 @@ public class DatabaseInitializer implements BeforeEachCallback {
       connection.prepareStatement("DELETE FROM pipeline_step").executeUpdate();
       connection.prepareStatement("DELETE FROM pipeline_process").executeUpdate();
       connection.prepareStatement("DELETE FROM pipeline_execution").executeUpdate();
+
+      connection
+          .prepareStatement(
+              "INSERT INTO public.\"user\" (key, username, email, password, first_name, last_name, roles, settings, system_settings, created, last_login, deleted, challenge_code_key) "
+                  + "VALUES (-1, 'gbif.app.it', 'gbif.app.it@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', null, null, '{GRSCICOLL_ADMIN,REGISTRY_ADMIN}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null)")
+          .executeUpdate();
+
       connection.commit();
 
       /*
