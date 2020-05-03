@@ -29,6 +29,7 @@ import org.gbif.ws.client.ClientContract;
 import org.gbif.ws.client.ClientDecoder;
 import org.gbif.ws.client.ClientEncoder;
 import org.gbif.ws.client.ClientErrorDecoder;
+import org.gbif.ws.client.ClientInvocationHandlerFactory;
 import org.gbif.ws.client.GbifAuthRequestInterceptor;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
@@ -50,6 +51,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
@@ -65,6 +67,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -77,7 +80,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
 
 import feign.Contract;
+import feign.Feign;
 import feign.RequestInterceptor;
+import feign.Retryer;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
@@ -223,6 +228,20 @@ public class RegistryIntegrationTestsConfiguration {
       Md5EncodeService encodeService) {
     return new GbifAuthRequestInterceptor(
         appKey, appKey, keyStore.getPrivateKey(appKey), signingService, encodeService);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean
+  public Retryer feignRetryer() {
+    return Retryer.NEVER_RETRY;
+  }
+
+  @Bean
+  @Scope("prototype")
+  public Feign.Builder feignBuilder(Retryer retryer) {
+    return Feign.builder()
+        .retryer(retryer)
+        .invocationHandlerFactory(new ClientInvocationHandlerFactory());
   }
 
   @Bean
