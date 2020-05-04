@@ -25,16 +25,7 @@ import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPers
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
-import org.gbif.ws.client.ClientContract;
-import org.gbif.ws.client.ClientDecoder;
-import org.gbif.ws.client.ClientEncoder;
-import org.gbif.ws.client.ClientErrorDecoder;
-import org.gbif.ws.client.ClientInvocationHandlerFactory;
-import org.gbif.ws.client.GbifAuthRequestInterceptor;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.KeyStore;
-import org.gbif.ws.security.Md5EncodeService;
-import org.gbif.ws.security.SigningService;
 
 import java.util.Collections;
 import java.util.Date;
@@ -45,20 +36,16 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
-import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.ribbon.FeignRibbonClientAutoConfiguration;
@@ -67,7 +54,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -76,16 +62,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zaxxer.hikari.HikariDataSource;
-
-import feign.Contract;
-import feign.Feign;
-import feign.RequestInterceptor;
-import feign.Retryer;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
 
 @TestConfiguration
 @SpringBootApplication(exclude = RabbitAutoConfiguration.class)
@@ -140,7 +117,6 @@ import feign.codec.ErrorDecoder;
           })
     })
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
-@EnableFeignClients(basePackages = "org.gbif.registry.ws.client")
 @ImportAutoConfiguration({
   HttpMessageConvertersAutoConfiguration.class,
   RibbonAutoConfiguration.class,
@@ -198,50 +174,6 @@ public class RegistryIntegrationTestsConfiguration {
     simplePrincipalProvider.setPrincipal("WS TEST");
     setSecurityPrincipal(simplePrincipalProvider, UserRole.REGISTRY_ADMIN);
     return simplePrincipalProvider;
-  }
-
-  @Bean
-  public Contract clientContract() {
-    return new ClientContract();
-  }
-
-  @Bean
-  public Decoder clientDecoder(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
-    return new ClientDecoder(objectMapper);
-  }
-
-  @Bean
-  public Encoder clientEncoder(@Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
-    return new ClientEncoder(objectMapper);
-  }
-
-  @Bean
-  public ErrorDecoder clientErrorDecoder() {
-    return new ClientErrorDecoder();
-  }
-
-  @Bean
-  public RequestInterceptor requestInterceptor(
-      @Value("${application.key}") String appKey,
-      @Qualifier("secretKeySigningService") SigningService signingService,
-      KeyStore keyStore,
-      Md5EncodeService encodeService) {
-    return new GbifAuthRequestInterceptor(
-        appKey, appKey, keyStore.getPrivateKey(appKey), signingService, encodeService);
-  }
-
-  @Bean
-  @ConditionalOnMissingBean
-  public Retryer feignRetryer() {
-    return Retryer.NEVER_RETRY;
-  }
-
-  @Bean
-  @Scope("prototype")
-  public Feign.Builder feignBuilder(Retryer retryer) {
-    return Feign.builder()
-        .retryer(retryer)
-        .invocationHandlerFactory(new ClientInvocationHandlerFactory());
   }
 
   @Bean
