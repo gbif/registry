@@ -77,6 +77,14 @@ public class Organizations extends JsonBackedData<Organization> {
     return organizationService.get(organizationKey);
   }
 
+  public Organization newPersistedInstance(UUID nodeKey) {
+    Organization organization = newInstance(nodeKey);
+    // password was not included in organization.json, so set it here
+    organization.setPassword("password");
+    UUID organizationKey = organizationService.create(organization);
+    return organizationService.get(organizationKey);
+  }
+
   /**
    * Populate credentials used in ws requests.
    *

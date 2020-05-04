@@ -179,6 +179,40 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  public void testEndorsements(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
+    Node node = testDataFactory.newNode();
+    service.create(node);
+    node = service.list(new PagingRequest()).getResults().get(0);
+
+    assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
+    assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 0);
+
+    Organization o = testDataFactory.newPersistedOrganization(node.getKey());
+    assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
+    assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 1);
+    assertResultsOfSize(service.pendingEndorsements(node.getKey(), new PagingRequest()), 1);
+    assertEquals(
+        Long.valueOf(1),
+        service.pendingEndorsements(new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
+
+    o.setEndorsementApproved(true);
+    organizationService.update(o);
+    assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 0);
+    assertEquals(
+        Long.valueOf(0),
+        service.pendingEndorsements(new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
+    assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 1);
+    assertEquals(
+        Long.valueOf(1),
+        service.endorsedOrganizations(node.getKey(), new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
   public void testCountries(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
     initVotingCountryNodes(serviceType);
@@ -312,9 +346,10 @@ public class NodeIT extends NetworkEntityIT<Node> {
     return null;
   }
 
-  @Test
-  public void testSuggest() {
-    NodeService service = (NodeService) getService(ServiceType.CLIENT);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSuggest(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
     Node node1 = testDataFactory.newNode();
     node1.setTitle("The Node");
     service.create(node1);

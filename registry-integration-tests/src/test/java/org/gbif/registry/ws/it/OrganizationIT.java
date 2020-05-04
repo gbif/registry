@@ -16,6 +16,8 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
@@ -33,7 +35,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,41 +100,6 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     assertEquals(2, service.suggest("Tim").size(), "Should find both organizations");
   }
 
-  // TODO: 04/05/2020 test client
-  @Test
-  public void testEndorsements() {
-    Node node = testDataFactory.newNode();
-    nodeService.create(node);
-    node = nodeService.list(new PagingRequest()).getResults().get(0);
-
-    assertResultsOfSize(nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
-    assertResultsOfSize(nodeService.pendingEndorsements(new PagingRequest()), 0);
-
-    Organization o = testDataFactory.newOrganization(node.getKey());
-    UUID key = this.getService().create(o);
-    o = getService().get(key);
-    assertResultsOfSize(nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
-    assertResultsOfSize(nodeService.pendingEndorsements(new PagingRequest()), 1);
-    assertResultsOfSize(nodeService.pendingEndorsements(node.getKey(), new PagingRequest()), 1);
-    assertEquals(
-        Long.valueOf(1),
-        nodeService.pendingEndorsements(new PagingRequest()).getCount(),
-        "Paging is not returning the correct count");
-
-    o.setEndorsementApproved(true);
-    this.getService().update(o);
-    assertResultsOfSize(nodeService.pendingEndorsements(new PagingRequest()), 0);
-    assertEquals(
-        Long.valueOf(0),
-        nodeService.pendingEndorsements(new PagingRequest()).getCount(),
-        "Paging is not returning the correct count");
-    assertResultsOfSize(nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()), 1);
-    assertEquals(
-        Long.valueOf(1),
-        nodeService.endorsedOrganizations(node.getKey(), new PagingRequest()).getCount(),
-        "Paging is not returning the correct count");
-  }
-
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testByCountry(ServiceType serviceType) {
@@ -159,6 +125,22 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
         "Paging is not returning the correct count");
     assertResultsOfSize(service.listByCountry(Country.FRANCE, new PagingRequest()), 2);
     assertResultsOfSize(service.listByCountry(Country.GERMANY, new PagingRequest()), 0);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testHostedByInstallationList(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
+    Installation installation = testDataFactory.newPersistedInstallation();
+    Organization organization = service.get(installation.getOrganizationKey());
+    Node node = nodeService.get(organization.getEndorsingNodeKey());
+
+    PagingResponse<Installation> resp =
+        nodeService.installations(node.getKey(), new PagingRequest());
+    assertResultsOfSize(resp, 1);
+
+    resp = service.installations(organization.getKey(), new PagingRequest());
+    assertResultsOfSize(resp, 1);
   }
 
   private void createOrgs(UUID nodeKey, ServiceType serviceType, Country... countries) {

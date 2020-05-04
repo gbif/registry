@@ -658,11 +658,7 @@ public abstract class NetworkEntityIT<
     }
   }
 
-  protected NetworkEntityService<T> getService() {
-    return service;
-  }
-
-  protected void assertResultsOfSize(PagingResponse<T> results, int size) {
+  protected void assertResultsOfSize(PagingResponse<?> results, int size) {
     assertNotNull(
         results, "PagingResponse (itself) is null; hint: no paging response should EVER do this");
     assertNotNull(results.getResults(), "PagingResponse results are null");

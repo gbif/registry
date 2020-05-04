@@ -76,7 +76,7 @@ public class NetworkIT extends NetworkEntityIT<Network> {
   public void testCreateAsEditor() {}
 
   @Override
-  protected Network duplicateForCreateAsEditorTest(Network entity) throws Exception {
+  protected Network duplicateForCreateAsEditorTest(Network entity) {
     throw new UnsupportedOperationException();
   }
 
