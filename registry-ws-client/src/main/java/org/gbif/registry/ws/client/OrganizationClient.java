@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @FeignClient(name = "organizationClient", url = "${registry.ws.url}", primary = false)
 @RequestMapping("organization")
-public interface OrganizationClient extends OrganizationService {
+public interface OrganizationClient extends NetworkEntityClient<Organization>, OrganizationService {
 
   @RequestMapping(
       method = RequestMethod.GET,
