@@ -24,7 +24,9 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.OrganizationClient;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.UUID;
 
@@ -32,8 +34,10 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -48,43 +52,54 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class OrganizationIT extends NetworkEntityIT<Organization> {
 
-  private final OrganizationService service;
   private final NodeService nodeService;
 
   private final TestDataFactory testDataFactory;
 
   @Autowired
   public OrganizationIT(
-      @Qualifier("organizationResource") OrganizationService service,
-      @Qualifier("organizationClient") OrganizationClient client,
-      @Qualifier("nodeResource") NodeService nodeService,
-      @Nullable SimplePrincipalProvider pp,
+      OrganizationService service,
+      NodeService nodeService,
+      @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
-    super(service, client, pp, testDataFactory, esServer);
-    this.service = service;
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
+    super(
+        service,
+        new ClientFactory(
+                "gbif.app.it",
+                "http://localhost:" + localServerPort,
+                "gbif.app.it",
+                keyStore.getPrivateKey("gbif.app.it"))
+            .newInstance(OrganizationClient.class),
+        principalProvider,
+        testDataFactory,
+        esServer);
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;
   }
 
-  @Test
-  public void testSuggest() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSuggest(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
     Node node = testDataFactory.newNode();
     UUID nodeKey = nodeService.create(node);
 
     Organization o1 = testDataFactory.newOrganization(nodeKey);
     o1.setTitle("Tim");
-    UUID key1 = this.getService().create(o1);
+    service.create(o1);
 
     Organization o2 = testDataFactory.newOrganization(nodeKey);
     o2.setTitle("The Tim");
-    UUID key2 = this.getService().create(o2);
+    service.create(o2);
 
-    OrganizationService service = (OrganizationService) this.getService();
     assertEquals(1, service.suggest("The").size(), "Should find only The Tim");
     assertEquals(2, service.suggest("Tim").size(), "Should find both organizations");
   }
 
+  // TODO: 04/05/2020 test client
   @Test
   public void testEndorsements() {
     Node node = testDataFactory.newNode();
@@ -119,14 +134,17 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
         "Paging is not returning the correct count");
   }
 
-  @Test
-  public void testByCountry() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testByCountry(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
     Node node = testDataFactory.newNode();
     nodeService.create(node);
     node = nodeService.list(new PagingRequest()).getResults().get(0);
 
     createOrgs(
         node.getKey(),
+        serviceType,
         Country.ANGOLA,
         Country.ANGOLA,
         Country.DENMARK,
@@ -143,7 +161,8 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     assertResultsOfSize(service.listByCountry(Country.GERMANY, new PagingRequest()), 0);
   }
 
-  private void createOrgs(UUID nodeKey, Country... countries) {
+  private void createOrgs(UUID nodeKey, ServiceType serviceType, Country... countries) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
     for (Country c : countries) {
       Organization o = testDataFactory.newOrganization(nodeKey);
       o.setCountry(c);

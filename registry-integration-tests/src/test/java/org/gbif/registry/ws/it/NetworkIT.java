@@ -20,14 +20,16 @@ import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NetworkClient;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.server.LocalServerPort;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -44,12 +46,23 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
   @Autowired
   public NetworkIT(
-      @Qualifier("networkResource") NetworkService service,
-      NetworkClient client,
-      @Nullable SimplePrincipalProvider pp,
+      NetworkService service,
+      @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
-    super(service, client, pp, testDataFactory, esServer);
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
+    super(
+        service,
+        new ClientFactory(
+                "gbif.app.it",
+                "http://localhost:" + localServerPort,
+                "gbif.app.it",
+                keyStore.getPrivateKey("gbif.app.it"))
+            .newInstance(NetworkClient.class),
+        principalProvider,
+        testDataFactory,
+        esServer);
     this.testDataFactory = testDataFactory;
   }
 

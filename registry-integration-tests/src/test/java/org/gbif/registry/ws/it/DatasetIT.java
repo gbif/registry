@@ -48,7 +48,9 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,8 +69,8 @@ import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Charsets;
@@ -77,7 +79,6 @@ import com.google.common.io.CharStreams;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -96,7 +97,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
-    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   private final DatasetService service;
@@ -112,17 +113,28 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   @Autowired
   public DatasetIT(
-      @Qualifier("datasetResource") DatasetService service,
-      @Qualifier("datasetClient") DatasetClient client,
-      @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
-      @Qualifier("organizationResource") OrganizationService organizationService,
-      @Qualifier("nodeResource") NodeService nodeService,
+      DatasetService service,
+      DatasetSearchService searchService,
+      OrganizationService organizationService,
+      NodeService nodeService,
       InstallationService installationService,
       DatasetRealtimeIndexer datasetRealtimeIndexer,
-      @Nullable SimplePrincipalProvider pp,
+      @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
-    super(service, client, pp, testDataFactory, esServer);
+      EsManageServer esServer,
+      KeyStore keyStore,
+      @LocalServerPort int localServerPort) {
+    super(
+        service,
+        new ClientFactory(
+                "gbif.app.it",
+                "http://localhost:" + localServerPort,
+                "gbif.app.it",
+                keyStore.getPrivateKey("gbif.app.it"))
+            .newInstance(DatasetClient.class),
+        principalProvider,
+        testDataFactory,
+        esServer);
     this.service = service;
     this.searchService = searchService;
     this.organizationService = organizationService;
@@ -142,17 +154,11 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     d.setDoi(null);
     UUID key = service.create(d);
     d = service.get(key);
-    assertFalse(Datasets.DATASET_DOI.equals(d.getDoi()));
+    assertNotEquals(Datasets.DATASET_DOI, d.getDoi());
     assertEquals(DOI.TEST_PREFIX, d.getDoi().getPrefix());
   }
 
-  /**
-   * Override creation to add process properties.
-   *
-   * @param orig
-   * @param expectedCount
-   * @return
-   */
+  /** Override creation to add process properties. */
   @Override
   protected Dataset create(Dataset orig, int expectedCount) {
     return create(orig, expectedCount, buildExpectedProcessedProperties(orig));
@@ -440,7 +446,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     d.setLicense(License.CC0_1_0);
     service.create(d);
 
-    assertAll(6l);
+    assertAll(6L);
     assertSearch("Hund", 1);
     assertSearch("bli bla blub", 2);
     assertSearch("PonTaurus", 1);
@@ -460,7 +466,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     Dataset d = newEntity();
     d = create(d, 1);
 
-    assertAll(1l);
+    assertAll(1L);
     assertSearch("Pontaurus needs more than 255 characters", 1); // 1 result expected
     assertSearch("very, very long title", 1); // 1 result expected
 
@@ -470,7 +476,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
     DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
 
-    assertAll(1l);
+    assertAll(1L);
     assertSearch("Pontaurus", 0);
     assertSearch(d.getTitle(), 1);
 
@@ -700,7 +706,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     service.update(dataset);
     dataset = service.get(key);
     assertNotNull(dataset.getDoi(), "DOI should never be null");
-    assertFalse(dataset.getDoi().equals(external1));
+    assertNotEquals(dataset.getDoi(), external1);
     final DOI originalGBIF = dataset.getDoi();
     assertThat(service.listIdentifiers(key))
         .hasSize(1)
@@ -991,7 +997,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
     // verify dataset was NOT updated from parsed document
     Dataset d6 = service.get(d1.getKey());
-    assertTrue(d6.getModified().compareTo(lastUpated.getModified()) == 0);
+    assertEquals(0, d6.getModified().compareTo(lastUpated.getModified()));
 
     // verify EML document NOT replaced
     List<Metadata> metadata2 = service.listMetadata(d1.getKey(), MetadataType.EML);
@@ -1153,12 +1159,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     return d;
   }
 
-  /**
-   * Create a new instance of Dataset, store it using the create method.
-   *
-   * @param expectedCount
-   * @return
-   */
+  /** Create a new instance of Dataset, store it using the create method. */
   private Dataset newAndCreate(int expectedCount) {
     Dataset newDataset = newEntity();
     return create(newDataset, expectedCount);

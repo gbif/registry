@@ -27,7 +27,9 @@ import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.InstallationClient;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.UUID;
 
@@ -35,8 +37,10 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -59,14 +63,25 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
 
   @Autowired
   public InstallationIT(
-      @Qualifier("installationResource") InstallationService service,
-      InstallationClient client,
-      @Qualifier("organizationResource") OrganizationService organizationService,
-      @Qualifier("nodeResource") NodeService nodeService,
-      @Nullable SimplePrincipalProvider pp,
+      InstallationService service,
+      OrganizationService organizationService,
+      NodeService nodeService,
+      @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
-    super(service, client, pp, testDataFactory, esServer);
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
+    super(
+        service,
+        new ClientFactory(
+                "gbif.app.it",
+                "http://localhost:" + localServerPort,
+                "gbif.app.it",
+                keyStore.getPrivateKey("gbif.app.it"))
+            .newInstance(InstallationClient.class),
+        principalProvider,
+        testDataFactory,
+        esServer);
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.testDataFactory = testDataFactory;
@@ -82,24 +97,27 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
   }
 
   /** Tests that we can successfully disable and undisable an installation. */
-  @Test
-  public void disableInstallation() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void disableInstallation(ServiceType serviceType) {
     Installation e = newEntity();
-    UUID key = getService().create(e);
-    e = getService().get(key);
+    InstallationService service = (InstallationService) getService(serviceType);
+    UUID key = service.create(e);
+    e = service.get(key);
     assertFalse(e.isDisabled(), "Should not be disabled to start");
 
     e.setDisabled(true);
-    getService().update(e);
-    e = getService().get(e.getKey());
+    service.update(e);
+    e = service.get(e.getKey());
     assertTrue(e.isDisabled(), "We just disabled it");
 
     e.setDisabled(false);
-    getService().update(e);
-    e = getService().get(e.getKey());
+    service.update(e);
+    e = service.get(e.getKey());
     assertFalse(e.isDisabled(), "We just un-disabled it");
   }
 
+  // TODO: 04/05/2020 client test
   // Easier to test this here than other places due to our utility factory
   @Test
   public void testHostedByInstallationList() {
@@ -127,37 +145,42 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
     return organizationService.get(entity.getOrganizationKey()).getEndorsingNodeKey();
   }
 
-  @Test
-  public void testSuggest() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSuggest(ServiceType serviceType) {
+    InstallationService service = (InstallationService) getService(serviceType);
     Installation installation1 = newEntity();
     installation1.setTitle("The installation");
-    getService().create(installation1);
+    service.create(installation1);
 
     Installation installation2 = newEntity();
     installation2.setTitle("The Great installation");
-    getService().create(installation2);
+    service.create(installation2);
 
-    InstallationService service = (InstallationService) this.getService();
     assertEquals(1, service.suggest("Great").size(), "Should find only The Great installation");
     assertEquals(2, service.suggest("the").size(), "Should find both installations");
   }
 
-  @Test
-  public void testListByType() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListByType(ServiceType serviceType) {
+    InstallationService service = (InstallationService) getService(serviceType);
     Installation installation1 = newEntity();
     installation1.setTitle("The installation");
     installation1.setType(InstallationType.HTTP_INSTALLATION);
-    getService().create(installation1);
+    service.create(installation1);
 
     Installation installation2 = newEntity();
     installation2.setTitle("The Great installation");
     installation2.setType(InstallationType.EARTHCAPE_INSTALLATION);
-    getService().create(installation2);
+    service.create(installation2);
 
-    InstallationService service = (InstallationService) this.getService();
     assertEquals(
         1,
-        service.listByType(InstallationType.EARTHCAPE_INSTALLATION, null).getResults().size(),
+        service
+            .listByType(InstallationType.EARTHCAPE_INSTALLATION, new PagingRequest())
+            .getResults()
+            .size(),
         "Should find only The Great installation");
   }
 }
