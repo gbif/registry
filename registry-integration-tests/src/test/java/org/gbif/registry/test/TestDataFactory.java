@@ -86,6 +86,10 @@ public class TestDataFactory {
     return organizations.newPersistedInstance();
   }
 
+  public Organization newPersistedOrganization(UUID endorsingNodeKey) {
+    return organizations.newPersistedInstance(endorsingNodeKey);
+  }
+
   public Identifier newIdentifier() {
     return identifiers.newInstance();
   }
@@ -118,6 +122,11 @@ public class TestDataFactory {
 
   public Installation newInstallation() {
     return installations.newInstance();
+  }
+
+  public Installation newPersistedInstallation() {
+    Organization organization = organizations.newPersistedInstance();
+    return installations.newPersistedInstance(organization.getKey());
   }
 
   public Installation newPersistedInstallation(UUID organizationKey) {
