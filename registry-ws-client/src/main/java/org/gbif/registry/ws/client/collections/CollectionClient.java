@@ -44,6 +44,7 @@ public interface CollectionClient
       @RequestParam(value = "contact", required = false) UUID contactKey,
       @RequestParam(value = "code", required = false) String code,
       @RequestParam(value = "name", required = false) String name,
+      @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
       @SpringQueryMap Pageable page);
 
   @RequestMapping(

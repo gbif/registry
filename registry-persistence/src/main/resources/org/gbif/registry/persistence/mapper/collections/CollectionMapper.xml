@@ -12,6 +12,7 @@
     <result property="incorporatedCollections" column="incorporated_collections" typeHandler="StringArrayTypeHandler"/>
     <result property="importantCollectors" column="important_collectors" typeHandler="StringArrayTypeHandler"/>
     <result property="collectionSummary" column="collection_summary" typeHandler="CollectionSummaryTypeHandler"/>
+    <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contacts" column="key" select="listContacts"/>
@@ -24,14 +25,14 @@
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
-    taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary
+    taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
-    c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary
+    c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -64,7 +65,8 @@
     #{notes,jdbcType=VARCHAR},
     #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore
+    #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
+    #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -95,7 +97,8 @@
     notes = #{notes,jdbcType=VARCHAR},
     incorporated_collections = #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
-    collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore
+    collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
+    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -153,6 +156,9 @@
     <if test="code != null" >
       AND c.code = #{code,jdbcType=VARCHAR}
     </if>
+    <if test="alternativeCode != null" >
+      AND c.alternative_codes ?? #{alternativeCode,jdbcType=VARCHAR}
+    </if>
     <if test="name != null" >
       AND c.name = #{name,jdbcType=VARCHAR}
     </if>
@@ -177,6 +183,9 @@
     </if>
     <if test="code != null" >
       AND c.code = #{code,jdbcType=VARCHAR}
+    </if>
+    <if test="alternativeCode != null" >
+      AND c.alternative_codes ?? #{alternativeCode,jdbcType=VARCHAR}
     </if>
     <if test="name != null" >
       AND c.name = #{name,jdbcType=VARCHAR}

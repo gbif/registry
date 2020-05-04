@@ -76,6 +76,7 @@ public class InstitutionMapperIT extends BaseItTest {
     institution.setDisciplines(disciplines);
     institution.setEmail(Collections.singletonList("test@test.com"));
     institution.setPhone(Collections.singletonList("1234"));
+    institution.setAlternativeCodes(Collections.singletonMap("CODE2", "another code"));
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
@@ -196,6 +197,40 @@ public class InstitutionMapperIT extends BaseItTest {
   }
 
   @Test
+  public void alternativeCodesTest() {
+    Institution inst1 = new Institution();
+    inst1.setKey(UUID.randomUUID());
+    inst1.setCode("i1");
+    inst1.setName("n1");
+    inst1.setCreatedBy("test");
+    inst1.setModifiedBy("test");
+    inst1.setAlternativeCodes(Collections.singletonMap("i2", "test"));
+    institutionMapper.create(inst1);
+
+    Institution inst2 = new Institution();
+    inst2.setKey(UUID.randomUUID());
+    inst2.setCode("i2");
+    inst2.setName("n2");
+    inst2.setCreatedBy("test");
+    inst2.setModifiedBy("test");
+    inst2.setAlternativeCodes(Collections.singletonMap("i1", "test"));
+    institutionMapper.create(inst2);
+
+    Pageable pageable = PAGE.apply(1, 0L);
+    List<Institution> institutions = institutionMapper.list("i1", null, null, null, null, pageable);
+    assertEquals(1, institutions.size());
+    assertEquals(inst1.getKey(), institutions.get(0).getKey());
+
+    institutions = institutionMapper.list("i2", null, null, null, null, pageable);
+    assertEquals(1, institutions.size());
+    assertEquals(inst2.getKey(), institutions.get(0).getKey());
+
+    institutions = institutionMapper.list(null, null, null, null, "i1", pageable);
+    assertEquals(1, institutions.size());
+    assertEquals(inst2.getKey(), institutions.get(0).getKey());
+  }
+
+  @Test
   public void countTest() {
     Institution inst1 = new Institution();
     inst1.setKey(UUID.randomUUID());
@@ -203,6 +238,7 @@ public class InstitutionMapperIT extends BaseItTest {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
+    inst1.setAlternativeCodes(Collections.singletonMap("ii1", "test"));
 
     Institution inst2 = new Institution();
     inst2.setKey(UUID.randomUUID());
@@ -219,5 +255,6 @@ public class InstitutionMapperIT extends BaseItTest {
     assertEquals(1, institutionMapper.count(null, null, null, "n2", null));
     assertEquals(1, institutionMapper.count(null, null, "i2", "n2", null));
     assertEquals(0, institutionMapper.count(null, null, "i1", "n2", null));
+    assertEquals(1, institutionMapper.count(null, null, null, null, "ii1"));
   }
 }

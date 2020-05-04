@@ -38,6 +38,7 @@ public interface CollectionMapper extends BaseMapper<Collection>, ContactableMap
       @Nullable @Param("query") String query,
       @Nullable @Param("code") String code,
       @Nullable @Param("name") String name,
+      @Nullable @Param("alternativeCode") String alternativeCode,
       @Nullable @Param("page") Pageable page);
 
   long count(
@@ -45,7 +46,8 @@ public interface CollectionMapper extends BaseMapper<Collection>, ContactableMap
       @Nullable @Param("contactKey") UUID contactKey,
       @Nullable @Param("query") String query,
       @Nullable @Param("code") String code,
-      @Nullable @Param("name") String name);
+      @Nullable @Param("name") String name,
+      @Nullable @Param("alternativeCode") String alternativeCode);
 
   /** A simple suggest by title service. */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
