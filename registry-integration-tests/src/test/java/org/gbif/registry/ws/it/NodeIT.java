@@ -35,7 +35,9 @@ import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NodeClient;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -69,7 +71,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NodeIT extends NetworkEntityIT<Node> {
 
   private final NodeService nodeService;
-  private final NodeClient nodeClient;
   private final OrganizationService organizationService;
   private final InstallationService installationService;
   private final DatasetService datasetService;
@@ -86,17 +87,27 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @Autowired
   public NodeIT(
-      @Qualifier("nodeResource") NodeService nodeService,
-      NodeClient nodeClient,
-      @Qualifier("organizationResource") OrganizationService organizationService,
-      @Qualifier("installationResource") InstallationService installationService,
-      @Qualifier("datasetResource") DatasetService datasetService,
-      @Nullable SimplePrincipalProvider pp,
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
-    super(nodeService, nodeClient, pp, testDataFactory, esServer);
+      EsManageServer esServer,
+      KeyStore keyStore,
+      @LocalServerPort int localServerPort) {
+    super(
+        nodeService,
+        new ClientFactory(
+                "gbif.app.it",
+                "http://localhost:" + localServerPort,
+                "gbif.app.it",
+                keyStore.getPrivateKey("gbif.app.it"))
+            .newInstance(NodeClient.class),
+        principalProvider,
+        testDataFactory,
+        esServer);
     this.nodeService = nodeService;
-    this.nodeClient = nodeClient;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
