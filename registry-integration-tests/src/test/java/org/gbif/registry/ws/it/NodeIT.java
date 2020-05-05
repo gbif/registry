@@ -45,7 +45,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,7 +149,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     n.setType(nodeType);
     n.setParticipationStatus(status);
     n.setGbifRegion(GbifRegion.AFRICA);
-    n = create(n, count + 1);
+    n = create(n, serviceType, count + 1);
     count++;
 
     if (TEST_COUNTRIES.containsKey(c)) {
@@ -163,18 +162,16 @@ public class NodeIT extends NetworkEntityIT<Node> {
     }
   }
 
-  // TODO: 02/05/2020 create?
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testAffiliateNode(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
     Node n = newEntity();
     n.setTitle("GBIF Affiliate Node");
     n.setType(NodeType.OTHER);
     n.setParticipationStatus(ParticipationStatus.AFFILIATE);
     n.setGbifRegion(null);
     n.setCountry(null);
-    create(n, 1);
+    create(n, serviceType, 1);
   }
 
   @ParameterizedTest
@@ -249,7 +246,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   public void testDatasets(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
     // endorsing node for the organization
-    Node node = create(newEntity(), 1);
+    Node node = create(newEntity(), serviceType, 1);
     // publishing organization (required field)
     Organization o = testDataFactory.newOrganization(node.getKey());
     o.setEndorsementApproved(true);
@@ -301,34 +298,40 @@ public class NodeIT extends NetworkEntityIT<Node> {
   // TODO: 02/05/2020 client must throw UnsupportedOperationException
   /** Node contacts are IMS managed and the service throws exceptions */
   @Override
-  @Test
-  public void testContacts() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testContacts(ServiceType serviceType) {
     NodeService service = (NodeService) getService(ServiceType.RESOURCE);
-    Node n = create(newEntity(), 1);
+    Node n = create(newEntity(), serviceType, 1);
     assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
 
   /** Node contacts are IMS managed and the service throws exceptions */
-  @Test
-  public void testAddContact() {
-    Node n = create(newEntity(), 1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testAddContact(ServiceType serviceType) {
+    Node n = create(newEntity(), serviceType, 1);
     assertThrows(
         UnsupportedOperationException.class,
         () -> nodeService.addContact(n.getKey(), new Contact()));
   }
 
   /** Node contacts are IMS managed and the service throws exceptions */
-  @Test
-  public void testDeleteContact() {
-    Node n = create(newEntity(), 1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDeleteContact(ServiceType serviceType) {
+    Node n = create(newEntity(), serviceType, 1);
     assertThrows(
         UnsupportedOperationException.class, () -> nodeService.deleteContact(n.getKey(), 1));
   }
 
-  @Test
+  // TODO: 05/05/2020 client should throw UnsupportedOperationException
   @Override
-  public void testSimpleSearchContact() {
-    assertThrows(UnsupportedOperationException.class, super::testSimpleSearchContact);
+  @ParameterizedTest
+  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  public void testSimpleSearchContact(ServiceType serviceType) {
+    assertThrows(
+        UnsupportedOperationException.class, () -> super.testSimpleSearchContact(serviceType));
   }
 
   @Override

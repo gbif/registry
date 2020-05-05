@@ -27,13 +27,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.ContactService;
-import org.gbif.api.service.registry.EndpointService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.NetworkEntityService;
-import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
@@ -44,7 +38,9 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.security.AccessControlException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +51,8 @@ import javax.validation.ConstraintViolationException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -63,7 +61,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -85,12 +82,6 @@ public abstract class NetworkEntityIT<
   private final NetworkEntityService<T> service; // under test
   private final NetworkEntityService<T> client; // under test
 
-  private final ContactService contactService;
-  private final EndpointService endpointService;
-  private final MachineTagService machineTagService;
-  private final TagService tagService;
-  private final CommentService commentService;
-  private final IdentifierService identifierService;
   private final TestDataFactory testDataFactory;
 
   public NetworkEntityIT(
@@ -102,14 +93,6 @@ public abstract class NetworkEntityIT<
     super(simplePrincipalProvider, esServer);
     this.service = service;
     this.client = client;
-    // not so nice, but we know what we deal with in the tests
-    // and this bundles most basic tests into one base test class without copy paste redundancy
-    contactService = service;
-    endpointService = service;
-    machineTagService = service;
-    tagService = service;
-    commentService = service;
-    identifierService = service;
     this.testDataFactory = testDataFactory;
   }
 
@@ -128,24 +111,30 @@ public abstract class NetworkEntityIT<
     }
   }
 
-  @Test
-  public void createWithKey() {
+  // TODO: 05/05/2020 client should throw ConstraintViolationException
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void createWithKey(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     T e = newEntity();
     e.setKey(UUID.randomUUID()); // illegal to provide a key
     assertThrows(ConstraintViolationException.class, () -> service.create(e));
   }
 
-  @Test
-  public void testCreate() {
-    create(newEntity(), 1);
-    create(newEntity(), 2);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCreate(ServiceType serviceType) {
+    create(newEntity(), serviceType, 1);
+    create(newEntity(), serviceType, 2);
   }
 
   @Disabled("Use during development.")
   @Test
-  public void testCreateAsEditor() {
+  public void testCreateAsEditor(ServiceType serviceType) throws Exception {
     // Create as admin.
-    T entity = create(newEntity(), 1);
+    T entity = create(newEntity(), serviceType, 1);
 
     if (getSimplePrincipalProvider() == null) {
       return;
@@ -156,40 +145,37 @@ public abstract class NetworkEntityIT<
     // Grant appropriate rights to the normal user.
     // This is very ugly, but there aren't APIs for editor rights.
     T anotherEntity = null;
-    try {
-      anotherEntity = duplicateForCreateAsEditorTest(entity);
-      anotherEntity.setModified(null);
-      anotherEntity.setCreated(null);
-      anotherEntity.setKey(null);
+    anotherEntity = duplicateForCreateAsEditorTest(entity);
+    anotherEntity.setModified(null);
+    anotherEntity.setCreated(null);
+    anotherEntity.setKey(null);
 
-      Connection c = database.getTestDatabase().getConnection();
-      PreparedStatement ps = c.prepareStatement("INSERT INTO editor_rights VALUES(?, ?)");
+    try (Connection c = database.getTestDatabase().getConnection();
+        PreparedStatement ps = c.prepareStatement("INSERT INTO editor_rights VALUES(?, ?)")) {
       ps.setString(1, TestConstants.TEST_EDITOR);
       ps.setObject(2, keyForCreateAsEditorTest(entity));
       ps.execute();
-      ps.close();
-      c.close();
-
-    } catch (Exception e) {
     }
 
     // Create as the editor user
-    create(anotherEntity, 2);
+    create(anotherEntity, serviceType, 2);
   }
 
   protected abstract T duplicateForCreateAsEditorTest(T entity) throws Exception;
 
   protected abstract UUID keyForCreateAsEditorTest(T entity);
 
-  @Test
-  public void testTitles() {
-    Map<UUID, String> titles = Maps.newHashMap();
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testTitles(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    Map<UUID, String> titles = new HashMap<>();
 
     assertEquals(titles, service.getTitles(titles.keySet()));
 
     for (int i = 1; i < 8; i++) {
       T ent = newEntity();
-      ent = create(ent, i);
+      ent = create(ent, serviceType, i);
       titles.put(ent.getKey(), ent.getTitle());
     }
     assertEquals(titles, service.getTitles(titles.keySet()));
@@ -203,22 +189,25 @@ public abstract class NetworkEntityIT<
    * provider with name "heinz" won't authorize, because there is no user "heinz" in the test
    * identity database with role administrator.
    */
-  @Test
-  public void testCreateBadRole() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCreateBadRole(ServiceType serviceType) {
     // SimplePrincipalProvider configured for web service client tests only
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("heinz");
       try {
-        create(newEntity(), 1);
+        create(newEntity(), serviceType, 1);
       } catch (Exception e) {
         assertTrue(e instanceof AccessControlException);
       }
     }
   }
 
-  @Test
-  public void testUpdate() {
-    T n1 = create(newEntity(), 1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testUpdate(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T n1 = create(newEntity(), serviceType, 1);
     n1.setTitle("New title");
     service.update(n1);
     NetworkEntity n2 = service.get(n1.getKey());
@@ -236,17 +225,22 @@ public abstract class NetworkEntityIT<
         "List service does not reflect the number of created entities");
   }
 
-  @Test
-  public void testUpdateFailingValidation() {
-    T n1 = create(newEntity(), 1);
+  // TODO: 05/05/2020 client should throw ConstraintViolationException
+  @ParameterizedTest
+  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  public void testUpdateFailingValidation(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T n1 = create(newEntity(), serviceType, 1);
     n1.setTitle("A"); // should fail as it is too short
     assertThrows(ConstraintViolationException.class, () -> service.update(n1));
   }
 
-  @Test
-  public void testDelete() {
-    NetworkEntity n1 = create(newEntity(), 1);
-    NetworkEntity n2 = create(newEntity(), 2);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDelete(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    NetworkEntity n1 = create(newEntity(), serviceType, 1);
+    NetworkEntity n2 = create(newEntity(), serviceType, 2);
     service.delete(n1.getKey());
     T n4 = service.get(n1.getKey()); // one can get a deleted entity
     n1.setDeleted(n4.getDeleted());
@@ -263,20 +257,16 @@ public abstract class NetworkEntityIT<
         "Following a delete, the wrong entity is returned in list results");
   }
 
-  public void testDoubleDelete() {
-    NetworkEntity n1 = create(newEntity(), 1);
-    service.delete(n1.getKey());
-    service.delete(n1.getKey()); // should just do nothing silently
-  }
-
   /**
    * Creates 5 entities, and then pages over them using differing paging strategies, confirming the
    * correct number of records are returned for each strategy.
    */
-  @Test
-  public void testPaging() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testPaging(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     for (int i = 1; i <= 5; i++) {
-      create(newEntity(), i);
+      create(newEntity(), serviceType, i);
     }
 
     // the expected number of records returned when paging at different page sizes
@@ -308,12 +298,14 @@ public abstract class NetworkEntityIT<
   }
 
   /** Confirm that the list method and its paging return entities in creation time order. */
-  @Test
-  public void testPagingOrder() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testPagingOrder(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     // keeps a list of all uuids created in that creation order
-    List<UUID> uuids = Lists.newArrayList();
+    List<UUID> uuids = new ArrayList<>();
     for (int i = 1; i <= 5; i++) {
-      T d = create(newEntity(), i);
+      T d = create(newEntity(), serviceType, i);
       uuids.add(d.getKey());
     }
     uuids = Lists.reverse(uuids);
@@ -342,56 +334,84 @@ public abstract class NetworkEntityIT<
   }
 
   /** Simple search test including when the entity is updated. */
-  @Test
-  public void testSimpleSearch() {
-    T n1 = create(newEntity(), 1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSimpleSearch(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T n1 = create(newEntity(), serviceType, 1);
     n1.setTitle("New title foo");
     service.update(n1);
 
     assertEquals(
-        Long.valueOf(1), service.search("New", null).getCount(), "Search should return a hit");
-    assertEquals(
-        Long.valueOf(1), service.search("TITLE", null).getCount(), "Search should return a hit");
-    assertEquals(
-        Long.valueOf(0), service.search("NO", null).getCount(), "Search should return a hit");
-    assertEquals(
         Long.valueOf(1),
-        service.search(" new tit fo", null).getCount(),
+        service.search("New", new PagingRequest()).getCount(),
         "Search should return a hit");
     assertEquals(
-        Long.valueOf(0), service.search("<", null).getCount(), "Search should return no hits");
+        Long.valueOf(1),
+        service.search("TITLE", new PagingRequest()).getCount(),
+        "Search should return a hit");
     assertEquals(
-        Long.valueOf(0), service.search("\"<\"", null).getCount(), "Search should return no hits");
+        Long.valueOf(0),
+        service.search("NO", new PagingRequest()).getCount(),
+        "Search should return a hit");
     assertEquals(
-        Long.valueOf(1), service.search(null, null).getCount(), "Search should return all hits");
+        Long.valueOf(1),
+        service.search(" new tit fo", new PagingRequest()).getCount(),
+        "Search should return a hit");
     assertEquals(
-        Long.valueOf(1), service.search("  ", null).getCount(), "Search should return all hits");
+        Long.valueOf(0),
+        service.search("<", new PagingRequest()).getCount(),
+        "Search should return no hits");
+    assertEquals(
+        Long.valueOf(0),
+        service.search("\"<\"", new PagingRequest()).getCount(),
+        "Search should return no hits");
+    assertEquals(
+        Long.valueOf(1),
+        service.search(null, new PagingRequest()).getCount(),
+        "Search should return all hits");
+    assertEquals(
+        Long.valueOf(1),
+        service.search("  ", new PagingRequest()).getCount(),
+        "Search should return all hits");
 
     // Updates should be reflected in search
     n1.setTitle("BINGO");
     service.update(n1);
 
     assertEquals(
-        Long.valueOf(1), service.search("BINGO", null).getCount(), "Search should return a hit");
+        Long.valueOf(1),
+        service.search("BINGO", new PagingRequest()).getCount(),
+        "Search should return a hit");
     assertEquals(
-        Long.valueOf(0), service.search("New", null).getCount(), "Search should return no hits");
+        Long.valueOf(0),
+        service.search("New", new PagingRequest()).getCount(),
+        "Search should return no hits");
     assertEquals(
-        Long.valueOf(0), service.search("TITILE", null).getCount(), "Search should return no hits");
+        Long.valueOf(0),
+        service.search("TITILE", new PagingRequest()).getCount(),
+        "Search should return no hits");
     assertEquals(
-        Long.valueOf(1), service.search("bi ", null).getCount(), "Search should return a hit");
+        Long.valueOf(1),
+        service.search("bi ", new PagingRequest()).getCount(),
+        "Search should return a hit");
   }
 
   /** Ensures the simple search pages as expected. */
-  @Test
-  public void testSimpleSearchPaging() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSimpleSearchPaging(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     for (int i = 1; i <= 5; i++) {
       T n1 = newEntity();
       n1.setTitle("Bingo");
-      create(n1, i);
+      create(n1, serviceType, i);
     }
 
     assertEquals(
-        Long.valueOf(5), service.search("Bingo", null).getCount(), "Search should return a hit");
+        Long.valueOf(5),
+        service.search("Bingo", new PagingRequest()).getCount(),
+        "Search should return a hit");
     // first page 3 results
     assertEquals(
         3,
@@ -408,60 +428,78 @@ public abstract class NetworkEntityIT<
         "Search should return the requested number of records");
   }
 
-  @Test
-  public void testContacts() {
-    T entity = create(newEntity(), 1);
-    ContactTests.testAddDeleteUpdate(contactService, entity, testDataFactory);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testContacts(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity = create(newEntity(), serviceType, 1);
+    ContactTests.testAddDeleteUpdate(service, entity, testDataFactory);
   }
 
-  @Test
-  public void testEndpoints() {
-    T entity = create(newEntity(), 1);
-    EndpointTests.testAddDelete(endpointService, entity, testDataFactory);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testEndpoints(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity = create(newEntity(), serviceType, 1);
+    EndpointTests.testAddDelete(service, entity, testDataFactory);
   }
 
-  @Test
-  public void testMachineTags() {
-    T entity = create(newEntity(), 1);
-    MachineTagTests.testAddDelete(machineTagService, entity, testDataFactory);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMachineTags(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity = create(newEntity(), serviceType, 1);
+    MachineTagTests.testAddDelete(service, entity, testDataFactory);
   }
 
-  @Test
-  @Disabled("Only for clients")
-  public void testMachineTagsNotAllowedToCreateClient() {
+  @Disabled("client should throw AccessControlException")
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"CLIENT"})
+  public void testMachineTagsNotAllowedToCreateClient(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("notExisting");
-      T entity = create(newEntity(), 1);
+      T entity = create(newEntity(), serviceType, 1);
       assertThrows(
           AccessControlException.class,
-          () -> MachineTagTests.testAddDelete(machineTagService, entity, testDataFactory));
+          () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
     } else {
       throw new AccessControlException("");
     }
   }
 
-  @Test
-  @Disabled("only for cliets")
-  public void testMachineTagsMissingNamespaceRights() {
+  @Disabled("client should throw AccessControlException")
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"CLIENT"})
+  public void testMachineTagsMissingNamespaceRights(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("editor");
-      T entity = create(newEntity(), 1);
+      T entity = create(newEntity(), ServiceType.CLIENT, 1);
       assertThrows(
           AccessControlException.class,
-          () -> MachineTagTests.testAddDelete(machineTagService, entity, testDataFactory));
+          () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
     } else {
       throw new AccessControlException("");
     }
   }
 
-  @Test
-  @Disabled("Only for clients")
-  public void testMachineTagsNotAllowedToDeleteClient() {
+  @Disabled("client should throw AccessControlException")
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"CLIENT"})
+  public void testMachineTagsNotAllowedToDeleteClient(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
-      T entity = create(newEntity(), 1);
+      T entity = create(newEntity(), ServiceType.CLIENT, 1);
       // add machine tags
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
@@ -486,43 +524,45 @@ public abstract class NetworkEntityIT<
     return machineTag;
   }
 
-  @Test
-  public void testMachineTagSearch() {
-    T entity1 = create(newEntity(), 1);
-    T entity2 = create(newEntity(), 2);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMachineTagSearch(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity1 = create(newEntity(), serviceType, 1);
+    T entity2 = create(newEntity(), serviceType, 2);
 
-    machineTagService.addMachineTag(
+    service.addMachineTag(
         entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "one"));
-    machineTagService.addMachineTag(
+    service.addMachineTag(
         entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "two"));
-    machineTagService.addMachineTag(
+    service.addMachineTag(
         entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "three"));
-    machineTagService.addMachineTag(
+    service.addMachineTag(
         entity2.getKey(), newMachineTag(entity2, "test.gbif.org", "network-entity", "four"));
 
     PagingResponse<T> res;
 
-    res = service.listByMachineTag("test.gbif.org", "network-entity", "one", null);
+    res = service.listByMachineTag("test.gbif.org", "network-entity", "one", new PagingRequest());
     assertEquals(Long.valueOf(1), res.getCount());
     assertEquals(1, res.getResults().size());
-    res = service.listByMachineTag("test.gbif.org", "network-entity", null, null);
+    res = service.listByMachineTag("test.gbif.org", "network-entity", null, new PagingRequest());
     assertEquals(Long.valueOf(2), res.getCount());
     assertEquals(2, res.getResults().size());
-    res = service.listByMachineTag("test.gbif.org", null, null, null);
+    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest());
     assertEquals(Long.valueOf(2), res.getCount());
     assertEquals(2, res.getResults().size());
 
-    res = service.listByMachineTag("test.gbif.org", "network-entity", "five", null);
+    res = service.listByMachineTag("test.gbif.org", "network-entity", "five", new PagingRequest());
     System.out.println("Results " + res.getResults());
     System.out.println("Count " + res.getCount());
     System.err.println("Results " + res.getResults());
     System.err.println("Count " + res.getCount());
     assertEquals(Long.valueOf(0), res.getCount());
 
-    res = service.listByMachineTag("test.gbif.org", "nothing", null, null);
+    res = service.listByMachineTag("test.gbif.org", "nothing", null, new PagingRequest());
     assertEquals(Long.valueOf(0), res.getCount());
 
-    res = service.listByMachineTag("not-in-test.gbif.org", null, null, null);
+    res = service.listByMachineTag("not-in-test.gbif.org", null, null, new PagingRequest());
     assertEquals(Long.valueOf(0), res.getCount());
 
     res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(0, 1));
@@ -536,30 +576,39 @@ public abstract class NetworkEntityIT<
     assertEquals(0, res.getResults().size());
   }
 
-  @Test
-  public void testTags() {
-    T entity = create(newEntity(), 1);
-    TagTests.testAddDelete(tagService, entity);
-    entity = create(newEntity(), 2);
-    TagTests.testTagErroneousDelete(tagService, entity);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testTags(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity = create(newEntity(), serviceType, 1);
+    TagTests.testAddDelete(service, entity);
+    entity = create(newEntity(), serviceType, 2);
+    TagTests.testTagErroneousDelete(service, entity);
   }
 
-  @Test
-  public void testComments() {
-    T entity = create(newEntity(), 1);
-    CommentTests.testAddDelete(commentService, entity, testDataFactory);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testComments(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity = create(newEntity(), serviceType, 1);
+    CommentTests.testAddDelete(service, entity, testDataFactory);
   }
 
   // Check that simple search covers contacts which throws IllegalStateException for Nodes
-  @Test
-  public void testSimpleSearchContact() {
-    ContactTests.testSimpleSearch(contactService, service, create(newEntity(), 1), testDataFactory);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSimpleSearchContact(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    ContactTests.testSimpleSearch(
+        service, service, create(newEntity(), serviceType, 1), testDataFactory);
   }
 
-  @Test
-  public void testIdentifierCRUD() {
-    T entity = create(newEntity(), 1);
-    IdentifierTests.testAddDelete(identifierService, service, entity, testDataFactory);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testIdentifierCRUD(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity = create(newEntity(), serviceType, 1);
+    IdentifierTests.testAddDelete(service, service, entity, testDataFactory);
   }
 
   private Identifier newTestIdentifier(T owner, IdentifierType type, String identifierValue) {
@@ -568,35 +617,38 @@ public abstract class NetworkEntityIT<
     return identifier;
   }
 
-  @Test
-  public void testIdentifierSearch() {
-    T entity1 = create(newEntity(), 1);
-    T entity2 = create(newEntity(), 2);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testIdentifierSearch(ServiceType serviceType) {
+    NetworkEntityService<T> service = getService(serviceType);
+    T entity1 = create(newEntity(), serviceType, 1);
+    T entity2 = create(newEntity(), serviceType, 2);
 
-    identifierService.addIdentifier(
+    service.addIdentifier(
         entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
-    identifierService.addIdentifier(
+    service.addIdentifier(
         entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
-    identifierService.addIdentifier(
+    service.addIdentifier(
         entity1.getKey(), newTestIdentifier(entity2, IdentifierType.DOI, "doi:2"));
-    identifierService.addIdentifier(
+    service.addIdentifier(
         entity2.getKey(), newTestIdentifier(entity2, IdentifierType.DOI, "doi:2"));
 
-    PagingResponse<T> res = service.listByIdentifier(IdentifierType.DOI, "doi:2", null);
+    PagingResponse<T> res =
+        service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest());
     assertEquals(Long.valueOf(2), res.getCount());
     assertEquals(2, res.getResults().size());
-    res = service.listByIdentifier("doi:2", null);
+    res = service.listByIdentifier("doi:2", new PagingRequest());
     assertEquals(Long.valueOf(2), res.getCount());
     assertEquals(2, res.getResults().size());
 
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:1", null);
+    res = service.listByIdentifier(IdentifierType.DOI, "doi:1", new PagingRequest());
     assertEquals(Long.valueOf(1), res.getCount());
     assertEquals(1, res.getResults().size());
 
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:XXX", null);
+    res = service.listByIdentifier(IdentifierType.DOI, "doi:XXX", new PagingRequest());
     assertEquals(Long.valueOf(0), res.getCount());
 
-    res = service.listByIdentifier(IdentifierType.GBIF_PORTAL, "doi:1", null);
+    res = service.listByIdentifier(IdentifierType.GBIF_PORTAL, "doi:1", new PagingRequest());
     assertEquals(Long.valueOf(0), res.getCount());
 
     res = service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest(0, 1));
@@ -614,8 +666,8 @@ public abstract class NetworkEntityIT<
   protected abstract T newEntity();
 
   // Repeatable entity creation with verification tests
-  protected T create(T orig, int expectedCount) {
-    return create(orig, expectedCount, null);
+  protected T create(T orig, ServiceType serviceType, int expectedCount) {
+    return create(orig, serviceType, expectedCount, null);
   }
 
   /**
@@ -624,8 +676,10 @@ public abstract class NetworkEntityIT<
    * @param processedProperties expected values of properties that are processed so they would not
    *     match the original
    */
-  protected T create(T orig, int expectedCount, Map<String, Object> processedProperties) {
+  protected T create(
+      T orig, ServiceType serviceType, int expectedCount, Map<String, Object> processedProperties) {
     try {
+      NetworkEntityService<T> service = getService(serviceType);
       @SuppressWarnings("unchecked")
       T entity = (T) BeanUtils.cloneBean(orig);
       Preconditions.checkNotNull(entity, "Cannot create a non existing entity");
