@@ -52,6 +52,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 
 import com.google.common.collect.ImmutableMap;
 
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -98,10 +99,10 @@ public class NodeIT extends NetworkEntityIT<Node> {
     super(
         nodeService,
         new ClientFactory(
-                "gbif.app.it",
+                IT_APP_KEY2,
                 "http://localhost:" + localServerPort,
-                "gbif.app.it",
-                keyStore.getPrivateKey("gbif.app.it"))
+                IT_APP_KEY2,
+                keyStore.getPrivateKey(IT_APP_KEY2))
             .newInstance(NodeClient.class),
         principalProvider,
         testDataFactory,

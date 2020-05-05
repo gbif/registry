@@ -40,6 +40,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -69,10 +70,10 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     super(
         service,
         new ClientFactory(
-                "gbif.app.it",
+                IT_APP_KEY2,
                 "http://localhost:" + localServerPort,
-                "gbif.app.it",
-                keyStore.getPrivateKey("gbif.app.it"))
+                IT_APP_KEY2,
+                keyStore.getPrivateKey(IT_APP_KEY2))
             .newInstance(OrganizationClient.class),
         principalProvider,
         testDataFactory,

@@ -31,6 +31,8 @@ import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
+
 /**
  * This is parameterized to run the same test routines for the following:
  *
@@ -55,10 +57,10 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     super(
         service,
         new ClientFactory(
-                "gbif.app.it",
+                IT_APP_KEY2,
                 "http://localhost:" + localServerPort,
-                "gbif.app.it",
-                keyStore.getPrivateKey("gbif.app.it"))
+                IT_APP_KEY2,
+                keyStore.getPrivateKey(IT_APP_KEY2))
             .newInstance(NetworkClient.class),
         principalProvider,
         testDataFactory,

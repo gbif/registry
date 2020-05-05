@@ -80,6 +80,7 @@ import com.google.common.io.CharStreams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -128,10 +129,10 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     super(
         service,
         new ClientFactory(
-                "gbif.app.it",
+                IT_APP_KEY2,
                 "http://localhost:" + localServerPort,
-                "gbif.app.it",
-                keyStore.getPrivateKey("gbif.app.it"))
+                IT_APP_KEY2,
+                keyStore.getPrivateKey(IT_APP_KEY2))
             .newInstance(DatasetClient.class),
         principalProvider,
         testDataFactory,
