@@ -68,6 +68,8 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -100,7 +102,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DatasetIT extends NetworkEntityIT<Dataset> {
 
-  private final DatasetService service;
   private final DatasetSearchService searchService;
   private final OrganizationService organizationService;
   private final NodeService nodeService;
@@ -135,7 +136,6 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         principalProvider,
         testDataFactory,
         esServer);
-    this.service = service;
     this.searchService = searchService;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
@@ -144,8 +144,10 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     this.testDataFactory = testDataFactory;
   }
 
-  @Test
-  public void testCreateDoi() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCreateDoi(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset d = newEntity();
     service.create(d);
     assertEquals(Datasets.DATASET_DOI, d.getDoi());
@@ -159,9 +161,9 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   /** Override creation to add process properties. */
-  protected Dataset create(Dataset orig, int expectedCount) {
-    return create(
-        orig, ServiceType.RESOURCE, expectedCount, buildExpectedProcessedProperties(orig));
+  @Override
+  protected Dataset create(Dataset orig, ServiceType serviceType, int expectedCount) {
+    return create(orig, serviceType, expectedCount, buildExpectedProcessedProperties(orig));
   }
 
   @Override
@@ -177,23 +179,27 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     return organizationService.get(entity.getPublishingOrganizationKey()).getEndorsingNodeKey();
   }
 
-  @Test
-  public void testConstituents() {
-    Dataset parent = newAndCreate(1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testConstituents(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset parent = newAndCreate(1, serviceType);
     for (int id = 0; id < 10; id++) {
       Dataset constituent = newEntity();
       constituent.setParentDatasetKey(parent.getKey());
       constituent.setType(parent.getType());
-      create(constituent, id + 2);
+      create(constituent, serviceType, id + 2);
     }
 
     assertEquals(10, service.get(parent.getKey()).getNumConstituents());
   }
 
+  // TODO: 05/05/2020 organizationService should be client as well
   // Easier to test this here than OrganizationIT due to our utility dataset factory
-  @Test
-  public void testHostedByList() {
-    Dataset dataset = newAndCreate(1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testHostedByList(ServiceType serviceType) {
+    Dataset dataset = newAndCreate(1, serviceType);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull(i, "Dataset should have an installation");
     PagingResponse<Dataset> published =
@@ -207,9 +213,10 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   // Easier to test this here than OrganizationIT due to our utility dataset factory
-  @Test
-  public void testPublishedByList() {
-    Dataset dataset = newAndCreate(1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testPublishedByList(ServiceType serviceType) {
+    Dataset dataset = newAndCreate(1, serviceType);
     PagingResponse<Dataset> published =
         organizationService.publishedDatasets(
             dataset.getPublishingOrganizationKey(), new PagingRequest());
@@ -226,9 +233,10 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   // Easier to test this here than InstallationIT due to our utility dataset factory
-  @Test
-  public void testHostedByInstallationList() {
-    Dataset dataset = newAndCreate(1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testHostedByInstallationList(ServiceType serviceType) {
+    Dataset dataset = newAndCreate(1, serviceType);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull(i, "Dataset should have an installation");
     PagingResponse<Dataset> hosted =
@@ -242,11 +250,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "The hosted installation should serve the dataset created");
   }
 
-  @Test
-  public void testTypedSearch() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testTypedSearch(ServiceType serviceType) {
     Dataset d = newEntity();
     d.setType(DatasetType.CHECKLIST);
-    d = create(d, 1);
+    d = create(d, serviceType, 1);
     assertSearch(d.getTitle(), 1); // 1 result expected for a simple search
 
     DatasetSearchRequest req = new DatasetSearchRequest();
@@ -259,23 +268,25 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
-  @Test
-  public void testMultiCountryFacet() {
+  // TODO: 05/05/2020 searchService should be client as well
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMultiCountryFacet(ServiceType serviceType) {
     Dataset d = newEntity(Country.ALGERIA);
     d.setType(DatasetType.CHECKLIST);
-    d = create(d, 1);
+    create(d, serviceType, 1);
 
     d = newEntity(Country.GERMANY);
     d.setType(DatasetType.CHECKLIST);
-    d = create(d, 2);
+    create(d, serviceType, 2);
 
     d = newEntity(Country.FRANCE);
     d.setType(DatasetType.OCCURRENCE);
-    d = create(d, 3);
+    create(d, serviceType, 3);
 
     d = newEntity(Country.GHANA);
     d.setType(DatasetType.OCCURRENCE);
-    d = create(d, 4);
+    create(d, serviceType, 4);
 
     DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
 
@@ -326,13 +337,14 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Elasticsearch does not have the expected number of facet values for query[" + req + "]");
   }
 
-  @Test
-  public void testSearchParameter() throws InterruptedException {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSearchParameter(ServiceType serviceType) {
     Dataset d = newEntity(Country.SOUTH_AFRICA);
     d.setType(DatasetType.CHECKLIST);
     d.setLicense(License.CC0_1_0);
     d.setLanguage(Language.AFRIKAANS);
-    create(d, 1);
+    create(d, serviceType, 1);
 
     DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
 
@@ -353,11 +365,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
-  @Test
-  public void testSearchLargeTitles() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSearchLargeTitles(ServiceType serviceType) {
     Dataset d = newEntity();
     d.setType(DatasetType.OCCURRENCE);
-    d = create(d, 1);
+    d = create(d, serviceType, 1);
 
     testSearch(d.getTitle());
     testSearch("Pontaurus needs more than 255 characters for it's title");
@@ -371,11 +384,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     testSearch("PonTaurus Bolkar Daglari Aladaglari");
   }
 
-  @Test
-  public void testEventTypeSearch() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testEventTypeSearch(ServiceType serviceType) {
     Dataset d = newEntity();
     d.setType(DatasetType.SAMPLING_EVENT);
-    d = create(d, 1);
+    d = create(d, serviceType, 1);
 
     assertSearch(d.getTitle(), 1);
 
@@ -389,10 +403,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
-  @Test
-  public void testDismaxSearch() throws InterruptedException {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDismaxSearch(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
 
-    Dataset d = newAndCreate(1);
+    Dataset d = newAndCreate(1, serviceType);
     final UUID pubKey = d.getPublishingOrganizationKey();
     final UUID instKey = d.getInstallationKey();
     final UUID nodeKey = organizationService.get(pubKey).getEndorsingNodeKey();
@@ -461,10 +477,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertTrue(docs.stream().anyMatch(dataset -> dataset.getKey().equals(gpsKey)));
   }
 
-  @Test
-  public void testSearchListener() throws InterruptedException {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSearchListener(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset d = newEntity();
-    d = create(d, 1);
+    d = create(d, serviceType, 1);
 
     assertAll(1L);
     assertSearch("Pontaurus needs more than 255 characters", 1); // 1 result expected
@@ -515,10 +533,11 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertSearch(host.getTitle(), 0);
   }
 
-  @Test
-  public void testInstallationMove() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testInstallationMove(ServiceType serviceType) {
     Dataset d = newEntity();
-    d = create(d, 1);
+    d = create(d, serviceType, 1);
     assertSearch(d.getTitle(), 1); // 1 result expected
 
     UUID nodeKey = nodeService.create(testDataFactory.newNode());
@@ -632,9 +651,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   private Dataset newEntity(UUID organizationKey, UUID installationKey) {
-    // the dataset
-    Dataset d = testDataFactory.newDataset(organizationKey, installationKey);
-    return d;
+    return testDataFactory.newDataset(organizationKey, installationKey);
   }
 
   @Test
@@ -655,10 +672,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertEquals(expectedParagraph, dataset.getDescription());
   }
 
-  @Test
-  public void testCitation() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCitation(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset dataset = newEntity();
-    dataset = create(dataset, 1);
+    dataset = create(dataset, serviceType, 1);
     dataset = service.get(dataset.getKey());
     assertNotNull(dataset.getCitation(), "Citation should never be null");
 
@@ -671,6 +690,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     dataset.getCitation().setText("GOD publishing, volume 123");
     service.update(dataset);
     dataset = service.get(dataset.getKey());
+    assertNotNull(dataset.getCitation());
     assertEquals("doi:456", dataset.getCitation().getIdentifier());
     // original citation not preserved, we generate one
     assertNotEquals("GOD publishing, volume 123", dataset.getCitation().getText());
@@ -681,6 +701,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     dataset.getCitation().setText(null);
     service.update(dataset);
     dataset = service.get(dataset.getKey());
+    assertNotNull(dataset.getCitation());
     assertEquals("doi:456", dataset.getCitation().getIdentifier());
     // original citation not preserved, we generate one
     assertNotEquals(
@@ -688,8 +709,10 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         dataset.getCitation().getText());
   }
 
-  @Test
-  public void testDoiChanges() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDoiChanges(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     final DOI external1 = new DOI("10.9999/nonGbif");
     final DOI external2 = new DOI("10.9999/nonGbif2");
     // we use the test prefix in tests for GBIF DOIs, see registry-test.properties
@@ -697,7 +720,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
     Dataset src = newEntity();
     src.setDoi(external1);
-    final UUID key = create(src, 1).getKey();
+    final UUID key = create(src, serviceType, 1).getKey();
     Dataset dataset = service.get(key);
     assertEquals(external1, dataset.getDoi());
     assertEquals(0, service.listIdentifiers(key).size());
@@ -759,15 +782,17 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         .contains(gbif2.toString(), external2.toString(), originalGBIF.toString());
   }
 
-  @Test
-  public void testLicenseChanges() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testLicenseChanges(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset src = newEntity();
 
     // start with dataset with null license
     src.setLicense(null);
 
     // register dataset
-    final UUID key = create(src, 1).getKey();
+    final UUID key = create(src, serviceType, 1).getKey();
 
     // ensure default license CC-BY 4.0 was assigned
     Dataset dataset = service.get(key);
@@ -806,15 +831,19 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
    * dataset by reinterpreting its preferred metadata document. In particular the test ensures the
    * dataset license is updated properly as per the metadata document.
    */
-  @Test
-  public void testUpdateFromPreferredMetadata() throws IOException {
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void testUpdateFromPreferredMetadata(ServiceType serviceType) throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset src = newEntity();
 
     // start with dataset with CC0 license
     src.setLicense(License.CC0_1_0);
 
     // register dataset
-    final UUID key = create(src, 1).getKey();
+    final UUID key = create(src, serviceType, 1).getKey();
 
     // ensure license CC0 was assigned
     Dataset dataset = service.get(key);
@@ -837,6 +866,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
     ((DatasetResource) service).updateFromPreferredMetadata(key, "DatasetIT");
     dataset = service.get(key);
+    assertNotNull(dataset);
     assertEquals(License.CC_BY_4_0, dataset.getLicense());
   }
 
@@ -844,12 +874,14 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
    * Test checks behaviour updating Citation with valid and invalid identifier. In the database,
    * there is a min length 1 character constraint on Dataset.citation_identifier.
    */
-  @Test
-  public void testDatasetCitationIdentifierConstraint() throws IOException {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDatasetCitationIdentifierConstraint(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset src = newEntity();
 
     // register dataset
-    final UUID key = create(src, 1).getKey();
+    final UUID key = create(src, serviceType, 1).getKey();
 
     Dataset dataset = service.get(key);
     assertNotNull(dataset.getCitation());
@@ -882,14 +914,18 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     // /...and check it fails, however, constraint violation can only be thrown by web service
     // because client
     // trims Citation fields via StringTrimInterceptor
-    assertNotNull(exception);
+    if (service instanceof DatasetResource) {
+      assertNotNull(exception);
+    }
   }
 
-  @Test
-  public void testMaintenanceUpdateFrequencyChanges() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMaintenanceUpdateFrequencyChanges(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset src = newEntity();
     assertNull(src.getMaintenanceUpdateFrequency());
-    final UUID key = create(src, 1).getKey();
+    final UUID key = create(src, serviceType, 1).getKey();
     Dataset dataset = service.get(key);
     assertNull(src.getMaintenanceUpdateFrequency());
 
@@ -906,15 +942,18 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertEquals(MaintenanceUpdateFrequency.BIANNUALLY, dataset.getMaintenanceUpdateFrequency());
   }
 
-  @Test
-  public void test404() {
-    // TODO: is throws the right assertion here
-    assertThrows(NotFoundException.class, () -> service.get(UUID.randomUUID()));
+  // TODO: 05/05/2020 result used to be null instead of NotFoundException
+  @ParameterizedTest
+  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  public void test404(ServiceType serviceType) {
+    assertThrows(NotFoundException.class, () -> getService(serviceType).get(UUID.randomUUID()));
   }
 
-  @Test
-  public void testMetadata() throws IOException {
-    Dataset d1 = create(newEntity(), 1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadata(ServiceType serviceType) throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset d1 = create(newEntity(), serviceType, 1);
     assertEquals(License.CC_BY_NC_4_0, d1.getLicense());
     List<Metadata> metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
     assertEquals(0, metadata.size(), "No EML uploaded yes");
@@ -927,6 +966,8 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertNotEquals(d1, d2, "Dataset should have changed after metadata was uploaded");
     assertEquals("Tanzanian Entomological Collection", d2.getTitle());
     assertEquals(d1.getCreated(), d2.getCreated(), "Created data should not change");
+    assertNotNull(d1.getModified());
+    assertNotNull(d2.getModified());
     assertTrue(
         d1.getModified().before(d2.getModified()), "Dataset modification date should change");
 
@@ -997,6 +1038,8 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
     // verify dataset was NOT updated from parsed document
     Dataset d6 = service.get(d1.getKey());
+    assertNotNull(d6.getModified());
+    assertNotNull(lastUpated.getModified());
     assertEquals(0, d6.getModified().compareTo(lastUpated.getModified()));
 
     // verify EML document NOT replaced
@@ -1016,9 +1059,11 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   /** Test that uploading the same document repeatedly does not change the dataset. */
-  @Test
-  public void testMetadataDuplication() throws IOException {
-    Dataset d1 = newAndCreate(1);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testMetadataDuplication(ServiceType serviceType) throws IOException {
+    DatasetService service = (DatasetService) getService(serviceType);
+    Dataset d1 = newAndCreate(1, serviceType);
     List<Metadata> m1 = service.listMetadata(d1.getKey(), MetadataType.EML);
 
     // upload a valid EML doc
@@ -1039,13 +1084,15 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Dataset metadata should not have changed after same metadata document was uploaded");
   }
 
-  @Test
-  public void testByCountry() {
-    createCountryDatasets(DatasetType.OCCURRENCE, Country.ANDORRA, 3);
-    createCountryDatasets(DatasetType.OCCURRENCE, Country.DJIBOUTI, 1);
-    createCountryDatasets(DatasetType.METADATA, Country.HAITI, 7);
-    createCountryDatasets(DatasetType.OCCURRENCE, Country.HAITI, 3);
-    createCountryDatasets(DatasetType.CHECKLIST, Country.HAITI, 2);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testByCountry(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    createCountryDatasets(DatasetType.OCCURRENCE, serviceType, Country.ANDORRA, 3);
+    createCountryDatasets(DatasetType.OCCURRENCE, serviceType, Country.DJIBOUTI, 1);
+    createCountryDatasets(DatasetType.METADATA, serviceType, Country.HAITI, 7);
+    createCountryDatasets(DatasetType.OCCURRENCE, serviceType, Country.HAITI, 3);
+    createCountryDatasets(DatasetType.CHECKLIST, serviceType, Country.HAITI, 2);
 
     assertResultsOfSize(service.listByCountry(Country.UNKNOWN, null, new PagingRequest()), 0);
     assertResultsOfSize(service.listByCountry(Country.ANDORRA, null, new PagingRequest()), 3);
@@ -1062,12 +1109,14 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         service.listByCountry(Country.HAITI, DatasetType.METADATA, new PagingRequest()), 7);
   }
 
-  @Test
-  public void testListByType() {
-    createDatasetsWithType(DatasetType.METADATA, 1);
-    createDatasetsWithType(DatasetType.CHECKLIST, 2);
-    createDatasetsWithType(DatasetType.OCCURRENCE, 3);
-    createDatasetsWithType(DatasetType.SAMPLING_EVENT, 4);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListByType(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    createDatasetsWithType(DatasetType.METADATA, serviceType, 1);
+    createDatasetsWithType(DatasetType.CHECKLIST, serviceType, 2);
+    createDatasetsWithType(DatasetType.OCCURRENCE, serviceType, 3);
+    createDatasetsWithType(DatasetType.SAMPLING_EVENT, serviceType, 4);
 
     assertResultsOfSize(service.listByType(DatasetType.METADATA, new PagingRequest()), 1);
     assertResultsOfSize(service.listByType(DatasetType.CHECKLIST, new PagingRequest()), 2);
@@ -1075,14 +1124,24 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertResultsOfSize(service.listByType(DatasetType.SAMPLING_EVENT, new PagingRequest()), 4);
   }
 
-  @Test
-  public void testCountrySearch() {
-    createCountryDatasets(Country.ANDORRA, 3);
-    createCountryDatasets(DatasetType.OCCURRENCE, Country.DJIBOUTI, 1, Country.DJIBOUTI);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCountrySearch(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+    createCountryDatasets(serviceType, Country.ANDORRA, 3);
     createCountryDatasets(
-        DatasetType.OCCURRENCE, Country.HAITI, 3, Country.AFGHANISTAN, Country.DENMARK);
-    createCountryDatasets(DatasetType.CHECKLIST, Country.HAITI, 4, Country.GABON, Country.FIJI);
-    createCountryDatasets(DatasetType.OCCURRENCE, Country.DOMINICA, 2, Country.DJIBOUTI);
+        DatasetType.OCCURRENCE, serviceType, Country.DJIBOUTI, 1, Country.DJIBOUTI);
+    createCountryDatasets(
+        DatasetType.OCCURRENCE,
+        serviceType,
+        Country.HAITI,
+        3,
+        Country.AFGHANISTAN,
+        Country.DENMARK);
+    createCountryDatasets(
+        DatasetType.CHECKLIST, serviceType, Country.HAITI, 4, Country.GABON, Country.FIJI);
+    createCountryDatasets(
+        DatasetType.OCCURRENCE, serviceType, Country.DOMINICA, 2, Country.DJIBOUTI);
 
     DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
 
@@ -1103,19 +1162,29 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertSearch(null, Country.DJIBOUTI, 3);*/
   }
 
-  @Test
-  public void createDatasetsWithInvalidUri() {
+  // TODO: 05/05/2020 client should throw ValidationException
+  @ParameterizedTest
+  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  public void createDatasetsWithInvalidUri(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset d = newEntity();
     d.setHomepage(URI.create("file:/test.txt"));
     assertThrows(ValidationException.class, () -> service.create(d));
   }
 
-  private void createCountryDatasets(Country publishingCountry, int number) {
-    createCountryDatasets(DatasetType.OCCURRENCE, publishingCountry, number, (Country) null);
+  private void createCountryDatasets(
+      ServiceType serviceType, Country publishingCountry, int number) {
+    createCountryDatasets(
+        DatasetType.OCCURRENCE, serviceType, publishingCountry, number, (Country) null);
   }
 
   private void createCountryDatasets(
-      DatasetType type, Country publishingCountry, int number, Country... countries) {
+      DatasetType type,
+      ServiceType serviceType,
+      Country publishingCountry,
+      int number,
+      Country... countries) {
+    DatasetService service = (DatasetService) getService(serviceType);
     Dataset d = addCountryCoverage(newEntity(), countries);
     d.setType(type);
     service.create(d);
@@ -1139,12 +1208,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
    * @param type dataset type
    * @param number amount of datasets to create
    */
-  private void createDatasetsWithType(DatasetType type, int number) {
+  private void createDatasetsWithType(DatasetType type, ServiceType serviceType, int number) {
     // create datasets for it
     for (int x = 0; x < number; x++) {
       Dataset d = newEntity();
       d.setType(type);
-      service.create(d);
+      getService(serviceType).create(d);
     }
   }
 
@@ -1160,8 +1229,8 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   /** Create a new instance of Dataset, store it using the create method. */
-  private Dataset newAndCreate(int expectedCount) {
+  private Dataset newAndCreate(int expectedCount, ServiceType serviceType) {
     Dataset newDataset = newEntity();
-    return create(newDataset, expectedCount);
+    return create(newDataset, serviceType, expectedCount);
   }
 }
