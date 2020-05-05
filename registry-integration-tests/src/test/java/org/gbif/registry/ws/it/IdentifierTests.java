@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.it;
 
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.NetworkEntity;
@@ -55,9 +56,10 @@ public class IdentifierTests {
     Identifier identifier = testDataFactory.newIdentifier();
     PagingResponse<T> entities =
         networkEntityService.listByIdentifier(
-            identifier.getType(), identifier.getIdentifier(), null);
+            identifier.getType(), identifier.getIdentifier(), new PagingRequest());
     assertEquals((Long) 1L, entities.getCount(), "Only one entity should have the identifier");
-    entities = networkEntityService.listByIdentifier(identifier.getIdentifier(), null);
+    entities =
+        networkEntityService.listByIdentifier(identifier.getIdentifier(), new PagingRequest());
     assertEquals((Long) 1L, entities.getCount(), "Only one entity should have the identifier");
 
     // test deletion, ensuring correct one is deleted

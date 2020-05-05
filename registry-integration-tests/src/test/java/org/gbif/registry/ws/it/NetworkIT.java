@@ -73,7 +73,7 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
   /** Test doesn't make sense for a network. */
   @Override
-  public void testCreateAsEditor() {}
+  public void testCreateAsEditor(ServiceType serviceType) {}
 
   @Override
   protected Network duplicateForCreateAsEditorTest(Network entity) {

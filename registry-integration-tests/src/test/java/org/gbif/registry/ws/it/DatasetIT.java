@@ -159,9 +159,9 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   /** Override creation to add process properties. */
-  @Override
   protected Dataset create(Dataset orig, int expectedCount) {
-    return create(orig, expectedCount, buildExpectedProcessedProperties(orig));
+    return create(
+        orig, ServiceType.RESOURCE, expectedCount, buildExpectedProcessedProperties(orig));
   }
 
   @Override
@@ -651,7 +651,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
     Map<String, Object> processProperties = Datasets.buildExpectedProcessedProperties(dataset);
     processProperties.put("description", expectedParagraph);
-    dataset = create(dataset, 1, processProperties);
+    dataset = create(dataset, ServiceType.RESOURCE, 1, processProperties);
     assertEquals(expectedParagraph, dataset.getDescription());
   }
 
