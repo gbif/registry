@@ -80,7 +80,7 @@ public class UserManagementIT extends BaseItTest {
     UserCreation userCreation = UserTestFixture.generateUser(ALTERNATE_USERNAME);
 
     requestTestFixture
-        .postSignedRequest(IT_APP_KEY, userCreation, "/admin/user")
+        .postSignedRequest(IT_APP_KEY2, IT_APP_KEY2, userCreation, "/admin/user")
         .andExpect(status().isCreated());
 
     // test we can't log in (challengeCode not confirmed)
