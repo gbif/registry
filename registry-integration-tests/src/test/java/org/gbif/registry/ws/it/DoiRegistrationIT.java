@@ -31,11 +31,16 @@ import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.ws.client.DoiRegistrationClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -48,44 +53,60 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  *   <li>The WS service client layer
  * </ol>
  */
-public class DoiRegistrationServiceIT extends BaseItTest {
+public class DoiRegistrationIT extends BaseItTest {
 
-  private final DoiRegistrationService doiRegistrationService;
+  private final DoiRegistrationService doiRegistrationResource;
+  private final DoiRegistrationService doiRegistrationClient;
 
   @Autowired
-  public DoiRegistrationServiceIT(
-      DoiRegistrationService doiRegistrationService,
+  public DoiRegistrationIT(
+      DoiRegistrationService doiRegistrationResource,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore,
+      UserTestFixture userTestFixture) {
     super(simplePrincipalProvider, esServer);
-    this.doiRegistrationService = doiRegistrationService;
+    this.doiRegistrationResource = doiRegistrationResource;
+    this.doiRegistrationClient =
+        prepareClient(localServerPort, keyStore, DoiRegistrationClient.class);
   }
 
   /** Generates a new DOI. */
-  @Test
-  public void testGenerate() {
-    DOI doi = doiRegistrationService.generate(DoiType.DATA_PACKAGE);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testGenerate(ServiceType serviceType) {
+    DoiRegistrationService service =
+        getService(serviceType, doiRegistrationResource, doiRegistrationClient);
+    DOI doi = service.generate(DoiType.DATA_PACKAGE);
     assertNotNull(doi);
   }
 
   /** Tests generate and get DOI methods. */
-  @Test
-  public void testCreateAndGet() {
-    DOI doi = doiRegistrationService.generate(DoiType.DATA_PACKAGE);
-    DoiData doiData = doiRegistrationService.get(doi.getPrefix(), doi.getSuffix());
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCreateAndGet(ServiceType serviceType) {
+    DoiRegistrationService service =
+        getService(serviceType, doiRegistrationResource, doiRegistrationClient);
+    DOI doi = service.generate(DoiType.DATA_PACKAGE);
+    DoiData doiData = service.get(doi.getPrefix(), doi.getSuffix());
     assertNotNull(doi);
     assertNotNull(doiData);
   }
 
   /** Tests the registration of DOI for a data package. */
-  @Test
-  public void testRegister() {
-    DoiRegistration.Builder builder =
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testRegister(ServiceType serviceType) {
+    DoiRegistrationService service =
+        getService(serviceType, doiRegistrationResource, doiRegistrationClient);
+    DoiRegistration doiRegistration =
         DoiRegistration.builder()
             .withType(DoiType.DATA_PACKAGE)
             .withUser(TestConstants.TEST_ADMIN)
-            .withMetadata(testMetadata());
-    DOI doi = doiRegistrationService.register(builder.build());
+            .withMetadata(testMetadata())
+            .build();
+    DOI doi = service.register(doiRegistration);
     assertNotNull(doi);
   }
 

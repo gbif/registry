@@ -29,15 +29,12 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.InstallationClient;
-import org.gbif.registry.ws.it.fixtures.TestConstants;
-import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.util.Date;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +61,6 @@ public class MetasyncHistoryIT extends BaseItTest {
   private final InstallationService installationService;
 
   private final TestDataFactory testDataFactory;
-  private final UserTestFixture userTestFixture;
 
   @Autowired
   public MetasyncHistoryIT(
@@ -76,23 +72,14 @@ public class MetasyncHistoryIT extends BaseItTest {
       TestDataFactory testDataFactory,
       EsManageServer esServer,
       @LocalServerPort int localServerPort,
-      KeyStore keyStore,
-      UserTestFixture userTestFixture) {
+      KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
     this.metasyncHistoryResource = metasyncHistoryResource;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
     this.testDataFactory = testDataFactory;
-    this.metasyncHistoryClient =
-        prepareClient(
-            TestConstants.TEST_ADMIN, localServerPort, keyStore, InstallationClient.class);
-    this.userTestFixture = userTestFixture;
-  }
-
-  @BeforeEach
-  public void beforeEach() {
-    userTestFixture.prepareAdminUser();
+    this.metasyncHistoryClient = prepareClient(localServerPort, keyStore, InstallationClient.class);
   }
 
   /** Tests the operations create and list of {@link MetasyncHistoryService}. */
