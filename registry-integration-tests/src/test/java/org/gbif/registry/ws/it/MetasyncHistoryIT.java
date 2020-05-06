@@ -28,13 +28,20 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.InstallationClient;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.Date;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,50 +56,68 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class MetasyncHistoryIT extends BaseItTest {
 
-  private final MetasyncHistoryService metasyncHistoryService;
+  private final MetasyncHistoryService metasyncHistoryResource;
+  private final MetasyncHistoryService metasyncHistoryClient;
 
   private final OrganizationService organizationService;
   private final NodeService nodeService;
   private final InstallationService installationService;
 
   private final TestDataFactory testDataFactory;
+  private final UserTestFixture userTestFixture;
 
   @Autowired
   public MetasyncHistoryIT(
-      MetasyncHistoryService metasyncHistoryService,
+      MetasyncHistoryService metasyncHistoryResource,
       OrganizationService organizationService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore,
+      UserTestFixture userTestFixture) {
     super(simplePrincipalProvider, esServer);
-    this.metasyncHistoryService = metasyncHistoryService;
+    this.metasyncHistoryResource = metasyncHistoryResource;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
     this.testDataFactory = testDataFactory;
+    this.metasyncHistoryClient =
+        prepareClient(
+            TestConstants.TEST_ADMIN, localServerPort, keyStore, InstallationClient.class);
+    this.userTestFixture = userTestFixture;
+  }
+
+  @BeforeEach
+  public void beforeEach() {
+    userTestFixture.prepareAdminUser();
   }
 
   /** Tests the operations create and list of {@link MetasyncHistoryService}. */
-  @Test
-  public void testCreateAndList() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCreateAndList(ServiceType serviceType) {
+    MetasyncHistoryService service =
+        getService(serviceType, metasyncHistoryResource, metasyncHistoryClient);
     MetasyncHistory metasyncHistory = getTestInstance();
-    metasyncHistoryService.createMetasync(metasyncHistory);
-    PagingResponse<MetasyncHistory> response =
-        metasyncHistoryService.listMetasync(new PagingRequest());
+    service.createMetasync(metasyncHistory);
+    PagingResponse<MetasyncHistory> response = service.listMetasync(new PagingRequest());
     assertTrue(
         response.getResults().size() > 0, "The list operation should return at least 1 record");
   }
 
   /** Tests the {@link MetasyncHistoryService#listMetasync(UUID, Pageable)} operation. */
-  @Test
-  public void testListAndListByInstallation() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListAndListByInstallation(ServiceType serviceType) {
+    MetasyncHistoryService service =
+        getService(serviceType, metasyncHistoryResource, metasyncHistoryClient);
     MetasyncHistory metasyncHistory = getTestInstance();
-    metasyncHistoryService.createMetasync(metasyncHistory);
+    service.createMetasync(metasyncHistory);
     PagingResponse<MetasyncHistory> response =
-        metasyncHistoryService.listMetasync(
-            metasyncHistory.getInstallationKey(), new PagingRequest());
+        service.listMetasync(metasyncHistory.getInstallationKey(), new PagingRequest());
     assertTrue(
         response.getResults().size() > 0, "The list operation should return at least 1 record");
   }
