@@ -390,8 +390,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         .build();
   }
 
-  @Override
-  public boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
+  @PostMapping("{key}/endorsement/{confirmationKey}")
+  @Secured(APP_ROLE)
+  public boolean confirmEndorsement(
+      @PathVariable("key") UUID organizationKey,
+      @PathVariable("confirmationKey") UUID confirmationKey) {
     return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
   }
 }
