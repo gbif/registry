@@ -48,14 +48,15 @@ import org.gbif.registry.ws.resources.pipelines.PipelinesHistoryResource;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
+
+import java.util.Collections;
+import java.util.UUID;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.security.access.AccessDeniedException;
-
-import java.util.Collections;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -90,13 +91,16 @@ public class PipelinesHistoryIT extends BaseItTest {
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
-    this.pipelinesHistoryClient = prepareClient(TestConstants.TEST_ADMIN, localServerPort, keyStore, PipelinesHistoryClient.class);
+    this.pipelinesHistoryClient =
+        prepareClient(
+            TestConstants.TEST_ADMIN, localServerPort, keyStore, PipelinesHistoryClient.class);
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createPipelineProcessTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey = createDataset();
     final int attempt = 1;
 
@@ -112,25 +116,31 @@ public class PipelinesHistoryIT extends BaseItTest {
 
   // TODO: 06/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = {"RESOURCE"})
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
   public void createPipelineProcessWithoutPrivilegesTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     resetSecurityContext(TestConstants.TEST_USER, UserRole.USER);
-    assertThrows(AccessDeniedException.class,
+    assertThrows(
+        AccessDeniedException.class,
         () -> service.createPipelineProcess(new PipelineProcessParameters(UUID.randomUUID(), 1)));
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void getNonExistentPipelineProcessTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     assertNull(service.getPipelineProcess(UUID.randomUUID(), 0));
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void historyTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey1 = createDataset();
     final UUID datasetKey2 = createDataset();
 
@@ -153,7 +163,8 @@ public class PipelinesHistoryIT extends BaseItTest {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void addPipelineStepTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey1 = createDataset();
     long processKey = service.createPipelineProcess(new PipelineProcessParameters(datasetKey1, 1));
 
@@ -180,9 +191,12 @@ public class PipelinesHistoryIT extends BaseItTest {
 
   // TODO: 06/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = {"RESOURCE"})
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
   public void addPipelineStepWithoutPrivilegesTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey1 = createDataset();
     long processKey = service.createPipelineProcess(new PipelineProcessParameters(datasetKey1, 1));
     assertTrue(processKey > 0);
@@ -197,13 +211,15 @@ public class PipelinesHistoryIT extends BaseItTest {
             .setType(StepType.ABCD_TO_VERBATIM)
             .setState(PipelineStep.Status.RUNNING);
 
-    assertThrows(AccessDeniedException.class, () -> service.addPipelineStep(processKey, executionKey, step));
+    assertThrows(
+        AccessDeniedException.class, () -> service.addPipelineStep(processKey, executionKey, step));
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void updatePipelineStepStatusAndMetricsTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey1 = createDataset();
     long processKey = service.createPipelineProcess(new PipelineProcessParameters(datasetKey1, 1));
 
@@ -226,8 +242,7 @@ public class PipelinesHistoryIT extends BaseItTest {
         new PipelineStepParameters(
             PipelineStep.Status.COMPLETED,
             Collections.singletonList(new PipelineStep.MetricInfo("name", "value")));
-    service.updatePipelineStepStatusAndMetrics(
-        processKey, executionKey, stepKey, stepParams);
+    service.updatePipelineStepStatusAndMetrics(processKey, executionKey, stepKey, stepParams);
 
     PipelineStep stepCreated = service.getPipelineStep(processKey, executionKey, stepKey);
     assertEquals(PipelineStep.Status.COMPLETED, stepCreated.getState());
@@ -239,19 +254,24 @@ public class PipelinesHistoryIT extends BaseItTest {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void getPipelineWorkflowNonExistentProcessTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     assertNull(service.getPipelineProcess(UUID.randomUUID(), 1));
   }
 
   // TODO: 06/05/2020 client throw an exception for some reason
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = {"RESOURCE"})
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
   public void runPipelineAttemptTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     // create one process with one step
     final UUID datasetKey1 = createDataset();
     final int attempt = 1;
-    long processKey = service.createPipelineProcess(new PipelineProcessParameters(datasetKey1, attempt));
+    long processKey =
+        service.createPipelineProcess(new PipelineProcessParameters(datasetKey1, attempt));
 
     PipelineExecution execution =
         new PipelineExecution()
@@ -279,8 +299,7 @@ public class PipelinesHistoryIT extends BaseItTest {
 
     // run the process
     final String rerunReason = "test reason";
-    service.runPipelineAttempt(
-        datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason);
+    service.runPipelineAttempt(datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason);
 
     // check that the DB was updated
     PipelineProcess process = service.getPipelineProcess(datasetKey1, attempt);
@@ -298,13 +317,18 @@ public class PipelinesHistoryIT extends BaseItTest {
 
   // TODO: 06/05/2020 resource does not throw an exception for some reason
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = {"CLIENT"})
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"CLIENT"})
   public void runPipelineAttemptInRunningStateTest(ServiceType serviceType) {
-    PipelinesHistoryService service = getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    PipelinesHistoryService service =
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     // create one process with one step
     final UUID datasetKey1 = createDataset();
     final int attempt = 1;
-    long processKey = pipelinesHistoryClient.createPipelineProcess(new PipelineProcessParameters(datasetKey1, attempt));
+    long processKey =
+        pipelinesHistoryClient.createPipelineProcess(
+            new PipelineProcessParameters(datasetKey1, attempt));
 
     PipelineExecution execution =
         new PipelineExecution()
@@ -323,11 +347,15 @@ public class PipelinesHistoryIT extends BaseItTest {
             .setState(PipelineStep.Status.RUNNING));
 
     // run process and expect a bad request since the step is in running state
-    assertThrows(WebApplicationException.class,
-        () -> service.runPipelineAttempt(datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test"));
+    assertThrows(
+        WebApplicationException.class,
+        () ->
+            service.runPipelineAttempt(
+                datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test"));
 
     // run process without attempt and expect a bad request since the step is in running state
-    assertThrows(WebApplicationException.class,
+    assertThrows(
+        WebApplicationException.class,
         () -> service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test"));
   }
 
