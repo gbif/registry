@@ -19,7 +19,9 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
 import java.util.stream.Stream;
@@ -44,6 +46,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -120,5 +124,25 @@ public class BaseItTest {
   public enum ServiceType {
     RESOURCE,
     CLIENT
+  }
+
+  protected <T> T prepareClient(int localServerPort, KeyStore keyStore, Class<T> cls) {
+    return new ClientFactory(
+            IT_APP_KEY2,
+            "http://localhost:" + localServerPort,
+            IT_APP_KEY2,
+            keyStore.getPrivateKey(IT_APP_KEY2))
+        .newInstance(cls);
+  }
+
+  protected <T> T getService(ServiceType param, T resource, T client) {
+    switch (param) {
+      case CLIENT:
+        return client;
+      case RESOURCE:
+        return resource;
+      default:
+        throw new IllegalStateException("Must be resource or client");
+    }
   }
 }
