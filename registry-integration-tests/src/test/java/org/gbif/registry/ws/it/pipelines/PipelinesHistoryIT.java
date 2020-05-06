@@ -44,6 +44,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.registry.ws.resources.pipelines.PipelinesHistoryResource;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -52,6 +53,7 @@ import org.gbif.ws.security.KeyStore;
 import java.util.Collections;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +75,7 @@ public class PipelinesHistoryIT extends BaseItTest {
   private final InstallationService installationService;
   private final PipelinesHistoryService pipelinesHistoryResource;
   private final PipelinesHistoryClient pipelinesHistoryClient;
+  private final UserTestFixture userTestFixture;
 
   @Autowired
   public PipelinesHistoryIT(
@@ -84,7 +87,8 @@ public class PipelinesHistoryIT extends BaseItTest {
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       @LocalServerPort int localServerPort,
-      KeyStore keyStore) {
+      KeyStore keyStore,
+      UserTestFixture userTestFixture) {
     super(principalProvider, esServer);
     this.pipelinesHistoryResource = pipelinesHistoryResource;
     this.datasetService = datasetService;
@@ -94,6 +98,12 @@ public class PipelinesHistoryIT extends BaseItTest {
     this.pipelinesHistoryClient =
         prepareClient(
             TestConstants.TEST_ADMIN, localServerPort, keyStore, PipelinesHistoryClient.class);
+    this.userTestFixture = userTestFixture;
+  }
+
+  @BeforeEach
+  public void beforeEach() {
+    userTestFixture.prepareAdminUser();
   }
 
   @ParameterizedTest
