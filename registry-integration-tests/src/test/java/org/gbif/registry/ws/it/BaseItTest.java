@@ -138,16 +138,18 @@ public class BaseItTest {
   }
 
   protected <T> T prepareClient(int localServerPort, KeyStore keyStore, Class<T> cls) {
-    return prepareClient(IT_APP_KEY2, localServerPort, keyStore, cls);
+    return prepareClient(IT_APP_KEY2, IT_APP_KEY2, localServerPort, keyStore, cls);
   }
 
   protected <T> T prepareClient(
       String username, int localServerPort, KeyStore keyStore, Class<T> cls) {
+    return prepareClient(username, IT_APP_KEY2, localServerPort, keyStore, cls);
+  }
+
+  protected <T> T prepareClient(
+      String username, String appKey, int localServerPort, KeyStore keyStore, Class<T> cls) {
     return new ClientFactory(
-            username,
-            "http://localhost:" + localServerPort,
-            IT_APP_KEY2,
-            keyStore.getPrivateKey(IT_APP_KEY2))
+            username, "http://localhost:" + localServerPort, appKey, keyStore.getPrivateKey(appKey))
         .newInstance(cls);
   }
 

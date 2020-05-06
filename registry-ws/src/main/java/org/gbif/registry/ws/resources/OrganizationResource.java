@@ -222,7 +222,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
     if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
       // here we consider the user has the right to endorse an organization without a key.
-      confirmEndorsement(organization.getKey(), (UUID) null);
+      organizationEndorsementService.confirmEndorsement(organization.getKey(), (UUID) null);
     }
 
     // let the parent class set the modifiedBy

@@ -22,14 +22,13 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.AppRole;
-import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -38,14 +37,22 @@ import java.util.stream.Collectors;
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static org.gbif.api.vocabulary.AppRole.APP;
+import static org.gbif.api.vocabulary.UserRole.REGISTRY_ADMIN;
+import static org.gbif.api.vocabulary.UserRole.USER;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -58,7 +65,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class OrganizationCreationIT extends BaseItTest {
 
-  private OrganizationService organizationService;
+  private OrganizationService organizationResource;
+  private OrganizationService organizationClient;
+  private OrganizationService adminOrganizationClient;
+  private OrganizationService userOrganizationClient;
   private NodeService nodeService;
   private ChallengeCodeMapper challengeCodeMapper;
   private ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper;
@@ -66,28 +76,36 @@ public class OrganizationCreationIT extends BaseItTest {
 
   @Autowired
   public OrganizationCreationIT(
-      OrganizationService organizationService,
+      OrganizationService organizationResource,
       NodeService nodeService,
       ChallengeCodeMapper challengeCodeMapper,
       ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper,
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
-    this.organizationService = organizationService;
+    this.organizationResource = organizationResource;
     this.nodeService = nodeService;
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
     this.testDataFactory = testDataFactory;
+    this.organizationClient =
+        prepareClient(IT_APP_KEY, IT_APP_KEY, localServerPort, keyStore, OrganizationClient.class);
+    this.adminOrganizationClient =
+        prepareClient(TEST_ADMIN, IT_APP_KEY, localServerPort, keyStore, OrganizationClient.class);
+    this.userOrganizationClient =
+        prepareClient(TEST_USER, IT_APP_KEY, localServerPort, keyStore, OrganizationClient.class);
   }
 
   @BeforeEach
   public void init() {
     // reset SimplePrincipleProvider, configured for web service client tests only
-    setupPrincipal(TestConstants.TEST_ADMIN, UserRole.REGISTRY_ADMIN.name(), AppRole.APP.name());
+    setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN, APP);
   }
 
-  private void setupPrincipal(String name, String... roles) {
+  private void setupPrincipal(String name, Enum... roles) {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal(name);
@@ -97,19 +115,20 @@ public class OrganizationCreationIT extends BaseItTest {
           new UsernamePasswordAuthenticationToken(
               getSimplePrincipalProvider().get().getName(),
               "",
-              Arrays.stream(roles).map(SimpleGrantedAuthority::new).collect(Collectors.toList())));
+              Arrays.stream(roles)
+                  .map(Enum::name)
+                  .map(SimpleGrantedAuthority::new)
+                  .collect(Collectors.toList())));
     }
   }
 
   /** It is not in the scope of this test to test the email bits. */
-  @Test
-  public void testEndorsements() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testEndorsements(ServiceType serviceType) {
+    OrganizationService service = getService(serviceType, organizationResource, organizationClient);
     Organization organization =
-        prepareOrganization(
-            prepareNode(nodeService, testDataFactory), organizationService, testDataFactory);
-
-    // reset principal - use APP role
-    setupPrincipal(TestConstants.IT_APP_KEY, AppRole.APP.name());
+        prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
 
     assertEquals(
         Long.valueOf(0),
@@ -131,7 +150,7 @@ public class OrganizationCreationIT extends BaseItTest {
         challengeCodeSupportMapper.getChallengeCodeKey(organization.getKey());
     UUID challengeCode = challengeCodeMapper.getChallengeCode(challengeCodeKey);
     assertTrue(
-        organizationService.confirmEndorsement(organization.getKey(), challengeCode),
+        service.confirmEndorsement(organization.getKey(), challengeCode),
         "endorsement should be confirmed");
 
     // We should have no more pending endorsement for this node
@@ -142,17 +161,21 @@ public class OrganizationCreationIT extends BaseItTest {
             .getCount());
 
     // We should also have a contact
-    assertEquals(1, organizationService.get(organization.getKey()).getContacts().size());
+    assertEquals(1, service.get(organization.getKey()).getContacts().size());
 
     // and a comment
-    assertEquals(1, organizationService.get(organization.getKey()).getComments().size());
+    assertEquals(1, service.get(organization.getKey()).getComments().size());
   }
 
-  @Test
-  public void testEndorsementsByAdmin() {
+  // TODO: 07/05/2020 client exception, compare to the old client
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void testEndorsementsByAdmin(ServiceType serviceType) {
+    OrganizationService service = getService(serviceType, organizationResource, organizationClient);
     Organization organization =
-        prepareOrganization(
-            prepareNode(nodeService, testDataFactory), organizationService, testDataFactory);
+        prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
     assertEquals(
         Long.valueOf(0),
         nodeService
@@ -161,18 +184,23 @@ public class OrganizationCreationIT extends BaseItTest {
     UUID organizationKey = organization.getKey();
     assertThrows(
         ValidationException.class,
-        () -> organizationService.confirmEndorsement(organizationKey, null),
+        () -> service.confirmEndorsement(organizationKey, null),
         "endorsement should NOT be confirmed using appkey and no confirmation code");
 
+    // reset principal - use USER role
+    setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
+    OrganizationService adminService =
+        getService(serviceType, organizationResource, adminOrganizationClient);
+
     assertThrows(
-        ValidationException.class,
-        () -> organizationService.confirmEndorsement(organizationKey, null),
+        AccessDeniedException.class,
+        () -> adminService.confirmEndorsement(organizationKey, null),
         "endorsement should NOT be confirmed without confirmation code");
 
     // get the latest version (to get fields like modified)
-    organization = organizationService.get(organizationKey);
+    organization = service.get(organizationKey);
     organization.setEndorsementApproved(true);
-    organizationService.update(organization);
+    service.update(organization);
 
     assertEquals(
         Long.valueOf(1),
@@ -181,25 +209,30 @@ public class OrganizationCreationIT extends BaseItTest {
             .getCount());
   }
 
+  // TODO: 07/05/2020 client exception
   /**
    * Only Admin shall be allowed to set EndorsementApproved directly (without providing a
    * confirmationCode)
    */
-  @Test
-  public void testSetEndorsementsByNonAdmin() {
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void testSetEndorsementsByNonAdmin(ServiceType serviceType) {
+    OrganizationService service = getService(serviceType, organizationResource, organizationClient);
     Organization organization =
-        prepareOrganization(
-            prepareNode(nodeService, testDataFactory), organizationService, testDataFactory);
+        prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
 
     // reset principal - use USER role
-    setupPrincipal(TestConstants.TEST_USER, UserRole.USER.name());
+    setupPrincipal(TEST_USER, USER);
+    OrganizationService userService =
+        getService(serviceType, organizationResource, userOrganizationClient);
 
-    Organization createdOrganization = organizationService.get(organization.getKey());
+    Organization createdOrganization = userService.get(organization.getKey());
     createdOrganization.setEndorsementApproved(true);
 
     // make sure an app can not change the endorsementApproved directly
-    assertThrows(
-        AccessDeniedException.class, () -> organizationService.update(createdOrganization));
+    assertThrows(AccessDeniedException.class, () -> userService.update(createdOrganization));
   }
 
   private static Node prepareNode(NodeService nodeService, TestDataFactory testDataFactory) {
