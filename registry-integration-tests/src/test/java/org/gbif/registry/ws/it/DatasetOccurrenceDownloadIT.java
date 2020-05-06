@@ -28,14 +28,19 @@ import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.DatasetOccurrenceDownloadUsageClient;
+import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -52,8 +57,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class DatasetOccurrenceDownloadIT extends BaseItTest {
 
   private TestDataFactory testDataFactory;
-  private final OccurrenceDownloadService occurrenceDownloadService;
-  private final DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService;
+  private final OccurrenceDownloadClient occurrenceDownloadClient;
+  private final OccurrenceDownloadService occurrenceDownloadResource;
+  private final DatasetOccurrenceDownloadUsageClient datasetOccurrenceDownloadUsageClient;
+  private final DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource;
 
   // The following services are required to create dataset instances
   private final DatasetService datasetService;
@@ -63,22 +70,28 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
 
   @Autowired
   public DatasetOccurrenceDownloadIT(
-      OccurrenceDownloadService occurrenceDownloadService,
+      OccurrenceDownloadService occurrenceDownloadResource,
       OrganizationService organizationService,
       DatasetService datasetService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService,
+      DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
-    this.occurrenceDownloadService = occurrenceDownloadService;
+    this.occurrenceDownloadResource = occurrenceDownloadResource;
+    this.occurrenceDownloadClient =
+        prepareClient(localServerPort, keyStore, OccurrenceDownloadClient.class);
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.nodeService = nodeService;
     this.installationService = installationService;
-    this.datasetOccurrenceDownloadUsageService = datasetOccurrenceDownloadUsageService;
+    this.datasetOccurrenceDownloadUsageResource = datasetOccurrenceDownloadUsageResource;
+    this.datasetOccurrenceDownloadUsageClient =
+        prepareClient(localServerPort, keyStore, DatasetOccurrenceDownloadUsageClient.class);
     this.testDataFactory = testDataFactory;
   }
 
@@ -105,8 +118,16 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
    * Tests the process of persist a dataset occurrence download and list the downloads by dataset
    * key.
    */
-  @Test
-  public void testAddAndGetOccurrenceDatasetOne() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testAddAndGetOccurrenceDatasetOne(ServiceType serviceType) {
+    OccurrenceDownloadService occurrenceDownloadService =
+        getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+    DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService =
+        getService(
+            serviceType,
+            datasetOccurrenceDownloadUsageResource,
+            datasetOccurrenceDownloadUsageClient);
     Download occurrenceDownload = OccurrenceDownloadIT.getTestInstancePredicateDownload();
     final Dataset testDataset = createTestDataset();
 
@@ -130,8 +151,16 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
    * Tests the process of persist a list of dataset occurrence download and list the downloads by
    * dataset key.
    */
-  @Test
-  public void testAddAndGetOccurrenceDatasetMany() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testAddAndGetOccurrenceDatasetMany(ServiceType serviceType) {
+    OccurrenceDownloadService occurrenceDownloadService =
+        getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+    DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageService =
+        getService(
+            serviceType,
+            datasetOccurrenceDownloadUsageResource,
+            datasetOccurrenceDownloadUsageClient);
     Download occurrenceDownload = OccurrenceDownloadIT.getTestInstancePredicateDownload();
     final Dataset testDataset1 = createTestDataset();
     final Dataset testDataset2 = createTestDataset();
