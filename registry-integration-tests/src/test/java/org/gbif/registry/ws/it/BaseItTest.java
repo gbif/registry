@@ -117,6 +117,17 @@ public class BaseItTest {
     }
   }
 
+  protected void resetSecurityContext(String principal, UserRole role) {
+    simplePrincipalProvider.setPrincipal(principal);
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            simplePrincipalProvider.get().getName(),
+            "",
+            Collections.singleton(new SimpleGrantedAuthority(role.name()))));
+  }
+
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
   }
@@ -127,11 +138,15 @@ public class BaseItTest {
   }
 
   protected <T> T prepareClient(int localServerPort, KeyStore keyStore, Class<T> cls) {
+    return prepareClient(IT_APP_KEY2, localServerPort, keyStore, cls);
+  }
+
+  protected <T> T prepareClient(String username, int localServerPort, KeyStore keyStore, Class<T> cls) {
     return new ClientFactory(
-            IT_APP_KEY2,
-            "http://localhost:" + localServerPort,
-            IT_APP_KEY2,
-            keyStore.getPrivateKey(IT_APP_KEY2))
+        username,
+        "http://localhost:" + localServerPort,
+        IT_APP_KEY2,
+        keyStore.getPrivateKey(IT_APP_KEY2))
         .newInstance(cls);
   }
 
