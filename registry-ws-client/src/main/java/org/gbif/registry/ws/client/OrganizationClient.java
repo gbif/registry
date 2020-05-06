@@ -105,8 +105,10 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
   @Override
   List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
 
+  @RequestMapping(method = RequestMethod.POST, value = "{key}/endorsement/{confirmationKey}")
+  @ResponseBody
   @Override
-  default boolean confirmEndorsement(UUID organizationKey, UUID confirmationKey) {
-    throw new UnsupportedOperationException("OrganizationClient confirm endorsement not supported");
-  }
+  boolean confirmEndorsement(
+      @PathVariable("key") UUID organizationKey,
+      @PathVariable("confirmationKey") UUID confirmationKey);
 }
