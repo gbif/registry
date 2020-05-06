@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RequestMapping("doi")
 public interface DoiRegistrationClient extends DoiRegistrationService {
 
-  @RequestMapping(method = RequestMethod.POST, value = "get/{type}")
+  @RequestMapping(method = RequestMethod.POST, value = "gen/{type}")
   @Override
   DOI generate(@PathVariable("type") DoiType type);
 
