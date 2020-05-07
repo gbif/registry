@@ -25,8 +25,8 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
-import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -40,7 +40,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -54,14 +53,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class OrganizationIT extends NetworkEntityIT<Organization> {
 
-  private final NodeService nodeService;
+  private final NodeService nodeResource;
+  private final NodeService nodeClient;
 
   private final TestDataFactory testDataFactory;
 
   @Autowired
   public OrganizationIT(
       OrganizationService service,
-      NodeService nodeService,
+      NodeService nodeResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
@@ -69,16 +69,14 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
       KeyStore keyStore) {
     super(
         service,
-        new ClientFactory(
-                IT_APP_KEY2,
-                "http://localhost:" + localServerPort,
-                IT_APP_KEY2,
-                keyStore.getPrivateKey(IT_APP_KEY2))
-            .newInstance(OrganizationClient.class),
+        localServerPort,
+        keyStore,
+        OrganizationClient.class,
         principalProvider,
         testDataFactory,
         esServer);
-    this.nodeService = nodeService;
+    this.nodeResource = nodeResource;
+    this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
     this.testDataFactory = testDataFactory;
   }
 
@@ -87,7 +85,7 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   public void testSuggest(ServiceType serviceType) {
     OrganizationService service = (OrganizationService) getService(serviceType);
     Node node = testDataFactory.newNode();
-    UUID nodeKey = nodeService.create(node);
+    UUID nodeKey = nodeResource.create(node);
 
     Organization o1 = testDataFactory.newOrganization(nodeKey);
     o1.setTitle("Tim");
@@ -105,6 +103,8 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   @EnumSource(ServiceType.class)
   public void testByCountry(ServiceType serviceType) {
     OrganizationService service = (OrganizationService) getService(serviceType);
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
     Node node = testDataFactory.newNode();
     nodeService.create(node);
     node = nodeService.list(new PagingRequest()).getResults().get(0);
@@ -132,6 +132,8 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   @EnumSource(ServiceType.class)
   public void testHostedByInstallationList(ServiceType serviceType) {
     OrganizationService service = (OrganizationService) getService(serviceType);
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
     Installation installation = testDataFactory.newPersistedInstallation();
     Organization organization = service.get(installation.getOrganizationKey());
     Node node = nodeService.get(organization.getEndorsingNodeKey());
@@ -154,7 +156,9 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   }
 
   @Override
-  protected Organization newEntity() {
+  protected Organization newEntity(ServiceType serviceType) {
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
     UUID key = nodeService.create(testDataFactory.newNode());
     Node node = nodeService.get(key);
     return testDataFactory.newOrganization(node.getKey());

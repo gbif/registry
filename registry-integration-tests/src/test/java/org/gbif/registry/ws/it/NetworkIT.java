@@ -20,7 +20,6 @@ import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NetworkClient;
-import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -30,8 +29,6 @@ import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
-
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -56,12 +53,9 @@ public class NetworkIT extends NetworkEntityIT<Network> {
       KeyStore keyStore) {
     super(
         service,
-        new ClientFactory(
-                IT_APP_KEY2,
-                "http://localhost:" + localServerPort,
-                IT_APP_KEY2,
-                keyStore.getPrivateKey(IT_APP_KEY2))
-            .newInstance(NetworkClient.class),
+        localServerPort,
+        keyStore,
+        NetworkClient.class,
         principalProvider,
         testDataFactory,
         esServer);
@@ -69,7 +63,7 @@ public class NetworkIT extends NetworkEntityIT<Network> {
   }
 
   @Override
-  protected Network newEntity() {
+  protected Network newEntity(ServiceType serviceType) {
     return testDataFactory.newNetwork();
   }
 
