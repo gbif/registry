@@ -25,7 +25,8 @@ import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.InstallationClient;
-import org.gbif.ws.client.ClientFactory;
+import org.gbif.registry.ws.client.NodeClient;
+import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -39,7 +40,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,15 +55,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class InstallationIT extends NetworkEntityIT<Installation> {
 
-  private final OrganizationService organizationService;
-  private final NodeService nodeService;
+  private final OrganizationService organizationResource;
+  private final OrganizationService organizationClient;
+  private final NodeService nodeResource;
+  private final NodeService nodeClient;
+
   private final TestDataFactory testDataFactory;
 
   @Autowired
   public InstallationIT(
       InstallationService service,
-      OrganizationService organizationService,
-      NodeService nodeService,
+      OrganizationService organizationResource,
+      NodeService nodeResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
@@ -71,34 +74,24 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
       KeyStore keyStore) {
     super(
         service,
-        new ClientFactory(
-                IT_APP_KEY2,
-                "http://localhost:" + localServerPort,
-                IT_APP_KEY2,
-                keyStore.getPrivateKey(IT_APP_KEY2))
-            .newInstance(InstallationClient.class),
+        localServerPort,
+        keyStore,
+        InstallationClient.class,
         principalProvider,
         testDataFactory,
         esServer);
-    this.organizationService = organizationService;
-    this.nodeService = nodeService;
+    this.organizationResource = organizationResource;
+    this.organizationClient = prepareClient(localServerPort, keyStore, OrganizationClient.class);
+    this.nodeResource = nodeResource;
+    this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
     this.testDataFactory = testDataFactory;
-  }
-
-  @Override
-  protected Installation newEntity() {
-    UUID nodeKey = nodeService.create(testDataFactory.newNode());
-    Organization o = testDataFactory.newOrganization(nodeKey);
-    UUID key = organizationService.create(o);
-    Organization organization = organizationService.get(key);
-    return testDataFactory.newInstallation(organization.getKey());
   }
 
   /** Tests that we can successfully disable and undisable an installation. */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void disableInstallation(ServiceType serviceType) {
-    Installation e = newEntity();
+    Installation e = newEntity(serviceType);
     InstallationService service = (InstallationService) getService(serviceType);
     UUID key = service.create(e);
     e = service.get(key);
@@ -124,18 +117,18 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
 
   @Override
   protected UUID keyForCreateAsEditorTest(Installation entity) {
-    return organizationService.get(entity.getOrganizationKey()).getEndorsingNodeKey();
+    return organizationResource.get(entity.getOrganizationKey()).getEndorsingNodeKey();
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testSuggest(ServiceType serviceType) {
     InstallationService service = (InstallationService) getService(serviceType);
-    Installation installation1 = newEntity();
+    Installation installation1 = newEntity(serviceType);
     installation1.setTitle("The installation");
     service.create(installation1);
 
-    Installation installation2 = newEntity();
+    Installation installation2 = newEntity(serviceType);
     installation2.setTitle("The Great installation");
     service.create(installation2);
 
@@ -147,12 +140,12 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
   @EnumSource(ServiceType.class)
   public void testListByType(ServiceType serviceType) {
     InstallationService service = (InstallationService) getService(serviceType);
-    Installation installation1 = newEntity();
+    Installation installation1 = newEntity(serviceType);
     installation1.setTitle("The installation");
     installation1.setType(InstallationType.HTTP_INSTALLATION);
     service.create(installation1);
 
-    Installation installation2 = newEntity();
+    Installation installation2 = newEntity(serviceType);
     installation2.setTitle("The Great installation");
     installation2.setType(InstallationType.EARTHCAPE_INSTALLATION);
     service.create(installation2);
@@ -164,5 +157,18 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
             .getResults()
             .size(),
         "Should find only The Great installation");
+  }
+
+  @Override
+  protected Installation newEntity(ServiceType serviceType) {
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
+    Organization o = testDataFactory.newOrganization(nodeKey);
+    UUID key = organizationService.create(o);
+    Organization organization = organizationService.get(key);
+    return testDataFactory.newInstallation(organization.getKey());
   }
 }

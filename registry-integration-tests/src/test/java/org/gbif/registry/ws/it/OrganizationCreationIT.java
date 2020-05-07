@@ -26,6 +26,7 @@ import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
@@ -69,7 +70,8 @@ public class OrganizationCreationIT extends BaseItTest {
   private OrganizationService organizationClient;
   private OrganizationService adminOrganizationClient;
   private OrganizationService userOrganizationClient;
-  private NodeService nodeService;
+  private NodeService nodeResource;
+  private NodeService nodeClient;
   private ChallengeCodeMapper challengeCodeMapper;
   private ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper;
   private TestDataFactory testDataFactory;
@@ -77,7 +79,7 @@ public class OrganizationCreationIT extends BaseItTest {
   @Autowired
   public OrganizationCreationIT(
       OrganizationService organizationResource,
-      NodeService nodeService,
+      NodeService nodeResource,
       ChallengeCodeMapper challengeCodeMapper,
       ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper,
       TestDataFactory testDataFactory,
@@ -87,7 +89,8 @@ public class OrganizationCreationIT extends BaseItTest {
       KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
     this.organizationResource = organizationResource;
-    this.nodeService = nodeService;
+    this.nodeResource = nodeResource;
+    this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
     this.testDataFactory = testDataFactory;
@@ -127,6 +130,8 @@ public class OrganizationCreationIT extends BaseItTest {
   @EnumSource(ServiceType.class)
   public void testEndorsements(ServiceType serviceType) {
     OrganizationService service = getService(serviceType, organizationResource, organizationClient);
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
     Organization organization =
         prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
 
@@ -174,6 +179,8 @@ public class OrganizationCreationIT extends BaseItTest {
       names = {"RESOURCE"})
   public void testEndorsementsByAdmin(ServiceType serviceType) {
     OrganizationService service = getService(serviceType, organizationResource, organizationClient);
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
     Organization organization =
         prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
     assertEquals(
@@ -220,6 +227,8 @@ public class OrganizationCreationIT extends BaseItTest {
       names = {"RESOURCE"})
   public void testSetEndorsementsByNonAdmin(ServiceType serviceType) {
     OrganizationService service = getService(serviceType, organizationResource, organizationClient);
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+
     Organization organization =
         prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
 

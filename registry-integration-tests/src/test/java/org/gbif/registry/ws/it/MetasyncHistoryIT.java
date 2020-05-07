@@ -29,6 +29,8 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.InstallationClient;
+import org.gbif.registry.ws.client.NodeClient;
+import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -56,18 +58,21 @@ public class MetasyncHistoryIT extends BaseItTest {
   private final MetasyncHistoryService metasyncHistoryResource;
   private final MetasyncHistoryService metasyncHistoryClient;
 
-  private final OrganizationService organizationService;
-  private final NodeService nodeService;
-  private final InstallationService installationService;
+  private final OrganizationService organizationResource;
+  private final OrganizationService organizationClient;
+  private final NodeService nodeResource;
+  private final NodeService nodeClient;
+  private final InstallationService installationResource;
+  private final InstallationService installationClient;
 
   private final TestDataFactory testDataFactory;
 
   @Autowired
   public MetasyncHistoryIT(
       MetasyncHistoryService metasyncHistoryResource,
-      OrganizationService organizationService,
-      NodeService nodeService,
-      InstallationService installationService,
+      OrganizationService organizationResource,
+      NodeService nodeResource,
+      InstallationService installationResource,
       SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
@@ -75,9 +80,12 @@ public class MetasyncHistoryIT extends BaseItTest {
       KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
     this.metasyncHistoryResource = metasyncHistoryResource;
-    this.organizationService = organizationService;
-    this.nodeService = nodeService;
-    this.installationService = installationService;
+    this.organizationResource = organizationResource;
+    this.organizationClient = prepareClient(localServerPort, keyStore, OrganizationClient.class);
+    this.nodeResource = nodeResource;
+    this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
+    this.installationResource = installationResource;
+    this.installationClient = prepareClient(localServerPort, keyStore, InstallationClient.class);
     this.testDataFactory = testDataFactory;
     this.metasyncHistoryClient = prepareClient(localServerPort, keyStore, InstallationClient.class);
   }
@@ -88,7 +96,7 @@ public class MetasyncHistoryIT extends BaseItTest {
   public void testCreateAndList(ServiceType serviceType) {
     MetasyncHistoryService service =
         getService(serviceType, metasyncHistoryResource, metasyncHistoryClient);
-    MetasyncHistory metasyncHistory = getTestInstance();
+    MetasyncHistory metasyncHistory = getTestInstance(serviceType);
     service.createMetasync(metasyncHistory);
     PagingResponse<MetasyncHistory> response = service.listMetasync(new PagingRequest());
     assertTrue(
@@ -101,7 +109,7 @@ public class MetasyncHistoryIT extends BaseItTest {
   public void testListAndListByInstallation(ServiceType serviceType) {
     MetasyncHistoryService service =
         getService(serviceType, metasyncHistoryResource, metasyncHistoryClient);
-    MetasyncHistory metasyncHistory = getTestInstance();
+    MetasyncHistory metasyncHistory = getTestInstance(serviceType);
     service.createMetasync(metasyncHistory);
     PagingResponse<MetasyncHistory> response =
         service.listMetasync(metasyncHistory.getInstallationKey(), new PagingRequest());
@@ -113,7 +121,13 @@ public class MetasyncHistoryIT extends BaseItTest {
    * Creates a test installation. The installation is persisted in the data base. The organization
    * related to the installation are created too.
    */
-  private Installation createTestInstallation() {
+  private Installation createTestInstallation(ServiceType serviceType) {
+    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+    InstallationService installationService =
+        getService(serviceType, installationResource, installationClient);
+
     // endorsing node for the organization
     UUID nodeKey = nodeService.create(testDataFactory.newNode());
 
@@ -128,12 +142,12 @@ public class MetasyncHistoryIT extends BaseItTest {
   }
 
   /** Creates {@link MetasyncHistory} object to be used in test cases. */
-  private MetasyncHistory getTestInstance() {
+  private MetasyncHistory getTestInstance(ServiceType serviceType) {
     MetasyncHistory metasyncHistory = new MetasyncHistory();
     metasyncHistory.setDetails("testDetails");
     metasyncHistory.setResult(MetasyncResult.OK);
     metasyncHistory.setSyncDate(new Date());
-    Installation installation = createTestInstallation();
+    Installation installation = createTestInstallation(serviceType);
     metasyncHistory.setInstallationKey(installation.getKey());
     return metasyncHistory;
   }

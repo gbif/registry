@@ -34,6 +34,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.security.AccessControlException;
 import java.sql.Connection;
@@ -86,13 +87,15 @@ public abstract class NetworkEntityIT<
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,
-      NetworkEntityService<T> client,
+      int localServerPort,
+      KeyStore keyStore,
+      Class<? extends NetworkEntityService<T>> cls,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer) {
     super(simplePrincipalProvider, esServer);
     this.service = service;
-    this.client = client;
+    this.client = prepareClient(localServerPort, keyStore, cls);
     this.testDataFactory = testDataFactory;
   }
 
@@ -118,7 +121,7 @@ public abstract class NetworkEntityIT<
       names = {"RESOURCE"})
   public void createWithKey(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T e = newEntity();
+    T e = newEntity(serviceType);
     e.setKey(UUID.randomUUID()); // illegal to provide a key
     assertThrows(ConstraintViolationException.class, () -> service.create(e));
   }
@@ -126,15 +129,15 @@ public abstract class NetworkEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testCreate(ServiceType serviceType) {
-    create(newEntity(), serviceType, 1);
-    create(newEntity(), serviceType, 2);
+    create(newEntity(serviceType), serviceType, 1);
+    create(newEntity(serviceType), serviceType, 2);
   }
 
   @Disabled("Use during development.")
   @Test
   public void testCreateAsEditor(ServiceType serviceType) throws Exception {
     // Create as admin.
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
 
     if (getSimplePrincipalProvider() == null) {
       return;
@@ -174,7 +177,7 @@ public abstract class NetworkEntityIT<
     assertEquals(titles, service.getTitles(titles.keySet()));
 
     for (int i = 1; i < 8; i++) {
-      T ent = newEntity();
+      T ent = newEntity(serviceType);
       ent = create(ent, serviceType, i);
       titles.put(ent.getKey(), ent.getTitle());
     }
@@ -196,7 +199,7 @@ public abstract class NetworkEntityIT<
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("heinz");
       try {
-        create(newEntity(), serviceType, 1);
+        create(newEntity(serviceType), serviceType, 1);
       } catch (Exception e) {
         assertTrue(e instanceof AccessControlException);
       }
@@ -207,7 +210,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testUpdate(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T n1 = create(newEntity(), serviceType, 1);
+    T n1 = create(newEntity(serviceType), serviceType, 1);
     n1.setTitle("New title");
     service.update(n1);
     NetworkEntity n2 = service.get(n1.getKey());
@@ -230,7 +233,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(value = ServiceType.class, names = "RESOURCE")
   public void testUpdateFailingValidation(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T n1 = create(newEntity(), serviceType, 1);
+    T n1 = create(newEntity(serviceType), serviceType, 1);
     n1.setTitle("A"); // should fail as it is too short
     assertThrows(ConstraintViolationException.class, () -> service.update(n1));
   }
@@ -239,8 +242,8 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testDelete(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    NetworkEntity n1 = create(newEntity(), serviceType, 1);
-    NetworkEntity n2 = create(newEntity(), serviceType, 2);
+    NetworkEntity n1 = create(newEntity(serviceType), serviceType, 1);
+    NetworkEntity n2 = create(newEntity(serviceType), serviceType, 2);
     service.delete(n1.getKey());
     T n4 = service.get(n1.getKey()); // one can get a deleted entity
     n1.setDeleted(n4.getDeleted());
@@ -266,7 +269,7 @@ public abstract class NetworkEntityIT<
   public void testPaging(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
     for (int i = 1; i <= 5; i++) {
-      create(newEntity(), serviceType, i);
+      create(newEntity(serviceType), serviceType, i);
     }
 
     // the expected number of records returned when paging at different page sizes
@@ -305,7 +308,7 @@ public abstract class NetworkEntityIT<
     // keeps a list of all uuids created in that creation order
     List<UUID> uuids = new ArrayList<>();
     for (int i = 1; i <= 5; i++) {
-      T d = create(newEntity(), serviceType, i);
+      T d = create(newEntity(serviceType), serviceType, i);
       uuids.add(d.getKey());
     }
     uuids = Lists.reverse(uuids);
@@ -338,7 +341,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testSimpleSearch(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T n1 = create(newEntity(), serviceType, 1);
+    T n1 = create(newEntity(serviceType), serviceType, 1);
     n1.setTitle("New title foo");
     service.update(n1);
 
@@ -403,7 +406,7 @@ public abstract class NetworkEntityIT<
   public void testSimpleSearchPaging(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
     for (int i = 1; i <= 5; i++) {
-      T n1 = newEntity();
+      T n1 = newEntity(serviceType);
       n1.setTitle("Bingo");
       create(n1, serviceType, i);
     }
@@ -432,7 +435,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testContacts(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
     ContactTests.testAddDeleteUpdate(service, entity, testDataFactory);
   }
 
@@ -440,7 +443,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testEndpoints(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
     EndpointTests.testAddDelete(service, entity, testDataFactory);
   }
 
@@ -448,7 +451,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testMachineTags(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
     MachineTagTests.testAddDelete(service, entity, testDataFactory);
   }
 
@@ -462,7 +465,7 @@ public abstract class NetworkEntityIT<
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("notExisting");
-      T entity = create(newEntity(), serviceType, 1);
+      T entity = create(newEntity(serviceType), serviceType, 1);
       assertThrows(
           AccessControlException.class,
           () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
@@ -481,7 +484,7 @@ public abstract class NetworkEntityIT<
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("editor");
-      T entity = create(newEntity(), ServiceType.CLIENT, 1);
+      T entity = create(newEntity(serviceType), ServiceType.CLIENT, 1);
       assertThrows(
           AccessControlException.class,
           () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
@@ -499,7 +502,7 @@ public abstract class NetworkEntityIT<
     NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
-      T entity = create(newEntity(), ServiceType.CLIENT, 1);
+      T entity = create(newEntity(serviceType), ServiceType.CLIENT, 1);
       // add machine tags
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
@@ -528,8 +531,8 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testMachineTagSearch(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity1 = create(newEntity(), serviceType, 1);
-    T entity2 = create(newEntity(), serviceType, 2);
+    T entity1 = create(newEntity(serviceType), serviceType, 1);
+    T entity2 = create(newEntity(serviceType), serviceType, 2);
 
     service.addMachineTag(
         entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "one"));
@@ -580,9 +583,9 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testTags(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
     TagTests.testAddDelete(service, entity);
-    entity = create(newEntity(), serviceType, 2);
+    entity = create(newEntity(serviceType), serviceType, 2);
     TagTests.testTagErroneousDelete(service, entity);
   }
 
@@ -590,7 +593,7 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testComments(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
     CommentTests.testAddDelete(service, entity, testDataFactory);
   }
 
@@ -600,14 +603,14 @@ public abstract class NetworkEntityIT<
   public void testSimpleSearchContact(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
     ContactTests.testSimpleSearch(
-        service, service, create(newEntity(), serviceType, 1), testDataFactory);
+        service, service, create(newEntity(serviceType), serviceType, 1), testDataFactory);
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testIdentifierCRUD(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType, 1);
     IdentifierTests.testAddDelete(service, service, entity, testDataFactory);
   }
 
@@ -621,8 +624,8 @@ public abstract class NetworkEntityIT<
   @EnumSource(ServiceType.class)
   public void testIdentifierSearch(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity1 = create(newEntity(), serviceType, 1);
-    T entity2 = create(newEntity(), serviceType, 2);
+    T entity1 = create(newEntity(serviceType), serviceType, 1);
+    T entity2 = create(newEntity(serviceType), serviceType, 2);
 
     service.addIdentifier(
         entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
@@ -663,7 +666,7 @@ public abstract class NetworkEntityIT<
   }
 
   /** @return a new example instance */
-  protected abstract T newEntity();
+  protected abstract T newEntity(ServiceType serviceType);
 
   // Repeatable entity creation with verification tests
   protected T create(T orig, ServiceType serviceType, int expectedCount) {

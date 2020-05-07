@@ -34,8 +34,10 @@ import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.DatasetClient;
+import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NodeClient;
-import org.gbif.ws.client.ClientFactory;
+import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -52,7 +54,6 @@ import org.springframework.boot.web.server.LocalServerPort;
 
 import com.google.common.collect.ImmutableMap;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -70,10 +71,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class NodeIT extends NetworkEntityIT<Node> {
 
-  private final NodeService nodeService;
-  private final OrganizationService organizationService;
-  private final InstallationService installationService;
-  private final DatasetService datasetService;
+  private final OrganizationService organizationResource;
+  private final OrganizationService organizationClient;
+  private final InstallationService installationResource;
+  private final InstallationService installationClient;
+  private final DatasetService datasetResource;
+  private final DatasetService datasetClient;
+
   private int count;
   private final TestDataFactory testDataFactory;
 
@@ -88,9 +92,9 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @Autowired
   public NodeIT(
       NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
+      OrganizationService organizationResource,
+      InstallationService installationResource,
+      DatasetService datasetResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
@@ -98,19 +102,18 @@ public class NodeIT extends NetworkEntityIT<Node> {
       @LocalServerPort int localServerPort) {
     super(
         nodeService,
-        new ClientFactory(
-                IT_APP_KEY2,
-                "http://localhost:" + localServerPort,
-                IT_APP_KEY2,
-                keyStore.getPrivateKey(IT_APP_KEY2))
-            .newInstance(NodeClient.class),
+        localServerPort,
+        keyStore,
+        NodeClient.class,
         principalProvider,
         testDataFactory,
         esServer);
-    this.nodeService = nodeService;
-    this.organizationService = organizationService;
-    this.installationService = installationService;
-    this.datasetService = datasetService;
+    this.organizationResource = organizationResource;
+    this.organizationClient = prepareClient(localServerPort, keyStore, OrganizationClient.class);
+    this.installationResource = installationResource;
+    this.installationClient = prepareClient(localServerPort, keyStore, InstallationClient.class);
+    this.datasetResource = datasetResource;
+    this.datasetClient = prepareClient(localServerPort, keyStore, DatasetClient.class);
     this.testDataFactory = testDataFactory;
   }
 
@@ -144,7 +147,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   private void insertTestNode(
       Country c, ParticipationStatus status, NodeType nodeType, ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
-    Node n = newEntity();
+    Node n = newEntity(serviceType);
     n.setCountry(c);
     n.setTitle("GBIF Node " + c.getTitle());
     n.setType(nodeType);
@@ -166,7 +169,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testAffiliateNode(ServiceType serviceType) {
-    Node n = newEntity();
+    Node n = newEntity(serviceType);
     n.setTitle("GBIF Affiliate Node");
     n.setType(NodeType.OTHER);
     n.setParticipationStatus(ParticipationStatus.AFFILIATE);
@@ -179,6 +182,9 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @EnumSource(ServiceType.class)
   public void testEndorsements(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+
     Node node = testDataFactory.newNode();
     service.create(node);
     node = service.list(new PagingRequest()).getResults().get(0);
@@ -246,8 +252,14 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @EnumSource(ServiceType.class)
   public void testDatasets(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
+    OrganizationService organizationService =
+        getService(serviceType, organizationResource, organizationClient);
+    InstallationService installationService =
+        getService(serviceType, installationResource, installationClient);
+    DatasetService datasetService = getService(serviceType, datasetResource, datasetClient);
+
     // endorsing node for the organization
-    Node node = create(newEntity(), serviceType, 1);
+    Node node = create(newEntity(serviceType), serviceType, 1);
     // publishing organization (required field)
     Organization o = testDataFactory.newOrganization(node.getKey());
     o.setEndorsementApproved(true);
@@ -281,7 +293,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   public void testIms(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
     initVotingCountryNodes(serviceType);
-    Node es = nodeService.getByCountry(Country.SPAIN);
+    Node es = service.getByCountry(Country.SPAIN);
     assertEquals((Integer) 2001, es.getParticipantSince());
     assertEquals(ParticipationStatus.VOTING, es.getParticipationStatus());
     // this is no real data, it comes from the test inserts above
@@ -303,27 +315,29 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @EnumSource(ServiceType.class)
   public void testContacts(ServiceType serviceType) {
     NodeService service = (NodeService) getService(ServiceType.RESOURCE);
-    Node n = create(newEntity(), serviceType, 1);
+    Node n = create(newEntity(serviceType), serviceType, 1);
     assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
 
+  // TODO: 07/05/2020 client exception
   /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
-  @EnumSource(ServiceType.class)
+  @EnumSource(value = ServiceType.class, names = "RESOURCE")
   public void testAddContact(ServiceType serviceType) {
-    Node n = create(newEntity(), serviceType, 1);
+    NodeService service = ((NodeService) getService(serviceType));
+    Node n = create(newEntity(serviceType), serviceType, 1);
     assertThrows(
-        UnsupportedOperationException.class,
-        () -> nodeService.addContact(n.getKey(), new Contact()));
+        UnsupportedOperationException.class, () -> service.addContact(n.getKey(), new Contact()));
   }
 
+  // TODO: 07/05/2020 client exception
   /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
-  @EnumSource(ServiceType.class)
+  @EnumSource(value = ServiceType.class, names = "RESOURCE")
   public void testDeleteContact(ServiceType serviceType) {
-    Node n = create(newEntity(), serviceType, 1);
-    assertThrows(
-        UnsupportedOperationException.class, () -> nodeService.deleteContact(n.getKey(), 1));
+    NodeService service = ((NodeService) getService(serviceType));
+    Node n = create(newEntity(serviceType), serviceType, 1);
+    assertThrows(UnsupportedOperationException.class, () -> service.deleteContact(n.getKey(), 1));
   }
 
   // TODO: 05/05/2020 client should throw UnsupportedOperationException
@@ -336,7 +350,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   }
 
   @Override
-  protected Node newEntity() {
+  protected Node newEntity(ServiceType serviceType) {
     return testDataFactory.newNode();
   }
 
