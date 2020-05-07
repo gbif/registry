@@ -15,13 +15,13 @@
  */
 package org.gbif.registry.search.dataset.indexing.es;
 
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -42,6 +42,8 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.google.common.io.CharStreams;
 
 import lombok.Data;
 
@@ -98,19 +100,17 @@ public class EsClient implements Closeable {
   /** Creates a new index using the indexName, recordType and settings provided. */
   public void createIndex(
       String indexName, String recordType, Map<?, ?> settings, String mappingFile) {
-    try {
+    try (final Reader mappingFileReader =
+        new InputStreamReader(
+            new BufferedInputStream(
+                getClass().getClassLoader().getResourceAsStream(mappingFile)))) {
       CreateIndexRequest createIndexRequest = new CreateIndexRequest();
       createIndexRequest
           .index(indexName)
           .settings(settings)
-          .mapping(
-              recordType,
-              new String(
-                  Files.readAllBytes(
-                      Paths.get(getClass().getClassLoader().getResource(mappingFile).toURI()))),
-              XContentType.JSON);
+          .mapping(recordType, CharStreams.toString(mappingFileReader), XContentType.JSON);
       restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
-    } catch (IOException | URISyntaxException ex) {
+    } catch (IOException ex) {
       throw new IllegalStateException(ex);
     }
   }
