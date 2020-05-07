@@ -32,14 +32,18 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.DatasetProcessStatusClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -59,7 +63,8 @@ public class DatasetProcessStatusIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
 
-  private final DatasetProcessStatusService datasetProcessStatusService;
+  private final DatasetProcessStatusService datasetProcessStatusResource;
+  private final DatasetProcessStatusService datasetProcessStatusClient;
   // The following services are required to create dataset instances
   private final DatasetService datasetService;
   private final OrganizationService organizationService;
@@ -68,30 +73,37 @@ public class DatasetProcessStatusIT extends BaseItTest {
 
   @Autowired
   public DatasetProcessStatusIT(
-      DatasetProcessStatusService datasetProcessStatusService,
+      DatasetProcessStatusService datasetProcessStatusResource,
       DatasetService datasetService,
       OrganizationService organizationService,
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
-    this.datasetProcessStatusService = datasetProcessStatusService;
+    this.datasetProcessStatusResource = datasetProcessStatusResource;
     this.datasetService = datasetService;
     this.organizationService = organizationService;
     this.nodeService = nodeService;
     this.installationService = installationService;
     this.testDataFactory = testDataFactory;
+    this.datasetProcessStatusClient =
+        prepareClient(localServerPort, keyStore, DatasetProcessStatusClient.class);
   }
 
   /** Tests the create and get of a {@link DatasetProcessStatus}. */
-  @Test
-  public void testCreateAndGet() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testCreateAndGet(ServiceType serviceType) {
+    DatasetProcessStatusService service =
+        getService(serviceType, datasetProcessStatusResource, datasetProcessStatusClient);
     DatasetProcessStatus expected = buildProcessStatus(createTestDataset(), 1);
-    datasetProcessStatusService.createDatasetProcessStatus(expected);
+    service.createDatasetProcessStatus(expected);
     DatasetProcessStatus actual =
-        datasetProcessStatusService.getDatasetProcessStatus(
+        service.getDatasetProcessStatus(
             expected.getDatasetKey(), expected.getCrawlJob().getAttempt());
     assertNotNull(actual);
     assertEquals(expected.getFinishedCrawling(), actual.getFinishedCrawling());
@@ -136,55 +148,65 @@ public class DatasetProcessStatusIT extends BaseItTest {
    * DatasetProcessStatusService#listDatasetProcessStatus(org.gbif.api.model.common.paging.Pageable)}
    * operation.
    */
-  @Test
-  public void testListAndListByDataset() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListAndListByDataset(ServiceType serviceType) {
+    DatasetProcessStatusService service =
+        getService(serviceType, datasetProcessStatusResource, datasetProcessStatusClient);
     Dataset dataset = createTestDataset();
     Dataset dataset2 = createTestDataset();
 
-    datasetProcessStatusService.createDatasetProcessStatus(buildProcessStatus(dataset, 1));
-    datasetProcessStatusService.createDatasetProcessStatus(buildProcessStatus(dataset, 2));
-    datasetProcessStatusService.createDatasetProcessStatus(buildProcessStatus(dataset2, 1));
+    service.createDatasetProcessStatus(buildProcessStatus(dataset, 1));
+    service.createDatasetProcessStatus(buildProcessStatus(dataset, 2));
+    service.createDatasetProcessStatus(buildProcessStatus(dataset2, 1));
 
     PagingResponse<DatasetProcessStatus> statuses =
-        datasetProcessStatusService.listDatasetProcessStatus(new PagingRequest(0, 10));
+        service.listDatasetProcessStatus(new PagingRequest(0, 10));
     assertEquals(Long.valueOf(3), statuses.getCount(), "There have been 3 crawl attempts");
     assertEquals(3, statuses.getResults().size(), "There have been 3 crawl attempts");
 
     PagingResponse<DatasetProcessStatus> statusesByDataset =
-        datasetProcessStatusService.listDatasetProcessStatus(dataset.getKey(), new PagingRequest());
+        service.listDatasetProcessStatus(dataset.getKey(), new PagingRequest());
     assertEquals(
         Long.valueOf(2), statusesByDataset.getCount(), "The dataset has had 2 crawl attempts");
     assertEquals(2, statusesByDataset.getResults().size(), "The dataset has had 2 crawl attempts");
   }
 
-  @Test
-  public void testIllegalCreate() {
+  // TODO: 07/05/2020 client exception
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void testIllegalCreate(ServiceType serviceType) {
+    DatasetProcessStatusService service =
+        getService(serviceType, datasetProcessStatusResource, datasetProcessStatusClient);
     Dataset dataset = createTestDataset();
 
     DatasetProcessStatus status = buildProcessStatus(dataset, 1);
-    datasetProcessStatusService.createDatasetProcessStatus(status);
+    service.createDatasetProcessStatus(status);
     // valid to update
     status.setFragmentsEmitted(1000);
-    datasetProcessStatusService.updateDatasetProcessStatus(status);
+    service.updateDatasetProcessStatus(status);
     // illegal to create the same attempt ID
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            datasetProcessStatusService.createDatasetProcessStatus(buildProcessStatus(dataset, 1)));
+        () -> service.createDatasetProcessStatus(buildProcessStatus(dataset, 1)));
   }
 
   /** Tests a create, get, update */
-  @Test
-  public void testUpdate() {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testUpdate(ServiceType serviceType) {
+    DatasetProcessStatusService service =
+        getService(serviceType, datasetProcessStatusResource, datasetProcessStatusClient);
     DatasetProcessStatus orig = buildProcessStatus(createTestDataset(), 1);
-    datasetProcessStatusService.createDatasetProcessStatus(orig);
+    service.createDatasetProcessStatus(orig);
     DatasetProcessStatus written =
-        datasetProcessStatusService.getDatasetProcessStatus(
-            orig.getDatasetKey(), orig.getCrawlJob().getAttempt());
+        service.getDatasetProcessStatus(orig.getDatasetKey(), orig.getCrawlJob().getAttempt());
     assertEquals(orig.getDatasetKey(), written.getDatasetKey());
     assertEquals(orig.getCrawlJob().getAttempt(), written.getCrawlJob().getAttempt());
     written.setFinishReason(FinishReason.ABORT);
-    datasetProcessStatusService.updateDatasetProcessStatus(written);
+    service.updateDatasetProcessStatus(written);
     assertEquals(orig.getCrawlJob().getAttempt(), written.getCrawlJob().getAttempt());
   }
 
