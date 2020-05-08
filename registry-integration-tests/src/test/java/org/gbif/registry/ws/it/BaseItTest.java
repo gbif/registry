@@ -23,6 +23,7 @@ import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Stream;
 
@@ -113,7 +114,9 @@ public class BaseItTest {
           new UsernamePasswordAuthenticationToken(
               simplePrincipalProvider.get().getName(),
               "",
-              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+              Arrays.asList(
+                  new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()),
+                  new SimpleGrantedAuthority(UserRole.GRSCICOLL_ADMIN.name()))));
     }
   }
 

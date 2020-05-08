@@ -19,6 +19,8 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
@@ -101,6 +103,8 @@ public abstract class BaseTest<
 
   protected static final Supplier<Map<String, List<String>>> DEFAULT_QUERY_PARAMS =
       () -> PAGE_PARAMS.apply(DEFAULT_OFFSET, DEFAULT_LIMIT);
+
+  public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   protected MockMvc mockMvc;
   private final Class<T> clazz;

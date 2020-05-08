@@ -47,6 +47,7 @@ public class TestConstants {
   public static final String IT_APP_KEY = "gbif.app.it";
   public static final String IT_APP_KEY2 = "gbif.app.it2";
 
+  public static final String WS_TEST = "WS TEST";
   public static final String TEST_ADMIN = "admin";
   public static final String TEST_EDITOR = "editor";
   public static final String TEST_USER = "user";
