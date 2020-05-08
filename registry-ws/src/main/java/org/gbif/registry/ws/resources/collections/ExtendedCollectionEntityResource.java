@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
@@ -23,7 +24,6 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
@@ -46,7 +46,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -58,6 +57,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -116,11 +116,15 @@ public abstract class ExtendedCollectionEntityResource<
     this.objectClass = objectClass;
   }
 
-  @Validated({PrePersist.class, Default.class})
+  // TODO: 08/05/2020 replace manual validation with validation's Group
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public UUID create(T entity) {
+  public UUID create(@RequestBody T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
+    preCreate(entity);
 
     if (entity.getAddress() != null) {
       checkArgument(
@@ -172,9 +176,14 @@ public abstract class ExtendedCollectionEntityResource<
     return entity.getKey();
   }
 
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public void update(T entity) {
+  public void update(@RequestBody @Trim T entity) {
+    preUpdate(entity);
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
 
