@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
@@ -46,6 +47,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -116,8 +118,8 @@ public abstract class ExtendedCollectionEntityResource<
     this.objectClass = objectClass;
   }
 
-  // TODO: 08/05/2020 replace manual validation with validation's Group
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
@@ -127,16 +129,10 @@ public abstract class ExtendedCollectionEntityResource<
     preCreate(entity);
 
     if (entity.getAddress() != null) {
-      checkArgument(
-          entity.getAddress().getKey() == null,
-          "Unable to create an address which already has a key");
       addressMapper.create(entity.getAddress());
     }
 
     if (entity.getMailingAddress() != null) {
-      checkArgument(
-          entity.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
       addressMapper.create(entity.getMailingAddress());
     }
 
@@ -145,8 +141,6 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : entity.getMachineTags()) {
-        checkArgument(
-            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(entity.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         baseMapper.addMachineTag(entity.getKey(), machineTag.getKey());
@@ -155,7 +149,6 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getTags().isEmpty()) {
       for (Tag tag : entity.getTags()) {
-        checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
         tag.setCreatedBy(entity.getCreatedBy());
         tagMapper.createTag(tag);
         baseMapper.addTag(entity.getKey(), tag.getKey());
@@ -164,8 +157,6 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getIdentifiers().isEmpty()) {
       for (Identifier identifier : entity.getIdentifiers()) {
-        checkArgument(
-            identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(entity.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         baseMapper.addIdentifier(entity.getKey(), identifier.getKey());

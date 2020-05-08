@@ -120,9 +120,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     preCreate(person);
 
     if (person.getMailingAddress() != null) {
-      checkArgument(
-          person.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
       addressMapper.create(person.getMailingAddress());
     }
 
@@ -131,8 +128,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : person.getMachineTags()) {
-        checkArgument(
-            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(person.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         personMapper.addMachineTag(person.getKey(), machineTag.getKey());
@@ -141,7 +136,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getTags().isEmpty()) {
       for (Tag tag : person.getTags()) {
-        checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
         tag.setCreatedBy(person.getCreatedBy());
         tagMapper.createTag(tag);
         personMapper.addTag(person.getKey(), tag.getKey());
@@ -150,8 +144,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getIdentifiers().isEmpty()) {
       for (Identifier identifier : person.getIdentifiers()) {
-        checkArgument(
-            identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(person.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         personMapper.addIdentifier(person.getKey(), identifier.getKey());
