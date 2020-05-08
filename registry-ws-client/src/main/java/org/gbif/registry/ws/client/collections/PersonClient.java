@@ -41,7 +41,7 @@ public interface PersonClient extends BaseCollectionEntityClient<Person>, Person
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
       @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
-      Pageable page);
+      @SpringQueryMap Pageable page);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -49,7 +49,7 @@ public interface PersonClient extends BaseCollectionEntityClient<Person>, Person
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Person> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Person> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
       method = RequestMethod.GET,

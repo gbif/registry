@@ -53,7 +53,7 @@ public interface CollectionClient
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Collection> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Collection> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
       method = RequestMethod.GET,
