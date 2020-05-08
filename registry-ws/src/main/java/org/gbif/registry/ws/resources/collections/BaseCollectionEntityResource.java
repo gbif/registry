@@ -70,7 +70,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -116,11 +115,9 @@ public abstract class BaseCollectionEntityResource<
     this.withMyBatis = withMyBatis;
   }
 
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Trim
-  @Transactional
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public UUID create(@RequestBody @NotNull @Valid T entity, Authentication authentication) {
+  public void preCreate(T entity) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     if (!isAllowedToEditEntity(authentication, entity)) {
       throw new WebApplicationException(
           "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
@@ -129,7 +126,6 @@ public abstract class BaseCollectionEntityResource<
     final String username = authentication.getName();
     entity.setCreatedBy(username);
     entity.setModifiedBy(username);
-    return create(entity);
   }
 
   @DeleteMapping("{key}")
@@ -164,13 +160,8 @@ public abstract class BaseCollectionEntityResource<
     return baseMapper.get(key);
   }
 
-  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Transactional
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Valid T entity) {
+  public void preUpdate(T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    checkArgument(
-        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
 
     if (!isAllowedToEditEntity(authentication, entity)) {
       throw new WebApplicationException(
@@ -178,7 +169,6 @@ public abstract class BaseCollectionEntityResource<
     }
 
     entity.setModifiedBy(authentication.getName());
-    update(entity);
   }
 
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)

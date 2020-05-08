@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -49,6 +50,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,8 +61,8 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 @Validated
 @RestController
@@ -105,12 +109,15 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     return super.get(key);
   }
 
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
+  @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public UUID create(Person person) {
+  public UUID create(@RequestBody Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
+    preCreate(person);
 
     if (person.getMailingAddress() != null) {
       checkArgument(
@@ -155,9 +162,14 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     return person.getKey();
   }
 
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public void update(Person person) {
+  public void update(@RequestBody @Trim Person person) {
+    preUpdate(person);
     Person oldPerson = get(person.getKey());
     checkArgument(oldPerson != null, "Entity doesn't exist");
 
