@@ -13,6 +13,7 @@
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
+    <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
   </properties>
 
   <dependencies>
@@ -221,18 +222,6 @@
 
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <excludes>
-            <!-- This is where the exclusion occurs -->
-            <exclude>**/application.yml</exclude>
-            <exclude>**/bootstrap.yml</exclude>
-          </excludes>
-        </configuration>
-      </plugin>
-
-      <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
           <usedDependencies>
@@ -277,6 +266,25 @@
           <mainClass>${start-class}</mainClass>
           <addResources>false</addResources>
           <layout>ZIP</layout>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${maven-jar-plugin.version}</version>
+        <configuration>
+          <excludes>
+            <!-- This is where the exclusion occurs -->
+            <exclude>**/application.yml</exclude>
+            <exclude>**/bootstrap.yml</exclude>
+          </excludes>
+          <archive>
+            <manifest>
+              <mainClass>${start-class}</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
 
