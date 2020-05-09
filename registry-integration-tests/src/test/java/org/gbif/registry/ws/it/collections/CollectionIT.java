@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionResource}. */
-public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
+public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";

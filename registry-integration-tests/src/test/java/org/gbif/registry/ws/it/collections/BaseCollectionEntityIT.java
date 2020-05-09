@@ -66,7 +66,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 /** Base class to test the CRUD operations of {@link CollectionEntity}. */
-public abstract class BaseTest<
+public abstract class BaseCollectionEntityIT<
         T extends CollectionEntity & Identifiable & Taggable & MachineTaggable>
     extends BaseItTest {
 
@@ -112,7 +112,7 @@ public abstract class BaseTest<
 
   @RegisterExtension public CollectionsDatabaseInitializer collectionsDatabaseInitializer;
 
-  public BaseTest(
+  public BaseCollectionEntityIT(
       MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,

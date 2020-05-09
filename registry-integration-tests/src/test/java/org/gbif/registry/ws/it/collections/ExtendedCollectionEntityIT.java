@@ -51,9 +51,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-public abstract class ExtendedCollectionEntityTest<
+public abstract class ExtendedCollectionEntityIT<
         T extends CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable>
-    extends BaseTest<T> {
+    extends BaseCollectionEntityIT<T> {
 
   // query params
   private static final String CONTACT_PARAM = "contact";
@@ -61,7 +61,7 @@ public abstract class ExtendedCollectionEntityTest<
   private static final JavaType LIST_KEY_CODE_NAME_TYPE =
       OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, KeyCodeNameResult.class);
 
-  public ExtendedCollectionEntityTest(
+  public ExtendedCollectionEntityIT(
       MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
