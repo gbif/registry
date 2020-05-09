@@ -22,7 +22,6 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -37,7 +36,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,15 +44,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.JavaType;
-
 import static org.gbif.registry.ws.it.fixtures.TestConstants.WS_TEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class PersonIT extends BaseTest<Person> {
+public class PersonIT extends BaseCollectionEntityIT<Person> {
 
   private final PersonService personResource;
   private final PersonService personClient;
@@ -72,13 +68,6 @@ public class PersonIT extends BaseTest<Person> {
   private static final String FIRST_NAME_UPDATED = "first name updated";
   private static final String POSITION_UPDATED = "new position";
   private static final String PHONE_UPDATED = "134235433";
-
-  // query params
-  private static final String PRIMARY_INSTITUTION_PARAM = "primaryInstitution";
-  private static final String PRIMARY_COLLECTION_PARAM = "primaryCollection";
-
-  private static final JavaType LIST_PERSON_SUGGEST_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, PersonSuggestResult.class);
 
   @Autowired
   public PersonIT(
