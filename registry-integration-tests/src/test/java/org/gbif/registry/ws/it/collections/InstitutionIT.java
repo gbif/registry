@@ -19,6 +19,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
@@ -44,9 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Tests the {@link InstitutionResource}. */
 public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
 
-  private final InstitutionService institutionResource;
-  private final InstitutionService institutionClient;
-
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
   private static final URI HOMEPAGE = URI.create("http://dummy");
@@ -58,21 +56,30 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   @Autowired
   public InstitutionIT(
       InstitutionService institutionResource,
+      PersonService personResource,
       MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
-    super(mockMvc, principalProvider, esServer, identityService, Institution.class);
-    this.institutionResource = institutionResource;
-    this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
+    super(
+        institutionResource,
+        InstitutionClient.class,
+        personResource,
+        mockMvc,
+        principalProvider,
+        esServer,
+        identityService,
+        Institution.class,
+        localServerPort,
+        keyStore);
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listTest(ServiceType serviceType) {
-    InstitutionService service = getService(serviceType, institutionResource, institutionClient);
+    InstitutionService service = ((InstitutionService) getService(serviceType));
 
     Institution institution1 = newEntity();
     institution1.setCode("c1");
@@ -148,7 +155,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testSuggest(ServiceType serviceType) {
-    InstitutionService service = getService(serviceType, institutionResource, institutionClient);
+    InstitutionService service = ((InstitutionService) getService(serviceType));
 
     Institution institution1 = newEntity();
     institution1.setCode("II");
@@ -206,10 +213,5 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   @Override
   protected Institution newInvalidEntity() {
     return new Institution();
-  }
-
-  @Override
-  protected String getBasePath() {
-    return "/grscicoll/institution/";
   }
 }

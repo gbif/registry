@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
@@ -49,8 +50,6 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
   private final InstitutionService institutionResource;
   private final InstitutionService institutionClient;
-  private final CollectionService collectionResource;
-  private final CollectionService collectionClient;
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -64,23 +63,32 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   public CollectionIT(
       InstitutionService institutionResource,
       CollectionService collectionResource,
+      PersonService personResource,
       MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
-    super(mockMvc, principalProvider, esServer, identityService, Collection.class);
+    super(
+        collectionResource,
+        CollectionClient.class,
+        personResource,
+        mockMvc,
+        principalProvider,
+        esServer,
+        identityService,
+        Collection.class,
+        localServerPort,
+        keyStore);
     this.institutionResource = institutionResource;
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
-    this.collectionResource = collectionResource;
-    this.collectionClient = prepareClient(localServerPort, keyStore, CollectionClient.class);
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listTest(ServiceType serviceType) {
-    CollectionService service = getService(serviceType, collectionResource, collectionClient);
+    CollectionService service = ((CollectionService) getService(serviceType));
 
     Collection collection1 = newEntity();
     collection1.setCode("c1");
@@ -163,7 +171,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listByInstitutionTest(ServiceType serviceType) {
-    CollectionService service = getService(serviceType, collectionResource, collectionClient);
+    CollectionService service = ((CollectionService) getService(serviceType));
     InstitutionService institutionService =
         getService(serviceType, institutionResource, institutionClient);
 
@@ -204,7 +212,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listMultipleParamsTest(ServiceType serviceType) {
-    CollectionService service = getService(serviceType, collectionResource, collectionClient);
+    CollectionService service = ((CollectionService) getService(serviceType));
     InstitutionService institutionService =
         getService(serviceType, institutionResource, institutionClient);
 
@@ -250,7 +258,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testSuggest(ServiceType serviceType) {
-    CollectionService service = getService(serviceType, collectionResource, collectionClient);
+    CollectionService service = ((CollectionService) getService(serviceType));
 
     Collection collection1 = newEntity();
     collection1.setCode("CC");
@@ -308,10 +316,5 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   @Override
   protected Collection newInvalidEntity() {
     return new Collection();
-  }
-
-  @Override
-  protected String getBasePath() {
-    return "/grscicoll/collection/";
   }
 }
