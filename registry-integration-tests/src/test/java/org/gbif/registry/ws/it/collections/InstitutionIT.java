@@ -17,6 +17,7 @@ package org.gbif.registry.ws.it.collections;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
@@ -221,6 +222,46 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
 
     response = service.list(null, null, null, null, null, new PagingRequest(0L, 0));
     assertEquals(0, response.getResults().size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listByContactTest(ServiceType serviceType) {
+    InstitutionService service = (InstitutionService) getService(serviceType);
+    PersonService personService = getService(serviceType, personResource, personClient);
+
+    // persons
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey1 = personService.create(person1);
+
+    Person person2 = new Person();
+    person2.setFirstName("first name2");
+    UUID personKey2 = personService.create(person2);
+
+    // institutions
+    Institution institution1 = newEntity();
+    UUID instutionKey1 = service.create(institution1);
+
+    Institution institution2 = newEntity();
+    UUID instutionKey2 = service.create(institution2);
+
+    // add contacts
+    service.addContact(instutionKey1, personKey1);
+    service.addContact(instutionKey1, personKey2);
+    service.addContact(instutionKey2, personKey2);
+
+    assertEquals(
+        1, service.list(null, personKey1, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2, service.list(null, personKey2, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0,
+        service.list(null, UUID.randomUUID(), null, null, null, DEFAULT_PAGE).getResults().size());
+
+    service.removeContact(instutionKey1, personKey2);
+    assertEquals(
+        1, service.list(null, personKey2, null, null, null, DEFAULT_PAGE).getResults().size());
   }
 
   @Override
