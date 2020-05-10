@@ -22,7 +22,6 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.PersonService;
@@ -38,9 +37,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.databind.JavaType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,33 +50,16 @@ public abstract class ExtendedCollectionEntityIT<
   private final PersonService personResource;
   private final PersonService personClient;
 
-  // query params
-  private static final String CONTACT_PARAM = "contact";
-
-  private static final JavaType LIST_KEY_CODE_NAME_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, KeyCodeNameResult.class);
-
   public ExtendedCollectionEntityIT(
       CrudService<T> resource,
       Class<? extends CrudService<T>> cls,
       PersonService personResource,
-      MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      Class<T> clazz,
       int localServerPort,
       KeyStore keyStore) {
-    super(
-        resource,
-        cls,
-        mockMvc,
-        principalProvider,
-        esServer,
-        identityService,
-        clazz,
-        localServerPort,
-        keyStore);
+    super(resource, cls, principalProvider, esServer, identityService, localServerPort, keyStore);
     this.personResource = personResource;
     this.personClient = prepareClient(localServerPort, keyStore, PersonClient.class);
   }

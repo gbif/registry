@@ -18,7 +18,6 @@ package org.gbif.registry.ws.it.collections;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -47,10 +46,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -65,31 +60,21 @@ public abstract class BaseCollectionEntityIT<
   private final CrudService<T> resource;
   private final CrudService<T> client;
 
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
-
-  protected MockMvc mockMvc;
-  protected final JavaType pagingResponseType;
 
   @RegisterExtension public CollectionsDatabaseInitializer collectionsDatabaseInitializer;
 
   public BaseCollectionEntityIT(
       CrudService<T> resource,
       Class<? extends CrudService<T>> cls,
-      MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      Class<T> clazz,
       int localServerPort,
       KeyStore keyStore) {
     super(principalProvider, esServer);
     this.resource = resource;
     this.client = prepareClient(localServerPort, keyStore, cls);
-    this.mockMvc = mockMvc;
-    this.pagingResponseType =
-        OBJECT_MAPPER.getTypeFactory().constructParametricType(PagingResponse.class, clazz);
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
   }
 
@@ -221,8 +206,6 @@ public abstract class BaseCollectionEntityIT<
 
     assertThrows(NotFoundException.class, () -> service.get(UUID.randomUUID()));
   }
-
-  // TODO: 10/05/2020 add listWithoutParametersTest
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
