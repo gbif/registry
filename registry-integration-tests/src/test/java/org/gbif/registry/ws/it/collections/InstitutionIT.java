@@ -17,6 +17,7 @@ package org.gbif.registry.ws.it.collections;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -35,7 +36,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -57,7 +57,6 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   public InstitutionIT(
       InstitutionService institutionResource,
       PersonService personResource,
-      MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
@@ -67,11 +66,9 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
         institutionResource,
         InstitutionClient.class,
         personResource,
-        mockMvc,
         principalProvider,
         esServer,
         identityService,
-        Institution.class,
         localServerPort,
         keyStore);
   }
@@ -219,10 +216,10 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     response = service.list(null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    response = service.list(null, null, null, null, null, new PagingRequest(0L, 1));
     assertEquals(1, response.getResults().size());
 
-    response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    response = service.list(null, null, null, null, null, new PagingRequest(0L, 0));
     assertEquals(0, response.getResults().size());
   }
 

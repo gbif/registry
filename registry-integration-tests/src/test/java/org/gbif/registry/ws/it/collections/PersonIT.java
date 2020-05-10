@@ -42,7 +42,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.WS_TEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,7 +71,6 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
       PersonService personResource,
       InstitutionService institutionResource,
       CollectionService collectionResource,
-      MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
@@ -81,11 +79,9 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     super(
         personResource,
         PersonClient.class,
-        mockMvc,
         principalProvider,
         esServer,
         identityService,
-        Person.class,
         localServerPort,
         keyStore);
     this.institutionResource = institutionResource;
