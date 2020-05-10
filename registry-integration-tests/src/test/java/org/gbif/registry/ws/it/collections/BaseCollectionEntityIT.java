@@ -322,8 +322,6 @@ public abstract class BaseCollectionEntityIT<
     assertEquals(0, identifierService.listIdentifiers(key).size());
   }
 
-  // TODO: 10/05/2020 add listDeletedTest
-
   protected CrudService<T> getService(ServiceType param) {
     switch (param) {
       case CLIENT:

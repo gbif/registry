@@ -276,6 +276,30 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(1, service.suggest("name2").size());
   }
 
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listDeletedTest(ServiceType serviceType) {
+    CollectionService service = ((CollectionService) getService(serviceType));
+
+    Collection collection1 = newEntity();
+    collection1.setCode("code1");
+    collection1.setName("Collection name");
+    UUID key1 = service.create(collection1);
+
+    Collection collection2 = newEntity();
+    collection2.setCode("code2");
+    collection2.setName("Collection name2");
+    UUID key2 = service.create(collection2);
+
+    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key1);
+    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key2);
+    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+  }
+
   @Override
   protected Collection newEntity() {
     Collection collection = new Collection();
