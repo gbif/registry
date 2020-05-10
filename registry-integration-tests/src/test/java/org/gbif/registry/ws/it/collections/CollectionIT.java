@@ -300,6 +300,33 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
   }
 
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listWithoutParametersTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+
+    service.create(newEntity());
+    service.create(newEntity());
+
+    Collection collection3 = newEntity();
+    UUID key3 = service.create(collection3);
+
+    PagingResponse<Collection> response =
+        service.list(null, null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(3, response.getResults().size());
+
+    service.delete(key3);
+
+    response = service.list(null, null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(2, response.getResults().size());
+
+    response = service.list(null, null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
+
+    response = service.list(null, null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(0, response.getResults().size());
+  }
+
   @Override
   protected Collection newEntity() {
     Collection collection = new Collection();
