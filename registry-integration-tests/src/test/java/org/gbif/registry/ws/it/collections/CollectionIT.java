@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it.collections;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
@@ -322,6 +323,52 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     response = service.list(null, null, null, null, null, null, new PagingRequest(0L, 0));
     assertEquals(0, response.getResults().size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listByContactTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+    PersonService personService = getService(serviceType, personResource, personClient);
+
+    // persons
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey1 = personService.create(person1);
+
+    Person person2 = new Person();
+    person2.setFirstName("first name2");
+    UUID personKey2 = personService.create(person2);
+
+    // collections
+    Collection collection1 = newEntity();
+    UUID collectionKey1 = service.create(collection1);
+
+    Collection collection2 = newEntity();
+    UUID collectionKey2 = service.create(collection2);
+
+    // add contacts
+    service.addContact(collectionKey1, personKey1);
+    service.addContact(collectionKey1, personKey2);
+    service.addContact(collectionKey2, personKey2);
+
+    assertEquals(
+        1,
+        service.list(null, null, personKey1, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2,
+        service.list(null, null, personKey2, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0,
+        service
+            .list(null, null, UUID.randomUUID(), null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+
+    service.removeContact(collectionKey1, personKey2);
+    assertEquals(
+        1,
+        service.list(null, null, personKey1, null, null, null, DEFAULT_PAGE).getResults().size());
   }
 
   @Override

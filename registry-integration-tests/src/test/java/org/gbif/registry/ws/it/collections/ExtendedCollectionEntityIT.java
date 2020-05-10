@@ -47,8 +47,8 @@ public abstract class ExtendedCollectionEntityIT<
         T extends CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable>
     extends BaseCollectionEntityIT<T> {
 
-  private final PersonService personResource;
-  private final PersonService personClient;
+  protected final PersonService personResource;
+  protected final PersonService personClient;
 
   public ExtendedCollectionEntityIT(
       CrudService<T> resource,
@@ -63,9 +63,6 @@ public abstract class ExtendedCollectionEntityIT<
     this.personResource = personResource;
     this.personClient = prepareClient(localServerPort, keyStore, PersonClient.class);
   }
-
-  // TODO: 10/05/2020 move createWithAddressTest to PersonIT
-  // TODO: 10/05/2020 move listByContactTest to PersonIT and InstitutionIT
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
