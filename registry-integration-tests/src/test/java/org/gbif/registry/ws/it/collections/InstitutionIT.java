@@ -173,6 +173,30 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(1, service.suggest("name2").size());
   }
 
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listDeletedTest(ServiceType serviceType) {
+    InstitutionService service = ((InstitutionService) getService(serviceType));
+
+    Institution institution1 = newEntity();
+    institution1.setCode("code1");
+    institution1.setName("Institution name");
+    UUID key1 = service.create(institution1);
+
+    Institution institution2 = newEntity();
+    institution2.setCode("code2");
+    institution2.setName("Institution name2");
+    UUID key2 = service.create(institution2);
+
+    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key1);
+    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key2);
+    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+  }
+
   @Override
   protected Institution newEntity() {
     Institution institution = new Institution();

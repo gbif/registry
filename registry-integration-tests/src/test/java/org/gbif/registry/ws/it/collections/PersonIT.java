@@ -400,6 +400,30 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     assertEquals(1, service.suggest("first second2").size());
   }
 
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listDeletedTest(ServiceType serviceType) {
+    PersonService service = (PersonService) getService(serviceType);
+
+    Person person1 = newEntity();
+    person1.setFirstName("first");
+    person1.setLastName("second");
+    UUID key1 = service.create(person1);
+
+    Person person2 = newEntity();
+    person2.setFirstName("first2");
+    person2.setLastName("second2");
+    UUID key2 = service.create(person2);
+
+    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key1);
+    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key2);
+    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+  }
+
   @Override
   protected Person newEntity() {
     Person person = new Person();
