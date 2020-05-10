@@ -197,6 +197,35 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
   }
 
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listWithoutParametersTest(ServiceType serviceType) {
+    InstitutionService service = (InstitutionService) getService(serviceType);
+
+    Institution institution1 = newEntity();
+    service.create(institution1);
+
+    Institution institution2 = newEntity();
+    service.create(institution2);
+
+    Institution institution3 = newEntity();
+    UUID key3 = service.create(institution3);
+
+    PagingResponse<Institution> response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(3, response.getResults().size());
+
+    service.delete(key3);
+
+    response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(2, response.getResults().size());
+
+    response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
+
+    response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(0, response.getResults().size());
+  }
+
   @Override
   protected Institution newEntity() {
     Institution institution = new Institution();
