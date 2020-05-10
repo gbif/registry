@@ -15,10 +15,7 @@
  */
 package org.gbif.registry.ws.it.collections;
 
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -28,99 +25,69 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.registry.IdentifierService;
+import org.gbif.api.service.registry.MachineTagService;
+import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
-import org.junit.jupiter.api.Test;
+import javax.validation.ValidationException;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_GRSCICOLL_ADMIN;
-import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Base class to test the CRUD operations of {@link CollectionEntity}. */
 public abstract class BaseCollectionEntityIT<
         T extends CollectionEntity & Identifiable & Taggable & MachineTaggable>
     extends BaseItTest {
 
-  protected static final int DEFAULT_OFFSET = 0;
-  protected static final int DEFAULT_LIMIT = 5;
-  protected static final String OFFSET_PARAM = "offset";
-  protected static final String LIMIT_PARAM = "limit";
-  protected static final String Q_PARAM = "q";
+  private final CrudService<T> resource;
+  private final CrudService<T> client;
 
   protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  protected static final JavaType LIST_TAG_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, Tag.class);
-  protected static final JavaType LIST_MACHINE_TAG_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, MachineTag.class);
-  protected static final JavaType LIST_IDENTIFIER_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, Identifier.class);
-  protected static final JavaType LIST_PERSON_TYPE =
-      OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, Person.class);
-
-  protected static final BiFunction<Integer, Integer, Map<String, List<String>>> PAGE_PARAMS =
-      (offset, limit) -> {
-        Map<String, List<String>> params = new HashMap<>();
-        params.put(OFFSET_PARAM, Collections.singletonList(String.valueOf(offset)));
-        params.put(LIMIT_PARAM, Collections.singletonList(String.valueOf(limit)));
-        return params;
-      };
-
-  protected static final Function<String, Map<String, List<String>>> Q_SEARCH_PARAMS =
-      q -> {
-        Map<String, List<String>> params = PAGE_PARAMS.apply(DEFAULT_OFFSET, DEFAULT_LIMIT);
-        params.put(Q_PARAM, Collections.singletonList(q));
-        return params;
-      };
-
-  protected static final Supplier<Map<String, List<String>>> DEFAULT_QUERY_PARAMS =
-      () -> PAGE_PARAMS.apply(DEFAULT_OFFSET, DEFAULT_LIMIT);
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   protected MockMvc mockMvc;
-  private final Class<T> clazz;
   protected final JavaType pagingResponseType;
 
   @RegisterExtension public CollectionsDatabaseInitializer collectionsDatabaseInitializer;
 
   public BaseCollectionEntityIT(
+      CrudService<T> resource,
+      Class<? extends CrudService<T>> cls,
       MockMvc mockMvc,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      Class<T> clazz) {
+      Class<T> clazz,
+      int localServerPort,
+      KeyStore keyStore) {
     super(principalProvider, esServer);
+    this.resource = resource;
+    this.client = prepareClient(localServerPort, keyStore, cls);
     this.mockMvc = mockMvc;
-    this.clazz = clazz;
     this.pagingResponseType =
         OBJECT_MAPPER.getTypeFactory().constructParametricType(PagingResponse.class, clazz);
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
@@ -136,17 +103,18 @@ public abstract class BaseCollectionEntityIT<
 
   protected abstract T newInvalidEntity();
 
-  protected abstract String getBasePath();
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void crudTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
 
-  @Test
-  public void crudTest() throws Exception {
     // create
     T entity = newEntity();
-    UUID key = createEntityCall(entity);
+    UUID key = service.create(entity);
 
     assertNotNull(key);
 
-    T entitySaved = getEntityCall(key);
+    T entitySaved = service.get(key);
     assertEquals(key, entitySaved.getKey());
     assertNewEntity(entitySaved);
     assertNotNull(entitySaved.getCreatedBy());
@@ -156,109 +124,111 @@ public abstract class BaseCollectionEntityIT<
 
     // update
     entity = updateEntity(entitySaved);
-    updateEntityCall(entity);
+    service.update(entity);
 
-    entitySaved = getEntityCall(key);
+    entitySaved = service.get(key);
     assertUpdatedEntity(entitySaved);
 
     // delete
-    deleteEntityCall(key);
-    entitySaved = getEntityCall(key);
+    service.delete(key);
+    entitySaved = service.get(key);
     assertNotNull(entitySaved.getDeleted());
   }
 
-  @Test
-  public void createInvalidEntityTest() throws Exception {
-    int status =
-        mockMvc
-            .perform(
-                post(getBasePath())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(newInvalidEntity()))
-                    .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getStatus();
-    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY.value(), status);
+  // TODO: 10/05/2020 client exception
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void createInvalidEntityTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+
+    assertThrows(ValidationException.class, () -> service.create(newInvalidEntity()));
   }
 
-  @Test
-  public void deleteMissingEntityTest() throws Exception {
-    assertEquals(HttpStatus.BAD_REQUEST.value(), deleteEntityCall(UUID.randomUUID()));
+  // TODO: 09/05/2020 client exception, should throw IllegalStateException
+  @Disabled
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void deleteMissingEntityTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+
+    assertThrows(IllegalStateException.class, () -> service.delete(UUID.randomUUID()));
   }
 
-  @Test
-  public void updateDeletedEntityTest() throws Exception {
+  // TODO: 10/05/2020 client exception
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void updateDeletedEntityTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+
     T entity = newEntity();
-    UUID key = createEntityCall(entity);
+    UUID key = service.create(entity);
     entity.setKey(key);
-    deleteEntityCall(key);
-    entity = getEntityCall(key);
-    assertNotNull(entity.getDeleted());
-    assertEquals(HttpStatus.BAD_REQUEST.value(), updateEntityCall(entity));
+    service.delete(key);
+
+    T entity2 = service.get(key);
+    assertNotNull(entity2.getDeleted());
+    assertThrows(IllegalArgumentException.class, () -> service.update(entity2));
   }
 
-  @Test
-  public void restoreDeletedEntityTest() throws Exception {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void restoreDeletedEntityTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+
     T entity = newEntity();
-    UUID key = createEntityCall(entity);
+    UUID key = service.create(entity);
     entity.setKey(key);
-    deleteEntityCall(key);
-    entity = getEntityCall(key);
+    service.delete(key);
+    entity = service.get(key);
     assertNotNull(entity.getDeleted());
 
     // restore it
     entity.setDeleted(null);
-    updateEntityCall(entity);
-    entity = getEntityCall(key);
+    service.update(entity);
+    entity = service.get(key);
     assertNull(entity.getDeleted());
   }
 
-  @Test
-  public void updateInvalidEntityTest() throws Exception {
+  // TODO: 10/05/2020 client exception
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void updateInvalidEntityTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+
     T entity = newEntity();
-    UUID key = createEntityCall(entity);
-    entity = newInvalidEntity();
-    entity.setKey(key);
-    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY.value(), updateEntityCall(entity));
+    UUID key = service.create(entity);
+
+    T newEntity = newInvalidEntity();
+    newEntity.setKey(key);
+    assertThrows(ValidationException.class, () -> service.update(newEntity));
   }
 
-  @Test
-  public void getMissingEntity() throws Exception {
-    assertEquals(
-        HttpStatus.NOT_FOUND.value(),
-        mockMvc
-            .perform(get(getBasePath() + UUID.randomUUID().toString()))
-            .andReturn()
-            .getResponse()
-            .getStatus());
+  // TODO: 10/05/2020 client exception
+  @ParameterizedTest
+  @EnumSource(
+      value = ServiceType.class,
+      names = {"RESOURCE"})
+  public void getMissingEntity(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+
+    assertThrows(NotFoundException.class, () -> service.get(UUID.randomUUID()));
   }
 
-  @Test
-  public void listWithoutParametersTest() throws Exception {
-    T entity1 = newEntity();
-    UUID key1 = createEntityCall(entity1);
+  // TODO: 10/05/2020 add listWithoutParametersTest
 
-    T entity2 = newEntity();
-    UUID key2 = createEntityCall(entity2);
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void createFullEntityTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
 
-    T entity3 = newEntity();
-    UUID key3 = createEntityCall(entity3);
-
-    // list
-    assertEquals(3, listEntitiesCall(DEFAULT_QUERY_PARAMS.get()).getResults().size());
-
-    // delete and list
-    deleteEntityCall(key3);
-    assertEquals(2, listEntitiesCall(DEFAULT_QUERY_PARAMS.get()).getResults().size());
-
-    // paging tests
-    assertEquals(1, listEntitiesCall(PAGE_PARAMS.apply(0, 1)).getResults().size());
-    assertEquals(0, listEntitiesCall(PAGE_PARAMS.apply(0, 0)).getResults().size());
-  }
-
-  @Test
-  public void createFullEntityTest() throws Exception {
     T entity = newEntity();
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
@@ -273,8 +243,8 @@ public abstract class BaseCollectionEntityIT<
     identifier.setType(IdentifierType.LSID);
     entity.setIdentifiers(Collections.singletonList(identifier));
 
-    UUID key = createEntityCall(entity);
-    T entitySaved = getEntityCall(key);
+    UUID key = service.create(entity);
+    T entitySaved = service.get(key);
 
     assertEquals(1, entitySaved.getMachineTags().size());
     assertEquals("value", entitySaved.getMachineTags().get(0).getValue());
@@ -285,260 +255,83 @@ public abstract class BaseCollectionEntityIT<
     assertEquals(IdentifierType.LSID, entitySaved.getIdentifiers().get(0).getType());
   }
 
-  @Test
-  public void tagsTest() throws Exception {
-    UUID key = createEntityCall(newEntity());
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void tagsTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+    TagService tagService = (TagService) service;
+
+    UUID key = service.create(newEntity());
 
     Tag tag = new Tag();
     tag.setValue("value");
+    int tagKey = tagService.addTag(key, tag);
 
-    Integer tagKey =
-        OBJECT_MAPPER.readValue(
-            mockMvc
-                .perform(
-                    post(getBasePath() + key.toString() + "/tag")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(OBJECT_MAPPER.writeValueAsString(tag))
-                        .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            Integer.class);
-
-    List<Tag> tags = listTagsCall(key);
+    List<Tag> tags = tagService.listTags(key, null);
     assertEquals(1, tags.size());
-
     assertEquals(tagKey, tags.get(0).getKey());
     assertEquals("value", tags.get(0).getValue());
 
-    // delete the tag
-    mockMvc.perform(
-        delete(getBasePath() + key.toString() + "/tag/" + tagKey)
-            .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)));
-    assertEquals(0, listTagsCall(key).size());
+    tagService.deleteTag(key, tagKey);
+    assertEquals(0, tagService.listTags(key, null).size());
   }
 
-  @Test
-  public void machineTagsTest() throws Exception {
-    UUID key = createEntityCall(newEntity());
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void machineTagsTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+    MachineTagService machineTagService = (MachineTagService) service;
+
+    T entity = newEntity();
+    UUID key = service.create(entity);
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
+    int machineTagKey = machineTagService.addMachineTag(key, machineTag);
 
-    Integer machineTagKey =
-        OBJECT_MAPPER.readValue(
-            mockMvc
-                .perform(
-                    post(getBasePath() + key.toString() + "/machineTag")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(OBJECT_MAPPER.writeValueAsString(machineTag))
-                        .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            Integer.class);
-
-    List<MachineTag> machineTags = listMachineTagsCall(key);
+    List<MachineTag> machineTags = machineTagService.listMachineTags(key);
     assertEquals(1, machineTags.size());
     assertEquals(machineTagKey, machineTags.get(0).getKey());
     assertEquals("value", machineTags.get(0).getValue());
 
-    // delete the machine tag
-    mockMvc.perform(
-        delete(getBasePath() + key.toString() + "/machineTag/" + machineTagKey)
-            .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)));
-    assertEquals(0, listMachineTagsCall(key).size());
+    machineTagService.deleteMachineTag(key, machineTagKey);
+    assertEquals(0, machineTagService.listMachineTags(key).size());
   }
 
-  @Test
-  public void identifiersTest() throws Exception {
-    UUID key = createEntityCall(newEntity());
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void identifiersTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+    IdentifierService identifierService = (IdentifierService) service;
+
+    T entity = newEntity();
+    UUID key = service.create(entity);
 
     Identifier identifier = new Identifier();
     identifier.setIdentifier("identifier");
     identifier.setType(IdentifierType.LSID);
 
-    Integer identifierKey =
-        OBJECT_MAPPER.readValue(
-            mockMvc
-                .perform(
-                    post(getBasePath() + key.toString() + "/identifier")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(OBJECT_MAPPER.writeValueAsString(identifier))
-                        .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString(),
-            Integer.class);
+    int identifierKey = identifierService.addIdentifier(key, identifier);
 
-    List<Identifier> identifiers = listIdentifiersCall(key);
+    List<Identifier> identifiers = identifierService.listIdentifiers(key);
     assertEquals(1, identifiers.size());
     assertEquals(identifierKey, identifiers.get(0).getKey());
     assertEquals("identifier", identifiers.get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
 
-    // delete the identifier
-    mockMvc.perform(
-        delete(getBasePath() + key.toString() + "/identifier/" + identifierKey)
-            .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)));
-    assertEquals(0, listIdentifiersCall(key).size());
+    identifierService.deleteIdentifier(key, identifierKey);
+    assertEquals(0, identifierService.listIdentifiers(key).size());
   }
 
-  @Test
-  public void listDeletedTest() throws Exception {
-    UUID key1 = createEntityCall(newEntity());
-    UUID key2 = createEntityCall(newEntity());
+  // TODO: 10/05/2020 add listDeletedTest
 
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    assertEquals(0, listDeletedCall(params).getResults().size());
-
-    deleteEntityCall(key1);
-    assertEquals(1, listDeletedCall(params).getResults().size());
-
-    deleteEntityCall(key2);
-    assertEquals(2, listDeletedCall(params).getResults().size());
-  }
-
-  protected T getEntityCall(UUID key) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(get(getBasePath() + key.toString()))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        clazz);
-  }
-
-  protected UUID createEntityCall(T entity) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                post(getBasePath())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(entity))
-                    .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        UUID.class);
-  }
-
-  protected int updateEntityCall(T entity) throws Exception {
-    return mockMvc
-        .perform(
-            put(getBasePath() + entity.getKey().toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(OBJECT_MAPPER.writeValueAsString(entity))
-                .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-        .andReturn()
-        .getResponse()
-        .getStatus();
-  }
-
-  protected int deleteEntityCall(UUID key) throws Exception {
-    return mockMvc
-        .perform(
-            delete(getBasePath() + key.toString())
-                .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-        .andReturn()
-        .getResponse()
-        .getStatus();
-  }
-
-  protected List<Tag> listTagsCall(UUID entityKey) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(get(getBasePath() + entityKey.toString() + "/tag"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        LIST_TAG_TYPE);
-  }
-
-  protected List<MachineTag> listMachineTagsCall(UUID entityKey) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(get(getBasePath() + entityKey.toString() + "/machineTag"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        LIST_MACHINE_TAG_TYPE);
-  }
-
-  protected List<Identifier> listIdentifiersCall(UUID entityKey) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(get(getBasePath() + entityKey.toString() + "/identifier"))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        LIST_IDENTIFIER_TYPE);
-  }
-
-  protected PagingResponse<T> listEntitiesCall(Map<String, List<String>> queryParams)
-      throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                MockMvcRequestBuilders.get(getBasePath())
-                    .queryParams(CollectionUtils.toMultiValueMap(queryParams)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        pagingResponseType);
-  }
-
-  protected PagingResponse<T> listDeletedCall(Map<String, List<String>> queryParams)
-      throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                MockMvcRequestBuilders.get(getBasePath() + "deleted")
-                    .queryParams(CollectionUtils.toMultiValueMap(queryParams)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        pagingResponseType);
-  }
-
-  protected UUID createInstitutionCall(Institution entity) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                post("/grscicoll/institution")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(entity))
-                    .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        UUID.class);
-  }
-
-  protected UUID createCollectionCall(Collection entity) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                post("/grscicoll/collection")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(entity))
-                    .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        UUID.class);
-  }
-
-  protected UUID createPersonCall(Person entity) throws Exception {
-    return OBJECT_MAPPER.readValue(
-        mockMvc
-            .perform(
-                post("/grscicoll/person")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(OBJECT_MAPPER.writeValueAsString(entity))
-                    .with(httpBasic(TEST_GRSCICOLL_ADMIN, TEST_PASSWORD)))
-            .andReturn()
-            .getResponse()
-            .getContentAsString(),
-        UUID.class);
+  protected CrudService<T> getService(ServiceType param) {
+    switch (param) {
+      case CLIENT:
+        return client;
+      case RESOURCE:
+        return resource;
+      default:
+        throw new IllegalStateException("Must be resource or client");
+    }
   }
 }

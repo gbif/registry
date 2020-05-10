@@ -52,8 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class PersonIT extends BaseCollectionEntityIT<Person> {
 
-  private final PersonService personResource;
-  private final PersonService personClient;
   private final InstitutionService institutionResource;
   private final InstitutionService institutionClient;
   private final CollectionService collectionResource;
@@ -80,9 +78,16 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
       IdentityService identityService,
       @LocalServerPort int localServerPort,
       KeyStore keyStore) {
-    super(mockMvc, principalProvider, esServer, identityService, Person.class);
-    this.personResource = personResource;
-    this.personClient = prepareClient(localServerPort, keyStore, PersonClient.class);
+    super(
+        personResource,
+        PersonClient.class,
+        mockMvc,
+        principalProvider,
+        esServer,
+        identityService,
+        Person.class,
+        localServerPort,
+        keyStore);
     this.institutionResource = institutionResource;
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
     this.collectionResource = collectionResource;
@@ -92,7 +97,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createWithAddressTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
     Person person = newEntity();
 
     Address mailingAddress = new Address();
@@ -122,7 +127,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listWithoutParamsTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
 
     Person person1 = newEntity();
     service.create(person1);
@@ -151,7 +156,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listQueryTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
 
     Person person1 = newEntity();
     Address address = new Address();
@@ -204,7 +209,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listByInstitutionTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
     InstitutionService institutionService =
         getService(serviceType, institutionResource, institutionClient);
 
@@ -245,7 +250,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listByCollectionTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
     CollectionService collectionService =
         getService(serviceType, collectionResource, collectionClient);
 
@@ -286,7 +291,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void listMultipleParamsTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
     InstitutionService institutionService =
         getService(serviceType, institutionResource, institutionClient);
     CollectionService collectionService =
@@ -335,7 +340,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void updateAddressesTest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
 
     // entities
     Person person = newEntity();
@@ -376,7 +381,7 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testSuggest(ServiceType serviceType) {
-    PersonService service = getService(serviceType, personResource, personClient);
+    PersonService service = ((PersonService) getService(serviceType));
 
     Person person1 = newEntity();
     person1.setFirstName("first");
@@ -438,10 +443,5 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   @Override
   protected Person newInvalidEntity() {
     return new Person();
-  }
-
-  @Override
-  protected String getBasePath() {
-    return "/grscicoll/person/";
   }
 }
