@@ -105,7 +105,7 @@ public class BaseItTest {
 
   @BeforeEach
   public void setup() {
-    // reset SimplePrincipleProvider, configured for web service client tests only
+    // reset SimplePrincipleProvider, configured for web resources tests only
     if (simplePrincipalProvider != null) {
       simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
       SecurityContext ctx = SecurityContextHolder.createEmptyContext();
