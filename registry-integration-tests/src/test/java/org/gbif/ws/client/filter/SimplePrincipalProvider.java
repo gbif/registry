@@ -27,7 +27,7 @@ import com.google.common.base.Strings;
  * A Principal provider providing the same principal every time. The principal to be provided can be
  * changed at any time.
  *
- * <p>Useful for testing ws-clients.
+ * <p>Useful for testing ws-resources.
  */
 public class SimplePrincipalProvider implements Supplier<Principal> {
 
