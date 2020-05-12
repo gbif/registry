@@ -185,12 +185,9 @@ public class OccurrenceDownloadIT extends BaseItTest {
     assertEquals(format, occurrenceDownload2.getRequest().getFormat());
   }
 
-  // TODO: 06/05/2020
   /** Creates a {@link Download} with a null status which should trigger a validation exception. */
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void testCreateWithNullStatus(ServiceType serviceType) {
     OccurrenceDownloadService service =
         getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);

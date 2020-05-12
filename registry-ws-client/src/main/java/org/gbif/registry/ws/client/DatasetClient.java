@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +43,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("dataset")
-@FeignClient(name = "datasetClient", url = "${registry.ws.url}", primary = false)
 public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetService {
 
   @RequestMapping(

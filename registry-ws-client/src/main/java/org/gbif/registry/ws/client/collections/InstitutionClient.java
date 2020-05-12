@@ -52,7 +52,7 @@ public interface InstitutionClient
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Institution> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Institution> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
       method = RequestMethod.GET,

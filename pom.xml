@@ -99,7 +99,7 @@
     <gbif-download-query-tools.version>1.27.2-sb-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.44.4-jackson2-SNAPSHOT</gbif-postal-service.version>
     <!-- Special gbif-api with jackson 2 features, see branch 'jackson2' -->
-    <gbif-api.version>0.109-jackson2-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.110-jackson2-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>0.16-jackson2-SNAPSHOT</gbif-directory.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <commons-validator.version>1.5.1</commons-validator.version>

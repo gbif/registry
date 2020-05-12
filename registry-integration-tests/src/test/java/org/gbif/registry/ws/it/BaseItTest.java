@@ -23,6 +23,7 @@ import org.gbif.ws.client.ClientFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Stream;
 
@@ -104,7 +105,7 @@ public class BaseItTest {
 
   @BeforeEach
   public void setup() {
-    // reset SimplePrincipleProvider, configured for web service client tests only
+    // reset SimplePrincipleProvider, configured for web resources tests only
     if (simplePrincipalProvider != null) {
       simplePrincipalProvider.setPrincipal(TestConstants.TEST_ADMIN);
       SecurityContext ctx = SecurityContextHolder.createEmptyContext();
@@ -113,7 +114,9 @@ public class BaseItTest {
           new UsernamePasswordAuthenticationToken(
               simplePrincipalProvider.get().getName(),
               "",
-              Collections.singleton(new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()))));
+              Arrays.asList(
+                  new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()),
+                  new SimpleGrantedAuthority(UserRole.GRSCICOLL_ADMIN.name()))));
     }
   }
 
