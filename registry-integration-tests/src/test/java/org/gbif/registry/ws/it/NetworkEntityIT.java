@@ -114,11 +114,8 @@ public abstract class NetworkEntityIT<
     }
   }
 
-  // TODO: 05/05/2020 client should throw ConstraintViolationException
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void createWithKey(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
     T e = newEntity(serviceType);
@@ -228,9 +225,8 @@ public abstract class NetworkEntityIT<
         "List service does not reflect the number of created entities");
   }
 
-  // TODO: 05/05/2020 client should throw ConstraintViolationException
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  @EnumSource(ServiceType.class)
   public void testUpdateFailingValidation(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
     T n1 = create(newEntity(serviceType), serviceType, 1);

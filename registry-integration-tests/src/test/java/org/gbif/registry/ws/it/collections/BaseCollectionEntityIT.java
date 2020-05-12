@@ -120,11 +120,8 @@ public abstract class BaseCollectionEntityIT<
     assertNotNull(entitySaved.getDeleted());
   }
 
-  // TODO: 10/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void createInvalidEntityTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
 
@@ -180,11 +177,8 @@ public abstract class BaseCollectionEntityIT<
     assertNull(entity.getDeleted());
   }
 
-  // TODO: 10/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void updateInvalidEntityTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
 
