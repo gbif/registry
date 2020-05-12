@@ -53,8 +53,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
@@ -70,7 +68,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -116,11 +113,9 @@ public abstract class BaseCollectionEntityResource<
     this.withMyBatis = withMyBatis;
   }
 
-  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Trim
-  @Transactional
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public UUID create(@RequestBody @NotNull @Valid T entity, Authentication authentication) {
+  public void preCreate(T entity) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     if (!isAllowedToEditEntity(authentication, entity)) {
       throw new WebApplicationException(
           "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
@@ -129,13 +124,15 @@ public abstract class BaseCollectionEntityResource<
     final String username = authentication.getName();
     entity.setCreatedBy(username);
     entity.setModifiedBy(username);
-    return create(entity);
   }
 
   @DeleteMapping("{key}")
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void delete(@PathVariable @NotNull UUID key, Authentication authentication) {
+  @Override
+  public void delete(@PathVariable UUID key) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     T entityToDelete = get(key);
     checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
 
@@ -147,15 +144,8 @@ public abstract class BaseCollectionEntityResource<
     entityToDelete.setModifiedBy(authentication.getName());
     update(entityToDelete);
 
-    delete(key);
-  }
-
-  @Transactional
-  @Override
-  public void delete(UUID key) {
-    T objectToDelete = get(key);
     baseMapper.delete(key);
-    eventManager.post(DeleteCollectionEntityEvent.newInstance(objectToDelete, objectClass));
+    eventManager.post(DeleteCollectionEntityEvent.newInstance(entityToDelete, objectClass));
   }
 
   @Nullable
@@ -164,13 +154,8 @@ public abstract class BaseCollectionEntityResource<
     return baseMapper.get(key);
   }
 
-  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Transactional
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@PathVariable @NotNull UUID key, @RequestBody @NotNull @Trim @Valid T entity) {
+  public void preUpdate(T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    checkArgument(
-        key.equals(entity.getKey()), "Provided entity must have the same key as the resource URL");
 
     if (!isAllowedToEditEntity(authentication, entity)) {
       throw new WebApplicationException(
@@ -178,16 +163,17 @@ public abstract class BaseCollectionEntityResource<
     }
 
     entity.setModifiedBy(authentication.getName());
-    update(entity);
   }
 
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Override
   public int addIdentifier(
-      @PathVariable("key") @NotNull UUID entityKey,
-      @RequestBody @NotNull @Valid Identifier identifier,
-      Authentication authentication) {
+      @PathVariable("key") UUID entityKey, @RequestBody Identifier identifier) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     // only admins can add IH identifiers
     if (identifier.getType() == IdentifierType.IH_IRN
         && !SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
@@ -196,12 +182,6 @@ public abstract class BaseCollectionEntityResource<
     }
 
     identifier.setCreatedBy(authentication.getName());
-    return addIdentifier(entityKey, identifier);
-  }
-
-  @Validated({PrePersist.class, Default.class})
-  @Override
-  public int addIdentifier(UUID entityKey, Identifier identifier) {
     int identifierKey =
         withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
     eventManager.post(
@@ -213,10 +193,11 @@ public abstract class BaseCollectionEntityResource<
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
+  @Override
   public void deleteIdentifier(
-      @PathVariable("key") @NotNull UUID entityKey,
-      @PathVariable int identifierKey,
-      Authentication authentication) {
+      @PathVariable("key") UUID entityKey, @PathVariable int identifierKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     // check if the user has permissions to delete the identifier. Only admins can delete IH
     // identifiers.
     List<Identifier> identifiers = baseMapper.listIdentifiers(entityKey);
@@ -230,11 +211,6 @@ public abstract class BaseCollectionEntityResource<
           "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
     }
 
-    deleteIdentifier(entityKey, identifierKey);
-  }
-
-  @Override
-  public void deleteIdentifier(UUID entityKey, int identifierKey) {
     baseMapper.deleteIdentifier(entityKey, identifierKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(
@@ -249,14 +225,17 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public int addTag(
-      @PathVariable("key") @NotNull UUID entityKey,
-      @RequestBody @NotNull Tag tag,
-      Authentication authentication) {
+  @Override
+  public int addTag(@PathVariable("key") UUID entityKey, @RequestBody Tag tag) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     tag.setCreatedBy(authentication.getName());
-    return addTag(entityKey, tag);
+    int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+    return tagKey;
   }
 
   @Override
@@ -264,15 +243,6 @@ public abstract class BaseCollectionEntityResource<
     Tag tag = new Tag();
     tag.setValue(value);
     return addTag(key, tag);
-  }
-
-  @Validated({PrePersist.class, Default.class})
-  @Override
-  public int addTag(UUID entityKey, Tag tag) {
-    int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
-    eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
-    return tagKey;
   }
 
   @DeleteMapping("{key}/tag/{tagKey}")
@@ -306,12 +276,13 @@ public abstract class BaseCollectionEntityResource<
    * @return key of MachineTag created
    */
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Trim
   @Transactional
+  @Override
   public int addMachineTag(
-      @PathVariable("key") UUID targetEntityKey,
-      @RequestBody @NotNull @Trim @Valid MachineTag machineTag,
-      Authentication authentication) {
+      @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim MachineTag machineTag) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
@@ -319,17 +290,11 @@ public abstract class BaseCollectionEntityResource<
         || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
             && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace()))) {
       machineTag.setCreatedBy(nameFromContext);
-      return addMachineTag(targetEntityKey, machineTag);
+      return withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
     } else {
       throw new WebApplicationException(
           "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
     }
-  }
-
-  @Validated({PrePersist.class, Default.class})
-  @Override
-  public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
-    return withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
   }
 
   @Override

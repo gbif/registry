@@ -1198,9 +1198,8 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertSearch(null, Country.DJIBOUTI, 3);*/
   }
 
-  // TODO: 05/05/2020 client should throw ValidationException
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  @EnumSource(ServiceType.class)
   public void createDatasetsWithInvalidUri(ServiceType serviceType) {
     DatasetService service = (DatasetService) getService(serviceType);
     Dataset d = newEntity(serviceType);

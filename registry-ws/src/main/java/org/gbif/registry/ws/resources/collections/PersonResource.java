@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -49,6 +50,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,8 +61,8 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 @Validated
 @RestController
@@ -105,17 +109,17 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     return super.get(key);
   }
 
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
+  @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public UUID create(Person person) {
+  public UUID create(@RequestBody Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
+    preCreate(person);
 
     if (person.getMailingAddress() != null) {
-      checkArgument(
-          person.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
       addressMapper.create(person.getMailingAddress());
     }
 
@@ -124,8 +128,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : person.getMachineTags()) {
-        checkArgument(
-            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(person.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         personMapper.addMachineTag(person.getKey(), machineTag.getKey());
@@ -134,7 +136,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getTags().isEmpty()) {
       for (Tag tag : person.getTags()) {
-        checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
         tag.setCreatedBy(person.getCreatedBy());
         tagMapper.createTag(tag);
         personMapper.addTag(person.getKey(), tag.getKey());
@@ -143,8 +144,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
 
     if (!person.getIdentifiers().isEmpty()) {
       for (Identifier identifier : person.getIdentifiers()) {
-        checkArgument(
-            identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(person.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         personMapper.addIdentifier(person.getKey(), identifier.getKey());
@@ -155,9 +154,14 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     return person.getKey();
   }
 
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public void update(Person person) {
+  public void update(@RequestBody @Trim Person person) {
+    preUpdate(person);
     Person oldPerson = get(person.getKey());
     checkArgument(oldPerson != null, "Entity doesn't exist");
 

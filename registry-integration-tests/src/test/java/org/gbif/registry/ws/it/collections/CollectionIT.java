@@ -18,27 +18,39 @@ package org.gbif.registry.ws.it.collections;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.ws.client.collections.CollectionClient;
+import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionResource}. */
-public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
+public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
+
+  private final InstitutionService institutionResource;
+  private final InstitutionService institutionClient;
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -48,23 +60,34 @@ public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
   private static final String DESCRIPTION_UPDATED = "dummy description updated";
   private static final AccessionStatus ACCESSION_STATUS_UPDATED = AccessionStatus.PROJECT;
 
-  // query params
-  private static final String CODE_PARAM = "code";
-  private static final String NAME_PARAM = "name";
-  private static final String INSTITUTION_PARAM = "institution";
-  private static final String ALT_CODE_PARAM = "alternativeCode";
-
   @Autowired
   public CollectionIT(
-      MockMvc mockMvc,
+      InstitutionService institutionResource,
+      CollectionService collectionResource,
+      PersonService personResource,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
-      IdentityService identityService) {
-    super(mockMvc, principalProvider, esServer, identityService, Collection.class);
+      IdentityService identityService,
+      @LocalServerPort int localServerPort,
+      KeyStore keyStore) {
+    super(
+        collectionResource,
+        CollectionClient.class,
+        personResource,
+        principalProvider,
+        esServer,
+        identityService,
+        localServerPort,
+        keyStore);
+    this.institutionResource = institutionResource;
+    this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
   }
 
-  @Test
-  public void listTest() throws Exception {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listTest(ServiceType serviceType) {
+    CollectionService service = ((CollectionService) getService(serviceType));
+
     Collection collection1 = newEntity();
     collection1.setCode("c1");
     collection1.setName("n1");
@@ -73,7 +96,7 @@ public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
     address.setCity("city");
     collection1.setAddress(address);
     collection1.setAlternativeCodes(Collections.singletonMap("alt", "test"));
-    UUID key1 = createEntityCall(collection1);
+    UUID key1 = service.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("c2");
@@ -82,158 +105,270 @@ public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
     address2.setAddress("dummy address2");
     address2.setCity("city2");
     collection2.setAddress(address2);
-    UUID key2 = createEntityCall(collection2);
+    UUID key2 = service.create(collection2);
 
     // query param
-    assertEquals(2, listEntitiesCall(DEFAULT_QUERY_PARAMS.get()).getResults().size());
-    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("dummy")).getResults().size());
+    PagingResponse<Collection> response =
+        service.list("dummy", null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("")).getResults().size());
+    response = service.list("", null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(2, response.getResults().size());
 
-    List<Collection> collections = listEntitiesCall(Q_SEARCH_PARAMS.apply("city")).getResults();
-    assertEquals(1, collections.size());
-    assertEquals(key1, collections.get(0).getKey());
+    response = service.list("city", null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
+    assertEquals(key1, response.getResults().get(0).getKey());
 
-    collections = listEntitiesCall(Q_SEARCH_PARAMS.apply("city2")).getResults();
-    assertEquals(1, collections.size());
-    assertEquals(key2, collections.get(0).getKey());
+    response = service.list("city2", null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
+    assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("c")).getResults().size());
-    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply("dum add")).getResults().size());
-    assertEquals(0, listEntitiesCall(Q_SEARCH_PARAMS.apply("<")).getResults().size());
-    assertEquals(0, listEntitiesCall(Q_SEARCH_PARAMS.apply("\"<\"")).getResults().size());
-    assertEquals(2, listEntitiesCall(Q_SEARCH_PARAMS.apply(" ")).getResults().size());
+    assertEquals(
+        2, service.list("c", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2, service.list("dum add", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0, service.list("<", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0, service.list("\"<\"", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2, service.list(null, null, null, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2, service.list("  ", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
 
     // code and name params
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    params.put(CODE_PARAM, Collections.singletonList("c1"));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
-
-    params = DEFAULT_QUERY_PARAMS.get();
-    params.put(NAME_PARAM, Collections.singletonList("n2"));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
-
-    params = DEFAULT_QUERY_PARAMS.get();
-    params.put(CODE_PARAM, Collections.singletonList("c1"));
-    params.put(NAME_PARAM, Collections.singletonList("n1"));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
-
-    params.put(CODE_PARAM, Collections.singletonList("c2"));
-    assertEquals(0, listEntitiesCall(params).getResults().size());
+    assertEquals(
+        1, service.list(null, null, null, "c1", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        1, service.list(null, null, null, null, "n2", null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        1, service.list(null, null, null, "c1", "n1", null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0, service.list(null, null, null, "c2", "n1", null, DEFAULT_PAGE).getResults().size());
 
     // alternative code
-    params = DEFAULT_QUERY_PARAMS.get();
-    params.put(ALT_CODE_PARAM, Collections.singletonList("alt"));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
-
-    params.put(ALT_CODE_PARAM, Collections.singletonList("foo"));
-    assertEquals(0, listEntitiesCall(params).getResults().size());
+    assertEquals(
+        1, service.list(null, null, null, null, null, "alt", DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0, service.list(null, null, null, null, null, "foo", DEFAULT_PAGE).getResults().size());
 
     // update address
-    collection2 = getEntityCall(key2);
+    collection2 = service.get(key2);
+    assertNotNull(collection2.getAddress());
     collection2.getAddress().setCity("city3");
-    updateEntityCall(collection2);
-    assertEquals(1, listEntitiesCall(Q_SEARCH_PARAMS.apply("city3")).getResults().size());
+    service.update(collection2);
+    assertEquals(
+        1, service.list("city3", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
 
-    deleteEntityCall(key2);
-    assertEquals(0, listEntitiesCall(Q_SEARCH_PARAMS.apply("city3")).getResults().size());
+    service.delete(key2);
+    assertEquals(
+        0, service.list("city3", null, null, null, null, null, DEFAULT_PAGE).getResults().size());
   }
 
-  @Test
-  public void listByInstitutionTest() throws Exception {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listByInstitutionTest(ServiceType serviceType) {
+    CollectionService service = ((CollectionService) getService(serviceType));
+    InstitutionService institutionService =
+        getService(serviceType, institutionResource, institutionClient);
+
     // institutions
     Institution institution1 = new Institution();
     institution1.setCode("code1");
     institution1.setName("name1");
-    UUID institutionKey1 = createInstitutionCall(institution1);
+    UUID institutionKey1 = institutionService.create(institution1);
 
     Institution institution2 = new Institution();
     institution2.setCode("code2");
     institution2.setName("name2");
-    UUID institutionKey2 = createInstitutionCall(institution2);
+    UUID institutionKey2 = institutionService.create(institution2);
 
     Collection collection1 = newEntity();
     collection1.setInstitutionKey(institutionKey1);
-    createEntityCall(collection1);
+    service.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setInstitutionKey(institutionKey1);
-    createEntityCall(collection2);
+    service.create(collection2);
 
     Collection collection3 = newEntity();
     collection3.setInstitutionKey(institutionKey2);
-    createEntityCall(collection3);
+    service.create(collection3);
 
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey1.toString()));
-    assertEquals(2, listEntitiesCall(params).getResults().size());
+    PagingResponse<Collection> response =
+        service.list(null, institutionKey1, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(2, response.getResults().size());
 
-    params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey2.toString()));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
+    response = service.list(null, institutionKey2, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
 
-    params.put(INSTITUTION_PARAM, Collections.singletonList(UUID.randomUUID().toString()));
-    assertEquals(0, listEntitiesCall(params).getResults().size());
+    response = service.list(null, UUID.randomUUID(), null, null, null, null, DEFAULT_PAGE);
+    assertEquals(0, response.getResults().size());
   }
 
-  @Test
-  public void listMultipleParamsTest() throws Exception {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listMultipleParamsTest(ServiceType serviceType) {
+    CollectionService service = ((CollectionService) getService(serviceType));
+    InstitutionService institutionService =
+        getService(serviceType, institutionResource, institutionClient);
+
     // institutions
     Institution institution1 = new Institution();
     institution1.setCode("code1");
     institution1.setName("name1");
-    UUID institutionKey1 = createInstitutionCall(institution1);
+    UUID institutionKey1 = institutionService.create(institution1);
 
     Institution institution2 = new Institution();
     institution2.setCode("code2");
     institution2.setName("name2");
-    UUID institutionKey2 = createInstitutionCall(institution2);
+    UUID institutionKey2 = institutionService.create(institution2);
 
     Collection collection1 = newEntity();
     collection1.setCode("code1");
     collection1.setInstitutionKey(institutionKey1);
-    createEntityCall(collection1);
+    service.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("code2");
     collection2.setInstitutionKey(institutionKey1);
-    createEntityCall(collection2);
+    service.create(collection2);
 
     Collection collection3 = newEntity();
     collection3.setInstitutionKey(institutionKey2);
-    createEntityCall(collection3);
+    service.create(collection3);
 
-    Map<String, List<String>> params = DEFAULT_QUERY_PARAMS.get();
-    params.put(Q_PARAM, Collections.singletonList("code1"));
-    params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey1.toString()));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
+    PagingResponse<Collection> response =
+        service.list("code1", institutionKey1, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
 
-    params.put(Q_PARAM, Collections.singletonList("foo"));
-    assertEquals(0, listEntitiesCall(params).getResults().size());
+    response = service.list("foo", institutionKey1, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(0, response.getResults().size());
 
-    params.put(Q_PARAM, Collections.singletonList("code2"));
-    assertEquals(1, listEntitiesCall(params).getResults().size());
+    response = service.list("code2", institutionKey2, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(0, response.getResults().size());
 
-    params.put(INSTITUTION_PARAM, Collections.singletonList(institutionKey2.toString()));
-    assertEquals(0, listEntitiesCall(params).getResults().size());
+    response = service.list("code2", institutionKey1, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(1, response.getResults().size());
   }
 
-  @Test
-  public void testSuggest() throws Exception {
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSuggest(ServiceType serviceType) {
+    CollectionService service = ((CollectionService) getService(serviceType));
+
     Collection collection1 = newEntity();
     collection1.setCode("CC");
     collection1.setName("Collection name");
-    UUID key1 = createEntityCall(collection1);
+    service.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("CC2");
     collection2.setName("Collection name2");
-    UUID key2 = createEntityCall(collection2);
+    service.create(collection2);
 
-    assertEquals(2, suggestCall("collection").size());
-    assertEquals(2, suggestCall("CC").size());
-    assertEquals(1, suggestCall("CC2").size());
-    assertEquals(1, suggestCall("name2").size());
+    assertEquals(2, service.suggest("collection").size());
+    assertEquals(2, service.suggest("CC").size());
+    assertEquals(1, service.suggest("CC2").size());
+    assertEquals(1, service.suggest("name2").size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listDeletedTest(ServiceType serviceType) {
+    CollectionService service = ((CollectionService) getService(serviceType));
+
+    Collection collection1 = newEntity();
+    collection1.setCode("code1");
+    collection1.setName("Collection name");
+    UUID key1 = service.create(collection1);
+
+    Collection collection2 = newEntity();
+    collection2.setCode("code2");
+    collection2.setName("Collection name2");
+    UUID key2 = service.create(collection2);
+
+    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key1);
+    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+
+    service.delete(key2);
+    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listWithoutParametersTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+
+    service.create(newEntity());
+    service.create(newEntity());
+
+    Collection collection3 = newEntity();
+    UUID key3 = service.create(collection3);
+
+    PagingResponse<Collection> response =
+        service.list(null, null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(3, response.getResults().size());
+
+    service.delete(key3);
+
+    response = service.list(null, null, null, null, null, null, DEFAULT_PAGE);
+    assertEquals(2, response.getResults().size());
+
+    response = service.list(null, null, null, null, null, null, new PagingRequest(0L, 1));
+    assertEquals(1, response.getResults().size());
+
+    response = service.list(null, null, null, null, null, null, new PagingRequest(0L, 0));
+    assertEquals(0, response.getResults().size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listByContactTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+    PersonService personService = getService(serviceType, personResource, personClient);
+
+    // persons
+    Person person1 = new Person();
+    person1.setFirstName("first name");
+    UUID personKey1 = personService.create(person1);
+
+    Person person2 = new Person();
+    person2.setFirstName("first name2");
+    UUID personKey2 = personService.create(person2);
+
+    // collections
+    Collection collection1 = newEntity();
+    UUID collectionKey1 = service.create(collection1);
+
+    Collection collection2 = newEntity();
+    UUID collectionKey2 = service.create(collection2);
+
+    // add contacts
+    service.addContact(collectionKey1, personKey1);
+    service.addContact(collectionKey1, personKey2);
+    service.addContact(collectionKey2, personKey2);
+
+    assertEquals(
+        1,
+        service.list(null, null, personKey1, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2,
+        service.list(null, null, personKey2, null, null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        0,
+        service
+            .list(null, null, UUID.randomUUID(), null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+
+    service.removeContact(collectionKey1, personKey2);
+    assertEquals(
+        1,
+        service.list(null, null, personKey1, null, null, null, DEFAULT_PAGE).getResults().size());
   }
 
   @Override
@@ -276,10 +411,5 @@ public class CollectionIT extends ExtendedCollectionEntityTest<Collection> {
   @Override
   protected Collection newInvalidEntity() {
     return new Collection();
-  }
-
-  @Override
-  protected String getBasePath() {
-    return "/grscicoll/collection/";
   }
 }

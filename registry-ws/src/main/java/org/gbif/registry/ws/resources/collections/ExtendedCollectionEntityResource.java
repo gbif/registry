@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
@@ -58,6 +59,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -116,23 +118,21 @@ public abstract class ExtendedCollectionEntityResource<
     this.objectClass = objectClass;
   }
 
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
+  @Trim
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public UUID create(T entity) {
+  public UUID create(@RequestBody T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
+    preCreate(entity);
 
     if (entity.getAddress() != null) {
-      checkArgument(
-          entity.getAddress().getKey() == null,
-          "Unable to create an address which already has a key");
       addressMapper.create(entity.getAddress());
     }
 
     if (entity.getMailingAddress() != null) {
-      checkArgument(
-          entity.getMailingAddress().getKey() == null,
-          "Unable to create an address which already has a key");
       addressMapper.create(entity.getMailingAddress());
     }
 
@@ -141,8 +141,6 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : entity.getMachineTags()) {
-        checkArgument(
-            machineTag.getKey() == null, "Unable to create a machine tag which already has a key");
         machineTag.setCreatedBy(entity.getCreatedBy());
         machineTagMapper.createMachineTag(machineTag);
         baseMapper.addMachineTag(entity.getKey(), machineTag.getKey());
@@ -151,7 +149,6 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getTags().isEmpty()) {
       for (Tag tag : entity.getTags()) {
-        checkArgument(tag.getKey() == null, "Unable to create a tag which already has a key");
         tag.setCreatedBy(entity.getCreatedBy());
         tagMapper.createTag(tag);
         baseMapper.addTag(entity.getKey(), tag.getKey());
@@ -160,8 +157,6 @@ public abstract class ExtendedCollectionEntityResource<
 
     if (!entity.getIdentifiers().isEmpty()) {
       for (Identifier identifier : entity.getIdentifiers()) {
-        checkArgument(
-            identifier.getKey() == null, "Unable to create an identifier which already has a key");
         identifier.setCreatedBy(entity.getCreatedBy());
         identifierMapper.createIdentifier(identifier);
         baseMapper.addIdentifier(entity.getKey(), identifier.getKey());
@@ -172,9 +167,14 @@ public abstract class ExtendedCollectionEntityResource<
     return entity.getKey();
   }
 
+  @PutMapping(
+      value = {"", "{key}"},
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public void update(T entity) {
+  public void update(@RequestBody @Trim T entity) {
+    preUpdate(entity);
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
 
