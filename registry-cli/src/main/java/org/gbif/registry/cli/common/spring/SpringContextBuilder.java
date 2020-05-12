@@ -16,7 +16,6 @@
 package org.gbif.registry.cli.common.spring;
 
 import org.gbif.api.ws.mixin.Mixins;
-import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.doi.service.DoiService;
@@ -25,6 +24,7 @@ import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
 import org.gbif.registry.cli.common.stubs.MessagePublisherStub;
+import org.gbif.registry.cli.datasetindex.DatasetBatchIndexer;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
 import org.gbif.registry.directory.client.config.DirectoryClientConfiguration;
@@ -234,7 +234,7 @@ public class SpringContextBuilder {
       excludeFilters = {
         @ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
-            classes = DatasetBatchIndexBuilder.class)
+            classes = DatasetBatchIndexer.class)
       })
   static class ApplicationConfig {}
 }

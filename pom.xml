@@ -267,6 +267,14 @@
         <artifactId>registry-search</artifactId>
         <version>${project.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-search</artifactId>
+        <classifier>tests</classifier>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-events</artifactId>

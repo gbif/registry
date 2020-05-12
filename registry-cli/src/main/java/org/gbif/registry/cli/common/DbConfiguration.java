@@ -21,8 +21,11 @@ import javax.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
 
+import lombok.Data;
+
 /** Holds configuration for the registry or identity database. */
 @SuppressWarnings("PublicField")
+@Data
 public class DbConfiguration {
 
   @NotNull

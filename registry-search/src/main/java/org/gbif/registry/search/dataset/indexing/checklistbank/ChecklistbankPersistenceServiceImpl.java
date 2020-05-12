@@ -37,9 +37,13 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
   private static final String SQL =
       "SELECT array_agg(nub_fk) as keys " + "FROM nub_rel " + "WHERE dataset_key = '%s'";
 
-  @Autowired
-  @Qualifier("clb_datasource")
   private DataSource dataSource;
+
+  @Autowired
+  public ChecklistbankPersistenceServiceImpl(@Qualifier("clb_datasource") DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
+
   /** Pages over all datasets and adds them to SOLR. */
   @Override
   public Integer[] getTaxonKeys(String datasetKey) {
