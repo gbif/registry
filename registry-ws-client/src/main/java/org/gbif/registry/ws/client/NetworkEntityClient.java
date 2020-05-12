@@ -23,6 +23,8 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -34,8 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.validation.groups.Default;
+
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +51,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEntityService<T> {
 
   @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
   @Override
   UUID create(@RequestBody T entity);
 
@@ -59,6 +65,7 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   PagingResponse<T> list(@SpringQueryMap Pageable page);
 
   @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Override
   void update(@RequestBody T entity);
 
