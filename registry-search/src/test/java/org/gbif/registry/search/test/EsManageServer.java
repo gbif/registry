@@ -67,6 +67,10 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   @Override
   public void afterPropertiesSet() throws Exception {
+    start();
+  }
+
+  public void start() throws Exception {
     embeddedElastic =
         EmbeddedElastic.builder()
             .withElasticVersion(getEsVersion())

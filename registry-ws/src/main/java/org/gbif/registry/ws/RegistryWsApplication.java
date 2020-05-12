@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.ws;
 
-import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
-
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
@@ -64,11 +62,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.oaipmh",
       "org.gbif.registry.service"
     },
-    excludeFilters = {
-      @ComponentScan.Filter(
-          type = FilterType.ASSIGNABLE_TYPE,
-          classes = DatasetBatchIndexBuilder.class)
-    })
+    excludeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE)})
 @EnableFeignClients
 public class RegistryWsApplication {
   public static void main(String[] args) {

@@ -16,7 +16,6 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.cli.indexing.dataset.DatasetBatchIndexBuilder;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
@@ -105,7 +104,6 @@ import com.zaxxer.hikari.HikariDataSource;
           type = FilterType.ASSIGNABLE_TYPE,
           classes = {
             EmailSenderImpl.class,
-            DatasetBatchIndexBuilder.class,
             GbifWsClient.class,
             VarnishPurgeConfiguration.class,
             TitleLookupConfiguration.class,

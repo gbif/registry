@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.cli.indexing.dataset;
+package org.gbif.registry.cli.datasetindex;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.ws.client.DatasetClient;
-import org.gbif.registry.ws.client.InstallationClient;
-import org.gbif.registry.ws.client.OrganizationClient;
-import org.gbif.ws.client.ClientFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,29 +39,15 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Primary;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
-import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.extern.slf4j.Slf4j;
 
 /** A builder that will clear and build a new dataset index by paging over the given service. */
-@SpringBootApplication
 @Slf4j
-@EnableConfigurationProperties
-@ComponentScan(basePackages = {"org.gbif.registry.search"})
-public class DatasetBatchIndexBuilder implements CommandLineRunner {
+public class DatasetBatchIndexer {
 
   // controls how many results we request while paging over the WS
   private static final int PAGE_SIZE = 100;
@@ -80,8 +59,7 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner {
   @Autowired private DatasetJsonConverter datasetJsonConverter;
 
   /** Pages over all datasets and adds them to ElasticSearch. */
-  @Override
-  public void run(String... args) {
+  public void run() {
     log.info("Building a new Dataset index");
     Stopwatch stopwatch = Stopwatch.createStarted();
     String indexName = "dataset_" + new Date().getTime();
@@ -171,46 +149,5 @@ public class DatasetBatchIndexBuilder implements CommandLineRunner {
             log.error("Error executing job", ex);
           }
         });
-  }
-
-  @Bean
-  @Primary
-  @ConfigurationProperties("indexing.datasource.checklistbank")
-  public DataSourceProperties clbDataSourceProperties() {
-    return new DataSourceProperties();
-  }
-
-  @Bean(name = "clb_datasource")
-  @Primary
-  @ConfigurationProperties("indexing.datasource.checklistbank.hikari")
-  public HikariDataSource clbDataSource() {
-    return clbDataSourceProperties()
-        .initializeDataSourceBuilder()
-        .type(HikariDataSource.class)
-        .build();
-  }
-
-  @Bean
-  public ClientFactory clientFactory(@Value("${api.root.url}") String apiBaseUrl) {
-    return new ClientFactory(apiBaseUrl);
-  }
-
-  @Bean
-  public InstallationService installationService(ClientFactory clientFactory) {
-    return clientFactory.newInstance(InstallationClient.class);
-  }
-
-  @Bean
-  public OrganizationService organizationService(ClientFactory clientFactory) {
-    return clientFactory.newInstance(OrganizationClient.class);
-  }
-
-  @Bean
-  public DatasetService datasetService(ClientFactory clientFactory) {
-    return clientFactory.newInstance(DatasetClient.class);
-  }
-
-  public static void main(String[] args) {
-    SpringApplication.run(DatasetBatchIndexBuilder.class, args).close();
   }
 }
