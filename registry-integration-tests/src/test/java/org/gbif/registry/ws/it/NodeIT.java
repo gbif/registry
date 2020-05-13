@@ -274,7 +274,6 @@ public class NodeIT extends NetworkEntityIT<Node> {
     Dataset d2 = testDataFactory.newDataset(organizationKey, installationKey);
     UUID d2Key = datasetService.create(d2);
 
-    // TODO: 03/05/2020 fix null pageable query params
     // test node service
     PagingResponse<Dataset> resp = service.endorsedDatasets(node.getKey(), new PagingRequest());
     assertEquals(2, resp.getResults().size());
@@ -308,21 +307,19 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertNotNull(notInIms);
   }
 
-  // TODO: 02/05/2020 client must throw UnsupportedOperationException
   /** Node contacts are IMS managed and the service throws exceptions */
   @Override
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testContacts(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(ServiceType.RESOURCE);
+    NodeService service = (NodeService) getService(serviceType);
     Node n = create(newEntity(serviceType), serviceType, 1);
     assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
 
-  // TODO: 07/05/2020 client exception
   /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  @EnumSource(ServiceType.class)
   public void testAddContact(ServiceType serviceType) {
     NodeService service = ((NodeService) getService(serviceType));
     Node n = create(newEntity(serviceType), serviceType, 1);
@@ -330,20 +327,18 @@ public class NodeIT extends NetworkEntityIT<Node> {
         UnsupportedOperationException.class, () -> service.addContact(n.getKey(), new Contact()));
   }
 
-  // TODO: 07/05/2020 client exception
   /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  @EnumSource(ServiceType.class)
   public void testDeleteContact(ServiceType serviceType) {
     NodeService service = ((NodeService) getService(serviceType));
     Node n = create(newEntity(serviceType), serviceType, 1);
     assertThrows(UnsupportedOperationException.class, () -> service.deleteContact(n.getKey(), 1));
   }
 
-  // TODO: 05/05/2020 client should throw UnsupportedOperationException
   @Override
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  @EnumSource(ServiceType.class)
   public void testSimpleSearchContact(ServiceType serviceType) {
     assertThrows(
         UnsupportedOperationException.class, () -> super.testSimpleSearchContact(serviceType));
