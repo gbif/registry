@@ -103,7 +103,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void refresh() {
-    if (Strings.isNullOrEmpty(indexName)) {
+    if (!Strings.isNullOrEmpty(indexName)) {
       refresh(indexName);
     }
   }
