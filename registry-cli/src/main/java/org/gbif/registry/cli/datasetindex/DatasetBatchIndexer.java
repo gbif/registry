@@ -24,7 +24,6 @@ import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +38,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
@@ -50,19 +50,34 @@ import lombok.extern.slf4j.Slf4j;
 public class DatasetBatchIndexer {
 
   // controls how many results we request while paging over the WS
-  private static final int PAGE_SIZE = 100;
+  private static final int DEFAULT_PAGE_SIZE = 100;
 
-  @Autowired private GbifWsClient gbifWsClient;
+  private final GbifWsClient gbifWsClient;
 
-  @Autowired private EsClient esClient;
+  private final EsClient esClient;
 
-  @Autowired private DatasetJsonConverter datasetJsonConverter;
+  private final DatasetJsonConverter datasetJsonConverter;
+
+  // Stops indexing datasets after this amount of records
+  // This variable has the only intention to be used in IT and local tests
+  private final Integer stopAfter;
+
+  @Autowired
+  public DatasetBatchIndexer(
+      GbifWsClient gbifWsClient,
+      EsClient esClient,
+      DatasetJsonConverter datasetJsonConverter,
+      @Value("${indexing.stopAfter:-1}") Integer stopAfter) {
+    this.gbifWsClient = gbifWsClient;
+    this.esClient = esClient;
+    this.datasetJsonConverter = datasetJsonConverter;
+    this.stopAfter = stopAfter;
+  }
 
   /** Pages over all datasets and adds them to ElasticSearch. */
-  public void run() {
+  public void run(String indexName) {
     log.info("Building a new Dataset index");
     Stopwatch stopwatch = Stopwatch.createStarted();
-    String indexName = "dataset_" + new Date().getTime();
     esClient.createIndex(
         indexName,
         IndexingConstants.DATASET_RECORD_TYPE,
@@ -79,7 +94,8 @@ public class DatasetBatchIndexer {
             jobs.add(
                 CompletableFuture.supplyAsync(
                     () -> index(pagingResponse, datasetJsonConverter, indexName, esClient),
-                    executor)));
+                    executor)),
+        stopAfter);
 
     CompletableFuture.allOf(jobs.toArray(new CompletableFuture[] {}));
 
@@ -124,17 +140,22 @@ public class DatasetBatchIndexer {
     }
   }
 
-  private static void onAllDatasets(
-      GbifWsClient gbifWsClient, Consumer<PagingResponse<Dataset>> responseConsumer) {
-    PagingRequest page = new PagingRequest(0, PAGE_SIZE);
+  private void onAllDatasets(
+      GbifWsClient gbifWsClient,
+      Consumer<PagingResponse<Dataset>> responseConsumer,
+      int stopAfter) {
+    int pageSize = stopAfter < 1 ? DEFAULT_PAGE_SIZE : Math.min(DEFAULT_PAGE_SIZE, stopAfter);
+    PagingRequest page = new PagingRequest(0, pageSize);
     PagingResponse<Dataset> response = gbifWsClient.listDatasets(new PagingRequest(0, 0));
+    int datasetCount = 0;
     do {
       log.debug("Requesting {} datasets starting at offset {}", page.getLimit(), page.getOffset());
       PagingResponse<Dataset> pagingResponse = gbifWsClient.listDatasets(page);
       response.setEndOfRecords(pagingResponse.isEndOfRecords());
+      datasetCount += pagingResponse.getResults().size();
       responseConsumer.accept(pagingResponse);
       page.nextPage();
-    } while (!response.isEndOfRecords());
+    } while (!response.isEndOfRecords() && (stopAfter < 0 || stopAfter < datasetCount));
   }
 
   private static void logIndexingErrors(List<CompletableFuture<BulkResponse>> jobs) {

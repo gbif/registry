@@ -30,4 +30,6 @@ public class DatasetBatchIndexerConfiguration {
   private ElasticsearchConfig datasetEs;
 
   private ElasticsearchConfig occurrenceEs;
+
+  private Integer stopAfter = -1;
 }

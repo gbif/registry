@@ -34,6 +34,8 @@ public class ElasticsearchConfig {
 
   private String index;
 
+  private String alias;
+
   @Override
   public String toString() {
     return new StringJoiner(", ", ElasticsearchConfig.class.getSimpleName() + "[", "]")
@@ -43,6 +45,7 @@ public class ElasticsearchConfig {
         .add("connectionRequestTimeOut='" + connectionRequestTimeOut + "'")
         .add("maxRetryTimeOut=" + maxRetryTimeOut)
         .add("index=" + index)
+        .add("alias=" + alias)
         .toString();
   }
 }
