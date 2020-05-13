@@ -51,6 +51,7 @@ import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
+import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -979,7 +980,12 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void test404(ServiceType serviceType) {
-    assertThrows(NotFoundException.class, () -> getService(serviceType).get(UUID.randomUUID()));
+    if (serviceType == ServiceType.CLIENT) {
+      assertThrows(
+          WebApplicationException.class, () -> getService(serviceType).get(UUID.randomUUID()));
+    } else {
+      assertThrows(NotFoundException.class, () -> getService(serviceType).get(UUID.randomUUID()));
+    }
   }
 
   @ParameterizedTest
