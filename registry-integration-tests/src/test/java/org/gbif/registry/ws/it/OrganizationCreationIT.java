@@ -35,8 +35,6 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.validation.ValidationException;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -55,6 +53,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -189,10 +188,9 @@ public class OrganizationCreationIT extends BaseItTest {
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
     UUID organizationKey = organization.getKey();
-    assertThrows(
-        ValidationException.class,
-        () -> service.confirmEndorsement(organizationKey, null),
-        "endorsement should NOT be confirmed using appkey and no confirmation code");
+    boolean endorsement = service.confirmEndorsement(organizationKey, UUID.randomUUID());
+    assertFalse(
+        endorsement, "endorsement should NOT be confirmed using appkey and no confirmation code");
 
     // reset principal - use USER role
     setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
@@ -216,15 +214,12 @@ public class OrganizationCreationIT extends BaseItTest {
             .getCount());
   }
 
-  // TODO: 07/05/2020 client exception
   /**
    * Only Admin shall be allowed to set EndorsementApproved directly (without providing a
    * confirmationCode)
    */
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void testSetEndorsementsByNonAdmin(ServiceType serviceType) {
     OrganizationService service = getService(serviceType, organizationResource, organizationClient);
     NodeService nodeService = getService(serviceType, nodeResource, nodeClient);

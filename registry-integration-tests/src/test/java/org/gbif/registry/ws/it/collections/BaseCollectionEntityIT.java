@@ -42,7 +42,6 @@ import java.util.UUID;
 
 import javax.validation.ValidationException;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -128,23 +127,16 @@ public abstract class BaseCollectionEntityIT<
     assertThrows(ValidationException.class, () -> service.create(newInvalidEntity()));
   }
 
-  // TODO: 09/05/2020 client exception, should throw IllegalStateException
-  @Disabled
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void deleteMissingEntityTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
 
-    assertThrows(IllegalStateException.class, () -> service.delete(UUID.randomUUID()));
+    assertThrows(IllegalArgumentException.class, () -> service.delete(UUID.randomUUID()));
   }
 
-  // TODO: 10/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void updateDeletedEntityTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
 
@@ -190,11 +182,8 @@ public abstract class BaseCollectionEntityIT<
     assertThrows(ValidationException.class, () -> service.update(newEntity));
   }
 
-  // TODO: 10/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void getMissingEntity(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
 
