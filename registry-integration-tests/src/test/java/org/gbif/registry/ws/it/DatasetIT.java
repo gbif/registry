@@ -283,7 +283,6 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
-  // TODO: 05/05/2020 searchService should be client as well
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testMultiCountryFacet(ServiceType serviceType) {

@@ -101,7 +101,6 @@ public class PipelinesHistoryIT extends BaseItTest {
     this.getPipelinesHistoryClientUserCredentials =
         prepareClient(
             TestConstants.TEST_USER, localServerPort, keyStore, PipelinesHistoryClient.class);
-    ;
     this.userTestFixture = userTestFixture;
   }
 
@@ -271,11 +270,8 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertNull(service.getPipelineProcess(UUID.randomUUID(), 1));
   }
 
-  // TODO: 06/05/2020 client throw an exception for some reason
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void runPipelineAttemptTest(ServiceType serviceType) {
     PipelinesHistoryService service =
         getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
