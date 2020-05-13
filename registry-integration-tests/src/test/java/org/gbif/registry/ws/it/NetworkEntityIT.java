@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Disabled;
@@ -120,7 +120,7 @@ public abstract class NetworkEntityIT<
     NetworkEntityService<T> service = getService(serviceType);
     T e = newEntity(serviceType);
     e.setKey(UUID.randomUUID()); // illegal to provide a key
-    assertThrows(ConstraintViolationException.class, () -> service.create(e));
+    assertThrows(ValidationException.class, () -> service.create(e));
   }
 
   @ParameterizedTest
@@ -231,7 +231,7 @@ public abstract class NetworkEntityIT<
     NetworkEntityService<T> service = getService(serviceType);
     T n1 = create(newEntity(serviceType), serviceType, 1);
     n1.setTitle("A"); // should fail as it is too short
-    assertThrows(ConstraintViolationException.class, () -> service.update(n1));
+    assertThrows(ValidationException.class, () -> service.update(n1));
   }
 
   @ParameterizedTest

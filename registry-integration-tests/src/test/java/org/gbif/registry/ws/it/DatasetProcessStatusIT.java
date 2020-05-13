@@ -172,11 +172,8 @@ public class DatasetProcessStatusIT extends BaseItTest {
     assertEquals(2, statusesByDataset.getResults().size(), "The dataset has had 2 crawl attempts");
   }
 
-  // TODO: 07/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void testIllegalCreate(ServiceType serviceType) {
     DatasetProcessStatusService service =
         getService(serviceType, datasetProcessStatusResource, datasetProcessStatusClient);

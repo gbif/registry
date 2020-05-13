@@ -110,11 +110,8 @@ public abstract class ExtendedCollectionEntityIT<
     assertEquals(0, contactService.listContacts(entityKey2).size());
   }
 
-  // TODO: 10/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void duplicateContactTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType);
     ContactService contactService = (ContactService) service;

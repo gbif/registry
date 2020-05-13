@@ -46,7 +46,6 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.registry.ws.resources.pipelines.PipelinesHistoryResource;
-import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -74,7 +73,8 @@ public class PipelinesHistoryIT extends BaseItTest {
   private final NodeService nodeService;
   private final InstallationService installationService;
   private final PipelinesHistoryService pipelinesHistoryResource;
-  private final PipelinesHistoryClient pipelinesHistoryClient;
+  private final PipelinesHistoryService pipelinesHistoryClient;
+  private final PipelinesHistoryService getPipelinesHistoryClientUserCredentials;
   private final UserTestFixture userTestFixture;
 
   @Autowired
@@ -98,6 +98,9 @@ public class PipelinesHistoryIT extends BaseItTest {
     this.pipelinesHistoryClient =
         prepareClient(
             TestConstants.TEST_ADMIN, localServerPort, keyStore, PipelinesHistoryClient.class);
+    this.getPipelinesHistoryClientUserCredentials =
+        prepareClient(
+            TestConstants.TEST_USER, localServerPort, keyStore, PipelinesHistoryClient.class);
     this.userTestFixture = userTestFixture;
   }
 
@@ -124,14 +127,11 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertEquals(TestConstants.TEST_ADMIN, processCreated.getCreatedBy());
   }
 
-  // TODO: 06/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void createPipelineProcessWithoutPrivilegesTest(ServiceType serviceType) {
     PipelinesHistoryService service =
-        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+        getService(serviceType, pipelinesHistoryResource, getPipelinesHistoryClientUserCredentials);
     resetSecurityContext(TestConstants.TEST_USER, UserRole.USER);
     assertThrows(
         AccessDeniedException.class,
@@ -199,11 +199,8 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertTrue(stepCreated.lenientEquals(step));
   }
 
-  // TODO: 06/05/2020 client exception
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void addPipelineStepWithoutPrivilegesTest(ServiceType serviceType) {
     PipelinesHistoryService service =
         getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
@@ -214,6 +211,9 @@ public class PipelinesHistoryIT extends BaseItTest {
     long executionKey = service.addPipelineExecution(processKey, new PipelineExecution());
 
     resetSecurityContext(TestConstants.TEST_USER, UserRole.USER);
+    PipelinesHistoryService serviceUserCredentials =
+        getService(serviceType, pipelinesHistoryResource, getPipelinesHistoryClientUserCredentials);
+
     PipelineStep step =
         new PipelineStep()
             .setMessage("message")
@@ -222,7 +222,8 @@ public class PipelinesHistoryIT extends BaseItTest {
             .setState(PipelineStep.Status.RUNNING);
 
     assertThrows(
-        AccessDeniedException.class, () -> service.addPipelineStep(processKey, executionKey, step));
+        AccessDeniedException.class,
+        () -> serviceUserCredentials.addPipelineStep(processKey, executionKey, step));
   }
 
   @ParameterizedTest
@@ -269,11 +270,8 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertNull(service.getPipelineProcess(UUID.randomUUID(), 1));
   }
 
-  // TODO: 06/05/2020 client throw an exception for some reason
   @ParameterizedTest
-  @EnumSource(
-      value = ServiceType.class,
-      names = {"RESOURCE"})
+  @EnumSource(ServiceType.class)
   public void runPipelineAttemptTest(ServiceType serviceType) {
     PipelinesHistoryService service =
         getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
@@ -325,7 +323,6 @@ public class PipelinesHistoryIT extends BaseItTest {
     process.getExecutions().forEach(e -> assertNotNull(e.getRerunReason()));
   }
 
-  // TODO: 06/05/2020 resource does not throw an exception for some reason
   @ParameterizedTest
   @EnumSource(
       value = ServiceType.class,
@@ -358,14 +355,14 @@ public class PipelinesHistoryIT extends BaseItTest {
 
     // run process and expect a bad request since the step is in running state
     assertThrows(
-        WebApplicationException.class,
+        IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
                 datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test"));
 
     // run process without attempt and expect a bad request since the step is in running state
     assertThrows(
-        WebApplicationException.class,
+        IllegalArgumentException.class,
         () -> service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test"));
   }
 

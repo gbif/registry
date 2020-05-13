@@ -199,7 +199,6 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertEquals(10, service.get(parent.getKey()).getNumConstituents());
   }
 
-  // TODO: 05/05/2020 organizationService should be client as well
   // Easier to test this here than OrganizationIT due to our utility dataset factory
   @ParameterizedTest
   @EnumSource(ServiceType.class)
@@ -284,7 +283,6 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
         "Elasticsearch does not have the expected number of results for query[" + req + "]");
   }
 
-  // TODO: 05/05/2020 searchService should be client as well
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testMultiCountryFacet(ServiceType serviceType) {
@@ -978,9 +976,8 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
     assertEquals(MaintenanceUpdateFrequency.BIANNUALLY, dataset.getMaintenanceUpdateFrequency());
   }
 
-  // TODO: 05/05/2020 result used to be null instead of NotFoundException
   @ParameterizedTest
-  @EnumSource(value = ServiceType.class, names = "RESOURCE")
+  @EnumSource(ServiceType.class)
   public void test404(ServiceType serviceType) {
     assertThrows(NotFoundException.class, () -> getService(serviceType).get(UUID.randomUUID()));
   }
