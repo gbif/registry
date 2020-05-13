@@ -100,8 +100,8 @@ public class SpringContextBuilder {
                     .put("api.root.url", configuration.getApiRootUrl())
                     .put(
                         "elasticsearch.occurrence.index",
-                        configuration.getOccurrenceEs().getIndex())
-                    .put("elasticsearch.registry.index", configuration.getDatasetEs().getIndex())
+                        configuration.getOccurrenceEs().getAlias())
+                    .put("elasticsearch.registry.index", configuration.getDatasetEs().getAlias())
                     .put(
                         "indexing.datasource.checklistbank.url",
                         "jdbc:postgresql://"
@@ -121,6 +121,7 @@ public class SpringContextBuilder {
                     .put(
                         "indexing.datasource.checklistbank.hikari.connectionTimeout",
                         configuration.getClbDb().getConnectionTimeout())
+                    .put("indexing.stopAfter", configuration.getStopAfter())
                     .build()));
     ctx.refresh();
     ctx.start();

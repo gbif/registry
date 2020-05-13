@@ -34,6 +34,8 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 
+import com.google.common.base.Strings;
+
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
@@ -56,6 +58,12 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     this.mappingFile = mappingFile;
     this.indexName = indexName;
     this.typeName = typeName;
+  }
+
+  public EsManageServer() {
+    this.mappingFile = null;
+    this.indexName = null;
+    this.typeName = null;
   }
 
   @Override
@@ -95,6 +103,12 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void refresh() {
+    if (Strings.isNullOrEmpty(indexName)) {
+      refresh(indexName);
+    }
+  }
+
+  public void refresh(String indexName) {
     try {
       restClient.indices().refresh(new RefreshRequest().indices(indexName), RequestOptions.DEFAULT);
     } catch (Exception ex) {
@@ -104,12 +118,16 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   /** Utility method to create an index. */
   private void createIndex() throws IOException {
-    String mapping = IOUtils.toString(mappingFile.getInputStream(), StandardCharsets.UTF_8);
-    restClient
-        .indices()
-        .create(
-            new CreateIndexRequest().index(indexName).mapping(typeName, mapping, XContentType.JSON),
-            RequestOptions.DEFAULT);
+    if (!Strings.isNullOrEmpty(indexName)) {
+      String mapping = IOUtils.toString(mappingFile.getInputStream(), StandardCharsets.UTF_8);
+      restClient
+          .indices()
+          .create(
+              new CreateIndexRequest()
+                  .index(indexName)
+                  .mapping(typeName, mapping, XContentType.JSON),
+              RequestOptions.DEFAULT);
+    }
   }
 
   private RestHighLevelClient buildRestClient() {
@@ -132,13 +150,15 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void reCreateIndex() {
-    try {
-      restClient
-          .indices()
-          .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
-      createIndex();
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
+    if (!Strings.isNullOrEmpty(indexName)) {
+      try {
+        restClient
+            .indices()
+            .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
+        createIndex();
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
     }
   }
 }
