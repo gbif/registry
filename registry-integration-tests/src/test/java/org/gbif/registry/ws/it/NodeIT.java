@@ -274,7 +274,6 @@ public class NodeIT extends NetworkEntityIT<Node> {
     Dataset d2 = testDataFactory.newDataset(organizationKey, installationKey);
     UUID d2Key = datasetService.create(d2);
 
-    // TODO: 03/05/2020 fix null pageable query params
     // test node service
     PagingResponse<Dataset> resp = service.endorsedDatasets(node.getKey(), new PagingRequest());
     assertEquals(2, resp.getResults().size());
