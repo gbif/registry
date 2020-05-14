@@ -60,7 +60,9 @@ public class DatasetBatchIndexerCommand extends BaseCommand {
     batchIndexer.run(
         config.getDatasetEs().getIndex() != null
             ? config.getDatasetEs().getIndex()
-            : "dataset_" + new Date().getTime());
+            : "dataset_" + new Date().getTime(),
+        config.getIndexingSettings(),
+        config.getSearchSettings());
   }
 
   public DatasetBatchIndexer getDatasetBatchIndexer() {

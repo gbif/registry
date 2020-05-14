@@ -16,6 +16,10 @@
 package org.gbif.registry.cli.datasetindex;
 
 import org.gbif.registry.cli.common.DbConfiguration;
+import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import lombok.Data;
 
@@ -32,4 +36,10 @@ public class DatasetBatchIndexerConfiguration {
   private ElasticsearchConfig occurrenceEs;
 
   private Integer stopAfter = -1;
+
+  private Map<String, String> indexingSettings =
+      new HashMap<>(IndexingConstants.DEFAULT_INDEXING_SETTINGS);
+
+  private Map<String, String> searchSettings =
+      new HashMap<>(IndexingConstants.DEFAULT_SEARCH_SETTINGS);
 }
