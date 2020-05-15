@@ -116,7 +116,7 @@
     <logback.version>1.2.3</logback.version>
     <janino-logback.version>2.5.10</janino-logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
-    <xoai.version>4.1.0-gbif-2-SNAPSHOT</xoai.version>
+    <xoai.version>4.1.0-gbif-2</xoai.version>
     <feign.version>10.4.0</feign.version>
     <mock-javamail.version>1.9</mock-javamail.version>
     <embedded-database-spring-test.version>1.5.3</embedded-database-spring-test.version>
