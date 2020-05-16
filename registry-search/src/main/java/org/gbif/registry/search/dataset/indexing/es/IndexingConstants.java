@@ -45,6 +45,6 @@ public class IndexingConstants {
 
   static {
     DEFAULT_SEARCH_SETTINGS.put("index.refresh_interval", "1s");
-    DEFAULT_SEARCH_SETTINGS.put("index.number_of_replicas", "3");
+    DEFAULT_SEARCH_SETTINGS.put("index.number_of_replicas", "1");
   }
 }
