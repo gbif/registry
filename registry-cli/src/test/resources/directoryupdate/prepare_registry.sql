@@ -59,7 +59,7 @@ VALUES ('a49e75d9-7b07-4d01-9be8-6ab2133f42f9', 'EUROPE', 'EUROPE', 'The UK Nati
 
 INSERT INTO public.node (key, gbif_region, continent, title, country, created_by, modified_by,
                          created, modified, deleted, fulltext_search, type, participation_status)
-VALUES ('0e655f55-8a9d-498f-9903-33058b78d006', 'AFRICA', 'AFRICA',
+VALUES ('c9659a3e-07e9-4fcb-83c6-de8b9009a02e', 'AFRICA', 'AFRICA',
         'Wrong node name which must be updated by directory', 'TG',
         'CLI_TEST', 'CLI_TEST', '2020-03-20 00:24:07.409947',
         '2020-03-20 00:24:07.409947', null,
@@ -69,4 +69,4 @@ VALUES ('0e655f55-8a9d-498f-9903-33058b78d006', 'AFRICA', 'AFRICA',
 INSERT INTO public.identifier (key, type, identifier, created_by, created)
 VALUES (-1, 'GBIF_PARTICIPANT', '244', 'directory-update-robot', '2020-03-20 00:24:07.416676');
 
-INSERT INTO public.node_identifier (node_key, identifier_key) VALUES ('0e655f55-8a9d-498f-9903-33058b78d006', -1);
+INSERT INTO public.node_identifier (node_key, identifier_key) VALUES ('c9659a3e-07e9-4fcb-83c6-de8b9009a02e', -1);
