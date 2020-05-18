@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <packaging>pom</packaging>
 
@@ -12,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.0-SNAPSHOT</version>
+  <version>3.0</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -20,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/registry.git</connection>
     <url>https://github.com/gbif/registry</url>
     <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>registry-parent-3.0</tag>
   </scm>
 
   <repositories>
@@ -138,14 +137,14 @@
     <hikaricp.version>3.2.0</hikaricp.version>
     <mockito-junit-jupiter.version>3.1.0</mockito-junit-jupiter.version>
 
-    <datacite.api.base.url/>
-    <datacite.user/>
-    <datacite.password/>
+    <datacite.api.base.url />
+    <datacite.user />
+    <datacite.password />
 
-    <mail.host/>
-    <mail.username/>
-    <mail.password/>
-    <mail.port/>
+    <mail.host />
+    <mail.username />
+    <mail.password />
+    <mail.port />
 
     <!-- Sonar -->
     <sonar.projectName>GBIF Registry</sonar.projectName>
