@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class DirectoryUpdateServiceIT {
 
   private static final UUID TOGO_NODE_UUID =
-      UUID.fromString("0e655f55-8a9d-498f-9903-33058b78d006");
+      UUID.fromString("c9659a3e-07e9-4fcb-83c6-de8b9009a02e");
 
   private static DirectoryUpdateConfiguration directoryUpdateConfig;
   private static Connection registryDbConnection;
