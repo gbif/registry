@@ -23,8 +23,6 @@ import org.gbif.registry.persistence.mapper.NodeMapper;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -41,7 +39,6 @@ import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MAS
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /** Test Registry updates from the Directory */
 @SuppressWarnings("UnstableApiUsage")
@@ -91,25 +88,10 @@ public class DirectoryUpdateServiceIT {
   public void testDirectoryUpdateAndCreate() {
     DirectoryUpdateService directoryUpdateService =
         new DirectoryUpdateService(directoryUpdateConfig);
+    DirectoryUpdater directoryUpdater =
+        directoryUpdateService.getContext().getBean(DirectoryUpdater.class);
 
-    directoryUpdateService.startAsync();
-
-    // maybe a little bit weak
-    // TODO: 20/03/2020 async service, use awaitility?
-    try {
-      Thread.sleep(3000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      fail();
-    }
-
-    directoryUpdateService.stopAsync();
-    try {
-      directoryUpdateService.awaitTerminated(1, TimeUnit.MINUTES);
-    } catch (TimeoutException e) {
-      e.printStackTrace();
-      fail();
-    }
+    directoryUpdater.applyUpdates();
 
     NodeMapper nodeMapper = directoryUpdateService.getContext().getBean(NodeMapper.class);
     int nodesCount = nodeMapper.count();
