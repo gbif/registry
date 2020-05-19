@@ -148,7 +148,7 @@ public class SpringContextBuilder {
     }
 
     if (messagingConfiguration != null) {
-      if (doiSynchronizerConfiguration != null) {
+      if (messagingConfiguration.host != null) {
         ctx.registerBean(
             "messagePublisher",
             MessagePublisher.class,
