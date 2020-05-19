@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.cli.directoryupdate;
 
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.cli.util.RegistryCliUtils;
@@ -23,7 +22,6 @@ import org.gbif.registry.persistence.mapper.NodeMapper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -114,14 +112,13 @@ public class DirectoryUpdateServiceIT {
     }
 
     NodeMapper nodeMapper = directoryUpdateService.getContext().getBean(NodeMapper.class);
-    List<org.gbif.api.model.registry.Node> registryNodes =
-        nodeMapper.list(new PagingRequest(0, 1000));
+    int nodesCount = nodeMapper.count();
     org.gbif.api.model.registry.Node togoNode = nodeMapper.get(TOGO_NODE_UUID);
     Node ugandaNode = nodeMapper.getByCountry(Country.UGANDA);
 
     assertNotEquals(
         2,
-        registryNodes.size(),
+        nodesCount,
         "After updating from the Directory total amount of nodes must be more than initial 2");
     assertEquals(
         "GBIF Uganda",
