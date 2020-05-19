@@ -16,6 +16,9 @@
 package org.gbif.registry.cli.common.spring;
 
 import org.gbif.api.ws.mixin.Mixins;
+import org.gbif.common.messaging.ConnectionParameters;
+import org.gbif.common.messaging.DefaultMessagePublisher;
+import org.gbif.common.messaging.DefaultMessageRegistry;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.config.MessagingConfiguration;
 import org.gbif.doi.service.DoiService;
@@ -35,6 +38,7 @@ import org.gbif.ws.security.Md5EncodeServiceImpl;
 import org.gbif.ws.security.SecretKeySigningService;
 import org.gbif.ws.security.SigningService;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -144,7 +148,28 @@ public class SpringContextBuilder {
     }
 
     if (messagingConfiguration != null) {
-      ctx.registerBean("messagePublisher", MessagePublisher.class, MessagePublisherStub::new);
+      if (doiSynchronizerConfiguration != null) {
+        ctx.registerBean(
+            "messagePublisher",
+            MessagePublisher.class,
+            () -> {
+              try {
+                return new DefaultMessagePublisher(
+                    new ConnectionParameters(
+                        messagingConfiguration.host,
+                        messagingConfiguration.port,
+                        messagingConfiguration.username,
+                        messagingConfiguration.password,
+                        messagingConfiguration.virtualHost),
+                    new DefaultMessageRegistry(),
+                    registryObjectMapper());
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+      } else {
+        ctx.registerBean("messagePublisher", MessagePublisher.class, MessagePublisherStub::new);
+      }
     }
 
     if (!packages.isEmpty()) {
