@@ -35,6 +35,7 @@ import java.net.URI;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -62,6 +63,7 @@ import static org.mockito.Mockito.verify;
 
 /** Test DoiUpdateListener for different cases. */
 @ExtendWith(MockitoExtension.class)
+@DisabledIfSystemProperty(named = "test.doi.update", matches = "false")
 public class DoiUpdaterListenerIT {
 
   private static final String PREFIX = "10.21373";
