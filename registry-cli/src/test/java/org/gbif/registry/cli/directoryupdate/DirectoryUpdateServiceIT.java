@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.cli.directoryupdate;
 
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.cli.util.RegistryCliUtils;
@@ -23,10 +22,7 @@ import org.gbif.registry.persistence.mapper.NodeMapper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +39,6 @@ import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MAS
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /** Test Registry updates from the Directory */
 @SuppressWarnings("UnstableApiUsage")
@@ -93,35 +88,19 @@ public class DirectoryUpdateServiceIT {
   public void testDirectoryUpdateAndCreate() {
     DirectoryUpdateService directoryUpdateService =
         new DirectoryUpdateService(directoryUpdateConfig);
+    DirectoryUpdater directoryUpdater =
+        directoryUpdateService.getContext().getBean(DirectoryUpdater.class);
 
-    directoryUpdateService.startAsync();
-
-    // maybe a little bit weak
-    // TODO: 20/03/2020 async service, use awaitility?
-    try {
-      Thread.sleep(3000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      fail();
-    }
-
-    directoryUpdateService.stopAsync();
-    try {
-      directoryUpdateService.awaitTerminated(1, TimeUnit.MINUTES);
-    } catch (TimeoutException e) {
-      e.printStackTrace();
-      fail();
-    }
+    directoryUpdater.applyUpdates();
 
     NodeMapper nodeMapper = directoryUpdateService.getContext().getBean(NodeMapper.class);
-    List<org.gbif.api.model.registry.Node> registryNodes =
-        nodeMapper.list(new PagingRequest(0, 1000));
+    int nodesCount = nodeMapper.count();
     org.gbif.api.model.registry.Node togoNode = nodeMapper.get(TOGO_NODE_UUID);
     Node ugandaNode = nodeMapper.getByCountry(Country.UGANDA);
 
     assertNotEquals(
         2,
-        registryNodes.size(),
+        nodesCount,
         "After updating from the Directory total amount of nodes must be more than initial 2");
     assertEquals(
         "GBIF Uganda",
