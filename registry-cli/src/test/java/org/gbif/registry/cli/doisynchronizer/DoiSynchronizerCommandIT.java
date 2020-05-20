@@ -35,6 +35,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
@@ -46,6 +47,7 @@ import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
 
 @SuppressWarnings("ConstantConditions")
+@DisabledIfSystemProperty(named = "test.doi.sync", matches = "false")
 public class DoiSynchronizerCommandIT {
 
   private static final DOI DOI1 = new DOI("10.21373/gbif.1584932725458");
