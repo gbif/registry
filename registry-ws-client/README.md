@@ -26,8 +26,22 @@ DatasetServcie datasetClient = clientFactory.newInstance(DatasetClient.class);
 ## Read-write mode
 
 This includes authentication functionality.
-Make sure you are using right properties `wsUrl`, `appKey` and `secretKey`.
-Example:
+There are two ways: use simple user basic authentication or GBIF app authentication.
+
+### Using simple user basic authentication
+
+```java
+// set this to the web service URL.  It might be localhost:8080 for local development
+String wsUrl = "http://api.gbif.org/v1/";
+String password = "password";
+String username = "username";
+ClientFactory clientFactory = new ClientFactory(username, password, wsUrl);
+DatasetServcie datasetClient = clientFactory.newInstance(DatasetClient.class);
+```
+
+Make sure you are using right properties `wsUrl`, `username` and `passowrd`.
+
+### Using GBIF app authentication
 
 ```java
 // set this to the web service URL.  It might be localhost:8080 for local development
@@ -38,6 +52,9 @@ String username = "username";
 ClientFactory clientFactory = new ClientFactory(username, wsUrl, appKey, secretKey);
 DatasetServcie datasetClient = clientFactory.newInstance(DatasetClient.class);
 ```
+
+Make sure you are using right properties `wsUrl`, `username`, `appKey` and `secretKey`.
+
 
 [Parent](../README.md)
 
