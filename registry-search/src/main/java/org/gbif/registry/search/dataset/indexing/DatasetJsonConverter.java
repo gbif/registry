@@ -149,7 +149,7 @@ public class DatasetJsonConverter {
     consumers.add(this::metadataConsumer);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
-    // consumers.add(this::addFacetsData);
+    consumers.add(this::addOccurrenceSpeciesCounts);
   }
 
   public static DatasetJsonConverter create(
@@ -296,6 +296,17 @@ public class DatasetJsonConverter {
                   .map(TextNode::valueOf)
                   .collect(Collectors.toList()));
     }
+  }
+
+  private void addOccurrenceSpeciesCounts(ObjectNode datasetJsonNode) {
+    String datasetKey = datasetJsonNode.get("key").textValue();
+    OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
+    occurrenceSearchRequest.setLimit(0);
+    occurrenceSearchRequest.setOffset(0);
+    occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
+    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
+      gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
+    addRecordCounts(datasetJsonNode, response.getCount());
   }
 
   private void addFacetsData(ObjectNode datasetJsonNode) {
