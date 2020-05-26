@@ -124,14 +124,14 @@ public class DatasetJsonConverter {
     if (occurrenceCount == null) {
       occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
     }
-    return occurrenceCount;
+    return Optional.ofNullable(occurrenceCount).orElse(1L);
   }
 
   private Long getNameUsagesCount() {
     if (nameUsagesCount == null) {
       nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
     }
-    return nameUsagesCount;
+    return Optional.ofNullable(nameUsagesCount).orElse(1L);
   }
 
   @Autowired
@@ -236,7 +236,9 @@ public class DatasetJsonConverter {
     String datasetKey = dataset.get("key").textValue();
     dataset.put("occurrenceCount", datasetOccurrenceCount);
 
-    double occurrencePercentage = (double) datasetOccurrenceCount / getOccurrenceCount();
+    double occurrencePercentage =
+        Optional.ofNullable(datasetOccurrenceCount).map(Long::doubleValue).orElse(0D)
+            / getOccurrenceCount();
     double nameUsagesPercentage = 0D;
 
     // Contribution of occurrence records
