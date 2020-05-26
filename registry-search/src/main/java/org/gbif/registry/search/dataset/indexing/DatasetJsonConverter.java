@@ -124,14 +124,14 @@ public class DatasetJsonConverter {
     if (occurrenceCount == null) {
       occurrenceCount = gbifWsClient.getOccurrenceRecordCount();
     }
-    return occurrenceCount;
+    return Optional.ofNullable(occurrenceCount).orElse(1L);
   }
 
   private Long getNameUsagesCount() {
     if (nameUsagesCount == null) {
       nameUsagesCount = gbifWsClient.speciesSearch(new NameUsageSearchRequest(0, 0)).getCount();
     }
-    return nameUsagesCount;
+    return Optional.ofNullable(nameUsagesCount).orElse(1L);
   }
 
   @Autowired
@@ -149,7 +149,7 @@ public class DatasetJsonConverter {
     consumers.add(this::metadataConsumer);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
-    // consumers.add(this::addFacetsData);
+    consumers.add(this::addOccurrenceSpeciesCounts);
   }
 
   public static DatasetJsonConverter create(
@@ -236,7 +236,9 @@ public class DatasetJsonConverter {
     String datasetKey = dataset.get("key").textValue();
     dataset.put("occurrenceCount", datasetOccurrenceCount);
 
-    double occurrencePercentage = (double) datasetOccurrenceCount / getOccurrenceCount();
+    double occurrencePercentage =
+        Optional.ofNullable(datasetOccurrenceCount).map(Long::doubleValue).orElse(0D)
+            / getOccurrenceCount();
     double nameUsagesPercentage = 0D;
 
     // Contribution of occurrence records
@@ -296,6 +298,17 @@ public class DatasetJsonConverter {
                   .map(TextNode::valueOf)
                   .collect(Collectors.toList()));
     }
+  }
+
+  private void addOccurrenceSpeciesCounts(ObjectNode datasetJsonNode) {
+    String datasetKey = datasetJsonNode.get("key").textValue();
+    OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
+    occurrenceSearchRequest.setLimit(0);
+    occurrenceSearchRequest.setOffset(0);
+    occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
+    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
+        gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
+    addRecordCounts(datasetJsonNode, response.getCount());
   }
 
   private void addFacetsData(ObjectNode datasetJsonNode) {
