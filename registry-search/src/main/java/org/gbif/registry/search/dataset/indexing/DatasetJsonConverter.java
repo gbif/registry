@@ -305,7 +305,7 @@ public class DatasetJsonConverter {
     occurrenceSearchRequest.setOffset(0);
     occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
     SearchResponse<Occurrence, OccurrenceSearchParameter> response =
-      gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
+        gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
     addRecordCounts(datasetJsonNode, response.getCount());
   }
 
