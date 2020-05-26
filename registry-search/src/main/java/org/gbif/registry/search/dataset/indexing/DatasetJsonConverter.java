@@ -173,7 +173,7 @@ public class DatasetJsonConverter {
     addCountryCoverage(dataset, datasetAsJson);
     // addTaxonKeys(dataset, datasetAsJson);
     addMachineTags(dataset, datasetAsJson);
-    addOccurrenceCoverage(dataset, datasetAsJson);
+    // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
