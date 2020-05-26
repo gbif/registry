@@ -36,7 +36,8 @@ import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -232,7 +233,6 @@ public class DatasetJsonConverter {
   }
 
   private void addRecordCounts(ObjectNode dataset, Long datasetOccurrenceCount) {
-    DecimalFormat df = new DecimalFormat("0.000");
     String datasetKey = dataset.get("key").textValue();
     dataset.put("occurrenceCount", datasetOccurrenceCount);
 
@@ -242,21 +242,33 @@ public class DatasetJsonConverter {
     double nameUsagesPercentage = 0D;
 
     // Contribution of occurrence records
-    dataset.put("occurrencePercentage", df.format(occurrencePercentage));
+    dataset.put(
+        "occurrencePercentage",
+        BigDecimal.valueOf(occurrencePercentage).setScale(3, RoundingMode.HALF_UP).toString());
     DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
     if (Objects.nonNull(datasetMetrics)) {
-      nameUsagesPercentage = (double) datasetMetrics.getUsagesCount() / getNameUsagesCount();
+      nameUsagesPercentage = datasetMetrics.getUsagesCount() / getNameUsagesCount().doubleValue();
+      nameUsagesPercentage =
+          Double.isInfinite(nameUsagesPercentage) || Double.isNaN(nameUsagesPercentage)
+              ? 0D
+              : nameUsagesPercentage;
       dataset.put("nameUsagesCount", datasetMetrics.getUsagesCount());
     } else {
       dataset.put("nameUsagesCount", 0);
     }
 
     // Contribution of NameUsages
-    dataset.put("nameUsagesPercentage", df.format(nameUsagesPercentage));
+    dataset.put(
+        "nameUsagesPercentage",
+        BigDecimal.valueOf(nameUsagesPercentage).setScale(3, RoundingMode.HALF_UP).toString());
 
     // How much a dataset contributes in terms of records to GBIF data
-    dataset.put("dataScore", df.format(occurrencePercentage + nameUsagesPercentage));
+    dataset.put(
+        "dataScore",
+        BigDecimal.valueOf(occurrencePercentage + nameUsagesPercentage)
+            .setScale(3, RoundingMode.HALF_UP)
+            .toString());
   }
 
   private void enumTransforms(ObjectNode dataset) {
