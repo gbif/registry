@@ -233,6 +233,7 @@ public class DatasetJsonConverter {
   }
 
   private void addRecordCounts(ObjectNode dataset, Long datasetOccurrenceCount) {
+    int scale = 12;
     String datasetKey = dataset.get("key").textValue();
     dataset.put("occurrenceCount", datasetOccurrenceCount);
 
@@ -244,7 +245,7 @@ public class DatasetJsonConverter {
     // Contribution of occurrence records
     dataset.put(
         "occurrencePercentage",
-        BigDecimal.valueOf(occurrencePercentage).setScale(3, RoundingMode.HALF_UP).toString());
+        BigDecimal.valueOf(occurrencePercentage).setScale(scale, RoundingMode.HALF_UP).toString());
     DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
     if (Objects.nonNull(datasetMetrics)) {
@@ -261,13 +262,13 @@ public class DatasetJsonConverter {
     // Contribution of NameUsages
     dataset.put(
         "nameUsagesPercentage",
-        BigDecimal.valueOf(nameUsagesPercentage).setScale(3, RoundingMode.HALF_UP).toString());
+        BigDecimal.valueOf(nameUsagesPercentage).setScale(scale, RoundingMode.HALF_UP).toString());
 
     // How much a dataset contributes in terms of records to GBIF data
     dataset.put(
         "dataScore",
         BigDecimal.valueOf(occurrencePercentage + nameUsagesPercentage)
-            .setScale(3, RoundingMode.HALF_UP)
+            .setScale(scale, RoundingMode.HALF_UP)
             .toString());
   }
 
