@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.4-SNAPSHOT</version>
+  <version>3.5-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 

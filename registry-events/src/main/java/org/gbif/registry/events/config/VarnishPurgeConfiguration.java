@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.events;
+package org.gbif.registry.events.config;
 
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
@@ -21,6 +21,8 @@ import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.VarnishPurgeListener;
 import org.gbif.utils.HttpUtil;
 
 import java.net.URI;

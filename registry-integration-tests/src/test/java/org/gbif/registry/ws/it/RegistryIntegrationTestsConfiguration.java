@@ -17,7 +17,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
-import org.gbif.registry.events.VarnishPurgeConfiguration;
+import org.gbif.registry.events.config.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
