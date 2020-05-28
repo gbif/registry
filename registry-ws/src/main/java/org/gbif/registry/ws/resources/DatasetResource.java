@@ -75,8 +75,6 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -225,11 +223,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     } else if (!Strings.isNullOrEmpty(request.getQ())) {
       return search(request.getQ(), page);
     } else {
-      Instant start = Instant.now();
-      PagingResponse<Dataset> result = list(page);
-      Instant end = Instant.now();
-      LOG.info("*** Method execution time: {}", Duration.between(start, end));
-      return result;
+      return list(page);
     }
   }
 
@@ -252,18 +246,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   public PagingResponse<Dataset> list(Pageable page) {
-    Instant start = Instant.now();
     PagingResponse<Dataset> datasets = super.list(page);
-    Instant end = Instant.now();
-    LOG.info("*** DB execution time: {}", Duration.between(start, end));
-
-    start = Instant.now();
-    PagingResponse<Dataset> augmentedDatasets =
-        registryDatasetService.augmentWithMetadata(datasets);
-    end = Instant.now();
-    LOG.info("*** Augment execution time: {}", Duration.between(start, end));
-
-    return augmentedDatasets;
+    return registryDatasetService.augmentWithMetadata(datasets);
   }
 
   @Override
