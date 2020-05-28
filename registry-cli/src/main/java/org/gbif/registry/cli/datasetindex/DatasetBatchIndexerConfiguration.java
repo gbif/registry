@@ -29,6 +29,8 @@ public class DatasetBatchIndexerConfiguration {
 
   private String apiRootUrl;
 
+  private String registryWsUrl;
+
   private DbConfiguration clbDb;
 
   private ElasticsearchConfig datasetEs;
@@ -36,6 +38,8 @@ public class DatasetBatchIndexerConfiguration {
   private ElasticsearchConfig occurrenceEs;
 
   private Integer stopAfter = -1;
+
+  private Integer pageSize = 50;
 
   private Map<String, String> indexingSettings =
       new HashMap<>(IndexingConstants.DEFAULT_INDEXING_SETTINGS);

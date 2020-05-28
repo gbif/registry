@@ -30,6 +30,8 @@ import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientFactory;
 
+import java.util.Optional;
+
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
@@ -122,6 +124,7 @@ public class SpringContextBuilder {
                         "indexing.datasource.checklistbank.hikari.connectionTimeout",
                         configuration.getClbDb().getConnectionTimeout())
                     .put("indexing.stopAfter", configuration.getStopAfter())
+                    .put("indexing.pageSize", configuration.getPageSize())
                     .build()));
     ctx.refresh();
     ctx.start();
@@ -173,7 +176,9 @@ public class SpringContextBuilder {
 
     @Bean
     public ClientFactory clientFactory(DatasetBatchIndexerConfiguration configuration) {
-      return new ClientFactory(configuration.getApiRootUrl());
+      return new ClientFactory(
+          Optional.ofNullable(configuration.getRegistryWsUrl())
+              .orElse(configuration.getApiRootUrl()));
     }
 
     @Bean

@@ -50,14 +50,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DatasetBatchIndexer {
 
-  // controls how many results we request while paging over the WS
-  private static final int DEFAULT_PAGE_SIZE = 100;
-
   private final GbifWsClient gbifWsClient;
 
   private final EsClient esClient;
 
   private final DatasetJsonConverter datasetJsonConverter;
+
+  private final Integer pageSize;
 
   // Stops indexing datasets after this amount of records
   // This variable has the only intention to be used in IT and local tests
@@ -68,11 +67,13 @@ public class DatasetBatchIndexer {
       GbifWsClient gbifWsClient,
       EsClient esClient,
       DatasetJsonConverter datasetJsonConverter,
-      @Value("${indexing.stopAfter:-1}") Integer stopAfter) {
+      @Value("${indexing.stopAfter:-1}") Integer stopAfter,
+      @Value("${indexing.pageSize:50}") Integer pageSize) {
     this.gbifWsClient = gbifWsClient;
     this.esClient = esClient;
     this.datasetJsonConverter = datasetJsonConverter;
     this.stopAfter = stopAfter;
+    this.pageSize = pageSize;
   }
 
   /** Pages over all datasets and adds them to ElasticSearch. */
@@ -97,7 +98,8 @@ public class DatasetBatchIndexer {
                 CompletableFuture.supplyAsync(
                     () -> index(pagingResponse, datasetJsonConverter, indexName, esClient),
                     executor)),
-        stopAfter);
+        stopAfter,
+        pageSize);
 
     CompletableFuture.allOf(jobs.toArray(new CompletableFuture[] {}));
 
@@ -145,8 +147,9 @@ public class DatasetBatchIndexer {
   private void onAllDatasets(
       GbifWsClient gbifWsClient,
       Consumer<PagingResponse<Dataset>> responseConsumer,
-      int stopAfter) {
-    int pageSize = stopAfter < 1 ? DEFAULT_PAGE_SIZE : Math.min(DEFAULT_PAGE_SIZE, stopAfter);
+      int stopAfter,
+      int datasetPageSize) {
+    int pageSize = stopAfter < 1 ? datasetPageSize : Math.min(datasetPageSize, stopAfter);
     PagingRequest page = new PagingRequest(0, pageSize);
     PagingResponse<Dataset> response = gbifWsClient.listDatasets(new PagingRequest(0, 0));
     int datasetCount = 0;
