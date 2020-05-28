@@ -315,13 +315,11 @@ public class DatasetJsonConverter {
 
   private void addOccurrenceSpeciesCounts(ObjectNode datasetJsonNode) {
     String datasetKey = datasetJsonNode.get("key").textValue();
-    OccurrenceSearchRequest occurrenceSearchRequest = new OccurrenceSearchRequest();
-    occurrenceSearchRequest.setLimit(0);
-    occurrenceSearchRequest.setOffset(0);
-    occurrenceSearchRequest.addParameter(OccurrenceSearchParameter.DATASET_KEY, datasetKey);
-    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
-        gbifWsClient.occurrenceSearch(occurrenceSearchRequest);
-    addRecordCounts(datasetJsonNode, response.getCount());
+    Long count = gbifWsClient.getDatasetRecordCount(datasetKey);
+    if (count == null) {
+      log.warn("Datatset {} with 0 count", datasetKey);
+    }
+    addRecordCounts(datasetJsonNode, count);
   }
 
   private void addFacetsData(ObjectNode datasetJsonNode) {
