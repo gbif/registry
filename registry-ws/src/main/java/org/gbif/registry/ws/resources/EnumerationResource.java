@@ -26,6 +26,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NameUsageIssue;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.dwc.terms.Term;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
@@ -263,7 +265,8 @@ public class EnumerationResource {
     Map<String, Object> info = new LinkedHashMap<>();
     info.put("id", interpretationRemark.getId());
     info.put("severity", interpretationRemark.getSeverity().name());
-    info.put("relatedTerms", interpretationRemark.getRelatedTerms());
+    info.put("relatedTerms", interpretationRemark.getRelatedTerms().stream()
+                              .map(Term::qualifiedName).collect(Collectors.toSet()));
     return info;
   }
 }
