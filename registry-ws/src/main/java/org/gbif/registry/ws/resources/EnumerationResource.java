@@ -265,8 +265,11 @@ public class EnumerationResource {
     Map<String, Object> info = new LinkedHashMap<>();
     info.put("id", interpretationRemark.getId());
     info.put("severity", interpretationRemark.getSeverity().name());
-    info.put("relatedTerms", interpretationRemark.getRelatedTerms().stream()
-                              .map(Term::qualifiedName).collect(Collectors.toSet()));
+    info.put(
+        "relatedTerms",
+        interpretationRemark.getRelatedTerms().stream()
+            .map(Term::qualifiedName)
+            .collect(Collectors.toSet()));
     return info;
   }
 }
