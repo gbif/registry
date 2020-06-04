@@ -130,7 +130,8 @@ public class LegacyOrganizationResource {
       // the key provided}"
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .cacheControl(CacheControl.noCache())
-          .body(new ErrorResponse("No organisation matches the key provided"));
+          .build();
+      // .body(new ErrorResponse("No organisation matches the key provided"));
     }
 
     if (op != null) {
