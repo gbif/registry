@@ -183,7 +183,7 @@ public class SpringContextBuilder {
               new MapPropertySource(
                   "directoryConfigProperties",
                   ImmutableMap.of(
-                      "directory.ws.url", directoryConfiguration.wsUrl,
+                      "api.root.url", directoryConfiguration.wsUrl,
                       "directory.app.key", directoryConfiguration.appKey,
                       "directory.app.secret", directoryConfiguration.appSecret)));
 
