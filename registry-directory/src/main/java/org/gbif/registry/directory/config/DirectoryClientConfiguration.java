@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.directory.client.config;
+package org.gbif.registry.directory.config;
 
-import org.gbif.registry.directory.client.NodeClient;
-import org.gbif.registry.directory.client.ParticipantClient;
-import org.gbif.registry.directory.client.PersonClient;
+import org.gbif.api.service.directory.NodeService;
+import org.gbif.api.service.directory.ParticipantService;
+import org.gbif.api.service.directory.PersonService;
+import org.gbif.directory.client.NodeClient;
+import org.gbif.directory.client.ParticipantClient;
+import org.gbif.directory.client.PersonClient;
 import org.gbif.ws.client.ClientFactory;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -37,17 +40,17 @@ public class DirectoryClientConfiguration {
   }
 
   @Bean
-  public NodeClient nodeClient() {
+  public NodeService nodeClient() {
     return clientFactory.newInstance(NodeClient.class);
   }
 
   @Bean
-  public ParticipantClient participantClient() {
+  public ParticipantService participantClient() {
     return clientFactory.newInstance(ParticipantClient.class);
   }
 
   @Bean
-  public PersonClient personClient() {
+  public PersonService personClient() {
     return clientFactory.newInstance(PersonClient.class);
   }
 }
