@@ -40,17 +40,17 @@ public class DirectoryClientConfiguration {
   }
 
   @Bean
-  public NodeService nodeClient() {
+  public NodeService directoryNodeClient() {
     return clientFactory.newInstance(NodeClient.class);
   }
 
   @Bean
-  public ParticipantService participantClient() {
+  public ParticipantService directoryParticipantClient() {
     return clientFactory.newInstance(ParticipantClient.class);
   }
 
   @Bean
-  public PersonService personClient() {
+  public PersonService directoryPersonClient() {
     return clientFactory.newInstance(PersonClient.class);
   }
 }
