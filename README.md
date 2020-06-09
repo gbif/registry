@@ -60,7 +60,6 @@ For more information see [documentation](https://github.com/diffplug/spotless/tr
  Project modules:
  - [**registry-cli**](registry-cli/README.md)
  - [**registry-directory**](registry-directory/README.md)
- - [**registry-directory-client**](registry-directory-client/README.md)
  - [**registry-doi**](registry-doi/README.md)
  - [**registry-domain**](registry-domain/README.md)
  - [**registry-events**](registry-events/README.md)
