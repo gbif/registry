@@ -8,6 +8,6 @@ This module includes [gbif-directory](https://github.com/gbif/directory) related
 
  * `directory.app.secret` secret key associated with application key (consider removing this property)
 
- * `api.root.url` API URL (e.g. http://api.gbif-dev.org/v1/)
+ * `directory.ws.url` directory URL (e.g. http://api.gbif-dev.org/v1/directory/)
 
 [Parent](../README.md)

@@ -75,6 +75,8 @@ directory:
   app:
     key: @directory.app.key@
     secret: @directory.app.secret@
+  ws:
+    url: @directory.ws.url@
 
 api:
   root:
