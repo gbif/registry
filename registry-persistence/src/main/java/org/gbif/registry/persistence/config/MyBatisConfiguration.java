@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.config;
+package org.gbif.registry.persistence.config;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;

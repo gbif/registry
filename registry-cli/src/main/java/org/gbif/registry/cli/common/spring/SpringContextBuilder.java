@@ -32,7 +32,7 @@ import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
 import org.gbif.registry.directory.config.DirectoryClientConfiguration;
 import org.gbif.registry.identity.service.BaseIdentityAccessService;
-import org.gbif.registry.ws.config.MyBatisConfiguration;
+import org.gbif.registry.persistence.config.MyBatisConfiguration;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.security.Md5EncodeServiceImpl;
 import org.gbif.ws.security.SecretKeySigningService;
