@@ -7,8 +7,7 @@ Internally the module uses [OpenFeign](https://github.com/OpenFeign/feign)
 and [Spring Cloud OpenFeign](https://cloud.spring.io/spring-cloud-openfeign/reference/html/).
 
 Common classes and configuration for clients can be found
-in the project [gbif-common-ws](https://github.com/gbif/gbif-common-ws),
-branch registry-spring-boot-integration.
+in the project [gbif-common-ws](https://github.com/gbif/gbif-common-ws).
 
 The registry-ws client can be configured in the following ways:
 
