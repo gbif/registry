@@ -33,7 +33,7 @@ public class DirectoryClientConfiguration {
   private ClientFactory clientFactory;
 
   public DirectoryClientConfiguration(
-      @Value("${api.root.url}") String url,
+      @Value("${directory.ws.url}") String url,
       @Value("${directory.app.key}") String appKey,
       @Value("${directory.app.secret}") String secretKey) {
     this.clientFactory = new ClientFactory(appKey, url, appKey, secretKey);

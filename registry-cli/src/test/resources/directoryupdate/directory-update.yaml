@@ -1,5 +1,5 @@
 directory:
-  wsUrl: ${registry-cli-it.api.url}
+  wsUrl: ${registry-cli-it.directory.ws.url}
   appKey: ${registry-cli-it.directory.app.key}
   appSecret: ${registry-cli-it.directory.app.secret}
 frequencyInHour: 24
