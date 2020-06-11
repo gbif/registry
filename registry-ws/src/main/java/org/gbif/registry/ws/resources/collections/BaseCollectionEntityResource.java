@@ -20,6 +20,8 @@ import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Comment;
+import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -28,6 +30,7 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
@@ -38,6 +41,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
 import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
@@ -80,8 +84,8 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 @Validated
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class BaseCollectionEntityResource<
-        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
-    implements CrudService<T>, TagService, IdentifierService, MachineTagService {
+        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable>
+    implements CrudService<T>, TagService, IdentifierService, MachineTagService, CommentService {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseCollectionEntityResource.class);
 
@@ -90,6 +94,7 @@ public abstract class BaseCollectionEntityResource<
   private final TagMapper tagMapper;
   private final MachineTagMapper machineTagMapper;
   private final IdentifierMapper identifierMapper;
+  private final CommentMapper commentMapper;
   private final EventManager eventManager;
   final EditorAuthorizationService userAuthService;
   private final WithMyBatis withMyBatis;
@@ -99,6 +104,7 @@ public abstract class BaseCollectionEntityResource<
       TagMapper tagMapper,
       MachineTagMapper machineTagMapper,
       IdentifierMapper identifierMapper,
+      CommentMapper commentMapper,
       EditorAuthorizationService userAuthService,
       EventManager eventManager,
       Class<T> objectClass,
@@ -107,6 +113,7 @@ public abstract class BaseCollectionEntityResource<
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
+    this.commentMapper = commentMapper;
     this.eventManager = eventManager;
     this.objectClass = objectClass;
     this.userAuthService = userAuthService;
@@ -290,7 +297,12 @@ public abstract class BaseCollectionEntityResource<
         || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
             && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace()))) {
       machineTag.setCreatedBy(nameFromContext);
-      return withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
+      int key =
+          withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
+      eventManager.post(
+          ChangedCollectionEntityComponentEvent.newInstance(
+              targetEntityKey, objectClass, MachineTag.class));
+      return key;
     } else {
       throw new WebApplicationException(
           "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
@@ -409,11 +421,17 @@ public abstract class BaseCollectionEntityResource<
   @Override
   public void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            targetEntityKey, objectClass, MachineTag.class));
   }
 
   @Override
   public void deleteMachineTags(UUID targetEntityKey, String namespace, String name) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            targetEntityKey, objectClass, MachineTag.class));
   }
 
   @GetMapping("{key}/machineTag")
@@ -426,6 +444,56 @@ public abstract class BaseCollectionEntityResource<
       String namespace, @Nullable String name, @Nullable String value, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return withMyBatis.listByMachineTag(baseMapper, namespace, name, value, page);
+  }
+
+  /**
+   * This method ensures that the caller is authorized to perform the action and then adds the
+   * server controlled fields for createdBy and modifiedBy.
+   *
+   * @param targetEntityKey key of target entity to add comment to
+   * @param comment Comment to add
+   * @return key of Comment created
+   */
+  @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
+  @Trim
+  @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Override
+  public int addComment(
+      @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Comment comment) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    comment.setCreatedBy(authentication.getName());
+    comment.setModifiedBy(authentication.getName());
+    int key = withMyBatis.addComment(commentMapper, baseMapper, targetEntityKey, comment);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            targetEntityKey, objectClass, Comment.class));
+    return key;
+  }
+
+  /**
+   * This method ensures that the caller is authorized to perform the action, and then deletes the
+   * Comment.
+   *
+   * @param targetEntityKey key of target entity to delete comment from
+   * @param commentKey key of Comment to delete
+   */
+  @DeleteMapping("{key}/comment/{commentKey}")
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Override
+  public void deleteComment(
+      @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
+    baseMapper.deleteComment(targetEntityKey, commentKey);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            targetEntityKey, objectClass, Comment.class));
+  }
+
+  @GetMapping(value = "{key}/comment")
+  @Override
+  public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
+    return baseMapper.listComments(targetEntityKey);
   }
 
   /** Only admins can edit IH entities. */
