@@ -19,6 +19,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
@@ -44,7 +45,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public abstract class ExtendedCollectionEntityIT<
-        T extends CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable>
+        T extends
+            CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable
+                & Commentable>
     extends BaseCollectionEntityIT<T> {
 
   protected final PersonService personResource;

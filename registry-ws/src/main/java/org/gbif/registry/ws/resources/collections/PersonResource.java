@@ -31,6 +31,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
@@ -82,6 +83,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
       IdentifierMapper identifierMapper,
       TagMapper tagMapper,
       MachineTagMapper machineTagMapper,
+      CommentMapper commentMapper,
       EventManager eventManager,
       EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
@@ -90,6 +92,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
         tagMapper,
         machineTagMapper,
         identifierMapper,
+        commentMapper,
         userAuthService,
         eventManager,
         Person.class,

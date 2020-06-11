@@ -370,4 +370,30 @@
     ) t1 LIMIT 20
   </select>
 
+  <!-- COMMENTS -->
+  <insert id="addComment">
+    INSERT INTO collection_comment(collection_key,comment_key)
+    VALUES(
+      #{targetEntityKey,jdbcType=OTHER},
+      #{commentKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listComments" resultType="org.gbif.api.model.registry.Comment">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
+    FROM comment
+    INNER JOIN collection_comment ON comment_key = key
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
+  <delete id="deleteComment">
+    DELETE FROM comment USING collection_comment
+    WHERE
+    comment_key = comment.key AND
+    collection_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
+  </delete>
+  <!-- END COMMENTS -->
+
 </mapper>

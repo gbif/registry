@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
@@ -65,6 +66,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       IdentifierMapper identifierMapper,
       TagMapper tagMapper,
       MachineTagMapper machineTagMapper,
+      CommentMapper commentMapper,
       EditorAuthorizationService userAuthService,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
@@ -75,6 +77,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         identifierMapper,
         institutionMapper,
         machineTagMapper,
+        commentMapper,
         eventManager,
         Institution.class,
         userAuthService,
