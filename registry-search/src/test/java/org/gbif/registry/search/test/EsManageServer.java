@@ -18,6 +18,7 @@ package org.gbif.registry.search.test;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
@@ -50,8 +51,6 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private static final String ENV_ES_HTTP_PORT = "REGISTRY_ES_HTTP_PORT";
 
   private static final String ENV_ES_INSTALLATION_DIR = "REGISTRY_ES_INSTALLATION_DIR";
-
-  private static final String DEFAULT_INSTALLATION_DIR = "/tmp/registry-es/";
 
   private EmbeddedElastic embeddedElastic;
 
@@ -104,7 +103,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
             .withInstallationDirectory(
                 getEnvVariable(ENV_ES_INSTALLATION_DIR)
                     .map(v -> Paths.get(v).toFile())
-                    .orElse(Paths.get(DEFAULT_INSTALLATION_DIR).toFile()))
+                    .orElse(Files.createTempDirectory("registry-elasticsearch").toFile()))
             .build();
 
     embeddedElastic.start();
