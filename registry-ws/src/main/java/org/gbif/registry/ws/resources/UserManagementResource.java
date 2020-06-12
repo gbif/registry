@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -192,17 +192,13 @@ public class UserManagementResource {
         updateInitiator = identityService.get(authentication.getName());
       }
 
-      UserModelMutationResult result =
-          identityService.update(
-              UserUpdateRulesManager.applyUpdate(
-                  updateInitiator == null ? null : updateInitiator.getRoles(),
-                  currentUser,
-                  userUpdate,
-                  authentication != null
-                      && authentication.getAuthorities() != null
-                      && authentication
-                          .getAuthorities()
-                          .contains(new SimpleGrantedAuthority(APP_ROLE))));
+      boolean fromTrustedApp = SecurityContextCheck.checkUserInRole(authentication, APP_ROLE);
+      Set<UserRole> initiatorRoles = updateInitiator == null ? null : updateInitiator.getRoles();
+
+      GbifUser user =
+          UserUpdateRulesManager.applyUpdate(
+              initiatorRoles, currentUser, userUpdate, fromTrustedApp);
+      UserModelMutationResult result = identityService.update(user);
 
       if (result.containsError()) {
         response = ResponseEntity.unprocessableEntity().body(result);
