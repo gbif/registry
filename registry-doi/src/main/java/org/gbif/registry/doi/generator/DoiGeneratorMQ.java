@@ -95,7 +95,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   private DOI newDOI(final String shoulder, DoiType type) {
-    // only try for hundred times then fail
+    // try a thousand times then fail
     for (int x = 0; x < 1000; x++) {
       DOI doi = random(shoulder);
       try {
@@ -106,10 +106,14 @@ public class DoiGeneratorMQ implements DoiGenerator {
         return doi;
       } catch (Exception e) {
         // might have hit a unique constraint, try another doi
-        LOG.debug("Random {} DOI {} existed. Try another one (attempt {})", type, doi, x);
+        if (x <= 100) {
+          LOG.debug("Random {} DOI {} already exists at attempt {}", type, doi, x);
+        } else {
+          LOG.info("Random {} DOI {} already exists at attempt {}", type, doi, x);
+        }
       }
     }
-    throw new IllegalStateException("Tried 100 random DOIs and none worked, Giving up");
+    throw new IllegalStateException("Tried 1000 random DOIs and none worked, giving up.");
   }
 
   /**
