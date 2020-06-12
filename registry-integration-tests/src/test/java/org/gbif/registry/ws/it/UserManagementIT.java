@@ -211,6 +211,17 @@ public class UserManagementIT extends BaseItTest {
   }
 
   @Test
+  public void getUserByWrongSystemSettings() throws Exception {
+    userTestFixture.prepareUser();
+    Map<String, String> params = ImmutableMap.of("my.settings.key", "100_tacos=100$");
+
+    // user does not have these system settings
+    requestTestFixture
+        .getSignedRequest(IT_APP_KEY, "/admin/user/find", params)
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
   public void testUpdateUser() throws Exception {
     GbifUser testUser = userTestFixture.prepareUser();
     final String newUserFirstName = "My new first name";

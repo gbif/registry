@@ -119,6 +119,8 @@ directory:
   app:
     key: @directory.app.key@
     secret: @directory.app.secret@
+  ws:
+    url: @directory.ws.url@
 
 # OAI-PMH repositories expose their base URL as the value of the baseURL element in the Identify response
 # this value will be used as the baseURL element in the Identify response

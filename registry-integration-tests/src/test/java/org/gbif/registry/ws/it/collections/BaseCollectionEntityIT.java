@@ -18,6 +18,8 @@ package org.gbif.registry.ws.it.collections;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.registry.Comment;
+import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -25,6 +27,7 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
@@ -53,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Base class to test the CRUD operations of {@link CollectionEntity}. */
 public abstract class BaseCollectionEntityIT<
-        T extends CollectionEntity & Identifiable & Taggable & MachineTaggable>
+        T extends CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable>
     extends BaseItTest {
 
   private final CrudService<T> resource;
@@ -286,6 +289,29 @@ public abstract class BaseCollectionEntityIT<
 
     identifierService.deleteIdentifier(key, identifierKey);
     assertEquals(0, identifierService.listIdentifiers(key).size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void commentsTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType, resource, client);
+    CommentService commentService = (CommentService) service;
+
+    T entity = newEntity();
+    UUID key = service.create(entity);
+
+    Comment comment = new Comment();
+    comment.setContent("test comment");
+
+    int commentKey = commentService.addComment(key, comment);
+
+    List<Comment> comments = commentService.listComments(key);
+    assertEquals(1, comments.size());
+    assertEquals(commentKey, comments.get(0).getKey());
+    assertEquals(comment.getContent(), comments.get(0).getContent());
+
+    commentService.deleteComment(key, commentKey);
+    assertEquals(0, commentService.listComments(key).size());
   }
 
   protected CrudService<T> getService(ServiceType param) {

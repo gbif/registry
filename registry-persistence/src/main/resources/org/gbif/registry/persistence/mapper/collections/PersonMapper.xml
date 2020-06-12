@@ -9,6 +9,7 @@
     <collection property="identifiers" column="key" select="listIdentifiers"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
+    <collection property="comments" column="key" select="listComments"/>
   </resultMap>
 
   <sql id="PERSON_WRITE_FIELDS">
@@ -288,5 +289,31 @@
     ORDER BY first_name,last_name LIMIT 20)
     ) t1 LIMIT 20
   </select>
+
+  <!-- COMMENTS -->
+  <insert id="addComment">
+    INSERT INTO collection_person_comment(collection_person_key,comment_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{commentKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listComments" resultType="org.gbif.api.model.registry.Comment">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
+    FROM comment
+    INNER JOIN collection_person_comment ON comment_key = key
+    WHERE collection_person_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
+  <delete id="deleteComment">
+    DELETE FROM comment USING collection_person_comment
+    WHERE
+    comment_key = comment.key AND
+    collection_person_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
+  </delete>
+  <!-- END COMMENTS -->
 
 </mapper>

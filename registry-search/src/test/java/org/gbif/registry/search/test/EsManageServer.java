@@ -18,6 +18,9 @@ package org.gbif.registry.search.test;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +45,12 @@ import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 public class EsManageServer implements InitializingBean, DisposableBean {
 
   private static final String CLUSTER_NAME = "EsITCluster";
+
+  private static final String ENV_ES_TCP_PORT = "REGISTRY_ES_TCP_PORT";
+
+  private static final String ENV_ES_HTTP_PORT = "REGISTRY_ES_HTTP_PORT";
+
+  private static final String ENV_ES_INSTALLATION_DIR = "REGISTRY_ES_INSTALLATION_DIR";
 
   private EmbeddedElastic embeddedElastic;
 
@@ -83,10 +92,18 @@ public class EsManageServer implements InitializingBean, DisposableBean {
         EmbeddedElastic.builder()
             .withElasticVersion(getEsVersion())
             .withEsJavaOpts("-Xms128m -Xmx512m")
-            .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
-            .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
+            .withSetting(
+                PopularProperties.HTTP_PORT,
+                getEnvIntVariable(ENV_ES_HTTP_PORT).orElse(getAvailablePort()))
+            .withSetting(
+                PopularProperties.TRANSPORT_TCP_PORT,
+                getEnvIntVariable(ENV_ES_TCP_PORT).orElse(getAvailablePort()))
             .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
             .withStartTimeout(120, TimeUnit.SECONDS)
+            .withInstallationDirectory(
+                getEnvVariable(ENV_ES_INSTALLATION_DIR)
+                    .map(v -> Paths.get(v).toFile())
+                    .orElse(Files.createTempDirectory("registry-elasticsearch").toFile()))
             .build();
 
     embeddedElastic.start();
@@ -133,6 +150,14 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private RestHighLevelClient buildRestClient() {
     HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
     return new RestHighLevelClient(RestClient.builder(host));
+  }
+
+  private static Optional<Integer> getEnvIntVariable(String name) {
+    return Optional.ofNullable(System.getenv(name)).map(Integer::new);
+  }
+
+  private static Optional<String> getEnvVariable(String name) {
+    return Optional.ofNullable(System.getenv(name));
   }
 
   private static int getAvailablePort() throws IOException {
