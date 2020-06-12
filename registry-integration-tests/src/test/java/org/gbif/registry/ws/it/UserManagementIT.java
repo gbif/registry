@@ -225,10 +225,13 @@ public class UserManagementIT extends BaseItTest {
   public void testUpdateUser() throws Exception {
     GbifUser testUser = userTestFixture.prepareUser();
     final String newUserFirstName = "My new first name";
+    final Map<String, String> newSystemSettings = ImmutableMap.of("some.setting", "value");
 
     requestTestFixture.getRequest(USERNAME, PASSWORD, "/user/login").andExpect(status().isOk());
 
     testUser.setFirstName(newUserFirstName);
+    testUser.setSystemSettings(newSystemSettings);
+
     requestTestFixture
         .putSignedRequest(IT_APP_KEY, testUser, "/admin/user/" + USERNAME)
         .andExpect(status().isNoContent());
@@ -236,6 +239,7 @@ public class UserManagementIT extends BaseItTest {
     // load user directly from the database
     GbifUser updatedUser = userTestFixture.getUser(testUser.getUserName());
     assertEquals(newUserFirstName, updatedUser.getFirstName());
+    assertEquals(newSystemSettings, updatedUser.getSystemSettings());
 
     // create a new user
     GbifUser testUser2 =
