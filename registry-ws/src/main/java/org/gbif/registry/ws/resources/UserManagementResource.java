@@ -137,9 +137,9 @@ public class UserManagementResource {
 
   @GetMapping("/find")
   @Secured({ADMIN_ROLE, APP_ROLE})
-  public UserAdminView getUserBySystemSetting(@RequestParam Map<String, String> systemSettings) {
+  public UserAdminView getUserBySystemSetting(@RequestParam Map<String, String> queryParams) {
     GbifUser user = null;
-    Iterator<Map.Entry<String, String>> it = systemSettings.entrySet().iterator();
+    Iterator<Map.Entry<String, String>> it = queryParams.entrySet().iterator();
     if (it.hasNext()) {
       Map.Entry<String, String> paramPair = it.next();
       user = identityService.getBySystemSetting(paramPair.getKey(), paramPair.getValue());
