@@ -202,7 +202,7 @@ public class UserManagementResource {
                       && authentication.getAuthorities() != null
                       && authentication
                           .getAuthorities()
-                          .contains(new SimpleGrantedAuthority("ROLE_APP"))));
+                          .contains(new SimpleGrantedAuthority(APP_ROLE))));
 
       if (result.containsError()) {
         response = ResponseEntity.unprocessableEntity().body(result);
