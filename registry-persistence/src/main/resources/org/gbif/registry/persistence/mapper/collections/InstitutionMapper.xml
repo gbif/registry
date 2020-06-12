@@ -16,6 +16,7 @@
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
+    <collection property="comments" column="key" select="listComments"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
@@ -358,5 +359,31 @@
     (SELECT key,code,name FROM institution WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' ORDER BY name LIMIT 20)
     ) t1 LIMIT 20
   </select>
+
+  <!-- COMMENTS -->
+  <insert id="addComment">
+    INSERT INTO institution_comment(institution_key,comment_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{commentKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <select id="listComments" resultType="org.gbif.api.model.registry.Comment">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.CommentMapper.COMMENT_FIELDS"/>
+    FROM comment
+    INNER JOIN institution_comment ON comment_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <!-- Joined delete of comment to trigger cascade delete of the join table -->
+  <delete id="deleteComment">
+    DELETE FROM comment USING institution_comment
+    WHERE
+    comment_key = comment.key AND
+    institution_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
+  </delete>
+  <!-- END COMMENTS -->
 
 </mapper>

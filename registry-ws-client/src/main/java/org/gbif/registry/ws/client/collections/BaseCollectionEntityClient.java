@@ -16,12 +16,14 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
@@ -41,7 +43,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 public interface BaseCollectionEntityClient<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
-    extends CrudClient<T>, TagService, IdentifierService, MachineTagService {
+    extends CrudClient<T>, TagService, IdentifierService, MachineTagService, CommentService {
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -146,4 +148,23 @@ public interface BaseCollectionEntityClient<
   @Override
   List<Tag> listTags(
       @PathVariable("key") UUID key, @RequestParam(value = "owner", required = false) String owner);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/comment",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  int addComment(@PathVariable("key") UUID key, @RequestBody Comment comment);
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/comment/{commentKey}")
+  @Override
+  void deleteComment(@PathVariable("key") UUID key, @PathVariable("commentKey") int commentKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/comment",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  List<Comment> listComments(@PathVariable("key") UUID key);
 }

@@ -1,0 +1,29 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="72" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+          CREATE TABLE institution_comment (
+            institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+            comment_key integer NOT NULL UNIQUE REFERENCES comment(key) ON DELETE CASCADE,
+            PRIMARY KEY (institution_key, comment_key)
+          );
+
+          CREATE TABLE collection_comment (
+            collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+            comment_key integer NOT NULL UNIQUE REFERENCES comment(key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_key, comment_key)
+          );
+
+          CREATE TABLE collection_person_comment (
+            collection_person_key uuid NOT NULL REFERENCES collection_person(key) ON DELETE CASCADE,
+            comment_key integer NOT NULL UNIQUE REFERENCES comment(key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_person_key, comment_key)
+          );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

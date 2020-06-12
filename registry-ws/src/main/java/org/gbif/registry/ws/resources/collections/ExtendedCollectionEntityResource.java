@@ -20,6 +20,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -34,6 +35,7 @@ import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
@@ -76,7 +78,9 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 @Validated
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class ExtendedCollectionEntityResource<
-        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
+        T extends
+            CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable
+                & Commentable>
     extends BaseCollectionEntityResource<T> implements ContactService {
 
   private final BaseMapper<T> baseMapper;
@@ -95,6 +99,7 @@ public abstract class ExtendedCollectionEntityResource<
       IdentifierMapper identifierMapper,
       ContactableMapper contactableMapper,
       MachineTagMapper machineTagMapper,
+      CommentMapper commentMapper,
       EventManager eventManager,
       Class<T> objectClass,
       EditorAuthorizationService userAuthService,
@@ -104,6 +109,7 @@ public abstract class ExtendedCollectionEntityResource<
         tagMapper,
         machineTagMapper,
         identifierMapper,
+        commentMapper,
         userAuthService,
         eventManager,
         objectClass,
