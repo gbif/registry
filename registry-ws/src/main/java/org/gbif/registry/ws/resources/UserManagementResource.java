@@ -143,7 +143,6 @@ public class UserManagementResource {
     if (it.hasNext()) {
       Map.Entry<String, String> paramPair = it.next();
       user = identityService.getBySystemSetting(paramPair.getKey(), paramPair.getValue());
-      it.remove();
     }
 
     if (user == null) {
