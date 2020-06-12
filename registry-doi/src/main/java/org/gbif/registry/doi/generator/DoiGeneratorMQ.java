@@ -96,15 +96,17 @@ public class DoiGeneratorMQ implements DoiGenerator {
 
   private DOI newDOI(final String shoulder, DoiType type) {
     // only try for hundred times then fail
-    for (int x = 0; x < 100; x++) {
+    for (int x = 0; x < 1000; x++) {
       DOI doi = random(shoulder);
       try {
         doiMapper.create(doi, type);
+        if (x > 100) {
+          LOG.warn("Had to search {} times to find the available {} DOI {}.", x, type, doi);
+        }
         return doi;
       } catch (Exception e) {
         // might have hit a unique constraint, try another doi
-        LOG.debug(
-            "Exception: {}. Random {} DOI {} existed. Try another one", type, doi, e.getMessage());
+        LOG.debug("Random {} DOI {} existed. Try another one (attempt {})", type, doi, x);
       }
     }
     throw new IllegalStateException("Tried 100 random DOIs and none worked, Giving up");
