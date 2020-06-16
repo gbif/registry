@@ -32,7 +32,9 @@ public class DatasetElasticsearchConfiguration {
   public EsManageServer esManageServer() {
     try {
       return new EsManageServer(
-          resourceLoader.getResource("classpath:dataset-es-mapping.json"), "dataset", "dataset");
+          resourceLoader.getResource("classpath:dataset-es-mapping.json"),
+          resourceLoader.getResource("classpath:dataset-es-settings.json"),
+          "dataset", "dataset");
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }

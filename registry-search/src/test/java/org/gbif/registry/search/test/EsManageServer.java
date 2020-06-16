@@ -56,6 +56,8 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private final Resource mappingFile;
 
+  private final Resource settingsFile;
+
   private final String indexName;
 
   private final String typeName;
@@ -63,14 +65,16 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
-  public EsManageServer(Resource mappingFile, String indexName, String typeName) {
+  public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName, String typeName) {
     this.mappingFile = mappingFile;
+    this.settingsFile = settingsFile;
     this.indexName = indexName;
     this.typeName = typeName;
   }
 
   public EsManageServer() {
     this.mappingFile = null;
+    this.settingsFile = null;
     this.indexName = null;
     this.typeName = null;
   }
@@ -137,11 +141,13 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private void createIndex() throws IOException {
     if (!Strings.isNullOrEmpty(indexName)) {
       String mapping = IOUtils.toString(mappingFile.getInputStream(), StandardCharsets.UTF_8);
+      String settings = IOUtils.toString(settingsFile.getInputStream(), StandardCharsets.UTF_8);
       restClient
           .indices()
           .create(
               new CreateIndexRequest()
                   .index(indexName)
+                  .settings(settings, XContentType.JSON)
                   .mapping(typeName, mapping, XContentType.JSON),
               RequestOptions.DEFAULT);
     }
