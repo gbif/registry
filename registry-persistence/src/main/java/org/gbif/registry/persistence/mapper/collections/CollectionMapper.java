@@ -64,4 +64,12 @@ public interface CollectionMapper extends BaseMapper<Collection>, ContactableMap
    * @return the keys of the collections
    */
   List<UUID> findByIdentifier(@Nullable @Param("identifier") String identifier);
+
+  /**
+   * Gets the institution key of the specified collection.
+   *
+   * @param collectionKey key of the collection whose identifier key we want to get
+   * @return institution key
+   */
+  UUID getInstitutionKey(@Param("collectionKey") UUID collectionKey);
 }
