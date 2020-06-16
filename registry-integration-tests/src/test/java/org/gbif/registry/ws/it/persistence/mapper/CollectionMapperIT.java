@@ -268,20 +268,4 @@ public class CollectionMapperIT extends BaseItTest {
     assertEquals(0, collectionMapper.count(null, null, null, "c2", "n1", null));
     assertEquals(1, collectionMapper.count(null, null, null, null, null, "cc1"));
   }
-
-  @Test
-  public void getInstitutionKeyTest() {
-    Collection col1 = new Collection();
-    col1.setKey(UUID.randomUUID());
-    col1.setInstitutionKey(UUID.randomUUID());
-    col1.setCode("c1");
-    col1.setName("n1");
-    col1.setCreatedBy("test");
-    col1.setModifiedBy("test");
-    col1.setAlternativeCodes(Collections.singletonMap("cc1", "test"));
-    collectionMapper.create(col1);
-
-    assertEquals(col1.getInstitutionKey(), collectionMapper.getInstitutionKey(col1.getKey()));
-    assertNull(collectionMapper.getInstitutionKey(UUID.randomUUID()));
-  }
 }
