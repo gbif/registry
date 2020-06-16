@@ -131,6 +131,12 @@
     WHERE c.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="getInstitutionKey" resultType="java.util.UUID" >
+    SELECT institution_key
+    FROM collection
+    WHERE key = #{collectionKey,jdbcType=OTHER}
+  </select>
+
   <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_READ_FIELDS"/>
     FROM address
