@@ -39,6 +39,7 @@ import org.elasticsearch.client.NodeSelector;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -99,15 +100,27 @@ public class EsClient implements Closeable {
 
   /** Creates a new index using the indexName, recordType and settings provided. */
   public void createIndex(
-      String indexName, String recordType, Map<?, ?> settings, String mappingFile) {
+      String indexName,
+      String recordType,
+      Map<String, String> settings,
+      String mappingFile,
+      String settingsFile) {
     try (final Reader mappingFileReader =
-        new InputStreamReader(
-            new BufferedInputStream(
-                getClass().getClassLoader().getResourceAsStream(mappingFile)))) {
+            new InputStreamReader(
+                new BufferedInputStream(
+                    getClass().getClassLoader().getResourceAsStream(mappingFile)));
+        final Reader settingsFileReader =
+            new InputStreamReader(
+                new BufferedInputStream(
+                    getClass().getClassLoader().getResourceAsStream(settingsFile)))) {
+      Settings.Builder settingsBuilder = Settings.builder();
+      settings.forEach(settingsBuilder::put);
+      settingsBuilder.loadFromSource(CharStreams.toString(settingsFileReader), XContentType.JSON);
+
       CreateIndexRequest createIndexRequest = new CreateIndexRequest();
       createIndexRequest
           .index(indexName)
-          .settings(settings)
+          .settings(settingsBuilder.build())
           .mapping(recordType, CharStreams.toString(mappingFileReader), XContentType.JSON);
       restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
     } catch (IOException ex) {

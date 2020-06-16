@@ -69,10 +69,32 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
    */
   public SearchResponse<T, P> buildSearchResponse(
       org.elasticsearch.action.search.SearchResponse esResponse, SearchRequest<P> request) {
+    return buildSearchResponse(esResponse, request, searchResultConverter::toSearchResult);
+  }
 
-    SearchResponse<T, P> response = new SearchResponse<>(request);
+  /**
+   * Builds a SearchResponse instance using the current builder state.
+   *
+   * @return a new instance of a SearchResponse.
+   */
+  public SearchResponse<S, P> buildSearchAutocompleteResponse(
+      org.elasticsearch.action.search.SearchResponse esResponse, SearchRequest<P> request) {
+    return buildSearchResponse(esResponse, request, searchResultConverter::toSearchSuggestResult);
+  }
+
+  /**
+   * Builds a SearchResponse instance using the current builder state.
+   *
+   * @return a new instance of a SearchResponse.
+   */
+  public <R> SearchResponse<R, P> buildSearchResponse(
+      org.elasticsearch.action.search.SearchResponse esResponse,
+      SearchRequest<P> request,
+      Function<SearchHit, R> mapper) {
+
+    SearchResponse<R, P> response = new SearchResponse<>(request);
     response.setCount(esResponse.getHits().getTotalHits());
-    parseHits(esResponse).ifPresent(response::setResults);
+    parseHits(esResponse, mapper).ifPresent(response::setResults);
     if (request instanceof FacetedSearchRequest) {
       parseFacets(esResponse, (FacetedSearchRequest<P>) request).ifPresent(response::setFacets);
     }
@@ -137,7 +159,8 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
                     .collect(Collectors.toList()));
   }
 
-  private Optional<List<T>> parseHits(org.elasticsearch.action.search.SearchResponse esResponse) {
+  private <R> Optional<List<R>> parseHits(
+      org.elasticsearch.action.search.SearchResponse esResponse, Function<SearchHit, R> mapper) {
     if (esResponse.getHits() == null
         || esResponse.getHits().getHits() == null
         || esResponse.getHits().getHits().length == 0) {
@@ -145,9 +168,7 @@ public class EsResponseParser<T, S, P extends SearchParameter> {
     }
 
     return Optional.of(
-        Stream.of(esResponse.getHits().getHits())
-            .map(searchResultConverter::toSearchResult)
-            .collect(Collectors.toList()));
+        Stream.of(esResponse.getHits().getHits()).map(mapper).collect(Collectors.toList()));
   }
 
   private static Optional<String> getStringValue(SearchHit hit, String esField) {

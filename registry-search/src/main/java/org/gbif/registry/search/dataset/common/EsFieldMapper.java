@@ -69,6 +69,14 @@ public interface EsFieldMapper<P extends SearchParameter> {
     return new String[] {get(searchParameter)};
   }
 
+  /**
+   * Gets the autocomplete field associated to a parameter. By default returns the mapped es field +
+   * the "Autocomplete" word.
+   */
+  default String getAutocompleteField(P searchParameter) {
+    return get(searchParameter) + "Autocomplete";
+  }
+
   /** Fields used during to highlight in results. */
   default String[] highlightingFields() {
     return new String[] {};

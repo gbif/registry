@@ -85,7 +85,8 @@ public class DatasetBatchIndexer {
         indexName,
         IndexingConstants.DATASET_RECORD_TYPE,
         indexingSettings,
-        IndexingConstants.MAPPING_FILE);
+        IndexingConstants.MAPPING_FILE,
+        IndexingConstants.SETTINGS_FILE);
 
     ExecutorService executor = Executors.newWorkStealingPool();
 

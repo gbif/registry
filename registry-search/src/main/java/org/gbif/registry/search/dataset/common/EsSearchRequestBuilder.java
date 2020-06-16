@@ -48,6 +48,7 @@ import org.elasticsearch.common.geo.builders.PolygonBuilder;
 import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.GeoShapeQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
@@ -151,6 +152,35 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
   public Optional<QueryBuilder> buildQueryNode(FacetedSearchRequest<P> searchRequest) {
     return buildQuery(searchRequest.getParameters(), searchRequest.getQ());
+  }
+
+  public SearchRequest buildAutocompleteQuery(
+      org.gbif.api.model.common.search.SearchRequest<P> searchRequest, P parameter, String index) {
+    Optional<QueryBuilder> filterQuery = buildQuery(searchRequest.getParameters(), null);
+
+    BoolQueryBuilder query = QueryBuilders.boolQuery();
+    if (!Strings.isNullOrEmpty(searchRequest.getQ())) {
+      query.must(
+          QueryBuilders.matchQuery(
+                  esFieldMapper.getAutocompleteField(parameter), searchRequest.getQ())
+              .operator(Operator.AND));
+    } else {
+      query.must(QueryBuilders.matchAllQuery());
+    }
+    filterQuery.ifPresent(query::must);
+
+    SearchRequest request = new SearchRequest();
+    request.indices(index);
+
+    SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+    request.source(searchSourceBuilder);
+    searchSourceBuilder.query(query);
+
+    // add source field
+    searchSourceBuilder.fetchSource(
+        esFieldMapper.includeSuggestFields(parameter), esFieldMapper.excludeFields());
+
+    return request;
   }
 
   public SearchRequest buildSuggestQuery(String prefix, P parameter, Integer limit, String index) {

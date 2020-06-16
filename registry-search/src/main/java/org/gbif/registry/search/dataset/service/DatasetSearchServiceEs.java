@@ -93,11 +93,12 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
 
       // execute
       SearchRequest searchRequest =
-          esSearchRequestBuilder.buildSuggestQuery(
-              request.getQ(), DatasetSearchParameter.DATASET_TITLE, request.getLimit(), index);
-      return esResponseParser.buildSuggestResponse(
-          restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT),
-          DatasetSearchParameter.DATASET_TITLE);
+          esSearchRequestBuilder.buildAutocompleteQuery(
+              request, DatasetSearchParameter.DATASET_TITLE, index);
+      return esResponseParser
+          .buildSearchAutocompleteResponse(
+              restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT), request)
+          .getResults();
     } catch (IOException ex) {
       log.error("Error executing the search operation", ex);
       throw new RuntimeException(ex);

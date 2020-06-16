@@ -30,6 +30,8 @@ public class IndexingConstants {
 
   public static final String MAPPING_FILE = "dataset-es-mapping.json";
 
+  public static final String SETTINGS_FILE = "dataset-es-settings.json";
+
   /** Default/Recommended indexing settings. */
   public static final Map<String, String> DEFAULT_INDEXING_SETTINGS = new HashMap<>();
 
