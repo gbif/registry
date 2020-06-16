@@ -203,17 +203,22 @@ public class DatasetJsonConverter {
   }
 
   private void addTitles(ObjectNode dataset) {
+    if (dataset.has("title")) {
+      dataset.put("titleAutocomplete", dataset.get("title").asText());
+    }
     if (dataset.has("installationKey")) {
       Installation installation =
           gbifWsClient.getInstallation(dataset.get("installationKey").asText());
       if (Objects.nonNull(installation)) {
         dataset.put("installationTitle", installation.getTitle());
+        dataset.put("installationTitleAutocomplete", installation.getTitle());
         if (Objects.nonNull(installation.getOrganizationKey())) {
           Organization hostingOrg =
               gbifWsClient.getOrganization(installation.getOrganizationKey().toString());
           if (Objects.nonNull(hostingOrg)) {
             dataset.put("hostingOrganizationKey", hostingOrg.getKey().toString());
             dataset.put("hostingOrganizationTitle", hostingOrg.getTitle());
+            dataset.put("hostingOrganizationTitleAutocomplete", hostingOrg.getTitle());
           }
         }
       }
@@ -223,6 +228,7 @@ public class DatasetJsonConverter {
           gbifWsClient.getOrganization(dataset.get("publishingOrganizationKey").asText());
       if (Objects.nonNull(publisher)) {
         dataset.put("publishingOrganizationTitle", publisher.getTitle());
+        dataset.put("publishingOrganizationTitleAutocomplete", publisher.getTitle());
         if (Objects.nonNull(publisher.getCountry())) {
           dataset.put("publishingCountry", publisher.getCountry().getIso2LetterCode());
         }
