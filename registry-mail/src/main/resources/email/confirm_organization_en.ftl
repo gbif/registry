@@ -20,7 +20,9 @@
     <li>${organization.city!}</li>
     <li>${organization.province!}</li>
     <li>${organization.postalCode!}</li>
+    <#if (organization.country??) >
     <li>${organization.country.title!}</li>
+    </#if>
     <#list organization.homepage! as homepage>
       <li><a href="${homepage}">${homepage}</a></li>
     </#list>
