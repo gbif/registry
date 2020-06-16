@@ -93,7 +93,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     final Authentication authentication = authenticationFacade.getAuthentication();
     final String path = request.getRequestURI();
 
-    // skip GET and OPTIONS requests
+    // skip GET and OPTIONS requests and only check requests to grscicoll
     if (isNotGetOrOptionsRequest(request) && path.contains("grscicoll")) {
       // user must NOT be null if the resource requires editor rights restrictions
       ensureUserSetInSecurityContext(authentication, HttpStatus.FORBIDDEN);
