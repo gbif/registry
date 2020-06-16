@@ -85,6 +85,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   private static final String PRE_HL_TAG = "<em class=\"gbifHl\">";
   private static final String POST_HL_TAG = "</em>";
 
+
   private final EsFieldMapper<P> esFieldMapper;
 
   // this instance is created only once and reused for all searches
@@ -174,6 +175,9 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     request.source(searchSourceBuilder);
+
+    searchSourceBuilder.size(searchRequest.getLimit());
+    searchSourceBuilder.from(Math.max(0, (int)searchRequest.getOffset()));
     searchSourceBuilder.query(query);
 
     // add source field
