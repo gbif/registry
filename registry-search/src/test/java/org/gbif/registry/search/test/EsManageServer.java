@@ -65,7 +65,8 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
-  public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName, String typeName) {
+  public EsManageServer(
+      Resource mappingFile, Resource settingsFile, String indexName, String typeName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
