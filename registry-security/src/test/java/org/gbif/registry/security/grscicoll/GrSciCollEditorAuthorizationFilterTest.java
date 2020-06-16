@@ -449,7 +449,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void changeInstitutionKeyInCollectionAsEditorTest() {
+  public void changeInstitutionKeyInCollectionAsEditorWithNoRightsTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
@@ -465,8 +465,38 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // we return the old institution key in the mapepr
     doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
-    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, anotherInstKey);
+    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void changeInstitutionKeyInCollectionAsEditorWithRightsTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+
+    // the institution key is changed in the update
+    UUID anotherInstKey = UUID.randomUUID();
+    when(mockRequest.getContent())
+        .thenReturn(
+            "{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + anotherInstKey + "\"}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // we return the old institution key in the mapepr
+    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
+    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, anotherInstKey);
+    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));

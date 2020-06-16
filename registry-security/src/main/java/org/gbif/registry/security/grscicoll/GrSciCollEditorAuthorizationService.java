@@ -92,8 +92,10 @@ public class GrSciCollEditorAuthorizationService {
     if (collectionInMessageBody != null
         && !persistedInstitutionKey.equals(collectionInMessageBody.getInstitutionKey())) {
       // check if the user has permissions in the new institution
-      return userRightsMapper.keyExistsForUser(
-          username, collectionInMessageBody.getInstitutionKey());
+      if (!userRightsMapper.keyExistsForUser(
+          username, collectionInMessageBody.getInstitutionKey())) {
+        return false;
+      }
     }
 
     // check permissions in the collection
