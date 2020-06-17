@@ -50,6 +50,10 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
@@ -57,7 +61,10 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -90,6 +97,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   // Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
 
+  private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
+
+  private static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
+
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
@@ -110,9 +121,19 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Secured(ADMIN_ROLE)
   @Override
   public void create(@RequestBody @Trim Download occurrenceDownload) {
-    occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
-    occurrenceDownload.setLicense(License.UNSPECIFIED);
-    occurrenceDownloadMapper.create(occurrenceDownload);
+    try {
+      occurrenceDownload.setDoi(generateDOI());
+      occurrenceDownload.setLicense(License.UNSPECIFIED);
+      occurrenceDownloadMapper.create(occurrenceDownload);
+    } catch (Exception ex) {
+      LOG.error(NOTIFY_ADMIN, "Error creating download", ex);
+      throw new RuntimeException(ex);
+    }
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  DOI generateDOI() {
+    return doiGenerator.newDownloadDOI();
   }
 
   @Override
