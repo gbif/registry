@@ -84,7 +84,7 @@
     <spring-cloud-zookeeper.version>2.2.0.RELEASE</spring-cloud-zookeeper.version>
     <spring-cloud-openfeign.version>2.2.1.RELEASE</spring-cloud-openfeign.version>
     <zookeeper.version>3.4.14</zookeeper.version>
-    <commons-beanutils.version>1.9.2</commons-beanutils.version>
+    <commons-beanutils.version>1.9.4</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
     <gbif-doi.version>2.12</gbif-doi.version>
