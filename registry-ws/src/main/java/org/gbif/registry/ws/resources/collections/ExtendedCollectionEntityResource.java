@@ -54,7 +54,6 @@ import javax.validation.groups.Default;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -234,22 +233,9 @@ public abstract class ExtendedCollectionEntityResource<
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void addContact(
-      @PathVariable("key") @NotNull UUID entityKey,
-      @RequestBody @NotNull UUID personKey,
-      Authentication authentication) {
-    // check that the user has permissions to add a contact. Only admins can edit IH entities
-    T entity = baseMapper.get(entityKey);
-    if (!isAllowedToEditEntity(authentication, entity)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
-
-    addContact(entityKey, personKey);
-  }
-
   @Override
-  public void addContact(UUID entityKey, UUID personKey) {
+  public void addContact(
+      @PathVariable("key") @NotNull UUID entityKey, @RequestBody @NotNull UUID personKey) {
     // check if the contact exists
     List<Person> contacts = contactableMapper.listContacts(entityKey);
 
@@ -265,22 +251,9 @@ public abstract class ExtendedCollectionEntityResource<
   @DeleteMapping("{key}/contact/{personKey}")
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void removeContact(
-      @PathVariable("key") @NotNull UUID entityKey,
-      @PathVariable @NotNull UUID personKey,
-      Authentication authentication) {
-    // check that the user has permissions to add a contact. Only admins can edit IH entities
-    T entity = baseMapper.get(entityKey);
-    if (!isAllowedToEditEntity(authentication, entity)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
-
-    removeContact(entityKey, personKey);
-  }
-
   @Override
-  public void removeContact(UUID entityKey, UUID personKey) {
+  public void removeContact(
+      @PathVariable("key") @NotNull UUID entityKey, @PathVariable @NotNull UUID personKey) {
     contactableMapper.removeContact(entityKey, personKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));

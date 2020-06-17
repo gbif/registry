@@ -34,7 +34,6 @@ import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.EventManager;
@@ -48,12 +47,9 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.ws.NotFoundException;
 import org.gbif.ws.WebApplicationException;
 
-import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -122,12 +118,6 @@ public abstract class BaseCollectionEntityResource<
 
   public void preCreate(T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    if (!isAllowedToEditEntity(authentication, entity)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
-
     final String username = authentication.getName();
     entity.setCreatedBy(username);
     entity.setModifiedBy(username);
@@ -142,11 +132,6 @@ public abstract class BaseCollectionEntityResource<
 
     T entityToDelete = get(key);
     checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
-
-    if (!isAllowedToEditEntity(authentication, entityToDelete)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
 
     entityToDelete.setModifiedBy(authentication.getName());
     update(entityToDelete);
@@ -163,12 +148,6 @@ public abstract class BaseCollectionEntityResource<
 
   public void preUpdate(T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    if (!isAllowedToEditEntity(authentication, entity)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
-
     entity.setModifiedBy(authentication.getName());
   }
 
@@ -180,14 +159,6 @@ public abstract class BaseCollectionEntityResource<
   public int addIdentifier(
       @PathVariable("key") UUID entityKey, @RequestBody Identifier identifier) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    // only admins can add IH identifiers
-    if (identifier.getType() == IdentifierType.IH_IRN
-        && !SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
-
     identifier.setCreatedBy(authentication.getName());
     int identifierKey =
         withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
@@ -203,21 +174,6 @@ public abstract class BaseCollectionEntityResource<
   @Override
   public void deleteIdentifier(
       @PathVariable("key") UUID entityKey, @PathVariable int identifierKey) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-    // check if the user has permissions to delete the identifier. Only admins can delete IH
-    // identifiers.
-    List<Identifier> identifiers = baseMapper.listIdentifiers(entityKey);
-    Optional<Identifier> identifierToDelete =
-        identifiers.stream().filter(i -> i.getKey().equals(identifierKey)).findFirst();
-
-    if (identifierToDelete.isPresent()
-        && identifierToDelete.get().getType() == IdentifierType.IH_IRN
-        && !SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify GrSciColl entity", HttpStatus.FORBIDDEN);
-    }
-
     baseMapper.deleteIdentifier(entityKey, identifierKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(
@@ -291,22 +247,12 @@ public abstract class BaseCollectionEntityResource<
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim MachineTag machineTag) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
-        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-        || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
-            && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace()))) {
-      machineTag.setCreatedBy(nameFromContext);
-      int key =
-          withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
-      eventManager.post(
-          ChangedCollectionEntityComponentEvent.newInstance(
-              targetEntityKey, objectClass, MachineTag.class));
-      return key;
-    } else {
-      throw new WebApplicationException(
-          "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
-    }
+    machineTag.setCreatedBy(nameFromContext);
+    int key = withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            targetEntityKey, objectClass, MachineTag.class));
+    return key;
   }
 
   @Override
@@ -330,32 +276,8 @@ public abstract class BaseCollectionEntityResource<
    */
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   public void deleteMachineTagByMachineTagKey(
-      @PathVariable("key") UUID targetEntityKey,
-      @PathVariable("machineTagKey") int machineTagKey,
-      Authentication authentication) {
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    List<MachineTag> machineTags = baseMapper.listMachineTags(targetEntityKey);
-    Optional<MachineTag> optMachineTag =
-        machineTags.stream().filter(m -> m.getKey() == machineTagKey).findFirst();
-
-    if (optMachineTag.isPresent()) {
-      MachineTag machineTag = optMachineTag.get();
-
-      if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
-          || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-          || (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_EDITOR_ROLE)
-              && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-              && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
-        deleteMachineTag(targetEntityKey, machineTagKey);
-
-      } else {
-        throw new WebApplicationException(
-            "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
-      }
-    } else {
-      throw new NotFoundException("Machine tag was not found", URI.create("/"));
-    }
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
+    deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**
@@ -375,16 +297,7 @@ public abstract class BaseCollectionEntityResource<
    */
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   public void deleteMachineTagsByNamespace(
-      @PathVariable("key") UUID targetEntityKey,
-      @PathVariable("namespace") String namespace,
-      Authentication authentication) {
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
-    }
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
     deleteMachineTags(targetEntityKey, namespace);
   }
 
@@ -494,16 +407,5 @@ public abstract class BaseCollectionEntityResource<
   @Override
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
     return baseMapper.listComments(targetEntityKey);
-  }
-
-  /** Only admins can edit IH entities. */
-  protected boolean isAllowedToEditEntity(Authentication authentication, T entity) {
-    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
-      return true;
-    }
-
-    boolean isIhEntity =
-        entity.getIdentifiers().stream().anyMatch(i -> i.getType() == IdentifierType.IH_IRN);
-    return !isIhEntity;
   }
 }
