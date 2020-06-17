@@ -43,6 +43,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -84,6 +86,7 @@ public class DoiGeneratorMQ implements DoiGenerator {
     return newDOI("", DoiType.DATASET);
   }
 
+  @Transactional(propagation = Propagation.NOT_SUPPORTED)
   @Override
   public DOI newDownloadDOI() {
     return newDOI("dl.", DoiType.DOWNLOAD);
