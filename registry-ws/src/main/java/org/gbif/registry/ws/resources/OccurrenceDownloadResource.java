@@ -61,7 +61,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -115,23 +114,17 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
-  @Transactional
   @Secured(ADMIN_ROLE)
   @Override
   public void create(@RequestBody @Trim Download occurrenceDownload) {
     try {
-      occurrenceDownload.setDoi(generateDOI());
+      occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
       occurrenceDownload.setLicense(License.UNSPECIFIED);
       occurrenceDownloadMapper.create(occurrenceDownload);
     } catch (Exception ex) {
       LOG.error(NOTIFY_ADMIN, "Error creating download", ex);
       throw new RuntimeException(ex);
     }
-  }
-
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  DOI generateDOI() {
-    return doiGenerator.newDownloadDOI();
   }
 
   @Override
