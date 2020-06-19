@@ -160,18 +160,19 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     BoolQueryBuilder query = QueryBuilders.boolQuery();
     if (!Strings.isNullOrEmpty(searchRequest.getQ())) {
-      query
-          .should(
-              QueryBuilders.matchQuery(
-                      esFieldMapper.getAutocompleteField(parameter), searchRequest.getQ())
-                  .operator(Operator.AND))
-          .should(
-              QueryBuilders.spanFirstQuery(
-                      QueryBuilders.spanMultiTermQueryBuilder(
-                          QueryBuilders.prefixQuery(
-                              esFieldMapper.get(parameter), searchRequest.getQ().toLowerCase())),
-                      3)
-                  .boost(100));
+      query.should(
+          QueryBuilders.matchQuery(
+                  esFieldMapper.getAutocompleteField(parameter), searchRequest.getQ())
+              .operator(Operator.AND));
+      if (searchRequest.getQ().length() > 1) {
+        query.should(
+            QueryBuilders.spanFirstQuery(
+                    QueryBuilders.spanMultiTermQueryBuilder(
+                        QueryBuilders.prefixQuery(
+                            esFieldMapper.get(parameter), searchRequest.getQ().toLowerCase())),
+                    3)
+                .boost(100));
+      }
     } else {
       query.must(QueryBuilders.matchAllQuery());
     }
