@@ -24,13 +24,13 @@ public class ElasticsearchConfig {
 
   private String hosts;
 
-  private int connectionTimeOut = 120_000;
+  private int connectionTimeOut = 360_000;
 
-  private int socketTimeOut = 60_000;
+  private int socketTimeOut = 180_000;
 
-  private int connectionRequestTimeOut = 60_000;
+  private int connectionRequestTimeOut = 180_000;
 
-  private int maxRetryTimeOut = 60_000;
+  private int maxRetryTimeOut = 180_000;
 
   private String index;
 
