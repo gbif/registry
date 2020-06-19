@@ -67,10 +67,12 @@ public class DatasetBatchIndexerIT {
 
     configuration.setApiRootUrl(API_URL);
 
+    configuration.setIndexClb(false);
+
     DbConfiguration dbConfiguration = new DbConfiguration();
     dbConfiguration.serverName = "localhost:" + database.getEmbeddedPostgres().getPort();
     dbConfiguration.databaseName = "postgres";
-    dbConfiguration.user = "";
+    dbConfiguration.user = "postgres";
     dbConfiguration.password = "";
 
     configuration.setClbDb(dbConfiguration);

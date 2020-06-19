@@ -79,7 +79,10 @@ public class SpringContextBuilder {
     ctx.register(EsConfiguration.class);
     ctx.register(EsClient.class);
     ctx.register(DatasetJsonConverter.class);
-    ctx.register(ChecklistbankPersistenceServiceImpl.class);
+
+    if (configuration.isIndexClb()) {
+      ctx.register(ChecklistbankPersistenceServiceImpl.class);
+    }
 
     ctx.registerBean(
         "registryEsClientConfig",
