@@ -46,4 +46,6 @@ public class DatasetBatchIndexerConfiguration {
 
   private Map<String, String> searchSettings =
       new HashMap<>(IndexingConstants.DEFAULT_SEARCH_SETTINGS);
+
+  private boolean indexClb = true;
 }

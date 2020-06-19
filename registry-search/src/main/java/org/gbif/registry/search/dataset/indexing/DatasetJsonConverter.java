@@ -138,7 +138,7 @@ public class DatasetJsonConverter {
   @Autowired
   private DatasetJsonConverter(
       GbifWsClient gbifWsClient,
-      ChecklistbankPersistenceService checklistbankPersistenceService,
+      @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
       @Qualifier("occurrenceEsClient") RestHighLevelClient occurrenceEsClient,
       @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
@@ -172,7 +172,9 @@ public class DatasetJsonConverter {
     addDecades(dataset, datasetAsJson);
     addKeyword(dataset, datasetAsJson);
     addCountryCoverage(dataset, datasetAsJson);
-    // addTaxonKeys(dataset, datasetAsJson);
+    if (checklistbankPersistenceService != null) {
+      addTaxonKeys(dataset, datasetAsJson);
+    }
     addMachineTags(dataset, datasetAsJson);
     // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
