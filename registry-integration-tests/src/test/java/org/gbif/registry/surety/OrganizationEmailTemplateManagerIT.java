@@ -46,7 +46,6 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -114,7 +113,7 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
 
     assertNotNull(baseEmail, "We can generate the model from the template");
     // since there is no NodeManager we should not CC helpdesk (we send the email to helpdesk)
-    assertNull(baseEmail.getCcAddress());
+    assertTrue(baseEmail.getCcAddress().isEmpty());
 
     // now try with a NodeManager
     Person nodeManager = new Person();
