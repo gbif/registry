@@ -131,7 +131,7 @@ public class OrganizationEmailManager {
                   .map(
                       e ->
                           Collections.singletonList(organizationMailConfigProperties.getHelpdesk()))
-                  .orElse(null));
+                  .orElse(Collections.emptyList()));
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
     }
