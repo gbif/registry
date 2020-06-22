@@ -27,6 +27,8 @@ public class MailConfigurationProperties {
 
   private DevemailProperties devemail;
 
+  private String from;
+
   private List<String> cc = Collections.emptyList();
 
   private List<String> bcc = Collections.emptyList();
@@ -39,6 +41,14 @@ public class MailConfigurationProperties {
 
   public void setDevemail(DevemailProperties devemail) {
     this.devemail = devemail;
+  }
+
+  public String getFrom() {
+    return from;
+  }
+
+  public void setFrom(String from) {
+    this.from = from;
   }
 
   public List<String> getCc() {

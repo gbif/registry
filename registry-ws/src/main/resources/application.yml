@@ -16,6 +16,7 @@ occurrence:
 
 #Mail Properties
 mail:
+  from: @mail.from@
   cc: @mail.cc@
   bcc: @mail.bcc@
   enabled: true

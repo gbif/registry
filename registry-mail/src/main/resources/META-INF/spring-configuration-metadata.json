@@ -47,6 +47,11 @@
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties$DevemailProperties"
     },
     {
+      "name": "mail.from",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
+    },
+    {
       "name": "mail.cc",
       "type": "java.util.List",
       "sourceType": "org.gbif.registry.mail.config.MailConfigurationProperties"
