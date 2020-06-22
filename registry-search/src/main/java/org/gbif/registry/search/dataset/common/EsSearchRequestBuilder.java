@@ -164,7 +164,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
           QueryBuilders.matchQuery(
                   esFieldMapper.getAutocompleteField(parameter), searchRequest.getQ())
               .operator(Operator.AND));
-      if (searchRequest.getQ().length() > 1) {
+      if (searchRequest.getQ().length() > 2) {
         query.should(
             QueryBuilders.spanFirstQuery(
                     QueryBuilders.spanMultiTermQueryBuilder(
