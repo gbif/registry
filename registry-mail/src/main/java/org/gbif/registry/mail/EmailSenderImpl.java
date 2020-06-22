@@ -66,8 +66,7 @@ public class EmailSenderImpl implements EmailSender {
     try {
       // Send E-Mail
       final MimeMessage msg = mailSender.createMimeMessage();
-      // from will be set with the value from the {@link Session} object.
-      msg.setFrom();
+      msg.setFrom(mailConfigProperties.getFrom());
       msg.setRecipient(Message.RecipientType.TO, emailAddress);
       msg.setRecipients(
           Message.RecipientType.CC,
