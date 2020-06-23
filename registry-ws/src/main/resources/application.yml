@@ -66,7 +66,7 @@ pipelines:
 # file with all application keys & secrets
 appkeys:
   file: @appkeys.file@
-  whitelist: gbif.registry-ws-client-it,gbif.app.it
+  whitelist: gbif.registry-ws-client-it,gbif.app.it,gbif.portal
 
 # d7dddbf4-2cf0-4f39-9b2a-bb099caae36c is the GBIF Backbone Taxonomy
 # comma separated list of UUID
@@ -78,6 +78,7 @@ doi:
 
 elasticsearch:
   registry:
+    enabled: false
     hosts: @elasticsearch.registry.hosts@
     index: @elasticsearch.registry.index@
     connectionTimeOut: @elasticsearch.registry.connectionTimeOut@
@@ -85,6 +86,7 @@ elasticsearch:
     connectionRequestTimeOut: @elasticsearch.registry.connectionRequestTimeOut@
     maxRetryTimeOut: @elasticsearch.registry.maxRetryTimeOut@
   occurrence:
+    enabled: false
     hosts: @elasticsearch.occurrence.hosts@
     index: @elasticsearch.occurrence.index@
     connectionTimeOut: @elasticsearch.occurrence.connectionTimeOut@
