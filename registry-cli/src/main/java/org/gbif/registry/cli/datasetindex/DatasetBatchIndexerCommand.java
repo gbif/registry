@@ -18,8 +18,6 @@ package org.gbif.registry.cli.datasetindex;
 import org.gbif.cli.BaseCommand;
 import org.gbif.cli.Command;
 
-import java.util.Date;
-
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -57,12 +55,7 @@ public class DatasetBatchIndexerCommand extends BaseCommand {
   protected void doRun() {
     batchIndexer =
         SpringContextBuilder.applicationContext(config).getBean(DatasetBatchIndexer.class);
-    batchIndexer.run(
-        config.getDatasetEs().getIndex() != null
-            ? config.getDatasetEs().getIndex()
-            : "dataset_" + new Date().getTime(),
-        config.getIndexingSettings(),
-        config.getSearchSettings());
+    batchIndexer.run(config);
   }
 
   public DatasetBatchIndexer getDatasetBatchIndexer() {

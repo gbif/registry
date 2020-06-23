@@ -24,8 +24,8 @@ import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -77,14 +77,18 @@ public class DatasetBatchIndexer {
   }
 
   /** Pages over all datasets and adds them to ElasticSearch. */
-  public void run(
-      String indexName, Map<String, String> indexingSettings, Map<String, String> searchSettings) {
+  public void run(DatasetBatchIndexerConfiguration config) {
     log.info("Building a new Dataset index");
+
+    String indexName =
+        config.getDatasetEs().getIndex() != null
+            ? config.getDatasetEs().getIndex()
+            : "dataset_" + new Date().getTime();
     Stopwatch stopwatch = Stopwatch.createStarted();
     esClient.createIndex(
         indexName,
         IndexingConstants.DATASET_RECORD_TYPE,
-        indexingSettings,
+        config.getIndexingSettings(),
         IndexingConstants.MAPPING_FILE,
         IndexingConstants.SETTINGS_FILE);
 
@@ -106,8 +110,8 @@ public class DatasetBatchIndexer {
 
     logIndexingErrors(jobs);
     executor.shutdown();
-    esClient.updateSettings(indexName, searchSettings);
-    esClient.swapAlias(IndexingConstants.ALIAS, indexName);
+    esClient.updateSettings(indexName, config.getSearchSettings());
+    esClient.swapAlias(config.getDatasetEs().getAlias(), indexName);
     esClient.close();
     log.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
   }
