@@ -61,7 +61,9 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
         try {
           Array result = rs.getArray("keys");
           if (Objects.nonNull(result)) {
-            return (Integer[]) result.getArray();
+            Integer[] taxonKeys = (Integer[]) result.getArray();
+            log.info("Dataset [{}] has [{}] different taxon keys", datasetKey, taxonKeys.length);
+            return taxonKeys;
           } else {
             return new Integer[0];
           }

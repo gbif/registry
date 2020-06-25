@@ -74,7 +74,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put("subtype", DatasetSubtype.values().length)
           .build();
 
-  private static final String[] EXCLUDE_FIELDS = new String[] {"all", "taxonKey"};
+  private static final String[] EXCLUDE_FIELDS = new String[] {"all"};
 
   private static final String[] DATASET_TITLE_SUGGEST_FIELDS =
       new String[] {"title", "type", "subtype", "description"};
@@ -88,7 +88,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
 
   private static final FieldSortBuilder[] SORT =
       new FieldSortBuilder[] {
-        SortBuilders.fieldSort("dataScore").order(SortOrder.DESC),
+        SortBuilders.fieldSort("dataScore").order(SortOrder.ASC),
         SortBuilders.fieldSort("created").order(SortOrder.DESC)
       };
 
@@ -135,6 +135,28 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
   @Override
   public String[] highlightingFields() {
     return DATASET_HIGHLIGHT_FIELDS;
+  }
+
+  @Override
+  public String[] getMappedFields() {
+    return new String[] {
+      "title",
+      "type",
+      "subtype",
+      "description",
+      "publishingOrganizationKey",
+      "publishingOrganizationTitle",
+      "hostingOrganizationKey",
+      "hostingOrganizationTitle",
+      "publishingCountry",
+      "license",
+      "projectId",
+      "nameUsagesCount",
+      "occurrenceCount",
+      "keyword",
+      "decade",
+      "countryCoverage"
+    };
   }
 
   @Override

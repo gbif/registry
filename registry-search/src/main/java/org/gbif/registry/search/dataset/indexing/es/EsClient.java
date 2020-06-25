@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -102,7 +103,7 @@ public class EsClient implements Closeable {
   public void createIndex(
       String indexName,
       String recordType,
-      Map<String, String> settings,
+      Map<String, Object> settings,
       String mappingFile,
       String settingsFile) {
     try (final Reader mappingFileReader =
@@ -114,7 +115,14 @@ public class EsClient implements Closeable {
                 new BufferedInputStream(
                     getClass().getClassLoader().getResourceAsStream(settingsFile)))) {
       Settings.Builder settingsBuilder = Settings.builder();
-      settings.forEach(settingsBuilder::put);
+      settings.forEach(
+          (k, v) -> {
+            if (List.class.isAssignableFrom(v.getClass())) {
+              settingsBuilder.putList(k, (List<String>) v);
+            } else {
+              settingsBuilder.put(k, v.toString());
+            }
+          });
       settingsBuilder.loadFromSource(CharStreams.toString(settingsFileReader), XContentType.JSON);
 
       CreateIndexRequest createIndexRequest = new CreateIndexRequest();

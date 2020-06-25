@@ -253,7 +253,10 @@ public class DatasetJsonConverter {
     // Contribution of occurrence records
     dataset.put(
         "occurrencePercentage",
-        BigDecimal.valueOf(occurrencePercentage).setScale(scale, RoundingMode.HALF_UP).toString());
+        new Double(
+            BigDecimal.valueOf(occurrencePercentage)
+                .setScale(scale, RoundingMode.HALF_UP)
+                .doubleValue()));
     DatasetMetrics datasetMetrics = gbifWsClient.getDatasetSpeciesMetrics(datasetKey);
 
     if (Objects.nonNull(datasetMetrics)) {
@@ -270,14 +273,18 @@ public class DatasetJsonConverter {
     // Contribution of NameUsages
     dataset.put(
         "nameUsagesPercentage",
-        BigDecimal.valueOf(nameUsagesPercentage).setScale(scale, RoundingMode.HALF_UP).toString());
+        new Double(
+            BigDecimal.valueOf(nameUsagesPercentage)
+                .setScale(scale, RoundingMode.HALF_UP)
+                .doubleValue()));
 
     // How much a dataset contributes in terms of records to GBIF data
     dataset.put(
         "dataScore",
-        BigDecimal.valueOf(occurrencePercentage + nameUsagesPercentage)
-            .setScale(scale, RoundingMode.HALF_UP)
-            .toString());
+        new Double(
+            BigDecimal.valueOf((1 - occurrencePercentage) + (1 - nameUsagesPercentage))
+                .setScale(scale, RoundingMode.HALF_UP)
+                .doubleValue()));
   }
 
   private void enumTransforms(ObjectNode dataset) {

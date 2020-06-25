@@ -86,4 +86,14 @@ public interface EsFieldMapper<P extends SearchParameter> {
   default QueryBuilder fullTextQuery(String q) {
     return QueryBuilders.matchQuery("all", q);
   }
+
+  /**
+   * List of all ES fields mapped to API responses. Only these fields will be included a in _source
+   * field. An empty array means, all fields are mapped and must be included in the _source field.
+   *
+   * @return
+   */
+  default String[] getMappedFields() {
+    return new String[0];
+  }
 }

@@ -1,5 +1,10 @@
 {
   "dataset" : {
+    "_source": {
+      "excludes": [
+        "taxonKey"
+      ]
+    },
     "dynamic_templates": [
       {
         "nested_identifier": {
