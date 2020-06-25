@@ -41,7 +41,7 @@ public class DatasetBatchIndexerConfiguration {
 
   private Integer pageSize = 50;
 
-  private Map<String, String> indexingSettings =
+  private Map<String, Object> indexingSettings =
       new HashMap<>(IndexingConstants.DEFAULT_INDEXING_SETTINGS);
 
   private Map<String, String> searchSettings =

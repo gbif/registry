@@ -111,7 +111,7 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
 
     SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
     esRequest.source(searchSourceBuilder);
-    searchSourceBuilder.fetchSource(null, esFieldMapper.excludeFields());
+    searchSourceBuilder.fetchSource(esFieldMapper.getMappedFields(), esFieldMapper.excludeFields());
 
     // size and offset
     searchSourceBuilder.size(searchRequest.getLimit());
@@ -397,10 +397,11 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
     termsAggsBuilder.size(size);
 
     // aggs shard size
+    /*
     termsAggsBuilder.shardSize(
         Optional.ofNullable(esFieldMapper.getCardinality(esField))
             .orElse(DEFAULT_SHARD_SIZE.applyAsInt(size)));
-
+    */
     return termsAggsBuilder;
   }
 
