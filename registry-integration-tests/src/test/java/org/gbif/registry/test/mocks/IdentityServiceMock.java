@@ -18,6 +18,7 @@ package org.gbif.registry.test.mocks;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
@@ -94,6 +95,12 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public void delete(int key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void delete(
+      GbifUser user, String usernameBefore, String emailBefore, List<Download> downloads) {
     throw new UnsupportedOperationException();
   }
 

@@ -18,6 +18,7 @@ package org.gbif.registry.identity.service;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 
@@ -92,6 +93,16 @@ public interface IdentityService extends IdentityAccessService {
   UserModelMutationResult update(GbifUser user);
 
   void delete(int userKey);
+
+  /**
+   * Delete a user and remove all sensitive data.
+   *
+   * @param user user to delete
+   * @param usernameBefore username before deletion
+   * @param emailBefore email before deletion
+   * @param downloads user's downloads
+   */
+  void delete(GbifUser user, String usernameBefore, String emailBefore, List<Download> downloads);
 
   PagingResponse<GbifUser> list(@Nullable Pageable var1);
 

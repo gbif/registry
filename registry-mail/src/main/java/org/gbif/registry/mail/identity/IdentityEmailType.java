@@ -30,7 +30,10 @@ public enum IdentityEmailType implements EmailType {
   RESET_PASSWORD("resetPassword", "reset_password_en.ftl"),
 
   /** Welcome email with links and information. */
-  WELCOME("welcome", "welcome_en.ftl");
+  WELCOME("welcome", "welcome_en.ftl"),
+
+  /** Email 'User was deleted' */
+  DELETE_ACCOUNT("deleteAccount", "delete_account_en.ftl");
 
   private final String subjectKey;
   private final String ftlTemplate;

@@ -49,7 +49,9 @@ public interface UserMapper extends ChallengeCodeSupportMapper<Integer> {
    */
   void updateLastLogin(@Param("key") int key);
 
-  void delete(int key);
+  void deleteByKey(int key);
+
+  void delete(GbifUser user);
 
   void update(GbifUser user);
 

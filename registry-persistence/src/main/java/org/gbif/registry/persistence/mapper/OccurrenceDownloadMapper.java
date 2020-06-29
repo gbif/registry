@@ -51,6 +51,11 @@ public interface OccurrenceDownloadMapper {
 
   int countByStatus(@Param("status") Set<Download.Status> status);
 
+  void updateNotificationAddresses(
+      @Param("oldCreator") String oldCreator,
+      @Param("newCreator") String newCreator,
+      @Param("notificationAddressesAsString") String notificationAddressesAsString);
+
   List<Download> listByUser(
       @Param("creator") String creator,
       @Nullable @Param("page") Pageable page,

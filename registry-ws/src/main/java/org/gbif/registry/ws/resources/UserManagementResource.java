@@ -19,6 +19,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
@@ -28,6 +29,7 @@ import org.gbif.registry.domain.ws.UserUpdate;
 import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserUpdateRulesManager;
 import org.gbif.registry.ws.UpdatePasswordException;
@@ -36,6 +38,7 @@ import org.gbif.ws.security.AppkeysConfigurationProperties;
 import org.gbif.ws.server.filter.AppIdentityFilter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +51,7 @@ import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -106,12 +110,16 @@ public class UserManagementResource {
 
   private final IdentityService identityService;
   private final List<String> appKeyWhitelist;
+  private final OccurrenceDownloadMapper occurrenceDownloadMapper;
 
   /** {@link UserManagementResource} main constructor. */
   public UserManagementResource(
-      IdentityService identityService, AppkeysConfigurationProperties appkeysConfiguration) {
+      IdentityService identityService,
+      AppkeysConfigurationProperties appkeysConfiguration,
+      OccurrenceDownloadMapper occurrenceDownloadMapper) {
     this.identityService = identityService;
     appKeyWhitelist = appkeysConfiguration.getWhitelist();
+    this.occurrenceDownloadMapper = occurrenceDownloadMapper;
   }
 
   @GetMapping("roles")
@@ -243,7 +251,32 @@ public class UserManagementResource {
   @Secured(ADMIN_ROLE)
   @DeleteMapping("{userKey}")
   public ResponseEntity<Void> delete(@PathVariable int userKey) {
-    identityService.delete(userKey);
+    GbifUser user = identityService.getByKey(userKey);
+
+    if (user == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    String newUsername = RandomStringUtils.random(6);
+    String newEmail = "deleted_" + newUsername + "@deleted.invalid";
+    String oldUsername = user.getUserName();
+    String oldEmail = user.getEmail();
+
+    // erase user from downloads
+    occurrenceDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
+
+    // delete user and send an email
+    List<Download> downloads = occurrenceDownloadMapper.listByUser(user.getUserName(), null, null);
+    user.setFirstName(null);
+    user.setLastName(null);
+    user.setUserName(newUsername);
+    user.setEmail(newEmail);
+    user.setPasswordHash("DELETED_DELETED_DELETED_DELETED_");
+    user.setRoles(Collections.emptySet());
+    user.setSettings(null);
+    user.setSystemSettings(null);
+    identityService.delete(user, oldUsername, oldEmail, downloads);
+
     return ResponseEntity.noContent().build();
   }
 
