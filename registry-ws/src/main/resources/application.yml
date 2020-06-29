@@ -14,6 +14,10 @@ occurrence:
   ws:
     url: http://api.gbif-dev.org/v1/occurrence/
 
+occurrenceDownload:
+  portal:
+    url: https://www.gbif-dev.org/occurrence/download/
+
 #Mail Properties
 mail:
   from: @mail.from@

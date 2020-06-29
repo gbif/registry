@@ -1,6 +1,7 @@
 # application-test.yml
-url:
-  grscicollPortal: https://www.gbif-dev.org/grscicoll/
+occurrenceDownload:
+  portal:
+    url: https://www.gbif-dev.org/occurrence/download/
 
 # Mail Properties
 mail:
