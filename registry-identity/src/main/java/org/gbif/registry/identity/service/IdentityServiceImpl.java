@@ -19,6 +19,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.identity.model.ModelMutationError;
@@ -149,7 +150,14 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public void delete(int userKey) {
-    userMapper.delete(userKey);
+    userMapper.deleteByKey(userKey);
+  }
+
+  @Override
+  public void delete(
+      GbifUser user, String usernameBefore, String emailBefore, List<Download> downloads) {
+    userMapper.delete(user);
+    userSuretyDelegate.onDeleteUser(usernameBefore, emailBefore, downloads);
   }
 
   @Override

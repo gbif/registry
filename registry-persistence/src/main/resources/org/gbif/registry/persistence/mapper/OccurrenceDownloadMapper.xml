@@ -71,6 +71,14 @@
   </select>
 
   <!--
+  Only the status,size,doi and total_records can be updated
+ -->
+  <sql id="OCCURRENCE_DOWNLOAD_UPDATE_NOTIFICATION_ADDRESSES">
+    notification_addresses = #{notificationAddressesAsString,jdbcType=VARCHAR},
+    created_by = #{newCreator,jdbcType=VARCHAR}
+  </sql>
+
+  <!--
     Only the status,size,doi and total_records can be updated
    -->
   <sql id="OCCURRENCE_DOWNLOAD_UPDATE_STATUS">
@@ -126,6 +134,12 @@
     UPDATE occurrence_download
     SET <include refid="OCCURRENCE_DOWNLOAD_UPDATE_STATUS"/>
     WHERE key = #{key,jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateNotificationAddresses">
+    UPDATE occurrence_download
+    SET <include refid="OCCURRENCE_DOWNLOAD_UPDATE_NOTIFICATION_ADDRESSES"/>
+    WHERE created_by = #{oldCreator,jdbcType=VARCHAR}
   </update>
 
   <!-- Append safe ordering -->

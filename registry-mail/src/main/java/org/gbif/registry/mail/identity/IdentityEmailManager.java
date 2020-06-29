@@ -17,6 +17,8 @@ package org.gbif.registry.mail.identity;
 
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.occurrence.Download;
+import org.gbif.registry.domain.mail.AccountDeleteDataModel;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.domain.mail.BaseTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
@@ -27,10 +29,13 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import freemarker.template.TemplateException;
@@ -41,12 +46,32 @@ public class IdentityEmailManager {
 
   private final EmailTemplateProcessor emailTemplateProcessor;
   private final IdentitySuretyMailConfigurationProperties identityMailConfigProperties;
+  private final String portalUrl;
 
   public IdentityEmailManager(
       @Qualifier("identityEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessor,
-      IdentitySuretyMailConfigurationProperties identityMailConfigProperties) {
+      IdentitySuretyMailConfigurationProperties identityMailConfigProperties,
+      @Value("${portal.url}") String portalUrl) {
     this.emailTemplateProcessor = emailTemplateProcessor;
     this.identityMailConfigProperties = identityMailConfigProperties;
+    this.portalUrl = portalUrl;
+  }
+
+  public BaseEmailModel generateDeleteUserEmailModel(
+      String username, String email, List<Download> downloads) throws IOException {
+    try {
+      List<String> downloadUrls =
+          downloads.stream()
+              .map(p -> portalUrl + "ooccurrence/download/" + p.getKey())
+              .collect(Collectors.toList());
+      return emailTemplateProcessor.buildEmail(
+          IdentityEmailType.DELETE_ACCOUNT,
+          email,
+          new AccountDeleteDataModel(username, null, downloadUrls),
+          Locale.ENGLISH);
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
   }
 
   public BaseEmailModel generateNewUserEmailModel(GbifUser user, ChallengeCode challengeCode)

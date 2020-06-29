@@ -46,6 +46,18 @@
     deleted = #{deleted}
   </sql>
 
+  <sql id="USER_DELETE">
+    username = #{userName,jdbcType=VARCHAR},
+    first_name = #{firstName,jdbcType=VARCHAR},
+    last_name = #{lastName,jdbcType=VARCHAR},
+    email = #{email,jdbcType=VARCHAR},
+    password = #{passwordHash,jdbcType=VARCHAR},
+    roles = #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler},
+    settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
+    deleted = now()
+  </sql>
+
   <sql id="SIMPLE_SEARCH">
     WHERE
       u.last_name ILIKE '%' || #{query} || '%' OR
@@ -107,10 +119,16 @@
     WHERE username = #{userName,jdbcType=VARCHAR}
   </update>
 
-  <select id="delete" parameterType="java.lang.Integer">
+  <select id="deleteByKey" parameterType="java.lang.Integer">
     UPDATE public.user
     SET deleted = now()
     WHERE key = #{x} AND deleted IS NULL
+  </select>
+
+  <select id="delete" parameterType="org.gbif.api.model.common.GbifUser">
+    UPDATE public.user
+    SET <include refid="USER_DELETE"/>
+    WHERE key = #{key} AND deleted IS NULL
   </select>
 
   <select id="getChallengeCodeKey" resultType="Integer" parameterType="java.lang.Integer">

@@ -16,7 +16,9 @@
 package org.gbif.registry.identity.service;
 
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.occurrence.Download;
 
+import java.util.List;
 import java.util.UUID;
 
 /** Internal class used to coordinate actions between the MyBatis layer and the email manager. */
@@ -49,6 +51,15 @@ interface UserSuretyDelegate {
    * @return true if user was confirmed and false otherwise
    */
   boolean confirmUser(GbifUser user, UUID confirmationObject);
+
+  /**
+   * Handles the logic on user deletion.
+   *
+   * @param username username
+   * @param email user's email
+   * @param downloads user's downloads
+   */
+  void onDeleteUser(String username, String email, List<Download> downloads);
 
   /**
    * Handles the logic on password resetting (e.g. create challenge code, generate and send email).

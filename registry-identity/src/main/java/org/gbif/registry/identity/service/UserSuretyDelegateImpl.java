@@ -17,6 +17,7 @@ package org.gbif.registry.identity.service;
 
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.identity.IdentityEmailManager;
@@ -24,6 +25,7 @@ import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.surety.ChallengeCodeManager;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -58,6 +60,21 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   @Override
   public boolean isValidChallengeCode(Integer userKey, UUID challengeCode) {
     return challengeCodeManager.isValidChallengeCode(userKey, challengeCode);
+  }
+
+  @Override
+  public void onDeleteUser(String username, String email, List<Download> downloads) {
+    BaseEmailModel emailModel;
+    try {
+      emailModel = identityEmailManager.generateDeleteUserEmailModel(username, email, downloads);
+    } catch (IOException e) {
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Error while trying to generate email to delete user " + username,
+          e);
+      return;
+    }
+    emailSender.send(emailModel);
   }
 
   @Override
