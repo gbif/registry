@@ -247,7 +247,7 @@ public class UserManagementResource {
     return ResponseEntity.badRequest().build();
   }
 
-  /** For admin console only. Relax content-type to wildcard to allow angularjs. */
+  /** For admin console only. */
   @Secured(ADMIN_ROLE)
   @DeleteMapping("{userKey}")
   public ResponseEntity<Void> delete(@PathVariable int userKey) {
@@ -257,16 +257,18 @@ public class UserManagementResource {
       return ResponseEntity.notFound().build();
     }
 
-    String newUsername = RandomStringUtils.random(6);
+    String newUsername = RandomStringUtils.randomAlphanumeric(6);
     String newEmail = "deleted_" + newUsername + "@deleted.invalid";
     String oldUsername = user.getUserName();
     String oldEmail = user.getEmail();
+
+    // get all downloads before erase
+    List<Download> downloads = occurrenceDownloadMapper.listByUser(user.getUserName(), null, null);
 
     // erase user from downloads
     occurrenceDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
 
     // delete user and send an email
-    List<Download> downloads = occurrenceDownloadMapper.listByUser(user.getUserName(), null, null);
     user.setFirstName(null);
     user.setLastName(null);
     user.setUserName(newUsername);
