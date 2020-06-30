@@ -4,11 +4,11 @@
 
 <#if downloadUrls?size != 0>
     <p>Occurrence download metadata is not deleted.  You can still cite any of the downloads you created:</p>
-    <p>
+    <ul>
         <#list downloadUrls as downloadUrl>
-            <a href="${downloadUrl}">${downloadUrl}</a>
+            <li><a href="${downloadUrl}">${downloadUrl}</a></li>
         </#list>
-    </p>
+    </ul>
     <p>If you do cite a GBIF.org download, please write to communications@gbif.org with the DOI.</p>
 </#if>
 
