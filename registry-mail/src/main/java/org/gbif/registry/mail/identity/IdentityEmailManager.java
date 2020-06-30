@@ -46,15 +46,15 @@ public class IdentityEmailManager {
 
   private final EmailTemplateProcessor emailTemplateProcessor;
   private final IdentitySuretyMailConfigurationProperties identityMailConfigProperties;
-  private final String occurrenceDownloadPortalUrl;
+  private final String doiUrl;
 
   public IdentityEmailManager(
       @Qualifier("identityEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessor,
       IdentitySuretyMailConfigurationProperties identityMailConfigProperties,
-      @Value("${occurrenceDownload.portal.url}") String occurrenceDownloadPortalUrl) {
+      @Value("${doi.url}") String doiUrl) {
     this.emailTemplateProcessor = emailTemplateProcessor;
     this.identityMailConfigProperties = identityMailConfigProperties;
-    this.occurrenceDownloadPortalUrl = occurrenceDownloadPortalUrl;
+    this.doiUrl = doiUrl;
   }
 
   public BaseEmailModel generateDeleteUserEmailModel(
@@ -62,8 +62,13 @@ public class IdentityEmailManager {
     try {
       List<String> downloadUrls =
           downloads.stream()
-              .map(p -> occurrenceDownloadPortalUrl + p.getKey())
+              .filter(
+                  download ->
+                      download.getStatus() == Download.Status.SUCCEEDED
+                          || download.getStatus() == Download.Status.FILE_ERASED)
+              .map(download -> doiUrl + download.getDoi())
               .collect(Collectors.toList());
+
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.DELETE_ACCOUNT,
           email,

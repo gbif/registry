@@ -1,6 +1,11 @@
 {
   "properties": [
     {
+      "name": "doi.url",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.doi.config.DoiConfigurationProperties"
+    },
+    {
       "name": "doi.prefix",
       "type": "java.lang.String",
       "sourceType": "org.gbif.registry.doi.config.DoiConfigurationProperties"
