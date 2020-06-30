@@ -14,10 +14,6 @@ occurrence:
   ws:
     url: http://api.gbif-dev.org/v1/occurrence/
 
-occurrenceDownload:
-  portal:
-    url: https://www.gbif-dev.org/occurrence/download/
-
 #Mail Properties
 mail:
   from: @mail.from@
@@ -75,6 +71,7 @@ appkeys:
 # d7dddbf4-2cf0-4f39-9b2a-bb099caae36c is the GBIF Backbone Taxonomy
 # comma separated list of UUID
 doi:
+  url: https://doi.org/
   prefix: 10.21373
   datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
 

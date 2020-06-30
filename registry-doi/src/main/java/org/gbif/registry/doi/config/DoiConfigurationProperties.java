@@ -26,9 +26,19 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "doi")
 public class DoiConfigurationProperties {
 
+  private String url;
+
   private String prefix;
 
   private List<UUID> datasetParentExcludeList = Collections.emptyList();
+
+  public String getUrl() {
+    return url;
+  }
+
+  public void setUrl(String url) {
+    this.url = url;
+  }
 
   public String getPrefix() {
     return prefix;
