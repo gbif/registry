@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<eml:eml xmlns:eml="eml://ecoinformatics.org/eml-2.1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="eml://ecoinformatics.org/eml-2.1.1 http://rs.gbif.org/schema/eml-gbif-profile/1.1/eml.xsd"
+         system="http://gbif.org" scope="system" xml:lang="en">
+
+  <dataset>
+    <title>Example dataset to show registration</title>
+    <creator>
+      <organizationName>GBIF Secretariat</organizationName>
+      <address>
+	<deliveryPoint>Universitetsparken 15</deliveryPoint>
+	<city>København Ø</city>
+	<postalCode>2100</postalCode>
+	<country>Denmark</country>
+      </address>
+      <electronicMailAddress>helpdesk@gbif.org</electronicMailAddress>
+      <onlineUrl>https://github.com/gbif/registry/tree/master/registry-examples</onlineUrl>
+    </creator>
+    <metadataProvider>
+      <organizationName>GBIF</organizationName>
+      <onlineUrl>https://www.gbif.org/</onlineUrl>
+    </metadataProvider>
+    <pubDate>
+      2018-04-09
+    </pubDate>
+    <language>ENGLISH</language>
+    <abstract>
+      <para>This dataset was registered using the script available at https://github.com/gbif/registry/tree/master/registry-examples as an example of using the GBIF registry API to manage datasets in GBIF.org.</para>
+    </abstract>
+    <intellectualRights>
+      <para>
+	To the extent possible under law, the publisher has waived all rights to these data and has dedicated them to the
+	<ulink url="http://creativecommons.org/publicdomain/zero/1.0/legalcode">
+	  <citetitle>Public Domain (CC0 1.0)</citetitle>
+	</ulink>
+      . Users may copy, modify, distribute and use the work, including for commercial purposes, without restriction.</para>
+    </intellectualRights>
+    <distribution scope="document">
+      <online>
+	<url function="information">https://github.com/gbif/registry/tree/master/registry-examples</url>
+      </online>
+    </distribution>
+    <contact>
+      <individualName>
+	<givenName>Matthew</givenName>
+	<surName>Blissett</surName>
+      </individualName>
+      <positionName>editor</positionName>
+      <electronicMailAddress>helpdesk@gbif.org</electronicMailAddress>
+    </contact>
+  </dataset>
+
+  <additionalMetadata>
+    <metadata>
+      <gbif>
+	<dateStamp>2018-04-09T10:05:46Z</dateStamp>
+	<resourceLogoUrl>https://rs.gbif.org/style/logo.svg</resourceLogoUrl>
+      </gbif>
+    </metadata>
+  </additionalMetadata>
+
+</eml:eml>

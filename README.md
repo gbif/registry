@@ -63,6 +63,7 @@ For more information see [documentation](https://github.com/diffplug/spotless/tr
  - [**registry-doi**](registry-doi/README.md)
  - [**registry-domain**](registry-domain/README.md)
  - [**registry-events**](registry-events/README.md)
+ - [**registry-examples**](registry-examples/README.md)
  - [**registry-identity**](registry-identity/README.md)
  - [**registry-integration-tests**](registry-integration-tests/README.md)
  - [**registry-mail**](registry-mail/README.md)
