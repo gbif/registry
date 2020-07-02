@@ -51,7 +51,6 @@ import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
-import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
