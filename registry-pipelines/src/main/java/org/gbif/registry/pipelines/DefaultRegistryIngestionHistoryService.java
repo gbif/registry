@@ -80,7 +80,8 @@ public class DefaultRegistryIngestionHistoryService implements RegistryIngestion
 
     // get the corresponding pipeline processes for this dataset key and attempts
     Map<Integer, PipelineProcess> pipelineProcessByAttempt =
-        pipelineProcessMapper.getPipelineProcessesByDatasetAndAttempts(datasetKey, attempts)
+        pipelineProcessMapper
+            .getPipelineProcessesByDatasetAndAttempts(datasetKey, attempts)
             .stream()
             .collect(Collectors.toMap(PipelineProcess::getAttempt, p -> p));
 
