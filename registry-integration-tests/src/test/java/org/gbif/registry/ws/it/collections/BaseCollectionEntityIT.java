@@ -190,7 +190,11 @@ public abstract class BaseCollectionEntityIT<
   public void getMissingEntity(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
 
-    assertThrows(NotFoundException.class, () -> service.get(UUID.randomUUID()));
+    if (serviceType == ServiceType.CLIENT) {
+      assertNull(service.get(UUID.randomUUID()));
+    } else {
+      assertThrows(NotFoundException.class, () -> service.get(UUID.randomUUID()));
+    }
   }
 
   @ParameterizedTest
