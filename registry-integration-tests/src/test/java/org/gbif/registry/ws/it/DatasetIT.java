@@ -982,8 +982,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   @EnumSource(ServiceType.class)
   public void test404(ServiceType serviceType) {
     if (serviceType == ServiceType.CLIENT) {
-      assertThrows(
-          WebApplicationException.class, () -> getService(serviceType).get(UUID.randomUUID()));
+      assertNull(getService(serviceType).get(UUID.randomUUID()));
     } else {
       assertThrows(NotFoundException.class, () -> getService(serviceType).get(UUID.randomUUID()));
     }
