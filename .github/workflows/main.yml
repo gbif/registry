@@ -1,0 +1,29 @@
+name: Format
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Spotless
+        run: mvn -f directory-backend/pom.xml spotless:apply
+
+      # Java 11 is required for google-java-format v1.8
+      - name: Java 11 setup
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+
+      - name: Google Java Format
+        uses: axel-op/googlejavaformat-action@v3.1.0
+        with:
+          args: --replace --skip-javadoc-formatting --skip-sorting-imports --skip-reflowing-long-strings
+          version: 1.8
