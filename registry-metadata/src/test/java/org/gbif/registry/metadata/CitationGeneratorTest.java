@@ -57,7 +57,6 @@ public class CitationGeneratorTest {
 
   @Test
   public void testCompleteCitation() {
-
     Organization org = new Organization();
     org.setTitle("Cited Organization");
 
@@ -66,6 +65,25 @@ public class CitationGeneratorTest {
 
     assertEquals(
         "Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. "
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        CitationGenerator.generateCitation(dataset, org));
+  }
+
+  @Test
+  public void testCompleteCitationUserWithoutName() {
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+
+    Dataset dataset = getTestDatasetObject();
+    dataset.getContacts().add(createContact("John D.", "Doe", ContactType.ORIGINATOR));
+    dataset.getContacts().add(createContact("  ", "Smith", ContactType.ORIGINATOR));
+    dataset.getContacts().add(createContact("John", null, ContactType.ORIGINATOR));
+    dataset.getContacts().add(createContact(null, "Mendez", ContactType.ORIGINATOR));
+
+    assertEquals(
+        "Doe J D, Smith, Mendez (2009). Dataset to be cited. Version 2.1. Cited Organization. "
             + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
             + LocalDate.now(ZoneId.of("UTC")).toString()
             + ".",
