@@ -49,8 +49,7 @@ public class CitationGenerator {
   private static final EnumSet<ContactType> AUTHOR_CONTACT_TYPE =
       EnumSet.of(ContactType.ORIGINATOR, ContactType.METADATA_AUTHOR);
   private static final Predicate<Contact> IS_NAME_PROVIDED_FCT =
-      ctc ->
-          StringUtils.isNotBlank(ctc.getFirstName()) && StringUtils.isNotBlank(ctc.getLastName());
+      ctc -> StringUtils.isNotBlank(ctc.getLastName());
   private static final Predicate<Contact> IS_ELIGIBLE_CONTACT_TYPE =
       ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType());
 
