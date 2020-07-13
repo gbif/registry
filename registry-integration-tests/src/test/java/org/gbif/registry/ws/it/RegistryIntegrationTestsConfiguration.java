@@ -94,7 +94,6 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.directory",
       "org.gbif.registry.events",
       "org.gbif.registry.occurrence.client",
-      "org.gbif.registry.directory.client",
       "org.gbif.registry.oaipmh",
       "org.gbif.registry.service",
       "org.gbif.registry.test"

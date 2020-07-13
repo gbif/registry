@@ -95,15 +95,15 @@
       <artifactId>elasticsearch-rest-high-level-client</artifactId>
     </dependency>
     <dependency>
-      <groupId> org.elasticsearch.client</groupId>
+      <groupId>org.elasticsearch.client</groupId>
       <artifactId>elasticsearch-rest-client</artifactId>
     </dependency>
     <dependency>
-      <groupId> org.elasticsearch</groupId>
+      <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch-core</artifactId>
     </dependency>
     <dependency>
-      <groupId> org.elasticsearch</groupId>
+      <groupId>org.elasticsearch</groupId>
       <artifactId>elasticsearch</artifactId>
     </dependency>
     <dependency>
@@ -150,6 +150,11 @@
     </testResources>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
