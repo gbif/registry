@@ -94,10 +94,12 @@ public class EsManageServer implements InitializingBean, DisposableBean {
                 getEnvVariable(ENV_ES_INSTALLATION_DIR)
                     .map(v -> Paths.get(v).toFile())
                     .orElse(Files.createTempDirectory("registry-elasticsearch").toFile()))
-            .withIndex(indexName, IndexSettings.builder()
-                                    .withType(typeName, mappingFile.getInputStream())
-                                    .withSettings(settingsFile.getInputStream())
-                                    .build())
+            .withIndex(
+                indexName,
+                IndexSettings.builder()
+                    .withType(typeName, mappingFile.getInputStream())
+                    .withSettings(settingsFile.getInputStream())
+                    .build())
             .build();
 
     embeddedElastic.start();

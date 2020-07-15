@@ -60,7 +60,8 @@ public class DatasetBatchIndexerIT {
 
   private static String getEsVersion() throws IOException {
     Properties properties = new Properties();
-    properties.load(DatasetBatchIndexerIT.class.getClassLoader().getResourceAsStream("maven.properties"));
+    properties.load(
+        DatasetBatchIndexerIT.class.getClassLoader().getResourceAsStream("maven.properties"));
     return properties.getProperty("elasticsearch.version");
   }
 
@@ -82,20 +83,18 @@ public class DatasetBatchIndexerIT {
   }
 
   @BeforeAll
-  public static void init()throws Exception {
+  public static void init() throws Exception {
     embeddedElastic =
-    EmbeddedElastic.builder()
-      .withElasticVersion(getEsVersion())
-      .withEsJavaOpts("-Xms128m -Xmx512m")
-      .withSetting(
-        PopularProperties.HTTP_PORT, getAvailablePort())
-      .withSetting(
-        PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
-      .withSetting(PopularProperties.CLUSTER_NAME, "DatasetBatchIndexerIT")
-      .withStartTimeout(120, TimeUnit.SECONDS)
-      .withInstallationDirectory(Files.createTempDirectory("registry-elasticsearch").toFile())
-      .withIndex(OCCURRENCE_INDEX_NAME)
-      .build();
+        EmbeddedElastic.builder()
+            .withElasticVersion(getEsVersion())
+            .withEsJavaOpts("-Xms128m -Xmx512m")
+            .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
+            .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
+            .withSetting(PopularProperties.CLUSTER_NAME, "DatasetBatchIndexerIT")
+            .withStartTimeout(120, TimeUnit.SECONDS)
+            .withInstallationDirectory(Files.createTempDirectory("registry-elasticsearch").toFile())
+            .withIndex(OCCURRENCE_INDEX_NAME)
+            .build();
     embeddedElastic.start();
   }
 
@@ -140,7 +139,7 @@ public class DatasetBatchIndexerIT {
     embeddedElastic.refreshIndices();
 
     SearchResponse searchResponse =
-      buildRestClient()
+        buildRestClient()
             .search(
                 new SearchRequest()
                     .indices(IndexingConstants.ALIAS)
