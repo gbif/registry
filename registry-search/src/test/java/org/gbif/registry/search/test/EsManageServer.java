@@ -17,29 +17,21 @@ package org.gbif.registry.search.test;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 
-import com.google.common.base.Strings;
-
 import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
+import pl.allegro.tech.embeddedelasticsearch.IndexSettings;
 import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
@@ -73,13 +65,6 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     this.typeName = typeName;
   }
 
-  public EsManageServer() {
-    this.mappingFile = null;
-    this.settingsFile = null;
-    this.indexName = null;
-    this.typeName = null;
-  }
-
   @Override
   public void destroy() throws Exception {
     if (embeddedElastic != null) {
@@ -109,11 +94,14 @@ public class EsManageServer implements InitializingBean, DisposableBean {
                 getEnvVariable(ENV_ES_INSTALLATION_DIR)
                     .map(v -> Paths.get(v).toFile())
                     .orElse(Files.createTempDirectory("registry-elasticsearch").toFile()))
+            .withIndex(indexName, IndexSettings.builder()
+                                    .withType(typeName ,mappingFile.getInputStream())
+                                    .withSettings(settingsFile.getInputStream())
+                                    .build())
             .build();
 
     embeddedElastic.start();
     restClient = buildRestClient();
-    createIndex();
   }
 
   public RestHighLevelClient getRestClient() {
@@ -125,33 +113,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void refresh() {
-    if (!Strings.isNullOrEmpty(indexName)) {
-      refresh(indexName);
-    }
-  }
-
-  public void refresh(String indexName) {
-    try {
-      restClient.indices().refresh(new RefreshRequest().indices(indexName), RequestOptions.DEFAULT);
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
-  }
-
-  /** Utility method to create an index. */
-  private void createIndex() throws IOException {
-    if (!Strings.isNullOrEmpty(indexName)) {
-      String mapping = IOUtils.toString(mappingFile.getInputStream(), StandardCharsets.UTF_8);
-      String settings = IOUtils.toString(settingsFile.getInputStream(), StandardCharsets.UTF_8);
-      restClient
-          .indices()
-          .create(
-              new CreateIndexRequest()
-                  .index(indexName)
-                  .settings(settings, XContentType.JSON)
-                  .mapping(typeName, mapping, XContentType.JSON),
-              RequestOptions.DEFAULT);
-    }
+    embeddedElastic.refreshIndices();
   }
 
   private RestHighLevelClient buildRestClient() {
@@ -182,15 +144,6 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void reCreateIndex() {
-    if (!Strings.isNullOrEmpty(indexName)) {
-      try {
-        restClient
-            .indices()
-            .delete(new DeleteIndexRequest().indices(indexName), RequestOptions.DEFAULT);
-        createIndex();
-      } catch (Exception ex) {
-        throw new RuntimeException(ex);
-      }
-    }
+    embeddedElastic.recreateIndex(indexName);
   }
 }
