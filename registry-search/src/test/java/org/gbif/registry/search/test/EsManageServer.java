@@ -95,7 +95,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
                     .map(v -> Paths.get(v).toFile())
                     .orElse(Files.createTempDirectory("registry-elasticsearch").toFile()))
             .withIndex(indexName, IndexSettings.builder()
-                                    .withType(typeName ,mappingFile.getInputStream())
+                                    .withType(typeName, mappingFile.getInputStream())
                                     .withSettings(settingsFile.getInputStream())
                                     .build())
             .build();
