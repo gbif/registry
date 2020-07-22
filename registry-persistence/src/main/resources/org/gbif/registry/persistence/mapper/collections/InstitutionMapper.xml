@@ -293,10 +293,9 @@
     institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="findByIdentifier" resultMap="INSTITUTION_MAP">
-    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
-    FROM institution i
-    INNER JOIN institution_identifier ii ON ii.institution_key = i.key
+  <select id="findByIdentifier" resultType="java.util.UUID">
+    SELECT ii.institution_key
+    FROM institution_identifier ii
     INNER JOIN identifier i ON i."key" = ii.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>

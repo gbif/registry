@@ -310,10 +310,9 @@
     collection_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="findByIdentifier" resultMap="COLLECTION_MAP">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
-    FROM collection c
-    INNER JOIN collection_identifier ci ON ci.collection_key = c.key
+  <select id="findByIdentifier" resultType="java.util.UUID">
+    SELECT ci.collection_key
+    FROM collection_identifier ci
     INNER JOIN identifier i ON i."key" = ci.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
   </select>
