@@ -253,6 +253,7 @@ public class LookupResourceIT extends BaseItTest {
     LookupParams params = new LookupParams();
     params.setInstitutionCode(i1.getCode());
     params.setCollectionCode(c2.getCode());
+    params.setCollectionId(c2.getIdentifiers().get(0).getIdentifier());
 
     // When
     LookupResult result = lookupService.lookup(params);
@@ -267,10 +268,11 @@ public class LookupResourceIT extends BaseItTest {
 
     assertEquals(1, result.getCollectionMatches().size());
     Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchColl.getType());
+    assertEquals(Match.MatchType.EXACT, matchColl.getType());
     assertEquals(c2.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(2, matchColl.getRemarks().size());
+    assertEquals(3, matchColl.getRemarks().size());
     assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.CODE_MATCH));
+    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.IDENTIFIER_MATCH));
     assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.INST_COLL_MISMATCH));
   }
 }
