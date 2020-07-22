@@ -30,7 +30,8 @@ import org.springframework.stereotype.Repository;
 
 /** Mapper for {@link Collection} entities. */
 @Repository
-public interface CollectionMapper extends BaseMapper<Collection>, ContactableMapper {
+public interface CollectionMapper
+    extends BaseMapper<Collection>, ContactableMapper, LookupMapper<Collection> {
 
   List<Collection> list(
       @Nullable @Param("institutionKey") UUID institutionKey,
