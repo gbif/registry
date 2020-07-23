@@ -21,18 +21,24 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.model.collections.lookup.Match;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +46,15 @@ import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
+import static org.gbif.api.model.collections.lookup.Match.MATCH_TYPE_COMPARATOR;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark.ALTERNATIVE_CODE_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark.CODE_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.MatchRemark.COLLECTION_TAG;
+import static org.gbif.api.model.collections.lookup.Match.MatchRemark.COLLECTION_TO_INSTITUTION_TAG;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark.IDENTIFIER_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.MatchRemark.INSTITUTION_TAG;
+import static org.gbif.api.model.collections.lookup.Match.MatchRemark.INSTITUTION_TO_COLLECTION_TAG;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark.INST_COLL_MISMATCH;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark.NAME_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.MatchRemark.PROBABLY_ON_LOAN;
@@ -53,39 +64,46 @@ import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 @Service
 public class LookupServiceImpl implements LookupService {
 
+  public static final String PROCESSING_NAMESPACE = "processing.gbif.org";
+  public static final String INSTITUTION_TAG_NAME = "institutionCode";
+  public static final String COLLECTION_TAG_NAME = "collectionCode";
+  public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
+  public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
+
+  private static final List<String> GRSCICOLL_TAG_NAMES =
+      Arrays.asList(
+          INSTITUTION_TAG_NAME,
+          COLLECTION_TAG_NAME,
+          COLLECTION_TO_INSTITUTION_TAG_NAME,
+          INSTITUTION_TO_COLLECTION_TAG_NAME);
+
+  private static final Predicate<MachineTag> IS_GRSCICOLL_TAG =
+      mt ->
+          mt.getNamespace().equals(PROCESSING_NAMESPACE)
+              && GRSCICOLL_TAG_NAMES.contains(mt.getName());
+
   private final InstitutionMapper institutionMapper;
   private final CollectionMapper collectionMapper;
-
-  private static final Comparator<Match.MatchType> MATCH_TYPE_COMPARATOR =
-      (t1, t2) -> {
-        if (t1 == null) {
-          return t2 == null ? 0 : 1;
-        } else if (t2 == null) {
-          return -1;
-        }
-
-        if (t1 == t2) {
-          return 0;
-        }
-        if (t1 == Match.MatchType.EXACT) {
-          return -1;
-        }
-        if (t2 == Match.MatchType.EXACT) {
-          return 1;
-        }
-        return t1.compareTo(t2);
-      };
+  private final DatasetService datasetService;
 
   @Autowired
-  public LookupServiceImpl(InstitutionMapper institutionMapper, CollectionMapper collectionMapper) {
+  public LookupServiceImpl(
+      InstitutionMapper institutionMapper,
+      CollectionMapper collectionMapper,
+      DatasetService datasetService) {
     this.institutionMapper = institutionMapper;
     this.collectionMapper = collectionMapper;
+    this.datasetService = datasetService;
   }
 
   @Override
   public LookupResult lookup(LookupParams params) {
     if (params.getDatasetKey() != null) {
-      // TODO: check tags
+      // we check the machine tags and if we find matches we return the result already
+      Optional<LookupResult> result = matchWithMachineTags(params);
+      if (result.isPresent()) {
+        return result.get();
+      }
     }
 
     LookupResult result = new LookupResult();
@@ -104,6 +122,85 @@ public class LookupServiceImpl implements LookupService {
     result.setCollectionMatches(collectionMatches);
 
     return result;
+  }
+
+  private Optional<LookupResult> matchWithMachineTags(LookupParams params) {
+    Dataset dataset = datasetService.get(params.getDatasetKey());
+    if (dataset == null) {
+      return Optional.empty();
+    }
+
+    // map to keep track of the matches
+    Map<UUID, Match<Institution>> institutionMatches = new HashMap<>();
+    Map<UUID, Match<Collection>> collectionMatches = new HashMap<>();
+    dataset.getMachineTags().stream()
+        .filter(IS_GRSCICOLL_TAG)
+        .forEach(
+            mt -> {
+              if (INSTITUTION_TAG_NAME.equals(mt.getName())) {
+                addMachineTagMatch(
+                    mt,
+                    params.getInstitutionCode(),
+                    institutionMapper::get,
+                    institutionMatches,
+                    INSTITUTION_TAG);
+              } else if (COLLECTION_TAG_NAME.equals(mt.getName())) {
+                addMachineTagMatch(
+                    mt,
+                    params.getCollectionCode(),
+                    collectionMapper::get,
+                    collectionMatches,
+                    COLLECTION_TAG);
+              } else if (COLLECTION_TO_INSTITUTION_TAG_NAME.equals(mt.getName())) {
+                addMachineTagMatch(
+                    mt,
+                    params.getCollectionCode(),
+                    institutionMapper::get,
+                    institutionMatches,
+                    COLLECTION_TO_INSTITUTION_TAG);
+              } else if (INSTITUTION_TO_COLLECTION_TAG_NAME.equals(mt.getName())) {
+                addMachineTagMatch(
+                    mt,
+                    params.getInstitutionCode(),
+                    collectionMapper::get,
+                    collectionMatches,
+                    INSTITUTION_TO_COLLECTION_TAG);
+              }
+            });
+
+    if (institutionMatches.isEmpty() && collectionMatches.isEmpty()) {
+      return Optional.empty();
+    }
+
+    LookupResult result = new LookupResult();
+    institutionMatches.values().forEach(m -> result.getInstitutionMatches().add(m));
+    collectionMatches.values().forEach(m -> result.getCollectionMatches().add(m));
+
+    return Optional.of(result);
+  }
+
+  private <T extends CollectionEntity> void addMachineTagMatch(
+      MachineTag mt,
+      String param,
+      Function<UUID, T> entityRetriever,
+      Map<UUID, Match<T>> matchesMap,
+      MatchRemark remark) {
+    if (Strings.isNullOrEmpty(param)) {
+      return;
+    }
+
+    String[] val = mt.getValue().split(":");
+    if (val.length > 1) {
+      UUID mtKey = UUID.fromString(val[0]);
+      String mtCode = val[1];
+
+      if (!Strings.isNullOrEmpty(param) && mtCode.equals(param)) {
+        T entity = entityRetriever.apply(mtKey);
+        if (entity != null) {
+          matchesMap.computeIfAbsent(mtKey, k -> Match.machineTag(entity)).addRemark(remark);
+        }
+      }
+    }
   }
 
   private Map<UUID, Match<Institution>> matchInstitutions(LookupParams params) {
