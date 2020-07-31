@@ -17,7 +17,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
-import org.gbif.registry.service.collections.LookupServiceImpl;
+import org.gbif.registry.service.collections.lookup.DefaultLookupService;
 
 import java.util.UUID;
 
@@ -34,10 +34,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "grscicoll/lookup", produces = MediaType.APPLICATION_JSON_VALUE)
 public class LookupResource {
 
-  private final LookupServiceImpl lookupService;
+  private final DefaultLookupService lookupService;
 
   @Autowired
-  public LookupResource(LookupServiceImpl lookupService) {
+  public LookupResource(DefaultLookupService lookupService) {
     this.lookupService = lookupService;
   }
 

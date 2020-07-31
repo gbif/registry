@@ -242,6 +242,7 @@
     <if test="alternativeCode != null" >
       AND i.alternative_codes ?? trim(#{alternativeCode,jdbcType=VARCHAR})
     </if>
+    LIMIT 20
   </select>
 
   <!-- TAGS -->

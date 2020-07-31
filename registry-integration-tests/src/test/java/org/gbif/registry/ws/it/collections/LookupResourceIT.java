@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.it.collections;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.lookup.LookupParams;
@@ -32,6 +33,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
@@ -40,7 +42,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.service.collections.LookupService;
+import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -50,12 +52,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.gbif.registry.service.collections.LookupServiceImpl.COLLECTION_TAG_NAME;
-import static org.gbif.registry.service.collections.LookupServiceImpl.COLLECTION_TO_INSTITUTION_TAG_NAME;
-import static org.gbif.registry.service.collections.LookupServiceImpl.INSTITUTION_TAG_NAME;
-import static org.gbif.registry.service.collections.LookupServiceImpl.INSTITUTION_TO_COLLECTION_TAG_NAME;
-import static org.gbif.registry.service.collections.LookupServiceImpl.PROCESSING_NAMESPACE;
+import static org.gbif.registry.service.collections.lookup.matchers.BaseMatcher.COLLECTION_TAG_NAME;
+import static org.gbif.registry.service.collections.lookup.matchers.BaseMatcher.COLLECTION_TO_INSTITUTION_TAG_NAME;
+import static org.gbif.registry.service.collections.lookup.matchers.BaseMatcher.INSTITUTION_TAG_NAME;
+import static org.gbif.registry.service.collections.lookup.matchers.BaseMatcher.INSTITUTION_TO_COLLECTION_TAG_NAME;
+import static org.gbif.registry.service.collections.lookup.matchers.BaseMatcher.PROCESSING_NAMESPACE;
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link org.gbif.registry.ws.resources.collections.LookupResource}. */
@@ -104,6 +108,9 @@ public class LookupResourceIT extends BaseItTest {
   public void loadData() {
     i1.setCode("I1");
     i1.setName("Institution 1");
+    Address address1 = new Address();
+    address1.setCountry(Country.AFGHANISTAN);
+    i1.setAddress(address1);
     institutionService.create(i1);
 
     i2.setCode("I2");
@@ -136,19 +143,21 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchInst.getType());
-    assertEquals(i1.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
-    assertEquals(Match.MatchRemark.CODE_MATCH, matchInst.getRemarks().iterator().next());
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertEquals(Match.Reason.CODE_MATCH, institutionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchColl.getType());
-    assertEquals(c1.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(1, matchColl.getRemarks().size());
-    assertEquals(Match.MatchRemark.CODE_MATCH, matchColl.getRemarks().iterator().next());
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertEquals(Match.Reason.CODE_MATCH, collectionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
   }
 
   @Test
@@ -162,19 +171,21 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchInst.getType());
-    assertEquals(i1.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
-    assertEquals(Match.MatchRemark.NAME_MATCH, matchInst.getRemarks().iterator().next());
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertEquals(Match.Reason.NAME_MATCH, institutionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchColl.getType());
-    assertEquals(c1.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(1, matchColl.getRemarks().size());
-    assertEquals(Match.MatchRemark.NAME_MATCH, matchColl.getRemarks().iterator().next());
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertEquals(Match.Reason.NAME_MATCH, collectionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
   }
 
   @Test
@@ -188,19 +199,21 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchInst.getType());
-    assertEquals(i2.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
-    assertEquals(Match.MatchRemark.IDENTIFIER_MATCH, matchInst.getRemarks().iterator().next());
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertEquals(Match.Reason.IDENTIFIER_MATCH, institutionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchColl.getType());
-    assertEquals(c2.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(1, matchColl.getRemarks().size());
-    assertEquals(Match.MatchRemark.IDENTIFIER_MATCH, matchColl.getRemarks().iterator().next());
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertEquals(Match.Reason.IDENTIFIER_MATCH, collectionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
   }
 
   @Test
@@ -214,21 +227,23 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchInst.getType());
-    assertEquals(i2.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
     assertEquals(
-        Match.MatchRemark.ALTERNATIVE_CODE_MATCH, matchInst.getRemarks().iterator().next());
+        Match.Reason.ALTERNATIVE_CODE_MATCH, institutionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchColl.getType());
-    assertEquals(c2.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(1, matchColl.getRemarks().size());
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
     assertEquals(
-        Match.MatchRemark.ALTERNATIVE_CODE_MATCH, matchColl.getRemarks().iterator().next());
+        Match.Reason.ALTERNATIVE_CODE_MATCH, collectionMatch.getReasons().iterator().next());
+    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
   }
 
   @Test
@@ -244,21 +259,23 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.EXACT, matchInst.getType());
-    assertEquals(i2.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(2, matchInst.getRemarks().size());
-    assertTrue(matchInst.getRemarks().contains(Match.MatchRemark.CODE_MATCH));
-    assertTrue(matchInst.getRemarks().contains(Match.MatchRemark.IDENTIFIER_MATCH));
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.EXACT, matchColl.getType());
-    assertEquals(c2.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(2, matchColl.getRemarks().size());
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.CODE_MATCH));
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.IDENTIFIER_MATCH));
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(2, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
   @Test
@@ -268,20 +285,24 @@ public class LookupResourceIT extends BaseItTest {
     params.setOwnerInstitutionCode("foo");
     params.setInstitutionCode(i2.getCode());
     params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
+    params.setVerbose(true);
 
     // When
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    assertEquals(0, result.getCollectionMatches().size());
-    Match<Institution> match = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.EXACT, match.getType());
-    assertEquals(i2.getKey(), match.getEntityMatched().getKey());
-    assertEquals(3, match.getRemarks().size());
-    assertTrue(match.getRemarks().contains(Match.MatchRemark.CODE_MATCH));
-    assertTrue(match.getRemarks().contains(Match.MatchRemark.IDENTIFIER_MATCH));
-    assertTrue(match.getRemarks().contains(Match.MatchRemark.PROBABLY_ON_LOAN));
+    assertEquals(Match.MatchType.NONE, result.getInstitutionMatch().getMatchType());
+    assertEquals(Match.MatchType.NONE, result.getCollectionMatch().getMatchType());
+    assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
+
+    Match<Institution> alternative = result.getAlternativeMatches().getInstitutionMatches().get(0);
+    assertEquals(Match.MatchType.EXACT, alternative.getMatchType());
+    assertEquals(i2.getKey(), alternative.getEntityMatched().getKey());
+    assertEquals(3, alternative.getReasons().size());
+    assertTrue(alternative.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertTrue(alternative.getReasons().contains(Match.Reason.PROBABLY_ON_LOAN));
+    assertNull(alternative.getStatus());
   }
 
   @Test
@@ -296,21 +317,23 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.FUZZY, matchInst.getType());
-    assertEquals(i1.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
-    assertTrue(matchInst.getRemarks().contains(Match.MatchRemark.CODE_MATCH));
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.EXACT, matchColl.getType());
-    assertEquals(c2.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(3, matchColl.getRemarks().size());
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.CODE_MATCH));
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.IDENTIFIER_MATCH));
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.INST_COLL_MISMATCH));
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(3, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.INST_COLL_MISMATCH));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
   @Test
@@ -331,19 +354,21 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.MACHINE_TAG, matchInst.getType());
-    assertEquals(i1.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
-    assertTrue(matchInst.getRemarks().contains(Match.MatchRemark.INSTITUTION_TAG));
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.MACHINE_TAG, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.INSTITUTION_TAG));
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.MACHINE_TAG, matchColl.getType());
-    assertEquals(c1.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(1, matchColl.getRemarks().size());
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.COLLECTION_TAG));
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.MACHINE_TAG, collectionMatch.getMatchType());
+    assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.COLLECTION_TAG));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
   @Test
@@ -368,19 +393,52 @@ public class LookupResourceIT extends BaseItTest {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(1, result.getInstitutionMatches().size());
-    Match<Institution> matchInst = result.getInstitutionMatches().iterator().next();
-    assertEquals(Match.MatchType.MACHINE_TAG, matchInst.getType());
-    assertEquals(i2.getKey(), matchInst.getEntityMatched().getKey());
-    assertEquals(1, matchInst.getRemarks().size());
-    assertTrue(matchInst.getRemarks().contains(Match.MatchRemark.COLLECTION_TO_INSTITUTION_TAG));
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.MACHINE_TAG, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.COLLECTION_TO_INSTITUTION_TAG));
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
-    assertEquals(1, result.getCollectionMatches().size());
-    Match<Collection> matchColl = result.getCollectionMatches().iterator().next();
-    assertEquals(Match.MatchType.MACHINE_TAG, matchColl.getType());
-    assertEquals(c2.getKey(), matchColl.getEntityMatched().getKey());
-    assertEquals(1, matchColl.getRemarks().size());
-    assertTrue(matchColl.getRemarks().contains(Match.MatchRemark.INSTITUTION_TO_COLLECTION_TAG));
+    assertNotNull(result.getCollectionMatch());
+    Match<Collection> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.MACHINE_TAG, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.INSTITUTION_TO_COLLECTION_TAG));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+  }
+
+  @Test
+  public void countryMatchTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i1.getCode());
+    params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
+    params.setCountry(Country.AFGHANISTAN);
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.COUNTRY_MATCH));
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+
+    assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
+    Match<Institution> alternative = result.getAlternativeMatches().getInstitutionMatches().get(0);
+    assertEquals(Match.MatchType.FUZZY, alternative.getMatchType());
+    assertEquals(i2.getKey(), alternative.getEntityMatched().getKey());
+    assertEquals(1, alternative.getReasons().size());
+    assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertNull(alternative.getStatus());
   }
 
   private Dataset createDatasetWithMachineTags(MachineTag... machineTags) {
