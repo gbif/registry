@@ -100,6 +100,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
                     .withType(typeName, mappingFile.getInputStream())
                     .withSettings(settingsFile.getInputStream())
                     .build())
+            .withCleanInstallationDirectoryOnStop(true)
             .build();
 
     embeddedElastic.start();
