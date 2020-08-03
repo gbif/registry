@@ -45,6 +45,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Strings;
 
 import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;
@@ -63,6 +66,8 @@ public abstract class BaseMatcher<
   public static final String COLLECTION_TAG_NAME = "collectionCode";
   public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
   public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
+
+  private static final Logger LOG = LoggerFactory.getLogger(BaseMatcher.class);
 
   private final DatasetService datasetService;
 
@@ -111,7 +116,7 @@ public abstract class BaseMatcher<
       return Optional.empty();
     }
 
-    Dataset dataset = datasetService.get(datasetKey);
+    Dataset dataset = getDataset(datasetKey);
     if (dataset == null) {
       return Optional.empty();
     }
@@ -141,6 +146,16 @@ public abstract class BaseMatcher<
           matchesMap.computeIfAbsent(mtKey, k -> Match.machineTag(entity)).addReason(reason);
         }
       }
+    }
+  }
+
+  private Dataset getDataset(UUID datasetKey) {
+    try {
+      // done in a try-catch since we may get non-existing dataset keys
+      return datasetService.get(datasetKey);
+    } catch (Exception ex) {
+      LOG.warn("Couldn't find dataset for key {}", datasetKey);
+      return null;
     }
   }
 
