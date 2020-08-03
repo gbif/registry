@@ -42,13 +42,10 @@ public class RegistryWsClientFactory {
   /** @return read-only DatasetService */
   public static synchronized DatasetService datasetServiceReadOnly() {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder
-        .withUrl(REGISTRY_API_BASE_URL)
-        .withConnectionPoolConfig(CONNECTION_POOL_CONFIG);
+    clientBuilder.withUrl(REGISTRY_API_BASE_URL).withConnectionPoolConfig(CONNECTION_POOL_CONFIG);
 
     if (datasetServiceReadOnly == null) {
-      datasetServiceReadOnly =
-          clientBuilder.build(DatasetClient.class);
+      datasetServiceReadOnly = clientBuilder.build(DatasetClient.class);
     }
     return datasetServiceReadOnly;
   }
@@ -76,8 +73,7 @@ public class RegistryWsClientFactory {
         .withCredentials(USERNAME, PASSWORD);
 
     if (installationService == null) {
-      installationService =
-          clientBuilder.build(InstallationClient.class);
+      installationService = clientBuilder.build(InstallationClient.class);
     }
     return installationService;
   }

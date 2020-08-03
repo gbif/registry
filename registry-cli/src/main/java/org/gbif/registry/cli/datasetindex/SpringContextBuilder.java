@@ -179,7 +179,9 @@ public class SpringContextBuilder {
     public ClientBuilder clientBuilder(DatasetBatchIndexerConfiguration configuration) {
       ClientBuilder clientBuilder = new ClientBuilder();
       clientBuilder.withUrl(
-          configuration.getRegistryWsUrl() != null ? configuration.getRegistryWsUrl() : configuration.getApiRootUrl());
+          configuration.getRegistryWsUrl() != null
+              ? configuration.getRegistryWsUrl()
+              : configuration.getApiRootUrl());
       return clientBuilder;
     }
 
