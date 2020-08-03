@@ -43,7 +43,7 @@ public class DownloadTestDataProvider {
     download.setTotalRecords(10);
     PredicateDownloadRequest downloadRequest = new PredicateDownloadRequest();
     downloadRequest.setCreator("dev@gbif.org");
-    downloadRequest.setPredicate(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "3"));
+    downloadRequest.setPredicate(new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "3", false));
     downloadRequest.setFormat(DownloadFormat.DWCA);
     download.setRequest(downloadRequest);
 
