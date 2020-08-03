@@ -18,8 +18,9 @@ Example:
 ```java
 // set this to the web service URL.  It might be localhost:8080 for local development
 String wsUrl = "http://api.gbif.org/v1/";
-ClientFactory clientFactory = new ClientFactory(wsUrl);
-DatasetServcie datasetClient = clientFactory.newInstance(DatasetClient.class);
+ClientBuilder clientBuilder = new ClientBuilder();
+clientBuilder.withUrl(wsUrl);
+DatasetServcie datasetClient = clientBuilder.build(DatasetClient.class);
 ```
 
 ## Read-write mode
@@ -34,8 +35,11 @@ There are two ways: use simple user basic authentication or GBIF app authenticat
 String wsUrl = "http://api.gbif.org/v1/";
 String password = "password";
 String username = "username";
-ClientFactory clientFactory = new ClientFactory(username, password, wsUrl);
-DatasetServcie datasetClient = clientFactory.newInstance(DatasetClient.class);
+ClientBuilder clientBuilder = new ClientBuilder();
+clientBuilder
+  .withUrl(wsUrl)
+  .withCredentials(username, password);
+DatasetServcie datasetClient = clientBuilder.build(DatasetClient.class);
 ```
 
 Make sure you are using right properties `wsUrl`, `username` and `passowrd`.
@@ -48,8 +52,11 @@ String wsUrl = "http://api.gbif.org/v1/";
 String appKey = "app.key";
 String secretKey = "secret-key";
 String username = "username";
-ClientFactory clientFactory = new ClientFactory(username, wsUrl, appKey, secretKey);
-DatasetServcie datasetClient = clientFactory.newInstance(DatasetClient.class);
+ClientBuilder clientBuilder = new ClientBuilder();
+clientBuilder
+  .withUrl(wsUrl)
+  .withAppKeyCredentials(username, appKey, secretKey);
+DatasetServcie datasetClient = clientBuilder.build(DatasetClient.class);
 ```
 
 Make sure you are using right properties `wsUrl`, `username`, `appKey` and `secretKey`.

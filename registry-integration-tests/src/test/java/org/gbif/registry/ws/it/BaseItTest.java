@@ -19,7 +19,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.DatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
-import org.gbif.ws.client.ClientFactory;
+import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -151,9 +151,10 @@ public class BaseItTest {
 
   protected <T> T prepareClient(
       String username, String appKey, int localServerPort, KeyStore keyStore, Class<T> cls) {
-    return new ClientFactory(
-            username, "http://localhost:" + localServerPort, appKey, keyStore.getPrivateKey(appKey))
-        .newInstance(cls);
+    ClientBuilder clientBuilder = new ClientBuilder();
+    return clientBuilder.withUrl("http://localhost:" + localServerPort)
+        .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
+        .build(cls);
   }
 
   protected <T> T getService(ServiceType param, T resource, T client) {

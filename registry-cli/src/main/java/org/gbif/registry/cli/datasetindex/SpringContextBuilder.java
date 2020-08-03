@@ -28,9 +28,7 @@ import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.OrganizationClient;
-import org.gbif.ws.client.ClientFactory;
-
-import java.util.Optional;
+import org.gbif.ws.client.ClientBuilder;
 
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -178,25 +176,26 @@ public class SpringContextBuilder {
     }
 
     @Bean
-    public ClientFactory clientFactory(DatasetBatchIndexerConfiguration configuration) {
-      return new ClientFactory(
-          Optional.ofNullable(configuration.getRegistryWsUrl())
-              .orElse(configuration.getApiRootUrl()));
+    public ClientBuilder clientBuilder(DatasetBatchIndexerConfiguration configuration) {
+      ClientBuilder clientBuilder = new ClientBuilder();
+      clientBuilder.withUrl(
+          configuration.getRegistryWsUrl() != null ? configuration.getRegistryWsUrl() : configuration.getApiRootUrl());
+      return clientBuilder;
     }
 
     @Bean
-    public InstallationService installationService(ClientFactory clientFactory) {
-      return clientFactory.newInstance(InstallationClient.class);
+    public InstallationService installationService(ClientBuilder clientBuilder) {
+      return clientBuilder.build(InstallationClient.class);
     }
 
     @Bean
-    public OrganizationService organizationService(ClientFactory clientFactory) {
-      return clientFactory.newInstance(OrganizationClient.class);
+    public OrganizationService organizationService(ClientBuilder clientBuilder) {
+      return clientBuilder.build(OrganizationClient.class);
     }
 
     @Bean
-    public DatasetService datasetService(ClientFactory clientFactory) {
-      return clientFactory.newInstance(DatasetClient.class);
+    public DatasetService datasetService(ClientBuilder clientBuilder) {
+      return clientBuilder.build(DatasetClient.class);
     }
   }
 }
