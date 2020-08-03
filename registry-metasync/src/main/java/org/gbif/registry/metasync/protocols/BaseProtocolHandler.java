@@ -25,7 +25,6 @@ import org.gbif.registry.metasync.util.converter.DateTimeConverter;
 import org.gbif.registry.metasync.util.converter.LanguageConverter;
 import org.gbif.registry.metasync.util.converter.PeriodConverter;
 import org.gbif.registry.metasync.util.converter.UriConverter;
-import org.gbif.ws.client.ClientFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -110,7 +109,6 @@ public abstract class BaseProtocolHandler implements MetadataProtocolHandler {
     HttpResponse response;
     try {
       // Not using a Response Handler here because that can't throw arbitrary Exceptions
-      ClientFactory clientFactory = new ClientFactory(uri.toString());
       response = httpClient.execute(get);
     } catch (ClientProtocolException e) {
       throw new MetadataException(e, ErrorCode.HTTP_ERROR);

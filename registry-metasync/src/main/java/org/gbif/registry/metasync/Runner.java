@@ -27,7 +27,7 @@ import org.gbif.registry.metasync.resulthandler.RegistryUpdater;
 import org.gbif.registry.metasync.util.HttpClientFactory;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
-import org.gbif.ws.client.ClientFactory;
+import org.gbif.ws.client.ClientBuilder;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -46,9 +46,12 @@ public final class Runner {
 
     HttpClientFactory clientFactory = new HttpClientFactory(10, TimeUnit.SECONDS);
 
-    ClientFactory wsClientFactory =
-        new ClientFactory("username", "http://localhost:8080", "username", "password");
-    InstallationService installationService = wsClientFactory.newInstance(InstallationClient.class);
+    ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder
+        .withUrl("http://localhost:8080")
+        .withAppKeyCredentials("username", "username", "password");
+
+    InstallationService installationService = clientBuilder.build(InstallationClient.class);
 
     MetadataSynchroniserImpl synchroniser = new MetadataSynchroniserImpl(installationService);
 
@@ -59,7 +62,7 @@ public final class Runner {
     synchroniser.registerProtocolHandler(
         new BiocaseMetadataSynchroniser(clientFactory.provideHttpClient()));
 
-    DatasetService datasetService = wsClientFactory.newInstance(DatasetClient.class);
+    DatasetService datasetService = clientBuilder.build(DatasetClient.class);
 
     List<SyncResult> syncResults = synchroniser.synchroniseAllInstallations(100);
     LOG.info("Done syncing. Processing results");

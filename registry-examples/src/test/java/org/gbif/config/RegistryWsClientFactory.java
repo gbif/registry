@@ -19,12 +19,12 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
-import org.gbif.ws.client.ClientFactory;
+import org.gbif.ws.client.ClientBuilder;
 
 public class RegistryWsClientFactory {
 
-  private static final ClientFactory.ConnectionPoolConfig CONNECTION_POOL_CONFIG =
-      ClientFactory.ConnectionPoolConfig.builder()
+  private static final ClientBuilder.ConnectionPoolConfig CONNECTION_POOL_CONFIG =
+      ClientBuilder.ConnectionPoolConfig.builder()
           .timeout(10000)
           .maxConnections(100)
           .maxPerRoute(100)
@@ -41,29 +41,43 @@ public class RegistryWsClientFactory {
 
   /** @return read-only DatasetService */
   public static synchronized DatasetService datasetServiceReadOnly() {
-    ClientFactory clientFactory = new ClientFactory(REGISTRY_API_BASE_URL);
+    ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder
+        .withUrl(REGISTRY_API_BASE_URL)
+        .withConnectionPoolConfig(CONNECTION_POOL_CONFIG);
+
     if (datasetServiceReadOnly == null) {
       datasetServiceReadOnly =
-          clientFactory.newInstance(DatasetClient.class, CONNECTION_POOL_CONFIG);
+          clientBuilder.build(DatasetClient.class);
     }
     return datasetServiceReadOnly;
   }
 
   /** @return DatasetService with authentication */
   public static synchronized DatasetService datasetService() {
-    ClientFactory clientFactory = new ClientFactory(USERNAME, PASSWORD, REGISTRY_API_BASE_URL);
+    ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder
+        .withUrl(REGISTRY_API_BASE_URL)
+        .withConnectionPoolConfig(CONNECTION_POOL_CONFIG)
+        .withCredentials(USERNAME, PASSWORD);
+
     if (datasetService == null) {
-      datasetService = clientFactory.newInstance(DatasetClient.class, CONNECTION_POOL_CONFIG);
+      datasetService = clientBuilder.build(DatasetClient.class);
     }
     return datasetService;
   }
 
   /** @return InstallationService with authentication */
   public static synchronized InstallationService installationService() {
-    ClientFactory clientFactory = new ClientFactory(USERNAME, PASSWORD, REGISTRY_API_BASE_URL);
+    ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder
+        .withUrl(REGISTRY_API_BASE_URL)
+        .withConnectionPoolConfig(CONNECTION_POOL_CONFIG)
+        .withCredentials(USERNAME, PASSWORD);
+
     if (installationService == null) {
       installationService =
-          clientFactory.newInstance(InstallationClient.class, CONNECTION_POOL_CONFIG);
+          clientBuilder.build(InstallationClient.class);
     }
     return installationService;
   }

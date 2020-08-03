@@ -16,7 +16,7 @@
 package org.gbif.registry.occurrence.client.config;
 
 import org.gbif.registry.occurrence.client.OccurrenceMetricsClient;
-import org.gbif.ws.client.ClientFactory;
+import org.gbif.ws.client.ClientBuilder;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,14 +25,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OccurrenceClientConfiguration {
 
-  private ClientFactory clientFactory;
+  private final ClientBuilder clientBuilder;
 
   public OccurrenceClientConfiguration(@Value("${api.root.url}") String url) {
-    this.clientFactory = new ClientFactory(url);
+    this.clientBuilder = new ClientBuilder();
+    clientBuilder.withUrl(url);
   }
 
   @Bean
   public OccurrenceMetricsClient occurrenceMetricsClient() {
-    return clientFactory.newInstance(OccurrenceMetricsClient.class);
+    return clientBuilder.build(OccurrenceMetricsClient.class);
   }
 }
