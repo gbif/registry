@@ -51,7 +51,7 @@ public class LookupResource {
           String ownerInstitutionCode,
       @Nullable @RequestParam(value = "collectionCode", required = false) String collectionCode,
       @Nullable @RequestParam(value = "collectionId", required = false) String collectionId,
-      @Nullable @RequestParam(value = "country", required = false) Country country,
+      @Nullable Country country,
       @Nullable @RequestParam(value = "verbose", required = false) boolean verbose) {
 
     LookupParams params = new LookupParams();
