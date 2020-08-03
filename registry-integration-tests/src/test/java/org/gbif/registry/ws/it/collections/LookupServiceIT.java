@@ -62,8 +62,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Tests the {@link org.gbif.registry.ws.resources.collections.LookupResource}. */
-public class LookupResourceIT extends BaseItTest {
+/** Tests the {@link LookupService}. */
+public class LookupServiceIT extends BaseItTest {
 
   private static final String INST_TAG_CODE = "inst";
   private static final String COLL_TAG_CODE = "coll";
@@ -84,7 +84,7 @@ public class LookupResourceIT extends BaseItTest {
   private final InstallationService installationService;
 
   @Autowired
-  public LookupResourceIT(
+  public LookupServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       LookupService lookupService,
