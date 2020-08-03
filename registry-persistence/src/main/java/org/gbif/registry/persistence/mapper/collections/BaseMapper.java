@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
@@ -28,7 +29,7 @@ import java.util.UUID;
 import org.apache.ibatis.annotations.Param;
 
 /** Generic mapper for CRUD operations. Initially implemented for collections. */
-public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable>
+public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable & Commentable>
     extends TaggableMapper, IdentifiableMapper, MachineTaggableMapper<T>, CommentableMapper {
 
   T get(@Param("key") UUID key);

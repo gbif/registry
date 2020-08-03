@@ -144,7 +144,7 @@
   </select>
 
   <!-- Basic paging search functionality -->
-  <select id="list" resultType="SciCollection"  resultMap="COLLECTION_MAP" parameterType="Pageable">
+  <select id="list" resultType="SciCollection" resultMap="COLLECTION_MAP" parameterType="Pageable">
     SELECT <include refid="COLLECTION_READ_FIELDS"/>
     FROM collection c
     <if test="query != null" >
@@ -238,6 +238,29 @@
     WHERE
     collection_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
   </delete>
+
+  <select id="lookup" resultMap="COLLECTION_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    <if test="identifier != null" >
+      INNER JOIN collection_identifier ci ON ci.collection_key = c.key
+      INNER JOIN identifier id ON ci.identifier_key = id."key"
+    </if>
+    WHERE c.deleted is null
+    <if test="code != null" >
+      AND trim(c.code) = trim(#{code,jdbcType=VARCHAR})
+    </if>
+    <if test="identifier != null" >
+      AND regexp_replace(trim(id.identifier), 'http://', '') = regexp_replace(trim(#{identifier,jdbcType=VARCHAR}), 'http://', '')
+    </if>
+    <if test="name != null" >
+      AND regexp_replace(quote_literal(unaccent(lower(trim(c.name)))),'\s+','','g') = regexp_replace(quote_literal(unaccent(lower(trim(#{name,jdbcType=VARCHAR})))),'\s+','','g')
+    </if>
+    <if test="alternativeCode != null" >
+      AND c.alternative_codes ?? trim(#{alternativeCode,jdbcType=VARCHAR})
+    </if>
+    LIMIT 20
+  </select>
 
   <!-- TAGS -->
   <insert id="addTag">
