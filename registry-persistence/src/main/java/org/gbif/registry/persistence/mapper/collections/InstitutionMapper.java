@@ -30,7 +30,8 @@ import org.springframework.stereotype.Repository;
 
 /** Mapper for {@link Institution} entities. */
 @Repository
-public interface InstitutionMapper extends BaseMapper<Institution>, ContactableMapper {
+public interface InstitutionMapper
+    extends BaseMapper<Institution>, ContactableMapper, LookupMapper<Institution> {
 
   List<Institution> list(
       @Nullable @Param("query") String query,
