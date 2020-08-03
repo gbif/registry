@@ -17,6 +17,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.service.collections.lookup.DefaultLookupService;
 
 import java.util.UUID;
@@ -49,7 +50,9 @@ public class LookupResource {
       @Nullable @RequestParam(value = "ownerInstitutionCode", required = false)
           String ownerInstitutionCode,
       @Nullable @RequestParam(value = "collectionCode", required = false) String collectionCode,
-      @Nullable @RequestParam(value = "collectionId", required = false) String collectionId) {
+      @Nullable @RequestParam(value = "collectionId", required = false) String collectionId,
+      @Nullable @RequestParam(value = "country", required = false) Country country,
+      @Nullable @RequestParam(value = "verbose", required = false) boolean verbose) {
 
     LookupParams params = new LookupParams();
     params.setDatasetKey(datasetKey);
@@ -58,6 +61,8 @@ public class LookupResource {
     params.setOwnerInstitutionCode(ownerInstitutionCode);
     params.setCollectionCode(collectionCode);
     params.setCollectionId(collectionId);
+    params.setCountry(country);
+    params.setVerbose(verbose);
 
     return lookupService.lookup(params);
   }
