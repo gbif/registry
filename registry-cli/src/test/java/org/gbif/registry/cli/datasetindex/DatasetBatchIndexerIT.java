@@ -93,6 +93,7 @@ public class DatasetBatchIndexerIT {
             .withSetting(PopularProperties.CLUSTER_NAME, "DatasetBatchIndexerIT")
             .withStartTimeout(120, TimeUnit.SECONDS)
             .withInstallationDirectory(Files.createTempDirectory("registry-elasticsearch").toFile())
+            .withCleanInstallationDirectoryOnStop(true)
             .withIndex(OCCURRENCE_INDEX_NAME)
             .build();
     embeddedElastic.start();
