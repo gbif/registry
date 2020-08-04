@@ -160,7 +160,12 @@ public abstract class BaseMatcher<
   }
 
   protected Match<T> chooseAccepted(
-      Set<Match<T>> machineTagMatches, Set<Match<T>> exactMatches, Set<Match<T>> fuzzyMatches) {
+      Set<Match<T>> machineTagMatches,
+      Set<Match<T>> exactMatches,
+      Set<Match<T>> fuzzyMatches,
+      Predicate<Match<T>> exactExcludeFilter,
+      Predicate<Match<T>> fuzzyExcludeFilter,
+      Match.Status filterStatus) {
     if (!machineTagMatches.isEmpty()) {
       if (machineTagMatches.size() == 1) {
         Match<T> acceptedMatch = machineTagMatches.iterator().next();
@@ -169,9 +174,14 @@ public abstract class BaseMatcher<
       }
       return Match.none(Match.Status.AMBIGUOUS_MACHINE_TAGS);
     } else if (!exactMatches.isEmpty()) {
+      Set<Match<T>> filteredMatched = filterMatches(exactMatches, exactExcludeFilter);
+      if (filteredMatched.isEmpty()) {
+        return Match.none(filterStatus);
+      }
+
       // if there is no unique match we try with the country if provided
       Optional<Match<T>> uniqueMatch =
-          findUniqueMatch(exactMatches, Collections.singletonList(isCountryMatch()));
+          findUniqueMatch(filteredMatched, Collections.singletonList(isCountryMatch()));
       if (uniqueMatch.isPresent()) {
         Match<T> acceptedMatch = uniqueMatch.get();
         acceptedMatch.setStatus(Match.Status.ACCEPTED);
@@ -179,9 +189,15 @@ public abstract class BaseMatcher<
       }
       return Match.none(Match.Status.AMBIGUOUS);
     } else if (!fuzzyMatches.isEmpty()) {
+      Set<Match<T>> filteredMatched = filterMatches(fuzzyMatches, fuzzyExcludeFilter);
+      if (filteredMatched.isEmpty()) {
+        return Match.none(filterStatus);
+      }
+
       // if there is no unique match we try with other fields or the country if provided
       Optional<Match<T>> uniqueMatch =
-          findUniqueMatch(fuzzyMatches, Arrays.asList(isMultipleFieldsMatch(), isCountryMatch()));
+          findUniqueMatch(
+              filteredMatched, Arrays.asList(isMultipleFieldsMatch(), isCountryMatch()));
       if (uniqueMatch.isPresent()) {
         Match<T> acceptedMatch = uniqueMatch.get();
         acceptedMatch.setStatus(Match.Status.DOUBTFUL);
@@ -252,9 +268,11 @@ public abstract class BaseMatcher<
     return !map.isEmpty() ? new HashSet<>(map.values()) : Collections.emptySet();
   }
 
-  protected Set<Match<T>> extractAndFilter(
-      Map<UUID, Match<T>> matches, Predicate<Match<T>> filterCondition) {
-    return extractMatches(matches).stream().filter(filterCondition).collect(Collectors.toSet());
+  protected Set<Match<T>> filterMatches(
+      Set<Match<T>> matches, Predicate<Match<T>> filterCondition) {
+    return filterCondition != null
+        ? matches.stream().filter(filterCondition).collect(Collectors.toSet())
+        : matches;
   }
 
   abstract LookupMapper<T> getLookupMapper();

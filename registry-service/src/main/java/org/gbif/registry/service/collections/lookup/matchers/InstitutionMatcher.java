@@ -85,10 +85,12 @@ public class InstitutionMatcher extends BaseMatcher<Institution> {
     matches.setAcceptedMatch(
         chooseAccepted(
             extractMatches(matches.getMachineTagMatchesMap()),
-            extractAndFilter(
-                matches.getExactMatchesMap(), m -> !m.getReasons().contains(PROBABLY_ON_LOAN)),
-            extractAndFilter(
-                matches.getFuzzyMatchesMap(), m -> !m.getReasons().contains(PROBABLY_ON_LOAN))));
+            extractMatches(matches.getExactMatchesMap()),
+            extractMatches(matches.getFuzzyMatchesMap()),
+            m -> !m.getReasons().contains(PROBABLY_ON_LOAN),
+            m -> !m.getReasons().contains(PROBABLY_ON_LOAN),
+            Match.Status.AMBIGUOUS_OWNER));
+
     return matches;
   }
 
