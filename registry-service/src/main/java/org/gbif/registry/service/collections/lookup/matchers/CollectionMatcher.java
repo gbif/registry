@@ -85,8 +85,10 @@ public class CollectionMatcher extends BaseMatcher<Collection> {
         chooseAccepted(
             extractMatches(matches.getMachineTagMatchesMap()),
             extractMatches(matches.getExactMatchesMap()),
-            extractAndFilter(
-                matches.getFuzzyMatchesMap(), m -> !m.getReasons().contains(INST_COLL_MISMATCH))));
+            extractMatches(matches.getFuzzyMatchesMap()),
+            null,
+            m -> !m.getReasons().contains(INST_COLL_MISMATCH),
+            Match.Status.AMBIGUOUS_INSTITUTION_MISMATCH));
     return matches;
   }
 

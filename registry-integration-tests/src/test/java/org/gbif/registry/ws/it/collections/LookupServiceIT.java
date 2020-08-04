@@ -292,7 +292,9 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertEquals(Match.MatchType.NONE, result.getInstitutionMatch().getMatchType());
+    assertEquals(Match.Status.AMBIGUOUS_OWNER, result.getInstitutionMatch().getStatus());
     assertEquals(Match.MatchType.NONE, result.getCollectionMatch().getMatchType());
+    assertNull(result.getCollectionMatch().getStatus());
     assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
 
     Match<Institution> alternative = result.getAlternativeMatches().getInstitutionMatches().get(0);
@@ -302,7 +304,6 @@ public class LookupServiceIT extends BaseItTest {
     assertTrue(alternative.getReasons().contains(Match.Reason.CODE_MATCH));
     assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
     assertTrue(alternative.getReasons().contains(Match.Reason.PROBABLY_ON_LOAN));
-    assertNull(alternative.getStatus());
   }
 
   @Test
@@ -334,6 +335,30 @@ public class LookupServiceIT extends BaseItTest {
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.INST_COLL_MISMATCH));
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+  }
+
+  @Test
+  public void institutionCollectionMismatchAmbiguousTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i1.getCode());
+    params.setCollectionId(c2.getIdentifiers().get(0).getIdentifier());
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+
+    assertEquals(Match.MatchType.NONE, result.getCollectionMatch().getMatchType());
+    assertEquals(
+        Match.Status.AMBIGUOUS_INSTITUTION_MISMATCH, result.getCollectionMatch().getStatus());
   }
 
   @Test
