@@ -30,7 +30,6 @@ import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.ws.WebApplicationException;
 
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -98,62 +97,47 @@ public class DoiRegistrationResource implements DoiRegistrationService {
    */
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI register(@RequestBody DoiRegistration doiRegistration) {
-    return createOrUpdate(
-        doiRegistration,
-        doiRegistrationToRegister ->
-            // Persist the DOI
-            Optional.ofNullable(doiRegistrationToRegister.getDoi())
-                .ifPresent(
-                    doi -> {
-                      Optional.ofNullable(doiMapper.get(doi))
-                          .ifPresent(
-                              doiData -> {
-                                // if DOI is not NEW throw an exception
-                                if (DoiStatus.NEW != doiData.getStatus()) {
-                                  throw new WebApplicationException(
-                                      "Doi already exists", HttpStatus.BAD_REQUEST);
-                                }
-                              });
-                      doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
-                    }));
+  public DOI register(@RequestBody DoiRegistration newDoiRegistration) {
+    return createOrUpdate(newDoiRegistration, this::registerPreFilter);
+  }
+
+  private void registerPreFilter(DoiData doiData) {
+    if (doiData != null && doiData.getStatus() != DoiStatus.NEW) {
+      throw new WebApplicationException(
+          "Doi already exists", HttpStatus.BAD_REQUEST);
+    }
   }
 
   /**
-   * Register a new DOI, if the registration object doesn't contain a DOI a new DOI is generated.
+   * Update an existing DOI.
    */
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public DOI update(@RequestBody DoiRegistration doiRegistration) {
-    return createOrUpdate(
-        doiRegistration,
-        existingDoiRegistration ->
-            // Update the DOI
-            Optional.ofNullable(existingDoiRegistration.getDoi())
-                .ifPresent(
-                    doi -> {
-                      Optional.ofNullable(doiMapper.get(doi))
-                          .ifPresent(
-                              doiData -> {
-                                // if DOI is not NEW throw an exception
-                                if (DoiStatus.DELETED == doiData.getStatus()) {
-                                  throw new WebApplicationException(
-                                      "Doi already exists", HttpStatus.BAD_REQUEST);
-                                }
-                              });
-                      doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
-                    }));
+  public DOI update(@RequestBody DoiRegistration existingDoiRegistration) {
+    return createOrUpdate(existingDoiRegistration, this::updatePreFilter);
   }
 
-  private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiRegistration> preFilter) {
+  private void updatePreFilter(DoiData doiData) {
+    if (doiData != null && doiData.getStatus() == DoiStatus.DELETED) {
+      throw new WebApplicationException(
+          "Doi already deleted", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  private DOI createOrUpdate(DoiRegistration doiRegistration, Consumer<DoiData> preFilter) {
     checkIsUserAuthenticated();
     try {
-      preFilter.accept(doiRegistration);
-      // registration contains a DOI already
-      DOI doi =
-          doiRegistration.getDoi() == null
-              ? genDoiByType(doiRegistration.getType())
-              : doiRegistration.getDoi();
+      DOI doi = doiRegistration.getDoi();
+      if (doi != null) {
+        // registration contains a DOI already
+        DoiData doiData = doiMapper.get(doi);
+        preFilter.accept(doiData);
+        doiMapper.update(doi, doiMapper.get(doi), doiRegistration.getMetadata());
+      } else {
+        // generate a new one
+        doi = genDoiByType(doiRegistration.getType());
+      }
+
       // Ensures that the metadata contains the DOI as an alternative identifier
       DataCiteMetadata dataCiteMetadata = DataCiteValidator.fromXml(doiRegistration.getMetadata());
       DataCiteMetadata metadata =
@@ -186,11 +170,12 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     AlternateIdentifiers.Builder<Void> builder = AlternateIdentifiers.builder();
     if (alternateIdentifiers != null && alternateIdentifiers.getAlternateIdentifier() != null) {
       builder.addAlternateIdentifier(
-          alternateIdentifiers.getAlternateIdentifier().stream()
+          alternateIdentifiers
+              .getAlternateIdentifier()
+              .stream()
               .filter(
-                  identifier ->
-                      !identifier.getValue().equals(doi.getDoiName())
-                          && !identifier.getAlternateIdentifierType().equalsIgnoreCase("DOI"))
+                  id -> !id.getValue().equals(doi.getDoiName())
+                      && !id.getAlternateIdentifierType().equalsIgnoreCase("DOI"))
               .collect(Collectors.toList()));
     }
     builder.addAlternateIdentifier(
@@ -212,7 +197,6 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     }
   }
 
-  // TODO: 03/03/2020 replace with annotation Secured(USER)
   /** Check that the user is authenticated. */
   private void checkIsUserAuthenticated() {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
