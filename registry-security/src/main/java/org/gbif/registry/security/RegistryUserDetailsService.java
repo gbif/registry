@@ -29,8 +29,7 @@ import org.springframework.stereotype.Service;
 @Qualifier("registryUserDetailsService")
 public class RegistryUserDetailsService implements UserDetailsService {
 
-  // TODO: 2019-07-10 and what should be if OrganizationMapper is needed instead
-  private UserMapper userMapper;
+  private final UserMapper userMapper;
 
   public RegistryUserDetailsService(UserMapper userMapper) {
     this.userMapper = userMapper;

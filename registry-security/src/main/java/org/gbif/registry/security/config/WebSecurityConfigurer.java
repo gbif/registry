@@ -51,7 +51,7 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
 
   private final ApplicationContext context;
 
-  private UserDetailsService userDetailsService;
+  private final UserDetailsService userDetailsService;
 
   public WebSecurityConfigurer(
       @Qualifier("registryUserDetailsService") UserDetailsService userDetailsService,
