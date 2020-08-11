@@ -103,8 +103,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
 
   private void registerPreFilter(DoiData doiData) {
     if (doiData != null && doiData.getStatus() != DoiStatus.NEW) {
-      throw new WebApplicationException(
-          "Doi already exists", HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException("Doi already exists", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -119,8 +118,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
 
   private void updatePreFilter(DoiData doiData) {
     if (doiData != null && doiData.getStatus() == DoiStatus.DELETED) {
-      throw new WebApplicationException(
-          "Doi already deleted", HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException("Doi already deleted", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -170,12 +168,11 @@ public class DoiRegistrationResource implements DoiRegistrationService {
     AlternateIdentifiers.Builder<Void> builder = AlternateIdentifiers.builder();
     if (alternateIdentifiers != null && alternateIdentifiers.getAlternateIdentifier() != null) {
       builder.addAlternateIdentifier(
-          alternateIdentifiers
-              .getAlternateIdentifier()
-              .stream()
+          alternateIdentifiers.getAlternateIdentifier().stream()
               .filter(
-                  id -> !id.getValue().equals(doi.getDoiName())
-                      && !id.getAlternateIdentifierType().equalsIgnoreCase("DOI"))
+                  id ->
+                      !id.getValue().equals(doi.getDoiName())
+                          && !id.getAlternateIdentifierType().equalsIgnoreCase("DOI"))
               .collect(Collectors.toList()));
     }
     builder.addAlternateIdentifier(
