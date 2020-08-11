@@ -80,6 +80,7 @@ import com.google.common.base.Strings;
  * object before the setter of nested objects. e.g. setCitation will be called before the
  * setIdentifier and setText on the Citation object.
  */
+@SuppressWarnings("unused")
 public class DatasetWrapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetWrapper.class);
@@ -88,7 +89,7 @@ public class DatasetWrapper {
       Pattern.compile(
           "[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}/v(\\d+.\\d+)");
   private final Dataset target = new Dataset();
-  private ParagraphContainer description = new ParagraphContainer();
+  private final ParagraphContainer description = new ParagraphContainer();
 
   /**
    * Utility to parse an EML calendarDate in a textual format. Can be ISO date or just the year,

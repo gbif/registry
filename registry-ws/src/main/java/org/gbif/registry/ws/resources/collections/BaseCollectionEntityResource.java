@@ -255,6 +255,7 @@ public abstract class BaseCollectionEntityResource<
     return key;
   }
 
+  @Transactional
   @Override
   public int addMachineTag(UUID targetEntityKey, String namespace, String name, String value) {
     MachineTag machineTag = new MachineTag();
@@ -264,6 +265,7 @@ public abstract class BaseCollectionEntityResource<
     return addMachineTag(targetEntityKey, machineTag);
   }
 
+  @Transactional
   @Override
   public int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);
