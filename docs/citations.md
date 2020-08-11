@@ -30,6 +30,6 @@ use the form `lastName` and first letter of `firstNames` (e.g. Smirnov I).
 Note:
   * At least one `ContactType.ORIGINATOR` shall be present. Otherwise the authors are replaced
   by the organization (`{organization.title}`) publishing the dataset. If the organization name is used, it won't be repeated in the citation.
-  * An author is only considered if a firstName and lastName are both provided.
+  * An author is only considered if a lastName is provided.
   * The name of the organization on the contact itself is ignored for the citation generation.
   `organization.title` represents the name of the organization registered with GBIF that is publishing this dataset.
