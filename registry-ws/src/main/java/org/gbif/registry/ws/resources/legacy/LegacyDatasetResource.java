@@ -94,7 +94,7 @@ public class LegacyDatasetResource {
       value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerDataset(
+  public ResponseEntity<?> registerDataset(
       @RequestParam LegacyDataset dataset, Authentication authentication) {
     // reuse existing subresource
     return iptResource.registerDataset(dataset, authentication);
@@ -116,7 +116,7 @@ public class LegacyDatasetResource {
       value = "resource/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity updateDataset(
+  public ResponseEntity<?> updateDataset(
       @PathVariable("key") UUID datasetKey,
       @RequestParam LegacyDataset dataset,
       Authentication authentication) {
@@ -221,7 +221,7 @@ public class LegacyDatasetResource {
       value = {"resource", "resource{extension:\\.[a-z]+}"},
       consumes = {MediaType.ALL_VALUE},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity datasetsForOrganization(
+  public ResponseEntity<?> datasetsForOrganization(
       @PathVariable(value = "extension", required = false) String extension,
       @RequestParam(value = "organisationKey", required = false) UUID organizationKey,
       HttpServletResponse httpResponse) {
@@ -279,7 +279,7 @@ public class LegacyDatasetResource {
       value = {"resource/{key:[a-zA-Z0-9-]+}", "resource/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}"},
       consumes = {MediaType.ALL_VALUE},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity readDataset(
+  public ResponseEntity<?> readDataset(
       @PathVariable("key") UUID datasetKey,
       @PathVariable(value = "extension", required = false) String extension,
       HttpServletResponse response) {
@@ -319,7 +319,7 @@ public class LegacyDatasetResource {
    * @see IptResource#deleteDataset(java.util.UUID)
    */
   @DeleteMapping(value = "resource/{key}")
-  public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
+  public ResponseEntity<?> deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
   }
