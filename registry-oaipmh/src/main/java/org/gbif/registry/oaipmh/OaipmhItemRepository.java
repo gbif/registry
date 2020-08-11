@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.oaipmh;
 
+import com.google.common.collect.ImmutableMap;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -24,10 +25,10 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.registry.metadata.DublinCoreWriter;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.oaipmh.OaipmhSetRepository.SetIdentification;
-import org.gbif.registry.occurrence.client.OccurrenceMetricsClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
@@ -67,6 +68,7 @@ import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.DATASET_TYPE;
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.INSTALLATION;
 
 /** Implementation of a XOAI ItemRepository for {@link Dataset}. */
+@SuppressWarnings({"UnstableApiUsage", "NullableProblems"})
 public class OaipmhItemRepository implements ItemRepository {
 
   private static final Logger LOG = LoggerFactory.getLogger(OaipmhItemRepository.class);
@@ -80,7 +82,7 @@ public class OaipmhItemRepository implements ItemRepository {
   private final RegistryDatasetService datasetService;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
-  private final OccurrenceMetricsClient occurrenceMetricsClient;
+  private final CubeWsClient metricsClient;
 
   private final EMLWriter emlWriter;
   private final DublinCoreWriter dublinCoreWriter;
@@ -89,11 +91,11 @@ public class OaipmhItemRepository implements ItemRepository {
       RegistryDatasetService datasetService,
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
-      OccurrenceMetricsClient occurrenceMetricsClient) {
+      CubeWsClient metricsClient) {
     this.datasetService = datasetService;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
-    this.occurrenceMetricsClient = occurrenceMetricsClient;
+    this.metricsClient = metricsClient;
 
     // should eventually be injected
     emlWriter = EMLWriter.newInstance(false, true);
@@ -104,7 +106,7 @@ public class OaipmhItemRepository implements ItemRepository {
   private CacheLoader<UUID, Organization> buildOrganizationCacheLoader() {
     return new CacheLoader<UUID, Organization>() {
       @Override
-      public Organization load(UUID key) throws Exception {
+      public Organization load(UUID key) {
         return organizationMapper.get(key);
       }
     };
@@ -294,7 +296,7 @@ public class OaipmhItemRepository implements ItemRepository {
     ReadBuilder readBuilder = new ReadBuilder();
     readBuilder.at(OccurrenceCube.DATASET_KEY, dataset.getKey());
     try {
-      Long occurrenceCount = occurrenceMetricsClient.getCountForDataset(dataset.getKey());
+      Long occurrenceCount = metricsClient.count(ImmutableMap.of("datasetKey", dataset.getKey().toString()));
       if (occurrenceCount > 0) {
         additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, occurrenceCount);
       }

@@ -52,7 +52,6 @@
   </distributionManagement>
 
   <modules>
-    <module>registry-occurrence-client</module>
     <module>registry-directory</module>
     <module>registry-events</module>
     <module>registry-ws</module>
@@ -99,6 +98,7 @@
     <gbif-postal-service.version>0.45</gbif-postal-service.version>
     <gbif-api.version>0.116</gbif-api.version>
     <gbif-directory.version>1.4</gbif-directory.version>
+    <gbif-metrics.version>1.0</gbif-metrics.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
     <commons-validator.version>1.5.1</commons-validator.version>
     <commons-io.version>2.5</commons-io.version>
@@ -265,7 +265,6 @@
         <artifactId>registry-search</artifactId>
         <version>${project.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-search</artifactId>
@@ -286,11 +285,6 @@
       <dependency>
         <groupId>org.gbif.registry</groupId>
         <artifactId>registry-directory</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.gbif.registry</groupId>
-        <artifactId>registry-occurrence-client</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -327,6 +321,11 @@
         <groupId>org.gbif.directory</groupId>
         <artifactId>directory-ws-client</artifactId>
         <version>${gbif-directory.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.metrics</groupId>
+        <artifactId>metrics-ws-client</artifactId>
+        <version>${gbif-metrics.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>
