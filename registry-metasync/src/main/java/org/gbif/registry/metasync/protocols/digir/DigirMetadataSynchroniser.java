@@ -104,16 +104,17 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
 
       String code = MachineTagUtils.firstTag(dataset, TagName.DIGIR_CODE).getValue();
 
-      DigirResource resource =
+      int numberOfRecords =
           metadata.getResources().stream()
               .filter((r) -> code.equals(r.getCode()))
               .findFirst()
-              .get();
+              .map(DigirResource::getNumberOfRecords)
+              .orElse(0);
 
-      LOG.info("Retrieved count of {}", resource.getNumberOfRecords());
+      LOG.info("Retrieved count of {}", numberOfRecords);
 
-      if (resource.getNumberOfRecords() != 0) {
-        return new Long(resource.getNumberOfRecords());
+      if (numberOfRecords != 0) {
+        return (long) numberOfRecords;
       }
 
       return null;

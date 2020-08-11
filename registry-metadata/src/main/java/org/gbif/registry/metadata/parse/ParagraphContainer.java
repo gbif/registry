@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metadata.parse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,8 +35,8 @@ import com.google.common.collect.Lists;
  */
 public class ParagraphContainer {
 
-  private static Joiner paraJoin = Joiner.on("\n");
-  private List<String> paragraphs = Lists.newArrayList();
+  private static final Joiner paraJoin = Joiner.on("\n");
+  private final List<String> paragraphs = new ArrayList<>();
 
   public void appendParagraph(String para) {
     if (!Strings.isNullOrEmpty(para)) {
