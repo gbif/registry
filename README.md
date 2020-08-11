@@ -55,7 +55,6 @@ For more information see [documentation](https://github.com/diffplug/spotless/tr
  - [**registry-metadata**](registry-metadata/README.md)
  - [**registry-metasync**](registry-metasync/README.md)
  - [**registry-oaipmh**](registry-oaipmh/README.md)
- - [**registry-occurrence-client**](registry-occurrence-client/README.md)
  - [**registry-persistence**](registry-persistence/README.md)
  - [**registry-pipelines**](registry-pipelines/README.md)
  - [**registry-search**](registry-search/README.md)

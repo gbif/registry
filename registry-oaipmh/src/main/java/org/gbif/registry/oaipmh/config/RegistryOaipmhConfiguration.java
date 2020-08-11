@@ -15,9 +15,9 @@
  */
 package org.gbif.registry.oaipmh.config;
 
+import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.registry.oaipmh.OaipmhItemRepository;
 import org.gbif.registry.oaipmh.OaipmhSetRepository;
-import org.gbif.registry.occurrence.client.OccurrenceMetricsClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
@@ -45,6 +45,8 @@ import org.dspace.xoai.model.oaipmh.Granularity;
 import org.dspace.xoai.services.api.DateProvider;
 import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
 import org.dspace.xoai.services.impl.UTCDateProvider;
+import org.gbif.ws.client.ClientBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -154,9 +156,16 @@ public class RegistryOaipmhConfiguration {
       RegistryDatasetService datasetService,
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
-      OccurrenceMetricsClient occurrenceMetricsClient) {
+      CubeWsClient metricsClient) {
     return new OaipmhItemRepository(
-        datasetService, datasetMapper, organizationMapper, occurrenceMetricsClient);
+        datasetService, datasetMapper, organizationMapper, metricsClient);
+  }
+
+  @Bean
+  public CubeWsClient occurrenceMetricsClient(@Value("${api.root.url}") String url) {
+    ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withUrl(url);
+    return clientBuilder.build(CubeWsClient.class);
   }
 
   @Bean

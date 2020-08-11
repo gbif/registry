@@ -48,15 +48,15 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-occurrence-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-metadata</artifactId>
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-service</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif.metrics</groupId>
+      <artifactId>metrics-ws-client</artifactId>
     </dependency>
 
     <!-- Third party dependencies -->
