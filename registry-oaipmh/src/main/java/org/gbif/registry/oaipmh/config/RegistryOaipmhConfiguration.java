@@ -21,6 +21,7 @@ import org.gbif.registry.oaipmh.OaipmhSetRepository;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.ws.client.ClientBuilder;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -45,7 +46,6 @@ import org.dspace.xoai.model.oaipmh.Granularity;
 import org.dspace.xoai.services.api.DateProvider;
 import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
 import org.dspace.xoai.services.impl.UTCDateProvider;
-import org.gbif.ws.client.ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

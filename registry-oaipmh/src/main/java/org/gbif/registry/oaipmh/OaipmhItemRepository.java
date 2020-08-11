@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.oaipmh;
 
-import com.google.common.collect.ImmutableMap;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -61,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.COUNTRY;
@@ -296,7 +296,8 @@ public class OaipmhItemRepository implements ItemRepository {
     ReadBuilder readBuilder = new ReadBuilder();
     readBuilder.at(OccurrenceCube.DATASET_KEY, dataset.getKey());
     try {
-      Long occurrenceCount = metricsClient.count(ImmutableMap.of("datasetKey", dataset.getKey().toString()));
+      Long occurrenceCount =
+          metricsClient.count(ImmutableMap.of("datasetKey", dataset.getKey().toString()));
       if (occurrenceCount > 0) {
         additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, occurrenceCount);
       }
