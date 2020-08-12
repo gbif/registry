@@ -553,7 +553,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Trim
-  @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void update(@RequestBody @Trim Dataset dataset) {

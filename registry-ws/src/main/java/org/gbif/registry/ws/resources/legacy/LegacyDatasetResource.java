@@ -23,6 +23,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.ErrorResponse;
+import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDataset;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
@@ -94,7 +95,7 @@ public class LegacyDatasetResource {
       value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity<?> registerDataset(
+  public ResponseEntity<IptEntityResponse> registerDataset(
       @RequestParam LegacyDataset dataset, Authentication authentication) {
     // reuse existing subresource
     return iptResource.registerDataset(dataset, authentication);
@@ -116,7 +117,7 @@ public class LegacyDatasetResource {
       value = "resource/{key}",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity<?> updateDataset(
+  public ResponseEntity<LegacyDataset> updateDataset(
       @PathVariable("key") UUID datasetKey,
       @RequestParam LegacyDataset dataset,
       Authentication authentication) {
@@ -319,7 +320,7 @@ public class LegacyDatasetResource {
    * @see IptResource#deleteDataset(java.util.UUID)
    */
   @DeleteMapping(value = "resource/{key}")
-  public ResponseEntity<?> deleteDataset(@PathVariable("key") UUID datasetKey) {
+  public ResponseEntity<Void> deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
   }
