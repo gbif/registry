@@ -41,7 +41,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +58,8 @@ import freemarker.template.TemplateException;
  */
 @Service
 public class OrganizationEmailManager {
+
+  private static final Logger LOG = LoggerFactory.getLogger(OrganizationEmailManager.class);
 
   private final EmailTemplateProcessor emailTemplateProcessors;
   private final MailConfigurationProperties mailConfigProperties;
@@ -74,27 +80,31 @@ public class OrganizationEmailManager {
   }
 
   /**
-   * If nodeManagerContact does not contain an email address, the model will be set to send the
-   * message to helpdesk.
+   * Generate an email to inform a new organization has to be endorsed.
+   * If nodeManagerContact does not contain an email address, the model will be set to send the message to helpdesk.
    *
-   * @param newOrganization
+   * @param newOrganization new organization data
    * @param nodeManager the {@link Person} representing the NodeManager or null if there is none
-   * @param confirmationKey
-   * @param endorsingNode
+   * @param confirmationKey organization confirmation key
+   * @param endorsingNode organization endorsing node
    * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   public BaseEmailModel generateOrganizationEndorsementEmailModel(
-      Organization newOrganization, Person nodeManager, UUID confirmationKey, Node endorsingNode)
+      Organization newOrganization, @Nullable Person nodeManager, UUID confirmationKey, Node endorsingNode)
       throws IOException {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
+    Objects.requireNonNull(newOrganization.getKey(), "newOrganization key shall be present");
     Objects.requireNonNull(confirmationKey, "confirmationKey shall be provided");
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
+    LOG.debug("Organization key: {}; Confirmation key: {}; Endorsing node key: {}",
+        newOrganization.getKey(), confirmationKey, endorsingNode.getKey());
 
     Optional<String> nodeManagerEmailAddress =
         Optional.ofNullable(nodeManager).map(Person::getEmail);
+    LOG.debug("Node manager email address: {}", nodeManagerEmailAddress);
 
-    String name = HELPDESK_NAME;
-    String emailAddress = organizationMailConfigProperties.getHelpdesk();
+    String name;
+    String emailAddress;
     // do we have an email to contact the node manager ?
     if (nodeManagerEmailAddress.isPresent()) {
       name =
@@ -106,7 +116,11 @@ public class OrganizationEmailManager {
                           nodeManager.getSurname())))
               .orElse(endorsingNode.getTitle());
       emailAddress = nodeManagerEmailAddress.get();
+    } else {
+      name = HELPDESK_NAME;
+      emailAddress = organizationMailConfigProperties.getHelpdesk();
     }
+    LOG.debug("Name: {}; Email address: {}", name, emailAddress);
 
     BaseEmailModel baseEmailModel;
     try {
@@ -119,19 +133,20 @@ public class OrganizationEmailManager {
               endorsingNode,
               nodeManagerEmailAddress.isPresent());
 
+      // CC helpdesk unless we are sending the email to helpdesk
+      List<String> ccAddresses = emailAddress.equals(organizationMailConfigProperties.getHelpdesk())
+          ? Collections.emptyList()
+          : Collections.singletonList(organizationMailConfigProperties.getHelpdesk());
+      LOG.debug("Cc addresses: {}", ccAddresses);
+
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
               OrganizationEmailType.NEW_ORGANIZATION,
               emailAddress,
               templateDataModel,
               Locale.ENGLISH,
-              // CC helpdesk unless we are sending the email to helpdesk
-              Optional.ofNullable(emailAddress)
-                  .filter(e -> !e.equals(organizationMailConfigProperties.getHelpdesk()))
-                  .map(
-                      e ->
-                          Collections.singletonList(organizationMailConfigProperties.getHelpdesk()))
-                  .orElse(Collections.emptyList()));
+              ccAddresses
+          );
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
     }
@@ -142,18 +157,24 @@ public class OrganizationEmailManager {
    * Generate an email to inform a new organization was endorsed. The returning list includes an
    * email to helpdesk and one to the contact who submitted the request.
    *
-   * @param newOrganization
-   * @param endorsingNode
+   * @param newOrganization new organization data
+   * @param endorsingNode organization endorsing node
    * @return the list of {@link BaseEmailModel} to send.
    */
   public List<BaseEmailModel> generateOrganizationEndorsedEmailModel(
       Organization newOrganization, Node endorsingNode) throws IOException {
+    Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
+    Objects.requireNonNull(newOrganization.getKey(), "newOrganization key shall be present");
+    LOG.debug("Organization key: {}; Endorsing node key: {}",
+        newOrganization.getKey(), endorsingNode.getKey());
+
     List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
     URL organizationUrl = generateOrganizationUrl(newOrganization.getKey());
 
     OrganizationTemplateDataModel templateDataModel =
         OrganizationTemplateDataModel.buildEndorsedModel(
             HELPDESK_NAME, newOrganization, organizationUrl, endorsingNode);
+    LOG.debug("Name: {}; Organization url: {}", HELPDESK_NAME, organizationUrl);
 
     try {
       baseEmailModelList.add(
@@ -172,18 +193,24 @@ public class OrganizationEmailManager {
               .findFirst();
 
       if (pointOfContactEmail.isPresent()) {
+        String completeName = pointOfContact.get().computeCompleteName();
+        String email = pointOfContactEmail.get();
+        LOG.debug("Point of contact complete name: {}, email: {}", completeName, email);
+
         templateDataModel =
             OrganizationTemplateDataModel.buildEndorsedModel(
-                pointOfContact.isPresent() ? pointOfContact.get().computeCompleteName() : "",
+                completeName,
                 newOrganization,
                 organizationUrl,
                 endorsingNode);
         baseEmailModelList.add(
             emailTemplateProcessors.buildEmail(
                 OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
-                pointOfContactEmail.get(),
+                email,
                 templateDataModel,
                 Locale.ENGLISH));
+      } else {
+        LOG.debug("Point of contact email is not present!");
       }
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
