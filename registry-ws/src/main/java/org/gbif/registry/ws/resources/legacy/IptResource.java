@@ -85,7 +85,7 @@ public class IptResource {
       value = "register",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerIpt(
+  public ResponseEntity<IptEntityResponse> registerIpt(
       @RequestParam LegacyInstallation installation, Authentication authentication) {
     if (installation != null) {
       // set required fields
@@ -146,7 +146,7 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.NO_CONTENT if successful
    */
   @PostMapping(value = "update/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity updateIpt(
+  public ResponseEntity<Void> updateIpt(
       @PathVariable("key") UUID installationKey,
       @RequestParam LegacyInstallation installation,
       Authentication authentication) {
@@ -232,7 +232,7 @@ public class IptResource {
       value = "resource",
       consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
       produces = MediaType.APPLICATION_XML_VALUE)
-  public ResponseEntity registerDataset(
+  public ResponseEntity<IptEntityResponse> registerDataset(
       @RequestParam LegacyDataset dataset, Authentication authentication) {
     if (dataset != null) {
       // set required fields
@@ -313,7 +313,7 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.CREATED (201) if successful
    */
   @PostMapping(value = "resource/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-  public ResponseEntity updateDataset(
+  public ResponseEntity<Void> updateDataset(
       @PathVariable("key") UUID datasetKey,
       @RequestParam LegacyDataset dataset,
       Authentication authentication) {
@@ -415,7 +415,7 @@ public class IptResource {
    * @return ResponseEntity with HttpStatus.OK if successful
    */
   @DeleteMapping("resource/{key}")
-  public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
+  public ResponseEntity<Void> deleteDataset(@PathVariable("key") UUID datasetKey) {
     if (datasetKey != null) {
       // retrieve existing dataset
       Dataset existing = datasetService.get(datasetKey);

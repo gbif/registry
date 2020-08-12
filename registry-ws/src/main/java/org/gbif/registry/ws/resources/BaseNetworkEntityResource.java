@@ -341,6 +341,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     }
   }
 
+  @Transactional
   @Override
   public int addMachineTag(UUID targetEntityKey, String namespace, String name, String value) {
     MachineTag machineTag = new MachineTag();
@@ -350,6 +351,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     return addMachineTag(targetEntityKey, machineTag);
   }
 
+  @Transactional
   @Override
   public int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
     MachineTag machineTag = MachineTag.newInstance(tagName, value);

@@ -37,7 +37,7 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
   private static final String SQL =
       "SELECT array_agg(nub_fk) as keys " + "FROM nub_rel " + "WHERE dataset_key = '%s'";
 
-  private DataSource dataSource;
+  private final DataSource dataSource;
 
   @Autowired
   public ChecklistbankPersistenceServiceImpl(@Qualifier("clb_datasource") DataSource dataSource) {
@@ -53,25 +53,26 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
 
       // use streaming cursor for large result sets
       conn.setAutoCommit(false);
-      Statement st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-      st.setFetchSize(2);
+      try (Statement st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+        st.setFetchSize(2);
 
-      ResultSet rs = st.executeQuery(String.format(SQL, datasetKey));
-      if (rs.next()) {
-        try {
-          Array result = rs.getArray("keys");
-          if (Objects.nonNull(result)) {
-            Integer[] taxonKeys = (Integer[]) result.getArray();
-            log.info("Dataset [{}] has [{}] different taxon keys", datasetKey, taxonKeys.length);
-            return taxonKeys;
-          } else {
-            return new Integer[0];
+        try (ResultSet rs = st.executeQuery(String.format(SQL, datasetKey))) {
+          if (rs.next()) {
+            try {
+              Array result = rs.getArray("keys");
+              if (Objects.nonNull(result)) {
+                Integer[] taxonKeys = (Integer[]) result.getArray();
+                log.info("Dataset [{}] has [{}] different taxon keys", datasetKey, taxonKeys.length);
+                return taxonKeys;
+              } else {
+                return new Integer[0];
+              }
+            } catch (Exception e) {
+              throw new RuntimeException(e);
+            }
           }
-        } catch (Exception e) {
-          throw new RuntimeException(e);
         }
       }
-      rs.close();
     } catch (Exception e) {
       log.error("Failed to index taxon keys for dataset {}", datasetKey, e);
       throw new RuntimeException(e);
