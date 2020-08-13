@@ -53,7 +53,8 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
 
       // use streaming cursor for large result sets
       conn.setAutoCommit(false);
-      try (Statement st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
+      try (Statement st =
+          conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)) {
         st.setFetchSize(2);
 
         try (ResultSet rs = st.executeQuery(String.format(SQL, datasetKey))) {
@@ -62,7 +63,8 @@ public class ChecklistbankPersistenceServiceImpl implements ChecklistbankPersist
               Array result = rs.getArray("keys");
               if (Objects.nonNull(result)) {
                 Integer[] taxonKeys = (Integer[]) result.getArray();
-                log.info("Dataset [{}] has [{}] different taxon keys", datasetKey, taxonKeys.length);
+                log.info(
+                    "Dataset [{}] has [{}] different taxon keys", datasetKey, taxonKeys.length);
                 return taxonKeys;
               } else {
                 return new Integer[0];
