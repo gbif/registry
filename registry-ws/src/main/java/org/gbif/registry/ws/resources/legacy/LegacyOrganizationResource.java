@@ -120,7 +120,7 @@ public class LegacyOrganizationResource {
           .cacheControl(CacheControl.noCache())
           .build();
     }
-    LOG.info("Get Organization with key={}", organisationKey);
+    LOG.debug("Get Organization with key={}", organisationKey);
 
     Organization organization;
     try {
@@ -131,7 +131,6 @@ public class LegacyOrganizationResource {
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .cacheControl(CacheControl.noCache())
           .build();
-      // .body(new ErrorResponse("No organisation matches the key provided"));
     }
 
     if (op != null) {
@@ -208,7 +207,7 @@ public class LegacyOrganizationResource {
   @GetMapping(
       value = {"organisation", "organisation{extension:\\.[a-z]+}"},
       produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity getOrganizations(
+  public ResponseEntity<LegacyOrganizationBriefResponseListWrapper> getOrganizations(
       @PathVariable(required = false, value = "extension") String extension,
       HttpServletResponse response) {
     LOG.debug("List all Organizations for IPT");
