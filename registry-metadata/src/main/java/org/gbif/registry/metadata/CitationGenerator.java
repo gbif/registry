@@ -115,8 +115,6 @@ public class CitationGenerator {
       } catch (UnsupportedEncodingException e) {
         throw new IllegalArgumentException("Couldn't decode DOI URL", e);
       }
-    } else {
-      // ??
     }
 
     joiner.add("accessed via GBIF.org on " + LocalDate.now(UTC) + ".");

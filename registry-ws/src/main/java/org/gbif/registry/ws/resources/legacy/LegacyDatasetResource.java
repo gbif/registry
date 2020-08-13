@@ -319,8 +319,9 @@ public class LegacyDatasetResource {
    * @return ResponseEntity with HttpStatus.OK if successful
    * @see IptResource#deleteDataset(java.util.UUID)
    */
+  @SuppressWarnings("rawtypes")
   @DeleteMapping(value = "resource/{key}")
-  public ResponseEntity<Void> deleteDataset(@PathVariable("key") UUID datasetKey) {
+  public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
   }
