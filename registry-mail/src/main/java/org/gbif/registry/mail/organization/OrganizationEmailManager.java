@@ -90,14 +90,20 @@ public class OrganizationEmailManager {
    * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   public BaseEmailModel generateOrganizationEndorsementEmailModel(
-      Organization newOrganization, @Nullable Person nodeManager, UUID confirmationKey, Node endorsingNode)
+      Organization newOrganization,
+      @Nullable Person nodeManager,
+      UUID confirmationKey,
+      Node endorsingNode)
       throws IOException {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
     Objects.requireNonNull(newOrganization.getKey(), "newOrganization key shall be present");
     Objects.requireNonNull(confirmationKey, "confirmationKey shall be provided");
     Objects.requireNonNull(endorsingNode, "endorsingNode shall be provided");
-    LOG.debug("Organization key: {}; Confirmation key: {}; Endorsing node key: {}",
-        newOrganization.getKey(), confirmationKey, endorsingNode.getKey());
+    LOG.debug(
+        "Organization key: {}; Confirmation key: {}; Endorsing node key: {}",
+        newOrganization.getKey(),
+        confirmationKey,
+        endorsingNode.getKey());
 
     Optional<String> nodeManagerEmailAddress =
         Optional.ofNullable(nodeManager).map(Person::getEmail);
@@ -134,9 +140,10 @@ public class OrganizationEmailManager {
               nodeManagerEmailAddress.isPresent());
 
       // CC helpdesk unless we are sending the email to helpdesk
-      List<String> ccAddresses = emailAddress.equals(organizationMailConfigProperties.getHelpdesk())
-          ? Collections.emptyList()
-          : Collections.singletonList(organizationMailConfigProperties.getHelpdesk());
+      List<String> ccAddresses =
+          emailAddress.equals(organizationMailConfigProperties.getHelpdesk())
+              ? Collections.emptyList()
+              : Collections.singletonList(organizationMailConfigProperties.getHelpdesk());
       LOG.debug("Cc addresses: {}", ccAddresses);
 
       baseEmailModel =
@@ -145,8 +152,7 @@ public class OrganizationEmailManager {
               emailAddress,
               templateDataModel,
               Locale.ENGLISH,
-              ccAddresses
-          );
+              ccAddresses);
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
     }
@@ -165,8 +171,10 @@ public class OrganizationEmailManager {
       Organization newOrganization, Node endorsingNode) throws IOException {
     Objects.requireNonNull(newOrganization, "newOrganization shall be provided");
     Objects.requireNonNull(newOrganization.getKey(), "newOrganization key shall be present");
-    LOG.debug("Organization key: {}; Endorsing node key: {}",
-        newOrganization.getKey(), endorsingNode.getKey());
+    LOG.debug(
+        "Organization key: {}; Endorsing node key: {}",
+        newOrganization.getKey(),
+        endorsingNode.getKey());
 
     List<BaseEmailModel> baseEmailModelList = new ArrayList<>();
     URL organizationUrl = generateOrganizationUrl(newOrganization.getKey());
@@ -199,10 +207,7 @@ public class OrganizationEmailManager {
 
         templateDataModel =
             OrganizationTemplateDataModel.buildEndorsedModel(
-                completeName,
-                newOrganization,
-                organizationUrl,
-                endorsingNode);
+                completeName, newOrganization, organizationUrl, endorsingNode);
         baseEmailModelList.add(
             emailTemplateProcessors.buildEmail(
                 OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
