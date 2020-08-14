@@ -20,7 +20,7 @@
   </resultMap>
 
   <sql id="WRITABLE_ORGANIZATION_FIELDS">
-    key,endorsing_node_key,endorsement_approved,password,title,abbreviation,description,language,email,
+    key,endorsing_node_key,password,title,abbreviation,description,language,email,
     phone,homepage,logo_url,address,city,province,country,postal_code,latitude,longitude,created,created_by,
     modified,modified_by
   </sql>
@@ -28,7 +28,7 @@
   <sql id="ORGANIZATION_FIELDS">
     o.key,o.endorsing_node_key,o.endorsement_approved,o.password,o.title,o.abbreviation,o.description,o.language,o.email,
     o.phone,o.homepage,o.logo_url,o.address,o.city,o.province,o.country,o.postal_code,o.latitude,o.longitude,
-    o.created,o.created_by,o.modified,o.modified_by,o.deleted
+    o.created,o.created_by,o.modified,o.modified_by,o.deleted,o.endorsed
   </sql>
 
   <sql id="LEGACY_ORGANIZATION_BRIEF_FIELDS">
@@ -128,6 +128,12 @@
   <update id="update" parameterType="org.gbif.api.model.registry.Organization">
     UPDATE organization
     SET <include refid="ORGANIZATION_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <update id="endorse">
+    UPDATE organization
+    SET endorsed = now() AND endorsement_approved = true
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 

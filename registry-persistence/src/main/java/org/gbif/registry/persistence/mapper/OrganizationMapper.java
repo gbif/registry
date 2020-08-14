@@ -45,6 +45,11 @@ public interface OrganizationMapper
       @Param("nodeKey") UUID nodeKey, @Nullable @Param("page") Pageable page);
 
   /**
+   * Endorse organization by key.
+   */
+  void endorse(@Param("key") UUID key);
+
+  /**
    * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation
    * on this mapper.
    */
