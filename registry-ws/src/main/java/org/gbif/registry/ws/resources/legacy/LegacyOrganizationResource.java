@@ -126,8 +126,7 @@ public class LegacyOrganizationResource {
     try {
       organization = organizationService.get(organisationKey);
     } catch (NotFoundException e) {
-      // the organization didn't exist, and expected response is "{Error: "No organisation matches
-      // the key provided}"
+      // the organization didn't exist
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .cacheControl(CacheControl.noCache())
           .build();

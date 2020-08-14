@@ -78,4 +78,5 @@
   <include file="liquibase/070-add-fragmenter-value.xml" />
   <include file="liquibase/071-idigbio-alternative-codes-collections.xml" />
   <include file="liquibase/072-comments-grscicoll.xml" />
+  <include file="liquibase/073-organization-endorsed-field.xml" />
 </databaseChangeLog>
