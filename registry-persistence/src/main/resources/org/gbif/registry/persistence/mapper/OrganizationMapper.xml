@@ -80,7 +80,6 @@
   <sql id="WRITABLE_ORGANIZATION_FIELD_TYPES">
     #{key,jdbcType=OTHER},
     #{endorsingNodeKey,jdbcType=OTHER},
-    #{endorsementApproved,jdbcType=BOOLEAN},
     #{password,jdbcType=VARCHAR},
     #{title,jdbcType=VARCHAR},
     #{abbreviation,jdbcType=CHAR},
