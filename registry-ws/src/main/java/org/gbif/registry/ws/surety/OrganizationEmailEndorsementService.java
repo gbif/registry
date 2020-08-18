@@ -128,10 +128,10 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
 
     if (organization != null
         && !organization.isEndorsementApproved()
-        && (challengeCode == null || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode))) {
+        && (challengeCode == null
+            || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode))) {
       checkArgument(
-          organization.getDeleted() == null,
-          "Unable to endorse a previously deleted organization");
+          organization.getDeleted() == null, "Unable to endorse a previously deleted organization");
       challengeCodeManager.remove(organizationKey);
       organizationMapper.endorse(organizationKey);
 
