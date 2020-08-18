@@ -128,10 +128,11 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
 
     if (organization != null
         && !organization.isEndorsementApproved()
-        && challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode)
-        && challengeCodeManager.remove(organizationKey)) {
+        && (challengeCode == null || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode))) {
       checkArgument(
-          organization.getDeleted() == null, "Unable to update a previously deleted entity");
+          organization.getDeleted() == null,
+          "Unable to endorse a previously deleted organization");
+      challengeCodeManager.remove(organizationKey);
       organizationMapper.endorse(organizationKey);
 
       Node endorsingNode = nodeMapper.get(organization.getEndorsingNodeKey());
@@ -148,6 +149,39 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
       }
       return true;
     }
+
+    return false;
+  }
+
+  /**
+   * Confirm the endorsement of an organization without a challengeCode.
+   *
+   * @return the organization endorsement was approved or not
+   */
+  @Transactional
+  @Override
+  public boolean confirmEndorsement(UUID organizationKey) {
+    return confirmEndorsement(organizationKey, null);
+  }
+
+  /**
+   * Revoke the endorsement from an organization.
+   *
+   * @return the organization endorsement was approved or not
+   */
+  @Transactional
+  @Override
+  public boolean revokeEndorsement(UUID organizationKey) {
+    Organization organization = organizationMapper.get(organizationKey);
+
+    if (organization != null && organization.isEndorsementApproved()) {
+      checkArgument(
+          organization.getDeleted() == null,
+          "Unable to revoke endorsement from a previously deleted organization");
+      organizationMapper.revokeEndorsement(organizationKey);
+      return true;
+    }
+
     return false;
   }
 

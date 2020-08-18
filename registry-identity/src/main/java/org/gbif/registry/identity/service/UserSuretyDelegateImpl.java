@@ -95,13 +95,13 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
   @Override
   public boolean confirmUser(GbifUser user, UUID confirmationObject) {
-    Boolean confirmationSucceeded =
-        Optional.ofNullable(user.getKey())
-            .map(
-                keyVal ->
-                    challengeCodeManager.isValidChallengeCode(keyVal, confirmationObject)
-                        && challengeCodeManager.remove(keyVal))
-            .orElse(Boolean.FALSE);
+    boolean confirmationSucceeded = false;
+
+    if (user.getKey() != null && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject)) {
+      challengeCodeManager.remove(user.getKey());
+      confirmationSucceeded = true;
+    }
+
     if (confirmationSucceeded) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);

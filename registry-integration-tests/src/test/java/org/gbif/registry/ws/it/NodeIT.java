@@ -197,20 +197,24 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 1);
     assertResultsOfSize(service.pendingEndorsements(node.getKey(), new PagingRequest()), 1);
     assertEquals(
-        Long.valueOf(1),
+        1L,
         service.pendingEndorsements(new PagingRequest()).getCount(),
         "Paging is not returning the correct count");
 
-    o.setEndorsementApproved(true);
-    organizationService.update(o);
+    if (serviceType == ServiceType.RESOURCE) {
+      organizationService.confirmEndorsement(o.getKey());
+    } else {
+      ((OrganizationClient) organizationClient).confirmEndorsementEndpoint(o.getKey());
+    }
+
     assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 0);
     assertEquals(
-        Long.valueOf(0),
+        0L,
         service.pendingEndorsements(new PagingRequest()).getCount(),
         "Paging is not returning the correct count");
     assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 1);
     assertEquals(
-        Long.valueOf(1),
+        1L,
         service.endorsedOrganizations(node.getKey(), new PagingRequest()).getCount(),
         "Paging is not returning the correct count");
   }
@@ -265,6 +269,14 @@ public class NodeIT extends NetworkEntityIT<Node> {
     o.setEndorsementApproved(true);
     o.setEndorsingNodeKey(node.getKey());
     UUID organizationKey = organizationService.create(o);
+
+    // endorse organization
+    if (serviceType == ServiceType.RESOURCE) {
+      organizationService.confirmEndorsement(organizationKey);
+    } else {
+      ((OrganizationClient) organizationClient).confirmEndorsementEndpoint(organizationKey);
+    }
+
     // hosting technical installation (required field)
     Installation i = testDataFactory.newInstallation(organizationKey);
     UUID installationKey = installationService.create(i);
@@ -277,7 +289,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     // test node service
     PagingResponse<Dataset> resp = service.endorsedDatasets(node.getKey(), new PagingRequest());
     assertEquals(2, resp.getResults().size());
-    assertEquals(Long.valueOf(2), resp.getCount(), "Paging is not returning the correct count");
+    assertEquals(2L, resp.getCount(), "Paging is not returning the correct count");
 
     // the last created dataset should be the first in the list
     assertEquals(d2Key, resp.getResults().get(0).getKey());

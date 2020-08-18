@@ -29,6 +29,7 @@ import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -109,4 +110,12 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
   boolean confirmEndorsement(
       @PathVariable("key") UUID organizationKey,
       @PathVariable("confirmationKey") UUID confirmationKey);
+
+  @RequestMapping(method = RequestMethod.PUT, value = "{key}/endorsement")
+  @ResponseBody
+  ResponseEntity<Void> confirmEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/endorsement")
+  @ResponseBody
+  ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
 }

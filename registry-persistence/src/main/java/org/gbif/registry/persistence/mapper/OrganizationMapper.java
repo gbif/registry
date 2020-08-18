@@ -50,6 +50,11 @@ public interface OrganizationMapper
   void endorse(@Param("key") UUID key);
 
   /**
+   * Revoke organization endorsement by key.
+   */
+  void revokeEndorsement(@Param("key") UUID key);
+
+  /**
    * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation
    * on this mapper.
    */

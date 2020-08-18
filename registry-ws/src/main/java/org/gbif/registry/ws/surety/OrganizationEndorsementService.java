@@ -39,4 +39,20 @@ public interface OrganizationEndorsementService<T> {
    * @return the organization endorsement was approved or not
    */
   boolean confirmEndorsement(UUID organizationKey, T confirmationObject);
+
+  /**
+   * Confirm the endorsement of an organization without a confirmation object.
+   *
+   * @param organizationKey organization key
+   * @return the organization endorsement was approved or not
+   */
+  boolean confirmEndorsement(UUID organizationKey);
+
+  /**
+   * Revoke the endorsement of the organization.
+   *
+   * @param organizationKey organization key
+   * @return the organization endorsement was revoked or not
+   */
+  boolean revokeEndorsement(UUID organizationKey);
 }

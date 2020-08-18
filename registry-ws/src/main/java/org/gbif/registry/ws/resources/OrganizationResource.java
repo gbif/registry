@@ -61,8 +61,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -81,6 +81,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
+@SuppressWarnings("UnstableApiUsage")
 @Validated
 @Primary
 @RestController
@@ -179,54 +180,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       password.append(ALLOWED_CHARACTERS.charAt(randomIndex));
     }
     return password.toString();
-  }
-
-  @PutMapping(
-      value = {"", "{key}"},
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
-  @Trim
-  @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  @Override
-  public void update(@RequestBody @Trim Organization organization) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    Organization previousOrg = super.get(organization.getKey());
-    checkNotNull(previousOrg, "Organization not found");
-
-    // If the endorsement is being changed, and the user is only an EDITOR, they must have node
-    // permission.
-    // If the node is being changed, and the user is only an EDITOR, they must have node permission
-    // on both nodes.
-    boolean endorsementApprovedChanged =
-        previousOrg.isEndorsementApproved() != organization.isEndorsementApproved()
-            || !previousOrg.getEndorsingNodeKey().equals(organization.getEndorsingNodeKey());
-    if (endorsementApprovedChanged
-        && !SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        && !(userAuthService.allowedToModifyEntity(
-                nameFromContext, organization.getEndorsingNodeKey())
-            || userAuthService.allowedToModifyEntity(
-                nameFromContext, previousOrg.getEndorsingNodeKey()))) {
-      LOG.warn(
-          "Endorsement status or node changed, edit forbidden for {} on {}",
-          nameFromContext,
-          organization.getKey());
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "Endorsement status or node changed, edit forbidden for {0} on {1}",
-              nameFromContext, organization.getKey()),
-          HttpStatus.FORBIDDEN);
-    }
-
-    if (!previousOrg.isEndorsementApproved() && organization.isEndorsementApproved()) {
-      // here we consider the user has the right to endorse an organization without a key.
-      organizationEndorsementService.confirmEndorsement(organization.getKey(), (UUID) null);
-    }
-
-    // let the parent class set the modifiedBy
-    super.update(organization);
   }
 
   @Override
@@ -378,15 +331,18 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return o.getPassword();
   }
 
-  /** Confirm the endorsement of an organization. */
-  @PostMapping(value = "{key}/endorsement", consumes = MediaType.APPLICATION_JSON_VALUE)
+  /**
+   * Confirm the endorsement of an organization.
+   * This endpoint is used by email endorsement.
+   */
+  @PostMapping(path = "{key}/endorsement", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
-      @NotNull @PathVariable("key") UUID organizationKey,
+      @PathVariable("key") UUID organizationKey,
       @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
     return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey())
-            ? ResponseEntity.noContent()
-            : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+        ? ResponseEntity.noContent()
+        : ResponseEntity.status(HttpStatus.BAD_REQUEST))
         .build();
   }
 
@@ -397,5 +353,88 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       @PathVariable("key") UUID organizationKey,
       @PathVariable("confirmationKey") UUID confirmationKey) {
     return organizationEndorsementService.confirmEndorsement(organizationKey, confirmationKey);
+  }
+
+  /**
+   * Confirm the endorsement of an organization.
+   * This endpoint is used by the registry console endorsement.
+   */
+  @PutMapping("{key}/endorsement")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  public ResponseEntity<Void> confirmEndorsementEndpoint(@PathVariable("key") UUID organizationKey) {
+    boolean isEndorsed = confirmEndorsement(organizationKey);
+    return (isEndorsed
+        ? ResponseEntity.noContent()
+        : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+        .build();
+  }
+
+  @Override
+  public boolean confirmEndorsement(UUID organizationKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Organization organization = super.get(organizationKey);
+    checkNotNull(organization, "Organization not found");
+
+    allowedToEndorseOrganization(authentication, organization);
+
+    return organizationEndorsementService.confirmEndorsement(organizationKey);
+  }
+
+  /**
+   * Revoke the endorsement from an organization.
+   * This endpoint is used by the registry console endorsement.
+   */
+  @DeleteMapping("{key}/endorsement")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  public ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey) {
+    return (revokeEndorsement(organizationKey)
+        ? ResponseEntity.noContent()
+        : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+        .build();
+  }
+
+  @Override
+  public boolean revokeEndorsement(UUID organizationKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Organization organization = super.get(organizationKey);
+    checkNotNull(organization, "Organization not found");
+
+    allowedToEndorseOrganization(authentication, organization);
+
+    return organizationEndorsementService.revokeEndorsement(organizationKey);
+  }
+
+  @GetMapping("{key}/endorsement/user")
+  public ResponseEntity<Void> userAllowedToEndorseOrganization(@PathVariable("key") UUID organizationKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    Organization organization = super.get(organizationKey);
+    checkNotNull(organization, "Organization not found");
+
+    String nameFromContext = authentication != null ? authentication.getName() : null;
+
+    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+        && !userAuthService.allowedToModifyEntity(nameFromContext, organization.getEndorsingNodeKey())) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+  }
+
+  private void allowedToEndorseOrganization(Authentication authentication, Organization organization) {
+    String nameFromContext = authentication != null ? authentication.getName() : null;
+
+    // If  the user is only an EDITOR, they must have node permission.
+    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
+        && !userAuthService.allowedToModifyEntity(nameFromContext, organization.getEndorsingNodeKey())) {
+      LOG.warn(
+          "User {} is not allowed to endorse organization {}",
+          nameFromContext,
+          organization.getKey());
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to endorse organization {1}",
+              nameFromContext, organization.getKey()),
+          HttpStatus.FORBIDDEN);
+    }
   }
 }

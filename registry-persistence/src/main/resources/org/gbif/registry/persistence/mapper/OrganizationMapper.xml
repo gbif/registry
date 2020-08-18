@@ -56,7 +56,6 @@
    -->
   <sql id="ORGANIZATION_UPDATE">
     endorsing_node_key = #{endorsingNodeKey,jdbcType=OTHER},
-    endorsement_approved = #{endorsementApproved,jdbcType=BOOLEAN},
     title = #{title,jdbcType=VARCHAR},
     abbreviation = #{abbreviation,jdbcType=CHAR},
     description = #{description,jdbcType=VARCHAR},
@@ -132,7 +131,13 @@
 
   <update id="endorse">
     UPDATE organization
-    SET endorsed = now() AND endorsement_approved = true
+    SET endorsed = now(), endorsement_approved = true
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <update id="revokeEndorsement">
+    UPDATE organization
+    SET endorsed = NULL, endorsement_approved = false
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 
