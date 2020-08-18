@@ -24,7 +24,6 @@ import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
@@ -341,8 +340,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       @PathVariable("key") UUID organizationKey,
       @RequestBody @Valid @NotNull ConfirmationKeyParameter confirmationKeyParameter) {
     return (confirmEndorsement(organizationKey, confirmationKeyParameter.getConfirmationKey())
-        ? ResponseEntity.noContent()
-        : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+            ? ResponseEntity.noContent()
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST))
         .build();
   }
 
@@ -361,11 +360,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   @PutMapping("{key}/endorsement")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
-  public ResponseEntity<Void> confirmEndorsementEndpoint(@PathVariable("key") UUID organizationKey) {
+  public ResponseEntity<Void> confirmEndorsementEndpoint(
+      @PathVariable("key") UUID organizationKey) {
     boolean isEndorsed = confirmEndorsement(organizationKey);
-    return (isEndorsed
-        ? ResponseEntity.noContent()
-        : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+    return (isEndorsed ? ResponseEntity.noContent() : ResponseEntity.status(HttpStatus.BAD_REQUEST))
         .build();
   }
 
@@ -388,8 +386,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey) {
     return (revokeEndorsement(organizationKey)
-        ? ResponseEntity.noContent()
-        : ResponseEntity.status(HttpStatus.BAD_REQUEST))
+            ? ResponseEntity.noContent()
+            : ResponseEntity.status(HttpStatus.BAD_REQUEST))
         .build();
   }
 
@@ -420,12 +418,14 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
-  private void allowedToEndorseOrganization(Authentication authentication, Organization organization) {
+  private void allowedToEndorseOrganization(
+      Authentication authentication, Organization organization) {
     String nameFromContext = authentication != null ? authentication.getName() : null;
 
     // If  the user is only an EDITOR, they must have node permission.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        && !userAuthService.allowedToModifyEntity(nameFromContext, organization.getEndorsingNodeKey())) {
+        && !userAuthService.allowedToModifyEntity(
+            nameFromContext, organization.getEndorsingNodeKey())) {
       LOG.warn(
           "User {} is not allowed to endorse organization {}",
           nameFromContext,
