@@ -223,7 +223,8 @@ public class OrganizationCreationIT extends BaseItTest {
   public void testEndorsementsByAdmin() {
     OrganizationResource orgResource = ((OrganizationResource) organizationResource);
     Organization organization =
-        prepareOrganization(prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
+        prepareOrganization(
+            prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
     assertEquals(
         0L,
         nodeResource
