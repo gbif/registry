@@ -26,7 +26,6 @@ import org.gbif.registry.surety.ChallengeCodeManager;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -97,7 +96,8 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   public boolean confirmUser(GbifUser user, UUID confirmationObject) {
     boolean confirmationSucceeded = false;
 
-    if (user.getKey() != null && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject)) {
+    if (user.getKey() != null
+        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject)) {
       challengeCodeManager.remove(user.getKey());
       confirmationSucceeded = true;
     }
