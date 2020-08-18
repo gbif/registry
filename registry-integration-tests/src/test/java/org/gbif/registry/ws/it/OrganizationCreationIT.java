@@ -28,6 +28,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
+import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -36,10 +37,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -124,7 +128,9 @@ public class OrganizationCreationIT extends BaseItTest {
     }
   }
 
-  /** It is not in the scope of this test to test the email bits. */
+  /**
+   * It is not in the scope of this test to test the email bits.
+   */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testEndorsements(ServiceType serviceType) {
@@ -173,7 +179,7 @@ public class OrganizationCreationIT extends BaseItTest {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void testEndorsementsByAdmin(ServiceType serviceType) {
+  public void testEndorsementsByUpdateMethodByAdmin(ServiceType serviceType) {
     OrganizationService service = getService(serviceType, organizationResource, organizationClient);
     NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
 
@@ -210,6 +216,48 @@ public class OrganizationCreationIT extends BaseItTest {
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount(),
         "Organization can't be endorsed by update method");
+  }
+
+  @SuppressWarnings("ConstantConditions")
+  @Test
+  public void testEndorsementsByAdmin() {
+    OrganizationResource orgResource = ((OrganizationResource) organizationResource);
+    Organization organization =
+        prepareOrganization(prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
+    assertEquals(
+        0L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
+    UUID organizationKey = organization.getKey();
+
+    organization = orgResource.get(organizationKey);
+    assertFalse(organization.isEndorsementApproved());
+
+    // reset principal - use ADMIN role
+    setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
+
+    ResponseEntity<Void> response = orgResource.confirmEndorsementEndpoint(organizationKey);
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    organization = orgResource.get(organizationKey);
+    assertTrue(organization.isEndorsementApproved());
+    assertEquals(
+        1L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
+
+    response = orgResource.revokeEndorsementEndpoint(organizationKey);
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+
+    organization = orgResource.get(organizationKey);
+    assertFalse(organization.isEndorsementApproved());
+    assertEquals(
+        0L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
   }
 
   /**
