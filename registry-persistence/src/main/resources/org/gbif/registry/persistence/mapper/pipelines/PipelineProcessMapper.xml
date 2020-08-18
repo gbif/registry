@@ -165,6 +165,7 @@
     <foreach collection="attempts" item="key" separator="," open="(" close=")">
       #{key}
     </foreach>
+    ORDER BY p.created DESC
   </select>
 
   <select id="count" resultType="Long">
