@@ -135,18 +135,18 @@ public class OrganizationCreationIT extends BaseItTest {
         prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
 
     assertEquals(
-        Long.valueOf(0),
+        0L,
         nodeService
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
-    assertEquals(Long.valueOf(1), nodeService.pendingEndorsements(new PagingRequest()).getCount());
+    assertEquals(1L, nodeService.pendingEndorsements(new PagingRequest()).getCount());
     assertEquals(
-        Long.valueOf(1),
+        1L,
         nodeService
             .pendingEndorsements(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
     assertEquals(
-        Long.valueOf(1),
+        1L,
         nodeService.pendingEndorsements(new PagingRequest()).getCount(),
         "Paging is not returning the correct count");
 
@@ -159,7 +159,7 @@ public class OrganizationCreationIT extends BaseItTest {
 
     // We should have no more pending endorsement for this node
     assertEquals(
-        Long.valueOf(0),
+        0L,
         nodeService
             .pendingEndorsements(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
@@ -180,7 +180,7 @@ public class OrganizationCreationIT extends BaseItTest {
     Organization organization =
         prepareOrganization(prepareNode(nodeService, testDataFactory), service, testDataFactory);
     assertEquals(
-        Long.valueOf(0),
+        0L,
         nodeService
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
@@ -205,10 +205,11 @@ public class OrganizationCreationIT extends BaseItTest {
     adminService.update(organization);
 
     assertEquals(
-        Long.valueOf(1),
+        0L,
         nodeService
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
-            .getCount());
+            .getCount(),
+        "Organization can't be endorsed by update method");
   }
 
   /**

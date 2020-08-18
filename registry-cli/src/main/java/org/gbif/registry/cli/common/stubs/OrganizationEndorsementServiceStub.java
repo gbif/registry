@@ -34,4 +34,14 @@ public class OrganizationEndorsementServiceStub implements OrganizationEndorseme
   public boolean confirmEndorsement(UUID organizationKey, UUID confirmationObject) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public boolean confirmEndorsement(UUID organizationKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean revokeEndorsement(UUID organizationKey) {
+    throw new UnsupportedOperationException();
+  }
 }

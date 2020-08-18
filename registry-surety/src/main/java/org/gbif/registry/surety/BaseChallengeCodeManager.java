@@ -71,19 +71,15 @@ public class BaseChallengeCodeManager<K> implements ChallengeCodeManager<K> {
   /**
    * Removes a challengeCode and removes the link between the entity and the challengeCode. Should
    * be called inside a @Transactional method
-   *
-   * @return the challengeCode was removed successfully.
    */
   @Override
-  public boolean remove(K key) {
-    return Optional.ofNullable(challengeCodeSupportMapper.getChallengeCodeKey(key))
-        .map(
-            challengeCodeKey -> {
-              // remove the challengeCode from the referencing table first
-              challengeCodeSupportMapper.updateChallengeCodeKey(key, null);
-              challengeCodeMapper.deleteChallengeCode(challengeCodeKey);
-              return true;
-            })
-        .orElse(Boolean.FALSE);
+  public void remove(K key) {
+    Integer challengeCodeKey = challengeCodeSupportMapper.getChallengeCodeKey(key);
+
+    if (challengeCodeKey != null) {
+      // remove the challengeCode from the referencing table first
+      challengeCodeSupportMapper.updateChallengeCodeKey(key, null);
+      challengeCodeMapper.deleteChallengeCode(challengeCodeKey);
+    }
   }
 }

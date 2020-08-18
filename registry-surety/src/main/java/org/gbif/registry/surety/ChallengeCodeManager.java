@@ -41,8 +41,6 @@ public interface ChallengeCodeManager<K> {
   /**
    * Removes a challengeCode and removes the link between the entity and the challengeCode. Should
    * be called inside a @Transactional method
-   *
-   * @return the challengeCode was removed successfully.
    */
-  boolean remove(K key);
+  void remove(K key);
 }
