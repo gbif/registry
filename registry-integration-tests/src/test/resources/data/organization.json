@@ -2,6 +2,7 @@
   "title":"The BGBM",
   "abbreviation":"BGBM",
   "description":"The Berlin Botanical...",
+  "endorsementStatus": "WAITING_FOR_ENDORSEMENT",
   "language":"DE",
   "country":"DE",
   "postalCode":"1408",

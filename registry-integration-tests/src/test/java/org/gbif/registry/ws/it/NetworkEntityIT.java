@@ -700,7 +700,10 @@ public abstract class NetworkEntityIT<
         }
       }
 
-      assertLenientEquals("Persisted does not reflect original", entity, written);
+      assertLenientEquals(
+          String.format("Persisted does not reflect original\nPersisted: %s\nOriginal:  %s", written, entity),
+          entity,
+          written);
       assertEquals(
           expectedCount,
           service.list(new PagingRequest()).getResults().size(),
