@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.cli.common.stubs;
 
+import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
@@ -42,6 +43,11 @@ public class OrganizationEndorsementServiceStub implements OrganizationEndorseme
 
   @Override
   public boolean revokeEndorsement(UUID organizationKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void changeEndorsementStatus(UUID organizationKey, EndorsementStatus status) {
     throw new UnsupportedOperationException();
   }
 }
