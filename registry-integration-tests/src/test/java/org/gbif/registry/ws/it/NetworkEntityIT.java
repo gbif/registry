@@ -701,7 +701,8 @@ public abstract class NetworkEntityIT<
       }
 
       assertLenientEquals(
-          String.format("Persisted does not reflect original\nPersisted: %s\nOriginal:  %s", written, entity),
+          String.format(
+              "Persisted does not reflect original\nPersisted: %s\nOriginal:  %s", written, entity),
           entity,
           written);
       assertEquals(
