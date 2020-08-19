@@ -20,6 +20,7 @@ import org.gbif.api.model.directory.NodePerson;
 import org.gbif.api.model.directory.Participant;
 import org.gbif.api.model.directory.Person;
 import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.directory.NodeService;
@@ -183,6 +184,14 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
     }
 
     return false;
+  }
+
+  /**
+   * Change endorsement status.
+   */
+  @Override
+  public void changeEndorsementStatus(UUID organizationKey, EndorsementStatus status) {
+    organizationMapper.changeEndorsementStatus(organizationKey, status);
   }
 
   /**

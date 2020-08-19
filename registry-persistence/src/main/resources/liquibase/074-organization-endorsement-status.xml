@@ -1,0 +1,25 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="74" author="mpodolskiy">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TYPE enum_endorsement_status AS ENUM ('ENDORSED', 'REJECTED', 'ON_HOLD', 'WAITING_FOR_ENDORSEMENT');
+
+        ALTER TABLE organization ADD COLUMN endorsement_status enum_endorsement_status;
+
+        UPDATE organization SET endorsement_status='ENDORSED'
+        WHERE endorsement_approved = true;
+        UPDATE organization SET endorsement_status='WAITING_FOR_ENDORSEMENT'
+        WHERE endorsement_approved = false AND challenge_code_key IS NOT NULL;
+        UPDATE organization SET endorsement_status='REJECTED'
+        WHERE endorsement_approved = false AND challenge_code_key IS NULL;
+
+        ALTER TABLE organization ALTER COLUMN endorsement_status SET NOT NULL;
+        ALTER TABLE organization ALTER COLUMN endorsement_status SET DEFAULT 'WAITING_FOR_ENDORSEMENT';
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.surety;
 
+import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Organization;
 
 import java.util.UUID;
@@ -55,4 +56,12 @@ public interface OrganizationEndorsementService<T> {
    * @return the organization endorsement was revoked or not
    */
   boolean revokeEndorsement(UUID organizationKey);
+
+  /**
+   * Change the endorsement status of the organization.
+   *
+   * @param organizationKey organization key
+   * @param status new endorsement status
+   */
+  void changeEndorsementStatus(UUID organizationKey, EndorsementStatus status);
 }

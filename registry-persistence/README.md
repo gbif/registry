@@ -21,4 +21,20 @@ Update database manually by liquibase-maven-plugin (use values for db.url, db.us
 mvn liquibase:update -Dliquibase.url=<db.url> -Dliquibase.username=<db.username> -Dliquibase.password=<db.password> -Dliquibase.changeLogFile=src/main/resources/liquibase/master.xml -Dliquibase.defaultSchemaName=public
 ```
 
+Run script under registry-persistence directory.
+
+In case of exception:
+
+```
+Error setting up or running Liquibase: liquibase.exception.SetupException: liquibase/some-changelog.xml does not exist
+```
+
+run the following maven command:
+
+```
+mvn process-resources
+```
+
+DB on the environments (dev, uat, prod) should be updated by scripts.
+
 [Parent](../README.md)
