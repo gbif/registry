@@ -91,7 +91,8 @@ public class OrganizationCreationIT extends BaseItTest {
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
-      @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") @LocalServerPort int localServerPort,
+      @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") @LocalServerPort
+          int localServerPort,
       KeyStore keyStore,
       UserMapper userMapper) {
     super(simplePrincipalProvider, esServer);
@@ -243,7 +244,8 @@ public class OrganizationCreationIT extends BaseItTest {
     // reset principal - use ADMIN role
     setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
 
-    ResponseEntity<Void> response = organizationResource.confirmEndorsementEndpoint(organizationKey);
+    ResponseEntity<Void> response =
+        organizationResource.confirmEndorsementEndpoint(organizationKey);
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
     organization = organizationResource.get(organizationKey);
@@ -304,10 +306,12 @@ public class OrganizationCreationIT extends BaseItTest {
     UUID organizationKey = organization.getKey();
 
     // admin
-    ResponseEntity<Void> response = organizationResource .userAllowedToEndorseOrganization(organizationKey, TEST_ADMIN);
+    ResponseEntity<Void> response =
+        organizationResource.userAllowedToEndorseOrganization(organizationKey, TEST_ADMIN);
 
     assertNotNull(response);
-    assertTrue(response.getStatusCode().is2xxSuccessful(),
+    assertTrue(
+        response.getStatusCode().is2xxSuccessful(),
         "Admin must be allowed to endorse organization");
 
     // reset principal - use USER role
@@ -317,7 +321,8 @@ public class OrganizationCreationIT extends BaseItTest {
     response = organizationResource.userAllowedToEndorseOrganization(organizationKey, TEST_USER);
 
     assertNotNull(response);
-    assertTrue(response.getStatusCode().is4xxClientError(),
+    assertTrue(
+        response.getStatusCode().is4xxClientError(),
         "User without editor rights must not be allowed to endorse organization");
 
     // reset principal - use USER role
@@ -330,7 +335,8 @@ public class OrganizationCreationIT extends BaseItTest {
     response = organizationResource.userAllowedToEndorseOrganization(organizationKey, TEST_EDITOR);
 
     assertNotNull(response);
-    assertTrue(response.getStatusCode().is2xxSuccessful(),
+    assertTrue(
+        response.getStatusCode().is2xxSuccessful(),
         "User with editor rights must be allowed to endorse organization");
   }
 
