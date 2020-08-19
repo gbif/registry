@@ -404,8 +404,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @GetMapping("{key}/endorsement/user/{user}")
   public ResponseEntity<Void> userAllowedToEndorseOrganization(
-      @PathVariable("key") UUID organizationKey,
-      @PathVariable("user") String username) {
+      @PathVariable("key") UUID organizationKey, @PathVariable("user") String username) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
