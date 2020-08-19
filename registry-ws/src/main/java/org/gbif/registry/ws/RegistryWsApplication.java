@@ -57,7 +57,6 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.directory",
       "org.gbif.registry.events",
       "org.gbif.registry.messaging",
-      "org.gbif.registry.occurrence.client",
       "org.gbif.registry.oaipmh",
       "org.gbif.registry.service"
     },
