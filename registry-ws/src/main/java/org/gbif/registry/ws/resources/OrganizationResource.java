@@ -402,12 +402,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     return organizationEndorsementService.revokeEndorsement(organizationKey);
   }
 
-  @GetMapping("{key}/endorsement/user")
-  public ResponseEntity<Void> userAllowedToEndorseOrganization(@PathVariable("key") UUID organizationKey) {
+  @GetMapping("{key}/endorsement/user/{user}")
+  public ResponseEntity<Void> userAllowedToEndorseOrganization(
+      @PathVariable("key") UUID organizationKey,
+      @PathVariable("user") String username) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
-    String username = authentication != null ? authentication.getName() : null;
 
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
         && !userAuthService.allowedToModifyEntity(username, organization.getEndorsingNodeKey())) {

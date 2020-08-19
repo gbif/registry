@@ -56,6 +56,7 @@ import static org.gbif.api.vocabulary.UserRole.REGISTRY_ADMIN;
 import static org.gbif.api.vocabulary.UserRole.USER;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_EDITOR;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -302,7 +303,8 @@ public class OrganizationCreationIT extends BaseItTest {
             .getCount());
     UUID organizationKey = organization.getKey();
 
-    ResponseEntity<Void> response = organizationResource.userAllowedToEndorseOrganization(organizationKey);
+    // admin
+    ResponseEntity<Void> response = organizationResource .userAllowedToEndorseOrganization(organizationKey, TEST_ADMIN);
 
     assertNotNull(response);
     assertTrue(response.getStatusCode().is2xxSuccessful(),
@@ -311,16 +313,21 @@ public class OrganizationCreationIT extends BaseItTest {
     // reset principal - use USER role
     setupPrincipal(TEST_USER, USER);
 
-    response = organizationResource.userAllowedToEndorseOrganization(organizationKey);
+    // user without editor rights
+    response = organizationResource.userAllowedToEndorseOrganization(organizationKey, TEST_USER);
 
     assertNotNull(response);
     assertTrue(response.getStatusCode().is4xxClientError(),
         "User without editor rights must not be allowed to endorse organization");
 
-    // add editor rights
-    userMapper.addEditorRight(TEST_USER, organization.getEndorsingNodeKey());
+    // reset principal - use USER role
+    setupPrincipal(TEST_EDITOR, USER);
 
-    response = organizationResource.userAllowedToEndorseOrganization(organizationKey);
+    // add editor rights
+    userMapper.addEditorRight(TEST_EDITOR, organization.getEndorsingNodeKey());
+
+    // user with editor rights
+    response = organizationResource.userAllowedToEndorseOrganization(organizationKey, TEST_EDITOR);
 
     assertNotNull(response);
     assertTrue(response.getStatusCode().is2xxSuccessful(),
