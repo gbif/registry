@@ -16,6 +16,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.Country;
@@ -53,6 +54,11 @@ public interface OrganizationMapper
    * Revoke organization endorsement by key.
    */
   void revokeEndorsement(@Param("key") UUID key);
+
+  /**
+   * Change endorsement status.
+   */
+  void changeEndorsementStatus(@Param("key") UUID organizationKey, @Param("status") EndorsementStatus status);
 
   /**
    * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation

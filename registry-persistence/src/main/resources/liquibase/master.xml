@@ -79,4 +79,5 @@
   <include file="liquibase/071-idigbio-alternative-codes-collections.xml" />
   <include file="liquibase/072-comments-grscicoll.xml" />
   <include file="liquibase/073-organization-endorsed-field.xml" />
+  <include file="liquibase/074-organization-endorsement-status.xml" />
 </databaseChangeLog>

@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
@@ -61,6 +62,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_USER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -225,7 +227,6 @@ public class OrganizationCreationIT extends BaseItTest {
         "Organization can't be endorsed by update method");
   }
 
-  @SuppressWarnings("ConstantConditions")
   @Test
   public void testEndorsementsByAdmin() {
     Organization organization =
@@ -239,7 +240,10 @@ public class OrganizationCreationIT extends BaseItTest {
     UUID organizationKey = organization.getKey();
 
     organization = organizationResource.get(organizationKey);
+    assertNotNull(organization);
     assertFalse(organization.isEndorsementApproved());
+    assertEquals(EndorsementStatus.WAITING_FOR_ENDORSEMENT, organization.getEndorsementStatus());
+    assertNull(organization.getEndorsed());
 
     // reset principal - use ADMIN role
     setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
@@ -249,7 +253,10 @@ public class OrganizationCreationIT extends BaseItTest {
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
     organization = organizationResource.get(organizationKey);
+    assertNotNull(organization);
     assertTrue(organization.isEndorsementApproved());
+    assertEquals(EndorsementStatus.ENDORSED, organization.getEndorsementStatus());
+    assertNotNull(organization.getEndorsed());
     assertEquals(
         1L,
         nodeResource
@@ -260,9 +267,59 @@ public class OrganizationCreationIT extends BaseItTest {
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
     organization = organizationResource.get(organizationKey);
+    assertNotNull(organization);
     assertFalse(organization.isEndorsementApproved());
+    assertEquals(EndorsementStatus.REJECTED, organization.getEndorsementStatus());
+    assertNull(organization.getEndorsed());
     assertEquals(
         0L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
+  }
+
+  @Test
+  public void testChangeEndorsementStatus() {
+    Organization organization =
+        prepareOrganization(
+            prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
+    assertEquals(
+        0L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
+    UUID organizationKey = organization.getKey();
+
+    organization = organizationResource.get(organizationKey);
+    assertNotNull(organization);
+    assertFalse(organization.isEndorsementApproved());
+    assertEquals(EndorsementStatus.WAITING_FOR_ENDORSEMENT, organization.getEndorsementStatus());
+    assertNull(organization.getEndorsed());
+
+    // change status to REJECTED
+    organizationResource.changeEndorsementStatus(organizationKey, EndorsementStatus.REJECTED);
+
+    organization = organizationResource.get(organizationKey);
+    assertNotNull(organization);
+    assertFalse(organization.isEndorsementApproved());
+    assertEquals(EndorsementStatus.REJECTED, organization.getEndorsementStatus());
+    assertNull(organization.getEndorsed());
+    assertEquals(
+        0L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
+
+    // change status to ENDORSED
+    organizationResource.changeEndorsementStatus(organizationKey, EndorsementStatus.ENDORSED);
+
+    organization = organizationResource.get(organizationKey);
+    assertNotNull(organization);
+    assertTrue(organization.isEndorsementApproved());
+    assertEquals(EndorsementStatus.ENDORSED, organization.getEndorsementStatus());
+    assertNotNull(organization.getEndorsed());
+    assertEquals(
+        1L,
         nodeResource
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());

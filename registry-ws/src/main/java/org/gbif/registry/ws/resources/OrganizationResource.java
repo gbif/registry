@@ -22,6 +22,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
@@ -328,6 +329,14 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     // Organization.password is never null according to database schema. API doesn't mirror this
     // though.
     return o.getPassword();
+  }
+
+  @PostMapping("{key}/endorsement/status/{status}")
+  @Secured(ADMIN_ROLE)
+  public void changeEndorsementStatus(
+      @PathVariable("key") UUID organizationKey, @PathVariable("status") EndorsementStatus status) {
+    // TODO: 19/08/2020 send an email?
+    organizationEndorsementService.changeEndorsementStatus(organizationKey, status);
   }
 
   /**

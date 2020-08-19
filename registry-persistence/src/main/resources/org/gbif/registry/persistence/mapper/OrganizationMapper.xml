@@ -26,7 +26,7 @@
   </sql>
 
   <sql id="ORGANIZATION_FIELDS">
-    o.key,o.endorsing_node_key,o.endorsement_approved,o.password,o.title,o.abbreviation,o.description,o.language,o.email,
+    o.key,o.endorsing_node_key,o.endorsement_approved,o.endorsement_status,o.password,o.title,o.abbreviation,o.description,o.language,o.email,
     o.phone,o.homepage,o.logo_url,o.address,o.city,o.province,o.country,o.postal_code,o.latitude,o.longitude,
     o.created,o.created_by,o.modified,o.modified_by,o.deleted,o.endorsed
   </sql>
@@ -131,14 +131,25 @@
 
   <update id="endorse">
     UPDATE organization
-    SET endorsed = now(), endorsement_approved = true
-    WHERE key = #{key,jdbcType=OTHER}
+    SET endorsed = now(), endorsement_approved = true, endorsement_status = 'ENDORSED'
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
   <update id="revokeEndorsement">
     UPDATE organization
-    SET endorsed = NULL, endorsement_approved = false
-    WHERE key = #{key,jdbcType=OTHER}
+    SET endorsed = NULL, endorsement_approved = false, endorsement_status = 'REJECTED'
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <update id="changeEndorsementStatus" parameterType="map">
+    UPDATE organization
+    SET
+    <choose>
+      <when test="status.name() == 'ENDORSED'"> endorsed = now(), endorsement_approved = true, challenge_code_key = NULL, </when>
+      <otherwise> endorsed = NULL, endorsement_approved = false, </otherwise>
+    </choose>
+    endorsement_status = #{status,jdbcType=OTHER}
+    WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
   <!-- For safety, should it be already deleted nothing is done -->
