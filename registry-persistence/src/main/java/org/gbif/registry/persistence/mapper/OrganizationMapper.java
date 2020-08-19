@@ -58,7 +58,8 @@ public interface OrganizationMapper
   /**
    * Change endorsement status.
    */
-  void changeEndorsementStatus(@Param("key") UUID organizationKey, @Param("status") EndorsementStatus status);
+  void changeEndorsementStatus(
+      @Param("key") UUID organizationKey, @Param("status") EndorsementStatus status);
 
   /**
    * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation
