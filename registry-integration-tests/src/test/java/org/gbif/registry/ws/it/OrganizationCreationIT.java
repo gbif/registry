@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -69,15 +70,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class OrganizationCreationIT extends BaseItTest {
 
-  private OrganizationService organizationResource;
-  private OrganizationService organizationClient;
-  private OrganizationService adminOrganizationClient;
-  private OrganizationService userOrganizationClient;
-  private NodeService nodeResource;
-  private NodeService nodeClient;
-  private ChallengeCodeMapper challengeCodeMapper;
-  private ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper;
-  private TestDataFactory testDataFactory;
+  private final OrganizationResource organizationResource;
+  private final OrganizationService organizationClient;
+  private final OrganizationService adminOrganizationClient;
+  private final OrganizationService userOrganizationClient;
+  private final NodeService nodeResource;
+  private final NodeService nodeClient;
+  private final ChallengeCodeMapper challengeCodeMapper;
+  private final ChallengeCodeSupportMapper<UUID> challengeCodeSupportMapper;
+  private final TestDataFactory testDataFactory;
+  private final UserMapper userMapper;
 
   @Autowired
   public OrganizationCreationIT(
@@ -88,11 +90,13 @@ public class OrganizationCreationIT extends BaseItTest {
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
-      @LocalServerPort int localServerPort,
-      KeyStore keyStore) {
+      @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") @LocalServerPort int localServerPort,
+      KeyStore keyStore,
+      UserMapper userMapper) {
     super(simplePrincipalProvider, esServer);
-    this.organizationResource = organizationResource;
+    this.organizationResource = ((OrganizationResource) organizationResource);
     this.nodeResource = nodeResource;
+    this.userMapper = userMapper;
     this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
     this.challengeCodeMapper = challengeCodeMapper;
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
@@ -111,6 +115,7 @@ public class OrganizationCreationIT extends BaseItTest {
     setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN, APP);
   }
 
+  @SuppressWarnings("rawtypes")
   private void setupPrincipal(String name, Enum... roles) {
     // reset SimplePrincipleProvider, configured for web service client tests only
     if (getSimplePrincipalProvider() != null) {
@@ -221,7 +226,6 @@ public class OrganizationCreationIT extends BaseItTest {
   @SuppressWarnings("ConstantConditions")
   @Test
   public void testEndorsementsByAdmin() {
-    OrganizationResource orgResource = ((OrganizationResource) organizationResource);
     Organization organization =
         prepareOrganization(
             prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
@@ -232,16 +236,16 @@ public class OrganizationCreationIT extends BaseItTest {
             .getCount());
     UUID organizationKey = organization.getKey();
 
-    organization = orgResource.get(organizationKey);
+    organization = organizationResource.get(organizationKey);
     assertFalse(organization.isEndorsementApproved());
 
     // reset principal - use ADMIN role
     setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
 
-    ResponseEntity<Void> response = orgResource.confirmEndorsementEndpoint(organizationKey);
+    ResponseEntity<Void> response = organizationResource.confirmEndorsementEndpoint(organizationKey);
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-    organization = orgResource.get(organizationKey);
+    organization = organizationResource.get(organizationKey);
     assertTrue(organization.isEndorsementApproved());
     assertEquals(
         1L,
@@ -249,10 +253,10 @@ public class OrganizationCreationIT extends BaseItTest {
             .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
             .getCount());
 
-    response = orgResource.revokeEndorsementEndpoint(organizationKey);
+    response = organizationResource.revokeEndorsementEndpoint(organizationKey);
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
 
-    organization = orgResource.get(organizationKey);
+    organization = organizationResource.get(organizationKey);
     assertFalse(organization.isEndorsementApproved());
     assertEquals(
         0L,
@@ -284,6 +288,43 @@ public class OrganizationCreationIT extends BaseItTest {
 
     // make sure an app can not change the endorsementApproved directly
     assertThrows(AccessDeniedException.class, () -> userService.update(createdOrganization));
+  }
+
+  @Test
+  public void testUserAllowedToEndorseOrganization() {
+    Organization organization =
+        prepareOrganization(
+            prepareNode(nodeResource, testDataFactory), organizationResource, testDataFactory);
+    assertEquals(
+        0L,
+        nodeResource
+            .endorsedOrganizations(organization.getEndorsingNodeKey(), new PagingRequest())
+            .getCount());
+    UUID organizationKey = organization.getKey();
+
+    ResponseEntity<Void> response = organizationResource.userAllowedToEndorseOrganization(organizationKey);
+
+    assertNotNull(response);
+    assertTrue(response.getStatusCode().is2xxSuccessful(),
+        "Admin must be allowed to endorse organization");
+
+    // reset principal - use USER role
+    setupPrincipal(TEST_USER, USER);
+
+    response = organizationResource.userAllowedToEndorseOrganization(organizationKey);
+
+    assertNotNull(response);
+    assertTrue(response.getStatusCode().is4xxClientError(),
+        "User without editor rights must not be allowed to endorse organization");
+
+    // add editor rights
+    userMapper.addEditorRight(TEST_USER, organization.getEndorsingNodeKey());
+
+    response = organizationResource.userAllowedToEndorseOrganization(organizationKey);
+
+    assertNotNull(response);
+    assertTrue(response.getStatusCode().is2xxSuccessful(),
+        "User with editor rights must be allowed to endorse organization");
   }
 
   private static Node prepareNode(NodeService nodeService, TestDataFactory testDataFactory) {
