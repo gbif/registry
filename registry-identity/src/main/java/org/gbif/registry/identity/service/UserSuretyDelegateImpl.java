@@ -93,7 +93,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   }
 
   @Override
-  public boolean confirmUser(GbifUser user, UUID confirmationObject) {
+  public boolean confirmUser(GbifUser user, UUID confirmationObject, boolean emailEnabled) {
     boolean confirmationSucceeded = false;
 
     if (user.getKey() != null
@@ -102,7 +102,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
       confirmationSucceeded = true;
     }
 
-    if (confirmationSucceeded) {
+    if (confirmationSucceeded && emailEnabled) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
         emailSender.send(emailModel);

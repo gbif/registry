@@ -97,6 +97,7 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
  * Application itself (APP_ROLE). All applications with a valid appKey that is also present in the
  * appKey whitelist. See {@link AppIdentityFilter}.
  */
+@SuppressWarnings("UnstableApiUsage")
 @Validated
 @RestController
 @RequestMapping(value = "/admin/user", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -237,7 +238,7 @@ public class UserManagementResource {
     GbifUser user = identityService.get(authentication.getName());
     if (user != null
         && identityService.confirmUser(
-            user.getKey(), confirmationKeyParameter.getConfirmationKey())) {
+            user.getKey(), confirmationKeyParameter.getConfirmationKey(), true)) {
       identityService.updateLastLogin(user.getKey());
 
       // ideally we would return 200 OK but CreatedResponseFilter automatically change it to 201

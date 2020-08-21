@@ -128,9 +128,10 @@ public interface IdentityService extends IdentityAccessService {
    *
    * @param userKey
    * @param confirmationKey
+   * @param emailEnabled
    * @return the user was confirmed by this action or not
    */
-  boolean confirmUser(int userKey, UUID confirmationKey);
+  boolean confirmUser(int userKey, UUID confirmationKey, boolean emailEnabled);
 
   /**
    * Allows to change the password of a user providing a challenge code instead of its password. A

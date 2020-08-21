@@ -229,11 +229,11 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   }
 
   @Override
-  public boolean confirmUser(int userKey, UUID confirmationKey) {
+  public boolean confirmUser(int userKey, UUID confirmationKey, boolean emailEnabled) {
     return Optional.ofNullable(confirmationKey)
         .map(
             confirmationKeyVal ->
-                userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKeyVal))
+                userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKeyVal, emailEnabled))
         .orElse(Boolean.FALSE);
   }
 
@@ -247,7 +247,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Override
   public UserModelMutationResult updatePassword(
       int userKey, String newPassword, UUID challengeCode) {
-    return confirmUser(userKey, challengeCode)
+    return confirmUser(userKey, challengeCode, false)
         ? updatePassword(userKey, newPassword)
         : withSingleConstraintViolation(
             PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME, PropertyConstants.CONSTRAINT_INCORRECT);

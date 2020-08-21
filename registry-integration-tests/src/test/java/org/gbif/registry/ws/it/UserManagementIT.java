@@ -57,9 +57,9 @@ public class UserManagementIT extends BaseItTest {
 
   private static final String CHANGED_PASSWORD = "123456";
 
-  private IdentitySuretyTestHelper identitySuretyTestHelper;
-  private UserTestFixture userTestFixture;
-  private RequestTestFixture requestTestFixture;
+  private final IdentitySuretyTestHelper identitySuretyTestHelper;
+  private final UserTestFixture userTestFixture;
+  private final RequestTestFixture requestTestFixture;
 
   @Autowired
   public UserManagementIT(

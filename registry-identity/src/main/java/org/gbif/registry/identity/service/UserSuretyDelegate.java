@@ -48,9 +48,10 @@ interface UserSuretyDelegate {
    *
    * @param user user to confirm
    * @param confirmationObject confirmation object (challenge code)
+   * @param emailEnabled is email required
    * @return true if user was confirmed and false otherwise
    */
-  boolean confirmUser(GbifUser user, UUID confirmationObject);
+  boolean confirmUser(GbifUser user, UUID confirmationObject, boolean emailEnabled);
 
   /**
    * Handles the logic on user deletion.

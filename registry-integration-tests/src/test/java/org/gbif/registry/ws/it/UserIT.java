@@ -49,8 +49,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 public class UserIT extends BaseItTest {
 
-  private UserTestFixture userTestFixture;
-  private RequestTestFixture requestTestFixture;
+  private final UserTestFixture userTestFixture;
+  private final RequestTestFixture requestTestFixture;
 
   @Autowired
   public UserIT(
