@@ -103,6 +103,16 @@ public class IdentityEmailManager {
     }
   }
 
+  public BaseEmailModel generatePasswordChangedEmailModel(GbifUser user) throws IOException {
+    try {
+      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
+      return emailTemplateProcessor.buildEmail(
+          IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, Locale.ENGLISH);
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
+  }
+
   public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
     try {
       return emailTemplateProcessor.buildEmail(

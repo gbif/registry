@@ -131,4 +131,19 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     }
     emailSender.send(emailModel);
   }
+
+  @Override
+  public void onPasswordChanged(GbifUser user) {
+    BaseEmailModel emailModel;
+    try {
+      emailModel = identityEmailManager.generatePasswordChangedEmailModel(user);
+    } catch (IOException e) {
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Error while trying to generate email password was changed of user " + user.getUserName(),
+          e);
+      return;
+    }
+    emailSender.send(emailModel);
+  }
 }

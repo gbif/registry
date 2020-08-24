@@ -68,4 +68,11 @@ interface UserSuretyDelegate {
    * @param user user to reset password
    */
   void onPasswordReset(GbifUser user);
+
+  /**
+   * Handles the logic on password changed.
+   *
+   * @param user user who password was changed
+   */
+  void onPasswordChanged(GbifUser user);
 }
