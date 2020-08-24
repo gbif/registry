@@ -123,8 +123,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
         return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
       }
 
-      Optional<UserModelMutationResult> beanValidation =
-          validateBean(user, PostPersist.class);
+      Optional<UserModelMutationResult> beanValidation = validateBean(user, PostPersist.class);
       if (beanValidation.isPresent()) {
         return beanValidation.get();
       }
@@ -205,7 +204,9 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     GbifUser user = get(username);
 
     if (user != null
-        && PASSWORD_ENCODER.encode(password, user.getPasswordHash()).equalsIgnoreCase(user.getPasswordHash())
+        && PASSWORD_ENCODER
+            .encode(password, user.getPasswordHash())
+            .equalsIgnoreCase(user.getPasswordHash())
         && (!userSuretyDelegate.hasChallengeCode(user.getKey()) || user.getLastLogin() != null)) {
       return user;
     }
