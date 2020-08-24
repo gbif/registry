@@ -29,6 +29,9 @@ public enum IdentityEmailType implements EmailType {
   /** Email 'Reset password'. */
   RESET_PASSWORD("resetPassword", "reset_password_en.ftl"),
 
+  /** Email 'Password was changed'. */
+  PASSWORD_CHANGED("passwordChanged", "password_changed_en.ftl"),
+
   /** Welcome email with links and information. */
   WELCOME("welcome", "welcome_en.ftl"),
 

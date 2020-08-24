@@ -82,6 +82,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Transactional
   public UserModelMutationResult create(GbifUser rawUser, String password) {
     GbifUser user = normalize(rawUser);
+
     if (userMapper.get(user.getUserName()) != null
         || userMapper.getByEmail(user.getEmail()) != null) {
       return withError(ModelMutationError.USER_ALREADY_EXIST);
@@ -108,30 +109,31 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Override
   public UserModelMutationResult update(GbifUser rawUser) {
     GbifUser user = normalize(rawUser);
-    return Optional.ofNullable(getByKey(user.getKey()))
-        .map(
-            currentUser -> {
-              // handle email change and user if the user want to change it is is not already
-              // linked to another account
-              Optional<GbifUser> gbifUserAlreadyUsingEmail =
-                  Optional.of(currentUser)
-                      .filter(u -> !u.getEmail().equalsIgnoreCase(user.getEmail()))
-                      .map(u -> userMapper.getByEmail(user.getEmail()));
+    GbifUser currentUser = getByKey(user.getKey());
 
-              if (gbifUserAlreadyUsingEmail.isPresent()) {
-                return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
-              }
+    if (currentUser != null) {
+      // handle email change and user if the user want to change it is is not already
+      // linked to another account
+      Optional<GbifUser> gbifUserAlreadyUsingEmail =
+          Optional.of(currentUser)
+              .filter(u -> !u.getEmail().equalsIgnoreCase(user.getEmail()))
+              .map(u -> userMapper.getByEmail(user.getEmail()));
 
-              Optional<UserModelMutationResult> beanValidation =
-                  validateBean(user, PostPersist.class);
-              if (beanValidation.isPresent()) {
-                return beanValidation.get();
-              }
+      if (gbifUserAlreadyUsingEmail.isPresent()) {
+        return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
+      }
 
-              userMapper.update(user);
-              return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
-            })
-        .orElse(null);
+      Optional<UserModelMutationResult> beanValidation =
+          validateBean(user, PostPersist.class);
+      if (beanValidation.isPresent()) {
+        return beanValidation.get();
+      }
+
+      userMapper.update(user);
+      return UserModelMutationResult.onSuccess(user.getUserName(), user.getEmail());
+    }
+
+    return null;
   }
 
   /**
@@ -195,22 +197,20 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     }
 
     // use the settings which are the prefix in the existing password hash to encode the provided
-    // password
-    // and verify that they result in the same
+    // password and verify that they result in the same
 
     // ensure there is no pending challenge code, unless the user already logged in in the past.
     // If the user logged in in the past we assume the challengeCode is from a reset password and
-    // since we
-    // can't be sure the user initiated the request himself we must allow to login
-    return Optional.ofNullable(get(username))
-        .filter(
-            user ->
-                PASSWORD_ENCODER
-                        .encode(password, user.getPasswordHash())
-                        .equalsIgnoreCase(user.getPasswordHash())
-                    && (!userSuretyDelegate.hasChallengeCode(user.getKey())
-                        || user.getLastLogin() != null))
-        .orElse(null);
+    // since we can't be sure the user initiated the request himself we must allow to login
+    GbifUser user = get(username);
+
+    if (user != null
+        && PASSWORD_ENCODER.encode(password, user.getPasswordHash()).equalsIgnoreCase(user.getPasswordHash())
+        && (!userSuretyDelegate.hasChallengeCode(user.getKey()) || user.getLastLogin() != null)) {
+      return user;
+    }
+
+    return null;
   }
 
   @Override
@@ -230,18 +230,20 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public boolean confirmUser(int userKey, UUID confirmationKey, boolean emailEnabled) {
-    return Optional.ofNullable(confirmationKey)
-        .map(
-            confirmationKeyVal ->
-                userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKeyVal, emailEnabled))
-        .orElse(Boolean.FALSE);
+    if (confirmationKey != null) {
+      return userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKey, emailEnabled);
+    }
+
+    return false;
   }
 
   @Override
   public void resetPassword(int userKey) {
-    // ensure the user exists
-    Optional.ofNullable(userMapper.getByKey(userKey))
-        .ifPresent(userSuretyDelegate::onPasswordReset);
+    GbifUser user = userMapper.getByKey(userKey);
+
+    if (user != null) {
+      userSuretyDelegate.onPasswordReset(user);
+    }
   }
 
   @Override
@@ -255,18 +257,22 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public UserModelMutationResult updatePassword(int userKey, String newPassword) {
-    return Optional.ofNullable(userMapper.getByKey(userKey))
-        .map(
-            user -> {
-              if (StringUtils.isBlank(newPassword)
-                  || !PASSWORD_LENGTH_RANGE.contains(newPassword.length())) {
-                return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
-              }
-              user.setPasswordHash(PASSWORD_ENCODER.encode(newPassword));
-              userMapper.update(user);
-              return UserModelMutationResult.onSuccess();
-            })
-        .orElse(withSingleConstraintViolation("user", PropertyConstants.CONSTRAINT_UNKNOWN));
+    GbifUser user = userMapper.getByKey(userKey);
+
+    if (user != null) {
+      if (StringUtils.isBlank(newPassword)
+          || !PASSWORD_LENGTH_RANGE.contains(newPassword.length())) {
+        return withError(ModelMutationError.PASSWORD_LENGTH_VIOLATION);
+      }
+
+      user.setPasswordHash(PASSWORD_ENCODER.encode(newPassword));
+      userMapper.update(user);
+      userSuretyDelegate.onPasswordChanged(user);
+
+      return UserModelMutationResult.onSuccess();
+    }
+
+    return withSingleConstraintViolation("user", PropertyConstants.CONSTRAINT_UNKNOWN);
   }
 
   /**
