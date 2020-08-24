@@ -28,6 +28,7 @@ import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
+import org.gbif.registry.ws.provider.DatasetRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.server.processor.ParamNameProcessor;
@@ -71,6 +72,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new PartialDateHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSuggestRequestHandlerMethodArgumentResolver());
+    argumentResolvers.add(new DatasetRequestSearchParamsHandlerMethodArgumentResolver());
   }
 
   @Override
