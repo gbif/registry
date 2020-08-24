@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 public abstract class RequestSearchParams {
 
   public static final String IDENTIFIER_TYPE_PARAM = "identifierType";
-  public static final String IDENTIFIER_PARAM = "identifier" ;
+  public static final String IDENTIFIER_PARAM = "identifier";
   public static final String MACHINE_TAG_NAMESPACE_PARAM = "machineTagNamespace";
   public static final String MACHINE_TAG_NAME_PARAM = "machineTagName";
   public static final String MACHINE_TAG_VALUE_PARAM = "machineTagValue";
