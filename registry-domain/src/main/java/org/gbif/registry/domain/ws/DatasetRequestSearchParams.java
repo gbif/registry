@@ -21,6 +21,8 @@ import javax.annotation.Nullable;
 
 public class DatasetRequestSearchParams extends RequestSearchParams {
 
+  public static final String TYPE_PARAM = "param";
+
   private DatasetType type; // datasetType
 
   @Nullable

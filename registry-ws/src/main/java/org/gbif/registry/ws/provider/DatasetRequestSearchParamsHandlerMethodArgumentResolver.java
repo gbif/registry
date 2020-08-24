@@ -1,0 +1,39 @@
+package org.gbif.registry.ws.provider;
+
+import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
+import org.gbif.registry.domain.ws.RequestSearchParams;
+import org.springframework.core.MethodParameter;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
+
+@SuppressWarnings("NullableProblems")
+public class DatasetRequestSearchParamsHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
+
+  @Override
+  public boolean supportsParameter(MethodParameter parameter) {
+    return DatasetRequestSearchParams.class.equals(parameter.getParameterType());
+  }
+
+  @Override
+  public Object resolveArgument(
+      MethodParameter parameter,
+      ModelAndViewContainer mavContainer,
+      NativeWebRequest webRequest,
+      WebDataBinderFactory binderFactory) {
+    DatasetRequestSearchParams params = new DatasetRequestSearchParams();
+    params.setIdentifier(webRequest.getParameter(RequestSearchParams.IDENTIFIER_PARAM));
+    params.setIdentifierType(VocabularyUtils.lookupEnum(webRequest.getParameter(RequestSearchParams.IDENTIFIER_TYPE_PARAM), IdentifierType.class));
+    params.setMachineTagName(webRequest.getParameter(RequestSearchParams.MACHINE_TAG_NAME_PARAM));
+    params.setMachineTagNamespace(webRequest.getParameter(RequestSearchParams.MACHINE_TAG_NAMESPACE_PARAM));
+    params.setMachineTagValue(webRequest.getParameter(RequestSearchParams.MACHINE_TAG_VALUE_PARAM));
+    params.setQ(webRequest.getParameter(RequestSearchParams.Q_PARAM));
+    params.setType(VocabularyUtils.lookupEnum(webRequest.getParameter(DatasetRequestSearchParams.TYPE_PARAM), DatasetType.class));
+
+    return params;
+  }
+}
