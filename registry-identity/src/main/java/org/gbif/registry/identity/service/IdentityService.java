@@ -97,12 +97,11 @@ public interface IdentityService extends IdentityAccessService {
   /**
    * Delete a user and remove all sensitive data.
    *
-   * @param user user to delete
-   * @param usernameBefore username before deletion
-   * @param emailBefore email before deletion
+   * @param userBefore user (with sensitive data)
+   * @param user user to delete (without sensitive data)
    * @param downloads user's downloads
    */
-  void delete(GbifUser user, String usernameBefore, String emailBefore, List<Download> downloads);
+  void delete(GbifUser userBefore, GbifUser user, List<Download> downloads);
 
   PagingResponse<GbifUser> list(@Nullable Pageable var1);
 

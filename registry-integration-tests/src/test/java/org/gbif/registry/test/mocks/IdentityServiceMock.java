@@ -99,8 +99,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public void delete(
-      GbifUser user, String usernameBefore, String emailBefore, List<Download> downloads) {
+  public void delete(GbifUser userBefore, GbifUser user, List<Download> downloads) {
     throw new UnsupportedOperationException();
   }
 

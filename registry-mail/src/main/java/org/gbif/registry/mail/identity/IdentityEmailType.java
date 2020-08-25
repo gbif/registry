@@ -18,41 +18,34 @@ package org.gbif.registry.mail.identity;
 import org.gbif.registry.mail.EmailType;
 
 /**
- * Type of emails related to 'identity' stuff like: welcome email, create new account and reset
+ * Type of emails related to 'identity' functionality like: welcome email, create new account and reset
  * password.
  */
 public enum IdentityEmailType implements EmailType {
 
   /** Email 'Account was created, please confirm it'. */
-  NEW_USER("createAccount", "create_confirmation_en.ftl"),
+  NEW_USER("createAccount"),
 
   /** Email 'Reset password'. */
-  RESET_PASSWORD("resetPassword", "reset_password_en.ftl"),
+  RESET_PASSWORD("resetPassword"),
 
   /** Email 'Password was changed'. */
-  PASSWORD_CHANGED("passwordChanged", "password_changed_en.ftl"),
+  PASSWORD_CHANGED("passwordChanged"),
 
   /** Welcome email with links and information. */
-  WELCOME("welcome", "welcome_en.ftl"),
+  WELCOME("welcome"),
 
   /** Email 'User was deleted' */
-  DELETE_ACCOUNT("deleteAccount", "delete_account_en.ftl");
+  DELETE_ACCOUNT("deleteAccount");
 
-  private final String subjectKey;
-  private final String ftlTemplate;
+  private final String key;
 
-  IdentityEmailType(String subjectKey, String ftlTemplate) {
-    this.subjectKey = subjectKey;
-    this.ftlTemplate = ftlTemplate;
+  IdentityEmailType(String key) {
+    this.key = key;
   }
 
   @Override
-  public String getSubjectKey() {
-    return subjectKey;
-  }
-
-  @Override
-  public String getFtlTemplate() {
-    return ftlTemplate;
+  public String getKey() {
+    return key;
   }
 }
