@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 @Qualifier("identityEmailTemplateProcessor")
 public class IdentityEmailTemplateProcessor extends FreemarkerEmailTemplateProcessor {
 
-  private EmailDataProvider emailDataProvider;
+  private final EmailDataProvider emailDataProvider;
 
   /** @param emailDataProvider provides subject and template (depends on locale). */
   public IdentityEmailTemplateProcessor(

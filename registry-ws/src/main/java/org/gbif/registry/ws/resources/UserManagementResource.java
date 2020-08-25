@@ -261,7 +261,6 @@ public class UserManagementResource {
     String newUsername = RandomStringUtils.randomAlphanumeric(6);
     String newEmail = "deleted_" + newUsername + "@deleted.invalid";
     String oldUsername = user.getUserName();
-    String oldEmail = user.getEmail();
 
     // get all downloads before erase
     List<Download> downloads = occurrenceDownloadMapper.listByUser(user.getUserName(), null, null);
@@ -269,16 +268,18 @@ public class UserManagementResource {
     // erase user from downloads
     occurrenceDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
 
-    // delete user and send an email
-    user.setFirstName(null);
-    user.setLastName(null);
-    user.setUserName(newUsername);
-    user.setEmail(newEmail);
-    user.setPasswordHash("DELETED_DELETED_DELETED_DELETED_");
-    user.setRoles(Collections.emptySet());
-    user.setSettings(null);
-    user.setSystemSettings(null);
-    identityService.delete(user, oldUsername, oldEmail, downloads);
+    GbifUser userErasedPersonalData = new GbifUser(user);
+
+    // remove sensitive data, delete user and send an email
+    userErasedPersonalData.setFirstName(null);
+    userErasedPersonalData.setLastName(null);
+    userErasedPersonalData.setUserName(newUsername);
+    userErasedPersonalData.setEmail(newEmail);
+    userErasedPersonalData.setPasswordHash("DELETED_DELETED_DELETED_DELETED_");
+    userErasedPersonalData.setRoles(Collections.emptySet());
+    userErasedPersonalData.setSettings(null);
+    userErasedPersonalData.setSystemSettings(null);
+    identityService.delete(user, userErasedPersonalData, downloads);
 
     return ResponseEntity.noContent().build();
   }

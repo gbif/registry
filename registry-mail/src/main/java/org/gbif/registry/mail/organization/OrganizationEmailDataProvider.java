@@ -29,12 +29,12 @@ import org.springframework.stereotype.Service;
 @Qualifier("organizationEmailDataProvider")
 public class OrganizationEmailDataProvider implements EmailDataProvider {
 
-  private static final ResourceBundle EMAIL_SUBJECT_RESOURCE =
-      ResourceBundle.getBundle("email/subjects/email_subjects", Locale.ENGLISH);
+  public static final String ORGANIZATION_EMAIL_SUBJECTS_PATH = "email/subjects/email_subjects";
 
   @Override
   public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
-    String rawSubjectString = EMAIL_SUBJECT_RESOURCE.getString(emailType.getSubjectKey());
+    ResourceBundle bundle = ResourceBundle.getBundle(ORGANIZATION_EMAIL_SUBJECTS_PATH, locale);
+    String rawSubjectString = bundle.getString(emailType.getKey());
     if (subjectParams.length == 0) {
       return rawSubjectString;
     } else {
@@ -44,6 +44,7 @@ public class OrganizationEmailDataProvider implements EmailDataProvider {
 
   @Override
   public String getTemplate(Locale locale, EmailType emailType) {
-    return emailType.getFtlTemplate();
+    ResourceBundle bundle = ResourceBundle.getBundle(EMAIL_TEMPLATES_PATH, locale);
+    return bundle.getString(emailType.getKey());
   }
 }
