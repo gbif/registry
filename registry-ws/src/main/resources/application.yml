@@ -1,163 +1,139 @@
-# application.yml
-
 api:
-  root:
-    url: http://api.gbif-dev.org/v1/
   cache:
     purge:
       url: http://api.gbif-dev.org/v1
-      threads: 1
-portal:
-  url: https://www.gbif-dev.org/
-
+      threads: 2
+  root:
+    url: http://api.gbif-dev.org/v1/
+appkeys:
+  file: /usr/local/gbif/conf/appkeys.properties
+  whitelist: gbif.express,gbif.datarepo,gbif.portal
+checklistbank:
+  ws:
+    url: http://api.gbif-dev.org/v1/
 occurrence:
   ws:
     url: http://api.gbif-dev.org/v1/occurrence/
-
-#Mail Properties
-mail:
-  from: @mail.from@
-  cc: @mail.cc@
-  bcc: @mail.bcc@
-  enabled: true
-  devemail:
-    address: gbifregistry@mailinator.com
-    enabled: @mail.devemail.enabled@
-message:
-  enabled: false
-
-# urlTemplate are formatted using StringFormat (idx 0 = username, 1 = code)
+directory:
+  app:
+    key: gbif.portal
+    secret: 2b673f9de8b219aaa627b772f33cec190e0876509da3ae1b38018016e9
+  ws:
+    url: http://api.gbif-dev.org/v1/directory/
+doi:
+  url: https://doi.org/
+  datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
+  prefix: 10.21373
+grscicoll:
+  portal:
+    url: https://www.gbif-dev.org/grscicoll/
 identity:
   surety:
     mail:
       urlTemplate:
-        confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-        resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-
+        confirmUser: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
+        resetPassword: https://www.gbif-dev.org/user/update-password?username={0}&code={1}
+jwt:
+  signingKey: ec9f0b6949e2d229828179ceddf5257429c2ca05e3426836f30fef836788067a
+  expiryTimeInMs: 1800000
+  issuer: GBIF-REGISTRY
+mail:
+  from: helpdesk@gbif.org
+  bcc:
+  cc: helpdesk@gbif.org
+  enabled: true
+  devemail:
+    address: gbifregistry@mailinator.com
+    enabled: true
+message:
+  enabled: true
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  type-handlers-package: org.gbif.registry.persistence.mapper.handler;org.gbif.mybatis.type
+oaipmh:
+  adminEmail: gbifregistryoaipmh@mailinator.com
+  baseUrl: http://api.gbif-dev.org/v1/oai-pmh/registry
 organization:
   surety:
     mail:
-      helpdesk: @mail.helpdesk@
+      helpdesk: helpdesk@gbif.org
       urlTemplate:
-        organization: https://www.demo.gbif-dev.org/publisher/{0}
-        confirmOrganization: https://demo.gbif-dev.org/organization/confirm?key={0}&code={1}
-
-application:
-  key: gbif.app.it
-  secret: a
-
-#GRSCICOLL
-grscicoll:
-  portal:
-    url: https://www.gbif-dev.org/grscicoll/
-
-# JWT
-jwt:
-  signingKey: 03bee45dc7ecfb7f3bdd1f7171add974947f264c11bd0c37cfdeb0d6da3fd5c6
-  expiryTimeInMs: 1800000
-  issuer: GBIF-REGISTRY
-
-  # Pipelines properties
+        confirmOrganization: https://www.gbif-dev.org/publisher/confirm?key={0}&code={1}
+        organization: https://www.gbif-dev.org/publisher/{0}
+portal:
+  url: https://www.gbif-dev.org/
+purging:
+  threads: 100
+registry:
+  datasource:
+    url: jdbc:postgresql://pg1.gbif-dev.org/dev_registry
+    password: k_xlFrwGVlN5oovIlo_k
+    username: registry
+    hikari:
+      idleTimeout: 60000
+      maximumPoolSize: 8
+      minimumIdle: 1
+  postalservice:
+    embargoSeconds: 30
+    enabled: true
+    hostname: mq.gbif.org
+    password: dev-registry
+    port: 5672
+    threadcount: 4
+    username: dev-registry
+    virtualhost: /dev
+  sandboxmode:
+    enabled: false
+  search:
+    performIndexSync: true
 pipelines:
-  envPrefix: test
-  esHost: https://test.com
-  doAllThreads: 1
-
-# file with all application keys & secrets
-appkeys:
-  file: @appkeys.file@
-  whitelist: gbif.registry-ws-client-it,gbif.app.it,gbif.portal
-
-# d7dddbf4-2cf0-4f39-9b2a-bb099caae36c is the GBIF Backbone Taxonomy
-# comma separated list of UUID
-doi:
-  url: https://doi.org/
-  prefix: 10.21373
-  datasetParentExcludeList: d7dddbf4-2cf0-4f39-9b2a-bb099caae36c
-
-# ElasticSearch
-
+  envPrefix: dev
+  esHost: https://logs.gbif.org
+  doAllThreads: 10
 elasticsearch:
   registry:
-    enabled: false
-    hosts: @elasticsearch.registry.hosts@
-    index: @elasticsearch.registry.index@
-    connectionTimeOut: @elasticsearch.registry.connectionTimeOut@
-    socketTimeOut: @elasticsearch.registry.socketTimeOut@
-    connectionRequestTimeOut: @elasticsearch.registry.connectionRequestTimeOut@
-    maxRetryTimeOut: @elasticsearch.registry.maxRetryTimeOut@
+    hosts: http://registry-search.gbif-dev.org:9200/
+    index: dataset
+    connectionTimeOut: 60000
+    socketTimeOut: 60000
+    connectionRequestTimeOut: 120000
+    maxRetryTimeOut: 120000
+    enabled: true
   occurrence:
-    enabled: false
-    hosts: @elasticsearch.occurrence.hosts@
-    index: @elasticsearch.occurrence.index@
-    connectionTimeOut: @elasticsearch.occurrence.connectionTimeOut@
-    socketTimeOut: @elasticsearch.occurrence.socketTimeOut@
-    connectionRequestTimeOut: @elasticsearch.occurrence.connectionRequestTimeOut@
-    maxRetryTimeOut: @elasticsearch.occurrence.maxRetryTimeOut@
+    hosts: http://c3n1.gbif.org:9200/,http://c3n2.gbif.org:9200/,http://c3n3.gbif.org:9200/
+    index: occurrence
+    connectionTimeOut: 60000
+    socketTimeOut: 60000
+    connectionRequestTimeOut: 120000
+    maxRetryTimeOut: 120000
+    enabled: true
 indexing:
   datasource:
     checklistbank:
-      url: @checklistbank-it-spring.db.url@
-      username: @checklistbank-it-spring.db.username@
-      password: @checklistbank-it-spring.db.password@
+      password: 6rYzmJxtOTh37AsDzM4r
+      url: jdbc:postgresql://pg1.gbif-dev.org/dev_checklistbank
+      username: clb
       hikari:
-        maximumPoolSize: 10
+        maxPoolSize: 8
         minimumIdle: 1
         idleTimeout: 60000
         connectionTimeout: 5000
-
-# Database
-registry:
-  datasource:
-    url: @registry-it.db.url@
-    password: @registry-it.db.password@
-    username: @registry-it.db.username@
-    data: classpath:init-db.sql
-    hikari:
-      idleTimeout: 60000
-      maximumPoolSize: 10
-      minimumIdle: 1
-
-# GBIF Directory configuration
-directory:
-  app:
-    key: @directory.app.key@
-    secret: @directory.app.secret@
-  ws:
-    url: @directory.ws.url@
-
-# OAI-PMH repositories expose their base URL as the value of the baseURL element in the Identify response
-# this value will be used as the baseURL element in the Identify response
-oaipmh:
-  baseUrl: http://api.gbif-dev.org/v1/oai-pmh/registry
-  adminEmail: gbifregistry@mailinator.com
-
-# Spring (messaging, liquibase, mailing)
 spring:
-  # DOI messaging properties
-  # queue 'registry-doi' should be used
-  rabbitmq:
-    host: @registry.messaging.hostname@
-    port: @registry.messaging.port@
-    username: @registry.messaging.username@
-    password: @registry.messaging.password@
-    virtual-host: @registry.messaging.virtualhost@
-  # Liquibase
   liquibase:
-    change-log: classpath:liquibase/master.xml
     enabled: false
-    default-schema: public
-  # Mail
   mail:
     default-encoding: UTF-8
-    host: @mail.smtp.host@
-    username: @mail.username@
-    password: @mail.password@
-    port: @mail.smtp.port@
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+    host: localhost
+    password:
+    port: 25
     test-connection: false
+    username:
+  rabbitmq:
+    host: mq.gbif.org
+    password: dev-registry
+    port: 5672
+    username: dev-registry
+    virtual-host: /dev
+management:
+  endpoints.web.exposure.include: "*"
