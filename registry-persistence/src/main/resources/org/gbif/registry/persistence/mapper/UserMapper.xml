@@ -13,15 +13,15 @@
     <result column="system_settings" property="systemSettings" typeHandler="org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler"/>
     <result column="last_login" property="lastLogin" />
     <result column="deleted" property="deleted" />
-    <result column="language" property="language" />
+    <result column="locale" property="locale" />
   </resultMap>
 
   <sql id="WRITABLE_USER_FIELDS">
-    username,first_name,last_name,email,password,roles,settings,system_settings,created,language
+    username,first_name,last_name,email,password,roles,settings,system_settings,created,locale
   </sql>
 
   <sql id="USER_FIELDS">
-    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings,u.system_settings,u.last_login, u.deleted,u.language
+    u.key,u.username,u.first_name,u.last_name,u.email,u.password,u.roles,u.settings,u.system_settings,u.last_login, u.deleted,u.locale
   </sql>
 
   <sql id="WRITABLE_USER_FIELD_TYPES">
@@ -34,7 +34,7 @@
     #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     now(), <!-- created -->
-    #{language,jdbcType=VARCHAR}
+    #{locale,jdbcType=VARCHAR}
   </sql>
 
   <sql id="USER_UPDATE">
@@ -46,7 +46,7 @@
     settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     deleted = #{deleted},
-    language = #{language,jdbcType=VARCHAR}
+    locale = #{locale,jdbcType=VARCHAR}
   </sql>
 
   <sql id="USER_DELETE">
@@ -59,7 +59,7 @@
     settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     deleted = now(),
-    language = #{language,jdbcType=VARCHAR}
+    locale = #{locale,jdbcType=VARCHAR}
   </sql>
 
   <sql id="SIMPLE_SEARCH">

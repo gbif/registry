@@ -68,8 +68,7 @@ public class IdentityEmailManager {
               .map(download -> doiUrl + download.getDoi())
               .collect(Collectors.toList());
 
-      Locale locale = user.getLanguage() != null
-          ? new Locale(user.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
+      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
 
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.DELETE_ACCOUNT,
@@ -108,8 +107,7 @@ public class IdentityEmailManager {
   public BaseEmailModel generatePasswordChangedEmailModel(GbifUser user) throws IOException {
     try {
       BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
-      Locale locale = user.getLanguage() != null
-          ? new Locale(user.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
+      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, locale);
     } catch (TemplateException e) {
@@ -119,8 +117,7 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
     try {
-      Locale locale = user.getLanguage() != null
-          ? new Locale(user.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
+      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.WELCOME, user.getEmail(), new Object(), locale);
     } catch (TemplateException e) {
@@ -137,8 +134,7 @@ public class IdentityEmailManager {
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, EmailType emailType)
       throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
-    Locale locale = user.getLanguage() != null
-        ? new Locale(user.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
+    Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
   }
 
