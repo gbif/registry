@@ -33,6 +33,11 @@ public class DoiGeneratorStub implements DoiGenerator {
   }
 
   @Override
+  public DOI newDerivedDatasetDOI() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public DOI newDownloadDOI() {
     throw new UnsupportedOperationException();
   }
