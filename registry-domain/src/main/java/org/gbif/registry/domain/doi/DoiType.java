@@ -20,6 +20,9 @@ public enum DoiType {
   /** DOI of this type has no specific prefixes. */
   DATASET,
 
+  /** DOI of this type has no specific prefixes. */
+  DERIVED_DATASET,
+
   /** DOI of this type has a special prefix "dl.". */
   DOWNLOAD,
 

@@ -97,6 +97,11 @@ public class DoiGeneratorMQ implements DoiGenerator {
     return newDOI("dp.", DoiType.DATA_PACKAGE);
   }
 
+  @Override
+  public DOI newDerivedDatasetDOI() {
+    return newDOI("dd.", DoiType.DERIVED_DATASET);
+  }
+
   private DOI newDOI(final String shoulder, DoiType type) {
     // try a thousand times then fail
     for (int x = 0; x < 1000; x++) {

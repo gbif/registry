@@ -36,6 +36,14 @@ public interface DoiGenerator {
   DOI newDatasetDOI();
 
   /**
+   * Generates a new unique GBIF derived dataset DOI. The new DOI is unknown to DataCite still and only
+   * lives in the GBIF registry which guarantees it to be unique.
+   *
+   * @return the new DOI
+   */
+  DOI newDerivedDatasetDOI();
+
+  /**
    * Generates a new unique GBIF download DOI. The new DOI is unknown to DataCite still and only
    * lives in the GBIF registry which guarantees it to be unique.
    *
