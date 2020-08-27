@@ -33,6 +33,7 @@ import org.gbif.registry.doi.converter.DatasetConverter;
 import org.gbif.registry.doi.converter.DerivedDatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.net.URI;
@@ -135,9 +136,8 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(DOI doi, String creatorName, String title, List<DOI> relatedDatasets) {
-    // TODO: 27/08/2020 something else?
-    return DerivedDatasetConverter.convert(doi, creatorName, title, relatedDatasets);
+  public DataCiteMetadata buildMetadata(DOI doi, CitationCreationRequest data) {
+    return DerivedDatasetConverter.convert(doi, data);
   }
 
   @Override

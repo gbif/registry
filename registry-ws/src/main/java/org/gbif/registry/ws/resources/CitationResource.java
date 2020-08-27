@@ -46,8 +46,9 @@ public class CitationResource {
 
     DOI doi = doiGenerator.newDerivedDatasetDOI();
 
-    DataCiteMetadata metadata =
-        doiHandlerStrategy.buildMetadata(doi, authentication.getName(), request.getTitle(), request.getRelatedDatasets());
+    request.setCreator(authentication.getName());
+
+    DataCiteMetadata metadata = doiHandlerStrategy.buildMetadata(doi, request);
 
     doiHandlerStrategy.scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget());
 
