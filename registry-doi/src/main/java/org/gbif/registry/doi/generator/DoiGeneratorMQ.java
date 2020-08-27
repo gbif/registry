@@ -166,6 +166,22 @@ public class DoiGeneratorMQ implements DoiGenerator {
   }
 
   @Override
+  public void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target)
+      throws InvalidMetadataException {
+    checkNotNull(doi, "DOI required");
+    checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
+
+    String xml = DataCiteValidator.toXml(doi, metadata);
+    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, target);
+
+    try {
+      messagePublisher.send(message);
+    } catch (IOException e) {
+      LOG.error("Failed sending DoiChangeMessage for {} and derived dataset", doi, e);
+    }
+  }
+
+  @Override
   public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey)
       throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");

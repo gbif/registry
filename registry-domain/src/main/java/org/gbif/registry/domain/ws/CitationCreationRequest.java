@@ -3,32 +3,16 @@ package org.gbif.registry.domain.ws;
 import org.gbif.api.model.common.DOI;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
 
-public class CitationResponse {
-
-  private DOI assignedDOI;
-
-  private String citation;
+public class CitationCreationRequest {
 
   private String title;
 
   private URI target;
 
-  public DOI getAssignedDOI() {
-    return assignedDOI;
-  }
-
-  public void setAssignedDOI(DOI assignedDOI) {
-    this.assignedDOI = assignedDOI;
-  }
-
-  public String getCitation() {
-    return citation;
-  }
-
-  public void setCitation(String citation) {
-    this.citation = citation;
-  }
+  private List<DOI> relatedDatasets;
 
   public String getTitle() {
     return title;
@@ -44,5 +28,13 @@ public class CitationResponse {
 
   public void setTarget(URI target) {
     this.target = target;
+  }
+
+  public List<DOI> getRelatedDatasets() {
+    return Collections.unmodifiableList(relatedDatasets);
+  }
+
+  public void setRelatedDatasets(List<DOI> relatedDatasets) {
+    this.relatedDatasets = relatedDatasets;
   }
 }

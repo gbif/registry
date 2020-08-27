@@ -20,6 +20,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.doi.generator.DoiGenerator;
 
+import java.net.URI;
 import java.util.UUID;
 
 /**
@@ -57,6 +58,12 @@ public class DoiGeneratorStub implements DoiGenerator {
 
   @Override
   public void registerDataset(DOI doi, DataCiteMetadata metadata, UUID datasetKey)
+      throws InvalidMetadataException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target)
       throws InvalidMetadataException {
     throw new UnsupportedOperationException();
   }

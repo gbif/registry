@@ -23,6 +23,8 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 
+import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -48,6 +50,11 @@ public class DoiHandlerStrategyStub implements DataCiteDoiHandlerStrategy {
   }
 
   @Override
+  public DataCiteMetadata buildMetadata(DOI doi, String creatorName, String title, List<DOI> relatedDatasets) {
+    return null;
+  }
+
+  @Override
   public DataCiteMetadata buildMetadata(
       Dataset dataset, @Nullable DOI related, @Nullable RelationType relationType) {
     return null;
@@ -61,4 +68,7 @@ public class DoiHandlerStrategyStub implements DataCiteDoiHandlerStrategy {
 
   @Override
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {}
+
+  @Override
+  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target) {}
 }
