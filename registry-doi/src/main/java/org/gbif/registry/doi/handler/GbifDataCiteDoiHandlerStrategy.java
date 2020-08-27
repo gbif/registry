@@ -30,10 +30,12 @@ import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.occurrence.query.TitleLookupService;
 import org.gbif.registry.doi.config.DoiConfigurationProperties;
 import org.gbif.registry.doi.converter.DatasetConverter;
+import org.gbif.registry.doi.converter.DerivedDatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
+import java.net.URI;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
@@ -133,6 +135,12 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
   }
 
   @Override
+  public DataCiteMetadata buildMetadata(DOI doi, String creatorName, String title, List<DOI> relatedDatasets) {
+    // TODO: 27/08/2020 something else?
+    return DerivedDatasetConverter.convert(doi, creatorName, title, relatedDatasets);
+  }
+
+  @Override
   public void datasetChanged(Dataset dataset, @Nullable DOI previousDoi) {
     // When configured, we can skip the DOI logic for some dataset when the getParentDatasetKey is
     // in the
@@ -204,6 +212,16 @@ public class GbifDataCiteDoiHandlerStrategy implements DataCiteDoiHandlerStrateg
       doiGenerator.registerDataset(doi, metadata, datasetKey);
     } catch (InvalidMetadataException e) {
       LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}, dataset {}", doi, datasetKey, e);
+      doiGenerator.failed(doi, e);
+    }
+  }
+
+  @Override
+  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target) {
+    try {
+      doiGenerator.registerDerivedDataset(doi, metadata, target);
+    } catch (InvalidMetadataException e) {
+      LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}", doi, e);
       doiGenerator.failed(doi, e);
     }
   }

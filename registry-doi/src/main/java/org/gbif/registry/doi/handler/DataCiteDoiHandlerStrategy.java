@@ -22,6 +22,8 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 
+import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -37,6 +39,9 @@ public interface DataCiteDoiHandlerStrategy {
 
   /** Build the DataCiteMetadata for a Dataset. */
   DataCiteMetadata buildMetadata(Dataset dataset);
+
+  /** Build the DataCiteMetadata for a Dataset. */
+  DataCiteMetadata buildMetadata(DOI doi, String creatorName, String title, List<DOI> relatedDatasets);
 
   /** Build the DataCiteMetadata for a Dataset that includes a relation to another DOI. */
   DataCiteMetadata buildMetadata(
@@ -61,4 +66,7 @@ public interface DataCiteDoiHandlerStrategy {
 
   /** Directly schedule the registration of a Dataset DOI. */
   void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey);
+
+  /** Directly schedule the registration of a Derived Dataset DOI. */
+  void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target);
 }
