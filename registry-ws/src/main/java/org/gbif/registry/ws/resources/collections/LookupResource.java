@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,7 +36,6 @@ public class LookupResource {
 
   private final DefaultLookupService lookupService;
 
-  @Autowired
   public LookupResource(DefaultLookupService lookupService) {
     this.lookupService = lookupService;
   }

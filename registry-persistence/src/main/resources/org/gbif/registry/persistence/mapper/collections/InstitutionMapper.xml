@@ -234,7 +234,7 @@
       AND trim(i.code) = trim(#{code,jdbcType=VARCHAR})
     </if>
     <if test="identifier != null" >
-      AND regexp_replace(trim(id.identifier), 'http://', '') = regexp_replace(trim(#{identifier,jdbcType=VARCHAR}), 'http://', '')
+      AND regexp_replace(trim(id.identifier), 'http://|https://|urn:uuid:|urn:lsid:', '') = regexp_replace(trim(#{identifier,jdbcType=VARCHAR}), 'http://|https://|urn:uuid:|urn:lsid:', '')
     </if>
     <if test="name != null" >
       AND regexp_replace(quote_literal(unaccent(lower(trim(i.name)))),'\s+','','g') = regexp_replace(quote_literal(unaccent(lower(trim(#{name,jdbcType=VARCHAR})))),'\s+','','g')
