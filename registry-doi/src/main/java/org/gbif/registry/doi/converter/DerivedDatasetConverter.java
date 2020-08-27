@@ -14,9 +14,10 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
+import org.gbif.registry.doi.util.RegistryDoiUtils;
+import org.gbif.registry.domain.ws.CitationCreationRequest;
 
 import java.util.Date;
-import java.util.List;
 
 import static org.gbif.registry.doi.util.DataCiteConstants.GBIF_PUBLISHER;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
@@ -27,13 +28,13 @@ public final class DerivedDatasetConverter {
   private DerivedDatasetConverter() {
   }
 
-  public static DataCiteMetadata convert(DOI doi, String creatorName, String title, List<DOI> relatedDatasets) {
+  public static DataCiteMetadata convert(DOI doi, CitationCreationRequest data) {
     final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
     // Required fields
     convertIdentifier(builder, doi);
-    convertCreators(builder, creatorName);
-    convertTitles(builder, title);
+    convertCreators(builder, data);
+    convertTitles(builder, data);
     convertPublisher(builder);
     convertPublicationYear(builder);
     convertResourceType(builder);
@@ -45,7 +46,7 @@ public final class DerivedDatasetConverter {
 //    convertLanguage(builder);
 //    convertContributors(builder);
 //    convertAlternateIdentifiers(builder);
-    convertRelatedIdentifiers(builder, relatedDatasets);
+    convertRelatedIdentifiers(builder, data);
 //    convertRightsList(builder);
 //    convertSubjects(builder);
 //    convertGeoLocations(builder);
@@ -61,20 +62,20 @@ public final class DerivedDatasetConverter {
             .build());
   }
 
-  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, String creatorName) {
+  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, CitationCreationRequest data) {
     builder.withCreators(
         Creators.builder()
             .withCreator(
                 Creator.builder()
-                    .withCreatorName(CreatorName.builder().withValue(creatorName).build())
+                    .withCreatorName(CreatorName.builder().withValue(data.getCreator()).build())
                     .build())
             .build());
   }
 
-  private static void convertTitles(DataCiteMetadata.Builder<Void> builder, String title) {
+  private static void convertTitles(DataCiteMetadata.Builder<Void> builder, CitationCreationRequest data) {
     builder.withTitles(
         Titles.builder()
-            .withTitle(Title.builder().withValue(title).build())
+            .withTitle(Title.builder().withValue(data.getTitle()).build())
             .build());
   }
 
@@ -90,23 +91,41 @@ public final class DerivedDatasetConverter {
   private static void convertResourceType(DataCiteMetadata.Builder<Void> builder) {
     builder.withResourceType(
         DataCiteMetadata.ResourceType.builder()
-            .withResourceTypeGeneral(ResourceType.DATASET) // TODO: 27/08/2020 is DATASET ok?  what value?
+            .withResourceTypeGeneral(ResourceType.DATASET)
             .build());
   }
 
-  // TODO: 27/08/2020 is this ok?
   private static void convertRelatedIdentifiers(
-      DataCiteMetadata.Builder<Void> builder, List<DOI> relatedDatasets) {
-    if (!relatedDatasets.isEmpty()) {
-      final RelatedIdentifiers.Builder<?> relBuilder = builder.withRelatedIdentifiers();
-      for (DOI doi : relatedDatasets) {
-        if (doi != null) {
-          relBuilder.addRelatedIdentifier(
-              RelatedIdentifier.builder()
-                  .withRelationType(RelationType.IS_DERIVED_FROM)
-                  .withValue(doi.getDoiName())
-                  .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-                  .build());
+      DataCiteMetadata.Builder<Void> builder, CitationCreationRequest data) {
+    final RelatedIdentifiers.Builder<?> relBuilder = builder.withRelatedIdentifiers();
+
+    if (data.getOriginalDownloadDOI() != null) {
+      relBuilder.addRelatedIdentifier(
+          RelatedIdentifier.builder()
+              .withRelationType(RelationType.IS_DERIVED_FROM)
+              .withValue(data.getOriginalDownloadDOI().getDoiName())
+              .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+              .build());
+    }
+
+    if (!data.getRelatedDatasets().isEmpty()) {
+      for (String doiOrUuid : data.getRelatedDatasets()) {
+        if (doiOrUuid != null) {
+          if (DOI.isParsable(doiOrUuid)) {
+            relBuilder.addRelatedIdentifier(
+                RelatedIdentifier.builder()
+                    .withRelationType(RelationType.IS_DERIVED_FROM)
+                    .withValue(new DOI(doiOrUuid).getDoiName())
+                    .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+                    .build());
+          } else if (RegistryDoiUtils.isUuid(doiOrUuid)) {
+            relBuilder.addRelatedIdentifier(
+                RelatedIdentifier.builder()
+                    .withRelationType(RelationType.IS_DERIVED_FROM)
+                    .withValue("https://www.gbif.org/dataset/" + doiOrUuid)
+                    .withRelatedIdentifierType(RelatedIdentifierType.URL)
+                    .build());
+          }
         }
       }
     }

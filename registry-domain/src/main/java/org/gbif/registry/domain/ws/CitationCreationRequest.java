@@ -8,11 +8,20 @@ import java.util.List;
 
 public class CitationCreationRequest {
 
+  private DOI originalDownloadDOI;
   private String title;
-
+  private String creator;
   private URI target;
+  // List of DOIs or UUIDs
+  private List<String> relatedDatasets;
 
-  private List<DOI> relatedDatasets;
+  public DOI getOriginalDownloadDOI() {
+    return originalDownloadDOI;
+  }
+
+  public void setOriginalDownloadDOI(DOI originalDownloadDOI) {
+    this.originalDownloadDOI = originalDownloadDOI;
+  }
 
   public String getTitle() {
     return title;
@@ -20,6 +29,14 @@ public class CitationCreationRequest {
 
   public void setTitle(String title) {
     this.title = title;
+  }
+
+  public String getCreator() {
+    return creator;
+  }
+
+  public void setCreator(String creator) {
+    this.creator = creator;
   }
 
   public URI getTarget() {
@@ -30,11 +47,11 @@ public class CitationCreationRequest {
     this.target = target;
   }
 
-  public List<DOI> getRelatedDatasets() {
+  public List<String> getRelatedDatasets() {
     return Collections.unmodifiableList(relatedDatasets);
   }
 
-  public void setRelatedDatasets(List<DOI> relatedDatasets) {
+  public void setRelatedDatasets(List<String> relatedDatasets) {
     this.relatedDatasets = relatedDatasets;
   }
 }
