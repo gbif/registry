@@ -42,7 +42,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
     FREEMARKER_CONFIG.setLocale(Locale.US);
     FREEMARKER_CONFIG.setNumberFormat("0.####");
     FREEMARKER_CONFIG.setDateFormat("yyyy-mm-dd");
-    FREEMARKER_CONFIG.setClassForTemplateLoading(FreemarkerEmailTemplateProcessor.class, "/email");
+    FREEMARKER_CONFIG.setClassForTemplateLoading(FreemarkerEmailTemplateProcessor.class, "/email/templates");
   }
 
   /**
