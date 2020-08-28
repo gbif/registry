@@ -28,7 +28,8 @@ import org.springframework.stereotype.Service;
 @Qualifier("identityEmailDataProvider")
 public class IdentityEmailDataProvider implements EmailDataProvider {
 
-  public static final String IDENTITY_EMAIL_SUBJECTS_PATH = "email/subjects/identity_email_subjects";
+  public static final String IDENTITY_EMAIL_SUBJECTS_PATH =
+      "email/subjects/identity_email_subjects";
 
   @Override
   public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
