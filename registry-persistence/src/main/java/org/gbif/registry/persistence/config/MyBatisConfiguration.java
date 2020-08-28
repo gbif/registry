@@ -61,6 +61,7 @@ import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHand
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
@@ -92,6 +93,7 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(DOI.class, DOITypeHandler.class);
       configuration.getTypeHandlerRegistry().register(Predicate.class, PredicateTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
+      configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("Node", Node.class);
       configuration.getTypeAliasRegistry().registerAlias("Organization", Organization.class);
@@ -167,6 +169,7 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
+      configuration.getTypeAliasRegistry().registerAlias("LocaleTypeHandler", LocaleTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
