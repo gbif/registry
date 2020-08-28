@@ -57,7 +57,8 @@ public class IdentityEmailManager {
     this.doiUrl = doiUrl;
   }
 
-  public BaseEmailModel generateDeleteUserEmailModel(GbifUser user, List<Download> downloads) throws IOException {
+  public BaseEmailModel generateDeleteUserEmailModel(GbifUser user, List<Download> downloads)
+      throws IOException {
     try {
       List<String> downloadUrls =
           downloads.stream()
