@@ -1,6 +1,8 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
@@ -62,31 +64,31 @@ public class CitationResource {
   }
 
   @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-  public CitationResponse createCitation(@RequestBody CitationUpdateRequest request) {
+  public CitationResponse updateCitation(@RequestBody CitationUpdateRequest request) {
     throw new UnsupportedOperationException("not implemented");
   }
 
   @GetMapping(path = "{doiPrefix}/{doiSuffix}", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity getCitation(
+  public CitationResponse getCitation(
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix) {
     throw new UnsupportedOperationException("not implemented");
   }
 
   @GetMapping(path = "dataset/{key}", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity getDatasetCitation(@PathVariable("key")UUID datasetKey) {
+  public ResponseEntity getDatasetCitation(@PathVariable("key") UUID datasetKey) {
     throw new UnsupportedOperationException("not implemented");
   }
 
   @GetMapping(path = "{doiPrefix}/{doiSuffix}/citation", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity getCitationText(
+  public String getCitationText(
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix) {
     throw new UnsupportedOperationException("not implemented");
   }
 
   @GetMapping(path = "{doiPrefix}/{doiSuffix}/datasets", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity getCitationDatasets(
+  public PagingResponse<Dataset> getCitationDatasets(
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix) {
     throw new UnsupportedOperationException("not implemented");

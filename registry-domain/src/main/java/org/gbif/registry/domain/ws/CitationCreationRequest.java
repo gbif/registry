@@ -2,6 +2,7 @@ package org.gbif.registry.domain.ws;
 
 import org.gbif.api.model.common.DOI;
 
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -23,6 +24,7 @@ public class CitationCreationRequest {
     this.originalDownloadDOI = originalDownloadDOI;
   }
 
+  @NotNull
   public String getTitle() {
     return title;
   }
@@ -47,6 +49,7 @@ public class CitationCreationRequest {
     this.target = target;
   }
 
+  @NotNull
   public List<String> getRelatedDatasets() {
     return Collections.unmodifiableList(relatedDatasets);
   }
