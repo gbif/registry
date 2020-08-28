@@ -146,15 +146,12 @@ public class OrganizationEmailManager {
               : Collections.singletonList(organizationMailConfigProperties.getHelpdesk());
       LOG.debug("Cc addresses: {}", ccAddresses);
 
-      Locale locale = newOrganization.getLanguage() != null
-          ? new Locale(newOrganization.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
-
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
               OrganizationEmailType.NEW_ORGANIZATION,
               emailAddress,
               templateDataModel,
-              locale,
+              Locale.ENGLISH,
               ccAddresses);
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
@@ -188,14 +185,12 @@ public class OrganizationEmailManager {
     LOG.debug("Name: {}; Organization url: {}", HELPDESK_NAME, organizationUrl);
 
     try {
-      Locale locale = newOrganization.getLanguage() != null
-          ? new Locale(newOrganization.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
       baseEmailModelList.add(
           emailTemplateProcessors.buildEmail(
               OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
               organizationMailConfigProperties.getHelpdesk(),
               templateDataModel,
-              locale));
+              Locale.ENGLISH));
 
       Optional<Contact> pointOfContact =
           newOrganization.getContacts().stream()
@@ -218,7 +213,7 @@ public class OrganizationEmailManager {
                 OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
                 email,
                 templateDataModel,
-                locale));
+                Locale.ENGLISH));
       } else {
         LOG.debug("Point of contact email is not present!");
       }
@@ -239,8 +234,6 @@ public class OrganizationEmailManager {
             contact,
             emailAddress,
             mailConfigProperties.getCc());
-    Locale locale = organization.getLanguage() != null
-        ? new Locale(organization.getLanguage().getIso2LetterCode()) : Locale.ENGLISH;
 
     try {
       // if true, send mails to disposable email address service
@@ -250,7 +243,7 @@ public class OrganizationEmailManager {
                 OrganizationEmailType.PASSWORD_REMINDER,
                 mailConfigProperties.getDevemail().getAddress(),
                 templateDataModel,
-                locale,
+                Locale.ENGLISH,
                 organization.getTitle());
       } else {
         baseEmailModel =
@@ -258,7 +251,7 @@ public class OrganizationEmailManager {
                 OrganizationEmailType.PASSWORD_REMINDER,
                 emailAddress,
                 templateDataModel,
-                locale,
+                Locale.ENGLISH,
                 mailConfigProperties.getCc(),
                 organization.getTitle());
       }
