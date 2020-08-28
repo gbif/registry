@@ -21,29 +21,22 @@ import org.gbif.registry.mail.EmailType;
 public enum OrganizationEmailType implements EmailType {
 
   /** Email 'New organization, requires endorsement'. */
-  NEW_ORGANIZATION("newOrganization", "confirm_organization_en.ftl"),
+  NEW_ORGANIZATION("newOrganization"),
 
   /** Email 'Organization was endorsed'. */
-  ENDORSEMENT_CONFIRMATION("endorsementConfirmation", "organization_confirmed_en.ftl"),
+  ENDORSEMENT_CONFIRMATION("endorsementConfirmation"),
 
   /** Email 'Password reminder'. */
-  PASSWORD_REMINDER("passwordReminder", "organization_password_reminder_en.ftl");
+  PASSWORD_REMINDER("passwordReminder");
 
-  private final String subjectKey;
-  private final String ftlTemplate;
+  private final String key;
 
-  OrganizationEmailType(String subjectKey, String ftlTemplate) {
-    this.subjectKey = subjectKey;
-    this.ftlTemplate = ftlTemplate;
+  OrganizationEmailType(String key) {
+    this.key = key;
   }
 
   @Override
-  public String getSubjectKey() {
-    return subjectKey;
-  }
-
-  @Override
-  public String getFtlTemplate() {
-    return ftlTemplate;
+  public String getKey() {
+    return key;
   }
 }

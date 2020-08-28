@@ -20,6 +20,8 @@ import java.util.Locale;
 /** Email helper class which provide template name and email subject. */
 public interface EmailDataProvider {
 
+  String EMAIL_TEMPLATES_PATH = "email/templates/email_templates";
+
   /**
    * Returns email subject for selected locale and email type.
    *

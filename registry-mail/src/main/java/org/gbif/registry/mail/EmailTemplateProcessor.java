@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-import javax.annotation.Nullable;
-
 import freemarker.template.TemplateException;
 
 /** Email helper class which process template and prepare data to send. */
@@ -42,7 +40,7 @@ public interface EmailTemplateProcessor {
       EmailType emailType,
       String emailAddress,
       Object templateDataModel,
-      @Nullable Locale locale,
+      Locale locale,
       String... subjectParams)
       throws IOException, TemplateException;
 
@@ -61,7 +59,7 @@ public interface EmailTemplateProcessor {
       EmailType emailType,
       String emailAddress,
       Object templateDataModel,
-      @Nullable Locale locale,
+      Locale locale,
       List<String> ccAddresses,
       String... subjectParams)
       throws IOException, TemplateException;

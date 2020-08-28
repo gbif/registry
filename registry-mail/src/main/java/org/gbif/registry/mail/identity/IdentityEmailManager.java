@@ -57,8 +57,7 @@ public class IdentityEmailManager {
     this.doiUrl = doiUrl;
   }
 
-  public BaseEmailModel generateDeleteUserEmailModel(
-      String username, String email, List<Download> downloads) throws IOException {
+  public BaseEmailModel generateDeleteUserEmailModel(GbifUser user, List<Download> downloads) throws IOException {
     try {
       List<String> downloadUrls =
           downloads.stream()
@@ -69,11 +68,13 @@ public class IdentityEmailManager {
               .map(download -> doiUrl + download.getDoi())
               .collect(Collectors.toList());
 
+      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
+
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.DELETE_ACCOUNT,
-          email,
-          new AccountDeleteDataModel(username, null, downloadUrls),
-          Locale.ENGLISH);
+          user.getEmail(),
+          new AccountDeleteDataModel(user.getUserName(), null, downloadUrls),
+          locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -106,8 +107,9 @@ public class IdentityEmailManager {
   public BaseEmailModel generatePasswordChangedEmailModel(GbifUser user) throws IOException {
     try {
       BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
+      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, Locale.ENGLISH);
+          IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -115,8 +117,9 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
     try {
+      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.WELCOME, user.getEmail(), new Object(), Locale.ENGLISH);
+          IdentityEmailType.WELCOME, user.getEmail(), new Object(), locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -131,7 +134,8 @@ public class IdentityEmailManager {
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, EmailType emailType)
       throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
-    return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, Locale.ENGLISH);
+    Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
+    return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
   }
 
   private URL generateConfirmUserUrl(String userName, UUID confirmationKey)

@@ -56,11 +56,10 @@ interface UserSuretyDelegate {
   /**
    * Handles the logic on user deletion.
    *
-   * @param username username
-   * @param email user's email
+   * @param user user
    * @param downloads user's downloads
    */
-  void onDeleteUser(String username, String email, List<Download> downloads);
+  void onDeleteUser(GbifUser user, List<Download> downloads);
 
   /**
    * Handles the logic on password resetting (e.g. create challenge code, generate and send email).
