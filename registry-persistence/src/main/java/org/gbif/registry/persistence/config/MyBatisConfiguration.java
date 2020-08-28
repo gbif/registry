@@ -169,7 +169,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
-      configuration.getTypeAliasRegistry().registerAlias("LocaleTypeHandler", LocaleTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("LocaleTypeHandler", LocaleTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
