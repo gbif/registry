@@ -13,7 +13,7 @@
     <result column="system_settings" property="systemSettings" typeHandler="org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler"/>
     <result column="last_login" property="lastLogin" />
     <result column="deleted" property="deleted" />
-    <result column="locale" property="locale" />
+    <result column="locale" property="locale" typeHandler="org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler"/>
   </resultMap>
 
   <sql id="WRITABLE_USER_FIELDS">
@@ -34,7 +34,7 @@
     #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     now(), <!-- created -->
-    #{locale,jdbcType=VARCHAR}
+    #{locale,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler}
   </sql>
 
   <sql id="USER_UPDATE">
@@ -46,7 +46,7 @@
     settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     deleted = #{deleted},
-    locale = #{locale,jdbcType=VARCHAR}
+    locale = #{locale,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler}
   </sql>
 
   <sql id="USER_DELETE">
@@ -59,7 +59,7 @@
     settings = #{settings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     system_settings = #{systemSettings,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.auxhandler.SettingsTypeHandler}::hstore,
     deleted = now(),
-    locale = #{locale,jdbcType=VARCHAR}
+    locale = #{locale,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler}
   </sql>
 
   <sql id="SIMPLE_SEARCH">
