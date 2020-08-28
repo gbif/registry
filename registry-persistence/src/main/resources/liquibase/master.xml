@@ -80,4 +80,5 @@
   <include file="liquibase/072-comments-grscicoll.xml" />
   <include file="liquibase/073-organization-endorsed-field.xml" />
   <include file="liquibase/074-organization-endorsement-status.xml" />
+  <include file="liquibase/075-user-language.xml" />
 </databaseChangeLog>
