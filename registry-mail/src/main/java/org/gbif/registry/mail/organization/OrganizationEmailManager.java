@@ -234,6 +234,7 @@ public class OrganizationEmailManager {
             contact,
             emailAddress,
             mailConfigProperties.getCc());
+
     try {
       // if true, send mails to disposable email address service
       if (mailConfigProperties.getDevemail().getEnabled()) {

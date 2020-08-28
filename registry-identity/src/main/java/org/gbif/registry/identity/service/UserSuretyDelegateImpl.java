@@ -62,14 +62,14 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   }
 
   @Override
-  public void onDeleteUser(String username, String email, List<Download> downloads) {
+  public void onDeleteUser(GbifUser user, List<Download> downloads) {
     BaseEmailModel emailModel;
     try {
-      emailModel = identityEmailManager.generateDeleteUserEmailModel(username, email, downloads);
+      emailModel = identityEmailManager.generateDeleteUserEmailModel(user, downloads);
     } catch (IOException e) {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,
-          "Error while trying to generate email to delete user " + username,
+          "Error while trying to generate email to delete user " + user.getUserName(),
           e);
       return;
     }
