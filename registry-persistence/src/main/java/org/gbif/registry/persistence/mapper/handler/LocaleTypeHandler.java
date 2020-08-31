@@ -42,24 +42,18 @@ public class LocaleTypeHandler implements TypeHandler<Locale> {
   @Override
   public Locale getResult(ResultSet rs, int columnIndex) throws SQLException {
     String column = rs.getString(columnIndex);
-    return column != null
-        ? Locale.forLanguageTag(column.trim())
-        : null;
+    return column != null ? Locale.forLanguageTag(column.trim()) : null;
   }
 
   @Override
   public Locale getResult(ResultSet rs, String columnName) throws SQLException {
     String column = rs.getString(columnName);
-    return column != null
-        ? Locale.forLanguageTag(column.trim())
-        : null;
+    return column != null ? Locale.forLanguageTag(column.trim()) : null;
   }
 
   @Override
   public Locale getResult(CallableStatement cs, int columnIndex) throws SQLException {
     String column = cs.getString(columnIndex);
-    return column != null
-        ? Locale.forLanguageTag(column.trim())
-        : null;
+    return column != null ? Locale.forLanguageTag(column.trim()) : null;
   }
 }
