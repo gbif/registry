@@ -51,6 +51,7 @@ public class UserUpdateRulesManager {
     user.setLastName(userUpdate.getLastName());
     user.setEmail(userUpdate.getEmail());
     user.setSettings(userUpdate.getSettings());
+    user.setLocale(userUpdate.getLocale());
 
     if (isAdmin) {
       user.setRoles(userUpdate.getRoles());
@@ -78,6 +79,7 @@ public class UserUpdateRulesManager {
     user.setSettings(userCreate.getSettings());
     user.setSystemSettings(userCreate.getSystemSettings());
     user.getRoles().add(UserRole.USER);
+    user.setLocale(userCreate.getLocale());
     return user;
   }
 }
