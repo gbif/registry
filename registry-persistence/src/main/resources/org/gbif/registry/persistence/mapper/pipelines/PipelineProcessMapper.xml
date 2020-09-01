@@ -19,6 +19,9 @@
   </resultMap>
 
   <resultMap id="SEARCH_RESULT_MAP" type="org.gbif.api.model.pipelines.ws.SearchResult" autoMapping="true">
+    <result property="datasetKey" column="dataset_key"/>
+    <result property="executionKey" column="execution_key"/>
+    <result property="attempt" column="attempt"/>
     <result property="rerunReason" column="rerun_reason"/>
     <result property="stepState" column="state"/>
     <result property="stepType" column="type"/>
@@ -213,7 +216,8 @@
   </update>
 
   <select id="search" resultMap="SEARCH_RESULT_MAP">
-    SELECT pp.dataset_key, pp.attempt, pe.key, pe.rerun_reason, ps.type, ps.state, ps.started, ps.finished, ps.pipelines_version
+    SELECT pp.dataset_key dataset_key, pp.attempt, pe.key execution_key, pe.rerun_reason, ps.type, ps.state, ps.started,
+            ps.finished, ps.pipelines_version
     FROM pipeline_execution pe
     INNER JOIN pipeline_process pp on pp."key" = pe.pipeline_process_key
     INNER JOIN pipeline_step ps on ps.pipeline_execution_key = pe."key"
