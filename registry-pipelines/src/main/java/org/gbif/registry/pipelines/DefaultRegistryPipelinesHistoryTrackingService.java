@@ -156,7 +156,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     CompletableFuture.runAsync(
         () ->
             doOnAllDatasets(
-                datasetKey -> runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful),
+                datasetKey ->
+                    runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);

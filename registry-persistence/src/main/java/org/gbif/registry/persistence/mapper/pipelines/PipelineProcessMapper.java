@@ -120,5 +120,4 @@ public interface PipelineProcessMapper {
   List<PipelineProcess> getPipelineProcessesByDatasetAndAttempts(
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("attempts") List<Integer> attempts);
-
 }
