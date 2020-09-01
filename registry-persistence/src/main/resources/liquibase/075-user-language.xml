@@ -6,7 +6,7 @@
   <changeSet id="75" author="mpodolskiy">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-        ALTER TABLE public.user ADD COLUMN locale char(10);
+        ALTER TABLE public.user ADD COLUMN locale text;
        ]]>
     </sql>
   </changeSet>
