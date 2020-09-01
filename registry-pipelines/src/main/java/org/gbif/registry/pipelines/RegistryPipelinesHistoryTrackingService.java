@@ -185,5 +185,6 @@ public interface RegistryPipelinesHistoryTrackingService {
       @Nullable LocalDateTime finishedMin,
       @Nullable LocalDateTime finishedMax,
       @Nullable String rerunReason,
+      @Nullable String pipelinesVersion,
       @Nullable Pageable page);
 }

@@ -575,6 +575,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       @Nullable LocalDateTime finishedMin,
       @Nullable LocalDateTime finishedMax,
       @Nullable String rerunReason,
+      @Nullable String pipelinesVersion,
       @Nullable Pageable page) {
     return mapper.search(
         datasetKey,
@@ -585,6 +586,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         finishedMin,
         finishedMax,
         rerunReason,
+        pipelinesVersion,
         page);
   }
 
