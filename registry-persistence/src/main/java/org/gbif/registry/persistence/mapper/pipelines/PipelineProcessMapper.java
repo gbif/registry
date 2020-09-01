@@ -134,4 +134,15 @@ public interface PipelineProcessMapper {
       @Nullable @Param("rerunReason") String rerunReason,
       @Nullable @Param("pipelinesVersion") String pipelinesVersion,
       @Nullable @Param("page") Pageable page);
+
+  long searchCount(
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("state") PipelineStep.Status state,
+      @Nullable @Param("stepType") StepType stepType,
+      @Nullable @Param("startedMin") LocalDateTime startedMin,
+      @Nullable @Param("startedMax") LocalDateTime startedMax,
+      @Nullable @Param("finishedMin") LocalDateTime finishedMin,
+      @Nullable @Param("finishedMax") LocalDateTime finishedMax,
+      @Nullable @Param("rerunReason") String rerunReason,
+      @Nullable @Param("pipelinesVersion") String pipelinesVersion);
 }

@@ -256,4 +256,40 @@
     </if>
   </select>
 
+  <select id="searchCount" resultType="Long">
+    SELECT COUNT(*)
+    FROM pipeline_execution pe
+    INNER JOIN pipeline_process pp on pp."key" = pe.pipeline_process_key
+    INNER JOIN pipeline_step ps on ps.pipeline_execution_key = pe."key"
+    <where>
+      <if test="datasetKey != null">
+        pp.dataset_key = #{datasetKey, jdbcType=OTHER}
+      </if>
+      <if test="state != null">
+        AND ps.state = #{state, jdbcType=OTHER}
+      </if>
+      <if test="stepType != null">
+        AND ps.type = #{stepType, jdbcType=OTHER}
+      </if>
+      <if test="startedMin != null">
+        AND ps.started &gt;= #{startedMin, jdbcType=OTHER}
+      </if>
+      <if test="startedMax != null">
+        AND ps.started &lt;= #{startedMax, jdbcType=OTHER}
+      </if>
+      <if test="finishedMin != null">
+        AND ps.finished &gt;= #{finishedMin, jdbcType=OTHER}
+      </if>
+      <if test="finishedMax != null">
+        AND ps.finished &lt;= #{finishedMax, jdbcType=OTHER}
+      </if>
+      <if test="rerunReason != null">
+        AND pe.rerun_reason = #{rerunReason, jdbcType=VARCHAR}
+      </if>
+      <if test="pipelinesVersion != null">
+        AND ps.pipelines_version = #{pipelinesVersion, jdbcType=VARCHAR}
+      </if>
+    </where>
+  </select>
+
 </mapper>
