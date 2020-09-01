@@ -24,6 +24,7 @@
     <result property="stepType" column="type"/>
     <result property="stepStarted" column="started"/>
     <result property="stepFinished" column="finished"/>
+    <result property="pipelinesVersion" column="pipelines_version"/>
   </resultMap>
 
   <sql id="PIPELINE_PROCESS_FIELDS_CREATE">
@@ -212,7 +213,7 @@
   </update>
 
   <select id="search" resultMap="SEARCH_RESULT_MAP">
-    SELECT pp.dataset_key, pp.attempt, pe.key, pe.rerun_reason, ps.type, ps.state, ps.started, ps.finished
+    SELECT pp.dataset_key, pp.attempt, pe.key, pe.rerun_reason, ps.type, ps.state, ps.started, ps.finished, ps.pipelines_version
     FROM pipeline_execution pe
     INNER JOIN pipeline_process pp on pp."key" = pe.pipeline_process_key
     INNER JOIN pipeline_step ps on ps.pipeline_execution_key = pe."key"
@@ -240,6 +241,9 @@
       </if>
       <if test="rerunReason != null">
         AND pe.rerun_reason = #{rerunReason, jdbcType=VARCHAR}
+      </if>
+      <if test="pipelinesVersion != null">
+        AND ps.pipelines_version = #{pipelinesVersion, jdbcType=VARCHAR}
       </if>
     </where>
     ORDER BY ps.started DESC

@@ -234,6 +234,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @Nullable @RequestParam(value = "finishedMin", required = false) String finishedMinAsString,
       @Nullable @RequestParam(value = "finishedMax", required = false) String finishedMaxAsString,
       @Nullable @RequestParam(value = "rerunReason", required = false) String rerunReason,
+      @Nullable @RequestParam(value = "pipelinesVersion", required = false) String pipelinesVersion,
       Pageable page) {
 
     LocalDateTime startedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(startedMinAsString);
@@ -250,6 +251,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         finishedMin,
         finishedMax,
         rerunReason,
+        pipelinesVersion,
         page);
   }
 

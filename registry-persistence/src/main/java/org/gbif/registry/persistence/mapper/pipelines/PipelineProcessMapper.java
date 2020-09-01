@@ -132,5 +132,6 @@ public interface PipelineProcessMapper {
       @Nullable @Param("finishedMin") LocalDateTime finishedMin,
       @Nullable @Param("finishedMax") LocalDateTime finishedMax,
       @Nullable @Param("rerunReason") String rerunReason,
+      @Nullable @Param("pipelinesVersion") String pipelinesVersion,
       @Nullable @Param("page") Pageable page);
 }
