@@ -19,6 +19,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.StepType;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,6 +63,9 @@ public interface PipelineProcessMapper {
   PipelineProcess get(@Param("key") long key);
 
   Optional<Integer> getLastAttempt(@Param("datasetKey") UUID datasetKey);
+
+  Optional<Integer> getLastSuccessfulAttempt(
+      @Param("datasetKey") UUID datasetKey, @Param("stepType") StepType stepType);
 
   /**
    * Adds a {@link PipelineExecution} to an existing {@link PipelineProcess}.
@@ -116,4 +120,5 @@ public interface PipelineProcessMapper {
   List<PipelineProcess> getPipelineProcessesByDatasetAndAttempts(
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("attempts") List<Integer> attempts);
+
 }

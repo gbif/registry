@@ -169,13 +169,17 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   public RunPipelineResponse runAll(
       @RequestParam("steps") String steps,
       @RequestParam("reason") String reason,
+      @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
       @RequestBody(required = false) RunAllParams runAllParams) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     return historyTrackingService.runLastAttempt(
         parseSteps(steps),
         reason,
         authentication.getName(),
-        runAllParams != null ? runAllParams.getDatasetsToExclude() : Collections.emptyList());
+        runAllParams != null ? runAllParams.getDatasetsToExclude() : Collections.emptyList(),
+        runAllParams != null ? runAllParams.getDatasetsToInclude() : Collections.emptyList(),
+        useLastSuccessful);
   }
 
   /**
@@ -189,10 +193,12 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   public RunPipelineResponse runPipelineAttempt(
       @PathVariable("datasetKey") UUID datasetKey,
       @RequestParam("steps") String steps,
-      @RequestParam("reason") String reason) {
+      @RequestParam("reason") String reason,
+      @RequestParam(value = "useLastSuccessful", defaultValue = "false")
+          boolean useLastSuccessful) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.runLastAttempt(
-        datasetKey, parseSteps(steps), reason, authentication.getName(), null);
+        datasetKey, parseSteps(steps), reason, authentication.getName(), null, useLastSuccessful);
   }
 
   /**
