@@ -25,15 +25,20 @@ import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
 import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
+import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
 import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
+import org.gbif.registry.ws.util.DateUtils;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
@@ -217,6 +222,35 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.runPipelineAttempt(
         datasetKey, attempt, parseSteps(steps), reason, authentication.getName(), null);
+  }
+
+  @GetMapping("search")
+  public List<SearchResult> search(
+      @Nullable @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+      @Nullable @RequestParam(value = "state", required = false) PipelineStep.Status state,
+      @Nullable @RequestParam(value = "stepType", required = false) StepType stepType,
+      @Nullable @RequestParam(value = "startedMin", required = false) String startedMinAsString,
+      @Nullable @RequestParam(value = "startedMax", required = false) String startedMaxAsString,
+      @Nullable @RequestParam(value = "finishedMin", required = false) String finishedMinAsString,
+      @Nullable @RequestParam(value = "finishedMax", required = false) String finishedMaxAsString,
+      @Nullable @RequestParam(value = "rerunReason", required = false) String rerunReason,
+      Pageable page) {
+
+    LocalDateTime startedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(startedMinAsString);
+    LocalDateTime startedMax = DateUtils.UPPER_BOUND_RANGE_PARSER.apply(startedMaxAsString);
+    LocalDateTime finishedMin = DateUtils.LOWER_BOUND_RANGE_PARSER.apply(finishedMinAsString);
+    LocalDateTime finishedMax = DateUtils.UPPER_BOUND_RANGE_PARSER.apply(finishedMaxAsString);
+
+    return historyTrackingService.search(
+        datasetKey,
+        state,
+        stepType,
+        startedMin,
+        startedMax,
+        finishedMin,
+        finishedMax,
+        rerunReason,
+        page);
   }
 
   @ExceptionHandler({
