@@ -566,7 +566,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
-  public List<SearchResult> search(
+  public PagingResponse<SearchResult> search(
       @Nullable UUID datasetKey,
       @Nullable PipelineStep.Status state,
       @Nullable StepType stepType,
@@ -577,17 +577,32 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       @Nullable String rerunReason,
       @Nullable String pipelinesVersion,
       @Nullable Pageable page) {
-    return mapper.search(
-        datasetKey,
-        state,
-        stepType,
-        startedMin,
-        startedMax,
-        finishedMin,
-        finishedMax,
-        rerunReason,
-        pipelinesVersion,
-        page);
+
+    List<SearchResult> results =
+        mapper.search(
+            datasetKey,
+            state,
+            stepType,
+            startedMin,
+            startedMax,
+            finishedMin,
+            finishedMax,
+            rerunReason,
+            pipelinesVersion,
+            page);
+    long count =
+        mapper.searchCount(
+            datasetKey,
+            state,
+            stepType,
+            startedMin,
+            startedMax,
+            finishedMin,
+            finishedMax,
+            rerunReason,
+            pipelinesVersion);
+
+    return new PagingResponse<>(page, count, results);
   }
 
   public Long getNumberRecordsFromMetrics(

@@ -33,7 +33,6 @@ import org.gbif.registry.ws.util.DateUtils;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -225,7 +224,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   }
 
   @GetMapping("search")
-  public List<SearchResult> search(
+  public PagingResponse<SearchResult> search(
       @Nullable @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
       @Nullable @RequestParam(value = "state", required = false) PipelineStep.Status state,
       @Nullable @RequestParam(value = "stepType", required = false) StepType stepType,

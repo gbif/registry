@@ -176,7 +176,7 @@ public interface RegistryPipelinesHistoryTrackingService {
       List<PipelineStep.MetricInfo> metrics,
       String user);
 
-  List<SearchResult> search(
+  PagingResponse<SearchResult> search(
       @Nullable UUID datasetKey,
       @Nullable PipelineStep.Status state,
       @Nullable StepType stepType,
