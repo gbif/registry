@@ -18,6 +18,8 @@
     <result property="metrics" column="metrics" typeHandler="org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler"/>
   </resultMap>
 
+  <resultMap id="SEARCH_RESULT_MAP" type="org.gbif.api.model.pipelines.ws.SearchResult" autoMapping="true"/>
+
   <sql id="PIPELINE_PROCESS_FIELDS_CREATE">
     dataset_key, attempt, created, created_by
   </sql>
@@ -136,6 +138,16 @@
     SELECT p.attempt
     FROM pipeline_process p
     WHERE p.dataset_key = #{datasetKey, jdbcType=OTHER}
+    ORDER BY p.attempt DESC
+    LIMIT 1
+  </select>
+
+  <select id="getLastSuccessfulAttempt" resultType="Integer">
+    SELECT p.attempt
+    FROM pipeline_process p
+    INNER JOIN pipeline_execution pe on pe.pipeline_process_key = p.key
+    INNER JOIN pipeline_step ps on ps.pipeline_execution_key = pe.key
+    WHERE p.dataset_key = #{datasetKey, jdbcType=OTHER} AND ps.type = #{stepType,jdbcType=OTHER} AND ps.state = 'COMPLETED'
     ORDER BY p.attempt DESC
     LIMIT 1
   </select>

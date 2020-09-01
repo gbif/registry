@@ -38,10 +38,37 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param reason textual justification of why it has to be re-executed
    * @param user the user who is running the attempt
    * @param prefix if triggered for all datasets
+   * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
+   *     latest.
    * @return a response containing the request result
    */
   RunPipelineResponse runLastAttempt(
-      UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix);
+      UUID datasetKey,
+      Set<StepType> steps,
+      String reason,
+      String user,
+      String prefix,
+      boolean useLastSuccessful);
+
+  /**
+   * Executes the last crawl attempt for all datasets.
+   *
+   * @param steps steps to be executed
+   * @param reason textual justification of why it has to be re-executed
+   * @param user the user who is running the attempt
+   * @param datasetsToExclude excluded dataset keys
+   * @param datasetsToInclude included dataset keys
+   * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
+   *     latest.
+   * @return the response of the execution request
+   */
+  RunPipelineResponse runLastAttempt(
+      Set<StepType> steps,
+      String reason,
+      String user,
+      List<UUID> datasetsToExclude,
+      List<UUID> datasetsToInclude,
+      boolean useLastSuccessful);
 
   /**
    * Executes a previously run attempt.
@@ -56,18 +83,6 @@ public interface RegistryPipelinesHistoryTrackingService {
    */
   RunPipelineResponse runPipelineAttempt(
       UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user, String prefix);
-
-  /**
-   * Executes the last crawl attempt for all datasets.
-   *
-   * @param steps steps to be executed
-   * @param reason textual justification of why it has to be re-executed
-   * @param user the user who is running the attempt
-   * @param datasetsToExclude excluded dataset keys
-   * @return the response of the execution request
-   */
-  RunPipelineResponse runLastAttempt(
-      Set<StepType> steps, String reason, String user, List<UUID> datasetsToExclude);
 
   /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.

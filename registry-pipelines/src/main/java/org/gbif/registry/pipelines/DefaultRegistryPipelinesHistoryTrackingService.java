@@ -59,6 +59,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -118,45 +119,89 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   @Override
   public RunPipelineResponse runLastAttempt(
-      UUID datasetKey, Set<StepType> steps, String reason, String user, String prefix) {
-    int lastAttempt =
-        mapper
-            .getLastAttempt(datasetKey)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Couldn't find last attempt for dataset " + datasetKey));
-    return runPipelineAttempt(datasetKey, lastAttempt, steps, reason, user, prefix);
+      UUID datasetKey,
+      Set<StepType> steps,
+      String reason,
+      String user,
+      String prefix,
+      boolean useLastSuccessful) {
+    int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
+    return runPipelineAttempt(datasetKey, attempt, steps, reason, user, prefix);
+  }
+
+  private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
+    if (useLastSuccessful && steps.size() != 1) {
+      throw new IllegalArgumentException(
+          "When using the last successful attempt you must pass 1 and only 1 step");
+    }
+
+    Optional<Integer> attempt =
+        useLastSuccessful
+            ? mapper.getLastSuccessfulAttempt(datasetKey, steps.iterator().next())
+            : mapper.getLastAttempt(datasetKey);
+
+    return attempt.orElseThrow(
+        () -> new IllegalArgumentException("Couldn't find last attempt for dataset " + datasetKey));
+  }
+
+  @Override
+  public RunPipelineResponse runLastAttempt(
+      Set<StepType> steps,
+      String reason,
+      String user,
+      List<UUID> datasetsToExclude,
+      List<UUID> datasetsToInclude,
+      boolean useLastSuccessful) {
+    String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
+    CompletableFuture.runAsync(
+        () ->
+            doOnAllDatasets(
+                datasetKey -> runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful),
+                datasetsToExclude,
+                datasetsToInclude),
+        executorService);
+
+    return RunPipelineResponse.builder()
+        .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
+        .setSteps(steps)
+        .build();
   }
 
   /** Utility method to run batch jobs on all dataset elements */
-  private void doOnAllDatasets(Consumer<UUID> onDataset, List<UUID> datasetsToExclude) {
-    Consumer<UUID> rerunFn =
-        datasetKey -> {
-          try {
-            LOG.info("trying to rerun dataset {}", datasetKey);
-            onDataset.accept(datasetKey);
-          } catch (Exception ex) {
-            LOG.error(
-                "Error processing dataset {} while rerunning all datasets: {}",
-                datasetKey,
-                ex.getMessage());
-          }
-        };
+  private void doOnAllDatasets(
+      Consumer<UUID> onDataset, List<UUID> datasetsToExclude, List<UUID> datasetsToInclude) {
+    Consumer<List<UUID>> rerunFn =
+        datasetKeys ->
+            datasetKeys.stream()
+                .filter(PredicateUtils.not(datasetsToExclude::contains))
+                .forEach(
+                    datasetKey ->
+                        CompletableFuture.runAsync(
+                            () -> {
+                              try {
+                                LOG.info("trying to rerun dataset {}", datasetKey);
+                                onDataset.accept(datasetKey);
+                              } catch (Exception ex) {
+                                LOG.error(
+                                    "Error processing dataset {} while rerunning all datasets: {}",
+                                    datasetKey,
+                                    ex.getMessage());
+                              }
+                            },
+                            executorService));
 
-    PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
-
-    PagingResponse<Dataset> response;
-    do {
-      response = datasetService.list(pagingRequest);
-      response.getResults().stream()
-          .map(Dataset::getKey)
-          .filter(PredicateUtils.not(datasetsToExclude::contains))
-          .forEach(
-              datasetKey ->
-                  CompletableFuture.runAsync(() -> rerunFn.accept(datasetKey), executorService));
-      pagingRequest.addOffset(response.getResults().size());
-    } while (!response.isEndOfRecords());
+    if (datasetsToInclude != null && !datasetsToInclude.isEmpty()) {
+      rerunFn.accept(datasetsToInclude);
+    } else {
+      PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
+      PagingResponse<Dataset> response;
+      do {
+        response = datasetService.list(pagingRequest);
+        rerunFn.accept(
+            response.getResults().stream().map(Dataset::getKey).collect(Collectors.toList()));
+        pagingRequest.addOffset(response.getResults().size());
+      } while (!response.isEndOfRecords());
+    }
   }
 
   private Set<StepType> prioritizeSteps(Set<StepType> steps, Dataset dataset) {
@@ -195,23 +240,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       }
     }
     return newSteps;
-  }
-
-  @Override
-  public RunPipelineResponse runLastAttempt(
-      Set<StepType> steps, String reason, String user, List<UUID> datasetsToExclude) {
-    String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
-    CompletableFuture.runAsync(
-        () ->
-            doOnAllDatasets(
-                datasetKey -> runLastAttempt(datasetKey, steps, reason, user, prefix),
-                datasetsToExclude),
-        executorService);
-
-    return RunPipelineResponse.builder()
-        .setResponseStatus(RunPipelineResponse.ResponseStatus.OK)
-        .setSteps(steps)
-        .build();
   }
 
   /**
