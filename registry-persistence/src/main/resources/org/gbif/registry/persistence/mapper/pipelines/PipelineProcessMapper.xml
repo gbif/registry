@@ -18,7 +18,13 @@
     <result property="metrics" column="metrics" typeHandler="org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler"/>
   </resultMap>
 
-  <resultMap id="SEARCH_RESULT_MAP" type="org.gbif.api.model.pipelines.ws.SearchResult" autoMapping="true"/>
+  <resultMap id="SEARCH_RESULT_MAP" type="org.gbif.api.model.pipelines.ws.SearchResult" autoMapping="true">
+    <result property="rerunReason" column="rerun_reason"/>
+    <result property="stepState" column="state"/>
+    <result property="stepType" column="type"/>
+    <result property="stepStarted" column="started"/>
+    <result property="stepFinished" column="finished"/>
+  </resultMap>
 
   <sql id="PIPELINE_PROCESS_FIELDS_CREATE">
     dataset_key, attempt, created, created_by
@@ -204,5 +210,42 @@
     SET <include refid="STEP_UPDATE"/>
     WHERE key = #{step.key,jdbcType=BIGINT}
   </update>
+
+  <select id="search" resultMap="SEARCH_RESULT_MAP">
+    SELECT pp.dataset_key, pp.attempt, pe.key, pe.rerun_reason, ps.type, ps.state, ps.started, ps.finished
+    FROM pipeline_execution pe
+    INNER JOIN pipeline_process pp on pp."key" = pe.pipeline_process_key
+    INNER JOIN pipeline_step ps on ps.pipeline_execution_key = pe."key"
+    <where>
+      <if test="datasetKey != null">
+        pp.dataset_key = #{datasetKey, jdbcType=OTHER}
+      </if>
+      <if test="state != null">
+        AND ps.state = #{state, jdbcType=OTHER}
+      </if>
+      <if test="stepType != null">
+        AND ps.type = #{stepType, jdbcType=OTHER}
+      </if>
+      <if test="startedMin != null">
+        AND ps.started &gt;= #{startedMin, jdbcType=OTHER}
+      </if>
+      <if test="startedMax != null">
+        AND ps.started &lt;= #{startedMax, jdbcType=OTHER}
+      </if>
+      <if test="finishedMin != null">
+        AND ps.finished &gt;= #{finishedMin, jdbcType=OTHER}
+      </if>
+      <if test="finishedMax != null">
+        AND ps.finished &lt;= #{finishedMax, jdbcType=OTHER}
+      </if>
+      <if test="rerunReason != null">
+        AND pe.rerun_reason = #{rerunReason, jdbcType=VARCHAR}
+      </if>
+    </where>
+    ORDER BY ps.started DESC
+    <if test="page != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
 
 </mapper>
