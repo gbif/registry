@@ -1,8 +1,9 @@
 package org.gbif.registry.domain.ws;
 
+import java.io.Serializable;
 import java.net.URI;
 
-public class CitationUpdateRequest {
+public class CitationUpdateRequest implements Serializable {
 
   private URI target;
 

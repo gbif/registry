@@ -3,17 +3,17 @@ package org.gbif.registry.domain.ws;
 import org.gbif.api.model.common.DOI;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
-public class CitationCreationRequest {
+public class CitationCreationRequest implements Serializable {
 
   private DOI originalDownloadDOI;
   private String title;
   private String creator;
   private URI target;
-  // List of DOIs or UUIDs
   private List<String> relatedDatasets;
 
   public DOI getOriginalDownloadDOI() {

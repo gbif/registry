@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.CitationMapper">
+
+  <sql id="CITATION_FIELDS">
+    doi,original_download_doi,citation,title,target,created,created_by,modified,modified_by
+  </sql>
+
+  <sql id="CITATION_FIELD_TYPES">
+    #{citation.doi,jdbcType=OTHER},
+    #{citation.originalDownloadDOI,jdbcType=OTHER},
+    #{citation.citation,jdbcType=VARCHAR},
+    #{citation.title,jdbcType=VARCHAR},
+    #{citation.target,jdbcType=VARCHAR},
+    now(), <!-- created -->
+    #{citation.createdBy},
+    now(), <!-- modified -->
+    #{citation.modifiedBy}
+  </sql>
+
+  <resultMap id="CITATION_DATA_MAP" type="org.gbif.registry.domain.ws.Citation">
+    <result property="doi" column="doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="originalDownloadDOI" column="original_download_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="citation" column="citation" javaType="java.lang.String"/>
+    <result property="title" column="title" javaType="java.lang.String"/>
+    <result property="target" column="target" javaType="java.net.URI" typeHandler="org.gbif.mybatis.type.UriTypeHandler"/>
+    <result property="created" column="created" javaType="java.util.Date"/>
+    <result property="createdBy" column="created_by" javaType="java.lang.String"/>
+    <result property="modified" column="modified" javaType="java.util.Date"/>
+    <result property="modifiedBy" column="modified_by" javaType="java.lang.String"/>
+  </resultMap>
+
+  <insert id="create" parameterType="org.gbif.registry.domain.ws.Citation">
+    INSERT INTO citation(<include refid="CITATION_FIELDS"/>)
+    VALUES(<include refid="CITATION_FIELD_TYPES"/>)
+  </insert>
+
+  <select id="get" resultType="org.gbif.registry.domain.ws.Citation" resultMap="CITATION_DATA_MAP">
+    SELECT <include refid="CITATION_FIELDS"/>
+    FROM citation
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </select>
+
+  <insert id="addDatasetCitation">
+    INSERT INTO dataset_citation(dataset_key_or_doi,citation_doi)
+    VALUES(
+            #{datasetKeyOrDoi,jdbcType=OTHER},
+            #{citationDoi,jdbcType=OTHER}
+          )
+  </insert>
+
+  <select id="listByDataset" resultMap="CITATION_DATA_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="CITATION_FIELDS"/>
+    FROM dataset_citation dc
+    JOIN citation ON d.key = dc.dataset_key_or_doi OR d.doi = dc.dataset_key_or_doi
+    WHERE dc.dataset_key = #{datasetKey,jdbcType=OTHER}
+    ORDER BY created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="listByCitation" resultMap="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_FIELDS"/>
+    FROM dataset_citation dc
+    JOIN dataset d ON d.key = dc.dataset_key_or_doi OR d.doi = dc.dataset_key_or_doi
+    WHERE dc.doi = #{citationDoi,jdbcType=OTHER}
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+</mapper>
