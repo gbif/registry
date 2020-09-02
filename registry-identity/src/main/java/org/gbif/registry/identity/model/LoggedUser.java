@@ -18,6 +18,7 @@ package org.gbif.registry.identity.model;
 import org.gbif.api.model.common.GbifUser;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -30,6 +31,7 @@ public class LoggedUser {
   private String firstName;
   private String lastName;
   private String email;
+  private Locale locale;
   private final Map<String, String> settings = new HashMap<>();
 
   public static LoggedUser from(GbifUser user) {
@@ -47,6 +49,7 @@ public class LoggedUser {
     firstName = user.getFirstName();
     lastName = user.getLastName();
     email = user.getEmail();
+    locale = user.getLocale();
     settings.putAll(user.getSettings());
   }
 
@@ -64,6 +67,10 @@ public class LoggedUser {
 
   public String getEmail() {
     return email;
+  }
+
+  public Locale getLocale() {
+    return locale;
   }
 
   public Map<String, String> getSettings() {

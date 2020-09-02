@@ -28,18 +28,18 @@ import org.springframework.stereotype.Service;
 @Qualifier("identityEmailDataProvider")
 public class IdentityEmailDataProvider implements EmailDataProvider {
 
-  // last part of the path here is not a folder but the prefix of the ResourceBundle
-  // (email_subjects_en, email_subjects_fr)
-  private static final ResourceBundle EMAIL_SUBJECT_RESOURCE =
-      ResourceBundle.getBundle("email/subjects/identity_email_subjects", Locale.ENGLISH);
+  public static final String IDENTITY_EMAIL_SUBJECTS_PATH =
+      "email/subjects/identity_email_subjects";
 
   @Override
   public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
-    return EMAIL_SUBJECT_RESOURCE.getString(emailType.getSubjectKey());
+    ResourceBundle bundle = ResourceBundle.getBundle(IDENTITY_EMAIL_SUBJECTS_PATH, locale);
+    return bundle.getString(emailType.getKey());
   }
 
   @Override
   public String getTemplate(Locale locale, EmailType emailType) {
-    return emailType.getFtlTemplate();
+    ResourceBundle bundle = ResourceBundle.getBundle(EMAIL_TEMPLATES_PATH, locale);
+    return bundle.getString(emailType.getKey());
   }
 }
