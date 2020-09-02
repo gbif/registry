@@ -24,6 +24,7 @@ import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.security.UserUpdateRulesManager;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -128,6 +129,7 @@ public class UserTestFixture {
     user.getSettings().put("language", "en");
     user.getSettings().put("country", "dk");
     user.setEmail(username + "@gbif.org");
+    user.setLocale(new Locale("en"));
     return user;
   }
 
