@@ -1,0 +1,29 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="77" author="mpodolskiy">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+            CREATE TABLE citation (
+                doi text NOT NULL PRIMARY KEY,
+                original_download_doi text,
+                citation text,
+                title text,
+                target text,
+                created timestamp with time zone NOT NULL DEFAULT now(),
+                created_by text NOT NULL,
+                modified timestamp with time zone NOT NULL DEFAULT now(),
+                modified_by text NOT NUll
+            );
+
+            CREATE TABLE dataset_citation (
+                dataset_key_or_doi text NOT NULL,
+                citation_doi text NOT NULL,
+                PRIMARY KEY (dataset_key_or_doi, citation_doi)
+            );
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
