@@ -52,23 +52,36 @@
   <select id="listByDataset" resultMap="CITATION_DATA_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="CITATION_FIELDS"/>
     FROM dataset_citation dc
-    JOIN citation ON d.key = dc.dataset_key_or_doi OR d.doi = dc.dataset_key_or_doi
-    WHERE dc.dataset_key = #{datasetKey,jdbcType=OTHER}
+    JOIN citation c ON c.doi = dc.citation_doi
+    WHERE dc.dataset_key_or_doi = #{datasetKey,jdbcType=OTHER}
     ORDER BY created DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
 
+  <select id="countByDataset" resultType="Long">
+    SELECT count(*)
+    FROM dataset_citation dc
+    WHERE dc.dataset_key_or_doi = #{datasetKey,jdbcType=OTHER}
+  </select>
+
   <select id="listByCitation" resultMap="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_FIELDS"/>
     FROM dataset_citation dc
-    JOIN dataset d ON d.key = dc.dataset_key_or_doi OR d.doi = dc.dataset_key_or_doi
-    WHERE dc.doi = #{citationDoi,jdbcType=OTHER}
+    JOIN dataset d ON d.doi = dc.dataset_key_or_doi
+    LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dc.citation_doi = #{citationDoi,jdbcType=OTHER}
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
+  </select>
+
+  <select id="countByCitation" resultType="Long">
+    SELECT count(*)
+    FROM dataset_citation dc
+    WHERE dc.citation_doi = #{citationDoi,jdbcType=OTHER}
   </select>
 
 </mapper>

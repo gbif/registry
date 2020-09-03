@@ -22,7 +22,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
-import org.gbif.registry.domain.ws.CitationCreationRequest;
+import org.gbif.registry.domain.ws.Citation;
 
 import java.net.URI;
 import java.util.UUID;
@@ -50,7 +50,7 @@ public class DoiHandlerStrategyStub implements DataCiteDoiHandlerStrategy {
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(DOI doi, CitationCreationRequest data) {
+  public DataCiteMetadata buildMetadata(Citation citation) {
     return null;
   }
 
