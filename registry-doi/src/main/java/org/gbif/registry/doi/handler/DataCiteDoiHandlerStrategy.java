@@ -21,7 +21,7 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
-import org.gbif.registry.domain.ws.CitationCreationRequest;
+import org.gbif.registry.domain.ws.Citation;
 
 import java.net.URI;
 import java.util.UUID;
@@ -40,8 +40,8 @@ public interface DataCiteDoiHandlerStrategy {
   /** Build the DataCiteMetadata for a Dataset. */
   DataCiteMetadata buildMetadata(Dataset dataset);
 
-  /** Build the DataCiteMetadata for a CitationCreationRequest. */
-  DataCiteMetadata buildMetadata(DOI doi, CitationCreationRequest data);
+  /** Build the DataCiteMetadata for a Citation. */
+  DataCiteMetadata buildMetadata(Citation citation);
 
   /** Build the DataCiteMetadata for a Dataset that includes a relation to another DOI. */
   DataCiteMetadata buildMetadata(
