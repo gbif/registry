@@ -359,6 +359,78 @@ public class PipelineProcessMapperIT extends BaseItTest {
   }
 
   @Test
+  public void getLastSuccessfulAttemptTest() {
+    final UUID uuid1 = insertDataset();
+
+    // shouldn't find any attempt
+    assertFalse(
+        pipelineProcessMapper
+            .getLastSuccessfulAttempt(uuid1, StepType.VERBATIM_TO_INTERPRETED)
+            .isPresent());
+
+    // insert some processes
+    PipelineProcess p1 =
+        new PipelineProcess().setDatasetKey(uuid1).setAttempt(1).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(p1);
+    PipelineProcess p2 =
+        new PipelineProcess().setDatasetKey(uuid1).setAttempt(2).setCreatedBy(TEST_USER);
+    pipelineProcessMapper.createIfNotExists(p2);
+
+    // shouldn't find any attempt
+    assertFalse(
+        pipelineProcessMapper
+            .getLastSuccessfulAttempt(uuid1, StepType.VERBATIM_TO_INTERPRETED)
+            .isPresent());
+
+    // insert some executions
+    PipelineExecution pe1 = new PipelineExecution().setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineExecution(p1.getKey(), pe1);
+    PipelineExecution pe2 = new PipelineExecution().setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineExecution(p2.getKey(), pe2);
+
+    // insert steps
+    PipelineStep s1 =
+        new PipelineStep()
+            .setType(StepType.VERBATIM_TO_INTERPRETED)
+            .setState(Status.COMPLETED)
+            .setStarted(LocalDateTime.now())
+            .setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineStep(pe1.getKey(), s1);
+    PipelineStep s2 =
+        new PipelineStep()
+            .setType(StepType.VERBATIM_TO_INTERPRETED)
+            .setState(Status.FAILED)
+            .setStarted(LocalDateTime.now())
+            .setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineStep(pe2.getKey(), s2);
+
+    // get last attempt
+    assertEquals(
+        1,
+        pipelineProcessMapper
+            .getLastSuccessfulAttempt(uuid1, StepType.VERBATIM_TO_INTERPRETED)
+            .get()
+            .intValue());
+
+    // add new step
+    PipelineStep s22 =
+        new PipelineStep()
+            .setType(StepType.VERBATIM_TO_INTERPRETED)
+            .setState(Status.COMPLETED)
+            .setStarted(LocalDateTime.now())
+            .setCreatedBy(TEST_USER);
+    pipelineProcessMapper.addPipelineStep(pe2.getKey(), s22);
+    assertEquals(
+        2,
+        pipelineProcessMapper
+            .getLastSuccessfulAttempt(uuid1, StepType.VERBATIM_TO_INTERPRETED)
+            .get()
+            .intValue());
+    assertFalse(
+        pipelineProcessMapper.getLastSuccessfulAttempt(uuid1, StepType.HDFS_VIEW).isPresent());
+  }
+
+  @Test
   public void getPipelineProcessesByDatasetAndAttemptsTest() {
     // insert processes
     UUID datasetKey = insertDataset();

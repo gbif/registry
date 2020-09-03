@@ -19,7 +19,10 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.ws.SearchResult;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,6 +65,9 @@ public interface PipelineProcessMapper {
   PipelineProcess get(@Param("key") long key);
 
   Optional<Integer> getLastAttempt(@Param("datasetKey") UUID datasetKey);
+
+  Optional<Integer> getLastSuccessfulAttempt(
+      @Param("datasetKey") UUID datasetKey, @Param("stepType") StepType stepType);
 
   /**
    * Adds a {@link PipelineExecution} to an existing {@link PipelineProcess}.
@@ -116,4 +122,27 @@ public interface PipelineProcessMapper {
   List<PipelineProcess> getPipelineProcessesByDatasetAndAttempts(
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("attempts") List<Integer> attempts);
+
+  List<SearchResult> search(
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("state") PipelineStep.Status state,
+      @Nullable @Param("stepType") StepType stepType,
+      @Nullable @Param("startedMin") LocalDateTime startedMin,
+      @Nullable @Param("startedMax") LocalDateTime startedMax,
+      @Nullable @Param("finishedMin") LocalDateTime finishedMin,
+      @Nullable @Param("finishedMax") LocalDateTime finishedMax,
+      @Nullable @Param("rerunReason") String rerunReason,
+      @Nullable @Param("pipelinesVersion") String pipelinesVersion,
+      @Nullable @Param("page") Pageable page);
+
+  long searchCount(
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("state") PipelineStep.Status state,
+      @Nullable @Param("stepType") StepType stepType,
+      @Nullable @Param("startedMin") LocalDateTime startedMin,
+      @Nullable @Param("startedMax") LocalDateTime startedMax,
+      @Nullable @Param("finishedMin") LocalDateTime finishedMin,
+      @Nullable @Param("finishedMax") LocalDateTime finishedMax,
+      @Nullable @Param("rerunReason") String rerunReason,
+      @Nullable @Param("pipelinesVersion") String pipelinesVersion);
 }
