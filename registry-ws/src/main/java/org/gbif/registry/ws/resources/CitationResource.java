@@ -7,8 +7,8 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.registry.doi.generator.DoiGenerator;
 import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
-import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.domain.ws.Citation;
+import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.domain.ws.CitationUpdateRequest;
 import org.gbif.registry.persistence.mapper.CitationMapper;
 import org.springframework.http.MediaType;
@@ -23,6 +23,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
@@ -31,6 +34,9 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
 @RestController
 @RequestMapping(value = "citation", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CitationResource {
+
+  private static final ZoneId UTC = ZoneId.of("UTC");
+  private static final DateTimeFormatter REGULAR_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy");
 
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
@@ -62,7 +68,10 @@ public class CitationResource {
     Citation citation = new Citation();
     citation.setDoi(doi);
     citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
-    citation.setCitation("citation text"); // TODO: 27/08/2020 generate citation
+    citation.setCitation(
+        "Citation GBIF.org ("
+            + LocalDate.now(UTC).format(REGULAR_DATE_FORMAT)
+            + ") Filtered export of GBIF occurrence data https://doi.org/" + doi);
     citation.setTarget(request.getTarget());
     citation.setTitle(request.getTitle());
     citation.setCreatedBy(nameFromContext);
