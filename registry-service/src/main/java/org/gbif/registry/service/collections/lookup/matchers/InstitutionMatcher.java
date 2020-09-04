@@ -33,7 +33,10 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +55,7 @@ import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 @Component
 public class InstitutionMatcher extends BaseMatcher<Institution> {
 
+  private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[\\h\\s+]");
   private final InstitutionMapper institutionMapper;
 
   @Autowired
@@ -166,11 +170,30 @@ public class InstitutionMatcher extends BaseMatcher<Institution> {
   }
 
   private void checkOwnerInstitutionMismatch(LookupParams params, Match<Institution> match) {
-    if (!Strings.isNullOrEmpty(params.getOwnerInstitutionCode())
-        && !match.getEntityMatched().getCode().equals(params.getOwnerInstitutionCode())
-        && !match.getEntityMatched().getName().equals(params.getOwnerInstitutionCode())) {
-      match.getReasons().add(PROBABLY_ON_LOAN);
+    if (Strings.isNullOrEmpty(params.getOwnerInstitutionCode())) {
+      return;
     }
+    if (match.getEntityMatched().getCode().equals(params.getOwnerInstitutionCode().trim())) {
+      return;
+    }
+
+    UnaryOperator<String> nameNormalizer =
+        s -> StringUtils.stripAccents(WHITESPACE_PATTERN.matcher(s).replaceAll(""));
+
+    if (nameNormalizer
+        .apply(match.getEntityMatched().getName())
+        .equalsIgnoreCase(nameNormalizer.apply(params.getOwnerInstitutionCode()))) {
+      return;
+    }
+
+    if (match.getEntityMatched().getIdentifiers() != null
+        && match.getEntityMatched().getIdentifiers().stream()
+            .anyMatch(i -> i.getIdentifier().equals(params.getOwnerInstitutionCode()))) {
+      return;
+    }
+
+    // if the owner code doesn't match with the entity matched we add a reason
+    match.getReasons().add(PROBABLY_ON_LOAN);
   }
 
   @Override
