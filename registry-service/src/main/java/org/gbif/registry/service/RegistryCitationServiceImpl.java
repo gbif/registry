@@ -5,11 +5,13 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.DataCiteMetadataBuilderService;
+import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
+import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.persistence.mapper.CitationMapper;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,18 +29,22 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   private static final ZoneId UTC = ZoneId.of("UTC");
   private static final DateTimeFormatter REGULAR_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy");
 
-  private final DoiGenerator doiGenerator;
-  private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
+  private final DataCiteMetadataBuilderService metadataBuilderService;
+  private final DoiIssuingService doiIssuingService;
+  private final DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService;
   private final CitationMapper citationMapper;
   private final String citationText;
 
   public RegistryCitationServiceImpl(
-      DoiGenerator doiGenerator,
-      DataCiteDoiHandlerStrategy doiHandlerStrategy,
+      DataCiteMetadataBuilderService metadataBuilderService,
+      DoiIssuingService doiIssuingService,
+      DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService,
       CitationMapper citationMapper,
+      DoiMapper doiMapper,
       @Value("${citation.text}") String citationText) {
-    this.doiGenerator = doiGenerator;
-    this.doiHandlerStrategy = doiHandlerStrategy;
+    this.metadataBuilderService = metadataBuilderService;
+    this.doiIssuingService = doiIssuingService;
+    this.datasetDoiDataCiteHandlingService = datasetDoiDataCiteHandlingService;
     this.citationMapper = citationMapper;
     this.citationText = citationText;
   }
@@ -50,7 +56,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
 
   @Override
   public Citation create(CitationCreationRequest request) {
-    DOI doi = doiGenerator.newDerivedDatasetDOI();
+    DOI doi = doiIssuingService.newDerivedDatasetDOI();
 
     Citation citation = new Citation();
     citation.setDoi(doi);
@@ -62,9 +68,9 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     citation.setCreatedBy(request.getCreator());
     citation.setModifiedBy(request.getCreator());
 
-    DataCiteMetadata metadata = doiHandlerStrategy.buildMetadata(citation);
+    DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
 
-    doiHandlerStrategy.scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget());
+    datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget(), request.getRegistrationDate());
 
     citationMapper.create(citation);
     for (String relatedDatasetKeyOrDoi : request.getRelatedDatasets()) {

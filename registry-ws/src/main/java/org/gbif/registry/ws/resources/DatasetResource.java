@@ -49,8 +49,9 @@ import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
-import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.DataCiteMetadataBuilderService;
+import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
+import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.metadata.EMLWriter;
@@ -119,6 +120,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
+@SuppressWarnings("UnstableApiUsage")
 @Validated
 @Primary
 @RestController
@@ -139,8 +141,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final TagMapper tagMapper;
   private final NetworkMapper networkMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
-  private final DoiGenerator doiGenerator;
-  private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
+  private final DatasetDoiDataCiteHandlingService doiDataCiteHandlingService;
+  private final DataCiteMetadataBuilderService metadataBuilderService;
+  private final DoiIssuingService doiIssuingService;
   private final WithMyBatis withMyBatis;
 
   // The messagePublisher can be optional
@@ -152,8 +155,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       RegistryDatasetService registryDatasetService,
       @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
       EditorAuthorizationService userAuthService,
-      DoiGenerator doiGenerator,
-      DataCiteDoiHandlerStrategy doiHandlingStrategy,
+      DatasetDoiDataCiteHandlingService doiDataCiteHandlingService,
+      DataCiteMetadataBuilderService metadataBuilderService,
+      DoiIssuingService doiIssuingService,
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher) {
     super(
@@ -172,8 +176,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.tagMapper = mapperServiceLocator.getTagMapper();
     this.datasetProcessStatusMapper = mapperServiceLocator.getDatasetProcessStatusMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
-    this.doiGenerator = doiGenerator;
-    this.doiHandlerStrategy = doiHandlingStrategy;
+    this.doiDataCiteHandlingService = doiDataCiteHandlingService;
+    this.metadataBuilderService = metadataBuilderService;
+    this.doiIssuingService = doiIssuingService;
     this.messagePublisher = messagePublisher;
     this.withMyBatis = withMyBatis;
   }
@@ -449,7 +454,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
   }
 
-  private <T extends LenientEquals> boolean containedIn(T id, Collection<T> ids) {
+  private <T extends LenientEquals<T>> boolean containedIn(T id, Collection<T> ids) {
     for (T id2 : ids) {
       if (id.lenientEquals(id2)) {
         return true;
@@ -527,7 +532,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public UUID create(@RequestBody @Trim Dataset dataset) {
     if (dataset.getDoi() == null) {
-      dataset.setDoi(doiGenerator.newDatasetDOI());
+      dataset.setDoi(doiIssuingService.newDatasetDOI());
     }
     // Assign CC-BY 4.0 (default license) when license not specified yet
     // See https://github.com/gbif/registry/issues/71#issuecomment-438280021 for background on
@@ -543,8 +548,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
-    doiHandlerStrategy.scheduleDatasetRegistration(
-        dataset.getDoi(), doiHandlerStrategy.buildMetadata(get(key)), key);
+    doiDataCiteHandlingService.scheduleDatasetRegistration(
+        dataset.getDoi(), metadataBuilderService.buildMetadata(get(key)), key);
     return key;
   }
 
@@ -606,7 +611,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
-      if (oldDoi != null && doiHandlerStrategy.isUsingMyPrefix(oldDoi)) {
+      if (oldDoi != null && doiIssuingService.isGbif(oldDoi)) {
         dataset.setDoi(oldDoi);
       } else {
         // we have a non GBIF DOI before that we need to deprecate
@@ -626,7 +631,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     super.update(dataset);
 
     // to get the latest timestamps we need to read a new copy of the dataset
-    doiHandlerStrategy.datasetChanged(get(dataset.getKey()), oldDoi);
+    doiDataCiteHandlingService.datasetChanged(get(dataset.getKey()), oldDoi);
   }
 
   /** Add old DOI to list of alt identifiers in dataset. */
@@ -665,7 +670,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     for (Identifier id : existingIds) {
       if (DOI.isParsable(id.getIdentifier())) {
         DOI doi = new DOI(id.getIdentifier());
-        if (doiHandlerStrategy.isUsingMyPrefix(doi)) {
+        if (doiIssuingService.isGbif(doi)) {
           // remove from id list and make primary DOI
           LOG.info("Reactivating old GBIF DOI {} for dataset {}", doi, d.getKey());
           datasetMapper.deleteIdentifier(d.getKey(), id.getKey());
@@ -675,7 +680,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       }
     }
     // we never had a GBIF DOI for this dataset, give it a new one
-    DOI doi = doiGenerator.newDatasetDOI();
+    DOI doi = doiIssuingService.newDatasetDOI();
     LOG.info("Create new GBIF DOI {} for dataset {}", doi, d.getKey());
     d.setDoi(doi);
   }
