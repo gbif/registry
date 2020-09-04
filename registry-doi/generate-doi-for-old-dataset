@@ -1,0 +1,35 @@
+#!/bin/zsh -e
+#
+# Step through this script carefully; it is not tested and doesn't have much error checking!
+#
+# It has only been run on Linux, and the GNU tools may not be the same on Mac OS!
+#
+
+toDb () {
+    psql -h pg1.gbif.org -U registry prod_b_registry
+}
+
+datasetKey=$1
+echo >&2 "Generating DOI for dataset $datasetKey"
+
+(
+    echo "BEGIN;"
+
+    # Check if it already has a DOI
+    newDoi=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .doi)
+    if [[ $newDoi = 'null' ]]; then
+        newDoi=$(echo -n 10.15468/; {tr -dc 23456789abcdefghjkmnpqrstuvwxyz < /dev/urandom || :} | head -c6)
+        echo >&2 "Assigning DOI $newDoi"
+        echo "UPDATE dataset SET doi = '$newDoi' WHERE key = '$datasetKey' AND doi IS NULL;"
+        echo "INSERT INTO gbif_doi (doi, type, status, created, modified) VALUES ('$newDoi', 'DATASET', 'NEW', now(), now());"
+    else
+        echo >&2 "Dataset already has DOI $newDoi"
+    fi
+
+    echo "COMMIT;"
+) | tee | toDb
+
+curl -Ssi -XPURGE https://api.gbif.org/v1/dataset/$datasetKey | head -n 1
+
+newDoi=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .doi)
+ssh crap@prodcrawler1-vh.gbif.org ./util/doi-synchronizer --fix-doi --doi $newDoi --skip-dia

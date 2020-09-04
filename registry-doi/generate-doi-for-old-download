@@ -1,0 +1,65 @@
+#!/bin/zsh -e
+#
+# Step through this script carefully; it is not tested and doesn't have much error checking!
+#
+# It has only been run on Linux, and the GNU tools may not be the same on Mac OS!
+#
+
+set -o pipefail
+
+toDb () {
+    psql -h pg1.gbif.org -U registry prod_b_registry
+}
+
+downloadKey=$1
+echo >&2 "Generating DOI for download $downloadKey"
+
+# Date to use in citations.
+TZ=0
+today=$(date +%Y-%m-%d)
+date=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r .created | head -c 10)
+
+(
+    echo "BEGIN;"
+
+    # Check if it already has a DOI
+    newDoi=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r .doi)
+    if [[ $newDoi = 'null' ]]; then
+        newDoi=$(echo -n 10.15468/dl.; {tr -dc 23456789abcdefghjkmnpqrstuvwxyz < /dev/urandom || :} | head -c6)
+        echo >&2 "Assigning DOI $newDoi"
+        echo "UPDATE occurrence_download SET doi = '$newDoi' WHERE key = '$downloadKey' AND doi IS NULL;"
+        echo "INSERT INTO gbif_doi (doi, type, status, created, modified) VALUES ('$newDoi', 'DOWNLOAD', 'NEW', now(), now());"
+    else
+        echo >&2 "Download already has DOI $newDoi"
+    fi
+
+    for datasetKey in $(curl -Ss "https://api.gbif.org/v1/occurrence/download/$downloadKey/datasets?limit=500" | jq -r '.results[].datasetKey'); do
+
+        title=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .title)
+        doi=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .doi)
+
+        if [[ $doi = 'null' ]]; then
+            echo >&2 "Dataset $datasetKey ($title) does not have a DOI, attempting to assign one."
+            ./generate-doi-for-old-dataset $datasetKey >&2
+            doi=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .doi)
+        fi
+
+        if [[ $doi = 'null' ]]; then
+            echo "ROLLBACK;"
+            echo >&2 "Dataset $datasetKey ($title) does not have a DOI, and assignment failed."
+            exit 1
+        fi
+
+        citation=$(curl -Ss https://api.gbif.org/v1/dataset/$datasetKey | jq -r .citation.text | sed s/$today.$/$date./)
+
+        echo "UPDATE dataset_occurrence_download SET dataset_title = (\$\$$title\$\$), dataset_doi = '$doi', dataset_citation = (\$\$$citation\$\$) WHERE download_key = '$downloadKey' AND dataset_key = '$datasetKey' AND dataset_title IS NULL AND dataset_doi IS NULL AND dataset_citation IS NULL;"
+
+    done
+
+    echo "COMMIT;"
+) | tee | toDb
+
+newDoi=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r .doi)
+ssh crap@prodcrawler1-vh.gbif.org ./util/doi-synchronizer --fix-doi --doi $newDoi --skip-dia
+
+echo >&2 "Generated DOI $newDoi for download $downloadKey."
