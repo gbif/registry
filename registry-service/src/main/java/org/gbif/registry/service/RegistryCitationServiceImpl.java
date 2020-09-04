@@ -10,8 +10,10 @@ import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.persistence.mapper.CitationMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -28,14 +30,17 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   private final DoiGenerator doiGenerator;
   private final DataCiteDoiHandlerStrategy doiHandlerStrategy;
   private final CitationMapper citationMapper;
+  private final String citationText;
 
   public RegistryCitationServiceImpl(
       DoiGenerator doiGenerator,
       DataCiteDoiHandlerStrategy doiHandlerStrategy,
-      CitationMapper citationMapper) {
+      CitationMapper citationMapper,
+      @Value("${citation.text}") String citationText) {
     this.doiGenerator = doiGenerator;
     this.doiHandlerStrategy = doiHandlerStrategy;
     this.citationMapper = citationMapper;
+    this.citationText = citationText;
   }
 
   @Override
@@ -51,9 +56,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     citation.setDoi(doi);
     citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
     citation.setCitation(
-        "Citation GBIF.org ("
-            + LocalDate.now(UTC).format(REGULAR_DATE_FORMAT)
-            + ") Filtered export of GBIF occurrence data https://doi.org/" + doi);
+        MessageFormat.format(citationText, LocalDate.now(UTC).format(REGULAR_DATE_FORMAT), doi));
     citation.setTarget(request.getTarget());
     citation.setTitle(request.getTitle());
     citation.setCreatedBy(request.getCreator());

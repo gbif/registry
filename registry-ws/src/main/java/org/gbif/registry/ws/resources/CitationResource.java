@@ -4,10 +4,12 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.service.RegistryCitationService;
 import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.registry.service.RegistryOccurrenceDownloadService;
 import org.gbif.ws.WebApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.groups.Default;
 import java.util.UUID;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
@@ -30,28 +34,40 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @RestController
 @RequestMapping(value = "citation", produces = MediaType.APPLICATION_JSON_VALUE)
+@Validated
 public class CitationResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(CitationResource.class);
 
   private final RegistryCitationService citationService;
   private final RegistryDatasetService datasetService;
+  private final RegistryOccurrenceDownloadService occurrenceDownloadService;
 
-  public CitationResource(RegistryCitationService citationService, RegistryDatasetService datasetService) {
+  public CitationResource(
+      RegistryCitationService citationService,
+      RegistryDatasetService datasetService,
+      RegistryOccurrenceDownloadService occurrenceDownloadService) {
     this.citationService = citationService;
     this.datasetService = datasetService;
+    this.occurrenceDownloadService = occurrenceDownloadService;
   }
 
   @Secured({ADMIN_ROLE, USER_ROLE})
+  @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public Citation createCitation(@RequestBody CitationCreationRequest request) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
 
+    if (occurrenceDownloadService.checkOccurrenceDownloadExists(request.getOriginalDownloadDOI())) {
+      LOG.debug("Invalid original download DOI");
+      throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
+    }
+
     if (datasetService.checkDatasetsExist(request.getRelatedDatasets())) {
       LOG.debug("Invalid related datasets identifiers");
-      throw new WebApplicationException("Wrong dataset identifiers", HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException("Wrong related datasets identifiers", HttpStatus.BAD_REQUEST);
     }
 
     return citationService.create(request);
