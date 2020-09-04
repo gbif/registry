@@ -56,8 +56,8 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
             + ") Filtered export of GBIF occurrence data https://doi.org/" + doi);
     citation.setTarget(request.getTarget());
     citation.setTitle(request.getTitle());
-    citation.setCreatedBy(request.getCreatedBy());
-    citation.setModifiedBy(request.getCreatedBy());
+    citation.setCreatedBy(request.getCreator());
+    citation.setModifiedBy(request.getCreator());
 
     DataCiteMetadata metadata = doiHandlerStrategy.buildMetadata(citation);
 

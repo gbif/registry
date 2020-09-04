@@ -7,6 +7,11 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.service.RegistryCitationService;
+import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.ws.WebApplicationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -27,10 +32,14 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
 @RequestMapping(value = "citation", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CitationResource {
 
-  private final RegistryCitationService citationService;
+  private static final Logger LOG = LoggerFactory.getLogger(CitationResource.class);
 
-  public CitationResource(RegistryCitationService citationService) {
+  private final RegistryCitationService citationService;
+  private final RegistryDatasetService datasetService;
+
+  public CitationResource(RegistryCitationService citationService, RegistryDatasetService datasetService) {
     this.citationService = citationService;
+    this.datasetService = datasetService;
   }
 
   @Secured({ADMIN_ROLE, USER_ROLE})
@@ -38,7 +47,12 @@ public class CitationResource {
   public Citation createCitation(@RequestBody CitationCreationRequest request) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
-    request.setCreatedBy(nameFromContext);
+    request.setCreator(nameFromContext);
+
+    if (datasetService.checkDatasetsExist(request.getRelatedDatasets())) {
+      LOG.debug("Invalid related datasets identifiers");
+      throw new WebApplicationException("Wrong dataset identifiers", HttpStatus.BAD_REQUEST);
+    }
 
     return citationService.create(request);
   }

@@ -17,12 +17,14 @@ package org.gbif.registry.service;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.Constants;
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -262,5 +264,29 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       return null;
     }
     return document.getData();
+  }
+
+  @Override
+  public boolean checkDatasetsExist(List<String> datasetIdentifiers) {
+    for (String relatedDatasetKeyOrDoi : datasetIdentifiers) {
+      if (RegistryDoiUtils.isUuid(relatedDatasetKeyOrDoi)) {
+        Dataset dataset = datasetMapper.get(UUID.fromString(relatedDatasetKeyOrDoi));
+        if (dataset == null) {
+          LOG.debug("Dataset with the UUID {} was not found", relatedDatasetKeyOrDoi);
+          return false;
+        }
+      } else if (DOI.isParsable(relatedDatasetKeyOrDoi)) {
+        long count = datasetMapper.countByDOI(relatedDatasetKeyOrDoi);
+        if (count == 0) {
+          LOG.debug("Dataset with the DOI {} was not found", relatedDatasetKeyOrDoi);
+          return false;
+        }
+      } else {
+        LOG.debug("Identifier {} is not UUID as well as DOI", relatedDatasetKeyOrDoi);
+        return false;
+      }
+    }
+
+    return true;
   }
 }

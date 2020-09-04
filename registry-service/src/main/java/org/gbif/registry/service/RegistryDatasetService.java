@@ -37,4 +37,6 @@ public interface RegistryDatasetService {
   List<Metadata> listMetadata(UUID datasetKey, @Nullable MetadataType type);
 
   byte[] getMetadataDocument(int metadataKey);
+
+  boolean checkDatasetsExist(List<String> datasetIdentifiers);
 }
