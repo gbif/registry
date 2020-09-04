@@ -15,6 +15,7 @@ public class CitationCreationRequest implements Serializable {
   private String creator;
   private URI target;
   private List<String> relatedDatasets;
+  private String createdBy;
 
   public DOI getOriginalDownloadDOI() {
     return originalDownloadDOI;
@@ -56,5 +57,13 @@ public class CitationCreationRequest implements Serializable {
 
   public void setRelatedDatasets(List<String> relatedDatasets) {
     this.relatedDatasets = relatedDatasets;
+  }
+
+  public String getCreatedBy() {
+    return createdBy;
+  }
+
+  public void setCreatedBy(String createdBy) {
+    this.createdBy = createdBy;
   }
 }
