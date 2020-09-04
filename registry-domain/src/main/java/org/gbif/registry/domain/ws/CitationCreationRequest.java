@@ -1,8 +1,11 @@
 package org.gbif.registry.domain.ws;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
@@ -33,6 +36,7 @@ public class CitationCreationRequest implements Serializable {
     this.title = title;
   }
 
+  @Null(groups = {PrePersist.class})
   public String getCreator() {
     return creator;
   }
