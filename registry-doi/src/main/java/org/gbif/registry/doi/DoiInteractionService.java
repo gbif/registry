@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.registration;
+package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
+import org.gbif.registry.doi.registration.DoiRegistration;
 import org.gbif.registry.domain.doi.DoiType;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 /** Specifies the contract of a service that manages DOI registrations. */
-public interface DoiRegistrationService {
+public interface DoiInteractionService {
 
   /** Generates a new DOI based on the DoiType. */
   DOI generate(@NotNull DoiType doiType);

@@ -114,12 +114,12 @@ public class CitationIT extends BaseItTest {
     assertEquals(1, citationDatasetsPage2.getCount());
 
     PagingResponse<Citation> datasetCitationPage1 =
-        citationResource.getDatasetCitation(firstDataset.getKey(), REGULAR_PAGE);
+        citationResource.getDatasetCitations(firstDataset.getKey(), REGULAR_PAGE);
     assertNotNull(datasetCitationPage1);
     assertEquals(2, datasetCitationPage1.getCount());
 
     PagingResponse<Citation> datasetCitationPage2 =
-        citationResource.getDatasetCitation(thirdDataset.getKey(), REGULAR_PAGE);
+        citationResource.getDatasetCitations(thirdDataset.getKey(), REGULAR_PAGE);
     assertNotNull(datasetCitationPage2);
     assertEquals(1, datasetCitationPage2.getCount());
   }

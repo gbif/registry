@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.doi.generator;
+package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
@@ -23,55 +23,10 @@ import java.net.URI;
 import java.util.UUID;
 
 /**
- * Service that guarantees to issue unique new DOIs and deals with scheduling DOI metadata updates
- * and registration.
+ * Service manages DOIs scheduling metadata updates and registration by messaging.
+ * See also {@link DoiDirectManagingService}.
  */
-public interface DoiGenerator {
-
-  /**
-   * Generates a new unique GBIF dataset DOI. The new DOI is unknown to DataCite still and only
-   * lives in the GBIF registry which guarantees it to be unique.
-   *
-   * @return the new DOI
-   */
-  DOI newDatasetDOI();
-
-  /**
-   * Generates a new unique GBIF derived dataset DOI. The new DOI is unknown to DataCite still and only
-   * lives in the GBIF registry which guarantees it to be unique.
-   *
-   * @return the new DOI
-   */
-  DOI newDerivedDatasetDOI();
-
-  /**
-   * Generates a new unique GBIF download DOI. The new DOI is unknown to DataCite still and only
-   * lives in the GBIF registry which guarantees it to be unique.
-   *
-   * @return the new DOI
-   */
-  DOI newDownloadDOI();
-
-  /**
-   * Generates a new unique GBIF data package DOI. The new DOI is unknown to DataCite still and only
-   * lives in the GBIF registry which guarantees it to be unique.
-   *
-   * @return the new DOI
-   */
-  DOI newDataPackageDOI();
-
-  /**
-   * Tests a DOI to see if it was issued by GBIF.
-   *
-   * @return true if DOI was issued by GBIF
-   */
-  boolean isGbif(DOI doi);
-
-  /**
-   * Updates the doi table to status FAILED and uses the error message & stacktrace as the xml for
-   * manual debugging / cleanup.
-   */
-  void failed(DOI doi, InvalidMetadataException e);
+public interface DoiMessageManagingService {
 
   /**
    * Schedules a DOI metadata update with DataCite and registers the DOI if needed. For subsequent

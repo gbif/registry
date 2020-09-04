@@ -24,7 +24,9 @@ import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.SingleColumnFileReader;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.cli.doisynchronizer.diagnostic.DoiDiagnostician;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
+import org.gbif.registry.doi.DoiIssuingService;
+import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
@@ -57,7 +59,9 @@ public class DoiSynchronizer {
   private ApplicationContext context;
   private final DoiSynchronizerConfiguration config;
   private final DoiMapper doiMapper;
-  private final DataCiteDoiHandlerStrategy dataCiteDoiHandlerStrategy;
+  private final DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService;
+  private final DownloadDoiDataCiteHandlingService downloadDoiDataCiteHandlingService;
+  private final DoiIssuingService doiIssuingService;
   private final DatasetMapper datasetMapper;
   private final OccurrenceDownloadMapper downloadMapper;
   private final UserMapper userMapper;
@@ -76,7 +80,9 @@ public class DoiSynchronizer {
     this.config = config;
     this.context = context;
     this.doiMapper = context.getBean(DoiMapper.class);
-    this.dataCiteDoiHandlerStrategy = context.getBean(DataCiteDoiHandlerStrategy.class);
+    this.doiIssuingService = context.getBean(DoiIssuingService.class);
+    this.datasetDoiDataCiteHandlingService = context.getBean(DatasetDoiDataCiteHandlingService.class);
+    this.downloadDoiDataCiteHandlingService = context.getBean(DownloadDoiDataCiteHandlingService.class);
     this.datasetMapper = context.getBean(DatasetMapper.class);
     this.downloadMapper = context.getBean(OccurrenceDownloadMapper.class);
     this.userMapper = context.getBean(UserMapper.class);
@@ -167,20 +173,20 @@ public class DoiSynchronizer {
 
     DOI datasetDoi = dataset.getDoi();
     if (doi.equals(datasetDoi)) {
-      dataCiteDoiHandlerStrategy.datasetChanged(dataset, null);
+      datasetDoiDataCiteHandlingService.datasetChanged(dataset, null);
       return true;
     }
     // DOI changed
 
     // The dataset DOI is not issued by GBIF
-    if (!dataCiteDoiHandlerStrategy.isUsingMyPrefix(datasetDoi)) {
+    if (!doiIssuingService.isGbif(datasetDoi)) {
       boolean doiIsInAlternateIdentifiers = isIdentifierDOIFound(doi, dataset);
       boolean datasetDoiIsInAlternateIdentifiers = isIdentifierDOIFound(datasetDoi, dataset);
       // check we are in a known state which means:
       // - The current dataset DOI is not in alternative identifiers but the previous GBIF DOI is
       // the logic is applied by the registry
       if (doiIsInAlternateIdentifiers && !datasetDoiIsInAlternateIdentifiers) {
-        dataCiteDoiHandlerStrategy.datasetChanged(dataset, doi);
+        datasetDoiDataCiteHandlingService.datasetChanged(dataset, doi);
         return true;
       } else {
         LOG.error(
@@ -222,7 +228,7 @@ public class DoiSynchronizer {
       return false;
     }
 
-    dataCiteDoiHandlerStrategy.downloadChanged(download, null, user);
+    downloadDoiDataCiteHandlingService.downloadChanged(download, null, user);
 
     return true;
   }
