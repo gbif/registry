@@ -22,7 +22,7 @@ import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
 
 import javax.annotation.Nullable;
 import java.net.URI;
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -37,5 +37,5 @@ public class DatasetDoiDataCiteHandlingServiceStub implements DatasetDoiDataCite
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {}
 
   @Override
-  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, LocalDate registrationDate) {}
+  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {}
 }

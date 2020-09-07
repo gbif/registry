@@ -15,6 +15,7 @@ public class Citation implements Serializable {
   private URI target;
   private String createdBy;
   private String modifiedBy;
+  private Date registrationDate;
   private Date created;
   private Date modified;
 
@@ -72,6 +73,14 @@ public class Citation implements Serializable {
 
   public void setModifiedBy(String modifiedBy) {
     this.modifiedBy = modifiedBy;
+  }
+
+  public Date getRegistrationDate() {
+    return registrationDate;
+  }
+
+  public void setRegistrationDate(Date registrationDate) {
+    this.registrationDate = registrationDate;
   }
 
   public Date getCreated() {

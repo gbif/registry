@@ -7,8 +7,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.io.Serializable;
 import java.net.URI;
-import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 public class CitationCreationRequest implements Serializable {
@@ -17,7 +17,7 @@ public class CitationCreationRequest implements Serializable {
   private String title;
   private String creator;
   private URI target;
-  private LocalDate registrationDate;
+  private Date registrationDate;
   private List<String> relatedDatasets;
 
   public DOI getOriginalDownloadDOI() {
@@ -54,11 +54,11 @@ public class CitationCreationRequest implements Serializable {
     this.target = target;
   }
 
-  public LocalDate getRegistrationDate() {
+  public Date getRegistrationDate() {
     return registrationDate;
   }
 
-  public void setRegistrationDate(LocalDate registrationDate) {
+  public void setRegistrationDate(Date registrationDate) {
     this.registrationDate = registrationDate;
   }
 

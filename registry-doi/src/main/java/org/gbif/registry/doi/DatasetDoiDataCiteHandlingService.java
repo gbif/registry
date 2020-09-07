@@ -6,7 +6,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 
 import javax.annotation.Nullable;
 import java.net.URI;
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -30,5 +30,5 @@ public interface DatasetDoiDataCiteHandlingService {
   /**
    * Directly schedule the registration of a Derived Dataset DOI.
    */
-  void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, LocalDate registrationDate);
+  void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate);
 }

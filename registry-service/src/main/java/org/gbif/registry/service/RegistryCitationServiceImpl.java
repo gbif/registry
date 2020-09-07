@@ -11,14 +11,16 @@ import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.persistence.mapper.CitationMapper;
-import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
@@ -40,7 +42,6 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
       DoiIssuingService doiIssuingService,
       DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService,
       CitationMapper citationMapper,
-      DoiMapper doiMapper,
       @Value("${citation.text}") String citationText) {
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
@@ -57,7 +58,21 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   @Override
   public Citation create(CitationCreationRequest request) {
     DOI doi = doiIssuingService.newDerivedDatasetDOI();
+    Citation citation = toCitation(request, doi);
+    DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
 
+    datasetDoiDataCiteHandlingService
+        .scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget(), request.getRegistrationDate());
+
+    citationMapper.create(citation);
+    for (String relatedDatasetKeyOrDoi : request.getRelatedDatasets()) {
+      citationMapper.addDatasetCitation(relatedDatasetKeyOrDoi, doi);
+    }
+
+    return citation;
+  }
+
+  private Citation toCitation(CitationCreationRequest request, DOI doi) {
     Citation citation = new Citation();
     citation.setDoi(doi);
     citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
@@ -67,15 +82,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     citation.setTitle(request.getTitle());
     citation.setCreatedBy(request.getCreator());
     citation.setModifiedBy(request.getCreator());
-
-    DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
-
-    datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget(), request.getRegistrationDate());
-
-    citationMapper.create(citation);
-    for (String relatedDatasetKeyOrDoi : request.getRelatedDatasets()) {
-      citationMapper.addDatasetCitation(relatedDatasetKeyOrDoi, doi);
-    }
+    citation.setRegistrationDate(request.getRegistrationDate());
 
     return citation;
   }
@@ -101,5 +108,17 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
         citationMapper.countByCitation(citationDoi),
         citationMapper.listByCitation(citationDoi, page)
     );
+  }
+
+  @Scheduled(cron = "0 0 0 * * *")
+  public void registerPostponedCitations() {
+    List<Citation> citationsToRegister = citationMapper.listByRegistrationDate(new Date());
+
+    for (Citation citation : citationsToRegister) {
+      DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
+
+      datasetDoiDataCiteHandlingService
+          .scheduleDerivedDatasetRegistration(citation.getDoi(), metadata, citation.getTarget(), citation.getRegistrationDate());
+    }
   }
 }

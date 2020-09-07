@@ -8,6 +8,7 @@ import org.gbif.registry.domain.ws.Citation;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,4 +30,6 @@ public interface CitationMapper {
       @Param("citationDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
 
   long countByCitation(@Param("citationDoi") DOI citationDoi);
+
+  List<Citation> listByRegistrationDate(@Param("registrationDate") Date registrationDate);
 }
