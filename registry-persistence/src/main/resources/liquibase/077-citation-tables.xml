@@ -21,6 +21,7 @@
 
             CREATE TABLE dataset_citation (
                 dataset_key_or_doi text NOT NULL,
+                record_count integer,
                 citation_doi text NOT NULL,
                 PRIMARY KEY (dataset_key_or_doi, citation_doi)
             );

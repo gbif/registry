@@ -19,7 +19,10 @@ public interface CitationMapper {
 
   Citation get(@Param("doi") DOI doi);
 
-  void addDatasetCitation(@Param("datasetKeyOrDoi") String datasetKeyOrDoi, @Param("citationDoi") DOI citationDoi);
+  void addDatasetCitation(
+      @Param("datasetKeyOrDoi") String datasetKeyOrDoi,
+      @Param("recordCount") long recordCount,
+      @Param("citationDoi") DOI citationDoi);
 
   List<Citation> listByDataset(
       @Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);

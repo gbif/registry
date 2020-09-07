@@ -44,9 +44,10 @@
   </select>
 
   <insert id="addDatasetCitation">
-    INSERT INTO dataset_citation(dataset_key_or_doi,citation_doi)
+    INSERT INTO dataset_citation(dataset_key_or_doi,record_count,citation_doi)
     VALUES(
             #{datasetKeyOrDoi,jdbcType=OTHER},
+            #{recordCount,jdbcType=INTEGER},
             #{citationDoi,jdbcType=OTHER}
           )
   </insert>
