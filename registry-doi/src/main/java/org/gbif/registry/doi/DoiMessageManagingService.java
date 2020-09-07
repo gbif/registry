@@ -20,11 +20,11 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.UUID;
 
 /**
  * Service manages DOIs scheduling metadata updates and registration by messaging.
- * See also {@link DoiDirectManagingService}.
  */
 public interface DoiMessageManagingService {
 
@@ -50,10 +50,11 @@ public interface DoiMessageManagingService {
    * @param doi the GBIF DOI to register derived dataset
    * @param metadata the metadata to post to DataCite. Mandatory fields are validated immediately
    * @param target target url
+   * @param registrationDate registration date allows to postpone registration
    * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is
    *     not a GBIF one
    */
-  void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target)
+  void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate)
       throws InvalidMetadataException;
 
   /**

@@ -1,11 +1,15 @@
 package org.gbif.registry.doi;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.doi.config.DoiConfigurationProperties;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -14,7 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
 import java.net.URI;
-import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,8 +29,8 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
   private static final Logger LOG = LoggerFactory.getLogger(DatasetDoiDataCiteHandlingServiceImpl.class);
   private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
+  private final DoiMapper doiMapper;
   private final DoiMessageManagingService doiMessageManagingService;
-  private final DoiDirectManagingService doiDirectManagingService;
   private final DoiIssuingService doiIssuingService;
   private final DataCiteMetadataBuilderService metadataBuilderService;
 
@@ -34,13 +38,13 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
   private final List<UUID> parentDatasetExcludeList;
 
   public DatasetDoiDataCiteHandlingServiceImpl(
+      DoiMapper doiMapper,
       DoiMessageManagingService doiMessageManagingService,
-      DoiDirectManagingService doiDirectManagingService,
       DoiIssuingService doiIssuingService,
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiConfigurationProperties doiConfigProperties) {
+    this.doiMapper = doiMapper;
     this.doiMessageManagingService = doiMessageManagingService;
-    this.doiDirectManagingService = doiDirectManagingService;
     this.doiIssuingService = doiIssuingService;
     this.metadataBuilderService = metadataBuilderService;
     this.parentDatasetExcludeList = doiConfigProperties.getDatasetParentExcludeList();
@@ -89,23 +93,23 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
       doiMessageManagingService.registerDataset(doi, metadata, datasetKey);
     } catch (InvalidMetadataException e) {
       LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}, dataset {}", doi, datasetKey, e);
-      doiDirectManagingService.failed(doi, e);
+      failed(doi, e);
     }
   }
 
   @Override
-  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, LocalDate registrationDate) {
-    if (registrationDate == null || registrationDate.isAfter(LocalDate.now())) {
-      // postponed registration
-      doiDirectManagingService.update(doi, metadata, target);
-    } else {
-      // immediate registration
-      try {
-        doiMessageManagingService.registerDerivedDataset(doi, metadata, target);
-      } catch (InvalidMetadataException e) {
-        LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}", doi, e);
-        doiDirectManagingService.failed(doi, e);
-      }
+  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {
+    try {
+      doiMessageManagingService.registerDerivedDataset(doi, metadata, target, registrationDate);
+    } catch (InvalidMetadataException e) {
+      LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}", doi, e);
+      failed(doi, e);
     }
+  }
+
+  private void failed(DOI doi, InvalidMetadataException e) {
+    // Updates the doi table to FAILED status and uses the error stacktrace as the xml for
+    // debugging.
+    doiMapper.update(doi, new DoiData(DoiStatus.FAILED, null), ExceptionUtils.getStackTrace(e));
   }
 }

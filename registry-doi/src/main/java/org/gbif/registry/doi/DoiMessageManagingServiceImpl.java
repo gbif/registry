@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -78,13 +79,16 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
   }
 
   @Override
-  public void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target)
+  public void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate)
       throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
+    DoiStatus registrationStatus = (registrationDate == null || registrationDate.before(new Date())) ?
+        DoiStatus.REGISTERED : DoiStatus.RESERVED;
+
     String xml = DataCiteValidator.toXml(doi, metadata);
-    Message message = new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, target);
+    Message message = new ChangeDoiMessage(registrationStatus, doi, xml, target);
 
     try {
       messagePublisher.send(message);
