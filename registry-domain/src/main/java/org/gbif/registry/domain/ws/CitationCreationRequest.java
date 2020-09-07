@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 
 public class CitationCreationRequest implements Serializable {
 
@@ -18,7 +18,8 @@ public class CitationCreationRequest implements Serializable {
   private String creator;
   private URI target;
   private Date registrationDate;
-  private List<String> relatedDatasets;
+  // TODO: 07/09/2020 rename
+  private Map<String, Long> relatedDatasets;
 
   public DOI getOriginalDownloadDOI() {
     return originalDownloadDOI;
@@ -63,11 +64,11 @@ public class CitationCreationRequest implements Serializable {
   }
 
   @NotNull
-  public List<String> getRelatedDatasets() {
-    return Collections.unmodifiableList(relatedDatasets);
+  public Map<String, Long> getRelatedDatasets() {
+    return Collections.unmodifiableMap(relatedDatasets);
   }
 
-  public void setRelatedDatasets(List<String> relatedDatasets) {
+  public void setRelatedDatasets(Map<String, Long> relatedDatasets) {
     this.relatedDatasets = relatedDatasets;
   }
 }

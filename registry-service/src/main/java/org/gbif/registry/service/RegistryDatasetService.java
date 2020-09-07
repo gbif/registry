@@ -20,6 +20,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.vocabulary.MetadataType;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,5 +39,5 @@ public interface RegistryDatasetService {
 
   byte[] getMetadataDocument(int metadataKey);
 
-  boolean checkDatasetsExist(List<String> datasetIdentifiers);
+  boolean checkDatasetsExist(Collection<String> datasetIdentifiers);
 }

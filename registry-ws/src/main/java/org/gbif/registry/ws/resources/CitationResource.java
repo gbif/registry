@@ -65,7 +65,7 @@ public class CitationResource {
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
 
-    if (datasetService.checkDatasetsExist(request.getRelatedDatasets())) {
+    if (datasetService.checkDatasetsExist(request.getRelatedDatasets().keySet())) {
       LOG.debug("Invalid related datasets identifiers");
       throw new WebApplicationException("Wrong related datasets identifiers", HttpStatus.BAD_REQUEST);
     }

@@ -33,6 +33,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -267,7 +268,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   }
 
   @Override
-  public boolean checkDatasetsExist(List<String> datasetIdentifiers) {
+  public boolean checkDatasetsExist(Collection<String> datasetIdentifiers) {
     for (String relatedDatasetKeyOrDoi : datasetIdentifiers) {
       if (RegistryDoiUtils.isUuid(relatedDatasetKeyOrDoi)) {
         Dataset dataset = datasetMapper.get(UUID.fromString(relatedDatasetKeyOrDoi));

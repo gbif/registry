@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
@@ -65,8 +66,8 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
         .scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget(), request.getRegistrationDate());
 
     citationMapper.create(citation);
-    for (String relatedDatasetKeyOrDoi : request.getRelatedDatasets()) {
-      citationMapper.addDatasetCitation(relatedDatasetKeyOrDoi, doi);
+    for (Map.Entry<String, Long> relatedDataset : request.getRelatedDatasets().entrySet()) {
+      citationMapper.addDatasetCitation(relatedDataset.getKey(), relatedDataset.getValue(), doi);
     }
 
     return citation;
