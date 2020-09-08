@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.DOI;
@@ -7,6 +22,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
+import org.gbif.registry.domain.ws.CitationDatasetUsage;
 import org.gbif.registry.service.RegistryCitationService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
@@ -27,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.groups.Default;
+import java.util.List;
 import java.util.UUID;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
@@ -60,17 +77,21 @@ public class CitationResource {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
 
-    if (occurrenceDownloadService.checkOccurrenceDownloadExists(request.getOriginalDownloadDOI())) {
+    if (!occurrenceDownloadService.checkOccurrenceDownloadExists(request.getOriginalDownloadDOI())) {
       LOG.debug("Invalid original download DOI");
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
 
-    if (datasetService.checkDatasetsExist(request.getRelatedDatasets().keySet())) {
-      LOG.debug("Invalid related datasets identifiers");
-      throw new WebApplicationException("Wrong related datasets identifiers", HttpStatus.BAD_REQUEST);
+    List<CitationDatasetUsage> citationDatasetUsages;
+    try {
+      citationDatasetUsages =
+          datasetService.ensureCitationDatasetUsagesValid(request.getRelatedDatasets());
+    } catch (IllegalArgumentException e) {
+      LOG.error("Invalid related datasets identifiers");
+      throw new WebApplicationException("Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
     }
 
-    return citationService.create(request);
+    return citationService.create(toCitation(request), citationDatasetUsages);
   }
 
   public Citation getCitation(DOI doi) {
@@ -86,7 +107,19 @@ public class CitationResource {
 
   @GetMapping("dataset/{key}")
   public PagingResponse<Citation> getDatasetCitations(@PathVariable("key") UUID datasetKey, Pageable page) {
-    return citationService.getDatasetCitations(datasetKey, page);
+    return getDatasetCitations(datasetKey.toString(), page);
+  }
+
+  @GetMapping("dataset/{doiPrefix}/{doiSuffix}")
+  public PagingResponse<Citation> getDatasetCitations(
+      @PathVariable("doiPrefix") String doiPrefix,
+      @PathVariable("doiSuffix") String doiSuffix,
+      Pageable page) {
+    return getDatasetCitations(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
+  }
+
+  public PagingResponse<Citation> getDatasetCitations(String datasetKeyOrDoi, Pageable page) {
+    return citationService.getDatasetCitations(datasetKeyOrDoi, page);
   }
 
   public String getCitationText(DOI doi) {
@@ -110,5 +143,17 @@ public class CitationResource {
       @PathVariable("doiSuffix") String doiSuffix,
       Pageable page) {
     return getCitationDatasets(new DOI(doiPrefix, doiSuffix), page);
+  }
+
+  private Citation toCitation(CitationCreationRequest request) {
+    Citation citation = new Citation();
+    citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
+    citation.setTarget(request.getTarget());
+    citation.setTitle(request.getTitle());
+    citation.setCreatedBy(request.getCreator());
+    citation.setModifiedBy(request.getCreator());
+    citation.setRegistrationDate(request.getRegistrationDate());
+
+    return citation;
   }
 }

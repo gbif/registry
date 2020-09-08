@@ -12,7 +12,7 @@
     #{citation.citation,jdbcType=VARCHAR},
     #{citation.title,jdbcType=VARCHAR},
     #{citation.target,jdbcType=VARCHAR},
-    #{citation.registration_date,jdbcType=TIMESTAMP},
+    #{citation.registrationDate,jdbcType=TIMESTAMP},
     now(), <!-- created -->
     #{citation.createdBy},
     now(), <!-- modified -->
@@ -43,13 +43,18 @@
     WHERE doi = #{doi,jdbcType=OTHER}
   </select>
 
-  <insert id="addDatasetCitation">
-    INSERT INTO dataset_citation(dataset_key_or_doi,record_count,citation_doi)
-    VALUES(
-            #{datasetKeyOrDoi,jdbcType=OTHER},
-            #{recordCount,jdbcType=INTEGER},
-            #{citationDoi,jdbcType=OTHER}
-          )
+  <insert id="addCitationDatasets">
+    INSERT INTO dataset_citation (
+    WITH
+    dataset_usages(dataset_key, record_count) AS
+    ((VALUES
+    <foreach item="value" index="key" collection="citationMap" open="(" separator="),(" close=")">
+      cast(#{key} as uuid),#{value}
+    </foreach>
+    ))
+    SELECT dataset.key, dataset.doi, record_count, #{citationDoi} as citation_doi
+    FROM dataset
+    JOIN dataset_usages ON dataset.key = dataset_usages.dataset_key);
   </insert>
 
   <select id="listByRegistrationDate" resultMap="CITATION_DATA_MAP" parameterType="java.util.Date">
@@ -78,7 +83,7 @@
   <select id="listByCitation" resultMap="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="org.gbif.registry.persistence.mapper.DatasetMapper.DATASET_FIELDS"/>
     FROM dataset_citation dc
-    JOIN dataset d ON d.doi = dc.dataset_key_or_doi
+    JOIN dataset d ON d.doi = dc.dataset_key_or_doi OR cast(d.key as text) = dc.dataset_key_or_doi
     LEFT JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dc.citation_doi = #{citationDoi,jdbcType=OTHER}
     ORDER BY created DESC, key
