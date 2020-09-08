@@ -30,8 +30,8 @@ import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.DoiIssuingService;
+import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.provider.PartialDate;
@@ -88,8 +88,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final IdentityAccessService identityService;
-  private final DataCiteDoiHandlerStrategy doiHandlingStrategy;
-  private final DoiGenerator doiGenerator;
+  private final DoiIssuingService doiIssuingService;
+  private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
 
   // Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
@@ -101,13 +101,13 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-      DoiGenerator doiGenerator,
-      @Lazy DataCiteDoiHandlerStrategy doiHandlingStrategy,
+      DoiIssuingService doiIssuingService,
+      @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("ligthweightIdentityAccessService") IdentityAccessService identityService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
-    this.doiHandlingStrategy = doiHandlingStrategy;
-    this.doiGenerator = doiGenerator;
+    this.doiIssuingService = doiIssuingService;
+    this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.identityService = identityService;
   }
 
@@ -118,7 +118,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Override
   public void create(@RequestBody @Trim Download occurrenceDownload) {
     try {
-      occurrenceDownload.setDoi(doiGenerator.newDownloadDOI());
+      occurrenceDownload.setDoi(doiIssuingService.newDownloadDOI());
       occurrenceDownload.setLicense(License.UNSPECIFIED);
       occurrenceDownloadMapper.create(occurrenceDownload);
     } catch (Exception ex) {
@@ -204,7 +204,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(currentDownload.getRequest().getCreator(), authentication);
     GbifUser user = identityService.get(authentication.getName());
-    doiHandlingStrategy.downloadChanged(download, currentDownload, user);
+    doiDataCiteHandlingService.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
   }
 

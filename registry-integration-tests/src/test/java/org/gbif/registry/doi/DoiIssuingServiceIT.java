@@ -16,12 +16,11 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.registry.doi.generator.DoiGenerator;
-import org.gbif.registry.doi.generator.DoiGeneratorMQ;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -33,38 +32,37 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.beust.jcommander.internal.Nullable;
-import com.beust.jcommander.internal.Sets;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @ExtendWith(SpringExtension.class)
-@Import({DoiGeneratorMQ.class, DoiGeneratorMQIT.DoiGeneratorMQITConfiguration.class})
-public class DoiGeneratorMQIT extends BaseItTest {
+@Import({DoiMessageManagingServiceImpl.class, DoiIssuingServiceIT.DoiIssuingServiceITConfiguration.class})
+public class DoiIssuingServiceIT extends BaseItTest {
 
-  private DoiGenerator generator;
+  private final DoiIssuingService doiIssuingService;
 
   @Autowired
-  public DoiGeneratorMQIT(
-      DoiGenerator generator,
+  public DoiIssuingServiceIT(
+      DoiIssuingService doiIssuingService,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer) {
     super(simplePrincipalProvider, esServer);
-    this.generator = generator;
+    this.doiIssuingService = doiIssuingService;
   }
 
   @SpringBootConfiguration
   @MapperScan("org.gbif.registry.persistence.mapper")
-  static class DoiGeneratorMQITConfiguration {
+  static class DoiIssuingServiceITConfiguration {
     // NOTHING
   }
 
   @Test
   public void testNewDOI() {
-    Set<DOI> dois = Sets.newHashSet();
+    Set<DOI> dois = new HashSet<>();
     for (int x = 1; x < 20; x++) {
-      DOI doi = generator.newDatasetDOI();
-      assertTrue(generator.isGbif(doi));
+      DOI doi = doiIssuingService.newDatasetDOI();
+      assertTrue(doiIssuingService.isGbif(doi));
       dois.add(doi);
       assertEquals(DOI.TEST_PREFIX, doi.getPrefix());
       assertEquals(x, dois.size());

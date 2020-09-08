@@ -29,6 +29,7 @@ import com.google.common.base.Throwables;
 import com.google.common.io.Resources;
 
 /** Base class providing basic Jackson based factories for new object instances. */
+@SuppressWarnings("UnstableApiUsage")
 abstract class JsonBackedData<T> {
 
   private final ObjectMapper mapper;
