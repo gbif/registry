@@ -1,6 +1,20 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
@@ -10,23 +24,27 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.registry.doi.config.DoiConfigurationProperties;
 import org.gbif.registry.persistence.mapper.DoiMapper;
+
+import java.net.URI;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
 @Service
 public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCiteHandlingService {
 
   // DOI logging marker
-  private static final Logger LOG = LoggerFactory.getLogger(DatasetDoiDataCiteHandlingServiceImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(DatasetDoiDataCiteHandlingServiceImpl.class);
   private static final Marker DOI_SMTP = MarkerFactory.getMarker("DOI_SMTP");
 
   private final DoiMapper doiMapper;
@@ -70,7 +88,8 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
         && !dataset.getDoi().equals(previousDoi)) {
       scheduleDatasetRegistration(
           previousDoi,
-          metadataBuilderService.buildMetadata(dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
+          metadataBuilderService.buildMetadata(
+              dataset, dataset.getDoi(), RelationType.IS_PREVIOUS_VERSION_OF),
           dataset.getKey());
     }
     // if the current doi was a GBIF DOI finally schedule a metadata update in datacite
@@ -81,7 +100,9 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
       if (previousDoi == null || dataset.getDoi().equals(previousDoi)) {
         metadata = metadataBuilderService.buildMetadata(dataset);
       } else {
-        metadata = metadataBuilderService.buildMetadata(dataset, previousDoi, RelationType.IS_NEW_VERSION_OF);
+        metadata =
+            metadataBuilderService.buildMetadata(
+                dataset, previousDoi, RelationType.IS_NEW_VERSION_OF);
       }
       scheduleDatasetRegistration(dataset.getDoi(), metadata, dataset.getKey());
     }
@@ -98,7 +119,8 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
   }
 
   @Override
-  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {
+  public void scheduleDerivedDatasetRegistration(
+      DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {
     try {
       doiMessageManagingService.registerDerivedDataset(doi, metadata, target, registrationDate);
     } catch (InvalidMetadataException e) {

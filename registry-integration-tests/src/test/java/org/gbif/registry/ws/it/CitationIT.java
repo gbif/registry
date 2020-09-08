@@ -27,14 +27,16 @@ import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.CitationResource;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static java.util.stream.Collectors.toMap;
 import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredicateDownload;
@@ -87,7 +89,8 @@ public class CitationIT extends BaseItTest {
     Citation citation = citationResource.createCitation(requestData);
 
     // create citation
-    Citation actual = citationResource.getCitation(citation.getDoi().getPrefix(), citation.getDoi().getSuffix());
+    Citation actual =
+        citationResource.getCitation(citation.getDoi().getPrefix(), citation.getDoi().getSuffix());
 
     assertNotNull(actual);
     assertEquals(citation.getDoi(), actual.getDoi());
@@ -114,28 +117,31 @@ public class CitationIT extends BaseItTest {
     Dataset thirdDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
     // prepare requests
-    CitationCreationRequest requestData1 = newCitationRequest(
-        occurrenceDownload.getDoi(),
-        Stream.of(new String[][]{
-            {secondDataset.getKey().toString(), "1"},
-            {firstDataset.getDoi().getDoiName(), "2"},
-        }).collect(toMap(data -> data[0], data -> Long.valueOf(data[1])))
-    );
+    CitationCreationRequest requestData1 =
+        newCitationRequest(
+            occurrenceDownload.getDoi(),
+            Stream.of(
+                    new String[][] {
+                      {secondDataset.getKey().toString(), "1"},
+                      {firstDataset.getDoi().getDoiName(), "2"},
+                    })
+                .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
-    CitationCreationRequest requestData2 = newCitationRequest(
-        occurrenceDownload.getDoi(),
-        Stream.of(new String[][]{
-            {secondDataset.getDoi().getDoiName(), "1"},
-            {firstDataset.getKey().toString(), "2"},
-        }).collect(toMap(data -> data[0], data -> Long.valueOf(data[1])))
-    );
+    CitationCreationRequest requestData2 =
+        newCitationRequest(
+            occurrenceDownload.getDoi(),
+            Stream.of(
+                    new String[][] {
+                      {secondDataset.getDoi().getDoiName(), "1"},
+                      {firstDataset.getKey().toString(), "2"},
+                    })
+                .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
-    CitationCreationRequest requestData3 = newCitationRequest(
-        occurrenceDownload.getDoi(),
-        Stream.of(new String[][]{
-            {thirdDataset.getDoi().getDoiName(), "1"}
-        }).collect(toMap(data -> data[0], data -> Long.valueOf(data[1])))
-    );
+    CitationCreationRequest requestData3 =
+        newCitationRequest(
+            occurrenceDownload.getDoi(),
+            Stream.of(new String[][] {{thirdDataset.getDoi().getDoiName(), "1"}})
+                .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
     // create citations
     Citation citation1 = citationResource.createCitation(requestData1);
@@ -163,7 +169,8 @@ public class CitationIT extends BaseItTest {
     assertEquals(1, datasetCitationPage2.getCount());
   }
 
-  private CitationCreationRequest newCitationRequest(DOI originalDownloadDOI, Map<String, Long> relatedDatasets) {
+  private CitationCreationRequest newCitationRequest(
+      DOI originalDownloadDOI, Map<String, Long> relatedDatasets) {
     CitationCreationRequest creationRequest = new CitationCreationRequest();
     creationRequest.setTitle("Let's test citation");
     creationRequest.setOriginalDownloadDOI(originalDownloadDOI);

@@ -37,7 +37,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @ExtendWith(SpringExtension.class)
-@Import({DoiMessageManagingServiceImpl.class, DoiIssuingServiceIT.DoiIssuingServiceITConfiguration.class})
+@Import({
+  DoiMessageManagingServiceImpl.class,
+  DoiIssuingServiceIT.DoiIssuingServiceITConfiguration.class
+})
 public class DoiIssuingServiceIT extends BaseItTest {
 
   private final DoiIssuingService doiIssuingService;

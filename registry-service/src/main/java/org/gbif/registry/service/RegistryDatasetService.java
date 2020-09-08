@@ -21,7 +21,6 @@ import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

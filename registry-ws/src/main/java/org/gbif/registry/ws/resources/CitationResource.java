@@ -27,6 +27,12 @@ import org.gbif.registry.service.RegistryCitationService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
 import org.gbif.ws.WebApplicationException;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.validation.groups.Default;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -41,10 +47,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.groups.Default;
-import java.util.List;
-import java.util.UUID;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
@@ -77,7 +79,8 @@ public class CitationResource {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
 
-    if (!occurrenceDownloadService.checkOccurrenceDownloadExists(request.getOriginalDownloadDOI())) {
+    if (!occurrenceDownloadService.checkOccurrenceDownloadExists(
+        request.getOriginalDownloadDOI())) {
       LOG.debug("Invalid original download DOI");
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
@@ -88,7 +91,8 @@ public class CitationResource {
           datasetService.ensureCitationDatasetUsagesValid(request.getRelatedDatasets());
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
-      throw new WebApplicationException("Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
+      throw new WebApplicationException(
+          "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
     }
 
     return citationService.create(toCitation(request), citationDatasetUsages);
@@ -100,13 +104,13 @@ public class CitationResource {
 
   @GetMapping("{doiPrefix}/{doiSuffix}")
   public Citation getCitation(
-      @PathVariable("doiPrefix") String doiPrefix,
-      @PathVariable("doiSuffix") String doiSuffix) {
+      @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
     return getCitation(new DOI(doiPrefix, doiSuffix));
   }
 
   @GetMapping("dataset/{key}")
-  public PagingResponse<Citation> getDatasetCitations(@PathVariable("key") UUID datasetKey, Pageable page) {
+  public PagingResponse<Citation> getDatasetCitations(
+      @PathVariable("key") UUID datasetKey, Pageable page) {
     return getDatasetCitations(datasetKey.toString(), page);
   }
 
@@ -128,8 +132,7 @@ public class CitationResource {
 
   @GetMapping("{doiPrefix}/{doiSuffix}/citation")
   public String getCitationText(
-      @PathVariable("doiPrefix") String doiPrefix,
-      @PathVariable("doiSuffix") String doiSuffix) {
+      @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
     return getCitationText(new DOI(doiPrefix, doiSuffix));
   }
 

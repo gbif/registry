@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.service;
 
-import com.google.common.collect.Iterators;
-import org.apache.commons.collections.CollectionUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -31,9 +29,6 @@ import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
 import org.gbif.registry.persistence.mapper.CitationMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
 import java.text.MessageFormat;
 import java.time.LocalDate;
@@ -43,13 +38,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Iterators;
+
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
 
 @Service
 public class RegistryCitationServiceImpl implements RegistryCitationService {
 
   private static final ZoneId UTC = ZoneId.of("UTC");
-  private static final DateTimeFormatter REGULAR_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy");
+  private static final DateTimeFormatter REGULAR_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("d MMMM yyyy");
   private static final int BATCH_SIZE = 5_000;
 
   private final DataCiteMetadataBuilderService metadataBuilderService;
@@ -89,14 +92,12 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
 
     DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
 
-    datasetDoiDataCiteHandlingService
-        .scheduleDerivedDatasetRegistration(doi, metadata, citation.getTarget(), citation.getRegistrationDate());
+    datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
+        doi, metadata, citation.getTarget(), citation.getRegistrationDate());
 
     citationMapper.create(citation);
     Iterators.partition(citationDatasetUsages.iterator(), BATCH_SIZE)
-        .forEachRemaining(
-            batch ->
-                citationMapper.addCitationDatasets(doi, batch));
+        .forEachRemaining(batch -> citationMapper.addCitationDatasets(doi, batch));
 
     return citation;
   }
@@ -112,19 +113,21 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
 
     if (RegistryDoiUtils.isUuid(datasetKeyOrDoi)) {
       UUID datasetKey = UUID.fromString(datasetKeyOrDoi);
-      result = pagingResponse(
-          page,
-          citationMapper.countByDataset(datasetKey),
-          citationMapper.listByDataset(datasetKey, page));
+      result =
+          pagingResponse(
+              page,
+              citationMapper.countByDataset(datasetKey),
+              citationMapper.listByDataset(datasetKey, page));
     } else if (DOI.isParsable(datasetKeyOrDoi)) {
       List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
 
       if (CollectionUtils.isNotEmpty(datasets)) {
         Dataset dataset = datasets.get(0);
-        result = pagingResponse(
-            page,
-            citationMapper.countByDataset(dataset.getKey()),
-            citationMapper.listByDataset(dataset.getKey(), page));
+        result =
+            pagingResponse(
+                page,
+                citationMapper.countByDataset(dataset.getKey()),
+                citationMapper.listByDataset(dataset.getKey(), page));
       } else {
         result = new PagingResponse<>(0L, 20, 0L);
       }
@@ -140,8 +143,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     return pagingResponse(
         page,
         citationMapper.countByCitation(citationDoi),
-        citationMapper.listByCitation(citationDoi, page)
-    );
+        citationMapper.listByCitation(citationDoi, page));
   }
 
   @Scheduled(cron = "${citation.cronPattern}")
@@ -151,8 +153,8 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     for (Citation citation : citationsToRegister) {
       DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
 
-      datasetDoiDataCiteHandlingService
-          .scheduleDerivedDatasetRegistration(citation.getDoi(), metadata, citation.getTarget(), citation.getRegistrationDate());
+      datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
+          citation.getDoi(), metadata, citation.getTarget(), citation.getRegistrationDate());
     }
   }
 }

@@ -23,10 +23,10 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DoiMessageManagingService;
 import org.gbif.registry.doi.registration.DoiRegistration;
-import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.ws.WebApplicationException;
@@ -156,7 +156,8 @@ public class DoiInteractionResource implements DoiInteractionService {
       } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
         doiMessageManagingService.registerDownload(doi, metadata, doiRegistration.getKey());
       } else if (DoiType.DATASET == doiRegistration.getType()) {
-        doiMessageManagingService.registerDataset(doi, metadata, UUID.fromString(doiRegistration.getKey()));
+        doiMessageManagingService.registerDataset(
+            doi, metadata, UUID.fromString(doiRegistration.getKey()));
       }
 
       LOG.info("DOI registered/updated {}", doi.getDoiName());

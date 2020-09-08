@@ -20,10 +20,11 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
 
-import javax.annotation.Nullable;
 import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 /**
  * Stub class used to simplify binding, e.g. when this class must be bound but isn't actually used.
@@ -37,5 +38,6 @@ public class DatasetDoiDataCiteHandlingServiceStub implements DatasetDoiDataCite
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {}
 
   @Override
-  public void scheduleDerivedDatasetRegistration(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {}
+  public void scheduleDerivedDatasetRegistration(
+      DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {}
 }
