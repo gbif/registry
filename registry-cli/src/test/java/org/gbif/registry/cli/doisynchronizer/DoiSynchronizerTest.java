@@ -74,8 +74,7 @@ public class DoiSynchronizerTest {
   @BeforeEach
   public void before() {
     when(contextMock.getBean(DoiMapper.class)).thenReturn(doiMapperMock);
-    when(contextMock.getBean(DoiIssuingService.class))
-        .thenReturn(doiIssuingServiceMock);
+    when(contextMock.getBean(DoiIssuingService.class)).thenReturn(doiIssuingServiceMock);
     when(contextMock.getBean(DatasetDoiDataCiteHandlingService.class))
         .thenReturn(datasetDoiDataCiteHandlingServiceMock);
     when(contextMock.getBean(DownloadDoiDataCiteHandlingService.class))

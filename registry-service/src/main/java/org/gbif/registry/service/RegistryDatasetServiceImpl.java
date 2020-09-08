@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.service;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.Constants;
 import org.gbif.api.model.common.DOI;
@@ -37,9 +36,6 @@ import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -47,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;

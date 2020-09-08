@@ -15,18 +15,20 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
-import org.springframework.stereotype.Repository;
 
-import javax.annotation.Nullable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CitationMapper {

@@ -121,21 +121,31 @@ public class Citation implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Citation citation1 = (Citation) o;
-    return Objects.equals(doi, citation1.doi) &&
-        Objects.equals(originalDownloadDOI, citation1.originalDownloadDOI) &&
-        Objects.equals(citation, citation1.citation) &&
-        Objects.equals(title, citation1.title) &&
-        Objects.equals(target, citation1.target) &&
-        Objects.equals(createdBy, citation1.createdBy) &&
-        Objects.equals(modifiedBy, citation1.modifiedBy) &&
-        Objects.equals(registrationDate, citation1.registrationDate) &&
-        Objects.equals(created, citation1.created) &&
-        Objects.equals(modified, citation1.modified);
+    return Objects.equals(doi, citation1.doi)
+        && Objects.equals(originalDownloadDOI, citation1.originalDownloadDOI)
+        && Objects.equals(citation, citation1.citation)
+        && Objects.equals(title, citation1.title)
+        && Objects.equals(target, citation1.target)
+        && Objects.equals(createdBy, citation1.createdBy)
+        && Objects.equals(modifiedBy, citation1.modifiedBy)
+        && Objects.equals(registrationDate, citation1.registrationDate)
+        && Objects.equals(created, citation1.created)
+        && Objects.equals(modified, citation1.modified);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(doi, originalDownloadDOI, citation, title, target, createdBy, modifiedBy, registrationDate, created, modified);
+    return Objects.hash(
+        doi,
+        originalDownloadDOI,
+        citation,
+        title,
+        target,
+        createdBy,
+        modifiedBy,
+        registrationDate,
+        created,
+        modified);
   }
 
   @Override

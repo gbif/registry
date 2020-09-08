@@ -18,8 +18,6 @@ package org.gbif.registry.domain.ws;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.PrePersist;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collections;
@@ -27,6 +25,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
+
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 
 public class CitationCreationRequest implements Serializable {
 
@@ -94,17 +95,18 @@ public class CitationCreationRequest implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     CitationCreationRequest that = (CitationCreationRequest) o;
-    return Objects.equals(originalDownloadDOI, that.originalDownloadDOI) &&
-        Objects.equals(title, that.title) &&
-        Objects.equals(creator, that.creator) &&
-        Objects.equals(target, that.target) &&
-        Objects.equals(registrationDate, that.registrationDate) &&
-        Objects.equals(relatedDatasets, that.relatedDatasets);
+    return Objects.equals(originalDownloadDOI, that.originalDownloadDOI)
+        && Objects.equals(title, that.title)
+        && Objects.equals(creator, that.creator)
+        && Objects.equals(target, that.target)
+        && Objects.equals(registrationDate, that.registrationDate)
+        && Objects.equals(relatedDatasets, that.relatedDatasets);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(originalDownloadDOI, title, creator, target, registrationDate, relatedDatasets);
+    return Objects.hash(
+        originalDownloadDOI, title, creator, target, registrationDate, relatedDatasets);
   }
 
   @Override

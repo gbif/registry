@@ -27,8 +27,7 @@ public class CitationDatasetUsage {
   private DOI datasetDoi;
   private Long numberRecords;
 
-  public CitationDatasetUsage() {
-  }
+  public CitationDatasetUsage() {}
 
   public CitationDatasetUsage(UUID datasetKey, DOI datasetDoi, Long numberRecords) {
     this.datasetKey = datasetKey;
@@ -65,9 +64,9 @@ public class CitationDatasetUsage {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     CitationDatasetUsage that = (CitationDatasetUsage) o;
-    return Objects.equals(datasetKey, that.datasetKey) &&
-        Objects.equals(datasetDoi, that.datasetDoi) &&
-        Objects.equals(numberRecords, that.numberRecords);
+    return Objects.equals(datasetKey, that.datasetKey)
+        && Objects.equals(datasetDoi, that.datasetDoi)
+        && Objects.equals(numberRecords, that.numberRecords);
   }
 
   @Override

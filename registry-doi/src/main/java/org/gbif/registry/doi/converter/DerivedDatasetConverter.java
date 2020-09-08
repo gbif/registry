@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.doi.converter;
 
 import org.gbif.api.vocabulary.IdentifierType;
@@ -18,8 +33,7 @@ import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
 public final class DerivedDatasetConverter {
 
-  private DerivedDatasetConverter() {
-  }
+  private DerivedDatasetConverter() {}
 
   public static DataCiteMetadata convert(Citation citation) {
     final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
@@ -34,15 +48,15 @@ public final class DerivedDatasetConverter {
 
     // Optional and recommended fields
     // TODO: 27/08/2020 which ones do we need?
-//    convertDates(builder);
-//    convertDescriptions(builder);
-//    convertLanguage(builder);
-//    convertContributors(builder);
-//    convertAlternateIdentifiers(builder);
-//    convertRelatedIdentifiers(builder);
-//    convertRightsList(builder);
-//    convertSubjects(builder);
-//    convertGeoLocations(builder);
+    //    convertDates(builder);
+    //    convertDescriptions(builder);
+    //    convertLanguage(builder);
+    //    convertContributors(builder);
+    //    convertAlternateIdentifiers(builder);
+    //    convertRelatedIdentifiers(builder);
+    //    convertRightsList(builder);
+    //    convertSubjects(builder);
+    //    convertGeoLocations(builder);
 
     return builder.build();
   }
@@ -60,16 +74,15 @@ public final class DerivedDatasetConverter {
         Creators.builder()
             .withCreator(
                 Creator.builder()
-                    .withCreatorName(CreatorName.builder().withValue(citation.getCreatedBy()).build())
+                    .withCreatorName(
+                        CreatorName.builder().withValue(citation.getCreatedBy()).build())
                     .build())
             .build());
   }
 
   private static void convertTitles(DataCiteMetadata.Builder<Void> builder, Citation citation) {
     builder.withTitles(
-        Titles.builder()
-            .withTitle(Title.builder().withValue(citation.getTitle()).build())
-            .build());
+        Titles.builder().withTitle(Title.builder().withValue(citation.getTitle()).build()).build());
   }
 
   private static void convertPublisher(DataCiteMetadata.Builder<Void> builder) {

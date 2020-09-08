@@ -81,8 +81,10 @@ public class DoiSynchronizer {
     this.context = context;
     this.doiMapper = context.getBean(DoiMapper.class);
     this.doiIssuingService = context.getBean(DoiIssuingService.class);
-    this.datasetDoiDataCiteHandlingService = context.getBean(DatasetDoiDataCiteHandlingService.class);
-    this.downloadDoiDataCiteHandlingService = context.getBean(DownloadDoiDataCiteHandlingService.class);
+    this.datasetDoiDataCiteHandlingService =
+        context.getBean(DatasetDoiDataCiteHandlingService.class);
+    this.downloadDoiDataCiteHandlingService =
+        context.getBean(DownloadDoiDataCiteHandlingService.class);
     this.datasetMapper = context.getBean(DatasetMapper.class);
     this.downloadMapper = context.getBean(OccurrenceDownloadMapper.class);
     this.userMapper = context.getBean(UserMapper.class);

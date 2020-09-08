@@ -23,16 +23,17 @@ import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -49,8 +50,7 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
   private final URI dataPackageTarget;
 
   public DoiMessageManagingServiceImpl(
-      @Value("${portal.url}") URI portal,
-      @Lazy MessagePublisher messagePublisher) {
+      @Value("${portal.url}") URI portal, @Lazy MessagePublisher messagePublisher) {
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     this.datasetTarget = portal.resolve("dataset/");
@@ -79,13 +79,16 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
   }
 
   @Override
-  public void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate)
+  public void registerDerivedDataset(
+      DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate)
       throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
-    DoiStatus registrationStatus = (registrationDate == null || registrationDate.before(new Date())) ?
-        DoiStatus.REGISTERED : DoiStatus.RESERVED;
+    DoiStatus registrationStatus =
+        (registrationDate == null || registrationDate.before(new Date()))
+            ? DoiStatus.REGISTERED
+            : DoiStatus.RESERVED;
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(registrationStatus, doi, xml, target);
