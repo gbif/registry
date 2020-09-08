@@ -8,10 +8,10 @@
       <![CDATA[
             CREATE TABLE citation (
                 doi text NOT NULL PRIMARY KEY,
-                original_download_doi text,
-                citation text,
-                title text,
-                target text,
+                original_download_doi text REFERENCES download(doi) ON DELETE CASCADE,
+                citation text NOT NULL,
+                title text NOT NULL,
+                target text NOT NULL,
                 registration_date timestamp with time zone,
                 created timestamp with time zone NOT NULL DEFAULT now(),
                 created_by text NOT NULL,
@@ -20,10 +20,11 @@
             );
 
             CREATE TABLE dataset_citation (
-                dataset_key_or_doi text NOT NULL,
+                dataset_key uuid NOT NULL REFERENCES dataset(key) ON DELETE CASCADE,
+                dataset_doi text,
                 record_count integer,
-                citation_doi text NOT NULL,
-                PRIMARY KEY (dataset_key_or_doi, citation_doi)
+                citation_doi text NOT NULL REFERENCES citation(doi) ON DELETE CASCADE,
+                PRIMARY KEY (dataset_key, citation_doi)
             );
        ]]>
     </sql>

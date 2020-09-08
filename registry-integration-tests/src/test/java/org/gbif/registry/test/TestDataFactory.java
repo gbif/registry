@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.test;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -110,6 +111,13 @@ public class TestDataFactory {
 
   public Dataset newDataset(UUID publishingOrganizationKey, UUID installationKey) {
     return datasets.newInstance(publishingOrganizationKey, installationKey);
+  }
+
+  public Dataset newPersistedDataset(DOI doi) {
+    Organization organization = newPersistedOrganization();
+    Installation installation = newPersistedInstallation(organization.getKey());
+
+    return datasets.newPersistedInstance(doi, organization.getKey(), installation.getKey());
   }
 
   public Dataset newPersistedDataset(UUID organizationKey, UUID installationKey) {

@@ -1,16 +1,36 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.service;
 
+import com.google.common.collect.Iterators;
+import org.apache.commons.collections.CollectionUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.registry.doi.DataCiteMetadataBuilderService;
 import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
 import org.gbif.registry.doi.DoiIssuingService;
+import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.domain.ws.Citation;
-import org.gbif.registry.domain.ws.CitationCreationRequest;
+import org.gbif.registry.domain.ws.CitationDatasetUsage;
 import org.gbif.registry.persistence.mapper.CitationMapper;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,7 +41,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
@@ -31,11 +50,13 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
 
   private static final ZoneId UTC = ZoneId.of("UTC");
   private static final DateTimeFormatter REGULAR_DATE_FORMAT = DateTimeFormatter.ofPattern("d MMMM yyyy");
+  private static final int BATCH_SIZE = 5_000;
 
   private final DataCiteMetadataBuilderService metadataBuilderService;
   private final DoiIssuingService doiIssuingService;
   private final DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService;
   private final CitationMapper citationMapper;
+  private final DatasetMapper datasetMapper;
   private final String citationText;
 
   public RegistryCitationServiceImpl(
@@ -43,11 +64,13 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
       DoiIssuingService doiIssuingService,
       DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService,
       CitationMapper citationMapper,
+      DatasetMapper datasetMapper,
       @Value("${citation.text}") String citationText) {
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
     this.datasetDoiDataCiteHandlingService = datasetDoiDataCiteHandlingService;
     this.citationMapper = citationMapper;
+    this.datasetMapper = datasetMapper;
     this.citationText = citationText;
   }
 
@@ -57,33 +80,23 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   }
 
   @Override
-  public Citation create(CitationCreationRequest request) {
+  public Citation create(Citation citation, List<CitationDatasetUsage> citationDatasetUsages) {
     DOI doi = doiIssuingService.newDerivedDatasetDOI();
-    Citation citation = toCitation(request, doi);
+
+    citation.setDoi(doi);
+    citation.setCitation(
+        MessageFormat.format(citationText, LocalDate.now(UTC).format(REGULAR_DATE_FORMAT), doi));
+
     DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
 
     datasetDoiDataCiteHandlingService
-        .scheduleDerivedDatasetRegistration(doi, metadata, request.getTarget(), request.getRegistrationDate());
+        .scheduleDerivedDatasetRegistration(doi, metadata, citation.getTarget(), citation.getRegistrationDate());
 
     citationMapper.create(citation);
-    for (Map.Entry<String, Long> relatedDataset : request.getRelatedDatasets().entrySet()) {
-      citationMapper.addDatasetCitation(relatedDataset.getKey(), relatedDataset.getValue(), doi);
-    }
-
-    return citation;
-  }
-
-  private Citation toCitation(CitationCreationRequest request, DOI doi) {
-    Citation citation = new Citation();
-    citation.setDoi(doi);
-    citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
-    citation.setCitation(
-        MessageFormat.format(citationText, LocalDate.now(UTC).format(REGULAR_DATE_FORMAT), doi));
-    citation.setTarget(request.getTarget());
-    citation.setTitle(request.getTitle());
-    citation.setCreatedBy(request.getCreator());
-    citation.setModifiedBy(request.getCreator());
-    citation.setRegistrationDate(request.getRegistrationDate());
+    Iterators.partition(citationDatasetUsages.iterator(), BATCH_SIZE)
+        .forEachRemaining(
+            batch ->
+                citationMapper.addCitationDatasets(doi, batch));
 
     return citation;
   }
@@ -94,12 +107,32 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   }
 
   @Override
-  public PagingResponse<Citation> getDatasetCitations(UUID datasetKey, Pageable page) {
-    return pagingResponse(
-        page,
-        citationMapper.countByDataset(datasetKey),
-        citationMapper.listByDataset(datasetKey, page)
-    );
+  public PagingResponse<Citation> getDatasetCitations(String datasetKeyOrDoi, Pageable page) {
+    PagingResponse<Citation> result;
+
+    if (RegistryDoiUtils.isUuid(datasetKeyOrDoi)) {
+      UUID datasetKey = UUID.fromString(datasetKeyOrDoi);
+      result = pagingResponse(
+          page,
+          citationMapper.countByDataset(datasetKey),
+          citationMapper.listByDataset(datasetKey, page));
+    } else if (DOI.isParsable(datasetKeyOrDoi)) {
+      List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
+
+      if (CollectionUtils.isNotEmpty(datasets)) {
+        Dataset dataset = datasets.get(0);
+        result = pagingResponse(
+            page,
+            citationMapper.countByDataset(dataset.getKey()),
+            citationMapper.listByDataset(dataset.getKey(), page));
+      } else {
+        result = new PagingResponse<>(0L, 20, 0L);
+      }
+    } else {
+      result = new PagingResponse<>(0L, 20, 0L);
+    }
+
+    return result;
   }
 
   @Override
@@ -111,7 +144,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     );
   }
 
-  @Scheduled(cron = "0 0 0 * * *")
+  @Scheduled(cron = "${citation.cronPattern}")
   public void registerPostponedCitations() {
     List<Citation> citationsToRegister = citationMapper.listByRegistrationDate(new Date());
 

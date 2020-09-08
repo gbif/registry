@@ -1,30 +1,43 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.CitationResource;
-import org.gbif.registry.ws.resources.InstallationResource;
-import org.gbif.registry.ws.resources.NodeResource;
-import org.gbif.registry.ws.resources.OrganizationResource;
+import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Nullable;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toMap;
+import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredicateDownload;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -34,9 +47,7 @@ public class CitationIT extends BaseItTest {
 
   private final CitationResource citationResource;
   private final TestDataFactory testDataFactory;
-  private final NodeResource nodeService;
-  private final OrganizationResource organizationService;
-  private final InstallationResource installationService;
+  private final OccurrenceDownloadResource occurrenceDownloadService;
 
   @Autowired
   public CitationIT(
@@ -44,28 +55,38 @@ public class CitationIT extends BaseItTest {
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       TestDataFactory testDataFactory,
-      NodeResource nodeService,
-      OrganizationResource organizationService,
-      InstallationResource installationService) {
+      OccurrenceDownloadResource occurrenceDownloadService) {
     super(simplePrincipalProvider, esServer);
     this.citationResource = citationResource;
     this.testDataFactory = testDataFactory;
-    this.nodeService = nodeService;
-    this.organizationService = organizationService;
-    this.installationService = installationService;
+    this.occurrenceDownloadService = occurrenceDownloadService;
   }
 
   @Test
   public void testCreateCitation() {
+    // create download
+    Download occurrenceDownload = getTestInstancePredicateDownload();
+    occurrenceDownloadService.create(occurrenceDownload);
+    occurrenceDownload = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertNotNull(occurrenceDownload);
+
+    // create datasets
+    Dataset firstDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset1"));
+    Dataset secondDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset2"));
+
+    // prepare request
     CitationCreationRequest requestData = new CitationCreationRequest();
     requestData.setTitle("Let's test citation");
-    requestData.setOriginalDownloadDOI(new DOI("10.21373/55555"));
+    requestData.setOriginalDownloadDOI(occurrenceDownload.getDoi());
     requestData.setCreator("it");
     requestData.setTarget(URI.create("https://www.gbif.org"));
-    requestData.setRelatedDatasets(Arrays.asList(UUID.randomUUID().toString(), new DOI("10.21373/44444").toString()));
-
+    Map<String, Long> relatedDatasets = new HashMap<>();
+    relatedDatasets.put(firstDataset.getKey().toString(), 1L);
+    relatedDatasets.put(secondDataset.getDoi().getDoiName(), 2L);
+    requestData.setRelatedDatasets(relatedDatasets);
     Citation citation = citationResource.createCitation(requestData);
 
+    // create citation
     Citation actual = citationResource.getCitation(citation.getDoi().getPrefix(), citation.getDoi().getSuffix());
 
     assertNotNull(actual);
@@ -81,24 +102,42 @@ public class CitationIT extends BaseItTest {
 
   @Test
   public void testDatasetCitation() {
-    DOI originalDownloadDoi = new DOI("10.21373/55555");
+    // create download
+    Download occurrenceDownload = getTestInstancePredicateDownload();
+    occurrenceDownloadService.create(occurrenceDownload);
+    occurrenceDownload = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertNotNull(occurrenceDownload);
 
-    Dataset firstDataset = newDataset();
-    Dataset secondDataset = newDataset();
-    Dataset thirdDataset = newDataset();
+    // create datasets
+    Dataset firstDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset1"));
+    Dataset secondDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset2"));
+    Dataset thirdDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
+    // prepare requests
     CitationCreationRequest requestData1 = newCitationRequest(
-        originalDownloadDoi,
-        Arrays.asList(secondDataset.getKey().toString(), firstDataset.getDoi().getDoiName()));
+        occurrenceDownload.getDoi(),
+        Stream.of(new String[][]{
+            {secondDataset.getKey().toString(), "1"},
+            {firstDataset.getDoi().getDoiName(), "2"},
+        }).collect(toMap(data -> data[0], data -> Long.valueOf(data[1])))
+    );
 
     CitationCreationRequest requestData2 = newCitationRequest(
-        originalDownloadDoi,
-        Arrays.asList(secondDataset.getDoi().getDoiName(), firstDataset.getKey().toString()));
+        occurrenceDownload.getDoi(),
+        Stream.of(new String[][]{
+            {secondDataset.getDoi().getDoiName(), "1"},
+            {firstDataset.getKey().toString(), "2"},
+        }).collect(toMap(data -> data[0], data -> Long.valueOf(data[1])))
+    );
 
     CitationCreationRequest requestData3 = newCitationRequest(
-        originalDownloadDoi,
-        Collections.singletonList(thirdDataset.getDoi().getDoiName()));
+        occurrenceDownload.getDoi(),
+        Stream.of(new String[][]{
+            {thirdDataset.getDoi().getDoiName(), "1"}
+        }).collect(toMap(data -> data[0], data -> Long.valueOf(data[1])))
+    );
 
+    // create citations
     Citation citation1 = citationResource.createCitation(requestData1);
     Citation citation2 = citationResource.createCitation(requestData2);
     Citation citation3 = citationResource.createCitation(requestData3);
@@ -124,7 +163,7 @@ public class CitationIT extends BaseItTest {
     assertEquals(1, datasetCitationPage2.getCount());
   }
 
-  private CitationCreationRequest newCitationRequest(DOI originalDownloadDOI, List<String> relatedDatasets) {
+  private CitationCreationRequest newCitationRequest(DOI originalDownloadDOI, Map<String, Long> relatedDatasets) {
     CitationCreationRequest creationRequest = new CitationCreationRequest();
     creationRequest.setTitle("Let's test citation");
     creationRequest.setOriginalDownloadDOI(originalDownloadDOI);
@@ -133,18 +172,5 @@ public class CitationIT extends BaseItTest {
     creationRequest.setRelatedDatasets(relatedDatasets);
 
     return creationRequest;
-  }
-
-  private Dataset newDataset() {
-    // endorsing node for the organization
-    UUID nodeKey = nodeService.create(testDataFactory.newNode());
-    // publishing organization (required field)
-    Organization o = testDataFactory.newOrganization(nodeKey);
-    UUID organizationKey = organizationService.create(o);
-
-    Installation i = testDataFactory.newInstallation(organizationKey);
-    UUID installationKey = installationService.create(i);
-
-    return testDataFactory.newPersistedDataset(organizationKey, installationKey);
   }
 }
