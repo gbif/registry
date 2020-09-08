@@ -87,12 +87,12 @@ public class CitationMapperIT extends BaseItTest {
     // create citation datasets
     List<CitationDatasetUsage> citationDatasets1 = new ArrayList<>();
 
-    citationDatasets1.add(new CitationDatasetUsage(null, dataset1.getDoi(), 1L));
-    citationDatasets1.add(new CitationDatasetUsage(null, dataset2.getDoi(), 2L));
+    citationDatasets1.add(new CitationDatasetUsage(dataset1.getKey(), dataset1.getDoi(), 1L));
+    citationDatasets1.add(new CitationDatasetUsage(dataset2.getKey(), dataset2.getDoi(), 2L));
     citationDatasets1.add(new CitationDatasetUsage(dataset3.getKey(), null, 3L));
 
     List<CitationDatasetUsage> citationDatasets2 = new ArrayList<>();
-    citationDatasets2.add(new CitationDatasetUsage(null, dataset3.getDoi(), 3L));
+    citationDatasets2.add(new CitationDatasetUsage(dataset3.getKey(), dataset3.getDoi(), 3L));
 
     mapper.addCitationDatasets(citation1.getDoi(), citationDatasets1);
     mapper.addCitationDatasets(citation2.getDoi(), citationDatasets2);
