@@ -50,8 +50,8 @@
 
   <update id="update" parameterType="map">
     UPDATE gbif_doi
-    SET status   = #{status.status,jdbcType=OTHER},
-        target   = #{status.target,jdbcType=OTHER},
+    SET status   = #{doiData.status,jdbcType=OTHER},
+        target   = #{doiData.target,jdbcType=OTHER},
         metadata = #{xml,jdbcType=OTHER},
         modified = now()
     WHERE doi = #{doi,jdbcType=OTHER}

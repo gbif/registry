@@ -23,9 +23,10 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
-import org.gbif.registry.doi.generator.DoiGenerator;
+import org.gbif.registry.doi.DoiIssuingService;
+import org.gbif.registry.doi.DoiMessageManagingService;
 import org.gbif.registry.doi.registration.DoiRegistration;
-import org.gbif.registry.doi.registration.DoiRegistrationService;
+import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.ws.WebApplicationException;
@@ -56,15 +57,20 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController
 @RequestMapping("doi")
-public class DoiRegistrationResource implements DoiRegistrationService {
+public class DoiInteractionResource implements DoiInteractionService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DoiRegistrationResource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DoiInteractionResource.class);
 
-  private final DoiGenerator doiGenerator;
+  private final DoiIssuingService doiIssuingService;
+  private final DoiMessageManagingService doiMessageManagingService;
   private final DoiMapper doiMapper;
 
-  public DoiRegistrationResource(DoiGenerator doiGenerator, DoiMapper doiMapper) {
-    this.doiGenerator = doiGenerator;
+  public DoiInteractionResource(
+      DoiIssuingService doiIssuingService,
+      DoiMessageManagingService doiMessageManagingService,
+      DoiMapper doiMapper) {
+    this.doiIssuingService = doiIssuingService;
+    this.doiMessageManagingService = doiMessageManagingService;
     this.doiMapper = doiMapper;
   }
 
@@ -89,7 +95,7 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   @Override
   public void delete(@PathVariable String prefix, @PathVariable String suffix) {
     LOG.info("Deleting DOI {} {}", prefix, suffix);
-    doiGenerator.delete(new DOI(prefix, suffix));
+    doiMessageManagingService.delete(new DOI(prefix, suffix));
   }
 
   /**
@@ -146,11 +152,11 @@ public class DoiRegistrationResource implements DoiRegistrationService {
 
       // handle registration
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
-        doiGenerator.registerDataPackage(doi, metadata);
+        doiMessageManagingService.registerDataPackage(doi, metadata);
       } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
-        doiGenerator.registerDownload(doi, metadata, doiRegistration.getKey());
+        doiMessageManagingService.registerDownload(doi, metadata, doiRegistration.getKey());
       } else if (DoiType.DATASET == doiRegistration.getType()) {
-        doiGenerator.registerDataset(doi, metadata, UUID.fromString(doiRegistration.getKey()));
+        doiMessageManagingService.registerDataset(doi, metadata, UUID.fromString(doiRegistration.getKey()));
       }
 
       LOG.info("DOI registered/updated {}", doi.getDoiName());
@@ -186,11 +192,11 @@ public class DoiRegistrationResource implements DoiRegistrationService {
   /** Generates DOI based on the DoiType. */
   private DOI genDoiByType(DoiType doiType) {
     if (DoiType.DATA_PACKAGE == doiType) {
-      return doiGenerator.newDataPackageDOI();
+      return doiIssuingService.newDataPackageDOI();
     } else if (DoiType.DOWNLOAD == doiType) {
-      return doiGenerator.newDownloadDOI();
+      return doiIssuingService.newDownloadDOI();
     } else {
-      return doiGenerator.newDatasetDOI();
+      return doiIssuingService.newDatasetDOI();
     }
   }
 

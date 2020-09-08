@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.UUID;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -42,12 +43,24 @@ public final class RegistryDoiUtils {
     return String.valueOf(cal.get(Calendar.YEAR));
   }
 
-  /** Checks if a DOI can be found in the list of dataset identifiers. */
+  /**
+   * Checks if a DOI can be found in the list of dataset identifiers.
+   */
   public static boolean isIdentifierDOIFound(DOI doi, Identifiable identifiable) {
     return identifiable.getIdentifiers().stream()
         .anyMatch(
             identifier ->
                 IdentifierType.DOI == identifier.getType()
                     && identifier.getIdentifier().equals(doi.toString()));
+  }
+
+  @SuppressWarnings("ResultOfMethodCallIgnored")
+  public static boolean isUuid(String str) {
+    try {
+      UUID.fromString(str);
+      return true;
+    } catch (IllegalArgumentException e) {
+      return false;
+    }
   }
 }

@@ -73,6 +73,23 @@ public class Datasets extends JsonBackedData<Dataset> {
    * Persist a new Dataset associated to an publishing organization and installation for use in Unit
    * Tests.
    *
+   * @param doi dataset DOI
+   * @param organizationKey publishing organization key
+   * @param installationKey installation key
+   * @return persisted Dataset
+   */
+  public Dataset newPersistedInstance(DOI doi, UUID organizationKey, UUID installationKey) {
+    Dataset dataset = newInstance(organizationKey, installationKey);
+    dataset.setDoi(doi);
+    UUID key = datasetService.create(dataset);
+    // some properties like created, modified are only set when the dataset is retrieved anew
+    return datasetService.get(key);
+  }
+
+  /**
+   * Persist a new Dataset associated to an publishing organization and installation for use in Unit
+   * Tests.
+   *
    * @param organizationKey publishing organization key
    * @param installationKey installation key
    * @return persisted Dataset

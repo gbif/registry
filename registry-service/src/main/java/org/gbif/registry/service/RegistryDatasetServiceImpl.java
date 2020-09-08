@@ -15,14 +15,19 @@
  */
 package org.gbif.registry.service;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.Constants;
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.doi.util.RegistryDoiUtils;
+import org.gbif.registry.domain.ws.CitationDatasetUsage;
 import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -31,7 +36,12 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -49,6 +59,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 
+@SuppressWarnings("UnstableApiUsage")
 @Service
 public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
@@ -140,7 +151,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
    *       emlView, Dataset dbView);}
    * </ul>
    *
-   * @param target that will be modified with persitable values from the supplementary
+   * @param target        that will be modified with persitable values from the supplementary
    * @param supplementary holding the preferred properties for the target
    * @return the modified target dataset, or the supplementary dataset if the target is null
    */
@@ -228,7 +239,9 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     }
   }
 
-  /** Returns the parsed, preferred metadata document as a dataset. */
+  /**
+   * Returns the parsed, preferred metadata document as a dataset.
+   */
   @Nullable
   @Override
   public Dataset getPreferredMetadataDataset(UUID key) {
@@ -262,5 +275,53 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       return null;
     }
     return document.getData();
+  }
+
+  @Override
+  public List<CitationDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data) {
+    LOG.debug("Ensure citation dataset usages {}", data);
+    List<CitationDatasetUsage> result = new ArrayList<>();
+
+    for (Map.Entry<String, Long> item : data.entrySet()) {
+      String datasetKeyOrDoi = item.getKey();
+      LOG.debug("Try identifier {}", datasetKeyOrDoi);
+
+      if (RegistryDoiUtils.isUuid(datasetKeyOrDoi)) {
+        LOG.debug("Identifier {} is a valid UUID", datasetKeyOrDoi);
+        UUID key = UUID.fromString(datasetKeyOrDoi);
+        Dataset dataset = datasetMapper.get(key);
+
+        if (dataset == null) {
+          LOG.error("Dataset with the UUID {} was not found", datasetKeyOrDoi);
+          throw new IllegalArgumentException();
+        } else {
+          CitationDatasetUsage citationDatasetUsage = new CitationDatasetUsage();
+          citationDatasetUsage.setDatasetKey(key);
+          citationDatasetUsage.setDatasetDoi(dataset.getDoi());
+          citationDatasetUsage.setNumberRecords(item.getValue());
+          result.add(citationDatasetUsage);
+        }
+      } else if (DOI.isParsable(datasetKeyOrDoi)) {
+        LOG.debug("Identifier {} is a valid DOI", datasetKeyOrDoi);
+        List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
+
+        if (CollectionUtils.isEmpty(datasets)) {
+          LOG.error("Dataset with the DOI {} was not found", datasetKeyOrDoi);
+          throw new IllegalArgumentException();
+        } else {
+          Dataset dataset = datasets.get(0);
+          CitationDatasetUsage citationDatasetUsage = new CitationDatasetUsage();
+          citationDatasetUsage.setDatasetKey(dataset.getKey());
+          citationDatasetUsage.setDatasetDoi(dataset.getDoi());
+          citationDatasetUsage.setNumberRecords(item.getValue());
+          result.add(citationDatasetUsage);
+        }
+      } else {
+        LOG.error("Identifier {} is not UUID or DOI", datasetKeyOrDoi);
+        throw new IllegalArgumentException();
+      }
+    }
+
+    return result;
   }
 }

@@ -17,8 +17,9 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
-import org.gbif.registry.cli.common.stubs.DoiGeneratorStub;
-import org.gbif.registry.cli.common.stubs.DoiHandlerStrategyStub;
+import org.gbif.registry.cli.common.stubs.DataCiteMetadataBuilderServiceStub;
+import org.gbif.registry.cli.common.stubs.DatasetDoiDataCiteHandlingServiceStub;
+import org.gbif.registry.cli.common.stubs.DoiIssuingServiceStub;
 import org.gbif.registry.cli.common.stubs.EditorAuthorizationServiceStub;
 import org.gbif.registry.cli.common.stubs.EventManagerStub;
 import org.gbif.registry.cli.common.stubs.SearchServiceStub;
@@ -65,8 +66,9 @@ public class DatasetUpdater {
         .withDbConfiguration(cfg.db)
         .withComponents(
             SearchServiceStub.class,
-            DoiGeneratorStub.class,
-            DoiHandlerStrategyStub.class,
+            DatasetDoiDataCiteHandlingServiceStub.class,
+            DoiIssuingServiceStub.class,
+            DataCiteMetadataBuilderServiceStub.class,
             EditorAuthorizationServiceStub.class,
             EventManagerStub.class,
             RegistryDatasetServiceImpl.class,

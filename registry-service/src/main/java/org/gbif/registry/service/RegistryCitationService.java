@@ -15,31 +15,24 @@
  */
 package org.gbif.registry.service;
 
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
-import javax.annotation.Nullable;
+public interface RegistryCitationService {
 
-public interface RegistryDatasetService {
+  String getCitationText(DOI citationDoi);
 
-  Dataset get(UUID key);
+  Citation create(Citation citation, List<CitationDatasetUsage> citationDatasetUsages);
 
-  PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp);
+  Citation get(DOI citationDoi);
 
-  @Nullable
-  Dataset getPreferredMetadataDataset(UUID key);
+  PagingResponse<Citation> getDatasetCitations(String datasetKeyOrDoi, Pageable page);
 
-  List<Metadata> listMetadata(UUID datasetKey, @Nullable MetadataType type);
-
-  byte[] getMetadataDocument(int metadataKey);
-
-  List<CitationDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data);
+  PagingResponse<Dataset> getCitationDatasets(DOI datasetDoi, Pageable pageable);
 }
