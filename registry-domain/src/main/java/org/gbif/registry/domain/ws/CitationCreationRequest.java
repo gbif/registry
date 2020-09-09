@@ -20,7 +20,6 @@ import org.gbif.api.model.registry.PrePersist;
 
 import java.io.Serializable;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -83,7 +82,7 @@ public class CitationCreationRequest implements Serializable {
 
   @NotNull
   public Map<String, Long> getRelatedDatasets() {
-    return Collections.unmodifiableMap(relatedDatasets);
+    return relatedDatasets;
   }
 
   public void setRelatedDatasets(Map<String, Long> relatedDatasets) {

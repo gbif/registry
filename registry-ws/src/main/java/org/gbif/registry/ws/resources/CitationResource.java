@@ -31,6 +31,7 @@ import org.gbif.ws.WebApplicationException;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
 import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
@@ -74,7 +75,7 @@ public class CitationResource {
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public Citation createCitation(@RequestBody CitationCreationRequest request) {
+  public Citation createCitation(@RequestBody @Valid CitationCreationRequest request) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
