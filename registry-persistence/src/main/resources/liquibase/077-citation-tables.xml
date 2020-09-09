@@ -28,6 +28,7 @@
             );
 
             CREATE INDEX ON citation (created);
+            CREATE INDEX ON citation (registration_date);
             CREATE INDEX ON dataset_citation (dataset_key);
             CREATE INDEX ON dataset_citation (citation_doi);
        ]]>
