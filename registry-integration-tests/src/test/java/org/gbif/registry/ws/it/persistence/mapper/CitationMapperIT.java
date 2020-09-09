@@ -69,8 +69,8 @@ public class CitationMapperIT extends BaseItTest {
     citation1.setTitle("Citation title");
     citation1.setCreated(new Date());
     citation1.setModified(new Date());
-    citation1.setCreatedBy("IT");
-    citation1.setModifiedBy("IT");
+    citation1.setCreatedBy("WS_IT");
+    citation1.setModifiedBy("WS_IT");
     mapper.create(citation1);
 
     Citation citation2 = new Citation();
@@ -81,8 +81,8 @@ public class CitationMapperIT extends BaseItTest {
     citation2.setTitle("Citation title");
     citation2.setCreated(new Date());
     citation2.setModified(new Date());
-    citation2.setCreatedBy("IT");
-    citation2.setModifiedBy("IT");
+    citation2.setCreatedBy("WS_IT");
+    citation2.setModifiedBy("WS_IT");
     mapper.create(citation2);
 
     // create citation datasets
