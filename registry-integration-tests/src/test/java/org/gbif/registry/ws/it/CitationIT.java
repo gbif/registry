@@ -80,7 +80,6 @@ public class CitationIT extends BaseItTest {
     CitationCreationRequest requestData = new CitationCreationRequest();
     requestData.setTitle("Let's test citation");
     requestData.setOriginalDownloadDOI(occurrenceDownload.getDoi());
-    requestData.setCreator("it");
     requestData.setTarget(URI.create("https://www.gbif.org"));
     Map<String, Long> relatedDatasets = new HashMap<>();
     relatedDatasets.put(firstDataset.getKey().toString(), 1L);
@@ -174,7 +173,6 @@ public class CitationIT extends BaseItTest {
     CitationCreationRequest creationRequest = new CitationCreationRequest();
     creationRequest.setTitle("Let's test citation");
     creationRequest.setOriginalDownloadDOI(originalDownloadDOI);
-    creationRequest.setCreator("it");
     creationRequest.setTarget(URI.create("https://www.gbif.org"));
     creationRequest.setRelatedDatasets(relatedDatasets);
 
