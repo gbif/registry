@@ -27,6 +27,9 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -61,28 +64,14 @@ public class CitationMapperIT extends BaseItTest {
     Dataset dataset3 = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
     // create citations
-    Citation citation1 = new Citation();
-    citation1.setCitation("New citation text");
+    Citation citation1 = prepareCitation();
     citation1.setDoi(new DOI("10.21373/dd.doi1"));
     citation1.setOriginalDownloadDOI(new DOI("10.21373/dl.doi1"));
-    citation1.setTarget(URI.create("https://github.com/gbif/registry"));
-    citation1.setTitle("Citation title");
-    citation1.setCreated(new Date());
-    citation1.setModified(new Date());
-    citation1.setCreatedBy("WS_IT");
-    citation1.setModifiedBy("WS_IT");
     mapper.create(citation1);
 
-    Citation citation2 = new Citation();
-    citation2.setCitation("New citation text");
+    Citation citation2 = prepareCitation();
     citation2.setDoi(new DOI("10.21373/dd.doi2"));
     citation2.setOriginalDownloadDOI(new DOI("10.21373/dl.doi2"));
-    citation2.setTarget(URI.create("https://github.com/gbif/registry"));
-    citation2.setTitle("Citation title");
-    citation2.setCreated(new Date());
-    citation2.setModified(new Date());
-    citation2.setCreatedBy("WS_IT");
-    citation2.setModifiedBy("WS_IT");
     mapper.create(citation2);
 
     // create citation datasets
@@ -106,5 +95,61 @@ public class CitationMapperIT extends BaseItTest {
     datasets = mapper.listByCitation(citation1.getDoi(), new PagingRequest());
     assertNotNull(datasets);
     assertEquals(3, datasets.size());
+  }
+
+  @Test
+  public void testListByRegistrationDate() {
+    // create citations
+    Citation citation1 = prepareCitation();
+    citation1.setDoi(new DOI("10.21373/dd.doi1"));
+    // day before date
+    citation1.setRegistrationDate(
+        Date.from(
+            LocalDateTime.of(2020, Month.APRIL, 19, 20, 0)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()));
+    mapper.create(citation1);
+
+    Citation citation2 = prepareCitation();
+    citation2.setDoi(new DOI("10.21373/dd.doi2"));
+    // the same date but an hour later
+    citation2.setRegistrationDate(
+        Date.from(
+            LocalDateTime.of(2020, Month.APRIL, 20, 20, 0)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()));
+    mapper.create(citation2);
+
+    Citation citation3 = prepareCitation();
+    citation3.setDoi(new DOI("10.21373/dd.doi3"));
+    // day after date
+    citation3.setRegistrationDate(
+        Date.from(
+            LocalDateTime.of(2020, Month.APRIL, 21, 20, 0)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()));
+    mapper.create(citation3);
+
+    List<Citation> citations =
+        mapper.listByRegistrationDate(
+            Date.from(
+                LocalDateTime.of(2020, Month.APRIL, 20, 19, 0)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()));
+    assertNotNull(citations);
+    assertEquals(1, citations.size());
+  }
+
+  private Citation prepareCitation() {
+    Citation citation = new Citation();
+    citation.setCreated(new Date());
+    citation.setModified(new Date());
+    citation.setCreatedBy("WS_IT");
+    citation.setModifiedBy("WS_IT");
+    citation.setTarget(URI.create("https://github.com/gbif/registry"));
+    citation.setTitle("Citation title");
+    citation.setCitation("New citation text");
+
+    return citation;
   }
 }

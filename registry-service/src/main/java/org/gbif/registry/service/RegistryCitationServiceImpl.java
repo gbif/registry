@@ -153,7 +153,6 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   @Scheduled(cron = "${citation.cronPattern}")
   public void registerPostponedCitations() {
     LOG.info("Start registering delayed citations");
-
     List<Citation> citationsToRegister = citationMapper.listByRegistrationDate(new Date());
 
     for (Citation citation : citationsToRegister) {
