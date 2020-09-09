@@ -16,37 +16,40 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.DoiData;
-import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.domain.ws.Citation;
+import org.gbif.registry.domain.ws.CitationDatasetUsage;
 
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
-/** MyBatis mapper to store DOIs and their status in the registry db. */
 @Repository
-public interface DoiMapper {
+public interface CitationMapper {
 
-  DoiData get(@Param("doi") DOI doi);
+  void create(@Param("citation") Citation citation);
 
-  DoiType getType(@Param("doi") DOI doi);
+  Citation get(@Param("doi") DOI doi);
 
-  List<Map<String, Object>> list(
-      @Nullable @Param("status") DoiStatus status,
-      @Nullable @Param("type") DoiType type,
-      @Nullable @Param("page") Pageable page);
+  void addCitationDatasets(
+      @Param("citationDoi") DOI citationDoi,
+      @Param("citationDatasetUsages") List<CitationDatasetUsage> citationDatasetUsages);
 
-  String getMetadata(@Param("doi") DOI doi);
+  List<Citation> listByDataset(
+      @Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);
 
-  void create(@Param("doi") DOI doi, @Param("type") DoiType type);
+  long countByDataset(@Param("datasetKey") UUID datasetKey);
 
-  void update(@Param("doi") DOI doi, @Param("doiData") DoiData doiData, @Param("xml") String xml);
+  List<Dataset> listByCitation(
+      @Param("citationDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
 
-  void delete(@Param("doi") DOI doi);
+  long countByCitation(@Param("citationDoi") DOI citationDoi);
+
+  List<Citation> listByRegistrationDate(@Param("registrationDate") Date registrationDate);
 }

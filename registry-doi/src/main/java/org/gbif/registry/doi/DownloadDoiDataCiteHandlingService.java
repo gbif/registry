@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.domain.doi;
+package org.gbif.registry.doi;
 
-public enum DoiType {
+import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.occurrence.Download;
 
-  /** DOI of this type has no specific prefixes. */
-  DATASET,
+/** Business logic for Download DOI handling with DataCite. */
+public interface DownloadDoiDataCiteHandlingService {
 
-  /** DOI of this type has a special prefix "dd.". */
-  DERIVED_DATASET,
-
-  /** DOI of this type has a special prefix "dl.". */
-  DOWNLOAD,
-
-  /** DOI of this type has a special prefix "dp.". */
-  DATA_PACKAGE
+  /**
+   * Called when some data in the Download changed. The implementation decides the action to take
+   * with the DOI service.
+   *
+   * @param previousDownload download object as it appears before the change or null if the change
+   *     is triggered by something else
+   */
+  void downloadChanged(Download download, Download previousDownload, GbifUser user);
 }

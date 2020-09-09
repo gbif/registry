@@ -13,19 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.domain.doi;
+package org.gbif.registry.service;
 
-public enum DoiType {
+import org.gbif.api.model.common.DOI;
 
-  /** DOI of this type has no specific prefixes. */
-  DATASET,
+public interface RegistryOccurrenceDownloadService {
 
-  /** DOI of this type has a special prefix "dd.". */
-  DERIVED_DATASET,
-
-  /** DOI of this type has a special prefix "dl.". */
-  DOWNLOAD,
-
-  /** DOI of this type has a special prefix "dp.". */
-  DATA_PACKAGE
+  boolean checkOccurrenceDownloadExists(DOI doi);
 }

@@ -51,6 +51,10 @@ grscicoll:
   portal:
     url: https://www.gbif-dev.org/grscicoll/
 
+citation:
+  text: Citation GBIF.org ({0}) Filtered export of GBIF occurrence data https://doi.org/{1}
+  cronPattern: 0 0 0 * * *
+
 # JWT
 jwt:
   signingKey: 03bee45dc7ecfb7f3bdd1f7171add974947f264c11bd0c37cfdeb0d6da3fd5c6

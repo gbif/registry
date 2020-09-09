@@ -13,19 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.domain.doi;
+package org.gbif.registry.cli.common.stubs;
 
-public enum DoiType {
+import org.gbif.api.model.common.DOI;
+import org.gbif.registry.doi.DoiIssuingService;
 
-  /** DOI of this type has no specific prefixes. */
-  DATASET,
+public class DoiIssuingServiceStub implements DoiIssuingService {
+  @Override
+  public DOI newDatasetDOI() {
+    return null;
+  }
 
-  /** DOI of this type has a special prefix "dd.". */
-  DERIVED_DATASET,
+  @Override
+  public DOI newDerivedDatasetDOI() {
+    return null;
+  }
 
-  /** DOI of this type has a special prefix "dl.". */
-  DOWNLOAD,
+  @Override
+  public DOI newDownloadDOI() {
+    return null;
+  }
 
-  /** DOI of this type has a special prefix "dp.". */
-  DATA_PACKAGE
+  @Override
+  public DOI newDataPackageDOI() {
+    return null;
+  }
+
+  @Override
+  public boolean isGbif(DOI doi) {
+    return false;
+  }
 }

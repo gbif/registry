@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
     exclude = {
@@ -61,6 +62,7 @@ import org.springframework.context.annotation.FilterType;
       "org.gbif.registry.service"
     },
     excludeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE)})
+@EnableScheduling
 @EnableFeignClients
 public class RegistryWsApplication {
   public static void main(String[] args) {
