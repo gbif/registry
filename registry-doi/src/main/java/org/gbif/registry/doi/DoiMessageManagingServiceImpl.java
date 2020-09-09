@@ -29,6 +29,7 @@ import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,10 +86,12 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
     checkNotNull(doi, "DOI required");
     checkNotNull(messagePublisher, "No message publisher configured to send DoiChangeMessage");
 
+    Date now = new Date();
     DoiStatus registrationStatus =
-        (registrationDate == null || registrationDate.before(new Date()))
+        (registrationDate == null || DateUtils.isSameDay(now, registrationDate) || registrationDate.before(now))
             ? DoiStatus.REGISTERED
             : DoiStatus.RESERVED;
+    LOG.debug("Registering derived dataset DOI {} with status {}", doi, registrationStatus);
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message = new ChangeDoiMessage(registrationStatus, doi, xml, target);

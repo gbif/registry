@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,8 @@ import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
 
 @Service
 public class RegistryCitationServiceImpl implements RegistryCitationService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(RegistryCitationServiceImpl.class);
 
   private static final ZoneId UTC = ZoneId.of("UTC");
   private static final DateTimeFormatter REGULAR_DATE_FORMAT =
@@ -148,9 +152,12 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
 
   @Scheduled(cron = "${citation.cronPattern}")
   public void registerPostponedCitations() {
+    LOG.info("Start registering delayed citations");
+
     List<Citation> citationsToRegister = citationMapper.listByRegistrationDate(new Date());
 
     for (Citation citation : citationsToRegister) {
+      LOG.debug("Start registering citation {}", citation.getDoi());
       DataCiteMetadata metadata = metadataBuilderService.buildMetadata(citation);
 
       datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
