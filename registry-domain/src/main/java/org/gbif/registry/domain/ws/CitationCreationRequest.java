@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.PrePersist;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -35,7 +36,7 @@ public class CitationCreationRequest implements Serializable {
   private String creator;
   private URI target;
   private Date registrationDate;
-  private Map<String, Long> relatedDatasets;
+  private Map<String, Long> relatedDatasets = new HashMap<>();
 
   public DOI getOriginalDownloadDOI() {
     return originalDownloadDOI;
@@ -80,7 +81,6 @@ public class CitationCreationRequest implements Serializable {
     this.registrationDate = registrationDate;
   }
 
-  @NotNull
   public Map<String, Long> getRelatedDatasets() {
     return relatedDatasets;
   }
