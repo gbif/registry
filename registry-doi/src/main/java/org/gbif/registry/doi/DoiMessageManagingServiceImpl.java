@@ -88,7 +88,9 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
 
     Date now = new Date();
     DoiStatus registrationStatus =
-        (registrationDate == null || DateUtils.isSameDay(now, registrationDate) || registrationDate.before(now))
+        (registrationDate == null
+                || DateUtils.isSameDay(now, registrationDate)
+                || registrationDate.before(now))
             ? DoiStatus.REGISTERED
             : DoiStatus.RESERVED;
     LOG.debug("Registering derived dataset DOI {} with status {}", doi, registrationStatus);
