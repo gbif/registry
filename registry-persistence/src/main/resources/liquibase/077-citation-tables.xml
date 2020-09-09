@@ -9,14 +9,14 @@
             CREATE TABLE citation (
                 doi text NOT NULL PRIMARY KEY,
                 original_download_doi text,
-                citation text NOT NULL,
-                title text NOT NULL,
-                target text NOT NULL,
+                citation text NOT NULL CHECK (assert_min_length(created_by, 3)),
+                title text NOT NULL CHECK (assert_min_length(created_by, 3)),
+                target text NOT NULL CHECK (assert_min_length(created_by, 3)),
                 registration_date timestamp with time zone,
                 created timestamp with time zone NOT NULL DEFAULT now(),
-                created_by text NOT NULL,
+                created_by text NOT NULL CHECK (assert_min_length(created_by, 3)),
                 modified timestamp with time zone NOT NULL DEFAULT now(),
-                modified_by text NOT NUll
+                modified_by text NOT NUll CHECK (assert_min_length(created_by, 3))
             );
 
             CREATE TABLE dataset_citation (
@@ -26,6 +26,10 @@
                 citation_doi text NOT NULL REFERENCES citation(doi) ON DELETE CASCADE,
                 PRIMARY KEY (dataset_key, citation_doi)
             );
+
+            CREATE INDEX ON citation (created);
+            CREATE INDEX ON dataset_citation (dataset_key);
+            CREATE INDEX ON dataset_citation (citation_doi);
        ]]>
     </sql>
   </changeSet>
