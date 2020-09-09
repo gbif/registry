@@ -29,6 +29,7 @@ import org.gbif.api.vocabulary.Language;
 
 import java.io.StringWriter;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -46,8 +47,6 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Test class for DublinCoreWriter.
- *
- * @author cgendreau
  */
 public class DublinCoreWriterTest {
 
@@ -139,7 +138,7 @@ public class DublinCoreWriterTest {
     // Load test file
     String expectedContent =
         FileUtils.readFileToString(
-            org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"));
+            org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"), StandardCharsets.UTF_8);
 
     // compare without the whitespace characters
     String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);
