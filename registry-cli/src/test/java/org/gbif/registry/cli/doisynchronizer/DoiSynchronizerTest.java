@@ -17,7 +17,9 @@ package org.gbif.registry.cli.doisynchronizer;
 
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.doi.service.DoiService;
-import org.gbif.registry.doi.handler.DataCiteDoiHandlerStrategy;
+import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
+import org.gbif.registry.doi.DoiIssuingService;
+import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
@@ -48,7 +50,9 @@ public class DoiSynchronizerTest {
 
   @Mock private ApplicationContext contextMock;
   @Mock private DoiMapper doiMapperMock;
-  @Mock private DataCiteDoiHandlerStrategy dataCiteDoiHandlerStrategyMock;
+  @Mock private DoiIssuingService doiIssuingServiceMock;
+  @Mock private DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingServiceMock;
+  @Mock private DownloadDoiDataCiteHandlingService downloadDoiDataCiteHandlingServiceMock;
   @Mock private DatasetMapper datasetMapperMock;
   @Mock private OccurrenceDownloadMapper occurrenceDownloadMapperMock;
   @Mock private UserMapper userMapperMock;
@@ -70,8 +74,11 @@ public class DoiSynchronizerTest {
   @BeforeEach
   public void before() {
     when(contextMock.getBean(DoiMapper.class)).thenReturn(doiMapperMock);
-    when(contextMock.getBean(DataCiteDoiHandlerStrategy.class))
-        .thenReturn(dataCiteDoiHandlerStrategyMock);
+    when(contextMock.getBean(DoiIssuingService.class)).thenReturn(doiIssuingServiceMock);
+    when(contextMock.getBean(DatasetDoiDataCiteHandlingService.class))
+        .thenReturn(datasetDoiDataCiteHandlingServiceMock);
+    when(contextMock.getBean(DownloadDoiDataCiteHandlingService.class))
+        .thenReturn(downloadDoiDataCiteHandlingServiceMock);
     when(contextMock.getBean(DatasetMapper.class)).thenReturn(datasetMapperMock);
     when(contextMock.getBean(OccurrenceDownloadMapper.class))
         .thenReturn(occurrenceDownloadMapperMock);

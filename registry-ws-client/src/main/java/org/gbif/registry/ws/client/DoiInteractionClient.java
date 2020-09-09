@@ -17,8 +17,8 @@ package org.gbif.registry.ws.client;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
+import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.doi.registration.DoiRegistration;
-import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
 
 import org.springframework.http.MediaType;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("doi")
-public interface DoiRegistrationClient extends DoiRegistrationService {
+public interface DoiInteractionClient extends DoiInteractionService {
 
   @RequestMapping(method = RequestMethod.POST, value = "gen/{type}")
   @Override

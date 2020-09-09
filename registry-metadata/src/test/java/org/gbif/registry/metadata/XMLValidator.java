@@ -18,6 +18,7 @@ package org.gbif.registry.metadata;
 import java.io.IOException;
 import java.io.StringReader;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -35,7 +36,7 @@ import static org.junit.Assert.fail;
 public class XMLValidator {
 
   private static final SchemaFactory FACTORY =
-      SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+      SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
   /** Asserts that the xmlContent is valid according to the XSD at xsdLocation. */
   public static void assertXMLAgainstXSD(String xmlContent, String xsdLocation) throws IOException {

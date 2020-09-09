@@ -1,0 +1,162 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.gbif.registry.ws.resources;
+
+import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.PrePersist;
+import org.gbif.registry.domain.ws.Citation;
+import org.gbif.registry.domain.ws.CitationCreationRequest;
+import org.gbif.registry.domain.ws.CitationDatasetUsage;
+import org.gbif.registry.service.RegistryCitationService;
+import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.registry.service.RegistryOccurrenceDownloadService;
+import org.gbif.ws.WebApplicationException;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.validation.groups.Default;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.USER_ROLE;
+
+@RestController
+@RequestMapping(value = "citation", produces = MediaType.APPLICATION_JSON_VALUE)
+@Validated
+public class CitationResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(CitationResource.class);
+
+  private final RegistryCitationService citationService;
+  private final RegistryDatasetService datasetService;
+  private final RegistryOccurrenceDownloadService occurrenceDownloadService;
+
+  public CitationResource(
+      RegistryCitationService citationService,
+      RegistryDatasetService datasetService,
+      RegistryOccurrenceDownloadService occurrenceDownloadService) {
+    this.citationService = citationService;
+    this.datasetService = datasetService;
+    this.occurrenceDownloadService = occurrenceDownloadService;
+  }
+
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  @Validated({PrePersist.class, Default.class})
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  public Citation createCitation(@RequestBody CitationCreationRequest request) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    final String nameFromContext = authentication != null ? authentication.getName() : null;
+    request.setCreator(nameFromContext);
+
+    if (!occurrenceDownloadService.checkOccurrenceDownloadExists(
+        request.getOriginalDownloadDOI())) {
+      LOG.debug("Invalid original download DOI");
+      throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
+    }
+
+    List<CitationDatasetUsage> citationDatasetUsages;
+    try {
+      citationDatasetUsages =
+          datasetService.ensureCitationDatasetUsagesValid(request.getRelatedDatasets());
+    } catch (IllegalArgumentException e) {
+      LOG.error("Invalid related datasets identifiers");
+      throw new WebApplicationException(
+          "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
+    }
+
+    return citationService.create(toCitation(request), citationDatasetUsages);
+  }
+
+  public Citation getCitation(DOI doi) {
+    return citationService.get(doi);
+  }
+
+  @GetMapping("{doiPrefix}/{doiSuffix}")
+  public Citation getCitation(
+      @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
+    return getCitation(new DOI(doiPrefix, doiSuffix));
+  }
+
+  @GetMapping("dataset/{key}")
+  public PagingResponse<Citation> getDatasetCitations(
+      @PathVariable("key") UUID datasetKey, Pageable page) {
+    return getDatasetCitations(datasetKey.toString(), page);
+  }
+
+  @GetMapping("dataset/{doiPrefix}/{doiSuffix}")
+  public PagingResponse<Citation> getDatasetCitations(
+      @PathVariable("doiPrefix") String doiPrefix,
+      @PathVariable("doiSuffix") String doiSuffix,
+      Pageable page) {
+    return getDatasetCitations(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
+  }
+
+  public PagingResponse<Citation> getDatasetCitations(String datasetKeyOrDoi, Pageable page) {
+    return citationService.getDatasetCitations(datasetKeyOrDoi, page);
+  }
+
+  public String getCitationText(DOI doi) {
+    return citationService.getCitationText(doi);
+  }
+
+  @GetMapping("{doiPrefix}/{doiSuffix}/citation")
+  public String getCitationText(
+      @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
+    return getCitationText(new DOI(doiPrefix, doiSuffix));
+  }
+
+  public PagingResponse<Dataset> getCitationDatasets(DOI citationDoi, Pageable page) {
+    return citationService.getCitationDatasets(citationDoi, page);
+  }
+
+  @GetMapping("{doiPrefix}/{doiSuffix}/datasets")
+  public PagingResponse<Dataset> getCitationDatasets(
+      @PathVariable("doiPrefix") String doiPrefix,
+      @PathVariable("doiSuffix") String doiSuffix,
+      Pageable page) {
+    return getCitationDatasets(new DOI(doiPrefix, doiSuffix), page);
+  }
+
+  private Citation toCitation(CitationCreationRequest request) {
+    Citation citation = new Citation();
+    citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
+    citation.setTarget(request.getTarget());
+    citation.setTitle(request.getTitle());
+    citation.setCreatedBy(request.getCreator());
+    citation.setModifiedBy(request.getCreator());
+    citation.setRegistrationDate(request.getRegistrationDate());
+
+    return citation;
+  }
+}

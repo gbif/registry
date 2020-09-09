@@ -27,11 +27,11 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
+import org.gbif.registry.doi.DoiInteractionService;
 import org.gbif.registry.doi.registration.DoiRegistration;
-import org.gbif.registry.doi.registration.DoiRegistrationService;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.DoiRegistrationClient;
+import org.gbif.registry.ws.client.DoiInteractionClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -55,12 +55,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 public class DoiRegistrationIT extends BaseItTest {
 
-  private final DoiRegistrationService doiRegistrationResource;
-  private final DoiRegistrationService doiRegistrationClient;
+  private final DoiInteractionService doiRegistrationResource;
+  private final DoiInteractionService doiRegistrationClient;
 
   @Autowired
   public DoiRegistrationIT(
-      DoiRegistrationService doiRegistrationResource,
+      DoiInteractionService doiRegistrationResource,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       @LocalServerPort int localServerPort,
@@ -69,14 +69,14 @@ public class DoiRegistrationIT extends BaseItTest {
     super(simplePrincipalProvider, esServer);
     this.doiRegistrationResource = doiRegistrationResource;
     this.doiRegistrationClient =
-        prepareClient(localServerPort, keyStore, DoiRegistrationClient.class);
+        prepareClient(localServerPort, keyStore, DoiInteractionClient.class);
   }
 
   /** Generates a new DOI. */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testGenerate(ServiceType serviceType) {
-    DoiRegistrationService service =
+    DoiInteractionService service =
         getService(serviceType, doiRegistrationResource, doiRegistrationClient);
     DOI doi = service.generate(DoiType.DATA_PACKAGE);
     assertNotNull(doi);
@@ -86,7 +86,7 @@ public class DoiRegistrationIT extends BaseItTest {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testCreateAndGet(ServiceType serviceType) {
-    DoiRegistrationService service =
+    DoiInteractionService service =
         getService(serviceType, doiRegistrationResource, doiRegistrationClient);
     DOI doi = service.generate(DoiType.DATA_PACKAGE);
     DoiData doiData = service.get(doi.getPrefix(), doi.getSuffix());
@@ -98,7 +98,7 @@ public class DoiRegistrationIT extends BaseItTest {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testRegister(ServiceType serviceType) {
-    DoiRegistrationService service =
+    DoiInteractionService service =
         getService(serviceType, doiRegistrationResource, doiRegistrationClient);
     DoiRegistration doiRegistration =
         DoiRegistration.builder()
