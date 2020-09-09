@@ -44,6 +44,7 @@ import static org.gbif.api.model.collections.lookup.Match.Reason.COLLECTION_TAG;
 import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.INSTITUTION_TO_COLLECTION_TAG;
 import static org.gbif.api.model.collections.lookup.Match.Reason.INST_COLL_MISMATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.KEY_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.exact;
 import static org.gbif.api.model.collections.lookup.Match.fuzzy;
@@ -160,6 +161,9 @@ public class CollectionMatcher extends BaseMatcher<Collection> {
 
     // find matches using the id as name
     addFuzzyCollMatch.accept(findByName(params.getCollectionId()), NAME_MATCH);
+
+    // find matches by using the id as key
+    addFuzzyCollMatch.accept(findByKey(params.getCollectionId()), KEY_MATCH);
 
     return fuzzyMatches.isEmpty() ? Optional.empty() : Optional.of(fuzzyMatches);
   }

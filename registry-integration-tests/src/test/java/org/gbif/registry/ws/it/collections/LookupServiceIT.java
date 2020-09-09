@@ -193,7 +193,7 @@ public class LookupServiceIT extends BaseItTest {
     // State
     LookupParams params = new LookupParams();
     params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
-    params.setCollectionId(c2.getIdentifiers().get(0).getIdentifier());
+    params.setCollectionId("urn:uuid:" + c2.getIdentifiers().get(0).getIdentifier());
 
     // When
     LookupResult result = lookupService.lookup(params);
@@ -464,6 +464,28 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(1, alternative.getReasons().size());
     assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
     assertNull(alternative.getStatus());
+  }
+
+  @Test
+  public void keyMatchTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i1.getCode());
+    params.setInstitutionId(i1.getKey().toString());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.KEY_MATCH));
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
   }
 
   private Dataset createDatasetWithMachineTags(MachineTag... machineTags) {

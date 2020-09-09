@@ -42,13 +42,7 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.CODE_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.COLLECTION_TO_INSTITUTION_TAG;
-import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.INSTITUTION_TAG;
-import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.PROBABLY_ON_LOAN;
+import static org.gbif.api.model.collections.lookup.Match.Reason.*;
 import static org.gbif.api.model.collections.lookup.Match.exact;
 import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 
@@ -165,6 +159,9 @@ public class InstitutionMatcher extends BaseMatcher<Institution> {
 
     // find matches by using the id as name
     addFuzzyInstMatch.accept(findByName(params.getInstitutionId()), NAME_MATCH);
+
+    // find matches by using the id as key
+    addFuzzyInstMatch.accept(findByKey(params.getInstitutionId()), KEY_MATCH);
 
     return fuzzyMatches.isEmpty() ? Optional.empty() : Optional.of(fuzzyMatches);
   }
