@@ -138,7 +138,8 @@ public class DublinCoreWriterTest {
     // Load test file
     String expectedContent =
         FileUtils.readFileToString(
-            org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"), StandardCharsets.UTF_8);
+            org.gbif.utils.file.FileUtils.getClasspathFile("dc/qwerty_dc.xml"),
+            StandardCharsets.UTF_8);
 
     // compare without the whitespace characters
     String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);
