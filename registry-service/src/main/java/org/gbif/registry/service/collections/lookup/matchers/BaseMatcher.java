@@ -54,6 +54,7 @@ import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_COD
 import static org.gbif.api.model.collections.lookup.Match.Reason.CODE_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.COUNTRY_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.KEY_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
 
 /** Base matcher that contains common methods for the GrSciColl matchers. */
@@ -108,6 +109,19 @@ public abstract class BaseMatcher<
       return getLookupMapper().lookup(null, id, null, null);
     }
     return Collections.emptyList();
+  }
+
+  protected List<T> findByKey(String keyAsString) {
+    UUID key = null;
+    try {
+      key = UUID.fromString(keyAsString);
+    } catch (Exception ex) {
+      return Collections.emptyList();
+    }
+
+    T entityFound = getBaseMapper().get(key);
+
+    return entityFound != null ? Collections.singletonList(entityFound) : Collections.emptyList();
   }
 
   protected Optional<Map<UUID, Match<T>>> matchWithMachineTags(
@@ -232,7 +246,8 @@ public abstract class BaseMatcher<
     return match ->
         (match.getReasons().contains(CODE_MATCH) || match.getReasons().contains(IDENTIFIER_MATCH))
             && (match.getReasons().contains(NAME_MATCH)
-                || match.getReasons().contains(ALTERNATIVE_CODE_MATCH));
+                || match.getReasons().contains(ALTERNATIVE_CODE_MATCH)
+                || match.getReasons().contains(KEY_MATCH));
   }
 
   private Predicate<Match<T>> isCountryMatch() {
