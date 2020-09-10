@@ -16,35 +16,29 @@
 package org.gbif.registry.search.test;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
+import lombok.SneakyThrows;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
-
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
-import pl.allegro.tech.embeddedelasticsearch.IndexSettings;
-import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
-  private static final String CLUSTER_NAME = "EsITCluster";
-
-  private static final String ENV_ES_TCP_PORT = "REGISTRY_ES_TCP_PORT";
-
-  private static final String ENV_ES_HTTP_PORT = "REGISTRY_ES_HTTP_PORT";
-
-  private static final String ENV_ES_INSTALLATION_DIR = "REGISTRY_ES_INSTALLATION_DIR";
-
-  private EmbeddedElastic embeddedElastic;
+  private ElasticsearchContainer embeddedElastic;
 
   private final Resource mappingFile;
 
@@ -52,17 +46,15 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private final String indexName;
 
-  private final String typeName;
 
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
   public EsManageServer(
-      Resource mappingFile, Resource settingsFile, String indexName, String typeName) {
+      Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
-    this.typeName = typeName;
   }
 
   @Override
@@ -77,34 +69,44 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     start();
   }
 
+
+   public String getHttpHostAddress() {
+      return embeddedElastic.getHttpHostAddress();
+    }
+
+    public InetSocketAddress getTcpPort() {
+      return embeddedElastic.getTcpHost();
+    }
+
+    @SneakyThrows
+    private static String getEsVersion() {
+      Properties properties = new Properties();
+      properties.load(EsManageServer.class.getClassLoader().getResourceAsStream("maven.properties"));
+      return properties.getProperty("elasticsearch.version");
+    }
+
+
+
   public void start() throws Exception {
-    embeddedElastic =
-        EmbeddedElastic.builder()
-            .withElasticVersion(getEsVersion())
-            .withEsJavaOpts("-Xms128m -Xmx512m")
-            .withSetting(
-                PopularProperties.HTTP_PORT,
-                getEnvIntVariable(ENV_ES_HTTP_PORT).orElse(getAvailablePort()))
-            .withSetting(
-                PopularProperties.TRANSPORT_TCP_PORT,
-                getEnvIntVariable(ENV_ES_TCP_PORT).orElse(getAvailablePort()))
-            .withSetting(PopularProperties.CLUSTER_NAME, CLUSTER_NAME)
-            .withStartTimeout(120, TimeUnit.SECONDS)
-            .withInstallationDirectory(
-                getEnvVariable(ENV_ES_INSTALLATION_DIR)
-                    .map(v -> Paths.get(v).toFile())
-                    .orElse(Files.createTempDirectory("registry-elasticsearch").toFile()))
-            .withIndex(
-                indexName,
-                IndexSettings.builder()
-                    .withType(typeName, mappingFile.getInputStream())
-                    .withSettings(settingsFile.getInputStream())
-                    .build())
-            .withCleanInstallationDirectoryOnStop(true)
-            .build();
+    embeddedElastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
 
     embeddedElastic.start();
     restClient = buildRestClient();
+
+    createIndex();
+  }
+
+  private void createIndex() throws IOException {
+    CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+    createIndexRequest.settings(new String(Files.readAllBytes(settingsFile.getFile().toPath())), XContentType.JSON);
+    createIndexRequest.mapping(new String(Files.readAllBytes(mappingFile.getFile().toPath())), XContentType.JSON);
+    restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+  }
+
+  private void deleteIndex() throws IOException {
+    DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest();
+    deleteIndexRequest.indices(indexName);
+    restClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
   }
 
   public RestHighLevelClient getRestClient() {
@@ -112,24 +114,26 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public String getServerAddress() {
-    return "http://localhost:" + embeddedElastic.getHttpPort();
+    return "http://localhost:" + embeddedElastic.getMappedPort(9200);
   }
 
   public void refresh() {
-    embeddedElastic.refreshIndices();
+    try {
+      RefreshRequest refreshRequest = new RefreshRequest();
+      refreshRequest.indices(indexName);
+      restClient.indices().refresh(refreshRequest, RequestOptions.DEFAULT);
+    } catch (IOException ex) {
+      throw new IllegalStateException(ex);
+    }
   }
 
   private RestHighLevelClient buildRestClient() {
-    HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
+    HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
     return new RestHighLevelClient(RestClient.builder(host));
   }
 
   private static Optional<Integer> getEnvIntVariable(String name) {
     return Optional.ofNullable(System.getenv(name)).map(Integer::new);
-  }
-
-  private static Optional<String> getEnvVariable(String name) {
-    return Optional.ofNullable(System.getenv(name));
   }
 
   private static int getAvailablePort() throws IOException {
@@ -140,13 +144,13 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     return port;
   }
 
-  private String getEsVersion() throws IOException {
-    Properties properties = new Properties();
-    properties.load(this.getClass().getClassLoader().getResourceAsStream("maven.properties"));
-    return properties.getProperty("elasticsearch.version");
-  }
 
   public void reCreateIndex() {
-    embeddedElastic.recreateIndex(indexName);
+    try {
+      deleteIndex();
+      createIndex();
+    } catch (IOException ex) {
+      throw new IllegalStateException(ex);
+    }
   }
 }

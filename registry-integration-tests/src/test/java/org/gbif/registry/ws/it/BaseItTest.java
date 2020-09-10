@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -60,7 +59,6 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @DirtiesContext
-@Disabled
 public class BaseItTest {
 
   public static final String DB_LOCK = "db_lock";
