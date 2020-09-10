@@ -59,7 +59,6 @@ public class EsClient implements Closeable {
     private int connectionTimeOut;
     private int socketTimeOut;
     private int connectionRequestTimeOut;
-    private int maxRetryTimeOut;
   }
 
   private final RestHighLevelClient restHighLevelClient;
@@ -137,10 +136,9 @@ public class EsClient implements Closeable {
   }
 
   /** Updates the settings of an existing index. */
-  public void updateSettings(String indexName, Map<?, ?> settings) {
+  public void updateSettings(String indexName, Map<String, ?> settings) {
     try {
-      UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest();
-      updateSettingsRequest.indices(indexName).settings(settings);
+      UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest().indices(indexName).settings(settings);
       restHighLevelClient.indices().putSettings(updateSettingsRequest, RequestOptions.DEFAULT);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
@@ -176,7 +174,6 @@ public class EsClient implements Closeable {
                         .setSocketTimeout(esClientConfiguration.getSocketTimeOut())
                         .setConnectionRequestTimeout(
                             esClientConfiguration.getConnectionRequestTimeOut()))
-            .setMaxRetryTimeoutMillis(esClientConfiguration.getMaxRetryTimeOut())
             .setNodeSelector(NodeSelector.SKIP_DEDICATED_MASTERS));
   }
 
