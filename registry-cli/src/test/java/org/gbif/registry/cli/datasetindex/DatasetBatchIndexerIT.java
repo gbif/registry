@@ -19,12 +19,10 @@ import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.nio.file.Files;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -34,17 +32,14 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
-import pl.allegro.tech.embeddedelasticsearch.EmbeddedElastic;
-import pl.allegro.tech.embeddedelasticsearch.PopularProperties;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-@Disabled
 @DisabledIfSystemProperty(named = "test.indexer", matches = "false")
 public class DatasetBatchIndexerIT {
 
@@ -58,7 +53,7 @@ public class DatasetBatchIndexerIT {
   public static SingleInstancePostgresExtension database =
       EmbeddedPostgresExtension.singleInstance();
 
-  private static EmbeddedElastic embeddedElastic;
+  private static ElasticsearchContainer embeddedElastic;
 
   private static String getEsVersion() throws IOException {
     Properties properties = new Properties();
@@ -67,37 +62,16 @@ public class DatasetBatchIndexerIT {
     return properties.getProperty("elasticsearch.version");
   }
 
-  private static int getAvailablePort() throws IOException {
-    ServerSocket serverSocket = new ServerSocket(0);
-    int port = serverSocket.getLocalPort();
-    serverSocket.close();
 
-    return port;
-  }
-
-  public String getEsServerAddress() {
-    return "http://localhost:" + embeddedElastic.getHttpPort();
-  }
 
   private RestHighLevelClient buildRestClient() {
-    HttpHost host = new HttpHost("localhost", embeddedElastic.getHttpPort());
+    HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
     return new RestHighLevelClient(RestClient.builder(host));
   }
 
   @BeforeAll
   public static void init() throws Exception {
-    embeddedElastic =
-        EmbeddedElastic.builder()
-            .withElasticVersion(getEsVersion())
-            .withEsJavaOpts("-Xms128m -Xmx512m")
-            .withSetting(PopularProperties.HTTP_PORT, getAvailablePort())
-            .withSetting(PopularProperties.TRANSPORT_TCP_PORT, getAvailablePort())
-            .withSetting(PopularProperties.CLUSTER_NAME, "DatasetBatchIndexerIT")
-            .withStartTimeout(120, TimeUnit.SECONDS)
-            .withInstallationDirectory(Files.createTempDirectory("registry-elasticsearch").toFile())
-            .withCleanInstallationDirectoryOnStop(true)
-            .withIndex(OCCURRENCE_INDEX_NAME)
-            .build();
+    embeddedElastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
     embeddedElastic.start();
   }
 
@@ -106,12 +80,12 @@ public class DatasetBatchIndexerIT {
     DatasetBatchIndexerConfiguration configuration = new DatasetBatchIndexerConfiguration();
 
     ElasticsearchConfig elasticsearchConfigDataset = new ElasticsearchConfig();
-    elasticsearchConfigDataset.setHosts(getEsServerAddress());
+    elasticsearchConfigDataset.setHosts("http://" + embeddedElastic.getHttpHostAddress());
     elasticsearchConfigDataset.setAlias(IndexingConstants.ALIAS);
     configuration.setDatasetEs(elasticsearchConfigDataset);
 
     ElasticsearchConfig elasticsearchConfigOccurrence = new ElasticsearchConfig();
-    elasticsearchConfigOccurrence.setHosts(getEsServerAddress());
+    elasticsearchConfigOccurrence.setHosts("http://" + embeddedElastic.getHttpHostAddress());
     elasticsearchConfigOccurrence.setAlias(OCCURRENCE_INDEX_NAME);
     configuration.setOccurrenceEs(elasticsearchConfigOccurrence);
 
@@ -132,6 +106,16 @@ public class DatasetBatchIndexerIT {
     return configuration;
   }
 
+  public void refresh(RestHighLevelClient restHighLevelClient) {
+    try {
+      RefreshRequest refreshRequest = new RefreshRequest();
+      refreshRequest.indices("*");
+      restHighLevelClient.indices().refresh(refreshRequest, RequestOptions.DEFAULT);
+    } catch (IOException ex) {
+      throw new IllegalStateException(ex);
+    }
+  }
+
   @Test
   public void indexTests() throws IOException {
 
@@ -139,7 +123,8 @@ public class DatasetBatchIndexerIT {
         new DatasetBatchIndexerCommand(getConfiguration());
     datasetBatchIndexerCommand.doRun();
 
-    embeddedElastic.refreshIndices();
+    RestHighLevelClient restHighLevelClient = buildRestClient();
+    refresh(restHighLevelClient);
 
     SearchResponse searchResponse =
         buildRestClient()
@@ -151,7 +136,7 @@ public class DatasetBatchIndexerIT {
 
     Assertions.assertEquals(
         DATASETS_TO_INDEX,
-        searchResponse.getHits().getTotalHits(),
+        searchResponse.getHits().getTotalHits().value,
         "Wrong amount of indexed dataset");
   }
 
