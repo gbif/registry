@@ -30,8 +30,6 @@ public class ElasticsearchConfig {
 
   private int connectionRequestTimeOut = 180_000;
 
-  private int maxRetryTimeOut = 180_000;
-
   private String index;
 
   private String alias;
@@ -43,7 +41,6 @@ public class ElasticsearchConfig {
         .add("connectionTimeOut='" + connectionTimeOut + "'")
         .add("socketTimeOut='" + socketTimeOut + "'")
         .add("connectionRequestTimeOut='" + connectionRequestTimeOut + "'")
-        .add("maxRetryTimeOut=" + maxRetryTimeOut)
         .add("index=" + index)
         .add("alias=" + alias)
         .toString();
