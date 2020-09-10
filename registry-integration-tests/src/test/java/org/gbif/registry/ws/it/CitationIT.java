@@ -37,6 +37,8 @@ import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import static java.util.stream.Collectors.toMap;
 import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredicateDownload;
@@ -116,15 +118,10 @@ public class CitationIT extends BaseItTest {
     Dataset thirdDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
     // prepare requests
-    CitationCreationRequest requestData1 =
-        newCitationRequest(
-            occurrenceDownload.getDoi(),
-            Stream.of(
-                    new String[][] {
-                      {secondDataset.getKey().toString(), "1"},
-                      {firstDataset.getDoi().getDoiName(), "2"},
-                    })
-                .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
+    CitationCreationRequest requestData1 = newCitationRequest(occurrenceDownload.getDoi(), new HashMap<>());
+    String str = secondDataset.getKey() + ",1\n"
+        + firstDataset.getDoi() + ",2";
+    MultipartFile relatedDatasetsFile = new MockMultipartFile("file.csv", str.getBytes());
 
     CitationCreationRequest requestData2 =
         newCitationRequest(
@@ -143,7 +140,7 @@ public class CitationIT extends BaseItTest {
                 .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
     // create citations
-    Citation citation1 = citationResource.createCitation(requestData1);
+    Citation citation1 = citationResource.createCitation(requestData1, relatedDatasetsFile);
     Citation citation2 = citationResource.createCitation(requestData2);
     Citation citation3 = citationResource.createCitation(requestData3);
 

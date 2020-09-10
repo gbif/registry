@@ -28,7 +28,11 @@ import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
 import org.gbif.ws.WebApplicationException;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -47,7 +51,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
@@ -76,20 +82,45 @@ public class CitationResource {
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   public Citation createCitation(@RequestBody @Valid CitationCreationRequest request) {
+    return createCitation(request, request.getRelatedDatasets());
+  }
+
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  @Validated({PrePersist.class, Default.class})
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public Citation createCitation(@RequestPart("citation") @Valid CitationCreationRequest request,
+                                 @RequestPart("relatedDatasets") MultipartFile file) {
+    Map<String, Long> records = new HashMap<>();
+    try (Scanner scanner = new Scanner(file.getInputStream())) {
+      while (scanner.hasNextLine()) {
+        String[] lineElements = scanner.nextLine().split(",");
+        records.put(lineElements[0], Long.valueOf(lineElements[1]));
+      }
+    } catch (IOException e) {
+      throw new WebApplicationException("Error while reading file", HttpStatus.INTERNAL_SERVER_ERROR);
+    } catch (NumberFormatException e) {
+      LOG.error("Wrong number {}", e.getMessage());
+      throw new WebApplicationException("Invalid number " + e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    return createCitation(request, records);
+  }
+
+  private Citation createCitation(CitationCreationRequest request, Map<String, Long> relatedDatasets) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
 
     if (!occurrenceDownloadService.checkOccurrenceDownloadExists(
         request.getOriginalDownloadDOI())) {
-      LOG.debug("Invalid original download DOI");
+      LOG.error("Invalid original download DOI");
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
 
     List<CitationDatasetUsage> citationDatasetUsages;
     try {
       citationDatasetUsages =
-          datasetService.ensureCitationDatasetUsagesValid(request.getRelatedDatasets());
+          datasetService.ensureCitationDatasetUsagesValid(relatedDatasets);
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
       throw new WebApplicationException(
