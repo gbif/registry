@@ -122,7 +122,7 @@
     <woodstox.version>4.4.1</woodstox.version>
 
     <!-- es version -->
-    <elasticsearch.version>6.5.4</elasticsearch.version>
+    <elasticsearch.version>7.9.1</elasticsearch.version>
     <embedded-elasticsearch.version>2.10.0</embedded-elasticsearch.version>
 
     <!-- Caching -->

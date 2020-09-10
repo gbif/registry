@@ -58,7 +58,6 @@ public class SpringContextBuilder {
     esClientConfiguration.setConnectionRequestTimeOut(
         elasticsearchConfig.getConnectionRequestTimeOut());
     esClientConfiguration.setSocketTimeOut(elasticsearchConfig.getSocketTimeOut());
-    esClientConfiguration.setMaxRetryTimeOut(elasticsearchConfig.getMaxRetryTimeOut());
     esClientConfiguration.setConnectionTimeOut(elasticsearchConfig.getConnectionTimeOut());
     return esClientConfiguration;
   }
