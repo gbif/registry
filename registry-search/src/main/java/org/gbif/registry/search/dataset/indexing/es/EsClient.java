@@ -138,7 +138,8 @@ public class EsClient implements Closeable {
   /** Updates the settings of an existing index. */
   public void updateSettings(String indexName, Map<String, ?> settings) {
     try {
-      UpdateSettingsRequest updateSettingsRequest = new UpdateSettingsRequest().indices(indexName).settings(settings);
+      UpdateSettingsRequest updateSettingsRequest =
+          new UpdateSettingsRequest().indices(indexName).settings(settings);
       restHighLevelClient.indices().putSettings(updateSettingsRequest, RequestOptions.DEFAULT);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
