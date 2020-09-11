@@ -50,12 +50,10 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private final String indexName;
 
-
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
-  public EsManageServer(
-      Resource mappingFile, Resource settingsFile, String indexName) {
+  public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
@@ -73,26 +71,25 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     start();
   }
 
+  public String getHttpHostAddress() {
+    return embeddedElastic.getHttpHostAddress();
+  }
 
-   public String getHttpHostAddress() {
-      return embeddedElastic.getHttpHostAddress();
-    }
+  public InetSocketAddress getTcpPort() {
+    return embeddedElastic.getTcpHost();
+  }
 
-    public InetSocketAddress getTcpPort() {
-      return embeddedElastic.getTcpHost();
-    }
-
-    @SneakyThrows
-    private static String getEsVersion() {
-      Properties properties = new Properties();
-      properties.load(EsManageServer.class.getClassLoader().getResourceAsStream("maven.properties"));
-      return properties.getProperty("elasticsearch.version");
-    }
-
-
+  @SneakyThrows
+  private static String getEsVersion() {
+    Properties properties = new Properties();
+    properties.load(EsManageServer.class.getClassLoader().getResourceAsStream("maven.properties"));
+    return properties.getProperty("elasticsearch.version");
+  }
 
   public void start() throws Exception {
-    embeddedElastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+    embeddedElastic =
+        new ElasticsearchContainer(
+            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
 
     embeddedElastic.start();
     restClient = buildRestClient();
@@ -155,7 +152,6 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
     return port;
   }
-
 
   public void reCreateIndex() {
     try {
