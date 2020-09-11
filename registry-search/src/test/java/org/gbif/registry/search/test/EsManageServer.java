@@ -16,9 +16,11 @@
 package org.gbif.registry.search.test;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -34,6 +36,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
+import org.springframework.util.FileCopyUtils;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
@@ -96,10 +99,18 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     createIndex();
   }
 
+  private static String asString(Resource resource) {
+    try (Reader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
+      return FileCopyUtils.copyToString(reader);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private void createIndex() throws IOException {
     CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
-    createIndexRequest.settings(new String(Files.readAllBytes(settingsFile.getFile().toPath())), XContentType.JSON);
-    createIndexRequest.mapping(new String(Files.readAllBytes(mappingFile.getFile().toPath())), XContentType.JSON);
+    createIndexRequest.settings(asString(settingsFile), XContentType.JSON);
+    createIndexRequest.mapping(asString(mappingFile), XContentType.JSON);
     restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
   }
 
