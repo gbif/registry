@@ -31,7 +31,6 @@ import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
-import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
@@ -78,18 +77,15 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private final DatasetMapper datasetMapper;
   private final MetadataMapper metadataMapper;
-  private final NetworkMapper networkMapper;
   private final LoadingCache<UUID, Organization> organizationCache;
   private final LoadingCache<UUID, Set<UUID>> datasetKeysInNetworkCache;
 
   public RegistryDatasetServiceImpl(
       MetadataMapper metadataMapper,
       OrganizationMapper organizationMapper,
-      DatasetMapper datasetMapper,
-      NetworkMapper networkMapper) {
+      DatasetMapper datasetMapper) {
     this.metadataMapper = metadataMapper;
     this.datasetMapper = datasetMapper;
-    this.networkMapper = networkMapper;
     this.organizationCache =
         CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -104,10 +100,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(
             new CacheLoader<UUID, Set<UUID>>() {
+              @Override
               public Set<UUID> load(UUID key) {
                 return datasetMapper.listDatasetsInNetwork(key, null)
                     .stream()
-                    .map(dataset -> dataset.getKey())
+                    .map(Dataset::getKey)
                     .collect(Collectors.toSet());
               }
             });
