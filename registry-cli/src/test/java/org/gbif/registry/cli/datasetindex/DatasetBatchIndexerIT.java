@@ -35,10 +35,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 @DisabledIfSystemProperty(named = "test.indexer", matches = "false")
 public class DatasetBatchIndexerIT {
@@ -62,8 +62,6 @@ public class DatasetBatchIndexerIT {
     return properties.getProperty("elasticsearch.version");
   }
 
-
-
   private RestHighLevelClient buildRestClient() {
     HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
     return new RestHighLevelClient(RestClient.builder(host));
@@ -71,7 +69,9 @@ public class DatasetBatchIndexerIT {
 
   @BeforeAll
   public static void init() throws Exception {
-    embeddedElastic = new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+    embeddedElastic =
+        new ElasticsearchContainer(
+            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
     embeddedElastic.start();
   }
 
