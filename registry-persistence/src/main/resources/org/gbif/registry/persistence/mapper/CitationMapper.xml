@@ -39,7 +39,8 @@
 
   <update id="updateTarget">
     UPDATE citation
-    SET target   = #{target,jdbcType=OTHER}
+    SET target   = #{target,jdbcType=OTHER},
+        modified = now()
     WHERE doi = #{doi,jdbcType=OTHER}
   </update>
 
