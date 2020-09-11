@@ -37,6 +37,12 @@
     VALUES(<include refid="CITATION_FIELD_TYPES"/>)
   </insert>
 
+  <update id="updateTarget">
+    UPDATE citation
+    SET target   = #{target,jdbcType=OTHER}
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </update>
+
   <select id="get" resultType="org.gbif.registry.domain.ws.Citation" resultMap="CITATION_DATA_MAP">
     SELECT <include refid="CITATION_FIELDS"/>
     FROM citation

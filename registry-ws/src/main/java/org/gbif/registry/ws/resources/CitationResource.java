@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationCreationRequest;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
+import org.gbif.registry.domain.ws.CitationUpdateRequest;
 import org.gbif.registry.service.RegistryCitationService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
@@ -49,6 +50,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -130,14 +132,43 @@ public class CitationResource {
     return citationService.create(toCitation(request), citationDatasetUsages);
   }
 
-  public Citation getCitation(DOI doi) {
-    return citationService.get(doi);
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  @PutMapping(path = "{doiPrefix}/{doiSuffix}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void updateCitation(
+      @PathVariable("doiPrefix") String doiPrefix,
+      @PathVariable("doiSuffix") String doiSuffix,
+      @RequestBody @Valid CitationUpdateRequest request) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String nameFromContext = authentication != null ? authentication.getName() : null;
+
+    DOI citationDoi = new DOI(doiPrefix, doiSuffix);
+    Citation citation = citationService.get(citationDoi);
+
+    if (citation == null) {
+      LOG.error("Citation with the DOI {} was not found", citationDoi);
+      throw new WebApplicationException("Citation with the DOI was not found", HttpStatus.NOT_FOUND);
+    }
+
+    if (!citation.getCreatedBy().equals(nameFromContext)) {
+      LOG.error("User {} is not allowed to update the Citation {}", nameFromContext, citationDoi);
+      throw new WebApplicationException("User is not allowed to update the Citation", HttpStatus.FORBIDDEN);
+    }
+
+    try {
+      citationService.update(new DOI(), request.getTarget());
+    } catch (IllegalStateException e) {
+      throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}")
   public Citation getCitation(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
     return getCitation(new DOI(doiPrefix, doiSuffix));
+  }
+
+  public Citation getCitation(DOI doi) {
+    return citationService.get(doi);
   }
 
   @GetMapping("dataset/{key}")

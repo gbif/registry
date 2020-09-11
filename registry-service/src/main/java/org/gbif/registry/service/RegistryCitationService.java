@@ -22,6 +22,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
 
+import java.net.URI;
 import java.util.List;
 
 public interface RegistryCitationService {
@@ -29,6 +30,8 @@ public interface RegistryCitationService {
   String getCitationText(DOI citationDoi);
 
   Citation create(Citation citation, List<CitationDatasetUsage> citationDatasetUsages);
+
+  void update(DOI doi, URI target);
 
   Citation get(DOI citationDoi);
 
