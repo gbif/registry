@@ -62,6 +62,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.SUBTYPE, "subtype")
           .put(DatasetSearchParameter.TYPE, "type")
           .put(DatasetSearchParameter.DATASET_TITLE, "title")
+          .put(DatasetSearchParameter.DOI, "doi")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =
@@ -155,7 +156,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "occurrenceCount",
       "keyword",
       "decade",
-      "countryCoverage"
+      "countryCoverage",
+      "doi"
     };
   }
 
