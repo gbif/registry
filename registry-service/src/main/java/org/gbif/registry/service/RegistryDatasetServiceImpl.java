@@ -64,7 +64,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryDatasetServiceImpl.class);
 
-  private static final UUID IUCN_DATASET_KEY = UUID.fromString("19491596-35ae-4a91-9a98-85cf505f1bd3");
+  private static final UUID IUCN_DATASET_KEY =
+      UUID.fromString("19491596-35ae-4a91-9a98-85cf505f1bd3");
 
   // HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER =
