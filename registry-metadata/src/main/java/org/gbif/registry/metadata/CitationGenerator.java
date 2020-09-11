@@ -77,7 +77,8 @@ public class CitationGenerator {
     joiner.add(originalCitationText);
 
     // Check DOI exists, and append it if it doesn't.
-    if (!originalCitationText.toLowerCase().contains("doi.org") && !originalCitationText.toLowerCase().contains("doi:")) {
+    if (!originalCitationText.toLowerCase().contains("doi.org")
+        && !originalCitationText.toLowerCase().contains("doi:")) {
       try {
         joiner.add(URLDecoder.decode(dataset.getDoi().getUrl().toString(), "UTF-8"));
       } catch (UnsupportedEncodingException e) {

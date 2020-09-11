@@ -100,17 +100,17 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
                     return organizationMapper.get(key);
                   }
                 });
-    datasetKeysInNetworkCache = CacheBuilder.newBuilder()
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(
-            new CacheLoader<UUID, Set<UUID>>() {
-              public Set<UUID> load(UUID key) {
-                return datasetMapper.listDatasetsInNetwork(key, null)
-                    .stream()
-                    .map(dataset -> dataset.getKey())
-                    .collect(Collectors.toSet());
-              }
-            });
+    datasetKeysInNetworkCache =
+        CacheBuilder.newBuilder()
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build(
+                new CacheLoader<UUID, Set<UUID>>() {
+                  public Set<UUID> load(UUID key) {
+                    return datasetMapper.listDatasetsInNetwork(key, null).stream()
+                        .map(dataset -> dataset.getKey())
+                        .collect(Collectors.toSet());
+                  }
+                });
   }
 
   @NullToNotFound
@@ -239,23 +239,30 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   private Dataset setGeneratedCitation(Dataset dataset) {
     if (dataset == null
         || dataset.getPublishingOrganizationKey() == null
-        // for CoL and its constituents we want to show the verbatim citation and not the GBIF-generated one:
+        // for CoL and its constituents we want to show the verbatim citation and not the
+        // GBIF-generated one:
         || Constants.COL_DATASET_KEY.equals(dataset.getKey())
         || Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
       return dataset;
     }
 
-    boolean notObisDataset = ! datasetKeysInNetworkCache.getUnchecked(Constants.OBIS_NETWORK_KEY)
-        .contains(dataset.getKey());
+    boolean notObisDataset =
+        !datasetKeysInNetworkCache
+            .getUnchecked(Constants.OBIS_NETWORK_KEY)
+            .contains(dataset.getKey());
 
     Citation originalCitation = dataset.getCitation();
 
-    if (notObisDataset || originalCitation == null || Strings.isNullOrEmpty(originalCitation.getText())) {
-      // if the citation already exists keep it and only change the text. That allows us to keep the identifier
+    if (notObisDataset
+        || originalCitation == null
+        || Strings.isNullOrEmpty(originalCitation.getText())) {
+      // if the citation already exists keep it and only change the text. That allows us to keep the
+      // identifier
       // if provided.
       Citation citation = originalCitation == null ? new Citation() : originalCitation;
-      citation.setText(CitationGenerator.generateCitation(dataset,
-          organizationCache.getUnchecked(dataset.getPublishingOrganizationKey())));
+      citation.setText(
+          CitationGenerator.generateCitation(
+              dataset, organizationCache.getUnchecked(dataset.getPublishingOrganizationKey())));
       dataset.setCitation(citation);
     } else {
       // Append DOI if necessary, and append "accessed via GBIF.org".
