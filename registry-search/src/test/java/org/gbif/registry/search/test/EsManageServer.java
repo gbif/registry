@@ -25,12 +25,12 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -50,15 +50,18 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private final String indexName;
 
+  private final String typeName;
+
 
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
   public EsManageServer(
-      Resource mappingFile, Resource settingsFile, String indexName) {
+      Resource mappingFile, Resource settingsFile, String indexName, String typeName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
+    this.typeName = typeName;
   }
 
   @Override
@@ -111,7 +114,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private void createIndex() throws IOException {
     CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
     createIndexRequest.settings(asString(settingsFile), XContentType.JSON);
-    createIndexRequest.mapping(asString(mappingFile), XContentType.JSON);
+    createIndexRequest.mapping(typeName, asString(mappingFile), XContentType.JSON);
     restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
   }
 
@@ -129,7 +132,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     return "http://localhost:" + embeddedElastic.getMappedPort(9200);
   }
 
-  public void refresh() {
+    public void refresh() {
     try {
       RefreshRequest refreshRequest = new RefreshRequest();
       refreshRequest.indices(indexName);
