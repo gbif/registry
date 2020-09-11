@@ -31,6 +31,7 @@ import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
+import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
@@ -38,8 +39,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -75,13 +78,18 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private final DatasetMapper datasetMapper;
   private final MetadataMapper metadataMapper;
+  private final NetworkMapper networkMapper;
   private final LoadingCache<UUID, Organization> organizationCache;
+  private final LoadingCache<UUID, Set<UUID>> datasetKeysInNetworkCache;
 
   public RegistryDatasetServiceImpl(
       MetadataMapper metadataMapper,
       OrganizationMapper organizationMapper,
-      DatasetMapper datasetMapper) {
+      DatasetMapper datasetMapper,
+      NetworkMapper networkMapper) {
     this.metadataMapper = metadataMapper;
+    this.datasetMapper = datasetMapper;
+    this.networkMapper = networkMapper;
     this.organizationCache =
         CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -92,7 +100,17 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
                     return organizationMapper.get(key);
                   }
                 });
-    this.datasetMapper = datasetMapper;
+    datasetKeysInNetworkCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(
+            new CacheLoader<UUID, Set<UUID>>() {
+              public Set<UUID> load(UUID key) {
+                return datasetMapper.listDatasetsInNetwork(key, null)
+                    .stream()
+                    .map(dataset -> dataset.getKey())
+                    .collect(Collectors.toSet());
+              }
+            });
   }
 
   @NullToNotFound
@@ -102,6 +120,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     if (dataset == null) {
       return null;
     }
+
+    setGeneratedCitation(dataset);
 
     return sanitizeDataset(dataset);
   }
@@ -128,7 +148,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   public PagingResponse<Dataset> augmentWithMetadata(PagingResponse<Dataset> resp) {
     List<Dataset> augmented = Lists.newArrayList();
     for (Dataset d : resp.getResults()) {
-      augmented.add(merge(getPreferredMetadataDataset(d.getKey()), d));
+      augmented.add(setGeneratedCitation(merge(getPreferredMetadataDataset(d.getKey()), d)));
     }
     resp.setResults(augmented);
     return resp;
@@ -156,13 +176,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
     // nothing to merge, return the target (which may be null)
     if (supplementary == null) {
-      setGeneratedCitation(target);
       return target;
     }
 
     // nothing to overlay into
     if (target == null) {
-      setGeneratedCitation(supplementary);
       return supplementary;
     }
 
@@ -202,38 +220,49 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     target.setMachineTags(supplementary.getMachineTags());
     target.setTags(supplementary.getTags());
 
-    setGeneratedCitation(target);
-
     return target;
   }
 
   /**
-   * Set the generated GBIF citation on the provided Dataset object. This function is used until we
-   * decide if we store the GBIF generated citation in the database.
+   * Set the generated GBIF citation on the provided Dataset object.
    *
-   * <p>see https://github.com/gbif/registry/issues/4
+   * https://github.com/gbif/registry/issues/4
    *
+   * Where the provider is in particular networks (OBIS), or part of CoL, we use the provided citation and check
+   * for a DOI.
+   *
+   * https://github.com/gbif/registry/issues/43 (OBIS)
+   * https://github.com/gbif/portal-feedback/issues/1819 (CoL)
    * @param dataset
    * @return
    */
-  private void setGeneratedCitation(Dataset dataset) {
-    if (dataset != null
-        && dataset.getPublishingOrganizationKey() != null
-        // for CoL and its constituents we want to show the verbatim citation and no GBIF generated
-        // one:
-        // https://github.com/gbif/portal-feedback/issues/1819
-        && !Constants.COL_DATASET_KEY.equals(dataset.getKey())
-        && !Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
-
-      // if the citation already exists keep it and only change the text. That allows us to keep the
-      // identifier
-      // if provided.
-      Citation citation = dataset.getCitation() == null ? new Citation() : dataset.getCitation();
-      citation.setText(
-          CitationGenerator.generateCitation(
-              dataset, organizationCache.getUnchecked(dataset.getPublishingOrganizationKey())));
-      dataset.setCitation(citation);
+  private Dataset setGeneratedCitation(Dataset dataset) {
+    if (dataset == null
+        || dataset.getPublishingOrganizationKey() == null
+        // for CoL and its constituents we want to show the verbatim citation and not the GBIF-generated one:
+        || Constants.COL_DATASET_KEY.equals(dataset.getKey())
+        || Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+      return dataset;
     }
+
+    boolean notObisDataset = ! datasetKeysInNetworkCache.getUnchecked(Constants.OBIS_NETWORK_KEY)
+        .contains(dataset.getKey());
+
+    Citation originalCitation = dataset.getCitation();
+
+    if (notObisDataset || originalCitation == null || Strings.isNullOrEmpty(originalCitation.getText())) {
+      // if the citation already exists keep it and only change the text. That allows us to keep the identifier
+      // if provided.
+      Citation citation = originalCitation == null ? new Citation() : originalCitation;
+      citation.setText(CitationGenerator.generateCitation(dataset,
+          organizationCache.getUnchecked(dataset.getPublishingOrganizationKey())));
+      dataset.setCitation(citation);
+    } else {
+      // Append DOI if necessary, and append "accessed via GBIF.org".
+      originalCitation.setText(CitationGenerator.generatePublisherProvidedCitation(dataset));
+    }
+
+    return dataset;
   }
 
   /**
