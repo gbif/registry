@@ -17,6 +17,7 @@ package org.gbif.registry.domain.ws;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.util.HttpURI;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -65,6 +66,7 @@ public class CitationCreationRequest implements Serializable {
   }
 
   @NotNull
+  @HttpURI
   public URI getTarget() {
     return target;
   }

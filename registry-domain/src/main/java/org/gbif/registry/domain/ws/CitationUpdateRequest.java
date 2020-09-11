@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.util.HttpURI;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Objects;
@@ -27,6 +29,7 @@ public class CitationUpdateRequest implements Serializable {
   private URI target;
 
   @NotNull
+  @HttpURI
   public URI getTarget() {
     return target;
   }
