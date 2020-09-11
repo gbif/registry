@@ -32,6 +32,7 @@ import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
 import org.gbif.registry.persistence.mapper.CitationMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;
 import java.text.MessageFormat;
@@ -42,8 +43,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import javax.xml.bind.JAXBException;
+
 import org.apache.commons.collections.CollectionUtils;
-import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,8 +53,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Iterators;
-
-import javax.xml.bind.JAXBException;
 
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
 

@@ -15,11 +15,12 @@
  */
 package org.gbif.registry.domain.ws;
 
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Objects;
 import java.util.StringJoiner;
+
+import javax.validation.constraints.NotNull;
 
 public class CitationUpdateRequest implements Serializable {
 
