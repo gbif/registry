@@ -64,6 +64,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryDatasetServiceImpl.class);
 
+  private static final UUID IUCN_DATASET_KEY = UUID.fromString("19491596-35ae-4a91-9a98-85cf505f1bd3");
+
   // HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER =
       new HtmlPolicyBuilder()
@@ -251,11 +253,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
     Citation originalCitation = dataset.getCitation();
 
     if (notObisDataset
+        || dataset.getKey() != IUCN_DATASET_KEY
         || originalCitation == null
         || Strings.isNullOrEmpty(originalCitation.getText())) {
       // if the citation already exists keep it and only change the text. That allows us to keep the
-      // identifier
-      // if provided.
+      // identifier if provided.
       Citation citation = originalCitation == null ? new Citation() : originalCitation;
       citation.setText(
           CitationGenerator.generateCitation(
