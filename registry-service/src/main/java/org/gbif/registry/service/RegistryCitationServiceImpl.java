@@ -116,6 +116,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
     return citation;
   }
 
+  @Override
   public void update(DOI doi, URI target) {
     DoiData doiData = doiMapper.get(doi);
 
