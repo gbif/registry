@@ -140,10 +140,13 @@ public class CitationResource {
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix,
       @RequestBody @Valid CitationUpdateRequest request) {
+    updateCitation(new DOI(doiPrefix, doiSuffix), request);
+  }
+
+  public void updateCitation(DOI citationDoi, CitationUpdateRequest request) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String nameFromContext = authentication != null ? authentication.getName() : null;
 
-    DOI citationDoi = new DOI(doiPrefix, doiSuffix);
     Citation citation = citationService.get(citationDoi);
 
     if (citation == null) {
@@ -159,8 +162,9 @@ public class CitationResource {
     }
 
     try {
-      citationService.update(new DOI(), request.getTarget());
+      citationService.update(citationDoi, request.getTarget());
     } catch (IllegalStateException e) {
+      LOG.error(e.getMessage());
       throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
