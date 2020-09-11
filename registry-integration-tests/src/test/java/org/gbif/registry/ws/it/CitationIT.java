@@ -118,9 +118,9 @@ public class CitationIT extends BaseItTest {
     Dataset thirdDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
     // prepare requests
-    CitationCreationRequest requestData1 = newCitationRequest(occurrenceDownload.getDoi(), new HashMap<>());
-    String str = secondDataset.getKey() + ",1\n"
-        + firstDataset.getDoi() + ",2";
+    CitationCreationRequest requestData1 =
+        newCitationRequest(occurrenceDownload.getDoi(), new HashMap<>());
+    String str = secondDataset.getKey() + ",1\n" + firstDataset.getDoi() + ",2";
     MultipartFile relatedDatasetsFile = new MockMultipartFile("file.csv", str.getBytes());
 
     CitationCreationRequest requestData2 =

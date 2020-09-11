@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.search.dataset;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.util.VocabularyUtils;
@@ -84,6 +85,7 @@ public class DatasetSearchResultConverter
 
     getIntegerValue(fields, "decade").ifPresent(d::setDecades);
     getCountryListValue(fields, "countryCoverage").ifPresent(d::setCountryCoverage);
+    getStringValue(fields, "doi").map(DOI::new).ifPresent(d::setDoi);
 
     return d;
   }
