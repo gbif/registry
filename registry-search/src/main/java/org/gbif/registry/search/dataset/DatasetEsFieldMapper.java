@@ -164,6 +164,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
 
     return new FunctionScoreQueryBuilder(
             QueryBuilders.multiMatchQuery(q)
+                .field("doi", 25.0f)
                 .field("title", 20.0f)
                 .field("keyword", 10.0f)
                 .field("description", 8.0f)
