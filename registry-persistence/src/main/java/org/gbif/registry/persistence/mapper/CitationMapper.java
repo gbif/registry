@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.domain.ws.Citation;
 import org.gbif.registry.domain.ws.CitationDatasetUsage;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +35,8 @@ import org.springframework.stereotype.Repository;
 public interface CitationMapper {
 
   void create(@Param("citation") Citation citation);
+
+  void updateTarget(@Param("doi") DOI doi, @Param("target") URI target);
 
   Citation get(@Param("doi") DOI doi);
 

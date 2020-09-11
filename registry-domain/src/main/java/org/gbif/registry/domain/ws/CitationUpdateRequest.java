@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Objects;
@@ -24,6 +25,7 @@ public class CitationUpdateRequest implements Serializable {
 
   private URI target;
 
+  @NotNull
   public URI getTarget() {
     return target;
   }

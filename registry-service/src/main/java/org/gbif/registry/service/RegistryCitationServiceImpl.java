@@ -16,11 +16,14 @@
 package org.gbif.registry.service;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.DoiData;
+import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
+import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.DataCiteMetadataBuilderService;
 import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
 import org.gbif.registry.doi.DoiIssuingService;
@@ -30,6 +33,7 @@ import org.gbif.registry.domain.ws.CitationDatasetUsage;
 import org.gbif.registry.persistence.mapper.CitationMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 
+import java.net.URI;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -39,6 +43,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +51,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Iterators;
+
+import javax.xml.bind.JAXBException;
 
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
 
@@ -64,6 +71,7 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
   private final DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService;
   private final CitationMapper citationMapper;
   private final DatasetMapper datasetMapper;
+  private final DoiMapper doiMapper;
   private final String citationText;
 
   public RegistryCitationServiceImpl(
@@ -72,12 +80,14 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
       DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService,
       CitationMapper citationMapper,
       DatasetMapper datasetMapper,
+      DoiMapper doiMapper,
       @Value("${citation.text}") String citationText) {
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
     this.datasetDoiDataCiteHandlingService = datasetDoiDataCiteHandlingService;
     this.citationMapper = citationMapper;
     this.datasetMapper = datasetMapper;
+    this.doiMapper = doiMapper;
     this.citationText = citationText;
   }
 
@@ -104,6 +114,27 @@ public class RegistryCitationServiceImpl implements RegistryCitationService {
         .forEachRemaining(batch -> citationMapper.addCitationDatasets(doi, batch));
 
     return citation;
+  }
+
+  public void update(DOI doi, URI target) {
+    DoiData doiData = doiMapper.get(doi);
+
+    if (doiData.getStatus() != DoiStatus.REGISTERED) {
+      throw new IllegalStateException("Can change target only for registered DOI");
+    }
+
+    String xmlMetadata = doiMapper.getMetadata(doi);
+
+    DataCiteMetadata metadata;
+    try {
+      metadata = DataCiteValidator.fromXml(xmlMetadata);
+    } catch (JAXBException e) {
+      throw new IllegalStateException("Can't parse metadata");
+    }
+
+    datasetDoiDataCiteHandlingService.scheduleDerivedDatasetUpdating(doi, metadata, target);
+
+    citationMapper.updateTarget(doi, target);
   }
 
   @Override
