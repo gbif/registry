@@ -90,8 +90,9 @@ public class CitationResource {
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public Citation createCitation(@RequestPart("citation") @Valid CitationCreationRequest request,
-                                 @RequestPart("relatedDatasets") MultipartFile file) {
+  public Citation createCitation(
+      @RequestPart("citation") @Valid CitationCreationRequest request,
+      @RequestPart("relatedDatasets") MultipartFile file) {
     Map<String, Long> records = new HashMap<>();
     try (Scanner scanner = new Scanner(file.getInputStream())) {
       while (scanner.hasNextLine()) {
@@ -99,7 +100,8 @@ public class CitationResource {
         records.put(lineElements[0], Long.valueOf(lineElements[1]));
       }
     } catch (IOException e) {
-      throw new WebApplicationException("Error while reading file", HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new WebApplicationException(
+          "Error while reading file", HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (NumberFormatException e) {
       LOG.error("Wrong number {}", e.getMessage());
       throw new WebApplicationException("Invalid number " + e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -108,7 +110,8 @@ public class CitationResource {
     return createCitation(request, records);
   }
 
-  private Citation createCitation(CitationCreationRequest request, Map<String, Long> relatedDatasets) {
+  private Citation createCitation(
+      CitationCreationRequest request, Map<String, Long> relatedDatasets) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
@@ -121,8 +124,7 @@ public class CitationResource {
 
     List<CitationDatasetUsage> citationDatasetUsages;
     try {
-      citationDatasetUsages =
-          datasetService.ensureCitationDatasetUsagesValid(relatedDatasets);
+      citationDatasetUsages = datasetService.ensureCitationDatasetUsagesValid(relatedDatasets);
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
       throw new WebApplicationException(
