@@ -133,8 +133,7 @@ public class DatasetBatchIndexer {
                         .index(indexName)
                         .source(jsonNode.toString(), XContentType.JSON)
                         .opType(DocWriteRequest.OpType.INDEX)
-                        .id(dataset.getKey().toString())
-                        .type(IndexingConstants.DATASET_RECORD_TYPE));
+                        .id(dataset.getKey().toString()));
               });
       // Batching updates to Es proves quicker with batches of 100 - 1000 showing similar
       // performance

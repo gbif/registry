@@ -107,6 +107,7 @@ public class DatabaseInitializer implements BeforeEachCallback {
       connection.prepareStatement("DELETE FROM pipeline_step").executeUpdate();
       connection.prepareStatement("DELETE FROM pipeline_process").executeUpdate();
       connection.prepareStatement("DELETE FROM pipeline_execution").executeUpdate();
+      connection.prepareStatement("DELETE FROM citation").executeUpdate();
 
       connection
           .prepareStatement(

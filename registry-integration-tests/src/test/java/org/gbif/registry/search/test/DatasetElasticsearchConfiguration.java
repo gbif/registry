@@ -45,7 +45,6 @@ public class DatasetElasticsearchConfiguration {
   public EsClient.EsClientConfiguration occurrenceRestHighLevelClient(
       EsManageServer esManageServer) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
-    esClientConfiguration.setMaxRetryTimeOut(6000);
     esClientConfiguration.setSocketTimeOut(6000);
     esClientConfiguration.setConnectionRequestTimeOut(6000);
     esClientConfiguration.setConnectionRequestTimeOut(6000);
