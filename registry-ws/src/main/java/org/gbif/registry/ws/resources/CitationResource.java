@@ -148,12 +148,14 @@ public class CitationResource {
 
     if (citation == null) {
       LOG.error("Citation with the DOI {} was not found", citationDoi);
-      throw new WebApplicationException("Citation with the DOI was not found", HttpStatus.NOT_FOUND);
+      throw new WebApplicationException(
+          "Citation with the DOI was not found", HttpStatus.NOT_FOUND);
     }
 
     if (!citation.getCreatedBy().equals(nameFromContext)) {
       LOG.error("User {} is not allowed to update the Citation {}", nameFromContext, citationDoi);
-      throw new WebApplicationException("User is not allowed to update the Citation", HttpStatus.FORBIDDEN);
+      throw new WebApplicationException(
+          "User is not allowed to update the Citation", HttpStatus.FORBIDDEN);
     }
 
     try {
