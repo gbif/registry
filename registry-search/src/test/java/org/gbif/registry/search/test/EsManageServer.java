@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Properties;
 
-import lombok.SneakyThrows;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
@@ -38,6 +37,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.FileCopyUtils;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+
+import lombok.SneakyThrows;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
