@@ -21,10 +21,16 @@ import org.gbif.registry.mail.util.RegistryMailUtils;
 
 import java.util.Date;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.URLDataSource;
 import javax.mail.Address;
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -34,7 +40,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-/** Allows to send {@link BaseEmailModel} */
+/**
+ * Allows to send {@link BaseEmailModel}
+ */
 @Service
 @Qualifier("emailSender")
 public class EmailSenderImpl implements EmailSender {
@@ -77,7 +85,22 @@ public class EmailSenderImpl implements EmailSender {
               .toArray(new Address[0]));
       msg.setSubject(emailModel.getSubject());
       msg.setSentDate(new Date());
-      msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
+//      msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
+
+      MimeMultipart multipart = new MimeMultipart();
+
+      BodyPart htmlPart = new MimeBodyPart();
+      htmlPart.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
+
+      multipart.addBodyPart(htmlPart);
+
+      BodyPart imagePart = new MimeBodyPart();
+      imagePart.setDataHandler(new DataHandler(getImage()));
+      imagePart.setHeader("Content-ID", "<image>");
+
+      multipart.addBodyPart(imagePart);
+
+      msg.setContent(multipart);
 
       if (mailConfigProperties.getEnabled() != null && mailConfigProperties.getEnabled()) {
         mailSender.send(msg);
@@ -91,5 +114,14 @@ public class EmailSenderImpl implements EmailSender {
           emailAddress,
           e);
     }
+  }
+
+  private DataSource getImage() {
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    if (classLoader == null) {
+      classLoader = this.getClass().getClassLoader();
+    }
+    DataSource ds = new URLDataSource(classLoader.getResource("email/images/GBIF-2015-full.jpg"));
+    return ds;
   }
 }

@@ -73,7 +73,7 @@
                 <tr style="margin: 0;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">
                     <td class="masthead" style="margin: 0;padding: 10px 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;background: #4c9e49;color: white;">
 
-                        <img src="GBIF-2015-full.jpg" style="margin: 0 auto;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;max-width: 100%;display: block;">
+                        <img src="cid:image" style="margin: 0 auto;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;max-width: 100%;display: block;">
 
                     </td>
                 </tr>
