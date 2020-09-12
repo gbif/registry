@@ -118,9 +118,10 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
     try {
+      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
       Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.WELCOME, user.getEmail(), new Object(), locale);
+          IdentityEmailType.WELCOME, user.getEmail(), dataModel, locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
