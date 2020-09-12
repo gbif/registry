@@ -85,7 +85,6 @@ public class EmailSenderImpl implements EmailSender {
               .toArray(new Address[0]));
       msg.setSubject(emailModel.getSubject());
       msg.setSentDate(new Date());
-//      msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
 
       MimeMultipart multipart = new MimeMultipart();
 
