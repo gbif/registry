@@ -30,8 +30,8 @@ import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
-import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;
@@ -59,7 +59,8 @@ import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
 @Service
 public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDatasetService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RegistryDerivedDatasetServiceImpl.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(RegistryDerivedDatasetServiceImpl.class);
 
   private static final ZoneId UTC = ZoneId.of("UTC");
   private static final DateTimeFormatter REGULAR_DATE_FORMAT =
@@ -97,7 +98,8 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
   }
 
   @Override
-  public DerivedDataset create(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
+  public DerivedDataset create(
+      DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
     DOI doi = doiIssuingService.newDerivedDatasetDOI();
 
     derivedDataset.setDoi(doi);
@@ -107,7 +109,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
     DataCiteMetadata metadata = metadataBuilderService.buildMetadata(derivedDataset);
 
     datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
-      doi, metadata, derivedDataset.getTarget(), derivedDataset.getRegistrationDate());
+        doi, metadata, derivedDataset.getTarget(), derivedDataset.getRegistrationDate());
 
     derivedDatasetMapper.create(derivedDataset);
     Iterators.partition(derivedDatasetUsages.iterator(), BATCH_SIZE)
@@ -151,9 +153,9 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
       UUID datasetKey = UUID.fromString(datasetKeyOrDoi);
       result =
           pagingResponse(
-            page,
-            derivedDatasetMapper.countByDataset(datasetKey),
-            derivedDatasetMapper.listByDataset(datasetKey, page));
+              page,
+              derivedDatasetMapper.countByDataset(datasetKey),
+              derivedDatasetMapper.listByDataset(datasetKey, page));
     } else if (DOI.isParsable(datasetKeyOrDoi)) {
       List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
 
@@ -161,9 +163,9 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
         Dataset dataset = datasets.get(0);
         result =
             pagingResponse(
-              page,
-              derivedDatasetMapper.countByDataset(dataset.getKey()),
-              derivedDatasetMapper.listByDataset(dataset.getKey(), page));
+                page,
+                derivedDatasetMapper.countByDataset(dataset.getKey()),
+                derivedDatasetMapper.listByDataset(dataset.getKey(), page));
       } else {
         result = new PagingResponse<>(0L, 20, 0L);
       }
@@ -175,24 +177,29 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
   }
 
   @Override
-  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI derivedDatasetDoi, Pageable page) {
+  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(
+      DOI derivedDatasetDoi, Pageable page) {
     return pagingResponse(
-      page,
-      derivedDatasetMapper.countDerivedDatasetUsages(derivedDatasetDoi),
-      derivedDatasetMapper.listDerivedDatasetUsages(derivedDatasetDoi, page));
+        page,
+        derivedDatasetMapper.countDerivedDatasetUsages(derivedDatasetDoi),
+        derivedDatasetMapper.listDerivedDatasetUsages(derivedDatasetDoi, page));
   }
 
   @Scheduled(cron = "${citation.cronPattern}")
   public void registerPostponedCitations() {
     LOG.info("Start registering delayed citations");
-    List<DerivedDataset> citationsToRegister = derivedDatasetMapper.listByRegistrationDate(new Date());
+    List<DerivedDataset> citationsToRegister =
+        derivedDatasetMapper.listByRegistrationDate(new Date());
 
     for (DerivedDataset derivedDataset : citationsToRegister) {
       LOG.debug("Start registering derivedDataset {}", derivedDataset.getDoi());
       DataCiteMetadata metadata = metadataBuilderService.buildMetadata(derivedDataset);
 
       datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
-        derivedDataset.getDoi(), metadata, derivedDataset.getTarget(), derivedDataset.getRegistrationDate());
+          derivedDataset.getDoi(),
+          metadata,
+          derivedDataset.getTarget(),
+          derivedDataset.getRegistrationDate());
     }
   }
 }

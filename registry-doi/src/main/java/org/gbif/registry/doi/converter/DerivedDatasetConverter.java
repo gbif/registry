@@ -61,7 +61,8 @@ public final class DerivedDatasetConverter {
     return builder.build();
   }
 
-  private static void convertIdentifier(DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
+  private static void convertIdentifier(
+      DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
     builder.withIdentifier(
         Identifier.builder()
             .withIdentifierType(IdentifierType.DOI.name())
@@ -69,7 +70,8 @@ public final class DerivedDatasetConverter {
             .build());
   }
 
-  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
+  private static void convertCreators(
+      DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
     builder.withCreators(
         Creators.builder()
             .withCreator(
@@ -80,9 +82,12 @@ public final class DerivedDatasetConverter {
             .build());
   }
 
-  private static void convertTitles(DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
+  private static void convertTitles(
+      DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
     builder.withTitles(
-        Titles.builder().withTitle(Title.builder().withValue(derivedDataset.getTitle()).build()).build());
+        Titles.builder()
+            .withTitle(Title.builder().withValue(derivedDataset.getTitle()).build())
+            .build());
   }
 
   private static void convertPublisher(DataCiteMetadata.Builder<Void> builder) {
