@@ -62,6 +62,20 @@ public interface DoiMessageManagingService {
    * calls with the same DOI only the metadata in DataCite will be updated. If it is called for the
    * very first time the DOI will also be properly registered with DataCite.
    *
+   * @param doi the GBIF DOI to register derived dataset
+   * @param metadata the metadata to post to DataCite. Mandatory fields are validated immediately
+   * @param target target url
+   * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is
+   *     not a GBIF one
+   */
+  void registerDerivedDataset(DOI doi, DataCiteMetadata metadata, URI target)
+      throws InvalidMetadataException;
+
+  /**
+   * Schedules a DOI metadata update with DataCite and registers the DOI if needed. For subsequent
+   * calls with the same DOI only the metadata in DataCite will be updated. If it is called for the
+   * very first time the DOI will also be properly registered with DataCite.
+   *
    * @param doi the GBIF DOI to registerDataset
    * @param metadata the metadata to post to DataCite. Mandatory fields are validated immediately
    * @param downloadKey the download key to derive the target URL from

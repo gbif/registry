@@ -49,6 +49,13 @@
     VALUES(<include refid="DERIVED_DATASET_FIELD_TYPES"/>)
   </insert>
 
+  <update id="updateTarget">
+    UPDATE citation
+    SET target   = #{target,jdbcType=OTHER},
+    modified = now()
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </update>
+
   <select id="get" resultType="DerivedDataset" resultMap="DERIVED_DATASET_MAP">
     SELECT <include refid="DERIVED_DATASET_FIELDS"/>
     FROM derived_dataset

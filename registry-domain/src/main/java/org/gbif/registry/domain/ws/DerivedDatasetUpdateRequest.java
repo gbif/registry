@@ -15,15 +15,21 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.util.HttpURI;
+
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import javax.validation.constraints.NotNull;
+
 public class DerivedDatasetUpdateRequest implements Serializable {
 
   private URI target;
 
+  @NotNull
+  @HttpURI
   public URI getTarget() {
     return target;
   }
