@@ -21,6 +21,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
+import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryDatasetService;
@@ -48,6 +49,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -135,6 +137,41 @@ public class DerivedDatasetResource {
     return derivedDatasetService.get(doi);
   }
 
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  @PutMapping(path = "{doiPrefix}/{doiSuffix}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void updateCitation(
+      @PathVariable("doiPrefix") String doiPrefix,
+      @PathVariable("doiSuffix") String doiSuffix,
+      @RequestBody @Valid DerivedDatasetUpdateRequest request) {
+    updateCitation(new DOI(doiPrefix, doiSuffix), request);
+  }
+
+  public void updateCitation(DOI citationDoi, DerivedDatasetUpdateRequest request) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String nameFromContext = authentication != null ? authentication.getName() : null;
+
+    DerivedDataset derivedDataset = derivedDatasetService.get(citationDoi);
+
+    if (derivedDataset == null) {
+      LOG.error("Citation with the DOI {} was not found", citationDoi);
+      throw new WebApplicationException(
+          "Citation with the DOI was not found", HttpStatus.NOT_FOUND);
+    }
+
+    if (!derivedDataset.getCreatedBy().equals(nameFromContext)) {
+      LOG.error("User {} is not allowed to update the Citation {}", nameFromContext, citationDoi);
+      throw new WebApplicationException(
+          "User is not allowed to update the Citation", HttpStatus.FORBIDDEN);
+    }
+
+    try {
+      derivedDatasetService.update(citationDoi, request.getTarget());
+    } catch (IllegalStateException e) {
+      LOG.error(e.getMessage());
+      throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @GetMapping("{doiPrefix}/{doiSuffix}")
   public DerivedDataset getDerivedDataset(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
@@ -156,7 +193,7 @@ public class DerivedDatasetResource {
   }
 
   public PagingResponse<DerivedDataset> getDerivedDatasets(String datasetKeyOrDoi, Pageable page) {
-    return derivedDatasetService.getDatasetCitations(datasetKeyOrDoi, page);
+    return derivedDatasetService.getDerivedDataset(datasetKeyOrDoi, page);
   }
 
   public String getCitationText(DOI doi) {

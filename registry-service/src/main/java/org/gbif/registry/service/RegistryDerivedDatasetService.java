@@ -21,6 +21,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
+import java.net.URI;
 import java.util.List;
 
 public interface RegistryDerivedDatasetService {
@@ -29,9 +30,11 @@ public interface RegistryDerivedDatasetService {
 
   DerivedDataset create(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
 
+  void update(DOI doi, URI target);
+
   DerivedDataset get(DOI derivedDatasetDoi);
 
-  PagingResponse<DerivedDataset> getDatasetCitations(String datasetKeyOrDoi, Pageable page);
+  PagingResponse<DerivedDataset> getDerivedDataset(String datasetKeyOrDoi, Pageable page);
 
   PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI derivedDatasetDoi, Pageable pageable);
 }

@@ -62,6 +62,36 @@ public class CitationGenerator {
   }
 
   /**
+   * Generate a citation for a {@link Dataset} using the publisher's provided citation.
+   * @param dataset
+   * @return generated citation as {@link String}
+   */
+  public static String generatePublisherProvidedCitation(Dataset dataset) {
+
+    Objects.requireNonNull(dataset, "Dataset shall be provided");
+    String originalCitationText = dataset.getCitation().getText();
+    Objects.requireNonNull(originalCitationText, "Dataset.citation.text shall be provided");
+
+    StringJoiner joiner = new StringJoiner(" ");
+
+    joiner.add(originalCitationText);
+
+    // Check DOI exists, and append it if it doesn't.
+    if (!originalCitationText.toLowerCase().contains("doi.org")
+        && !originalCitationText.toLowerCase().contains("doi:")) {
+      try {
+        joiner.add(URLDecoder.decode(dataset.getDoi().getUrl().toString(), "UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        throw new IllegalArgumentException("Couldn't decode DOI URL", e);
+      }
+    }
+
+    joiner.add("accessed via GBIF.org on " + LocalDate.now(UTC) + ".");
+
+    return joiner.toString();
+  }
+
+  /**
    * Generate a citation for a {@link Dataset} and its {@link Organization}. TODO add support for
    * i18n
    *
