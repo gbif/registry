@@ -139,7 +139,9 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("DerivedDataset", DerivedDataset.class);
-      configuration.getTypeAliasRegistry().registerAlias("DerivedDatasetUsage", DerivedDatasetUsage.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DerivedDatasetUsage", DerivedDatasetUsage.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("LanguageTypeHandler", LanguageTypeHandler.class);
