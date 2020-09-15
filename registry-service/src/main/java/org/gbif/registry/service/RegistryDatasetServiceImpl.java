@@ -26,7 +26,7 @@ import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.MetadataType;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
-import org.gbif.registry.domain.ws.CitationDatasetUsage;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -275,9 +275,9 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   }
 
   @Override
-  public List<CitationDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data) {
+  public List<DerivedDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data) {
     LOG.debug("Ensure citation dataset usages {}", data);
-    List<CitationDatasetUsage> result = new ArrayList<>();
+    List<DerivedDatasetUsage> result = new ArrayList<>();
 
     for (Map.Entry<String, Long> item : data.entrySet()) {
       String datasetKeyOrDoi = item.getKey();
@@ -292,11 +292,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
           LOG.error("Dataset with the UUID {} was not found", datasetKeyOrDoi);
           throw new IllegalArgumentException();
         } else {
-          CitationDatasetUsage citationDatasetUsage = new CitationDatasetUsage();
-          citationDatasetUsage.setDatasetKey(key);
-          citationDatasetUsage.setDatasetDoi(dataset.getDoi());
-          citationDatasetUsage.setNumberRecords(item.getValue());
-          result.add(citationDatasetUsage);
+          DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
+          derivedDatasetUsage.setDatasetKey(key);
+          derivedDatasetUsage.setDatasetDoi(dataset.getDoi());
+          derivedDatasetUsage.setNumberRecords(item.getValue());
+          result.add(derivedDatasetUsage);
         }
       } else if (DOI.isParsable(datasetKeyOrDoi)) {
         LOG.debug("Identifier {} is a valid DOI", datasetKeyOrDoi);
@@ -307,11 +307,11 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
           throw new IllegalArgumentException();
         } else {
           Dataset dataset = datasets.get(0);
-          CitationDatasetUsage citationDatasetUsage = new CitationDatasetUsage();
-          citationDatasetUsage.setDatasetKey(dataset.getKey());
-          citationDatasetUsage.setDatasetDoi(dataset.getDoi());
-          citationDatasetUsage.setNumberRecords(item.getValue());
-          result.add(citationDatasetUsage);
+          DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
+          derivedDatasetUsage.setDatasetKey(dataset.getKey());
+          derivedDatasetUsage.setDatasetDoi(dataset.getDoi());
+          derivedDatasetUsage.setNumberRecords(item.getValue());
+          result.add(derivedDatasetUsage);
         }
       } else {
         LOG.error("Identifier {} is not UUID or DOI", datasetKeyOrDoi);

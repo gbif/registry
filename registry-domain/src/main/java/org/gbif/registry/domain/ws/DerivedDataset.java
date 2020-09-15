@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public class Citation implements Serializable {
+public class DerivedDataset implements Serializable {
 
   private DOI doi;
   private DOI originalDownloadDOI;
@@ -120,17 +120,17 @@ public class Citation implements Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Citation citation1 = (Citation) o;
-    return Objects.equals(doi, citation1.doi)
-        && Objects.equals(originalDownloadDOI, citation1.originalDownloadDOI)
-        && Objects.equals(citation, citation1.citation)
-        && Objects.equals(title, citation1.title)
-        && Objects.equals(target, citation1.target)
-        && Objects.equals(createdBy, citation1.createdBy)
-        && Objects.equals(modifiedBy, citation1.modifiedBy)
-        && Objects.equals(registrationDate, citation1.registrationDate)
-        && Objects.equals(created, citation1.created)
-        && Objects.equals(modified, citation1.modified);
+    DerivedDataset derivedDataset1 = (DerivedDataset) o;
+    return Objects.equals(doi, derivedDataset1.doi)
+        && Objects.equals(originalDownloadDOI, derivedDataset1.originalDownloadDOI)
+        && Objects.equals(citation, derivedDataset1.citation)
+        && Objects.equals(title, derivedDataset1.title)
+        && Objects.equals(target, derivedDataset1.target)
+        && Objects.equals(createdBy, derivedDataset1.createdBy)
+        && Objects.equals(modifiedBy, derivedDataset1.modifiedBy)
+        && Objects.equals(registrationDate, derivedDataset1.registrationDate)
+        && Objects.equals(created, derivedDataset1.created)
+        && Objects.equals(modified, derivedDataset1.modified);
   }
 
   @Override
@@ -150,7 +150,7 @@ public class Citation implements Serializable {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", Citation.class.getSimpleName() + "[", "]")
+    return new StringJoiner(", ", DerivedDataset.class.getSimpleName() + "[", "]")
         .add("doi=" + doi)
         .add("originalDownloadDOI=" + originalDownloadDOI)
         .add("citation='" + citation + "'")

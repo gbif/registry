@@ -18,21 +18,20 @@ package org.gbif.registry.service;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.registry.domain.ws.Citation;
-import org.gbif.registry.domain.ws.CitationDatasetUsage;
+import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.List;
 
-public interface RegistryCitationService {
+public interface RegistryDerivedDatasetService {
 
-  String getCitationText(DOI citationDoi);
+  String getCitationText(DOI derivedDatasetDoi);
 
-  Citation create(Citation citation, List<CitationDatasetUsage> citationDatasetUsages);
+  DerivedDataset create(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
 
-  Citation get(DOI citationDoi);
+  DerivedDataset get(DOI derivedDatasetDoi);
 
-  PagingResponse<Citation> getDatasetCitations(String datasetKeyOrDoi, Pageable page);
+  PagingResponse<DerivedDataset> getDatasetCitations(String datasetKeyOrDoi, Pageable page);
 
-  PagingResponse<Dataset> getCitationDatasets(DOI datasetDoi, Pageable pageable);
+  PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI derivedDatasetDoi, Pageable pageable);
 }

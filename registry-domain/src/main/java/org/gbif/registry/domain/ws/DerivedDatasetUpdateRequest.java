@@ -20,7 +20,7 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public class CitationUpdateRequest implements Serializable {
+public class DerivedDatasetUpdateRequest implements Serializable {
 
   private URI target;
 
@@ -36,7 +36,7 @@ public class CitationUpdateRequest implements Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CitationUpdateRequest that = (CitationUpdateRequest) o;
+    DerivedDatasetUpdateRequest that = (DerivedDatasetUpdateRequest) o;
     return Objects.equals(target, that.target);
   }
 
@@ -47,7 +47,7 @@ public class CitationUpdateRequest implements Serializable {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", CitationUpdateRequest.class.getSimpleName() + "[", "]")
+    return new StringJoiner(", ", DerivedDatasetUpdateRequest.class.getSimpleName() + "[", "]")
         .add("target=" + target)
         .toString();
   }
