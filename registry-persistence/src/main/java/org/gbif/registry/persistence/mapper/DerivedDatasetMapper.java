@@ -17,9 +17,8 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.registry.domain.ws.Citation;
-import org.gbif.registry.domain.ws.CitationDatasetUsage;
+import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.Date;
 import java.util.List;
@@ -31,25 +30,25 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CitationMapper {
+public interface DerivedDatasetMapper {
 
-  void create(@Param("citation") Citation citation);
+  void create(@Param("derivedDataset") DerivedDataset derivedDataset);
 
-  Citation get(@Param("doi") DOI doi);
+  DerivedDataset get(@Param("doi") DOI doi);
 
   void addCitationDatasets(
-      @Param("citationDoi") DOI citationDoi,
-      @Param("citationDatasetUsages") List<CitationDatasetUsage> citationDatasetUsages);
+      @Param("derivedDatasetDoi") DOI derivedDatasetDoi,
+      @Param("derivedDatasetUsages") List<DerivedDatasetUsage> derivedDatasetUsages
+  );
 
-  List<Citation> listByDataset(
+  List<DerivedDataset> listByDataset(
       @Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);
 
   long countByDataset(@Param("datasetKey") UUID datasetKey);
 
-  List<Dataset> listByCitation(
-      @Param("citationDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
+  List<DerivedDatasetUsage> listDerivedDatasetUsages(@Param("derivedDatasetDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
 
-  long countByCitation(@Param("citationDoi") DOI citationDoi);
+  long countDerivedDatasetUsages(@Param("derivedDatasetDoi") DOI derivedDatasetDoi);
 
-  List<Citation> listByRegistrationDate(@Param("registrationDate") Date registrationDate);
+  List<DerivedDataset> listByRegistrationDate(@Param("registrationDate") Date registrationDate);
 }

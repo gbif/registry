@@ -24,7 +24,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.ResourceType;
-import org.gbif.registry.domain.ws.Citation;
+import org.gbif.registry.domain.ws.DerivedDataset;
 
 import java.util.Date;
 
@@ -35,13 +35,13 @@ public final class DerivedDatasetConverter {
 
   private DerivedDatasetConverter() {}
 
-  public static DataCiteMetadata convert(Citation citation) {
+  public static DataCiteMetadata convert(DerivedDataset derivedDataset) {
     final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
     // Required fields
-    convertIdentifier(builder, citation);
-    convertCreators(builder, citation);
-    convertTitles(builder, citation);
+    convertIdentifier(builder, derivedDataset);
+    convertCreators(builder, derivedDataset);
+    convertTitles(builder, derivedDataset);
     convertPublisher(builder);
     convertPublicationYear(builder);
     convertResourceType(builder);
@@ -61,28 +61,28 @@ public final class DerivedDatasetConverter {
     return builder.build();
   }
 
-  private static void convertIdentifier(DataCiteMetadata.Builder<Void> builder, Citation citation) {
+  private static void convertIdentifier(DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
     builder.withIdentifier(
         Identifier.builder()
             .withIdentifierType(IdentifierType.DOI.name())
-            .withValue(citation.getDoi().getDoiName())
+            .withValue(derivedDataset.getDoi().getDoiName())
             .build());
   }
 
-  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, Citation citation) {
+  private static void convertCreators(DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
     builder.withCreators(
         Creators.builder()
             .withCreator(
                 Creator.builder()
                     .withCreatorName(
-                        CreatorName.builder().withValue(citation.getCreatedBy()).build())
+                        CreatorName.builder().withValue(derivedDataset.getCreatedBy()).build())
                     .build())
             .build());
   }
 
-  private static void convertTitles(DataCiteMetadata.Builder<Void> builder, Citation citation) {
+  private static void convertTitles(DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
     builder.withTitles(
-        Titles.builder().withTitle(Title.builder().withValue(citation.getTitle()).build()).build());
+        Titles.builder().withTitle(Title.builder().withValue(derivedDataset.getTitle()).build()).build());
   }
 
   private static void convertPublisher(DataCiteMetadata.Builder<Void> builder) {

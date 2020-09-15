@@ -18,12 +18,11 @@ package org.gbif.registry.ws.resources;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.registry.domain.ws.Citation;
-import org.gbif.registry.domain.ws.CitationCreationRequest;
-import org.gbif.registry.domain.ws.CitationDatasetUsage;
-import org.gbif.registry.service.RegistryCitationService;
+import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
 import org.gbif.ws.WebApplicationException;
@@ -59,21 +58,21 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @RestController
-@RequestMapping(value = "citation", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "derived_dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
-public class CitationResource {
+public class DerivedDatasetResource {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CitationResource.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DerivedDatasetResource.class);
 
-  private final RegistryCitationService citationService;
+  private final RegistryDerivedDatasetService derivedDatasetService;
   private final RegistryDatasetService datasetService;
   private final RegistryOccurrenceDownloadService occurrenceDownloadService;
 
-  public CitationResource(
-      RegistryCitationService citationService,
+  public DerivedDatasetResource(
+      RegistryDerivedDatasetService derivedDatasetService,
       RegistryDatasetService datasetService,
       RegistryOccurrenceDownloadService occurrenceDownloadService) {
-    this.citationService = citationService;
+    this.derivedDatasetService = derivedDatasetService;
     this.datasetService = datasetService;
     this.occurrenceDownloadService = occurrenceDownloadService;
   }
@@ -81,15 +80,15 @@ public class CitationResource {
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public Citation createCitation(@RequestBody @Valid CitationCreationRequest request) {
-    return createCitation(request, request.getRelatedDatasets());
+  public DerivedDataset create(@RequestBody @Valid DerivedDatasetCreationRequest request) {
+    return createDerivedDataset(request, request.getRelatedDatasets());
   }
 
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public Citation createCitation(
-      @RequestPart("citation") @Valid CitationCreationRequest request,
+  public DerivedDataset create(
+      @RequestPart("derivedDataset") @Valid DerivedDatasetCreationRequest request,
       @RequestPart("relatedDatasets") MultipartFile file) {
     Map<String, Long> records = new HashMap<>();
     try (Scanner scanner = new Scanner(file.getInputStream())) {
@@ -105,11 +104,11 @@ public class CitationResource {
       throw new WebApplicationException("Invalid number " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    return createCitation(request, records);
+    return createDerivedDataset(request, records);
   }
 
-  private Citation createCitation(
-      CitationCreationRequest request, Map<String, Long> relatedDatasets) {
+  private DerivedDataset createDerivedDataset(
+    DerivedDatasetCreationRequest request, Map<String, Long> relatedDatasets) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
@@ -120,48 +119,48 @@ public class CitationResource {
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
 
-    List<CitationDatasetUsage> citationDatasetUsages;
+    List<DerivedDatasetUsage> derivedDatasetUsages;
     try {
-      citationDatasetUsages = datasetService.ensureCitationDatasetUsagesValid(relatedDatasets);
+      derivedDatasetUsages = datasetService.ensureCitationDatasetUsagesValid(relatedDatasets);
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
       throw new WebApplicationException(
           "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
     }
 
-    return citationService.create(toCitation(request), citationDatasetUsages);
+    return derivedDatasetService.create(toDerivedDataset(request), derivedDatasetUsages);
   }
 
-  public Citation getCitation(DOI doi) {
-    return citationService.get(doi);
+  public DerivedDataset getDerivedDataset(DOI doi) {
+    return derivedDatasetService.get(doi);
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}")
-  public Citation getCitation(
+  public DerivedDataset getDerivedDataset(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
-    return getCitation(new DOI(doiPrefix, doiSuffix));
+    return getDerivedDataset(new DOI(doiPrefix, doiSuffix));
   }
 
   @GetMapping("dataset/{key}")
-  public PagingResponse<Citation> getDatasetCitations(
+  public PagingResponse<DerivedDataset> getDerivedDatasets(
       @PathVariable("key") UUID datasetKey, Pageable page) {
-    return getDatasetCitations(datasetKey.toString(), page);
+    return getDerivedDatasets(datasetKey.toString(), page);
   }
 
   @GetMapping("dataset/{doiPrefix}/{doiSuffix}")
-  public PagingResponse<Citation> getDatasetCitations(
+  public PagingResponse<DerivedDataset> getDerivedDatasets(
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix,
       Pageable page) {
-    return getDatasetCitations(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
+    return getDerivedDatasets(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
   }
 
-  public PagingResponse<Citation> getDatasetCitations(String datasetKeyOrDoi, Pageable page) {
-    return citationService.getDatasetCitations(datasetKeyOrDoi, page);
+  public PagingResponse<DerivedDataset> getDerivedDatasets(String datasetKeyOrDoi, Pageable page) {
+    return derivedDatasetService.getDatasetCitations(datasetKeyOrDoi, page);
   }
 
   public String getCitationText(DOI doi) {
-    return citationService.getCitationText(doi);
+    return derivedDatasetService.getCitationText(doi);
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}/citation")
@@ -170,27 +169,27 @@ public class CitationResource {
     return getCitationText(new DOI(doiPrefix, doiSuffix));
   }
 
-  public PagingResponse<Dataset> getCitationDatasets(DOI citationDoi, Pageable page) {
-    return citationService.getCitationDatasets(citationDoi, page);
+  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI citationDoi, Pageable page) {
+    return derivedDatasetService.getRelatedDatasets(citationDoi, page);
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}/datasets")
-  public PagingResponse<Dataset> getCitationDatasets(
+  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix,
       Pageable page) {
-    return getCitationDatasets(new DOI(doiPrefix, doiSuffix), page);
+    return getRelatedDatasets(new DOI(doiPrefix, doiSuffix), page);
   }
 
-  private Citation toCitation(CitationCreationRequest request) {
-    Citation citation = new Citation();
-    citation.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
-    citation.setTarget(request.getTarget());
-    citation.setTitle(request.getTitle());
-    citation.setCreatedBy(request.getCreator());
-    citation.setModifiedBy(request.getCreator());
-    citation.setRegistrationDate(request.getRegistrationDate());
+  private DerivedDataset toDerivedDataset(DerivedDatasetCreationRequest request) {
+    DerivedDataset derivedDataset = new DerivedDataset();
+    derivedDataset.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
+    derivedDataset.setTarget(request.getTarget());
+    derivedDataset.setTitle(request.getTitle());
+    derivedDataset.setCreatedBy(request.getCreator());
+    derivedDataset.setModifiedBy(request.getCreator());
+    derivedDataset.setRegistrationDate(request.getRegistrationDate());
 
-    return citation;
+    return derivedDataset;
   }
 }

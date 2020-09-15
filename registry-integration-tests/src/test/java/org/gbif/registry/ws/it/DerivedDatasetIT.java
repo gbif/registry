@@ -20,11 +20,12 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.registry.domain.ws.Citation;
-import org.gbif.registry.domain.ws.CitationCreationRequest;
+import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
-import org.gbif.registry.ws.resources.CitationResource;
+import org.gbif.registry.ws.resources.DerivedDatasetResource;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -45,23 +46,23 @@ import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredic
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class CitationIT extends BaseItTest {
+public class DerivedDatasetIT extends BaseItTest {
 
   private static final PagingRequest REGULAR_PAGE = new PagingRequest();
 
-  private final CitationResource citationResource;
+  private final DerivedDatasetResource derivedDatasetResource;
   private final TestDataFactory testDataFactory;
   private final OccurrenceDownloadResource occurrenceDownloadService;
 
   @Autowired
-  public CitationIT(
-      CitationResource citationResource,
+  public DerivedDatasetIT(
+      DerivedDatasetResource derivedDatasetResource,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       TestDataFactory testDataFactory,
       OccurrenceDownloadResource occurrenceDownloadService) {
     super(simplePrincipalProvider, esServer);
-    this.citationResource = citationResource;
+    this.derivedDatasetResource = derivedDatasetResource;
     this.testDataFactory = testDataFactory;
     this.occurrenceDownloadService = occurrenceDownloadService;
   }
@@ -79,22 +80,22 @@ public class CitationIT extends BaseItTest {
     Dataset secondDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset2"));
 
     // prepare request
-    CitationCreationRequest requestData = new CitationCreationRequest();
-    requestData.setTitle("Let's test citation");
+    DerivedDatasetCreationRequest requestData = new DerivedDatasetCreationRequest();
+    requestData.setTitle("Let's test derivedDataset");
     requestData.setOriginalDownloadDOI(occurrenceDownload.getDoi());
     requestData.setTarget(URI.create("https://www.gbif.org"));
     Map<String, Long> relatedDatasets = new HashMap<>();
     relatedDatasets.put(firstDataset.getKey().toString(), 1L);
     relatedDatasets.put(secondDataset.getDoi().getDoiName(), 2L);
     requestData.setRelatedDatasets(relatedDatasets);
-    Citation citation = citationResource.createCitation(requestData);
+    DerivedDataset derivedDataset = derivedDatasetResource.create(requestData);
 
-    // create citation
-    Citation actual =
-        citationResource.getCitation(citation.getDoi().getPrefix(), citation.getDoi().getSuffix());
+    // create derivedDataset
+    DerivedDataset actual =
+        derivedDatasetResource.getDerivedDataset(derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix());
 
     assertNotNull(actual);
-    assertEquals(citation.getDoi(), actual.getDoi());
+    assertEquals(derivedDataset.getDoi(), actual.getDoi());
     assertEquals(requestData.getOriginalDownloadDOI(), actual.getOriginalDownloadDOI());
     assertEquals(requestData.getTarget(), actual.getTarget());
     assertEquals(requestData.getTitle(), actual.getTitle());
@@ -118,13 +119,13 @@ public class CitationIT extends BaseItTest {
     Dataset thirdDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
     // prepare requests
-    CitationCreationRequest requestData1 =
-        newCitationRequest(occurrenceDownload.getDoi(), new HashMap<>());
+    DerivedDatasetCreationRequest requestData1 =
+        newDerivedDatasetCreationRequest(occurrenceDownload.getDoi(), new HashMap<>());
     String str = secondDataset.getKey() + ",1\n" + firstDataset.getDoi() + ",2";
     MultipartFile relatedDatasetsFile = new MockMultipartFile("file.csv", str.getBytes());
 
-    CitationCreationRequest requestData2 =
-        newCitationRequest(
+    DerivedDatasetCreationRequest requestData2 =
+        newDerivedDatasetCreationRequest(
             occurrenceDownload.getDoi(),
             Stream.of(
                     new String[][] {
@@ -133,41 +134,41 @@ public class CitationIT extends BaseItTest {
                     })
                 .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
-    CitationCreationRequest requestData3 =
-        newCitationRequest(
+    DerivedDatasetCreationRequest requestData3 =
+        newDerivedDatasetCreationRequest(
             occurrenceDownload.getDoi(),
             Stream.of(new String[][] {{thirdDataset.getDoi().getDoiName(), "1"}})
                 .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
     // create citations
-    Citation citation1 = citationResource.createCitation(requestData1, relatedDatasetsFile);
-    Citation citation2 = citationResource.createCitation(requestData2);
-    Citation citation3 = citationResource.createCitation(requestData3);
+    DerivedDataset derivedDataset1 = derivedDatasetResource.create(requestData1, relatedDatasetsFile);
+    DerivedDataset derivedDataset2 = derivedDatasetResource.create(requestData2);
+    DerivedDataset derivedDataset3 = derivedDatasetResource.create(requestData3);
 
-    PagingResponse<Dataset> citationDatasetsPage1 =
-        citationResource.getCitationDatasets(citation1.getDoi(), REGULAR_PAGE);
+    PagingResponse<DerivedDatasetUsage> citationDatasetsPage1 =
+        derivedDatasetResource.getRelatedDatasets(derivedDataset1.getDoi(), REGULAR_PAGE);
     assertNotNull(citationDatasetsPage1);
     assertEquals(2, citationDatasetsPage1.getCount());
 
-    PagingResponse<Dataset> citationDatasetsPage2 =
-        citationResource.getCitationDatasets(citation3.getDoi(), REGULAR_PAGE);
+    PagingResponse<DerivedDatasetUsage> citationDatasetsPage2 =
+        derivedDatasetResource.getRelatedDatasets(derivedDataset3.getDoi(), REGULAR_PAGE);
     assertNotNull(citationDatasetsPage2);
     assertEquals(1, citationDatasetsPage2.getCount());
 
-    PagingResponse<Citation> datasetCitationPage1 =
-        citationResource.getDatasetCitations(firstDataset.getKey(), REGULAR_PAGE);
+    PagingResponse<DerivedDataset> datasetCitationPage1 =
+        derivedDatasetResource.getDerivedDatasets(firstDataset.getKey(), REGULAR_PAGE);
     assertNotNull(datasetCitationPage1);
     assertEquals(2, datasetCitationPage1.getCount());
 
-    PagingResponse<Citation> datasetCitationPage2 =
-        citationResource.getDatasetCitations(thirdDataset.getKey(), REGULAR_PAGE);
+    PagingResponse<DerivedDataset> datasetCitationPage2 =
+        derivedDatasetResource.getDerivedDatasets(thirdDataset.getKey(), REGULAR_PAGE);
     assertNotNull(datasetCitationPage2);
     assertEquals(1, datasetCitationPage2.getCount());
   }
 
-  private CitationCreationRequest newCitationRequest(
+  private DerivedDatasetCreationRequest newDerivedDatasetCreationRequest(
       DOI originalDownloadDOI, Map<String, Long> relatedDatasets) {
-    CitationCreationRequest creationRequest = new CitationCreationRequest();
+    DerivedDatasetCreationRequest creationRequest = new DerivedDatasetCreationRequest();
     creationRequest.setTitle("Let's test citation");
     creationRequest.setOriginalDownloadDOI(originalDownloadDOI);
     creationRequest.setTarget(URI.create("https://www.gbif.org"));

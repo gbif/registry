@@ -82,5 +82,5 @@
   <include file="liquibase/074-organization-endorsement-status.xml" />
   <include file="liquibase/075-user-language.xml" />
   <include file="liquibase/076-derived-dataset-doi-type.xml" />
-  <include file="liquibase/077-citation-tables.xml" />
+  <include file="liquibase/077-derived-dataset-tables.xml" />
 </databaseChangeLog>

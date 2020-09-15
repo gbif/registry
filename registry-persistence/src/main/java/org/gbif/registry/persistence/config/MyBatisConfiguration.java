@@ -56,6 +56,8 @@ import org.gbif.mybatis.type.UriArrayTypeHandler;
 import org.gbif.mybatis.type.UriTypeHandler;
 import org.gbif.mybatis.type.UuidTypeHandler;
 import org.gbif.registry.domain.doi.DoiType;
+import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
@@ -136,6 +138,8 @@ public class MyBatisConfiguration {
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
+      configuration.getTypeAliasRegistry().registerAlias("DerivedDataset", DerivedDataset.class);
+      configuration.getTypeAliasRegistry().registerAlias("DerivedDatasetUsage", DerivedDatasetUsage.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("LanguageTypeHandler", LanguageTypeHandler.class);

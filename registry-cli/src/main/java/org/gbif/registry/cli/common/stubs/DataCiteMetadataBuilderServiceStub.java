@@ -22,7 +22,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.registry.doi.DataCiteMetadataBuilderService;
-import org.gbif.registry.domain.ws.Citation;
+import org.gbif.registry.domain.ws.DerivedDataset;
 
 import javax.annotation.Nullable;
 
@@ -38,7 +38,7 @@ public class DataCiteMetadataBuilderServiceStub implements DataCiteMetadataBuild
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(Citation citation) {
+  public DataCiteMetadata buildMetadata(DerivedDataset derivedDataset) {
     return null;
   }
 
