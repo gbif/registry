@@ -92,7 +92,8 @@ public class DerivedDatasetIT extends BaseItTest {
 
     // create derivedDataset
     DerivedDataset actual =
-        derivedDatasetResource.getDerivedDataset(derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix());
+        derivedDatasetResource.getDerivedDataset(
+            derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix());
 
     assertNotNull(actual);
     assertEquals(derivedDataset.getDoi(), actual.getDoi());
@@ -141,7 +142,8 @@ public class DerivedDatasetIT extends BaseItTest {
                 .collect(toMap(data -> data[0], data -> Long.valueOf(data[1]))));
 
     // create citations
-    DerivedDataset derivedDataset1 = derivedDatasetResource.create(requestData1, relatedDatasetsFile);
+    DerivedDataset derivedDataset1 =
+        derivedDatasetResource.create(requestData1, relatedDatasetsFile);
     DerivedDataset derivedDataset2 = derivedDatasetResource.create(requestData2);
     DerivedDataset derivedDataset3 = derivedDatasetResource.create(requestData3);
 

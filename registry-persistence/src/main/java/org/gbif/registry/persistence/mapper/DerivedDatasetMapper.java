@@ -41,15 +41,15 @@ public interface DerivedDatasetMapper {
 
   void addCitationDatasets(
       @Param("derivedDatasetDoi") DOI derivedDatasetDoi,
-      @Param("derivedDatasetUsages") List<DerivedDatasetUsage> derivedDatasetUsages
-  );
+      @Param("derivedDatasetUsages") List<DerivedDatasetUsage> derivedDatasetUsages);
 
   List<DerivedDataset> listByDataset(
       @Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);
 
   long countByDataset(@Param("datasetKey") UUID datasetKey);
 
-  List<DerivedDatasetUsage> listDerivedDatasetUsages(@Param("derivedDatasetDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
+  List<DerivedDatasetUsage> listDerivedDatasetUsages(
+      @Param("derivedDatasetDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
 
   long countDerivedDatasetUsages(@Param("derivedDatasetDoi") DOI derivedDatasetDoi);
 

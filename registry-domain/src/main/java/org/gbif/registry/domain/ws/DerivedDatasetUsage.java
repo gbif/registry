@@ -30,7 +30,8 @@ public class DerivedDatasetUsage {
 
   public DerivedDatasetUsage() {}
 
-  public DerivedDatasetUsage(UUID datasetKey, DOI datasetDoi, DOI derivedDatasetDoi, Long numberRecords) {
+  public DerivedDatasetUsage(
+      UUID datasetKey, DOI datasetDoi, DOI derivedDatasetDoi, Long numberRecords) {
     this.datasetKey = datasetKey;
     this.datasetDoi = datasetDoi;
     this.derivedDatasetDoi = derivedDatasetDoi;
@@ -75,9 +76,9 @@ public class DerivedDatasetUsage {
     if (o == null || getClass() != o.getClass()) return false;
     DerivedDatasetUsage that = (DerivedDatasetUsage) o;
     return Objects.equals(datasetKey, that.datasetKey)
-           && Objects.equals(datasetDoi, that.datasetDoi)
-           && Objects.equals(derivedDatasetDoi, that.derivedDatasetDoi)
-           && Objects.equals(numberRecords, that.numberRecords);
+        && Objects.equals(datasetDoi, that.datasetDoi)
+        && Objects.equals(derivedDatasetDoi, that.derivedDatasetDoi)
+        && Objects.equals(numberRecords, that.numberRecords);
   }
 
   @Override
