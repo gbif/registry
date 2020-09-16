@@ -28,7 +28,8 @@ public interface RegistryDerivedDatasetService {
 
   String getCitationText(DOI derivedDatasetDoi);
 
-  DerivedDataset create(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
+  DerivedDataset create(
+      DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
 
   void update(DOI doi, URI target);
 

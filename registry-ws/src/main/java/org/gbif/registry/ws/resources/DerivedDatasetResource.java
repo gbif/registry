@@ -23,8 +23,8 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
-import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
 import org.gbif.ws.WebApplicationException;
 
@@ -110,7 +110,7 @@ public class DerivedDatasetResource {
   }
 
   private DerivedDataset createDerivedDataset(
-    DerivedDatasetCreationRequest request, Map<String, Long> relatedDatasets) {
+      DerivedDatasetCreationRequest request, Map<String, Long> relatedDatasets) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
