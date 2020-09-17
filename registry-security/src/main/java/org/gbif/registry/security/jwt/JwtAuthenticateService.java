@@ -16,10 +16,11 @@
 package org.gbif.registry.security.jwt;
 
 import org.gbif.api.model.common.GbifUser;
-import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.api.service.common.IdentityAccessService;
 
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -32,10 +33,11 @@ public class JwtAuthenticateService {
 
   private final String issuer;
   private final String signingKey;
-  private final IdentityService identityService;
+  private final IdentityAccessService identityService;
 
   public JwtAuthenticateService(
-      JwtConfiguration jwtConfiguration, IdentityService identityService) {
+      JwtConfiguration jwtConfiguration,
+      @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     this.issuer = jwtConfiguration.getIssuer();
     this.signingKey = jwtConfiguration.getSigningKey();
     this.identityService = identityService;

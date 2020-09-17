@@ -103,7 +103,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
       DoiIssuingService doiIssuingService,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
-      @Qualifier("ligthweightIdentityAccessService") IdentityAccessService identityService) {
+      @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiIssuingService = doiIssuingService;
