@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.DerivedDatasetMapper">
+
+  <sql id="DERIVED_DATASET_FIELDS">
+    doi,original_download_doi,citation,title,target,registration_date,created,created_by,modified,modified_by
+  </sql>
+
+  <sql id="DERIVED_DATASET_FIELD_TYPES">
+    #{derivedDataset.doi,jdbcType=OTHER},
+    #{derivedDataset.originalDownloadDOI,jdbcType=OTHER},
+    #{derivedDataset.citation,jdbcType=VARCHAR},
+    #{derivedDataset.title,jdbcType=VARCHAR},
+    #{derivedDataset.target,jdbcType=VARCHAR},
+    #{derivedDataset.registrationDate,jdbcType=TIMESTAMP},
+    now(), <!-- created -->
+    #{derivedDataset.createdBy},
+    now(), <!-- modified -->
+    #{derivedDataset.modifiedBy}
+  </sql>
+
+  <resultMap id="DERIVED_DATASET_MAP" type="DerivedDataset">
+    <result property="doi" column="doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="originalDownloadDOI" column="original_download_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="citation" column="citation" javaType="java.lang.String"/>
+    <result property="title" column="title" javaType="java.lang.String"/>
+    <result property="target" column="target" javaType="java.net.URI" typeHandler="org.gbif.mybatis.type.UriTypeHandler"/>
+    <result property="registrationDate" column="registration_date" javaType="java.util.Date"/>
+    <result property="created" column="created" javaType="java.util.Date"/>
+    <result property="createdBy" column="created_by" javaType="java.lang.String"/>
+    <result property="modified" column="modified" javaType="java.util.Date"/>
+    <result property="modifiedBy" column="modified_by" javaType="java.lang.String"/>
+  </resultMap>
+
+
+  <sql id="DERIVED_DATASET_USAGE_FIELDS">
+    dataset_key, dataset_doi, derived_dataset_doi, record_count
+  </sql>
+
+  <resultMap id="DERIVED_DATASET_USAGE_MAP" type="deriveddatasetusage">
+    <result property="datasetKey" column="dataset_key"/>
+    <result property="datasetDoi" column="dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="derivedDatasetDoi" column="derived_dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="numberRecords" column="record_count" javaType="Long"/>
+  </resultMap>
+
+  <insert id="create" parameterType="DerivedDataset">
+    INSERT INTO derived_dataset(<include refid="DERIVED_DATASET_FIELDS"/>)
+    VALUES(<include refid="DERIVED_DATASET_FIELD_TYPES"/>)
+  </insert>
+
+  <update id="updateTarget">
+    UPDATE citation
+    SET target   = #{target,jdbcType=OTHER},
+    modified = now()
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </update>
+
+  <select id="get" resultType="DerivedDataset" resultMap="DERIVED_DATASET_MAP">
+    SELECT <include refid="DERIVED_DATASET_FIELDS"/>
+    FROM derived_dataset
+    WHERE doi = #{doi,jdbcType=OTHER}
+  </select>
+
+  <insert id="addCitationDatasets">
+    INSERT INTO dataset_derived_dataset (
+    WITH
+    dataset_usages(dataset_key, record_count) AS
+    ((VALUES
+    <foreach item="item" collection="derivedDatasetUsages" open="(" separator="),(" close=")">
+      cast(#{item.datasetKey} as uuid),#{item.numberRecords}
+    </foreach>
+    ))
+    SELECT dataset.key, dataset.doi, record_count, #{derivedDatasetDoi} as derived_dataset_doi
+    FROM dataset
+    JOIN dataset_usages ON dataset.key = dataset_usages.dataset_key);
+  </insert>
+
+  <select id="listByRegistrationDate" resultMap="DERIVED_DATASET_MAP" parameterType="java.util.Date">
+    SELECT <include refid="DERIVED_DATASET_FIELDS"/>
+    FROM derived_dataset d
+    WHERE d.registration_date::date = #{registrationDate,jdbcType=TIMESTAMP}::date
+  </select>
+
+  <select id="listByDataset" resultMap="DERIVED_DATASET_USAGE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DERIVED_DATASET_FIELDS"/>
+    FROM dataset_derived_dataset dd
+    JOIN derived_dataset d ON d.doi = dd.derived_dataset_doi
+    WHERE dd.dataset_key = #{datasetKey,jdbcType=OTHER}
+    ORDER BY d.created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByDataset" resultType="Long">
+    SELECT count(*)
+    FROM dataset_derived_dataset ddd
+    WHERE ddd.dataset_key = #{datasetKey,jdbcType=OTHER}
+  </select>
+
+  <select id="listDerivedDatasetUsages" resultMap="DERIVED_DATASET_USAGE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DERIVED_DATASET_USAGE_FIELDS"/>
+    FROM dataset_derived_dataset ddd
+    JOIN derived_dataset dd ON dd.doi = ddd.derived_dataset_doi
+    WHERE ddd.derived_dataset_doi = #{derivedDatasetDoi,jdbcType=OTHER}
+    ORDER BY dd.created DESC, ddd.dataset_key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countDerivedDatasetUsages" resultType="Long">
+    SELECT count(*)
+    FROM dataset_derived_dataset ddd
+    WHERE ddd.derived_dataset_doi = #{derivedDatasetDoi,jdbcType=OTHER}
+  </select>
+
+</mapper>

@@ -6,7 +6,7 @@
   <changeSet id="77" author="mpodolskiy">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-            CREATE TABLE citation (
+            CREATE TABLE derived_dataset (
                 doi text NOT NULL PRIMARY KEY,
                 original_download_doi text,
                 citation text NOT NULL CHECK (assert_min_length(created_by, 3)),
@@ -19,18 +19,18 @@
                 modified_by text NOT NUll CHECK (assert_min_length(created_by, 3))
             );
 
-            CREATE TABLE dataset_citation (
+            CREATE TABLE dataset_derived_dataset (
                 dataset_key uuid NOT NULL REFERENCES dataset(key) ON DELETE CASCADE,
                 dataset_doi text,
                 record_count integer,
-                citation_doi text NOT NULL REFERENCES citation(doi) ON DELETE CASCADE,
-                PRIMARY KEY (dataset_key, citation_doi)
+                derived_dataset_doi text NOT NULL REFERENCES derived_dataset(doi) ON DELETE CASCADE,
+                PRIMARY KEY (dataset_key, derived_dataset_doi)
             );
 
-            CREATE INDEX ON citation (created);
-            CREATE INDEX ON citation (registration_date);
-            CREATE INDEX ON dataset_citation (dataset_key);
-            CREATE INDEX ON dataset_citation (citation_doi);
+            CREATE INDEX ON derived_dataset (created);
+            CREATE INDEX ON derived_dataset (registration_date);
+            CREATE INDEX ON dataset_derived_dataset (dataset_key);
+            CREATE INDEX ON dataset_derived_dataset (derived_dataset_doi);
        ]]>
     </sql>
   </changeSet>

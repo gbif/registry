@@ -21,17 +21,20 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.UUID;
 
-public class CitationDatasetUsage {
+public class DerivedDatasetUsage {
 
   private UUID datasetKey;
   private DOI datasetDoi;
+  private DOI derivedDatasetDoi;
   private Long numberRecords;
 
-  public CitationDatasetUsage() {}
+  public DerivedDatasetUsage() {}
 
-  public CitationDatasetUsage(UUID datasetKey, DOI datasetDoi, Long numberRecords) {
+  public DerivedDatasetUsage(
+      UUID datasetKey, DOI datasetDoi, DOI derivedDatasetDoi, Long numberRecords) {
     this.datasetKey = datasetKey;
     this.datasetDoi = datasetDoi;
+    this.derivedDatasetDoi = derivedDatasetDoi;
     this.numberRecords = numberRecords;
   }
 
@@ -51,6 +54,14 @@ public class CitationDatasetUsage {
     this.datasetDoi = datasetDoi;
   }
 
+  public DOI getDerivedDatasetDoi() {
+    return derivedDatasetDoi;
+  }
+
+  public void setDerivedDatasetDoi(DOI derivedDatasetDoi) {
+    this.derivedDatasetDoi = derivedDatasetDoi;
+  }
+
   public Long getNumberRecords() {
     return numberRecords;
   }
@@ -63,22 +74,24 @@ public class CitationDatasetUsage {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CitationDatasetUsage that = (CitationDatasetUsage) o;
+    DerivedDatasetUsage that = (DerivedDatasetUsage) o;
     return Objects.equals(datasetKey, that.datasetKey)
         && Objects.equals(datasetDoi, that.datasetDoi)
+        && Objects.equals(derivedDatasetDoi, that.derivedDatasetDoi)
         && Objects.equals(numberRecords, that.numberRecords);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(datasetKey, datasetDoi, numberRecords);
+    return Objects.hash(datasetKey, datasetDoi, derivedDatasetDoi, numberRecords);
   }
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", CitationDatasetUsage.class.getSimpleName() + "[", "]")
+    return new StringJoiner(", ", DerivedDatasetUsage.class.getSimpleName() + "[", "]")
         .add("datasetKey=" + datasetKey)
         .add("datasetDoi=" + datasetDoi)
+        .add("derivedDatasetDoi=" + derivedDatasetDoi)
         .add("numberRecords=" + numberRecords)
         .toString();
   }

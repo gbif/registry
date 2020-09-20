@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -36,7 +35,6 @@ import static org.gbif.registry.identity.util.IdentityUtils.NORMALIZE_USERNAME_F
  * This service only provides access to user by loging/email. For authentication and other
  * functionality use {@link IdentityServiceImpl}.
  */
-@Qualifier("ligthweightIdentityAccessService")
 @Service
 public class BaseIdentityAccessService implements IdentityAccessService {
 
