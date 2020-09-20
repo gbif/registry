@@ -19,7 +19,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.vocabulary.MetadataType;
-import org.gbif.registry.domain.ws.CitationDatasetUsage;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.List;
 import java.util.Map;
@@ -40,5 +40,5 @@ public interface RegistryDatasetService {
 
   byte[] getMetadataDocument(int metadataKey);
 
-  List<CitationDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data);
+  List<DerivedDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data);
 }

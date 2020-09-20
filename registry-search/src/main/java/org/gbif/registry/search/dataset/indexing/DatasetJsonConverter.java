@@ -247,7 +247,7 @@ public class DatasetJsonConverter {
 
     double occurrencePercentage =
         Optional.ofNullable(datasetOccurrenceCount).map(Long::doubleValue).orElse(0D)
-            / getOccurrenceCount();
+            / Math.max(getOccurrenceCount(), 1);
     double nameUsagesPercentage = 0D;
 
     // Contribution of occurrence records

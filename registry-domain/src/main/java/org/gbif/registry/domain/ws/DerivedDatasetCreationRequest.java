@@ -30,7 +30,7 @@ import java.util.StringJoiner;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 
-public class CitationCreationRequest implements Serializable {
+public class DerivedDatasetCreationRequest implements Serializable {
 
   private DOI originalDownloadDOI;
   private String title;
@@ -95,7 +95,7 @@ public class CitationCreationRequest implements Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CitationCreationRequest that = (CitationCreationRequest) o;
+    DerivedDatasetCreationRequest that = (DerivedDatasetCreationRequest) o;
     return Objects.equals(originalDownloadDOI, that.originalDownloadDOI)
         && Objects.equals(title, that.title)
         && Objects.equals(creator, that.creator)
@@ -112,7 +112,7 @@ public class CitationCreationRequest implements Serializable {
 
   @Override
   public String toString() {
-    return new StringJoiner(", ", CitationCreationRequest.class.getSimpleName() + "[", "]")
+    return new StringJoiner(", ", DerivedDatasetCreationRequest.class.getSimpleName() + "[", "]")
         .add("originalDownloadDOI=" + originalDownloadDOI)
         .add("title='" + title + "'")
         .add("creator='" + creator + "'")

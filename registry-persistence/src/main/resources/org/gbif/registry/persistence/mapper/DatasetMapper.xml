@@ -31,7 +31,9 @@
   <sql id="DATASET_FIELDS">
     d.key,d.parent_dataset_key,d.duplicate_of_dataset_key,d.installation_key,d.publishing_organization_key,
     d.external,d.type,d.sub_type,d.title,d.alias,d.abbreviation,d.description,d.language,
-    d.homepage,d.logo_url,d.citation,d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
+    d.homepage,d.logo_url,
+    COALESCE(d.citation, o.title || ': ' || d.title) as citation,
+    d.citation_identifier,d.rights,d.locked_for_auto_update,d.created,d.created_by,
     d.modified,d.modified_by,d.deleted,d.doi,d.license,d.maintenance_update_frequency,d.version
   </sql>
 
