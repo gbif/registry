@@ -39,7 +39,7 @@ public interface DerivedDatasetMapper {
 
   DerivedDataset get(@Param("doi") DOI doi);
 
-  void addCitationDatasets(
+  void addUsagesToDerivedDataset(
       @Param("derivedDatasetDoi") DOI derivedDatasetDoi,
       @Param("derivedDatasetUsages") List<DerivedDatasetUsage> derivedDatasetUsages);
 
