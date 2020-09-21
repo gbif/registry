@@ -18,7 +18,7 @@ package org.gbif.registry.identity.service;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
-import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.identity.IdentityEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
@@ -39,7 +39,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   private static final Logger LOG = LoggerFactory.getLogger(UserSuretyDelegateImpl.class);
 
   private final ChallengeCodeManager<Integer> challengeCodeManager;
-  private EmailSender emailSender;
+  private final EmailSender emailSender;
   private final IdentityEmailManager identityEmailManager;
 
   public UserSuretyDelegateImpl(

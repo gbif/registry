@@ -15,11 +15,9 @@
  */
 package org.gbif.registry.mail;
 
-import org.gbif.registry.domain.mail.BaseEmailModel;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import freemarker.template.TemplateException;
 
@@ -60,7 +58,7 @@ public interface EmailTemplateProcessor {
       String emailAddress,
       Object templateDataModel,
       Locale locale,
-      List<String> ccAddresses,
+      Set<String> ccAddresses,
       String... subjectParams)
       throws IOException, TemplateException;
 }

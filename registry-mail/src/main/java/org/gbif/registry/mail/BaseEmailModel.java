@@ -13,37 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.domain.mail;
-
-import java.util.Collections;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
+package org.gbif.registry.mail;
 
 import com.google.common.base.Objects;
+
+import java.util.Collections;
+import java.util.Set;
 
 /** Very basic email model that holds the main components of an email to send. */
 public class BaseEmailModel {
 
-  @NotNull private final String emailAddress;
+  private final Set<String> emailAddresses;
   private final String subject;
   private final String body;
+  private final Set<String> ccAddresses;
 
-  private final List<String> ccAddress;
-
-  public BaseEmailModel(String emailAddress, String subject, String body) {
-    this(emailAddress, subject, body, Collections.emptyList());
+  public BaseEmailModel(Set<String> emailAddresses, String subject, String body) {
+    this(emailAddresses, subject, body, Collections.emptySet());
   }
 
-  public BaseEmailModel(String emailAddress, String subject, String body, List<String> ccAddress) {
-    this.emailAddress = emailAddress;
+  public BaseEmailModel(
+      Set<String> emailAddresses, String subject, String body, Set<String> ccAddresses) {
+    this.emailAddresses = emailAddresses != null ? emailAddresses : Collections.emptySet();
     this.subject = subject;
     this.body = body;
-    this.ccAddress = ccAddress;
+    this.ccAddresses = ccAddresses != null ? ccAddresses : Collections.emptySet();
   }
 
-  public String getEmailAddress() {
-    return emailAddress;
+  public Set<String> getEmailAddresses() {
+    return emailAddresses;
   }
 
   public String getSubject() {
@@ -54,17 +52,17 @@ public class BaseEmailModel {
     return body;
   }
 
-  public List<String> getCcAddress() {
-    return ccAddress;
+  public Set<String> getCcAddresses() {
+    return ccAddresses;
   }
 
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
-        .add("emailAddress", emailAddress)
+        .add("emailAddresses", emailAddresses)
         .add("subject", subject)
         .add("body", body)
-        .add("ccAddress", ccAddress)
+        .add("ccAddresses", ccAddresses)
         .toString();
   }
 }

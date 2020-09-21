@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.mail.identity;
 
-import org.gbif.registry.mail.EmailDataProvider;
 import org.gbif.registry.mail.FreemarkerEmailTemplateProcessor;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,17 +23,4 @@ import org.springframework.stereotype.Service;
 @Service
 @Qualifier("identityEmailTemplateProcessor")
 public class IdentityEmailTemplateProcessor extends FreemarkerEmailTemplateProcessor {
-
-  private final EmailDataProvider emailDataProvider;
-
-  /** @param emailDataProvider provides subject and template (depends on locale). */
-  public IdentityEmailTemplateProcessor(
-      @Qualifier("identityEmailDataProvider") EmailDataProvider emailDataProvider) {
-    this.emailDataProvider = emailDataProvider;
-  }
-
-  @Override
-  public EmailDataProvider getEmailDataProvider() {
-    return emailDataProvider;
-  }
 }

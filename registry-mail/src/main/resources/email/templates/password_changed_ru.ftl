@@ -1,5 +1,5 @@
-<#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseEmailModel" -->
-<#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseEmailModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.mail.BaseEmailModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.mail.BaseEmailModel" -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" style="margin: 0;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">
 <head style="margin: 0;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">
@@ -74,7 +74,7 @@
                 <tr style="margin: 0;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">
                     <td class="masthead" style="margin: 0;padding: 10px 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;background: #4c9e49;color: white;">
 
-                        <img src="cid:image" style="margin: 0 auto;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;max-width: 100%;display: block;">
+                        <img src="cid:logo.png" style="margin: 0 auto;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;max-width: 100%;display: block;">
 
                     </td>
                 </tr>
