@@ -15,36 +15,23 @@
  */
 package org.gbif.registry.mail;
 
-import org.gbif.registry.domain.mail.BaseEmailModel;
+import freemarker.template.Template;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
 /**
  * Email template processor allows to generate a {@link BaseEmailModel} from a Freemarker template.
  */
 public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateProcessor {
-
-  // shared config among all instances
-  private static final Configuration FREEMARKER_CONFIG =
-      new Configuration(Configuration.VERSION_2_3_25);
-
-  static {
-    FREEMARKER_CONFIG.setDefaultEncoding(StandardCharsets.UTF_8.name());
-    FREEMARKER_CONFIG.setLocale(Locale.US);
-    FREEMARKER_CONFIG.setNumberFormat("0.####");
-    FREEMARKER_CONFIG.setDateFormat("yyyy-mm-dd");
-    FREEMARKER_CONFIG.setClassForTemplateLoading(
-        FreemarkerEmailTemplateProcessor.class, "/email/templates");
-  }
 
   /**
    * Build a {@link BaseEmailModel} from
@@ -65,7 +52,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
       String... subjectParams)
       throws IOException, TemplateException {
     return buildEmail(
-        emailType, emailAddress, templateDataModel, locale, Collections.emptyList(), subjectParams);
+        emailType, emailAddress, templateDataModel, locale, Collections.emptySet(), subjectParams);
   }
 
   /**
@@ -85,24 +72,33 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
       String emailAddress,
       Object templateDataModel,
       Locale locale,
-      List<String> ccAddresses,
+      Set<String> ccAddresses,
       String... subjectParams)
       throws IOException, TemplateException {
     Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
     Objects.requireNonNull(templateDataModel, "templateDataModel shall be provided");
     Objects.requireNonNull(locale, "locale shall be provided");
 
-    // Prepare the E-Mail body text
-    StringWriter contentBuffer = new StringWriter();
-    FREEMARKER_CONFIG
-        .getTemplate(getEmailDataProvider().getTemplate(locale, emailType))
-        .process(templateDataModel, contentBuffer);
+    Configuration freemarkerConfig = createFreemarkerConfiguration(locale);
+    Template freemarkerTemplate = freemarkerConfig.getTemplate(emailType.getTemplate());
+    String htmlBody = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, templateDataModel);
+
     return new BaseEmailModel(
-        emailAddress,
-        getEmailDataProvider().getSubject(locale, emailType, subjectParams),
-        contentBuffer.toString(),
+        Collections.singleton(emailAddress),
+        emailType.getSubject(locale, emailType, subjectParams),
+        htmlBody,
         ccAddresses);
   }
 
-  public abstract EmailDataProvider getEmailDataProvider();
+  private Configuration createFreemarkerConfiguration(Locale locale) {
+    Configuration freemarkerConfig =
+        new Configuration(Configuration.VERSION_2_3_25);
+    freemarkerConfig.setLocale(locale);
+    freemarkerConfig.setDefaultEncoding(StandardCharsets.UTF_8.name());
+    freemarkerConfig.setNumberFormat("0.####");
+    freemarkerConfig.setDateFormat("yyyy-mm-dd");
+    freemarkerConfig.setClassForTemplateLoading(
+        this.getClass(), "/email/templates");
+    return freemarkerConfig;
+  }
 }

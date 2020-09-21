@@ -17,26 +17,48 @@ package org.gbif.registry.mail.organization;
 
 import org.gbif.registry.mail.EmailType;
 
+import java.text.MessageFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 /** Type of emails related to organization endorsement */
 public enum OrganizationEmailType implements EmailType {
 
   /** Email 'New organization, requires endorsement'. */
-  NEW_ORGANIZATION("newOrganization"),
+  NEW_ORGANIZATION("newOrganization", "confirm_organization.ftl"),
 
   /** Email 'Organization was endorsed'. */
-  ENDORSEMENT_CONFIRMATION("endorsementConfirmation"),
+  ENDORSEMENT_CONFIRMATION("endorsementConfirmation", "organization_confirmed.ftl"),
 
   /** Email 'Password reminder'. */
-  PASSWORD_REMINDER("passwordReminder");
+  PASSWORD_REMINDER("passwordReminder", "organization_password_reminder.ftl");
 
   private final String key;
+  private final String template;
 
-  OrganizationEmailType(String key) {
+  OrganizationEmailType(String key, String template) {
     this.key = key;
+    this.template = template;
   }
 
   @Override
   public String getKey() {
     return key;
+  }
+
+  @Override
+  public String getTemplate() {
+    return template;
+  }
+
+  @Override
+  public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
+    ResourceBundle bundle = ResourceBundle.getBundle("email/subjects/email_subjects", locale);
+    String rawSubjectString = bundle.getString(emailType.getKey());
+    if (subjectParams.length == 0) {
+      return rawSubjectString;
+    } else {
+      return MessageFormat.format(rawSubjectString, (Object[]) subjectParams);
+    }
   }
 }

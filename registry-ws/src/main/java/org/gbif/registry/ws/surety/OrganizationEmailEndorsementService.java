@@ -28,7 +28,7 @@ import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.service.directory.PersonService;
 import org.gbif.api.vocabulary.directory.NodePersonRole;
 import org.gbif.registry.directory.DirectoryRegistryMapping;
-import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.util.RegistryMailUtils;
