@@ -113,7 +113,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
 
     derivedDatasetMapper.create(derivedDataset);
     Iterators.partition(derivedDatasetUsages.iterator(), BATCH_SIZE)
-        .forEachRemaining(batch -> derivedDatasetMapper.addCitationDatasets(doi, batch));
+        .forEachRemaining(batch -> derivedDatasetMapper.addUsagesToDerivedDataset(doi, batch));
 
     return derivedDataset;
   }

@@ -60,7 +60,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @RestController
-@RequestMapping(value = "derived_dataset", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "derivedDataset", produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
 public class DerivedDatasetResource {
 
