@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.mail;
 
-import freemarker.template.Template;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -24,9 +22,11 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
+
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 
 /**
  * Email template processor allows to generate a {@link BaseEmailModel} from a Freemarker template.
@@ -81,7 +81,8 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
 
     Configuration freemarkerConfig = createFreemarkerConfiguration(locale);
     Template freemarkerTemplate = freemarkerConfig.getTemplate(emailType.getTemplate());
-    String htmlBody = FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, templateDataModel);
+    String htmlBody =
+        FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, templateDataModel);
 
     return new BaseEmailModel(
         Collections.singleton(emailAddress),
@@ -91,14 +92,12 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
   }
 
   private Configuration createFreemarkerConfiguration(Locale locale) {
-    Configuration freemarkerConfig =
-        new Configuration(Configuration.VERSION_2_3_25);
+    Configuration freemarkerConfig = new Configuration(Configuration.VERSION_2_3_25);
     freemarkerConfig.setLocale(locale);
     freemarkerConfig.setDefaultEncoding(StandardCharsets.UTF_8.name());
     freemarkerConfig.setNumberFormat("0.####");
     freemarkerConfig.setDateFormat("yyyy-mm-dd");
-    freemarkerConfig.setClassForTemplateLoading(
-        this.getClass(), "/email/templates");
+    freemarkerConfig.setClassForTemplateLoading(this.getClass(), "/email/templates");
     return freemarkerConfig;
   }
 }
