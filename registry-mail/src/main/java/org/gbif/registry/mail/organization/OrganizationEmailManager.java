@@ -20,7 +20,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
-import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.domain.mail.OrganizationPasswordReminderTemplateDataModel;
 import org.gbif.registry.domain.mail.OrganizationTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -140,10 +141,10 @@ public class OrganizationEmailManager {
               nodeManagerEmailAddress.isPresent());
 
       // CC helpdesk unless we are sending the email to helpdesk
-      List<String> ccAddresses =
+      Set<String> ccAddresses =
           emailAddress.equals(organizationMailConfigProperties.getHelpdesk())
-              ? Collections.emptyList()
-              : Collections.singletonList(organizationMailConfigProperties.getHelpdesk());
+              ? Collections.emptySet()
+              : Collections.singleton(organizationMailConfigProperties.getHelpdesk());
       LOG.debug("Cc addresses: {}", ccAddresses);
 
       baseEmailModel =

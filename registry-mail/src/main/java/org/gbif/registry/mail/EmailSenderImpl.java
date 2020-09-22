@@ -15,36 +15,38 @@
  */
 package org.gbif.registry.mail;
 
-import org.gbif.registry.domain.mail.BaseEmailModel;
 import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.util.RegistryMailUtils;
 
 import java.util.Date;
 
-import javax.mail.Address;
-import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-/** Allows to send {@link BaseEmailModel} */
+/**
+ * Allows to send {@link BaseEmailModel}
+ */
 @Service
 @Qualifier("emailSender")
 public class EmailSenderImpl implements EmailSender {
 
   private static final Logger LOG = LoggerFactory.getLogger(EmailSenderImpl.class);
 
-  private static final String HTML_CONTENT_TYPE = "text/html; charset=UTF-8";
-
   private final JavaMailSender mailSender;
   private final MailConfigurationProperties mailConfigProperties;
+
+  @Value("classpath:email/images/GBIF-2015-full.jpg")
+  private Resource logoFile;
 
   public EmailSenderImpl(
       JavaMailSender mailSender, MailConfigurationProperties mailConfigProperties) {
@@ -57,38 +59,41 @@ public class EmailSenderImpl implements EmailSender {
    * challenge code. This method will generate an HTML email.
    */
   @Override
-  public void send(@Valid @NotNull BaseEmailModel emailModel) {
-    RegistryMailUtils.toAddress(emailModel.getEmailAddress())
-        .ifPresent(emailAddress -> prepareAndSend(emailModel, emailAddress));
+  public void send(BaseEmailModel emailModel) {
+    if (emailModel == null) {
+      LOG.warn("Email model is null, skip email sending");
+      return;
+    }
+
+    if (emailModel.getEmailAddresses().isEmpty()) {
+      LOG.warn("No valid email addresses");
+      return;
+    }
+
+    prepareAndSend(emailModel);
   }
 
-  private void prepareAndSend(BaseEmailModel emailModel, Address emailAddress) {
+  private void prepareAndSend(BaseEmailModel emailModel) {
     try {
       // Send E-Mail
       final MimeMessage msg = mailSender.createMimeMessage();
-      msg.setFrom(mailConfigProperties.getFrom());
-      msg.setRecipient(Message.RecipientType.TO, emailAddress);
-      msg.setRecipients(
-          Message.RecipientType.CC,
-          RegistryMailUtils.toInternetAddresses(emailModel.getCcAddress()).toArray(new Address[0]));
-      msg.setRecipients(
-          Message.RecipientType.BCC,
-          RegistryMailUtils.toInternetAddresses(mailConfigProperties.getBcc())
-              .toArray(new Address[0]));
-      msg.setSubject(emailModel.getSubject());
-      msg.setSentDate(new Date());
-      msg.setContent(emailModel.getBody(), HTML_CONTENT_TYPE);
+      MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-      if (mailConfigProperties.getEnabled() != null && mailConfigProperties.getEnabled()) {
-        mailSender.send(msg);
-      } else {
-        LOG.warn("Mail sending is disabled!");
-      }
+      helper.setFrom(mailConfigProperties.getFrom());
+      helper.setTo(emailModel.getEmailAddresses().toArray(new InternetAddress[0]));
+      helper.setCc(emailModel.getCcAddresses().toArray(new String[0]));
+      helper.setBcc(mailConfigProperties.getBcc().toArray(new String[0]));
+      helper.setSubject(emailModel.getSubject());
+      helper.setSentDate(new Date());
+      helper.setText(emailModel.getBody(), true);
+      helper.addInline("logo.png", logoFile);
+
+      mailSender.send(msg);
     } catch (MessagingException e) {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,
           "Sending of notification Mail for [{}] failed",
-          emailAddress,
+          emailModel.getEmailAddresses(),
           e);
     }
   }

@@ -21,10 +21,9 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
-import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
-import org.gbif.registry.mail.organization.OrganizationEmailDataProvider;
 import org.gbif.registry.mail.organization.OrganizationEmailManager;
 import org.gbif.registry.mail.organization.OrganizationEmailTemplateProcessor;
 import org.gbif.registry.search.test.EsManageServer;
@@ -34,6 +33,7 @@ import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -61,19 +61,17 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
 
   private static final String TEST_NODE_MANAGER_EMAIL = "nodemanager@b.com";
 
-  private OrganizationSuretyMailConfigurationProperties
+  private final OrganizationSuretyMailConfigurationProperties
       organizationSuretyMailConfigurationProperties;
 
-  private MailConfigurationProperties mailConfigurationProperties;
+  private final MailConfigurationProperties mailConfigurationProperties;
   private OrganizationEmailManager organizationEmailTemplateManager;
-  private OrganizationEmailDataProvider organizationEmailDataProvider;
   private final TestDataFactory testDataFactory;
 
   @Autowired
   public OrganizationEmailTemplateManagerIT(
       MailConfigurationProperties mailConfigurationProperties,
       OrganizationSuretyMailConfigurationProperties organizationSuretyMailConfigurationProperties,
-      OrganizationEmailDataProvider organizationEmailDataProvider,
       TestDataFactory testDataFactory,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer) {
@@ -81,14 +79,13 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
     this.mailConfigurationProperties = mailConfigurationProperties;
     this.organizationSuretyMailConfigurationProperties =
         organizationSuretyMailConfigurationProperties;
-    this.organizationEmailDataProvider = organizationEmailDataProvider;
     this.testDataFactory = testDataFactory;
   }
 
   @BeforeEach
   public void init() {
     OrganizationEmailTemplateProcessor organizationEmailTP =
-        new OrganizationEmailTemplateProcessor(organizationEmailDataProvider);
+        new OrganizationEmailTemplateProcessor();
 
     organizationEmailTemplateManager =
         new OrganizationEmailManager(
@@ -113,7 +110,7 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
 
     assertNotNull(baseEmail, "We can generate the model from the template");
     // since there is no NodeManager we should not CC helpdesk (we send the email to helpdesk)
-    assertTrue(baseEmail.getCcAddress().isEmpty());
+    assertTrue(baseEmail.getCcAddresses().isEmpty());
 
     // now try with a NodeManager
     Person nodeManager = new Person();
@@ -126,9 +123,10 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
             org, nodeManager, UUID.randomUUID(), endorsingNode);
 
     assertNotNull(baseEmail, "We can generate the model from the template");
-    assertEquals(TEST_NODE_MANAGER_EMAIL, baseEmail.getEmailAddress());
+    String emailAddress = new ArrayList<>(baseEmail.getEmailAddresses()).get(0);
+    assertEquals(TEST_NODE_MANAGER_EMAIL, emailAddress);
     // we should have a CC to helpdesk
-    assertNotNull(baseEmail.getCcAddress());
+    assertNotNull(baseEmail.getCcAddresses());
   }
 
   private static Comment generateComment(String comment) {
@@ -164,10 +162,10 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
                   be ->
                       organizationSuretyMailConfigurationProperties
                           .getHelpdesk()
-                          .equals(be.getEmailAddress())),
+                          .equals(be.getEmailAddresses())),
           "Email to Helpdesk is there");
       assertTrue(
-          baseEmails.stream().anyMatch(be -> pocEmail.equals(be.getEmailAddress())),
+          baseEmails.stream().anyMatch(be -> pocEmail.equals(be.getEmailAddresses())),
           "Email to Point of Contact is there");
       assertTrue(
           baseEmails.stream()
