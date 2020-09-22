@@ -15,10 +15,10 @@
  */
 package org.gbif.registry.mail;
 
-import com.google.common.base.Objects;
-
 import java.util.Collections;
 import java.util.Set;
+
+import com.google.common.base.Objects;
 
 /** Very basic email model that holds the main components of an email to send. */
 public class BaseEmailModel {

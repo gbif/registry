@@ -22,5 +22,4 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Qualifier("organizationEmailTemplateProcessor")
-public class OrganizationEmailTemplateProcessor extends FreemarkerEmailTemplateProcessor {
-}
+public class OrganizationEmailTemplateProcessor extends FreemarkerEmailTemplateProcessor {}
