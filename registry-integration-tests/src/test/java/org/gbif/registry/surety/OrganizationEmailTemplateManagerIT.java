@@ -162,10 +162,11 @@ public class OrganizationEmailTemplateManagerIT extends BaseItTest {
                   be ->
                       organizationSuretyMailConfigurationProperties
                           .getHelpdesk()
-                          .equals(be.getEmailAddresses())),
+                          .equals(new ArrayList<>(be.getEmailAddresses()).get(0))),
           "Email to Helpdesk is there");
       assertTrue(
-          baseEmails.stream().anyMatch(be -> pocEmail.equals(be.getEmailAddresses())),
+          baseEmails.stream()
+              .anyMatch(be -> pocEmail.equals(new ArrayList<>(be.getEmailAddresses()).get(0))),
           "Email to Point of Contact is there");
       assertTrue(
           baseEmails.stream()
