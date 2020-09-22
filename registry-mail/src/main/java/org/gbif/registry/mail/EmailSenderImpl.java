@@ -21,7 +21,6 @@ import org.gbif.registry.mail.util.RegistryMailUtils;
 import java.util.Date;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import org.slf4j.Logger;
