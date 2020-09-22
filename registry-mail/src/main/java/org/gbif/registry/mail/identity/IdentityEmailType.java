@@ -62,7 +62,8 @@ public enum IdentityEmailType implements EmailType {
 
   @Override
   public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
-    ResourceBundle bundle = ResourceBundle.getBundle("email/subjects/identity_email_subjects", locale);
+    ResourceBundle bundle =
+        ResourceBundle.getBundle("email/subjects/identity_email_subjects", locale);
     String rawSubjectString = bundle.getString(emailType.getKey());
     if (subjectParams.length == 0) {
       return rawSubjectString;
