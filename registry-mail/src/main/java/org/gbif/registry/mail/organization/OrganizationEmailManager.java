@@ -237,25 +237,14 @@ public class OrganizationEmailManager {
             mailConfigProperties.getCc());
 
     try {
-      // if true, send mails to disposable email address service
-      if (mailConfigProperties.getDevemail().getEnabled()) {
-        baseEmailModel =
-            emailTemplateProcessors.buildEmail(
-                OrganizationEmailType.PASSWORD_REMINDER,
-                mailConfigProperties.getDevemail().getAddress(),
-                templateDataModel,
-                Locale.ENGLISH,
-                organization.getTitle());
-      } else {
-        baseEmailModel =
-            emailTemplateProcessors.buildEmail(
-                OrganizationEmailType.PASSWORD_REMINDER,
-                emailAddress,
-                templateDataModel,
-                Locale.ENGLISH,
-                mailConfigProperties.getCc(),
-                organization.getTitle());
-      }
+      baseEmailModel =
+          emailTemplateProcessors.buildEmail(
+              OrganizationEmailType.PASSWORD_REMINDER,
+              emailAddress,
+              templateDataModel,
+              Locale.ENGLISH,
+              mailConfigProperties.getCc(),
+              organization.getTitle());
     } catch (TemplateException tEx) {
       throw new IOException(tEx);
     }
