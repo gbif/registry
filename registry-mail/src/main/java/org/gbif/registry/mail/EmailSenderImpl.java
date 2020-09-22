@@ -80,7 +80,7 @@ public class EmailSenderImpl implements EmailSender {
       MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
       helper.setFrom(mailConfigProperties.getFrom());
-      helper.setTo(emailModel.getEmailAddresses().toArray(new InternetAddress[0]));
+      helper.setTo(emailModel.getEmailAddresses().toArray(new String[0]));
       helper.setCc(emailModel.getCcAddresses().toArray(new String[0]));
       helper.setBcc(mailConfigProperties.getBcc().toArray(new String[0]));
       helper.setSubject(emailModel.getSubject());
