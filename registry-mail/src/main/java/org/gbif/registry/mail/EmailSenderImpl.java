@@ -78,10 +78,15 @@ public class EmailSenderImpl implements EmailSender {
       final MimeMessage msg = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
+      if (mailConfigProperties.getDevemail().getEnabled()) {
+        helper.setTo(mailConfigProperties.getDevemail().getAddress());
+      } else {
+        helper.setTo(emailModel.getEmailAddresses().toArray(new String[0]));
+        helper.setCc(emailModel.getCcAddresses().toArray(new String[0]));
+        helper.setBcc(mailConfigProperties.getBcc().toArray(new String[0]));
+      }
+
       helper.setFrom(mailConfigProperties.getFrom());
-      helper.setTo(emailModel.getEmailAddresses().toArray(new String[0]));
-      helper.setCc(emailModel.getCcAddresses().toArray(new String[0]));
-      helper.setBcc(mailConfigProperties.getBcc().toArray(new String[0]));
       helper.setSubject(emailModel.getSubject());
       helper.setSentDate(new Date());
       helper.setText(emailModel.getBody(), true);
