@@ -15,9 +15,23 @@
  */
 package org.gbif.registry.mail;
 
+import java.util.Locale;
+
 /** Represents email type, provides with email subject and raw template. */
 public interface EmailType {
 
-  /** Returns email key to search for subject and template. */
+  /**
+   * Returns email key to search for subject.
+   */
   String getKey();
+
+  /**
+   * Returns email template name.
+   */
+  String getTemplate();
+
+  /**
+   * Returns email subject.
+   */
+  String getSubject(Locale locale, EmailType emailType, String... subjectParams);
 }

@@ -19,14 +19,14 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Organization;
 
 import java.net.URL;
-import java.util.List;
+import java.util.Set;
 
 public class OrganizationPasswordReminderTemplateDataModel extends BaseTemplateDataModel {
 
   private final Organization organization;
   private final Contact contact;
   private final String email;
-  private final List<String> ccEmail;
+  private final Set<String> ccEmail;
 
   public OrganizationPasswordReminderTemplateDataModel(
       String name,
@@ -34,7 +34,7 @@ public class OrganizationPasswordReminderTemplateDataModel extends BaseTemplateD
       Organization organization,
       Contact contact,
       String emailAddress,
-      List<String> ccEmail) {
+      Set<String> ccEmail) {
     super(name, url);
     this.organization = organization;
     this.contact = contact;
@@ -54,7 +54,7 @@ public class OrganizationPasswordReminderTemplateDataModel extends BaseTemplateD
     return email;
   }
 
-  public List<String> getCcEmail() {
+  public Set<String> getCcEmail() {
     return ccEmail;
   }
 }

@@ -16,7 +16,7 @@
 package org.gbif.registry.mail.config;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -29,9 +29,9 @@ public class MailConfigurationProperties {
 
   private String from;
 
-  private List<String> cc = Collections.emptyList();
+  private Set<String> cc = Collections.emptySet();
 
-  private List<String> bcc = Collections.emptyList();
+  private Set<String> bcc = Collections.emptySet();
 
   private Boolean enabled = Boolean.FALSE;
 
@@ -51,19 +51,19 @@ public class MailConfigurationProperties {
     this.from = from;
   }
 
-  public List<String> getCc() {
+  public Set<String> getCc() {
     return cc;
   }
 
-  public void setCc(List<String> cc) {
+  public void setCc(Set<String> cc) {
     this.cc = cc;
   }
 
-  public List<String> getBcc() {
+  public Set<String> getBcc() {
     return bcc;
   }
 
-  public void setBcc(List<String> bcc) {
+  public void setBcc(Set<String> bcc) {
     this.bcc = bcc;
   }
 

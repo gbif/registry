@@ -16,10 +16,11 @@
 package org.gbif.registry.mail.identity;
 
 import org.gbif.api.model.ChallengeCode;
+import org.gbif.api.model.common.AbstractGbifUser;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.registry.domain.mail.AccountDeleteDataModel;
-import org.gbif.registry.domain.mail.BaseEmailModel;
+import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.domain.mail.BaseTemplateDataModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.EmailType;
@@ -29,8 +30,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,6 +46,9 @@ import freemarker.template.TemplateException;
 /** Manager responsible to generate {@link BaseEmailModel}. */
 @Service
 public class IdentityEmailManager {
+
+  // supported locales
+  private static final List<String> SUPPORTED_LOCALES = Arrays.asList("en", "ru");
 
   private final EmailTemplateProcessor emailTemplateProcessor;
   private final IdentitySuretyMailConfigurationProperties identityMailConfigProperties;
@@ -69,7 +75,7 @@ public class IdentityEmailManager {
               .map(download -> doiUrl + download.getDoi())
               .collect(Collectors.toList());
 
-      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
+      Locale locale = getLocale(user);
 
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.DELETE_ACCOUNT,
@@ -108,7 +114,7 @@ public class IdentityEmailManager {
   public BaseEmailModel generatePasswordChangedEmailModel(GbifUser user) throws IOException {
     try {
       BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
-      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
+      Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, locale);
     } catch (TemplateException e) {
@@ -118,9 +124,10 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
     try {
-      Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
+      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
+      Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.WELCOME, user.getEmail(), new Object(), locale);
+          IdentityEmailType.WELCOME, user.getEmail(), dataModel, locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -135,7 +142,7 @@ public class IdentityEmailManager {
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, EmailType emailType)
       throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
-    Locale locale = user.getLocale() != null ? user.getLocale() : Locale.ENGLISH;
+    Locale locale = getLocale(user);
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
   }
 
@@ -155,5 +162,17 @@ public class IdentityEmailManager {
             identityMailConfigProperties.getUrlTemplate().getResetPassword(),
             userName,
             confirmationKey.toString()));
+  }
+
+  private Locale getLocale(GbifUser user) {
+    return Optional.ofNullable(user)
+        .map(AbstractGbifUser::getLocale)
+        .map(this::findSuitableLocaleTagAmongAvailable)
+        .map(Locale::forLanguageTag)
+        .orElse(Locale.ENGLISH);
+  }
+
+  private String findSuitableLocaleTagAmongAvailable(Locale locale) {
+    return Locale.lookupTag(Locale.LanguageRange.parse(locale.toLanguageTag()), SUPPORTED_LOCALES);
   }
 }

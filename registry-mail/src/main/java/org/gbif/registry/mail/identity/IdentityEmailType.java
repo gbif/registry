@@ -17,6 +17,10 @@ package org.gbif.registry.mail.identity;
 
 import org.gbif.registry.mail.EmailType;
 
+import java.text.MessageFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 /**
  * Type of emails related to 'identity' functionality like: welcome email, create new account and reset
  * password.
@@ -24,28 +28,46 @@ import org.gbif.registry.mail.EmailType;
 public enum IdentityEmailType implements EmailType {
 
   /** Email 'Account was created, please confirm it'. */
-  NEW_USER("createAccount"),
+  NEW_USER("createAccount", "create_confirmation.ftl"),
 
   /** Email 'Reset password'. */
-  RESET_PASSWORD("resetPassword"),
+  RESET_PASSWORD("resetPassword", "reset_password.ftl"),
 
   /** Email 'Password was changed'. */
-  PASSWORD_CHANGED("passwordChanged"),
+  PASSWORD_CHANGED("passwordChanged", "password_changed.ftl"),
 
   /** Welcome email with links and information. */
-  WELCOME("welcome"),
+  WELCOME("welcome", "welcome.ftl"),
 
   /** Email 'User was deleted' */
-  DELETE_ACCOUNT("deleteAccount");
+  DELETE_ACCOUNT("deleteAccount", "delete_account.ftl");
 
   private final String key;
+  private final String template;
 
-  IdentityEmailType(String key) {
+  IdentityEmailType(String key, String template) {
     this.key = key;
+    this.template = template;
   }
 
   @Override
   public String getKey() {
     return key;
+  }
+
+  @Override
+  public String getTemplate() {
+    return template;
+  }
+
+  @Override
+  public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
+    ResourceBundle bundle = ResourceBundle.getBundle("email/subjects/identity_email_subjects", locale);
+    String rawSubjectString = bundle.getString(emailType.getKey());
+    if (subjectParams.length == 0) {
+      return rawSubjectString;
+    } else {
+      return MessageFormat.format(rawSubjectString, (Object[]) subjectParams);
+    }
   }
 }
