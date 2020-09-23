@@ -25,7 +25,6 @@ import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.surety.ChallengeCodeManager;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 

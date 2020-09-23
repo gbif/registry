@@ -137,8 +137,7 @@ public class UserResource {
   @Secured({USER_ROLE})
   @PutMapping(path = "changeEmail", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<UserModelMutationResult> changeEmail(
-      @RequestBody @NotNull @Valid EmailChangeRequest request,
-      Authentication authentication) {
+      @RequestBody @NotNull @Valid EmailChangeRequest request, Authentication authentication) {
     // the user shall be authenticated using basic auth scheme
     ensureNotGbifScheme(authentication);
     ensureUserSetInSecurityContext(authentication);

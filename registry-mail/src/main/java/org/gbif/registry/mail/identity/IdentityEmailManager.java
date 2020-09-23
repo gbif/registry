@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.mail.identity;
 
-import com.google.common.collect.Sets;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.AbstractGbifUser;
 import org.gbif.api.model.common.GbifUser;
@@ -34,7 +33,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -44,6 +42,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Sets;
 
 import freemarker.template.TemplateException;
 
@@ -150,8 +150,8 @@ public class IdentityEmailManager {
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
   }
 
-  public BaseEmailModel generateAccountEmailChangeEmailModel(GbifUser user, ChallengeCode challengeCode)
-      throws IOException {
+  public BaseEmailModel generateAccountEmailChangeEmailModel(
+      GbifUser user, ChallengeCode challengeCode) throws IOException {
     try {
       return generateConfirmationEmailModel(
           user,

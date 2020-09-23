@@ -273,8 +273,10 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
         result = withSingleConstraintViolation("user", PropertyConstants.CONSTRAINT_UNKNOWN);
       }
     } else {
-      result = withSingleConstraintViolation(
-          PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME, PropertyConstants.CONSTRAINT_INCORRECT);
+      result =
+          withSingleConstraintViolation(
+              PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME,
+              PropertyConstants.CONSTRAINT_INCORRECT);
     }
 
     return result;
