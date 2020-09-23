@@ -37,7 +37,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
    * Build a {@link BaseEmailModel} from
    *
    * @param emailType template type (new user, reset password or welcome)
-   * @param emailAddress email address
+   * @param emailAddresses email addresses
    * @param templateDataModel source data
    * @param locale locale
    * @param subjectParams computable params for subject message formatting
@@ -46,20 +46,20 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
   @Override
   public BaseEmailModel buildEmail(
       EmailType emailType,
-      String emailAddress,
+      Set<String> emailAddresses,
       Object templateDataModel,
       Locale locale,
       String... subjectParams)
       throws IOException, TemplateException {
     return buildEmail(
-        emailType, emailAddress, templateDataModel, locale, Collections.emptySet(), subjectParams);
+        emailType, emailAddresses, templateDataModel, locale, Collections.emptySet(), subjectParams);
   }
 
   /**
    * Build a {@link BaseEmailModel} from
    *
    * @param emailType template type (new user, reset password or welcome)
-   * @param emailAddress email address
+   * @param emailAddresses email addresses
    * @param templateDataModel source data
    * @param locale locale
    * @param ccAddresses carbon copy addresses
@@ -69,13 +69,13 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
   @Override
   public BaseEmailModel buildEmail(
       EmailType emailType,
-      String emailAddress,
+      Set<String> emailAddresses,
       Object templateDataModel,
       Locale locale,
       Set<String> ccAddresses,
       String... subjectParams)
       throws IOException, TemplateException {
-    Objects.requireNonNull(emailAddress, "emailAddress shall be provided");
+    Objects.requireNonNull(emailAddresses, "emailAddress shall be provided");
     Objects.requireNonNull(templateDataModel, "templateDataModel shall be provided");
     Objects.requireNonNull(locale, "locale shall be provided");
 
@@ -85,7 +85,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
         FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, templateDataModel);
 
     return new BaseEmailModel(
-        Collections.singleton(emailAddress),
+        emailAddresses,
         emailType.getSubject(locale, emailType, subjectParams),
         htmlBody,
         ccAddresses);

@@ -28,25 +28,7 @@ public interface EmailTemplateProcessor {
    * Construct an email to send.
    *
    * @param emailType email type
-   * @param emailAddress email address
-   * @param templateDataModel data which fill template
-   * @param locale language locale
-   * @param subjectParams computable params for subject message formatting
-   * @return email data which is ready to be sent
-   */
-  BaseEmailModel buildEmail(
-      EmailType emailType,
-      String emailAddress,
-      Object templateDataModel,
-      Locale locale,
-      String... subjectParams)
-      throws IOException, TemplateException;
-
-  /**
-   * Construct an email to send.
-   *
-   * @param emailType email type
-   * @param emailAddresses email addresses
+   * @param emailAddresses email address
    * @param templateDataModel data which fill template
    * @param locale language locale
    * @param subjectParams computable params for subject message formatting
@@ -64,7 +46,7 @@ public interface EmailTemplateProcessor {
    * Construct an email to send.
    *
    * @param emailType email type
-   * @param emailAddress email address
+   * @param emailAddresses email address
    * @param templateDataModel data which fill template
    * @param locale language locale
    * @param ccAddresses carbon copy addresses
@@ -73,7 +55,7 @@ public interface EmailTemplateProcessor {
    */
   BaseEmailModel buildEmail(
       EmailType emailType,
-      String emailAddress,
+      Set<String> emailAddresses,
       Object templateDataModel,
       Locale locale,
       Set<String> ccAddresses,
