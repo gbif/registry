@@ -178,6 +178,11 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
+  public UserModelMutationResult updateEmail(int userKey, String oldEmail, String newEmail, UUID confirmationKey) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public List<UUID> listEditorRights(String userName) {
     throw new UnsupportedOperationException();
   }

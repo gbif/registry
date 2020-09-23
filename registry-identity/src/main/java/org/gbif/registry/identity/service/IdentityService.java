@@ -63,7 +63,6 @@ public interface IdentityService extends IdentityAccessService {
    * Checks if a user requires a confirmation. Confirmation can be for a new user or a password
    * change.
    *
-   * @param userKey
    * @return the user has a confirmation pending.
    */
   boolean hasPendingConfirmation(int userKey);
@@ -86,9 +85,6 @@ public interface IdentityService extends IdentityAccessService {
   /**
    * Apply an update to a user. It is the responsibility of the caller to ensure what is allowed to
    * be changed (e.g. base on the roles).
-   *
-   * @param user
-   * @return
    */
   UserModelMutationResult update(GbifUser user);
 
@@ -107,16 +103,12 @@ public interface IdentityService extends IdentityAccessService {
 
   /**
    * Trigger an update of the last login date.
-   *
-   * @param userKey
    */
   void updateLastLogin(int userKey);
 
   /**
    * Check if a confirmationKey is valid for a specific user.
    *
-   * @param userKey
-   * @param confirmationKey
    * @return the confirmationKey is valid or not
    */
   boolean isConfirmationKeyValid(int userKey, UUID confirmationKey);
@@ -125,9 +117,6 @@ public interface IdentityService extends IdentityAccessService {
    * Confirms user using a confirmation key. A confirmationKey can only be confirmed once and only
    * if it was previously assigned. If no confirmationKey is present this method will return false;
    *
-   * @param userKey
-   * @param confirmationKey
-   * @param emailEnabled
    * @return the user was confirmed by this action or not
    */
   boolean confirmUser(int userKey, UUID confirmationKey, boolean emailEnabled);
@@ -137,46 +126,30 @@ public interface IdentityService extends IdentityAccessService {
    * challenge code can only be used once and only if it was previously assigned (it assumes {@code
    * resetPassword} was previously called). If no challenge code is present this method will return
    * false and the password won't be changed.
-   *
-   * @param userKey
-   * @param newPassword
-   * @param confirmationKey
-   * @return the password was updated or not
    */
   UserModelMutationResult updatePassword(int userKey, String newPassword, UUID confirmationKey);
 
   /**
    * Allows to change the password of a user that is already authenticated.
-   *
-   * @param userKey
-   * @param newPassword
-   * @return
    */
   UserModelMutationResult updatePassword(int userKey, String newPassword);
 
   void resetPassword(int userKey);
 
+  UserModelMutationResult updateEmail(int userKey, String oldEmail, String newEmail, UUID confirmationKey);
+
   /**
    * Lists the entity keys the user has editor permissions on.
-   *
-   * @param userName
-   * @return
    */
   List<UUID> listEditorRights(String userName);
 
   /**
    * Grant the user rights over the given entity.
-   *
-   * @param userName
-   * @param key
    */
   void addEditorRight(String userName, UUID key);
 
   /**
    * Remove rights from the given entity for the user.
-   *
-   * @param userName
-   * @param key
    */
   void deleteEditorRight(String userName, UUID key);
 }

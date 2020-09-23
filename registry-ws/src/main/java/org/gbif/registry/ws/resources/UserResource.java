@@ -17,12 +17,14 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
+import org.gbif.registry.domain.ws.EmailChangeRequest;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.http.CacheControl;
@@ -44,7 +46,7 @@ import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSec
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @Validated
-@RequestMapping(value = "user", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "user", produces = MediaType.APPLICATION_JSON_VALUE)
 @RestController
 public class UserResource {
 
@@ -63,7 +65,7 @@ public class UserResource {
    * @return the user as {@link LoggedUser}
    */
   @RequestMapping(
-      value = "login",
+      path = "login",
       method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<ExtendedLoggedUser> login(Authentication authentication) {
     // the user shall be authenticated using basic auth. scheme only.
@@ -111,7 +113,7 @@ public class UserResource {
 
   /** Allows a user to change its own password. */
   @Secured({USER_ROLE})
-  @PutMapping(value = "changePassword", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(path = "changePassword", consumes = MediaType.APPLICATION_JSON_VALUE)
   public ResponseEntity<UserModelMutationResult> changePassword(
       @RequestBody @NotNull AuthenticationDataParameters authenticationDataParameters,
       Authentication authentication) {
@@ -126,6 +128,29 @@ public class UserResource {
           identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
       if (updatePasswordMutationResult.containsError()) {
         return ResponseEntity.unprocessableEntity().body(updatePasswordMutationResult);
+      }
+    }
+    return ResponseEntity.noContent().build();
+  }
+
+  /** Allows a user to change its own email. */
+  @Secured({USER_ROLE})
+  @PutMapping(path = "changeEmail", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<UserModelMutationResult> changeEmail(
+      @RequestBody @NotNull @Valid EmailChangeRequest request,
+      Authentication authentication) {
+    // the user shall be authenticated using basic auth scheme
+    ensureNotGbifScheme(authentication);
+    ensureUserSetInSecurityContext(authentication);
+
+    final String identifier = authentication.getName();
+    final GbifUser user = identityService.get(identifier);
+    if (user != null) {
+      UserModelMutationResult result =
+          identityService.updateEmail(
+              user.getKey(), user.getEmail(), request.getEmail(), request.getChallengeCode());
+      if (result.containsError()) {
+        return ResponseEntity.unprocessableEntity().body(result);
       }
     }
     return ResponseEntity.noContent().build();

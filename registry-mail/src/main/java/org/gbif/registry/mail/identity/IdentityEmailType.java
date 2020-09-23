@@ -50,7 +50,17 @@ public enum IdentityEmailType implements EmailType {
   /**
    * Email 'User was deleted'
    */
-  DELETE_ACCOUNT("deleteAccount", "delete_account.ftl");
+  DELETE_ACCOUNT("deleteAccount", "delete_account.ftl"),
+
+  /**
+   * Email 'Change email'.
+   */
+  CHANGE_EMAIL("changeEmail", "change_email.ftl"),
+
+  /**
+   * Email 'Change email'.
+   */
+  EMAIL_CHANGED("emailChanged", "email_changed.ftl");
 
   private final String key;
   private final String template;
