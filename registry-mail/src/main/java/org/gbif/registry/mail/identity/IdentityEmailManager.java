@@ -121,7 +121,10 @@ public class IdentityEmailManager {
       BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName());
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.PASSWORD_CHANGED, Collections.singleton(user.getEmail()), dataModel, locale);
+          IdentityEmailType.PASSWORD_CHANGED,
+          Collections.singleton(user.getEmail()),
+          dataModel,
+          locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -148,7 +151,8 @@ public class IdentityEmailManager {
       throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new ConfirmableTemplateDataModel(user.getUserName(), url);
     Locale locale = getLocale(user);
-    return emailTemplateProcessor.buildEmail(emailType, Collections.singleton(user.getEmail()), dataModel, locale);
+    return emailTemplateProcessor.buildEmail(
+        emailType, Collections.singleton(user.getEmail()), dataModel, locale);
   }
 
   public BaseEmailModel generateAccountEmailChangeEmailModel(
