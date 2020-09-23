@@ -99,7 +99,7 @@
                 To help you decide whether to endorse this organization, consult our
                 <a href="https://www.gbif.org/endorsement-guidelines" style="margin: 0;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;color: #71bc37;text-decoration: none;">endorsement guidelines</a>
                 and the information included below.
-                If you are ready to endorse, you can go straight ahead, using the link at the bottom of this email.
+                If you are ready to endorse, you can go straight ahead, using the button at the bottom of this email.
                 If the process takes longer, if you cannot take it on at this time, or if you decide against endorsing the organization,
                 please notify us by email to
                 <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;font-size: 100%;font-family: 'Avenir Next', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;color: #71bc37;text-decoration: none;">helpdesk@gbif.org</a>.
