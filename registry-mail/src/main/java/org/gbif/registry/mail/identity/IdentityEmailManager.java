@@ -21,6 +21,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.registry.domain.mail.AccountDeleteDataModel;
 import org.gbif.registry.domain.mail.BaseTemplateDataModel;
+import org.gbif.registry.domain.mail.ConfirmationTemplateDataModel;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.EmailType;
@@ -80,7 +81,7 @@ public class IdentityEmailManager {
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.DELETE_ACCOUNT,
           user.getEmail(),
-          new AccountDeleteDataModel(user.getUserName(), null, downloadUrls),
+          new AccountDeleteDataModel(user.getUserName(), downloadUrls),
           locale);
     } catch (TemplateException e) {
       throw new IOException(e);
@@ -113,7 +114,7 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generatePasswordChangedEmailModel(GbifUser user) throws IOException {
     try {
-      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
+      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName());
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, locale);
@@ -124,7 +125,7 @@ public class IdentityEmailManager {
 
   public BaseEmailModel generateWelcomeEmailModel(GbifUser user) throws IOException {
     try {
-      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), null);
+      BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName());
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.WELCOME, user.getEmail(), dataModel, locale);
@@ -141,7 +142,7 @@ public class IdentityEmailManager {
    */
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, EmailType emailType)
       throws IOException, TemplateException {
-    BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName(), url);
+    BaseTemplateDataModel dataModel = new ConfirmationTemplateDataModel(user.getUserName(), url);
     Locale locale = getLocale(user);
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
   }

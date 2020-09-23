@@ -18,7 +18,6 @@ package org.gbif.registry.domain.mail;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Organization;
 
-import java.net.URL;
 import java.util.Set;
 
 public class OrganizationPasswordReminderTemplateDataModel extends BaseTemplateDataModel {
@@ -30,12 +29,11 @@ public class OrganizationPasswordReminderTemplateDataModel extends BaseTemplateD
 
   public OrganizationPasswordReminderTemplateDataModel(
       String name,
-      URL url,
       Organization organization,
       Contact contact,
       String emailAddress,
       Set<String> ccEmail) {
-    super(name, url);
+    super(name);
     this.organization = organization;
     this.contact = contact;
     this.email = emailAddress;

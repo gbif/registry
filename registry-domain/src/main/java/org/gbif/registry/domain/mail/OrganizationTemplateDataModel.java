@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  *
  * <p>This class is required to be public for Freemarker.
  */
-public class OrganizationTemplateDataModel extends BaseTemplateDataModel {
+public class OrganizationTemplateDataModel extends ConfirmationTemplateDataModel {
 
   private final Organization organization;
   private final URL organizationUrl;

@@ -27,19 +27,29 @@ import java.util.ResourceBundle;
  */
 public enum IdentityEmailType implements EmailType {
 
-  /** Email 'Account was created, please confirm it'. */
+  /**
+   * Email 'Account was created, please confirm it'.
+   */
   NEW_USER("createAccount", "create_confirmation.ftl"),
 
-  /** Email 'Reset password'. */
+  /**
+   * Email 'Reset password'.
+   */
   RESET_PASSWORD("resetPassword", "reset_password.ftl"),
 
-  /** Email 'Password was changed'. */
+  /**
+   * Email 'Password was changed'.
+   */
   PASSWORD_CHANGED("passwordChanged", "password_changed.ftl"),
 
-  /** Welcome email with links and information. */
+  /**
+   * Welcome email with links and information.
+   */
   WELCOME("welcome", "welcome.ftl"),
 
-  /** Email 'User was deleted' */
+  /**
+   * Email 'User was deleted'
+   */
   DELETE_ACCOUNT("deleteAccount", "delete_account.ftl");
 
   private final String key;
