@@ -136,7 +136,8 @@ public interface IdentityService extends IdentityAccessService {
 
   void resetPassword(int userKey);
 
-  UserModelMutationResult updateEmail(int userKey, String oldEmail, String newEmail, UUID confirmationKey);
+  UserModelMutationResult updateEmail(
+      int userKey, String oldEmail, String newEmail, UUID confirmationKey);
 
   /**
    * Lists the entity keys the user has editor permissions on.

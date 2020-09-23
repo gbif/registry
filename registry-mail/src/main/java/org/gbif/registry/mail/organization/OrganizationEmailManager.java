@@ -30,7 +30,6 @@ import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperti
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
