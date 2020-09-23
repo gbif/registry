@@ -15,13 +15,15 @@
  */
 package org.gbif.registry.mail.identity;
 
+import com.google.common.collect.Sets;
 import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.AbstractGbifUser;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.registry.domain.mail.AccountDeleteDataModel;
+import org.gbif.registry.domain.mail.AccountEmailChangedTemplateDataModel;
 import org.gbif.registry.domain.mail.BaseTemplateDataModel;
-import org.gbif.registry.domain.mail.ConfirmationTemplateDataModel;
+import org.gbif.registry.domain.mail.ConfirmableTemplateDataModel;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.EmailType;
@@ -32,6 +34,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -142,9 +145,37 @@ public class IdentityEmailManager {
    */
   private BaseEmailModel generateConfirmationEmailModel(GbifUser user, URL url, EmailType emailType)
       throws IOException, TemplateException {
-    BaseTemplateDataModel dataModel = new ConfirmationTemplateDataModel(user.getUserName(), url);
+    BaseTemplateDataModel dataModel = new ConfirmableTemplateDataModel(user.getUserName(), url);
     Locale locale = getLocale(user);
     return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
+  }
+
+  public BaseEmailModel generateAccountEmailChangeEmailModel(GbifUser user, ChallengeCode challengeCode)
+      throws IOException {
+    try {
+      return generateConfirmationEmailModel(
+          user,
+          generateChangeEmailUrl(user.getUserName(), challengeCode.getCode()),
+          IdentityEmailType.CHANGE_EMAIL);
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
+  }
+
+  public BaseEmailModel generateAccountEmailChangedEmailModel(GbifUser user, String oldEmail)
+      throws IOException {
+    try {
+      BaseTemplateDataModel dataModel =
+          new AccountEmailChangedTemplateDataModel(user.getUserName(), user.getEmail());
+      Locale locale = getLocale(user);
+      return emailTemplateProcessor.buildEmail(
+          IdentityEmailType.EMAIL_CHANGED,
+          Sets.newHashSet(user.getEmail(), oldEmail),
+          dataModel,
+          locale);
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
   }
 
   private URL generateConfirmUserUrl(String userName, UUID confirmationKey)
@@ -161,6 +192,15 @@ public class IdentityEmailManager {
     return new URL(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getResetPassword(),
+            userName,
+            confirmationKey.toString()));
+  }
+
+  private URL generateChangeEmailUrl(String userName, UUID confirmationKey)
+      throws MalformedURLException {
+    return new URL(
+        MessageFormat.format(
+            identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
             userName,
             confirmationKey.toString()));
   }

@@ -112,15 +112,21 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     GbifUser currentUser = getByKey(user.getKey());
 
     if (currentUser != null) {
-      // handle email change and user if the user want to change it is is not already
-      // linked to another account
-      Optional<GbifUser> gbifUserAlreadyUsingEmail =
-          Optional.of(currentUser)
-              .filter(u -> !u.getEmail().equalsIgnoreCase(user.getEmail()))
-              .map(u -> userMapper.getByEmail(user.getEmail()));
+      boolean isEmailChanged = !user.getEmail().equalsIgnoreCase(currentUser.getEmail());
 
-      if (gbifUserAlreadyUsingEmail.isPresent()) {
-        return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
+      if (isEmailChanged) {
+        // handle email change and user if the user want to change it
+        // and it is not already linked to another account
+        GbifUser userByEmail = userMapper.getByEmail(user.getEmail());
+
+        if (userByEmail != null) {
+          return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
+        } else {
+          userSuretyDelegate.onChangeEmail(user);
+        }
+
+        // email must be updated separately by clicking a email's link
+        user.setEmail(currentUser.getEmail());
       }
 
       Optional<UserModelMutationResult> beanValidation = validateBean(user, PostPersist.class);
@@ -244,6 +250,34 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     if (user != null) {
       userSuretyDelegate.onPasswordReset(user);
     }
+  }
+
+  @Override
+  public UserModelMutationResult updateEmail(
+      int userKey, String oldEmail, String newEmail, UUID confirmationKey) {
+    UserModelMutationResult result;
+
+    GbifUser userByEmail = userMapper.getByEmail(newEmail);
+    if (userByEmail != null) {
+      result = withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
+    } else if (confirmUser(userKey, confirmationKey, false)) {
+      GbifUser user = userMapper.getByKey(userKey);
+
+      if (user != null) {
+        user.setEmail(newEmail);
+        userMapper.update(user);
+        userSuretyDelegate.onEmailChanged(user, oldEmail);
+
+        return UserModelMutationResult.onSuccess();
+      } else {
+        result = withSingleConstraintViolation("user", PropertyConstants.CONSTRAINT_UNKNOWN);
+      }
+    } else {
+      result = withSingleConstraintViolation(
+          PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME, PropertyConstants.CONSTRAINT_INCORRECT);
+    }
+
+    return result;
   }
 
   @Override

@@ -1,0 +1,15 @@
+package org.gbif.registry.domain.mail;
+
+public class AccountEmailChangedTemplateDataModel extends BaseTemplateDataModel {
+
+  private final String newEmail;
+
+  public AccountEmailChangedTemplateDataModel(String name, String newEmail) {
+    super(name);
+    this.newEmail = newEmail;
+  }
+
+  public String getNewEmail() {
+    return newEmail;
+  }
+}

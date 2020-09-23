@@ -88,6 +88,11 @@
       "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties"
     },
     {
+      "name": "identity.surety.mail.urlTemplate.changeEmail",
+      "type": "java.lang.String",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties"
+    },
+    {
       "name": "organization.surety.mail.helpdesk",
       "type": "java.lang.String",
       "sourceType": "org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties"

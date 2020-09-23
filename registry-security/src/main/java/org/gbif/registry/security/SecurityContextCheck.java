@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.security;
 
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.security.GbifAuthUtils;
 import org.gbif.ws.security.GbifAuthentication;
@@ -28,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -120,6 +122,10 @@ public class SecurityContextCheck {
     }
     throw new WebApplicationException(
         "User is not present in the white list", HttpStatus.FORBIDDEN);
+  }
+
+  public static boolean checkSameUser(GbifUser user, String username) {
+    return user != null && user.getUserName().equals(username);
   }
 
   /**

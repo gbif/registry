@@ -25,6 +25,7 @@ import org.gbif.registry.mail.util.RegistryMailUtils;
 import org.gbif.registry.surety.ChallengeCodeManager;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -141,6 +142,37 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,
           "Error while trying to generate email password was changed of user " + user.getUserName(),
+          e);
+      return;
+    }
+    emailSender.send(emailModel);
+  }
+
+  @Override
+  public void onChangeEmail(GbifUser user) {
+    ChallengeCode challengeCode = challengeCodeManager.create(user.getKey());
+    BaseEmailModel emailModel;
+    try {
+      emailModel = identityEmailManager.generateAccountEmailChangeEmailModel(user, challengeCode);
+    } catch (IOException e) {
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Error while trying to generate email to change email of user " + user.getUserName(),
+          e);
+      return;
+    }
+    emailSender.send(emailModel);
+  }
+
+  @Override
+  public void onEmailChanged(GbifUser user, String oldEmail) {
+    BaseEmailModel emailModel;
+    try {
+      emailModel = identityEmailManager.generateAccountEmailChangedEmailModel(user, oldEmail);
+    } catch (IOException e) {
+      LOG.error(
+          RegistryMailUtils.NOTIFY_ADMIN,
+          "Error while trying to generate email 'email changed' of user " + user.getUserName(),
           e);
       return;
     }

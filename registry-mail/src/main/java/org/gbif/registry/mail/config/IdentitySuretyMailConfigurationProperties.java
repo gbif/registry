@@ -38,6 +38,8 @@ public class IdentitySuretyMailConfigurationProperties {
 
     private String resetPassword;
 
+    private String changeEmail;
+
     public String getConfirmUser() {
       return confirmUser;
     }
@@ -52,6 +54,14 @@ public class IdentitySuretyMailConfigurationProperties {
 
     public void setResetPassword(String resetPassword) {
       this.resetPassword = resetPassword;
+    }
+
+    public String getChangeEmail() {
+      return changeEmail;
+    }
+
+    public void setChangeEmail(String changeEmail) {
+      this.changeEmail = changeEmail;
     }
   }
 }

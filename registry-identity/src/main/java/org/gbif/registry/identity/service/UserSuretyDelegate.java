@@ -74,4 +74,19 @@ interface UserSuretyDelegate {
    * @param user user who password was changed
    */
   void onPasswordChanged(GbifUser user);
+
+  /**
+   * Handles the logic on change email.
+   *
+   * @param user user who email has to be changed
+   */
+  void onChangeEmail(GbifUser user);
+
+  /**
+   * Handles the logic on email changed.
+   *
+   * @param user user who email was changed
+   * @param oldEmail old email address
+   */
+  void onEmailChanged(GbifUser user, String oldEmail);
 }
