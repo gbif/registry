@@ -149,7 +149,7 @@ public class OrganizationEmailManager {
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
               OrganizationEmailType.NEW_ORGANIZATION,
-              emailAddress,
+              Collections.singleton(emailAddress),
               templateDataModel,
               Locale.ENGLISH,
               ccAddresses);
@@ -188,7 +188,7 @@ public class OrganizationEmailManager {
       baseEmailModelList.add(
           emailTemplateProcessors.buildEmail(
               OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
-              organizationMailConfigProperties.getHelpdesk(),
+              Collections.singleton(organizationMailConfigProperties.getHelpdesk()),
               templateDataModel,
               Locale.ENGLISH));
 
@@ -211,7 +211,7 @@ public class OrganizationEmailManager {
         baseEmailModelList.add(
             emailTemplateProcessors.buildEmail(
                 OrganizationEmailType.ENDORSEMENT_CONFIRMATION,
-                email,
+                Collections.singleton(email),
                 templateDataModel,
                 Locale.ENGLISH));
       } else {
@@ -238,7 +238,7 @@ public class OrganizationEmailManager {
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
               OrganizationEmailType.PASSWORD_REMINDER,
-              emailAddress,
+              Collections.singleton(emailAddress),
               templateDataModel,
               Locale.ENGLISH,
               mailConfigProperties.getCc(),

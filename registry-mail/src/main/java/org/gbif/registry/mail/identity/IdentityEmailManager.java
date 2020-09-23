@@ -33,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -83,7 +84,7 @@ public class IdentityEmailManager {
 
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.DELETE_ACCOUNT,
-          user.getEmail(),
+          Collections.singleton(user.getEmail()),
           new AccountDeleteDataModel(user.getUserName(), downloadUrls),
           locale);
     } catch (TemplateException e) {
@@ -120,7 +121,7 @@ public class IdentityEmailManager {
       BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName());
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.PASSWORD_CHANGED, user.getEmail(), dataModel, locale);
+          IdentityEmailType.PASSWORD_CHANGED, Collections.singleton(user.getEmail()), dataModel, locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -131,7 +132,7 @@ public class IdentityEmailManager {
       BaseTemplateDataModel dataModel = new BaseTemplateDataModel(user.getUserName());
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
-          IdentityEmailType.WELCOME, user.getEmail(), dataModel, locale);
+          IdentityEmailType.WELCOME, Collections.singleton(user.getEmail()), dataModel, locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -147,7 +148,7 @@ public class IdentityEmailManager {
       throws IOException, TemplateException {
     BaseTemplateDataModel dataModel = new ConfirmableTemplateDataModel(user.getUserName(), url);
     Locale locale = getLocale(user);
-    return emailTemplateProcessor.buildEmail(emailType, user.getEmail(), dataModel, locale);
+    return emailTemplateProcessor.buildEmail(emailType, Collections.singleton(user.getEmail()), dataModel, locale);
   }
 
   public BaseEmailModel generateAccountEmailChangeEmailModel(
