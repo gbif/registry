@@ -230,7 +230,6 @@ public class OrganizationEmailManager {
     OrganizationPasswordReminderTemplateDataModel templateDataModel =
         new OrganizationPasswordReminderTemplateDataModel(
             contact.getFirstName(),
-            URI.create("https://gbif.org").toURL(),
             organization,
             contact,
             emailAddress,

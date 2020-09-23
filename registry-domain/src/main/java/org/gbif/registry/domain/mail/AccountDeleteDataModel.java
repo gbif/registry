@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.domain.mail;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,8 +22,8 @@ public class AccountDeleteDataModel extends BaseTemplateDataModel {
 
   private final List<String> downloadUrls;
 
-  public AccountDeleteDataModel(String name, URL url, List<String> downloadUrls) {
-    super(name, url);
+  public AccountDeleteDataModel(String name, List<String> downloadUrls) {
+    super(name);
     this.downloadUrls = downloadUrls != null ? downloadUrls : Collections.emptyList();
   }
 
