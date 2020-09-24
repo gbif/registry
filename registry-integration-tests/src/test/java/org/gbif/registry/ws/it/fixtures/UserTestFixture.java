@@ -43,12 +43,13 @@ public class UserTestFixture {
 
   public static final String USERNAME = "test_user";
   public static final String EMAIL = "test_user@gbif.org";
+  public static final String ALTERNATIVE_EMAIL = "123456@gbif.org";
   public static final String ALTERNATE_USERNAME = "alternative_test_user";
   public static final String PASSWORD = "password";
 
-  private IdentityService identityService;
-  private IdentitySuretyTestHelper identitySuretyTestHelper;
-  private UserMapper userMapper;
+  private final IdentityService identityService;
+  private final IdentitySuretyTestHelper identitySuretyTestHelper;
+  private final UserMapper userMapper;
 
   @Autowired
   public UserTestFixture(

@@ -264,6 +264,10 @@ public class UserManagementIT extends BaseItTest {
     requestTestFixture
         .putSignedRequest(IT_APP_KEY, testUser2, "/admin/user/" + ALTERNATE_USERNAME)
         .andExpect(status().isNoContent());
+
+    // email can't be updated directly
+    updatedUser = userTestFixture.getUser(testUser.getUserName());
+    assertEquals(testUser.getEmail(), updatedUser.getEmail());
   }
 
   @Test

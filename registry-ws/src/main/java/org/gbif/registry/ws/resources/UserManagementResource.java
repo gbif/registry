@@ -194,8 +194,6 @@ public class UserManagementResource {
     // UserUpdate
     GbifUser currentUser = identityService.get(username);
     if (SecurityContextCheck.checkSameUser(currentUser, userUpdate.getUserName())) {
-      response = ResponseEntity.badRequest().build();
-    } else {
       GbifUser updateInitiator = null;
 
       if (authentication != null) {
@@ -213,6 +211,8 @@ public class UserManagementResource {
       if (result.containsError()) {
         response = ResponseEntity.unprocessableEntity().body(result);
       }
+    } else {
+      response = ResponseEntity.badRequest().build();
     }
     return response;
   }
