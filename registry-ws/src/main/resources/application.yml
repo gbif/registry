@@ -33,7 +33,7 @@ identity:
       urlTemplate:
         confirmUser: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
         resetPassword: https://demo.gbif-dev.org/user/confirm?username={0}&code={1}
-        changeEmail: https://demo.gbif-dev.org/user/change-email?username={0}&code={1}
+        changeEmail: https://demo.gbif-dev.org/user/change-email?username={0}&code={1}&email={2}
 
 organization:
   surety:
