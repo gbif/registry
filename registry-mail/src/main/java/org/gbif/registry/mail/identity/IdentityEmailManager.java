@@ -160,7 +160,7 @@ public class IdentityEmailManager {
     try {
       return generateConfirmationEmailModel(
           user,
-          generateChangeEmailUrl(user.getUserName(), challengeCode.getCode()),
+          generateChangeEmailUrl(user.getUserName(), challengeCode.getCode(), user.getEmail()),
           IdentityEmailType.CHANGE_EMAIL);
     } catch (TemplateException e) {
       throw new IOException(e);
@@ -201,13 +201,14 @@ public class IdentityEmailManager {
             confirmationKey.toString()));
   }
 
-  private URL generateChangeEmailUrl(String userName, UUID confirmationKey)
+  private URL generateChangeEmailUrl(String userName, UUID confirmationKey, String email)
       throws MalformedURLException {
     return new URL(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
             userName,
-            confirmationKey.toString()));
+            confirmationKey.toString(),
+            email));
   }
 
   private Locale getLocale(GbifUser user) {

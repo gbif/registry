@@ -18,7 +18,7 @@ identity:
       urlTemplate:
         confirmUser: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
         resetPassword: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
-        changeEmail: https://www.gbif-dev.org/user/change-email?username={0}&code={1}
+        changeEmail: https://www.gbif-dev.org/user/change-email?username={0}&code={1}&email={2}
 
 application:
   key: gbif.app.it
