@@ -17,13 +17,16 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
+import org.gbif.registry.domain.ws.EmailChangeRequest;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
+import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -32,6 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
+import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATIVE_EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
@@ -51,16 +56,19 @@ public class UserIT extends BaseItTest {
 
   private final UserTestFixture userTestFixture;
   private final RequestTestFixture requestTestFixture;
+  private final IdentitySuretyTestHelper identitySuretyTestHelper;
 
   @Autowired
   public UserIT(
       UserTestFixture userTestFixture,
       RequestTestFixture requestTestFixture,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      IdentitySuretyTestHelper identitySuretyTestHelper) {
     super(simplePrincipalProvider, esServer);
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
+    this.identitySuretyTestHelper = identitySuretyTestHelper;
   }
 
   @Test
@@ -129,6 +137,64 @@ public class UserIT extends BaseItTest {
 
     // try with the new password
     requestTestFixture.getRequest(USERNAME, newPassword, "/user/login").andExpect(status().isOk());
+  }
+
+  @Test
+  public void testChangeEmail() throws Exception {
+    GbifUser testUser = userTestFixture.prepareUser();
+
+    GbifUser updatedUser = new GbifUser(testUser);
+    updatedUser.setEmail(ALTERNATIVE_EMAIL);
+
+    // perform user update including email
+    requestTestFixture
+        .putSignedRequest(IT_APP_KEY, updatedUser, "/admin/user/" + USERNAME)
+        .andExpect(status().isNoContent());
+
+    // ensure email was NOT updated (shall be confirmed first)
+    updatedUser = userTestFixture.getUser(testUser.getUserName());
+    assertEquals(testUser.getEmail(), updatedUser.getEmail());
+
+    // perform email change using a arbitrary wrong confirmation key
+    EmailChangeRequest request = new EmailChangeRequest();
+    request.setEmail(ALTERNATIVE_EMAIL);
+    request.setChallengeCode(UUID.randomUUID());
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, request, "/user/changeEmail")
+        .andExpect(status().isUnprocessableEntity());
+
+    // extract a valid confirmation key
+    UUID confirmationKey = identitySuretyTestHelper.getChallengeCode(updatedUser.getKey());
+    assertNotNull(confirmationKey, "challengeCode shall exist");
+
+    // perform email change using a current email (the same)
+    request = new EmailChangeRequest();
+    request.setEmail(testUser.getEmail());
+    request.setChallengeCode(confirmationKey);
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, request, "/user/changeEmail")
+        .andExpect(status().isUnprocessableEntity());
+
+    // perform email change correctly
+    request = new EmailChangeRequest();
+    request.setEmail(ALTERNATIVE_EMAIL);
+    request.setChallengeCode(confirmationKey);
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, request, "/user/changeEmail")
+        .andExpect(status().isNoContent());
+
+    // ensure email was updated
+    updatedUser = userTestFixture.getUser(testUser.getUserName());
+    assertEquals(ALTERNATIVE_EMAIL, updatedUser.getEmail());
+
+    // try to login using the old email
+    requestTestFixture
+        .getRequest(testUser.getEmail(), PASSWORD, "/user/login")
+        .andExpect(status().isUnauthorized());
+
+    // try with the new email
+    requestTestFixture.getRequest(ALTERNATIVE_EMAIL, PASSWORD, "/user/login")
+        .andExpect(status().isOk());
   }
 
   /**
