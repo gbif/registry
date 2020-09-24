@@ -52,7 +52,12 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
       String... subjectParams)
       throws IOException, TemplateException {
     return buildEmail(
-        emailType, emailAddresses, templateDataModel, locale, Collections.emptySet(), subjectParams);
+        emailType,
+        emailAddresses,
+        templateDataModel,
+        locale,
+        Collections.emptySet(),
+        subjectParams);
   }
 
   /**
