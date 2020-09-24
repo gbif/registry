@@ -193,7 +193,8 @@ public class UserIT extends BaseItTest {
         .andExpect(status().isUnauthorized());
 
     // try with the new email
-    requestTestFixture.getRequest(ALTERNATIVE_EMAIL, PASSWORD, "/user/login")
+    requestTestFixture
+        .getRequest(ALTERNATIVE_EMAIL, PASSWORD, "/user/login")
         .andExpect(status().isOk());
   }
 
