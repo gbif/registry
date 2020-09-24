@@ -28,4 +28,3 @@ public class AccountEmailChangedTemplateDataModel extends BaseTemplateDataModel 
     return newEmail;
   }
 }
-
