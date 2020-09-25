@@ -363,7 +363,8 @@ public class UserManagementResource {
   public ResponseEntity<Void> tokenValidityCheck(
       Authentication authentication,
       @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
-      @Nullable @RequestParam(value = "confirmationKey", required = false) UUID confirmationKey) {
+      @Nullable @RequestParam(value = "confirmationKey", required = false) UUID confirmationKey,
+      @Nullable @RequestParam(value = "email", required = false) String email) {
 
     // we ONLY accept user impersonation, and only from a trusted app key.
     SecurityContextCheck.ensureAuthorizedUserImpersonation(
@@ -372,7 +373,7 @@ public class UserManagementResource {
     String username = authentication.getName();
     GbifUser user = identityService.get(username);
 
-    if (user == null || identityService.isConfirmationKeyValid(user.getKey(), confirmationKey)) {
+    if (user == null || identityService.isConfirmationKeyValid(user.getKey(), email, confirmationKey)) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

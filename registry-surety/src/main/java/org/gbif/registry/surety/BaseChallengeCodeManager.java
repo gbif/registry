@@ -19,6 +19,7 @@ import org.gbif.api.model.ChallengeCode;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,19 +41,6 @@ public class BaseChallengeCodeManager<K> implements ChallengeCodeManager<K> {
   }
 
   /**
-   * Check if the provided challengeCode is valid for a specific entity key.
-   */
-  @Override
-  public boolean isValidChallengeCode(K key, UUID challengeCode) {
-    if (key == null || challengeCode == null) {
-      return false;
-    }
-
-    Integer ccKey = challengeCodeSupportMapper.getChallengeCodeKey(key);
-    return ccKey != null && challengeCode.equals(challengeCodeMapper.getChallengeCode(ccKey));
-  }
-
-  /**
    * Check if the provided challengeCode is valid for a specific entity key and data.
    */
   @Override
@@ -65,7 +53,7 @@ public class BaseChallengeCodeManager<K> implements ChallengeCodeManager<K> {
 
     if (ccKey != null) {
       ChallengeCode ccObject = challengeCodeMapper.getChallengeCodeObject(ccKey);
-      return challengeCode.equals(ccObject.getCode()) && data.equals(ccObject.getData());
+      return challengeCode.equals(ccObject.getCode()) && Objects.equals(data, ccObject.getData());
     }
 
     return false;

@@ -230,8 +230,8 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   }
 
   @Override
-  public boolean isConfirmationKeyValid(int userKey, UUID confirmationKey) {
-    return userSuretyDelegate.isValidChallengeCode(userKey, confirmationKey);
+  public boolean isConfirmationKeyValid(int userKey, String email, UUID confirmationKey) {
+    return userSuretyDelegate.isValidChallengeCode(userKey, email, confirmationKey);
   }
 
   @Override

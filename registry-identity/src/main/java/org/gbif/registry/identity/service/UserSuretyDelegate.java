@@ -28,13 +28,14 @@ interface UserSuretyDelegate {
   boolean hasChallengeCode(Integer userKey);
 
   /**
-   * Check if user's challenge code is valid.
+   * Check if challenge code is valid for user and email.
    *
    * @param userKey user key (id)
+   * @param email email
    * @param challengeCode challenge code (confirmation object)
    * @return true if challenge code is valid and false otherwise
    */
-  boolean isValidChallengeCode(Integer userKey, UUID challengeCode);
+  boolean isValidChallengeCode(Integer userKey, String email, UUID challengeCode);
 
   /**
    * Handles the logic on new user (e.g. create challenge code, generate and send email).
