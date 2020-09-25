@@ -373,7 +373,8 @@ public class UserManagementResource {
     String username = authentication.getName();
     GbifUser user = identityService.get(username);
 
-    if (user == null || identityService.isConfirmationKeyValid(user.getKey(), email, confirmationKey)) {
+    if (user == null
+        || identityService.isConfirmationKeyValid(user.getKey(), email, confirmationKey)) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
