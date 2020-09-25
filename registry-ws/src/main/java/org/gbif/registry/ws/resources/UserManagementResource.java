@@ -238,8 +238,8 @@ public class UserManagementResource {
 
     GbifUser user = identityService.get(authentication.getName());
     if (user != null
-        && identityService.confirmUser(
-            user.getKey(), confirmationKeyParameter.getConfirmationKey(), true)) {
+        && identityService.confirmAndNotifyUser(
+            user.getKey(), confirmationKeyParameter.getConfirmationKey())) {
       identityService.updateLastLogin(user.getKey());
 
       // ideally we would return 200 OK but CreatedResponseFilter automatically change it to 201

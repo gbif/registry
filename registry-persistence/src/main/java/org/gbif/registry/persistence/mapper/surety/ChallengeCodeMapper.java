@@ -30,5 +30,7 @@ public interface ChallengeCodeMapper {
 
   UUID getChallengeCode(@Param("key") Integer key);
 
+  ChallengeCode getChallengeCodeObject(@Param("key") Integer key);
+
   void deleteChallengeCode(int key);
 }

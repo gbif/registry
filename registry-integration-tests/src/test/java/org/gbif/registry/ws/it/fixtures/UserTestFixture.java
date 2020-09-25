@@ -106,7 +106,7 @@ public class UserTestFixture {
     Integer key = identityService.get(newTestUser.getUserName()).getKey();
     UUID challengeCode = identitySuretyTestHelper.getChallengeCode(key);
     assertTrue(
-        identityService.confirmUser(key, challengeCode, false),
+        identityService.confirmUser(key, challengeCode),
         "Shall confirm challengeCode " + challengeCode);
 
     // this is currently done in the web layer (UserResource) since we confirm the challengeCode

@@ -2,12 +2,19 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper">
 
+  <resultMap id="CHALLENGE_CODE_MAP" type="org.gbif.api.model.ChallengeCode" >
+    <id column="key" property="key" />
+    <result column="challenge_code" property="code" />
+    <result column="data" property="data" />
+  </resultMap>
+
   <sql id="WRITABLE_FIELDS">
-    challenge_code, created
+    challenge_code,data,created
   </sql>
 
   <sql id="WRITABLE_FIELD_TYPES">
     #{code,jdbcType=OTHER},
+    #{data,jdbcType=OTHER},
     now() <!-- created -->
   </sql>
 
@@ -22,6 +29,10 @@
 
   <select id="getChallengeCode" resultType="java.util.UUID" >
     SELECT challenge_code FROM challenge_code WHERE key = #{key}
+  </select>
+
+  <select id="getChallengeCodeObject" resultMap="CHALLENGE_CODE_MAP" resultType="org.gbif.api.model.ChallengeCode">
+    SELECT key,challenge_code,data FROM challenge_code WHERE key = #{key}
   </select>
 
   <delete id="deleteChallengeCode">

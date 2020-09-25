@@ -44,14 +44,32 @@ interface UserSuretyDelegate {
   void onNewUser(GbifUser user);
 
   /**
+   * Handles the logic on user confirmation.
+   *
+   * @param user user to confirm
+   * @param confirmationObject confirmation object (challenge code)
+   * @return true if user was confirmed and false otherwise
+   */
+  boolean confirmUser(GbifUser user, UUID confirmationObject);
+
+  /**
    * Handles the logic on user confirmation (e.g. confirm user, generate and send email).
    *
    * @param user user to confirm
    * @param confirmationObject confirmation object (challenge code)
-   * @param emailEnabled is email required
    * @return true if user was confirmed and false otherwise
    */
-  boolean confirmUser(GbifUser user, UUID confirmationObject, boolean emailEnabled);
+  boolean confirmAndNotifyUser(GbifUser user, UUID confirmationObject);
+
+  /**
+   * Handles the logic on user confirmation and email confirmation.
+   *
+   * @param user user to confirm
+   * @param email email to confirm
+   * @param confirmationObject confirmation object (challenge code)
+   * @return true if user was confirmed and false otherwise
+   */
+  boolean confirmUserAndEmail(GbifUser user, String email, UUID confirmationObject);
 
   /**
    * Handles the logic on user deletion.

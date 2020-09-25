@@ -39,7 +39,9 @@ public class BaseChallengeCodeManager<K> implements ChallengeCodeManager<K> {
     this.challengeCodeSupportMapper = challengeCodeSupportMapper;
   }
 
-  /** Check if the provided challengeCode is valid for a specific entity key. */
+  /**
+   * Check if the provided challengeCode is valid for a specific entity key.
+   */
   @Override
   public boolean isValidChallengeCode(K key, UUID challengeCode) {
     if (key == null || challengeCode == null) {
@@ -50,7 +52,28 @@ public class BaseChallengeCodeManager<K> implements ChallengeCodeManager<K> {
     return ccKey != null && challengeCode.equals(challengeCodeMapper.getChallengeCode(ccKey));
   }
 
-  /** Check if a given key is associated with a challengeCode. */
+  /**
+   * Check if the provided challengeCode is valid for a specific entity key and data.
+   */
+  @Override
+  public boolean isValidChallengeCode(K key, UUID challengeCode, String data) {
+    if (key == null || challengeCode == null) {
+      return false;
+    }
+
+    Integer ccKey = challengeCodeSupportMapper.getChallengeCodeKey(key);
+
+    if (ccKey != null) {
+      ChallengeCode ccObject = challengeCodeMapper.getChallengeCodeObject(ccKey);
+      return challengeCode.equals(ccObject.getCode()) && data.equals(ccObject.getData());
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if a given key is associated with a challengeCode.
+   */
   @Override
   public boolean hasChallengeCode(K key) {
     return Optional.ofNullable(challengeCodeSupportMapper.getChallengeCodeKey(key)).isPresent();
@@ -63,6 +86,19 @@ public class BaseChallengeCodeManager<K> implements ChallengeCodeManager<K> {
   @Override
   public ChallengeCode create(K key) {
     ChallengeCode challengeCode = ChallengeCode.newRandom();
+    challengeCodeMapper.createChallengeCode(challengeCode);
+    challengeCodeSupportMapper.updateChallengeCodeKey(key, challengeCode.getKey());
+    return challengeCode;
+  }
+
+  /**
+   * Creates a new challengeCode with additional data
+   * and updates the link between the entity and the challengeCode.
+   * Should be called inside a @Transactional method
+   */
+  @Override
+  public ChallengeCode create(K key, String data) {
+    ChallengeCode challengeCode = ChallengeCode.newRandom(data);
     challengeCodeMapper.createChallengeCode(challengeCode);
     challengeCodeSupportMapper.updateChallengeCodeKey(key, challengeCode.getKey());
     return challengeCode;
