@@ -107,11 +107,11 @@ public interface IdentityService extends IdentityAccessService {
   void updateLastLogin(int userKey);
 
   /**
-   * Check if a confirmationKey is valid for a specific user.
+   * Check if a confirmationKey is valid for a specific user and email.
    *
    * @return the confirmationKey is valid or not
    */
-  boolean isConfirmationKeyValid(int userKey, UUID confirmationKey);
+  boolean isConfirmationKeyValid(int userKey, String email, UUID confirmationKey);
 
   /**
    * Confirms user using a confirmation key. A confirmationKey can only be confirmed once and only

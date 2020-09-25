@@ -57,8 +57,8 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   }
 
   @Override
-  public boolean isValidChallengeCode(Integer userKey, UUID challengeCode) {
-    return challengeCodeManager.isValidChallengeCode(userKey, challengeCode);
+  public boolean isValidChallengeCode(Integer userKey, String email, UUID challengeCode) {
+    return challengeCodeManager.isValidChallengeCode(userKey, challengeCode, email);
   }
 
   @Override
@@ -97,7 +97,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     boolean confirmationSucceeded = false;
 
     if (user.getKey() != null
-        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject)) {
+        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject, null)) {
       challengeCodeManager.remove(user.getKey());
       confirmationSucceeded = true;
     }
@@ -109,7 +109,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     boolean confirmationSucceeded = false;
 
     if (user.getKey() != null
-        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject)) {
+        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject, null)) {
       challengeCodeManager.remove(user.getKey());
       confirmationSucceeded = true;
     }

@@ -32,11 +32,6 @@ public interface ChallengeCodeManager<K> {
   boolean isValidChallengeCode(K key, UUID challengeCode, String data);
 
   /**
-   * Check if the provided challengeCode is valid for a specific entity key.
-   */
-  boolean isValidChallengeCode(K key, UUID challengeCode);
-
-  /**
    * Check if a given key is associated with a challengeCode.
    */
   boolean hasChallengeCode(K key);

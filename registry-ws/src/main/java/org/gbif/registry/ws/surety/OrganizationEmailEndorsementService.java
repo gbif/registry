@@ -130,7 +130,7 @@ public class OrganizationEmailEndorsementService implements OrganizationEndorsem
     if (organization != null
         && !organization.isEndorsementApproved()
         && (challengeCode == null
-            || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode))) {
+            || challengeCodeManager.isValidChallengeCode(organizationKey, challengeCode, null))) {
       checkArgument(
           organization.getDeleted() == null, "Unable to endorse a previously deleted organization");
       challengeCodeManager.remove(organizationKey);
