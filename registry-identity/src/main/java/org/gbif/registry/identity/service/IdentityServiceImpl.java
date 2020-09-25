@@ -235,9 +235,27 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   }
 
   @Override
-  public boolean confirmUser(int userKey, UUID confirmationKey, boolean emailEnabled) {
+  public boolean confirmUser(int userKey, UUID confirmationKey) {
     if (confirmationKey != null) {
-      return userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKey, emailEnabled);
+      return userSuretyDelegate.confirmUser(getByKey(userKey), confirmationKey);
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean confirmUserAndEmail(int userKey, String email, UUID confirmationKey) {
+    if (confirmationKey != null) {
+      return userSuretyDelegate.confirmUserAndEmail(getByKey(userKey), email, confirmationKey);
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean confirmAndNotifyUser(int userKey, UUID confirmationKey) {
+    if (confirmationKey != null) {
+      return userSuretyDelegate.confirmAndNotifyUser(getByKey(userKey), confirmationKey);
     }
 
     return false;
@@ -260,7 +278,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
     GbifUser userByEmail = userMapper.getByEmail(newEmail);
     if (userByEmail != null) {
       result = withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
-    } else if (confirmUser(userKey, confirmationKey, false)) {
+    } else if (confirmUserAndEmail(userKey, newEmail, confirmationKey)) {
       GbifUser user = userMapper.getByKey(userKey);
 
       if (user != null) {
@@ -285,7 +303,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Override
   public UserModelMutationResult updatePassword(
       int userKey, String newPassword, UUID challengeCode) {
-    return confirmUser(userKey, challengeCode, false)
+    return confirmUser(userKey, challengeCode)
         ? updatePassword(userKey, newPassword)
         : withSingleConstraintViolation(
             PropertyConstants.CHALLENGE_CODE_PROPERTY_NAME, PropertyConstants.CONSTRAINT_INCORRECT);

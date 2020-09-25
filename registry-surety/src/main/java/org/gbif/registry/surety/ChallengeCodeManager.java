@@ -26,10 +26,19 @@ import java.util.UUID;
  */
 public interface ChallengeCodeManager<K> {
 
-  /** Check if the provided challengeCode is valid for a specific entity key. */
+  /**
+   * Check if the provided challengeCode is valid for a specific entity key and data.
+   */
+  boolean isValidChallengeCode(K key, UUID challengeCode, String data);
+
+  /**
+   * Check if the provided challengeCode is valid for a specific entity key.
+   */
   boolean isValidChallengeCode(K key, UUID challengeCode);
 
-  /** Check if a given key is associated with a challengeCode. */
+  /**
+   * Check if a given key is associated with a challengeCode.
+   */
   boolean hasChallengeCode(K key);
 
   /**
@@ -37,6 +46,13 @@ public interface ChallengeCodeManager<K> {
    * Should be called inside a @Transactional method
    */
   ChallengeCode create(K key);
+
+  /**
+   * Creates a new challengeCode with additional data
+   * and updates the link between the entity and the challengeCode.
+   * Should be called inside a @Transactional method
+   */
+  ChallengeCode create(K key, String data);
 
   /**
    * Removes a challengeCode and removes the link between the entity and the challengeCode. Should

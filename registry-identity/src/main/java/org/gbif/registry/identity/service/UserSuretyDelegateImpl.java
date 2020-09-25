@@ -93,7 +93,19 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   }
 
   @Override
-  public boolean confirmUser(GbifUser user, UUID confirmationObject, boolean emailEnabled) {
+  public boolean confirmUser(GbifUser user, UUID confirmationObject) {
+    boolean confirmationSucceeded = false;
+
+    if (user.getKey() != null
+        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject)) {
+      challengeCodeManager.remove(user.getKey());
+      confirmationSucceeded = true;
+    }
+    return confirmationSucceeded;
+  }
+
+  @Override
+  public boolean confirmAndNotifyUser(GbifUser user, UUID confirmationObject) {
     boolean confirmationSucceeded = false;
 
     if (user.getKey() != null
@@ -102,7 +114,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
       confirmationSucceeded = true;
     }
 
-    if (confirmationSucceeded && emailEnabled) {
+    if (confirmationSucceeded) {
       try {
         BaseEmailModel emailModel = identityEmailManager.generateWelcomeEmailModel(user);
         emailSender.send(emailModel);
@@ -113,6 +125,19 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
             e);
       }
     }
+    return confirmationSucceeded;
+  }
+
+  @Override
+  public boolean confirmUserAndEmail(GbifUser user, String email, UUID confirmationObject) {
+    boolean confirmationSucceeded = false;
+
+    if (user.getKey() != null
+        && challengeCodeManager.isValidChallengeCode(user.getKey(), confirmationObject, email)) {
+      challengeCodeManager.remove(user.getKey());
+      confirmationSucceeded = true;
+    }
+
     return confirmationSucceeded;
   }
 
@@ -149,7 +174,7 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
 
   @Override
   public void onChangeEmail(GbifUser user) {
-    ChallengeCode challengeCode = challengeCodeManager.create(user.getKey());
+    ChallengeCode challengeCode = challengeCodeManager.create(user.getKey(), user.getEmail());
     BaseEmailModel emailModel;
     try {
       emailModel = identityEmailManager.generateAccountEmailChangeEmailModel(user, challengeCode);

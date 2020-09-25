@@ -119,7 +119,24 @@ public interface IdentityService extends IdentityAccessService {
    *
    * @return the user was confirmed by this action or not
    */
-  boolean confirmUser(int userKey, UUID confirmationKey, boolean emailEnabled);
+  boolean confirmUser(int userKey, UUID confirmationKey);
+
+  /**
+   * Confirms user and email using a confirmation key. A confirmationKey can only be confirmed once and only
+   * if it was previously assigned. If no confirmationKey is present this method will return false;
+   *
+   * @return the user was confirmed by this action or not
+   */
+  boolean confirmUserAndEmail(int userKey, String email, UUID confirmationKey);
+
+  /**
+   * Confirms user using a confirmation key and notify about the result.
+   * A confirmationKey can only be confirmed once and only
+   * if it was previously assigned. If no confirmationKey is present this method will return false;
+   *
+   * @return the user was confirmed by this action or not
+   */
+  boolean confirmAndNotifyUser(int userKey, UUID confirmationKey);
 
   /**
    * Allows to change the password of a user providing a challenge code instead of its password. A

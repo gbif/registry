@@ -152,7 +152,17 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public boolean confirmUser(int userKey, UUID challengeCode, boolean emailEnabled) {
+  public boolean confirmUser(int userKey, UUID challengeCode) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean confirmUserAndEmail(int userKey, String email, UUID challengeCode) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean confirmAndNotifyUser(int userKey, UUID challengeCode) {
     throw new UnsupportedOperationException();
   }
 
