@@ -353,7 +353,7 @@ public class UserManagementIT extends BaseItTest {
     request.setEmail(ALTERNATIVE_EMAIL);
     request.setChallengeCode(UUID.randomUUID());
     requestTestFixture
-        .putRequest(USERNAME, PASSWORD, request, "/admin/user/changeEmail")
+        .putSignedRequest(USERNAME, request, "/admin/user/changeEmail")
         .andExpect(status().isUnprocessableEntity());
 
     // extract a valid confirmation key
@@ -365,7 +365,7 @@ public class UserManagementIT extends BaseItTest {
     request.setEmail(testUser.getEmail());
     request.setChallengeCode(confirmationKey);
     requestTestFixture
-        .putRequest(USERNAME, PASSWORD, request, "/admin/user/changeEmail")
+        .putSignedRequest(USERNAME, request, "/admin/user/changeEmail")
         .andExpect(status().isUnprocessableEntity());
 
     // perform email change correctly
@@ -373,7 +373,7 @@ public class UserManagementIT extends BaseItTest {
     request.setEmail(ALTERNATIVE_EMAIL);
     request.setChallengeCode(confirmationKey);
     requestTestFixture
-        .putRequest(USERNAME, PASSWORD, request, "/admin/user/changeEmail")
+        .putSignedRequest(USERNAME, request, "/admin/user/changeEmail")
         .andExpect(status().isNoContent());
 
     // ensure email was updated
