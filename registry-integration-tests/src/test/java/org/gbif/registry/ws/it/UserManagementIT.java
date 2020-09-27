@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
+import org.gbif.registry.domain.ws.EmailChangeRequest;
 import org.gbif.registry.domain.ws.UserAdminView;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ModelMutationError;
@@ -41,6 +42,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATE_USERNAME;
+import static org.gbif.registry.ws.it.fixtures.UserTestFixture.ALTERNATIVE_EMAIL;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.PASSWORD;
 import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -328,5 +330,64 @@ public class UserManagementIT extends BaseItTest {
     requestTestFixture
         .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight/" + randomKey)
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void testChangeEmail() throws Exception {
+    GbifUser testUser = userTestFixture.prepareUser();
+
+    GbifUser updatedUser = new GbifUser(testUser);
+    updatedUser.setEmail(ALTERNATIVE_EMAIL);
+
+    // perform user update including email
+    requestTestFixture
+        .putSignedRequest(IT_APP_KEY, updatedUser, "/admin/user/" + USERNAME)
+        .andExpect(status().isNoContent());
+
+    // ensure email was NOT updated (shall be confirmed first)
+    updatedUser = userTestFixture.getUser(testUser.getUserName());
+    assertEquals(testUser.getEmail(), updatedUser.getEmail());
+
+    // perform email change using a arbitrary wrong confirmation key
+    EmailChangeRequest request = new EmailChangeRequest();
+    request.setEmail(ALTERNATIVE_EMAIL);
+    request.setChallengeCode(UUID.randomUUID());
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, request, "/admin/user/changeEmail")
+        .andExpect(status().isUnprocessableEntity());
+
+    // extract a valid confirmation key
+    UUID confirmationKey = identitySuretyTestHelper.getChallengeCode(updatedUser.getKey());
+    assertNotNull(confirmationKey, "challengeCode shall exist");
+
+    // perform email change using a current email (the same)
+    request = new EmailChangeRequest();
+    request.setEmail(testUser.getEmail());
+    request.setChallengeCode(confirmationKey);
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, request, "/admin/user/changeEmail")
+        .andExpect(status().isUnprocessableEntity());
+
+    // perform email change correctly
+    request = new EmailChangeRequest();
+    request.setEmail(ALTERNATIVE_EMAIL);
+    request.setChallengeCode(confirmationKey);
+    requestTestFixture
+        .putRequest(USERNAME, PASSWORD, request, "/admin/user/changeEmail")
+        .andExpect(status().isNoContent());
+
+    // ensure email was updated
+    updatedUser = userTestFixture.getUser(testUser.getUserName());
+    assertEquals(ALTERNATIVE_EMAIL, updatedUser.getEmail());
+
+    // try to login using the old email
+    requestTestFixture
+        .getRequest(testUser.getEmail(), PASSWORD, "/user/login")
+        .andExpect(status().isUnauthorized());
+
+    // try with the new email
+    requestTestFixture
+        .getRequest(ALTERNATIVE_EMAIL, PASSWORD, "/user/login")
+        .andExpect(status().isOk());
   }
 }

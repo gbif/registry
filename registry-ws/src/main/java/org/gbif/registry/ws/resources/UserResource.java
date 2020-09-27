@@ -17,7 +17,6 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
-import org.gbif.registry.domain.ws.EmailChangeRequest;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.UserModelMutationResult;
@@ -128,28 +127,6 @@ public class UserResource {
           identityService.updatePassword(user.getKey(), authenticationDataParameters.getPassword());
       if (updatePasswordMutationResult.containsError()) {
         return ResponseEntity.unprocessableEntity().body(updatePasswordMutationResult);
-      }
-    }
-    return ResponseEntity.noContent().build();
-  }
-
-  /** Allows a user to change its own email. */
-  @Secured({USER_ROLE})
-  @PutMapping(path = "changeEmail", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<UserModelMutationResult> changeEmail(
-      @RequestBody @NotNull @Valid EmailChangeRequest request, Authentication authentication) {
-    // the user shall be authenticated using basic auth scheme
-    ensureNotGbifScheme(authentication);
-    ensureUserSetInSecurityContext(authentication);
-
-    final String identifier = authentication.getName();
-    final GbifUser user = identityService.get(identifier);
-    if (user != null) {
-      UserModelMutationResult result =
-          identityService.updateEmail(
-              user.getKey(), user.getEmail(), request.getEmail(), request.getChallengeCode());
-      if (result.containsError()) {
-        return ResponseEntity.unprocessableEntity().body(result);
       }
     }
     return ResponseEntity.noContent().build();
