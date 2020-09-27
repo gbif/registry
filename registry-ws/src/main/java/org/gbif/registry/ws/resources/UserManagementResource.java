@@ -23,6 +23,7 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
+import org.gbif.registry.domain.ws.EmailChangeRequest;
 import org.gbif.registry.domain.ws.UserAdminView;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.domain.ws.UserUpdate;
@@ -444,5 +445,32 @@ public class UserManagementResource {
       identityService.deleteEditorRight(username, key);
       return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+  }
+
+  /**
+   * Changes the user email only if the token presented is valid for the user account. The
+   * username is expected to be present in the security context (authenticated by appkey).
+   */
+  @Secured({USER_ROLE})
+  @PutMapping(path = "changeEmail", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<UserModelMutationResult> changeEmail(
+      @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,
+      Authentication authentication,
+      @RequestBody @NotNull @Valid EmailChangeRequest request) {
+    // we ONLY accept user impersonation, and only from a trusted app key.
+    SecurityContextCheck.ensureAuthorizedUserImpersonation(
+        authentication, authHeader, appKeyWhitelist);
+
+    final String identifier = authentication.getName();
+    final GbifUser user = identityService.get(identifier);
+    if (user != null) {
+      UserModelMutationResult result =
+          identityService.updateEmail(
+              user.getKey(), user.getEmail(), request.getEmail(), request.getChallengeCode());
+      if (result.containsError()) {
+        return ResponseEntity.unprocessableEntity().body(result);
+      }
+    }
+    return ResponseEntity.noContent().build();
   }
 }
