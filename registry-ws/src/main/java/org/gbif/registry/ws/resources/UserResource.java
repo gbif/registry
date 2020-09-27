@@ -23,7 +23,6 @@ import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.http.CacheControl;
