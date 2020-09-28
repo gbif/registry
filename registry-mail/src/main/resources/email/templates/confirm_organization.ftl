@@ -132,10 +132,12 @@
             </p>
 
 
+            <#if organization.description?has_content>
             <h4 style="margin: 0;padding: 0;font-size: 20px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.25;margin-bottom: 20px;">Description</h4>
             <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">
                 ${organization.description!}
             </p>
+            </#if>
 
 
             <#if organization.contacts?has_content>
