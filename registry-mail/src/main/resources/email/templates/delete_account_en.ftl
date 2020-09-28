@@ -81,7 +81,11 @@
                     <td class="content" style="margin: 0;padding: 30px 35px;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;background: white;">
                         <h4 style="margin: 0;padding: 0;font-size: 20px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.25;margin-bottom: 20px;">Dear ${name},</h4>
 
-                        <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">Your GBIF.org account ${name} has been deleted, and your personal information has been erased.</p>
+                        <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">
+                            Your GBIF.org account
+                            <b style="margin: 0;padding: 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">${name}</b>
+                            has been deleted, and your personal information has been erased.
+                        </p>
 
                         <#if downloadUrls?size != 0>
                         <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">Occurrence download metadata is not deleted.  You can still cite any of the downloads you created:</p>

@@ -81,7 +81,11 @@
                     <td class="content" style="margin: 0;padding: 30px 35px;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;background: white;">
                         <h4 style="margin: 0;padding: 0;font-size: 20px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.25;margin-bottom: 20px;">Уважаемый/ая ${name},</h4>
 
-                        <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">Ваш аккаунт ${name} на GBIF.org был удален, а ваша личная информация стерта.</p>
+                        <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">
+                            Ваш аккаунт
+                            <b style="margin: 0;padding: 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">${name}</b>
+                            на GBIF.org был удален, а ваша личная информация стерта.
+                        </p>
 
                         <#if downloadUrls?size != 0>
                         <p style="margin: 0;padding: 0;font-size: 16px;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;font-weight: normal;margin-bottom: 20px;">Метаданные загрузки находок не были удалены. Вы по-прежнему можете цитировать любые созданные вами загрузки:</p>
