@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 /** Internal class used to coordinate actions between the MyBatis layer and the email manager. */
-interface UserSuretyDelegate {
+public interface UserSuretyDelegate {
 
   /** Check if user has a challenge code. */
   boolean hasChallengeCode(Integer userKey);
