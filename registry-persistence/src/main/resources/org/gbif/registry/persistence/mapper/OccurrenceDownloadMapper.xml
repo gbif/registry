@@ -42,7 +42,7 @@
         <case value="MAP_OF_LIFE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
-        <case value="BLOODHOUND" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+        <case value="BIONOMIA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
       </discriminator>
