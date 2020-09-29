@@ -1,0 +1,23 @@
+POST http://api.gbif-dev.org/v1/derivedDataset
+Authorization: Basic <>
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="relatedDatasets"; filename="relatedDatasets.csv"
+Content-Type: application/csv
+
+< relatedDatasets.csv
+
+--boundary
+Content-Disposition: form-data; name="derivedDataset"
+Content-Type: application/json
+
+# Optional parameters:
+# originalDownloadDOI, registrationDate
+{
+  "originalDownloadDOI": "10.21373/dl.njvgg8",
+  "target": "https://github.com/gbif/registry",
+  "title": "Citation multipart request",
+  "registrationDate": "2020-09-12T19:09:22.000+0000"
+}
+--boundary

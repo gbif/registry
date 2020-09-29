@@ -1,0 +1,17 @@
+POST http://api.gbif-dev.org/v1/derivedDataset
+Authorization: Basic <>
+Content-Type: application/json
+
+# Optional parameters:
+# originalDownloadDOI, registrationDate, relatedDatasets
+{
+  "originalDownloadDOI": "10.21373/dl.njvgg8",
+  "target": "https://github.com/gbif/registry",
+  "title": "Derived dataset",
+  "registrationDate": "2020-09-22T14:09:22.000+0000",
+  "relatedDatasets": {
+    "10.21373/1llmgl": 1,
+    "9579eaa0-f762-11e1-a439-00145eb45e9a": 2,
+    "10.21373/abcdef": 3
+  }
+}
