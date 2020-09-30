@@ -44,7 +44,7 @@ public class EmailSenderImpl implements EmailSender {
   private final JavaMailSender mailSender;
   private final MailConfigurationProperties mailConfigProperties;
 
-  @Value("classpath:email/images/GBIF-2015-full.jpg")
+  @Value("classpath:email/images/GBIF-logo.png")
   private Resource logoFile;
 
   public EmailSenderImpl(
