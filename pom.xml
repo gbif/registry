@@ -702,7 +702,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <configuration>
-          <topSiteURL>http://gbif.github.io/registry-spring-boot/</topSiteURL>
+          <topSiteURL>http://gbif.github.io/registry/</topSiteURL>
         </configuration>
       </plugin>
 
