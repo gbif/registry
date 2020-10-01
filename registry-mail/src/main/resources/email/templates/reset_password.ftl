@@ -1,4 +1,6 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.ConfirmableTemplateDataModel" -->
+<#include "header.ftl">
+
 <h4 style="margin: 0;padding: 0;font-size: 20px;line-height: 1.25;margin-bottom: 20px;">Hello ${name},</h4>
 
 <p style="margin: 0;padding: 0;line-height: 1.65;margin-bottom: 20px;">We received a request to reset the password of your GBIF account. Please click the following button to reset your password:</p>
@@ -17,3 +19,5 @@
 </p><p style="margin: 0;padding: 0;line-height: 1.65;margin-bottom: 20px;">
     <em style="margin: 0;padding: 0;line-height: 1.65;">The GBIF Secretariat</em>
 </p>
+
+<#include "footer.ftl">

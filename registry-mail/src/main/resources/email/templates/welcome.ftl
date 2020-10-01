@@ -1,4 +1,6 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseTemplateDataModel" -->
+<#include "header.ftl">
+
 <h4 style="margin: 0;padding: 0;line-height: 1.25;margin-bottom: 20px;">Hello ${name},</h4>
 
 <p style="margin: 0;padding: 0;line-height: 1.65;margin-bottom: 20px;">Thanks for registering at GBIF.org. You're ready now to download the results of your searches of the hundreds of millions
@@ -61,3 +63,5 @@
         The GBIF Secretariat
     </em>
 </p>
+
+<#include "footer.ftl">
