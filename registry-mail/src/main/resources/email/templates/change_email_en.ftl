@@ -72,9 +72,7 @@
             <table style="margin: 0;padding: 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
                 <tr style="margin: 0;padding: 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">
                     <td class="masthead" style="margin: 0;padding: 10px 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;background: #509E2F;color: white;">
-
-                        <img src="cid:logo.png" style="margin: 0 auto;padding: 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;max-width: 100%;display: block;">
-
+                        <img src="cid:logo.png" width="300" height="114" alt="GBIF &ndash; Global Biodiversity Information Facility" style="margin: 0 auto;padding: 0;max-width: 100%;display: block;">
                     </td>
                 </tr>
                 <tr style="margin: 0;padding: 0;font-size: 100%;font-family: 'Roboto', &quot;Helvetica Neue&quot;, &quot;Helvetica&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;">
