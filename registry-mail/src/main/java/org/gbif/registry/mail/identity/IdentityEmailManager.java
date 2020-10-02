@@ -164,7 +164,8 @@ public class IdentityEmailManager {
     try {
       URL url = generateChangeEmailUrl(user.getUserName(), challengeCode.getCode(), newEmail);
       BaseTemplateDataModel dataModel =
-          new AccountChangeEmailTemplateDataModel(user.getUserName(), url, user.getEmail(), newEmail);
+          new AccountChangeEmailTemplateDataModel(
+              user.getUserName(), url, user.getEmail(), newEmail);
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.CHANGE_EMAIL, Collections.singleton(newEmail), dataModel, locale);

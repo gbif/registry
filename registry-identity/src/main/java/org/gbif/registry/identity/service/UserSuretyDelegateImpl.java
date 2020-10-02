@@ -177,7 +177,8 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
     ChallengeCode challengeCode = challengeCodeManager.create(user.getKey(), newEmail);
     BaseEmailModel emailModel;
     try {
-      emailModel = identityEmailManager.generateAccountEmailChangeEmailModel(user, newEmail, challengeCode);
+      emailModel =
+          identityEmailManager.generateAccountEmailChangeEmailModel(user, newEmail, challengeCode);
     } catch (IOException e) {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,
