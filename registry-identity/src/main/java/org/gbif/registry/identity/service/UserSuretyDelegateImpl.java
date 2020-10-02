@@ -173,11 +173,11 @@ public class UserSuretyDelegateImpl implements UserSuretyDelegate {
   }
 
   @Override
-  public void onChangeEmail(GbifUser user) {
-    ChallengeCode challengeCode = challengeCodeManager.create(user.getKey(), user.getEmail());
+  public void onChangeEmail(GbifUser user, String newEmail) {
+    ChallengeCode challengeCode = challengeCodeManager.create(user.getKey(), newEmail);
     BaseEmailModel emailModel;
     try {
-      emailModel = identityEmailManager.generateAccountEmailChangeEmailModel(user, challengeCode);
+      emailModel = identityEmailManager.generateAccountEmailChangeEmailModel(user, newEmail, challengeCode);
     } catch (IOException e) {
       LOG.error(
           RegistryMailUtils.NOTIFY_ADMIN,

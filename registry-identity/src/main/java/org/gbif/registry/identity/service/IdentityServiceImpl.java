@@ -122,7 +122,7 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
         if (userByEmail != null) {
           return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
         } else {
-          userSuretyDelegate.onChangeEmail(user);
+          userSuretyDelegate.onChangeEmail(currentUser, user.getEmail());
         }
 
         // email must be updated separately by clicking a email's link

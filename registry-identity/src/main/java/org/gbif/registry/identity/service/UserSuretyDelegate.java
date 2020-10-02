@@ -98,8 +98,9 @@ public interface UserSuretyDelegate {
    * Handles the logic on change email.
    *
    * @param user user who email has to be changed
+   * @param newEmail new email address
    */
-  void onChangeEmail(GbifUser user);
+  void onChangeEmail(GbifUser user, String newEmail);
 
   /**
    * Handles the logic on email changed.

@@ -20,12 +20,9 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Присоединяйтесь к одному из сообществ</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">По вопросам и обсуждениям использования данных, передаваемых через GBIF, присоединяйтесь к <a href="https://discourse.gbif.org/" style="color: #509E2F;text-decoration: none;">форуму сообщества GBIF</a>, запущенному в мае 2018 года.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">По вопросам и обсуждениям использования данных, передаваемых через GBIF, присоединяйтесь к <a href="https://discourse.gbif.org/" style="color: #509E2F;text-decoration: none;">форуму сообщества GBIF</a>.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;"><a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #509E2F;text-decoration: none;">Список пользователей API GBIF</a> представляет собой активную одноранговую группу обсуждения, где вы можете публиковать вопросы и оставаться информированным об обновлениях API GBIF и базовой инфраструктуры.</p>
-
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">С выпуском нашего нового веб-сайта в августе 2017 года мы рассчитываем обратить наше внимание на разработку замены устаревшего сайта сообщества GBIF, что позволит вам взаимодействовать и учиться у других, разделяющих ваши интересы.
-    Пожалуйста, свяжитесь с <a href="mailto:communication@gbif.org" style="color: #509E2F;text-decoration: none;">communication@gbif.org</a>, если у вас есть конкретные идеи или предложения, связанные с этой работой.</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Узнайте, как другие используют данные</h5>
 
@@ -33,12 +30,14 @@
     В рамках своей текущей программы по отслеживанию использования открытых данных о биоразнообразии секретариат GBIF представляет недавние исследования и
     собирает его каждый год в нашем <a href="https://www.gbif.org/science-review" style="color: #509E2F;text-decoration: none;">Обзоре Науки</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Отправьте нам свой отзыв</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Вопросы и отзывы</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Мы поддерживаем общедоступные репозитории на GitHub, где мы документируем, управляем и отвечаем на все, от запросов службы поддержки до ошибок и проблем с функциональностью и содержанием сайта до предложений о полезных дополнительных функциях и улучшениях.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Если у вас есть технические вопросы, связанные с получением или использованием данных, обратитесь к часто задаваемым вопросам на GBIF.org или на форуме сообщества.
+    Если вы не нашли ответа на свой вопрос, вы можете обратиться в <a href="mailto:helpdesk@gbif.org" style="color: #509E2F;text-decoration: none;">helpdesk@gbif.org</a>.</p>
+
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">У нас есть общедоступные репозитории на GitHub, в которых мы документируем,
+    управляем и отвечаем: от запросов службы поддержки до ошибок и проблем с функциональностью и содержанием сайта до предложений о полезных дополнительных функциях и улучшениях.
     Вы можете внести свой вклад, нажав кнопку чата в строке меню в верхней части каждой страницы.</p>
-
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Мы также работаем над <a href="https://www.gbif.org/faq" style="color: #509E2F;text-decoration: none;">объединением и улучшением часто задаваемых вопросов</a>, ранее разбросанным по разным веб-страницам, и будем добавлять их по мере необходимости.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">По вопросам прессы обращайтесь по электронной почте <a href="mailto:communication@gbif.org" style="color: #509E2F;text-decoration: none;">communication@gbif.org</a>. По всем другим частным или нетехническим вопросам обращайтесь по адресу <a href="mailto:info@gbif.org" style="color: #509E2F;text-decoration: none;">info@gbif.org</a>.</p>
 

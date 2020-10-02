@@ -4,7 +4,7 @@
 <h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Уважаемый/ая ${name},</h4>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Мы получили запрос на изменение адреса электронной почты вашего аккаунта GBIF.
+    Мы получили запрос на изменение адреса электронной почты вашего аккаунта GBIF c <a href="mailto:${currentEmail}" style="color: #509E2F;text-decoration: none;">${currentEmail}</a> на <a href="mailto:${newEmail}" style="color: #509E2F;text-decoration: none;">${newEmail}</a>.
     Нажмите на кнопку, чтобы изменить адрес электронной почты:
 </p>
 
@@ -18,6 +18,9 @@
     </tr>
 </table>
 
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
+    Вы также можете скопировать следующий URL и вставить в свой браузер: <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
+</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>GBIF Секретариат</em>

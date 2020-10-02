@@ -4,7 +4,7 @@
 <h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Hello ${name},</h4>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Thanks for registering at GBIF.org.
-    Please confirm your GBIF account by clicking the following button:</p>
+    Please confirm your GBIF account by clicking the button below:</p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
     <tr style="margin: 0;padding: 0;line-height: 1.65;">
@@ -16,6 +16,9 @@
     </tr>
 </table>
 
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
+    You can also copy the following URL and paste into your browser: <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
+</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>The GBIF Secretariat</em>

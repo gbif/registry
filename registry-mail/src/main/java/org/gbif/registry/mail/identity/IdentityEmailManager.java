@@ -19,6 +19,7 @@ import org.gbif.api.model.ChallengeCode;
 import org.gbif.api.model.common.AbstractGbifUser;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.registry.domain.mail.AccountChangeEmailTemplateDataModel;
 import org.gbif.registry.domain.mail.AccountDeleteDataModel;
 import org.gbif.registry.domain.mail.AccountEmailChangedTemplateDataModel;
 import org.gbif.registry.domain.mail.BaseTemplateDataModel;
@@ -29,8 +30,11 @@ import org.gbif.registry.mail.EmailType;
 import org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
@@ -156,12 +160,14 @@ public class IdentityEmailManager {
   }
 
   public BaseEmailModel generateAccountEmailChangeEmailModel(
-      GbifUser user, ChallengeCode challengeCode) throws IOException {
+      GbifUser user, String newEmail, ChallengeCode challengeCode) throws IOException {
     try {
-      return generateConfirmationEmailModel(
-          user,
-          generateChangeEmailUrl(user.getUserName(), challengeCode.getCode(), user.getEmail()),
-          IdentityEmailType.CHANGE_EMAIL);
+      URL url = generateChangeEmailUrl(user.getUserName(), challengeCode.getCode(), newEmail);
+      BaseTemplateDataModel dataModel =
+          new AccountChangeEmailTemplateDataModel(user.getUserName(), url, user.getEmail(), newEmail);
+      Locale locale = getLocale(user);
+      return emailTemplateProcessor.buildEmail(
+          IdentityEmailType.CHANGE_EMAIL, Collections.singleton(newEmail), dataModel, locale);
     } catch (TemplateException e) {
       throw new IOException(e);
     }
@@ -202,13 +208,13 @@ public class IdentityEmailManager {
   }
 
   private URL generateChangeEmailUrl(String userName, UUID confirmationKey, String email)
-      throws MalformedURLException {
+      throws MalformedURLException, UnsupportedEncodingException {
     return new URL(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
             userName,
             confirmationKey.toString(),
-            email));
+            URLEncoder.encode(email, StandardCharsets.UTF_8.name())));
   }
 
   private Locale getLocale(GbifUser user) {
