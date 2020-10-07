@@ -3,9 +3,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <changeSet id="76" author="mpodolskiy" runInTransaction="false">
-    <sql splitStatements="false" stripComments="false">
-      ALTER TYPE doi_type ADD VALUE 'DERIVED_DATASET' AFTER 'DATA_PACKAGE';
+  <changeSet id="77" author="mpodolskiy" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true" >
+      ALTER TABLE challenge_code ADD COLUMN data text;
     </sql>
   </changeSet>
 </databaseChangeLog>

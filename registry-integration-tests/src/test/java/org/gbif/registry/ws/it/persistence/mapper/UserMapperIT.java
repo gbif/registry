@@ -59,8 +59,8 @@ public class UserMapperIT extends BaseItTest {
     user.setRoles(roles);
     Map<String, String> settings = new HashMap<>();
     settings.put("country", "DK");
+    settings.put("locale", "en");
     user.setSettings(settings);
-    user.setLocale(new Locale("en"));
     assertNull(mapper.get(user.getUserName()));
 
     mapper.create(user);

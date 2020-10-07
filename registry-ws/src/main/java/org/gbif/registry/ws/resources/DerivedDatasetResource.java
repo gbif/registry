@@ -159,7 +159,10 @@ public class DerivedDatasetResource {
     }
 
     if (!derivedDataset.getCreatedBy().equals(nameFromContext)) {
-      LOG.error("User {} is not allowed to update the Derived dataset {}", nameFromContext, derivedDatasetDoi);
+      LOG.error(
+          "User {} is not allowed to update the Derived dataset {}",
+          nameFromContext,
+          derivedDatasetDoi);
       throw new WebApplicationException(
           "User is not allowed to update the Derived dataset", HttpStatus.FORBIDDEN);
     }
@@ -206,7 +209,8 @@ public class DerivedDatasetResource {
     return getCitationText(new DOI(doiPrefix, doiSuffix));
   }
 
-  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI derivedDatasetDoi, Pageable page) {
+  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(
+      DOI derivedDatasetDoi, Pageable page) {
     return derivedDatasetService.getRelatedDatasets(derivedDatasetDoi, page);
   }
 

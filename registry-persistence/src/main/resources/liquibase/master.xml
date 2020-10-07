@@ -80,9 +80,8 @@
   <include file="liquibase/072-comments-grscicoll.xml" />
   <include file="liquibase/073-organization-endorsed-field.xml" />
   <include file="liquibase/074-organization-endorsement-status.xml" />
-  <include file="liquibase/075-user-language.xml" />
-  <include file="liquibase/076-derived-dataset-doi-type.xml" />
-  <include file="liquibase/077-derived-dataset-tables.xml" />
-  <include file="liquibase/078-challenge-code-data-field.xml" />
-  <include file="liquibase/079-download-format-bionomia.xml" />
+  <include file="liquibase/075-derived-dataset-doi-type.xml" />
+  <include file="liquibase/076-derived-dataset-tables.xml" />
+  <include file="liquibase/077-challenge-code-data-field.xml" />
+  <include file="liquibase/078-download-format-bionomia.xml" />
 </databaseChangeLog>
