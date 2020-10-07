@@ -96,7 +96,7 @@
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-download-query-tools.version>1.34</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.45</gbif-postal-service.version>
-    <gbif-api.version>0.121</gbif-api.version>
+    <gbif-api.version>0.122</gbif-api.version>
     <gbif-directory.version>1.4</gbif-directory.version>
     <gbif-metrics.version>1.0</gbif-metrics.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
@@ -123,7 +123,7 @@
 
     <!-- es version -->
     <elasticsearch.version>7.9.1</elasticsearch.version>
-    <testcontainers-elasticsearch.version>1.14.3</testcontainers-elasticsearch.version>
+    <testcontainers-elasticsearch.version>1.15.0-rc2</testcontainers-elasticsearch.version>
 
     <!-- Caching -->
     <cache2k.version>1.2.0.Final</cache2k.version>

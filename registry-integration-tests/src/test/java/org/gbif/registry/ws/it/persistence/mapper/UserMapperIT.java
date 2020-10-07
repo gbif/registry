@@ -66,6 +66,6 @@ public class UserMapperIT extends BaseItTest {
     mapper.create(user);
     GbifUser created = mapper.get(user.getUserName());
     assertNotNull(created);
-    assertEquals(new Locale("en"), created.getLocale());
+    assertEquals(Locale.ENGLISH, created.getLocale());
   }
 }
