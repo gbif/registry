@@ -123,7 +123,7 @@ public class DerivedDatasetResource {
 
     List<DerivedDatasetUsage> derivedDatasetUsages;
     try {
-      derivedDatasetUsages = datasetService.ensureCitationDatasetUsagesValid(relatedDatasets);
+      derivedDatasetUsages = datasetService.ensureDerivedDatasetDatasetUsagesValid(relatedDatasets);
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
       throw new WebApplicationException(
@@ -139,33 +139,33 @@ public class DerivedDatasetResource {
 
   @Secured({ADMIN_ROLE, USER_ROLE})
   @PutMapping(path = "{doiPrefix}/{doiSuffix}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void updateCitation(
+  public void update(
       @PathVariable("doiPrefix") String doiPrefix,
       @PathVariable("doiSuffix") String doiSuffix,
       @RequestBody @Valid DerivedDatasetUpdateRequest request) {
-    updateCitation(new DOI(doiPrefix, doiSuffix), request);
+    update(new DOI(doiPrefix, doiSuffix), request);
   }
 
-  public void updateCitation(DOI citationDoi, DerivedDatasetUpdateRequest request) {
+  public void update(DOI derivedDatasetDoi, DerivedDatasetUpdateRequest request) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String nameFromContext = authentication != null ? authentication.getName() : null;
 
-    DerivedDataset derivedDataset = derivedDatasetService.get(citationDoi);
+    DerivedDataset derivedDataset = derivedDatasetService.get(derivedDatasetDoi);
 
     if (derivedDataset == null) {
-      LOG.error("Citation with the DOI {} was not found", citationDoi);
+      LOG.error("Derived dataset with the DOI {} was not found", derivedDatasetDoi);
       throw new WebApplicationException(
-          "Citation with the DOI was not found", HttpStatus.NOT_FOUND);
+          "Derived dataset with the DOI was not found", HttpStatus.NOT_FOUND);
     }
 
     if (!derivedDataset.getCreatedBy().equals(nameFromContext)) {
-      LOG.error("User {} is not allowed to update the Citation {}", nameFromContext, citationDoi);
+      LOG.error("User {} is not allowed to update the Derived dataset {}", nameFromContext, derivedDatasetDoi);
       throw new WebApplicationException(
-          "User is not allowed to update the Citation", HttpStatus.FORBIDDEN);
+          "User is not allowed to update the Derived dataset", HttpStatus.FORBIDDEN);
     }
 
     try {
-      derivedDatasetService.update(citationDoi, request.getTarget());
+      derivedDatasetService.update(derivedDatasetDoi, request.getTarget());
     } catch (IllegalStateException e) {
       LOG.error(e.getMessage());
       throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -206,8 +206,8 @@ public class DerivedDatasetResource {
     return getCitationText(new DOI(doiPrefix, doiSuffix));
   }
 
-  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI citationDoi, Pageable page) {
-    return derivedDatasetService.getRelatedDatasets(citationDoi, page);
+  public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI derivedDatasetDoi, Pageable page) {
+    return derivedDatasetService.getRelatedDatasets(derivedDatasetDoi, page);
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}/datasets")

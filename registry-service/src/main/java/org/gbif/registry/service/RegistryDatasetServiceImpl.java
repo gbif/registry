@@ -311,7 +311,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   }
 
   @Override
-  public List<DerivedDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data) {
+  public List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data) {
     LOG.debug("Ensure citation dataset usages {}", data);
     List<DerivedDatasetUsage> result = new ArrayList<>();
 
