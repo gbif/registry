@@ -40,5 +40,5 @@ public interface RegistryDatasetService {
 
   byte[] getMetadataDocument(int metadataKey);
 
-  List<DerivedDatasetUsage> ensureCitationDatasetUsagesValid(Map<String, Long> data);
+  List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data);
 }
