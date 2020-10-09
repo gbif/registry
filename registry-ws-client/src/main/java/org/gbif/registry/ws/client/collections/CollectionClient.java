@@ -49,10 +49,11 @@ public interface CollectionClient
       @RequestParam(value = "name", required = false) String name,
       @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
       @Nullable @RequestParam(value = "machineTagNamespace", required = false)
-        String machineTagNamespace,
+          String machineTagNamespace,
       @Nullable @RequestParam(value = "machineTagName", required = false) String machineTagName,
       @Nullable @RequestParam(value = "machineTagValue", required = false) String machineTagValue,
-      @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
+      @Nullable @RequestParam(value = "identifierType", required = false)
+          IdentifierType identifierType,
       @Nullable @RequestParam(value = "identifier", required = false) String identifier,
       @SpringQueryMap Pageable page);
 
