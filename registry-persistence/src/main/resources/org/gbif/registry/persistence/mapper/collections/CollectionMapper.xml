@@ -153,6 +153,14 @@
     <if test="contactKey != null" >
       INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
     </if>
+    <if test="machineTagNamespace != null || machineTagName != null || machineTagValue != null" >
+      INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
+      INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
+    </if>
+    <if test="identifierType != null || identifier != null" >
+      INNER JOIN collection_identifier ci on ci.collection_key = c.key
+      INNER JOIN identifier id on id.key = ci.identifier_key
+    </if>
     WHERE c.deleted IS NULL
     <if test="institutionKey != null" >
       AND c.institution_key = #{institutionKey,jdbcType=OTHER}
@@ -168,6 +176,21 @@
     </if>
     <if test="name != null" >
       AND c.name = #{name,jdbcType=VARCHAR}
+    </if>
+    <if test="machineTagNamespace != null" >
+      AND mt.namespace = #{machineTagNamespace,jdbcType=VARCHAR}
+    </if>
+    <if test="machineTagName != null" >
+      AND mt.name = #{machineTagName,jdbcType=VARCHAR}
+    </if>
+    <if test="machineTagValue != null" >
+      AND mt.value = #{machineTagValue,jdbcType=VARCHAR}
+    </if>
+    <if test="identifierType != null" >
+      AND id.type = #{identifierType,jdbcType=OTHER}
+    </if>
+    <if test="identifier != null" >
+      AND id.identifier = #{identifier,jdbcType=VARCHAR}
     </if>
     ORDER BY <if test="query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
     <if test="page != null" >
@@ -184,6 +207,14 @@
     <if test="contactKey != null" >
       INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
     </if>
+    <if test="machineTagNamespace != null || machineTagName != null || machineTagValue != null" >
+      INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
+      INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
+    </if>
+    <if test="identifierType != null || identifier != null" >
+      INNER JOIN collection_identifier ci on ci.collection_key = c.key
+      INNER JOIN identifier id on id.key = ci.identifier_key
+    </if>
     WHERE c.deleted IS NULL
     <if test="institutionKey != null" >
       AND c.institution_key = #{institutionKey,jdbcType=OTHER}
@@ -199,6 +230,21 @@
     </if>
     <if test="contactKey != null" >
       AND ccp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    </if>
+    <if test="machineTagNamespace != null" >
+      AND mt.namespace = #{machineTagNamespace,jdbcType=VARCHAR}
+    </if>
+    <if test="machineTagName != null" >
+      AND mt.name = #{machineTagName,jdbcType=VARCHAR}
+    </if>
+    <if test="machineTagValue != null" >
+      AND mt.value = #{machineTagValue,jdbcType=VARCHAR}
+    </if>
+    <if test="identifierType != null" >
+      AND id.type = #{identifierType,jdbcType=OTHER}
+    </if>
+    <if test="identifier != null" >
+      AND id.identifier = #{identifier,jdbcType=VARCHAR}
     </if>
   </select>
 
