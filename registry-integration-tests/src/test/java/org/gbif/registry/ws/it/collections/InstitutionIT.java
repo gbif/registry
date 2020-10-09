@@ -99,42 +99,94 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     UUID key2 = service.create(institution2);
 
     PagingResponse<Institution> response =
-        service.list("dummy", null, null, null, null, DEFAULT_PAGE);
+        service.list("dummy", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response = service.list("", null, null, null, null, DEFAULT_PAGE);
+    response = service.list("", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list("city", null, null, null, null, DEFAULT_PAGE);
+    response =
+        service.list("city", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
-    response = service.list("city2", null, null, null, null, DEFAULT_PAGE);
+    response =
+        service.list("city2", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
     // code and name params
-    assertEquals(1, service.list(null, null, "c1", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(1, service.list(null, null, null, "n2", null, DEFAULT_PAGE).getResults().size());
-    assertEquals(1, service.list(null, null, "c1", "n1", null, DEFAULT_PAGE).getResults().size());
-    assertEquals(0, service.list(null, null, "c2", "n1", null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        1,
+        service
+            .list(null, null, "c1", null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        service
+            .list(null, null, null, "n2", null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        service
+            .list(null, null, "c1", "n1", null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        0,
+        service
+            .list(null, null, "c2", "n1", null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
 
     // query param
-    assertEquals(2, service.list("c", null, null, null, null, DEFAULT_PAGE).getResults().size());
     assertEquals(
-        2, service.list("dum add", null, null, null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(0, service.list("<", null, null, null, null, DEFAULT_PAGE).getResults().size());
+        2,
+        service
+            .list("c", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
     assertEquals(
-        0, service.list("\"<\"", null, null, null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(2, service.list(null, null, null, null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(2, service.list("  ", null, null, null, null, DEFAULT_PAGE).getResults().size());
+        2,
+        service
+            .list("dum add", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        0,
+        service
+            .list("<", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        0,
+        service
+            .list("\"<\"", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        service
+            .list(null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        service
+            .list("  ", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
 
     // alternative code
-    response = service.list(null, null, null, null, "alt", DEFAULT_PAGE);
+    response =
+        service.list(null, null, null, null, "alt", null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
 
-    response = service.list(null, null, null, null, "foo", DEFAULT_PAGE);
+    response =
+        service.list(null, null, null, null, "foo", null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(0, response.getResults().size());
 
     // update address
@@ -143,11 +195,19 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     institution2.getAddress().setCity("city3");
     service.update(institution2);
     assertEquals(
-        1, service.list("city3", null, null, null, null, DEFAULT_PAGE).getResults().size());
+        1,
+        service
+            .list("city3", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
 
     service.delete(key2);
     assertEquals(
-        0, service.list("city3", null, null, null, null, DEFAULT_PAGE).getResults().size());
+        0,
+        service
+            .list("city3", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
   }
 
   @ParameterizedTest
@@ -209,18 +269,24 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     Institution institution3 = newEntity();
     UUID key3 = service.create(institution3);
 
-    PagingResponse<Institution> response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    PagingResponse<Institution> response =
+        service.list(null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(3, response.getResults().size());
 
     service.delete(key3);
 
-    response = service.list(null, null, null, null, null, DEFAULT_PAGE);
+    response =
+        service.list(null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list(null, null, null, null, null, new PagingRequest(0L, 1));
+    response =
+        service.list(
+            null, null, null, null, null, null, null, null, null, null, new PagingRequest(0L, 1));
     assertEquals(1, response.getResults().size());
 
-    response = service.list(null, null, null, null, null, new PagingRequest(0L, 0));
+    response =
+        service.list(
+            null, null, null, null, null, null, null, null, null, null, new PagingRequest(0L, 0));
     assertEquals(0, response.getResults().size());
   }
 
@@ -252,16 +318,42 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     service.addContact(instutionKey2, personKey2);
 
     assertEquals(
-        1, service.list(null, personKey1, null, null, null, DEFAULT_PAGE).getResults().size());
+        1,
+        service
+            .list(null, personKey1, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
     assertEquals(
-        2, service.list(null, personKey2, null, null, null, DEFAULT_PAGE).getResults().size());
+        2,
+        service
+            .list(null, personKey2, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
     assertEquals(
         0,
-        service.list(null, UUID.randomUUID(), null, null, null, DEFAULT_PAGE).getResults().size());
+        service
+            .list(
+                null,
+                UUID.randomUUID(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                DEFAULT_PAGE)
+            .getResults()
+            .size());
 
     service.removeContact(instutionKey1, personKey2);
     assertEquals(
-        1, service.list(null, personKey2, null, null, null, DEFAULT_PAGE).getResults().size());
+        1,
+        service
+            .list(null, personKey2, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .getResults()
+            .size());
   }
 
   @Override
