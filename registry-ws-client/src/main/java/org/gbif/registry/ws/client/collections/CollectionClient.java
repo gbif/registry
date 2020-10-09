@@ -20,9 +20,12 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
@@ -45,6 +48,12 @@ public interface CollectionClient
       @RequestParam(value = "code", required = false) String code,
       @RequestParam(value = "name", required = false) String name,
       @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
+      @Nullable @RequestParam(value = "machineTagNamespace", required = false)
+        String machineTagNamespace,
+      @Nullable @RequestParam(value = "machineTagName", required = false) String machineTagName,
+      @Nullable @RequestParam(value = "machineTagValue", required = false) String machineTagValue,
+      @Nullable @RequestParam(value = "identifierType", required = false) IdentifierType identifierType,
+      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
       @SpringQueryMap Pageable page);
 
   @RequestMapping(

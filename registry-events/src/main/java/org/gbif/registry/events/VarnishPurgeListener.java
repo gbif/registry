@@ -301,14 +301,18 @@ public class VarnishPurgeListener {
     Set<UUID> collectionKeys = new UUIDHashSet();
     for (Person p : persons) {
       List<Collection> collections =
-          collectionService.list(null, null, p.getKey(), null, null, null, null).getResults();
+          collectionService
+              .list(null, null, p.getKey(), null, null, null, null, null, null, null, null, null)
+              .getResults();
       collections.forEach(c -> collectionKeys.add(c.getKey()));
     }
 
     Set<UUID> institutionKeys = new UUIDHashSet();
     for (Person p : persons) {
       List<Institution> institutions =
-          institutionService.list(null, p.getKey(), null, null, null, null).getResults();
+          institutionService
+              .list(null, p.getKey(), null, null, null, null, null, null, null, null, null)
+              .getResults();
       institutions.forEach(i -> institutionKeys.add(i.getKey()));
     }
 

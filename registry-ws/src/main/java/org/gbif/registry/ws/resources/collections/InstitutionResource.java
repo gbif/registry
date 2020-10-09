@@ -22,6 +22,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -100,12 +101,43 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       @Nullable @RequestParam(value = "code", required = false) String code,
       @Nullable @RequestParam(value = "name", required = false) String name,
       @Nullable @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
+      @Nullable @RequestParam(value = "machineTagNamespace", required = false)
+          String machineTagNamespace,
+      @Nullable @RequestParam(value = "machineTagName", required = false) String machineTagName,
+      @Nullable @RequestParam(value = "machineTagValue", required = false) String machineTagValue,
+      @Nullable @RequestParam(value = "identifierType", required = false)
+          IdentifierType identifierType,
+      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
       Pageable page) {
     page = page == null ? new PagingRequest() : page;
     query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = institutionMapper.count(query, contactKey, code, name, alternativeCode);
+    long total =
+        institutionMapper.count(
+            query,
+            contactKey,
+            code,
+            name,
+            alternativeCode,
+            machineTagNamespace,
+            machineTagName,
+            machineTagValue,
+            identifierType,
+            identifier);
     return new PagingResponse<>(
-        page, total, institutionMapper.list(query, contactKey, code, name, alternativeCode, page));
+        page,
+        total,
+        institutionMapper.list(
+            query,
+            contactKey,
+            code,
+            name,
+            alternativeCode,
+            machineTagNamespace,
+            machineTagName,
+            machineTagValue,
+            identifierType,
+            identifier,
+            page));
   }
 
   @GetMapping("deleted")
