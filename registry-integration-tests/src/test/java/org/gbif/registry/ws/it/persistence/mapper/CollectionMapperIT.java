@@ -156,14 +156,38 @@ public class CollectionMapperIT extends BaseItTest {
     collectionMapper.create(col3);
 
     Pageable page = PAGE.apply(2, 0L);
-    assertEquals(2, collectionMapper.list(null, null, null, null, null, null, page).size());
+    assertEquals(
+        2,
+        collectionMapper
+            .list(null, null, null, null, null, null, null, null, null, null, null, page)
+            .size());
 
     page = PAGE.apply(5, 0L);
-    assertEquals(3, collectionMapper.list(null, null, null, null, null, null, page).size());
-    assertEquals(1, collectionMapper.list(null, null, null, "c1", null, null, page).size());
-    assertEquals(1, collectionMapper.list(null, null, null, null, "n2", null, page).size());
-    assertEquals(1, collectionMapper.list(null, null, null, "c3", "n3", null, page).size());
-    assertEquals(0, collectionMapper.list(null, null, null, "c1", "n3", null, page).size());
+    assertEquals(
+        3,
+        collectionMapper
+            .list(null, null, null, null, null, null, null, null, null, null, null, page)
+            .size());
+    assertEquals(
+        1,
+        collectionMapper
+            .list(null, null, null, "c1", null, null, null, null, null, null, null, page)
+            .size());
+    assertEquals(
+        1,
+        collectionMapper
+            .list(null, null, null, null, "n2", null, null, null, null, null, null, page)
+            .size());
+    assertEquals(
+        1,
+        collectionMapper
+            .list(null, null, null, "c3", "n3", null, null, null, null, null, null, page)
+            .size());
+    assertEquals(
+        0,
+        collectionMapper
+            .list(null, null, null, "c1", "n3", null, null, null, null, null, null, page)
+            .size());
   }
 
   @Test
@@ -193,21 +217,42 @@ public class CollectionMapperIT extends BaseItTest {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Collection> cols = collectionMapper.list(null, null, "c1 n1", null, null, null, pageable);
+    List<Collection> cols =
+        collectionMapper.list(
+            null, null, "c1 n1", null, null, null, null, null, null, null, null, pageable);
     assertEquals(1, cols.size());
     assertEquals("c1", cols.get(0).getCode());
     assertEquals("n1", cols.get(0).getName());
 
-    cols = collectionMapper.list(null, null, "c2 c1", null, null, null, pageable);
+    cols =
+        collectionMapper.list(
+            null, null, "c2 c1", null, null, null, null, null, null, null, null, pageable);
     assertEquals(0, cols.size());
 
-    cols = collectionMapper.list(null, null, "c3", null, null, null, pageable);
+    cols =
+        collectionMapper.list(
+            null, null, "c3", null, null, null, null, null, null, null, null, pageable);
     assertEquals(0, cols.size());
 
-    cols = collectionMapper.list(null, null, "n1", null, null, null, pageable);
+    cols =
+        collectionMapper.list(
+            null, null, "n1", null, null, null, null, null, null, null, null, pageable);
     assertEquals(2, cols.size());
 
-    cols = collectionMapper.list(null, null, "dummy address fo ", null, null, null, pageable);
+    cols =
+        collectionMapper.list(
+            null,
+            null,
+            "dummy address fo ",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            pageable);
     assertEquals(1, cols.size());
   }
 
@@ -233,15 +278,20 @@ public class CollectionMapperIT extends BaseItTest {
 
     Pageable pageable = PAGE.apply(1, 0L);
     List<Collection> collections =
-        collectionMapper.list(null, null, "c1", null, null, null, pageable);
+        collectionMapper.list(
+            null, null, "c1", null, null, null, null, null, null, null, null, pageable);
     assertEquals(1, collections.size());
     assertEquals(coll1.getKey(), collections.get(0).getKey());
 
-    collections = collectionMapper.list(null, null, "c2", null, null, null, pageable);
+    collections =
+        collectionMapper.list(
+            null, null, "c2", null, null, null, null, null, null, null, null, pageable);
     assertEquals(1, collections.size());
     assertEquals(coll2.getKey(), collections.get(0).getKey());
 
-    collections = collectionMapper.list(null, null, null, null, null, "c1", pageable);
+    collections =
+        collectionMapper.list(
+            null, null, null, null, null, "c1", null, null, null, null, null, pageable);
     assertEquals(1, collections.size());
     assertEquals(coll2.getKey(), collections.get(0).getKey());
   }
@@ -258,14 +308,33 @@ public class CollectionMapperIT extends BaseItTest {
 
     collectionMapper.create(col1);
 
-    assertEquals(1, collectionMapper.count(null, null, null, null, null, null));
-    assertEquals(0, collectionMapper.count(null, UUID.randomUUID(), null, null, null, null));
-    assertEquals(1, collectionMapper.count(null, null, "c1", null, null, null));
-    assertEquals(0, collectionMapper.count(null, null, null, "foo", null, null));
-    assertEquals(1, collectionMapper.count(null, null, null, "c1", null, null));
-    assertEquals(1, collectionMapper.count(null, null, null, null, "n1", null));
-    assertEquals(1, collectionMapper.count(null, null, null, "c1", "n1", null));
-    assertEquals(0, collectionMapper.count(null, null, null, "c2", "n1", null));
-    assertEquals(1, collectionMapper.count(null, null, null, null, null, "cc1"));
+    assertEquals(
+        1,
+        collectionMapper.count(null, null, null, null, null, null, null, null, null, null, null));
+    assertEquals(
+        0,
+        collectionMapper.count(
+            null, UUID.randomUUID(), null, null, null, null, null, null, null, null, null));
+    assertEquals(
+        1,
+        collectionMapper.count(null, null, "c1", null, null, null, null, null, null, null, null));
+    assertEquals(
+        0,
+        collectionMapper.count(null, null, null, "foo", null, null, null, null, null, null, null));
+    assertEquals(
+        1,
+        collectionMapper.count(null, null, null, "c1", null, null, null, null, null, null, null));
+    assertEquals(
+        1,
+        collectionMapper.count(null, null, null, null, "n1", null, null, null, null, null, null));
+    assertEquals(
+        1,
+        collectionMapper.count(null, null, null, "c1", "n1", null, null, null, null, null, null));
+    assertEquals(
+        0,
+        collectionMapper.count(null, null, null, "c2", "n1", null, null, null, null, null, null));
+    assertEquals(
+        1,
+        collectionMapper.count(null, null, null, null, null, "cc1", null, null, null, null, null));
   }
 }
