@@ -155,7 +155,7 @@
   </select>
 
   <select id="list" resultType="Institution"  resultMap="INSTITUTION_MAP" parameterType="Pageable">
-    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    SELECT DISTINCT <include refid="INSTITUTION_READ_FIELDS"/>
     FROM institution i
     <if test="query != null" >
       <include refid="FULLTEXT_SEARCH"/>
@@ -206,7 +206,7 @@
   </select>
 
   <select id="count" resultType="Long">
-    SELECT COUNT(*)
+    SELECT count(DISTINCT i.key)
     FROM institution i
     <if test="query != null" >
       <include refid="FULLTEXT_SEARCH"/>
