@@ -18,6 +18,7 @@ package org.gbif.registry.persistence.mapper.collections;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.ContactableMapper;
 
 import java.util.List;
@@ -39,6 +40,11 @@ public interface InstitutionMapper
       @Nullable @Param("code") String code,
       @Nullable @Param("name") String name,
       @Nullable @Param("alternativeCode") String alternativeCode,
+      @Nullable @Param("machineTagNamespace") String machineTagNamespace,
+      @Nullable @Param("machineTagName") String machineTagName,
+      @Nullable @Param("machineTagValue") String machineTagValue,
+      @Nullable @Param("identifierType") IdentifierType identifierType,
+      @Nullable @Param("identifier") String identifier,
       @Nullable @Param("page") Pageable page);
 
   long count(
@@ -46,7 +52,12 @@ public interface InstitutionMapper
       @Nullable @Param("contactKey") UUID contactKey,
       @Nullable @Param("code") String code,
       @Nullable @Param("name") String name,
-      @Nullable @Param("alternativeCode") String alternativeCode);
+      @Nullable @Param("alternativeCode") String alternativeCode,
+      @Nullable @Param("machineTagNamespace") String machineTagNamespace,
+      @Nullable @Param("machineTagName") String machineTagName,
+      @Nullable @Param("machineTagValue") String machineTagValue,
+      @Nullable @Param("identifierType") IdentifierType identifierType,
+      @Nullable @Param("identifier") String identifier);
 
   /** A simple suggest by title service. */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
