@@ -145,7 +145,7 @@
 
   <!-- Basic paging search functionality -->
   <select id="list" resultType="SciCollection" resultMap="COLLECTION_MAP" parameterType="Pageable">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    SELECT DISTINCT <include refid="COLLECTION_READ_FIELDS"/>
     FROM collection c
     <if test="query != null" >
       <include refid="FULLTEXT_SEARCH"/>
@@ -199,7 +199,7 @@
   </select>
 
   <select id="count" resultType="Long">
-    SELECT COUNT(*)
+    SELECT count(DISTINCT c.key)
     FROM collection c
     <if test="query != null" >
       <include refid="FULLTEXT_SEARCH"/>
