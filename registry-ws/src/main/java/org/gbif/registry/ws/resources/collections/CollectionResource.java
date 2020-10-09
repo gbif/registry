@@ -33,6 +33,7 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.security.EditorAuthorizationService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -126,9 +127,9 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
             identifierType,
             identifier);
     return new PagingResponse<>(
-        page,
-        total,
-        collectionMapper.list(
+      page,
+      total,
+      new ArrayList<>(collectionMapper.list(
             institutionKey,
             contactKey,
             query,
@@ -140,7 +141,7 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
             machineTagValue,
             identifierType,
             identifier,
-            page));
+            page)));
   }
 
   @GetMapping("deleted")
