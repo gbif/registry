@@ -155,7 +155,7 @@
   </select>
 
   <select id="list" resultType="Institution"  resultMap="INSTITUTION_MAP" parameterType="Pageable">
-    SELECT DISTINCT <include refid="INSTITUTION_READ_FIELDS"/>
+    SELECT DISTINCT ON (<if test="query != null" >ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key) <include refid="INSTITUTION_READ_FIELDS"/>
     FROM institution i
     <if test="query != null" >
       <include refid="FULLTEXT_SEARCH"/>

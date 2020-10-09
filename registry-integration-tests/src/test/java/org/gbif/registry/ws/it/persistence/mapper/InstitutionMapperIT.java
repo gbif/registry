@@ -201,29 +201,42 @@ public class InstitutionMapperIT extends BaseItTest {
     List<Institution> cols =
         institutionMapper.list(
             "i1 n1", null, null, null, null, null, null, null, null, null, pageable);
+    long count =
+        institutionMapper.count("i1 n1", null, null, null, null, null, null, null, null, null);
     assertEquals(1, cols.size());
+    assertEquals(count, cols.size());
     assertEquals("i1", cols.get(0).getCode());
     assertEquals("n1", cols.get(0).getName());
 
     cols =
         institutionMapper.list(
             "i2 i1", null, null, null, null, null, null, null, null, null, pageable);
+    count = institutionMapper.count("i2 i1", null, null, null, null, null, null, null, null, null);
     assertEquals(0, cols.size());
+    assertEquals(count, cols.size());
 
     cols =
         institutionMapper.list(
             "i3", null, null, null, null, null, null, null, null, null, pageable);
+    count = institutionMapper.count("i3", null, null, null, null, null, null, null, null, null);
     assertEquals(0, cols.size());
+    assertEquals(count, cols.size());
 
     cols =
         institutionMapper.list(
             "n1", null, null, null, null, null, null, null, null, null, pageable);
+    count = institutionMapper.count("n1", null, null, null, null, null, null, null, null, null);
     assertEquals(2, cols.size());
+    assertEquals(count, cols.size());
 
     cols =
         institutionMapper.list(
             "dummy address fo ", null, null, null, null, null, null, null, null, null, pageable);
+    count =
+        institutionMapper.count(
+            "dummy address fo ", null, null, null, null, null, null, null, null, null);
     assertEquals(1, cols.size());
+    assertEquals(count, cols.size());
   }
 
   @Test
@@ -250,19 +263,26 @@ public class InstitutionMapperIT extends BaseItTest {
     List<Institution> institutions =
         institutionMapper.list(
             "i1", null, null, null, null, null, null, null, null, null, pageable);
+    long count =
+        institutionMapper.count("i1", null, null, null, null, null, null, null, null, null);
     assertEquals(1, institutions.size());
+    assertEquals(count, institutions.size());
     assertEquals(inst1.getKey(), institutions.get(0).getKey());
 
     institutions =
         institutionMapper.list(
             "i2", null, null, null, null, null, null, null, null, null, pageable);
+    count = institutionMapper.count("i2", null, null, null, null, null, null, null, null, null);
     assertEquals(1, institutions.size());
+    assertEquals(count, institutions.size());
     assertEquals(inst2.getKey(), institutions.get(0).getKey());
 
     institutions =
         institutionMapper.list(
             null, null, null, null, "i1", null, null, null, null, null, pageable);
+    count = institutionMapper.count(null, null, null, null, "i1", null, null, null, null, null);
     assertEquals(1, institutions.size());
+    assertEquals(count, institutions.size());
     assertEquals(inst2.getKey(), institutions.get(0).getKey());
   }
 

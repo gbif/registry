@@ -145,7 +145,7 @@
 
   <!-- Basic paging search functionality -->
   <select id="list" resultType="SciCollection" resultMap="COLLECTION_MAP" parameterType="Pageable">
-    SELECT DISTINCT <include refid="COLLECTION_READ_FIELDS"/>
+    SELECT DISTINCT ON (<if test="query != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key) <include refid="COLLECTION_READ_FIELDS"/>
     FROM collection c
     <if test="query != null" >
       <include refid="FULLTEXT_SEARCH"/>
