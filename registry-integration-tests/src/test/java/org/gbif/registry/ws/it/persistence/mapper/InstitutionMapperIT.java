@@ -266,16 +266,20 @@ public class InstitutionMapperIT extends BaseItTest {
     long count =
         institutionMapper.count("i1", null, null, null, null, null, null, null, null, null);
     assertEquals(1, institutions.size());
-    assertEquals(count, institutions.size());
+    // it should return the one where the i1 is main code
     assertEquals(inst1.getKey(), institutions.get(0).getKey());
+    // there are 2 insts with i1
+    assertEquals(2, count);
 
     institutions =
         institutionMapper.list(
             "i2", null, null, null, null, null, null, null, null, null, pageable);
     count = institutionMapper.count("i2", null, null, null, null, null, null, null, null, null);
     assertEquals(1, institutions.size());
-    assertEquals(count, institutions.size());
+    // it should return the one where the i2 is main code
     assertEquals(inst2.getKey(), institutions.get(0).getKey());
+    // there are 2 insts with i2
+    assertEquals(2, count);
 
     institutions =
         institutionMapper.list(
