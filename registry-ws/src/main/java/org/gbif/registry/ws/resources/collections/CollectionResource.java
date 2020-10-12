@@ -127,21 +127,22 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
             identifierType,
             identifier);
     return new PagingResponse<>(
-      page,
-      total,
-      new ArrayList<>(collectionMapper.list(
-            institutionKey,
-            contactKey,
-            query,
-            code,
-            name,
-            alternativeCode,
-            machineTagNamespace,
-            machineTagName,
-            machineTagValue,
-            identifierType,
-            identifier,
-            page)));
+        page,
+        total,
+        new ArrayList<>(
+            collectionMapper.list(
+                institutionKey,
+                contactKey,
+                query,
+                code,
+                name,
+                alternativeCode,
+                machineTagNamespace,
+                machineTagName,
+                machineTagValue,
+                identifierType,
+                identifier,
+                page)));
   }
 
   @GetMapping("deleted")
