@@ -218,6 +218,7 @@ public class CollectionMapperIT extends BaseItTest {
     collectionMapper.create(col1);
 
     MachineTag mt = new MachineTag("ns", "test", "foo");
+    mt.setCreatedBy("test");
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(col1.getKey(), mt.getKey());
 
@@ -231,6 +232,7 @@ public class CollectionMapperIT extends BaseItTest {
     collectionMapper.create(col2);
 
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
+    identifier.setCreatedBy("test");
     identifierMapper.createIdentifier(identifier);
     collectionMapper.addIdentifier(col2.getKey(), identifier.getKey());
 
@@ -481,8 +483,10 @@ public class CollectionMapperIT extends BaseItTest {
     long count =
         collectionMapper.count(null, null, "c1", null, null, null, null, null, null, null, null);
     assertEquals(1, collections.size());
-    assertEquals(count, collections.size());
+    // it should return the one where the c1 is main code
     assertEquals(coll1.getKey(), collections.get(0).getKey());
+    // there are 2 colls with c1
+    assertEquals(2, count);
 
     collections =
         collectionMapper.list(
@@ -490,8 +494,10 @@ public class CollectionMapperIT extends BaseItTest {
     count =
         collectionMapper.count(null, null, "c2", null, null, null, null, null, null, null, null);
     assertEquals(1, collections.size());
-    assertEquals(count, collections.size());
+    // it should return the one where the c2 is main code
     assertEquals(coll2.getKey(), collections.get(0).getKey());
+    // there are 2 colls with c2
+    assertEquals(2, count);
 
     collections =
         collectionMapper.list(
