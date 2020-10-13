@@ -77,12 +77,12 @@ public class DerivedDatasetMapperIT extends BaseItTest {
     // create citation datasets
     List<DerivedDatasetUsage> citationDatasets1 = new ArrayList<>();
 
-    citationDatasets1.add(new DerivedDatasetUsage(dataset1.getKey(), dataset1.getDoi(), null, 1L));
-    citationDatasets1.add(new DerivedDatasetUsage(dataset2.getKey(), dataset2.getDoi(), null, 2L));
-    citationDatasets1.add(new DerivedDatasetUsage(dataset3.getKey(), null, null, 3L));
+    citationDatasets1.add(new DerivedDatasetUsage(dataset1.getKey(), dataset1.getDoi(), null, 1L, dataset1.getTitle()));
+    citationDatasets1.add(new DerivedDatasetUsage(dataset2.getKey(), dataset2.getDoi(), null, 2L, dataset2.getTitle()));
+    citationDatasets1.add(new DerivedDatasetUsage(dataset3.getKey(), null, null, 3L, dataset3.getTitle()));
 
     List<DerivedDatasetUsage> citationDatasets2 = new ArrayList<>();
-    citationDatasets2.add(new DerivedDatasetUsage(dataset3.getKey(), dataset3.getDoi(), null, 3L));
+    citationDatasets2.add(new DerivedDatasetUsage(dataset3.getKey(), dataset3.getDoi(), null, 3L, dataset3.getTitle()));
 
     mapper.addUsagesToDerivedDataset(derivedDataset1.getDoi(), citationDatasets1);
     mapper.addUsagesToDerivedDataset(derivedDataset2.getDoi(), citationDatasets2);

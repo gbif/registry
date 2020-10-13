@@ -25,13 +25,14 @@ public class DerivedDatasetUsage {
 
   private UUID datasetKey;
   private DOI datasetDoi;
+  private String datasetTitle;
   private DOI derivedDatasetDoi;
   private Long numberRecords;
 
   public DerivedDatasetUsage() {}
 
   public DerivedDatasetUsage(
-      UUID datasetKey, DOI datasetDoi, DOI derivedDatasetDoi, Long numberRecords) {
+      UUID datasetKey, DOI datasetDoi, DOI derivedDatasetDoi, Long numberRecords, String datasetTitle) {
     this.datasetKey = datasetKey;
     this.datasetDoi = datasetDoi;
     this.derivedDatasetDoi = derivedDatasetDoi;
@@ -52,6 +53,14 @@ public class DerivedDatasetUsage {
 
   public void setDatasetDoi(DOI datasetDoi) {
     this.datasetDoi = datasetDoi;
+  }
+
+  public String getDatasetTitle() {
+    return datasetTitle;
+  }
+
+  public void setDatasetTitle(String datasetTitle) {
+    this.datasetTitle = datasetTitle;
   }
 
   public DOI getDerivedDatasetDoi() {
@@ -77,13 +86,14 @@ public class DerivedDatasetUsage {
     DerivedDatasetUsage that = (DerivedDatasetUsage) o;
     return Objects.equals(datasetKey, that.datasetKey)
         && Objects.equals(datasetDoi, that.datasetDoi)
+        && Objects.equals(datasetTitle, that.datasetTitle)
         && Objects.equals(derivedDatasetDoi, that.derivedDatasetDoi)
         && Objects.equals(numberRecords, that.numberRecords);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(datasetKey, datasetDoi, derivedDatasetDoi, numberRecords);
+    return Objects.hash(datasetKey, datasetDoi, datasetTitle, derivedDatasetDoi, numberRecords);
   }
 
   @Override
@@ -91,6 +101,7 @@ public class DerivedDatasetUsage {
     return new StringJoiner(", ", DerivedDatasetUsage.class.getSimpleName() + "[", "]")
         .add("datasetKey=" + datasetKey)
         .add("datasetDoi=" + datasetDoi)
+        .add("datasetTitle=" + datasetTitle)
         .add("derivedDatasetDoi=" + derivedDatasetDoi)
         .add("numberRecords=" + numberRecords)
         .toString();
