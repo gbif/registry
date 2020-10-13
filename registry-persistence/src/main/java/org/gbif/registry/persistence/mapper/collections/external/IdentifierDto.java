@@ -55,8 +55,9 @@ public class IdentifierDto {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     IdentifierDto that = (IdentifierDto) o;
-    return Objects.equals(entityKey, that.entityKey) && type == that.type && Objects.equals(identifier,
-                                                                                            that.identifier);
+    return Objects.equals(entityKey, that.entityKey)
+        && type == that.type
+        && Objects.equals(identifier, that.identifier);
   }
 
   @Override

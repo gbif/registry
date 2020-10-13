@@ -63,9 +63,9 @@ public class MachineTagDto {
     if (o == null || getClass() != o.getClass()) return false;
     MachineTagDto that = (MachineTagDto) o;
     return Objects.equals(entityKey, that.entityKey)
-           && Objects.equals(namespace, that.namespace)
-           && Objects.equals(name, that.name)
-           && Objects.equals(value, that.value);
+        && Objects.equals(namespace, that.namespace)
+        && Objects.equals(name, that.name)
+        && Objects.equals(value, that.value);
   }
 
   @Override
