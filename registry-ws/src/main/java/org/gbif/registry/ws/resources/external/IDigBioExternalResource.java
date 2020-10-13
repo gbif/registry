@@ -144,6 +144,8 @@ public class IDigBioExternalResource {
   private IDigBioCollection convertToIDigBioCollection(
       CollectionDto collection, Set<IdentifierDto> identifiers, Set<MachineTagDto> machineTags) {
     IDigBioCollection iDigBioCollection = new IDigBioCollection();
+    iDigBioCollection.setInstitutionKey(collection.getInstitutionKey());
+    iDigBioCollection.setCollectionKey(collection.getCollectionKey());
     iDigBioCollection.setInstitution(collection.getInstitutionName());
     iDigBioCollection.setCollection(collection.getCollectionName());
 
@@ -161,12 +163,12 @@ public class IDigBioExternalResource {
     Set<String> institutionCodes =
         new HashSet<>(collection.getInstitutionAlternativeCodes().keySet());
     institutionCodes.add(collection.getInstitutionCode());
-    iDigBioCollection.setInstitutionCode(String.join(",", institutionCodes));
+    iDigBioCollection.setInstitutionCode(String.join(", ", institutionCodes).trim());
 
     Set<String> collectionCodes =
         new HashSet<>(collection.getCollectionAlternativeCodes().keySet());
     collectionCodes.add(collection.getCollectionCode());
-    iDigBioCollection.setCollectionCode(String.join(",", collectionCodes));
+    iDigBioCollection.setCollectionCode(String.join(", ", collectionCodes).trim());
 
     machineTags.stream()
         .filter(t -> t.getName().equals("CollectionUUID"))
