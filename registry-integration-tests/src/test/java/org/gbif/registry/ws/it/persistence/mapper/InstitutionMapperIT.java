@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.collections.Discipline;
@@ -76,7 +77,8 @@ public class InstitutionMapperIT extends BaseItTest {
     institution.setDisciplines(disciplines);
     institution.setEmail(Collections.singletonList("test@test.com"));
     institution.setPhone(Collections.singletonList("1234"));
-    institution.setAlternativeCodes(Collections.singletonMap("CODE2", "another code"));
+    institution.setAlternativeCodes(
+        Collections.singletonList(new AlternativeCode("CODE2", "another code")));
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
@@ -247,7 +249,7 @@ public class InstitutionMapperIT extends BaseItTest {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
-    inst1.setAlternativeCodes(Collections.singletonMap("i2", "test"));
+    inst1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("i2", "test")));
     institutionMapper.create(inst1);
 
     Institution inst2 = new Institution();
@@ -256,7 +258,7 @@ public class InstitutionMapperIT extends BaseItTest {
     inst2.setName("n2");
     inst2.setCreatedBy("test");
     inst2.setModifiedBy("test");
-    inst2.setAlternativeCodes(Collections.singletonMap("i1", "test"));
+    inst2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("i1", "test")));
     institutionMapper.create(inst2);
 
     Pageable pageable = PAGE.apply(1, 0L);
@@ -298,7 +300,7 @@ public class InstitutionMapperIT extends BaseItTest {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
-    inst1.setAlternativeCodes(Collections.singletonMap("ii1", "test"));
+    inst1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("ii1", "test")));
 
     Institution inst2 = new Institution();
     inst2.setKey(UUID.randomUUID());

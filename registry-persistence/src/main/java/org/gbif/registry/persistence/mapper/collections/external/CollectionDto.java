@@ -15,9 +15,11 @@
  */
 package org.gbif.registry.persistence.mapper.collections.external;
 
+import org.gbif.api.model.collections.AlternativeCode;
+
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,7 +28,7 @@ public class CollectionDto {
   private UUID collectionKey;
   private String collectionCode;
   private String collectionName;
-  private Map<String, String> collectionAlternativeCodes = new HashMap<>();
+  private List<AlternativeCode> collectionAlternativeCodes = new ArrayList<>();
   private String homepage;
   private String catalogUrl;
   private String description;
@@ -50,7 +52,7 @@ public class CollectionDto {
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
-  private Map<String, String> institutionAlternativeCodes = new HashMap<>();
+  private List<AlternativeCode> institutionAlternativeCodes = new ArrayList<>();
   private BigDecimal latitude;
   private BigDecimal longitude;
   private String uniqueNameUUID;
@@ -79,11 +81,11 @@ public class CollectionDto {
     this.collectionName = collectionName;
   }
 
-  public Map<String, String> getCollectionAlternativeCodes() {
+  public List<AlternativeCode> getCollectionAlternativeCodes() {
     return collectionAlternativeCodes;
   }
 
-  public void setCollectionAlternativeCodes(Map<String, String> collectionAlternativeCodes) {
+  public void setCollectionAlternativeCodes(List<AlternativeCode> collectionAlternativeCodes) {
     this.collectionAlternativeCodes = collectionAlternativeCodes;
   }
 
@@ -247,11 +249,11 @@ public class CollectionDto {
     this.institutionName = institutionName;
   }
 
-  public Map<String, String> getInstitutionAlternativeCodes() {
+  public List<AlternativeCode> getInstitutionAlternativeCodes() {
     return institutionAlternativeCodes;
   }
 
-  public void setInstitutionAlternativeCodes(Map<String, String> institutionAlternativeCodes) {
+  public void setInstitutionAlternativeCodes(List<AlternativeCode> institutionAlternativeCodes) {
     this.institutionAlternativeCodes = institutionAlternativeCodes;
   }
 
