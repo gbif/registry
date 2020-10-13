@@ -84,7 +84,9 @@ public class IDigBioCollection implements Serializable {
   @JsonProperty("physical_zip")
   private String physicalZip;
 
+  @JsonProperty("UniqueNameUUID")
   private String uniqueNameUUID;
+
   private String sameAs;
   private BigDecimal lat;
   private BigDecimal lon;
