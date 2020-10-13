@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.it.collections;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.lookup.LookupParams;
@@ -115,7 +116,7 @@ public class LookupServiceIT extends BaseItTest {
 
     i2.setCode("I2");
     i2.setName("Institution 2");
-    i2.setAlternativeCodes(Collections.singletonMap("II2", "test"));
+    i2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("II2", "test")));
     i2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-inst"));
     institutionService.create(i2);
 
@@ -127,7 +128,7 @@ public class LookupServiceIT extends BaseItTest {
     c2.setCode("C2");
     c2.setName("Collection 2");
     c2.setInstitutionKey(i2.getKey());
-    c2.setAlternativeCodes(Collections.singletonMap("CC2", "test"));
+    c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC2", "test")));
     c2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-coll"));
     collectionService.create(c2);
   }
@@ -220,8 +221,8 @@ public class LookupServiceIT extends BaseItTest {
   public void lookupByAlternativeCodeTest() {
     // State
     LookupParams params = new LookupParams();
-    params.setInstitutionCode(i2.getAlternativeCodes().keySet().iterator().next());
-    params.setCollectionCode(c2.getAlternativeCodes().keySet().iterator().next());
+    params.setInstitutionCode(i2.getAlternativeCodes().get(0).getCode());
+    params.setCollectionCode(c2.getAlternativeCodes().get(0).getCode());
 
     // When
     LookupResult result = lookupService.lookup(params);

@@ -15,13 +15,16 @@
  */
 package org.gbif.registry.persistence.mapper.auxhandler;
 
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Institution;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -31,36 +34,43 @@ import org.postgresql.util.HStoreConverter;
 import com.google.common.base.Strings;
 
 /** A converter for {@link Institution#getAlternativeCodes()} */
-public class AlternativeCodesTypeHandler extends BaseTypeHandler<Map<String, String>> {
+public class AlternativeCodesTypeHandler extends BaseTypeHandler<List<AlternativeCode>> {
 
   @Override
   public void setNonNullParameter(
-      PreparedStatement ps, int i, Map<String, String> parameter, JdbcType jdbcType)
+      PreparedStatement ps, int i, List<AlternativeCode> parameter, JdbcType jdbcType)
       throws SQLException {
-    ps.setString(i, HStoreConverter.toString(parameter));
+    Map<String, String> valuesMap = new HashMap<>();
+    parameter.forEach(alt -> valuesMap.put(alt.getCode(), alt.getDescription()));
+    ps.setString(i, HStoreConverter.toString(valuesMap));
   }
 
   @Override
-  public Map<String, String> getNullableResult(ResultSet rs, String columnName)
+  public List<AlternativeCode> getNullableResult(ResultSet rs, String columnName)
       throws SQLException {
     return fromString(rs.getString(columnName));
   }
 
   @Override
-  public Map<String, String> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+  public List<AlternativeCode> getNullableResult(ResultSet rs, int columnIndex)
+      throws SQLException {
     return fromString(rs.getString(columnIndex));
   }
 
   @Override
-  public Map<String, String> getNullableResult(CallableStatement cs, int columnIndex)
+  public List<AlternativeCode> getNullableResult(CallableStatement cs, int columnIndex)
       throws SQLException {
     return fromString(cs.getString(columnIndex));
   }
 
-  private Map<String, String> fromString(String hstring) {
+  private List<AlternativeCode> fromString(String hstring) {
     if (!Strings.isNullOrEmpty(hstring)) {
-      return HStoreConverter.fromString(hstring);
+      Map<String, String> valuesMap = HStoreConverter.fromString(hstring);
+      List<AlternativeCode> result = new ArrayList<>();
+      valuesMap.forEach((k, v) -> result.add(new AlternativeCode(k, v)));
+
+      return result;
     }
-    return new HashMap<>();
+    return new ArrayList<>();
   }
 }

@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.resources.external;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.collections.external.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper;
@@ -161,12 +162,16 @@ public class IDigBioExternalResource {
         .ifPresent(iDigBioCollection::setRecordsetQuery);
 
     Set<String> institutionCodes =
-        new HashSet<>(collection.getInstitutionAlternativeCodes().keySet());
+        collection.getInstitutionAlternativeCodes().stream()
+            .map(AlternativeCode::getCode)
+            .collect(Collectors.toSet());
     institutionCodes.add(collection.getInstitutionCode());
     iDigBioCollection.setInstitutionCode(String.join(", ", institutionCodes).trim());
 
     Set<String> collectionCodes =
-        new HashSet<>(collection.getCollectionAlternativeCodes().keySet());
+        collection.getCollectionAlternativeCodes().stream()
+            .map(AlternativeCode::getCode)
+            .collect(Collectors.toSet());
     collectionCodes.add(collection.getCollectionCode());
     iDigBioCollection.setCollectionCode(String.join(", ", collectionCodes).trim());
 

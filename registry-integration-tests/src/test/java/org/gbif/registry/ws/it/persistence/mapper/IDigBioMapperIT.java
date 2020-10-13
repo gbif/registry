@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
@@ -44,7 +45,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class IDigBioMapperIT extends BaseItTest {
 
@@ -142,7 +144,7 @@ public class IDigBioMapperIT extends BaseItTest {
     i1.setAddress(addr1);
     i1.setLatitude(BigDecimal.valueOf(12));
     i1.setLongitude(BigDecimal.valueOf(13));
-    i1.setAlternativeCodes(Collections.singletonMap("II", "test"));
+    i1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("II", "test")));
     institutionMapper.create(i1);
 
     MachineTag uniqueNameUUIDMt = new MachineTag("iDigBio.org", "UniqueNameUUID", "foo");
@@ -155,7 +157,7 @@ public class IDigBioMapperIT extends BaseItTest {
     col1.setCode("c1");
     col1.setName("n1");
     col1.setDescription("desc1");
-    col1.setAlternativeCodes(Collections.singletonMap("CC", "test"));
+    col1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC", "test")));
     col1.setInstitutionKey(i1.getKey());
     col1.setMailingAddress(addr2);
     col1.setCreatedBy("test");
