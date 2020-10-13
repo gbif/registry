@@ -60,6 +60,9 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
+import org.gbif.registry.persistence.mapper.collections.external.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
+import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
@@ -193,6 +196,11 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("AlternativeCodesTypeHandler", AlternativeCodesTypeHandler.class);
+
+      // external iDigBio
+      configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("IdentifierDto", IdentifierDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
     };
   }
 }
