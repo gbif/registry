@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
@@ -91,7 +92,8 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setIncorporatedCollections(Arrays.asList("col1", "col2"));
     collection.setImportantCollectors(Arrays.asList("collector 1", "collector 2"));
     collection.setCollectionSummary(Collections.singletonMap("key", 0));
-    collection.setAlternativeCodes(Collections.singletonMap("CODE2", "another code"));
+    collection.setAlternativeCodes(
+        Collections.singletonList(new AlternativeCode("CODE2", "another code")));
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
@@ -464,7 +466,7 @@ public class CollectionMapperIT extends BaseItTest {
     coll1.setName("n1");
     coll1.setCreatedBy("test");
     coll1.setModifiedBy("test");
-    coll1.setAlternativeCodes(Collections.singletonMap("c2", "test"));
+    coll1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("c2", "test")));
     collectionMapper.create(coll1);
 
     Collection coll2 = new Collection();
@@ -473,7 +475,7 @@ public class CollectionMapperIT extends BaseItTest {
     coll2.setName("n2");
     coll2.setCreatedBy("test");
     coll2.setModifiedBy("test");
-    coll2.setAlternativeCodes(Collections.singletonMap("c1", "test"));
+    coll2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("c1", "test")));
     collectionMapper.create(coll2);
 
     Pageable pageable = PAGE.apply(1, 0L);
@@ -517,7 +519,7 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setName("n1");
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
-    col1.setAlternativeCodes(Collections.singletonMap("cc1", "test"));
+    col1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("cc1", "test")));
 
     collectionMapper.create(col1);
 

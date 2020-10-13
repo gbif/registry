@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.it.collections;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
@@ -95,7 +96,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     address.setAddress("dummy address");
     address.setCity("city");
     collection1.setAddress(address);
-    collection1.setAlternativeCodes(Collections.singletonMap("alt", "test"));
+    collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = service.create(collection1);
 
     Collection collection2 = newEntity();
