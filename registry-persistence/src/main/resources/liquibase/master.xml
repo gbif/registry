@@ -84,4 +84,5 @@
   <include file="liquibase/076-derived-dataset-tables.xml" />
   <include file="liquibase/077-challenge-code-data-field.xml" />
   <include file="liquibase/078-download-format-bionomia.xml" />
+  <include file="liquibase/079-dataset-derived-dataset-title-field.xml" />
 </databaseChangeLog>
