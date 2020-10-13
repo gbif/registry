@@ -23,6 +23,7 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -56,6 +58,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
@@ -158,7 +161,7 @@ public class DerivedDatasetResource {
           "Derived dataset with the DOI was not found", HttpStatus.NOT_FOUND);
     }
 
-    if (!derivedDataset.getCreatedBy().equals(nameFromContext)) {
+    if (!Objects.equals(derivedDataset.getCreatedBy(), nameFromContext) && checkIsNotAdmin(authentication)) {
       LOG.error(
           "User {} is not allowed to update the Derived dataset {}",
           nameFromContext,
