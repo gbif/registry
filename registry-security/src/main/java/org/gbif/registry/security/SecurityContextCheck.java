@@ -43,8 +43,7 @@ public final class SecurityContextCheck {
   /**
    * Utility class
    */
-  private SecurityContextCheck() {
-  }
+  private SecurityContextCheck() {}
 
   /**
    * Ensure that a user is present in the security context otherwise throw WebApplicationException
@@ -81,7 +80,7 @@ public final class SecurityContextCheck {
   public static void ensureGbifScheme(final Authentication authentication) {
     if (authentication != null
         && SecurityConstants.GBIF_SCHEME.equals(
-        ((GbifAuthentication) authentication).getAuthenticationScheme())) {
+            ((GbifAuthentication) authentication).getAuthenticationScheme())) {
       return;
     }
     throw new WebApplicationException("GBIF scheme is expected", HttpStatus.FORBIDDEN);
@@ -98,7 +97,7 @@ public final class SecurityContextCheck {
   public static void ensureNotGbifScheme(final Authentication authentication) {
     if (authentication != null
         && !SecurityConstants.GBIF_SCHEME.equals(
-        ((GbifAuthentication) authentication).getAuthenticationScheme())) {
+            ((GbifAuthentication) authentication).getAuthenticationScheme())) {
       return;
     }
     throw new WebApplicationException("Not GBIF scheme is expected", HttpStatus.FORBIDDEN);

@@ -23,7 +23,6 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
-import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
@@ -165,7 +164,8 @@ public class DerivedDatasetResource {
           "Derived dataset with the DOI was not found", HttpStatus.NOT_FOUND);
     }
 
-    if (!Objects.equals(derivedDataset.getCreatedBy(), nameFromContext) && checkIsNotAdmin(authentication)) {
+    if (!Objects.equals(derivedDataset.getCreatedBy(), nameFromContext)
+        && checkIsNotAdmin(authentication)) {
       LOG.error(
           "User {} is not allowed to update the Derived dataset {}",
           nameFromContext,
