@@ -99,13 +99,17 @@ public class DerivedDatasetResource {
     try (Scanner scanner = new Scanner(file.getInputStream())) {
       while (scanner.hasNextLine()) {
         String[] lineElements = scanner.nextLine().split(",");
-        records.put(lineElements[0], Long.valueOf(lineElements[1]));
+        if (lineElements.length > 1) {
+          records.put(lineElements[0], Long.valueOf(lineElements[1]));
+        } else {
+          records.put(lineElements[0], null);
+        }
       }
     } catch (IOException e) {
       throw new WebApplicationException(
           "Error while reading file", HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (NumberFormatException e) {
-      LOG.error("Wrong number {}", e.getMessage());
+      LOG.error("Invalid number {}", e.getMessage());
       throw new WebApplicationException("Invalid number " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
