@@ -17,11 +17,14 @@ package org.gbif.registry.ws.resources.external;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class IDigBioCollection implements Serializable {
 
+  private UUID institutionKey;
+  private UUID collectionKey;
   private String institution;
   private String collection;
   private String recordsets;
@@ -90,6 +93,22 @@ public class IDigBioCollection implements Serializable {
   private String sameAs;
   private BigDecimal lat;
   private BigDecimal lon;
+
+  public UUID getInstitutionKey() {
+    return institutionKey;
+  }
+
+  public void setInstitutionKey(UUID institutionKey) {
+    this.institutionKey = institutionKey;
+  }
+
+  public UUID getCollectionKey() {
+    return collectionKey;
+  }
+
+  public void setCollectionKey(UUID collectionKey) {
+    this.collectionKey = collectionKey;
+  }
 
   public String getInstitution() {
     return institution;
