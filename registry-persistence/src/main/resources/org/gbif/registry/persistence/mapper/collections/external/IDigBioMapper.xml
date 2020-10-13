@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper">
+
+  <resultMap id="MACHINE_TAG_MAP" type="MachineTagDto" autoMapping="true">
+    <id property="entityKey" column="entity_key"/>
+  </resultMap>
+
+  <resultMap id="IDENTIFIER_MAP" type="IdentifierDto" autoMapping="true">
+    <id property="entityKey" column="entity_key"/>
+  </resultMap>
+
+  <resultMap id="COLLECTION_MAP" type="CollectionDto" autoMapping="true">
+    <id property="collectionKey" column="collection_key"/>
+    <result property="collectionAlternativeCodes" column="coll_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>
+    <result property="institutionAlternativeCodes" column="inst_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>
+  </resultMap>
+
+  <select id="getMachineTags" resultMap="MACHINE_TAG_MAP">
+    SELECT cmt.collection_key as entity_key, mt.namespace, mt.name, mt.value
+    FROM machine_tag mt
+    INNER JOIN collection_machine_tag cmt ON cmt.machine_tag_key = mt.key
+    WHERE mt.namespace = 'iDigBio.org'
+    <if test="collectionKeys != null"> AND cmt.collection_key IN
+      <foreach collection="collectionKeys" item="key" separator="," open="(" close=")">
+        #{key}
+      </foreach>
+    </if>
+  </select>
+
+  <select id="getIdentifiers" resultMap="IDENTIFIER_MAP">
+    SELECT ci.collection_key as entity_key, i.type, i.identifier
+    FROM identifier i
+    INNER JOIN collection_identifier ci ON ci.identifier_key = i.key and (i.type = 'IH_IRN' or i.type = 'LSID')
+    WHERE ci.collection_key IN
+    <foreach collection="collectionKeys" item="key" separator="," open="(" close=")">
+      #{key}
+    </foreach>
+  </select>
+
+  <select id="getCollections" resultMap="COLLECTION_MAP">
+    SELECT distinct on (c."key") c."key" collection_key, c.code collection_code, c.name collection_name, c.alternative_codes coll_alt_codes,
+      c.homepage, c.catalog_url, c.description, c.number_specimens, c.taxonomic_coverage, c.geography,
+      cp.first_name || ' ' || cp.last_name contact, cp.position contactPosition, cp.email contactEmail,
+      addr.address physical_address, addr.city physical_city, addr.province physical_state, addr.postal_code physical_zip,
+      mail_addr.address mailing_address, mail_addr.city mailing_city, mail_addr.province mailing_state, mail_addr.postal_code mailing_zip,
+      i."key" institution_key, i.code institution_code, i.name institution_name, i.alternative_codes inst_alt_codes, i.latitude, i.longitude, inst_mt.value unique_name_uuid
+    FROM collection c
+    LEFT JOIN address addr ON addr.key = c.address_key
+    LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
+    INNER JOIN institution i ON c.institution_key = i."key"
+    LEFT JOIN institution_machine_tag imt on imt.institution_key = c.institution_key
+    LEFT JOIN machine_tag inst_mt on imt.machine_tag_key = inst_mt.key and inst_mt.namespace = 'iDigBio.org' and inst_mt.name = 'UniqueNameUUID'
+    LEFT JOIN collection_collection_person ccp on ccp.collection_key = c."key"
+    LEFT JOIN collection_person cp on cp.key = ccp.collection_person_key
+    WHERE c.deleted IS NULL AND c.key IN
+    <foreach collection="collectionKeys" item="key" separator="," open="(" close=")">
+      #{key}
+    </foreach>
+  </select>
+
+  <select id="findCollectionByIDigBioUuid" resultType="java.util.UUID">
+    SELECT c.key
+    FROM collection c
+    INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
+    INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
+    WHERE c.deleted IS NULL AND mt.namespace = 'iDigBio.org' and mt.name = 'CollectionUUID'
+          and mt.value = #{iDigBioUuid,jdbcType=VARCHAR}
+  </select>
+
+</mapper>
