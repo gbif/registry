@@ -32,7 +32,11 @@ public class DerivedDatasetUsage {
   public DerivedDatasetUsage() {}
 
   public DerivedDatasetUsage(
-      UUID datasetKey, DOI datasetDoi, DOI derivedDatasetDoi, Long numberRecords, String datasetTitle) {
+      UUID datasetKey,
+      DOI datasetDoi,
+      DOI derivedDatasetDoi,
+      Long numberRecords,
+      String datasetTitle) {
     this.datasetKey = datasetKey;
     this.datasetDoi = datasetDoi;
     this.derivedDatasetDoi = derivedDatasetDoi;
