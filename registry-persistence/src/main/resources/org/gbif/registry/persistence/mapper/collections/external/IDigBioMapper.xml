@@ -41,14 +41,14 @@
   <select id="getCollections" resultMap="COLLECTION_MAP">
     SELECT distinct on (c."key") c."key" collection_key, c.code collection_code, c.name collection_name, c.alternative_codes coll_alt_codes,
       c.homepage, c.catalog_url, c.description, c.number_specimens, c.taxonomic_coverage, c.geography geographicRange,
-      cp.first_name || ' ' || cp.last_name contact, cp.position contactPosition, cp.email contactEmail,
+      concat(cp.first_name, ' ', cp.last_name) contact, cp.position contactPosition, cp.email contactEmail,
       addr.address physical_address, addr.city physical_city, addr.province physical_state, addr.postal_code physical_zip,
       mail_addr.address mailing_address, mail_addr.city mailing_city, mail_addr.province mailing_state, mail_addr.postal_code mailing_zip,
       i."key" institution_key, i.code institution_code, i.name institution_name, i.alternative_codes inst_alt_codes, i.latitude, i.longitude, inst_mt.value unique_name_uuid
     FROM collection c
     LEFT JOIN address addr ON addr.key = c.address_key
     LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
-    INNER JOIN institution i ON c.institution_key = i."key"
+    LEFT JOIN institution i ON c.institution_key = i."key"
     LEFT JOIN institution_machine_tag imt on imt.institution_key = c.institution_key
     LEFT JOIN machine_tag inst_mt on imt.machine_tag_key = inst_mt.key and inst_mt.namespace = 'iDigBio.org' and inst_mt.name = 'UniqueNameUUID'
     LEFT JOIN collection_collection_person ccp on ccp.collection_key = c."key"
