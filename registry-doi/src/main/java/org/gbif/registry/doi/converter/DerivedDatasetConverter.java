@@ -52,7 +52,7 @@ public final class DerivedDatasetConverter {
     convertResourceType(builder);
 
     // Optional and recommended fields
-    convertRelatedIdentifiers(builder, derivedDatasetUsages);
+    convertRelatedIdentifiers(builder, derivedDataset, derivedDatasetUsages);
 
     return builder.build();
   }
@@ -102,8 +102,20 @@ public final class DerivedDatasetConverter {
   }
 
   private static void convertRelatedIdentifiers(
-      DataCiteMetadata.Builder<Void> builder, List<DerivedDatasetUsage> datasetUsages) {
+      DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset, List<DerivedDatasetUsage> datasetUsages) {
+    // include related datasets
     builder.withRelatedIdentifiers(getRelatedIdentifiersDerivedDatasetDatasetUsage(datasetUsages));
+
+    // include original download DOI if present
+    if (derivedDataset.getOriginalDownloadDOI() != null) {
+      builder.withRelatedIdentifiers().addRelatedIdentifier(
+          DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
+              .withRelationType(RelationType.IS_DERIVED_FROM)
+              .withValue(derivedDataset.getOriginalDownloadDOI().getDoiName())
+              .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+              .build()
+      );
+    }
   }
 
   private static DataCiteMetadata.RelatedIdentifiers
