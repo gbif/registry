@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd" xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <identifier identifierType="DOI">10.21373/dd.abcdef</identifier>
+  <creators>
+    <creator>
+      <creatorName>test</creatorName>
+    </creator>
+  </creators>
+  <titles>
+    <title>Derived dataset title</title>
+  </titles>
+  <publisher>The Global Biodiversity Information Facility</publisher>
+  <publicationYear>2020</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset"/>
+  <relatedIdentifiers>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.21373/abcdef</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.21373/fedcba</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.21373/dl.abcdef</relatedIdentifier>
+  </relatedIdentifiers>
+</resource>

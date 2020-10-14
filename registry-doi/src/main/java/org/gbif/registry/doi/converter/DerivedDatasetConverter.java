@@ -21,6 +21,8 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
@@ -37,7 +39,8 @@ import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
 public final class DerivedDatasetConverter {
 
-  private DerivedDatasetConverter() {}
+  private DerivedDatasetConverter() {
+  }
 
   public static DataCiteMetadata convert(
       DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
@@ -87,7 +90,7 @@ public final class DerivedDatasetConverter {
   }
 
   private static void convertPublisher(DataCiteMetadata.Builder<Void> builder) {
-    builder.withPublisher(DataCiteMetadata.Publisher.builder().withValue(GBIF_PUBLISHER).build());
+    builder.withPublisher(Publisher.builder().withValue(GBIF_PUBLISHER).build());
   }
 
   private static void convertPublicationYear(DataCiteMetadata.Builder<Void> builder) {
@@ -106,38 +109,31 @@ public final class DerivedDatasetConverter {
       DerivedDataset derivedDataset,
       List<DerivedDatasetUsage> datasetUsages) {
     // include related datasets
-    builder.withRelatedIdentifiers(getRelatedIdentifiersDerivedDatasetDatasetUsage(datasetUsages));
+    if (!datasetUsages.isEmpty()) {
+      for (DerivedDatasetUsage du : datasetUsages) {
+        if (du.getDatasetDoi() != null) {
+          builder
+              .withRelatedIdentifiers()
+              .addRelatedIdentifier(
+                  RelatedIdentifier.builder()
+                      .withRelationType(RelationType.REFERENCES)
+                      .withValue(du.getDatasetDoi().getDoiName())
+                      .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+                      .build());
+        }
+      }
+    }
 
     // include original download DOI if present
     if (derivedDataset.getOriginalDownloadDOI() != null) {
       builder
           .withRelatedIdentifiers()
           .addRelatedIdentifier(
-              DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
+              RelatedIdentifier.builder()
                   .withRelationType(RelationType.IS_DERIVED_FROM)
                   .withValue(derivedDataset.getOriginalDownloadDOI().getDoiName())
                   .withRelatedIdentifierType(RelatedIdentifierType.DOI)
                   .build());
     }
-  }
-
-  private static DataCiteMetadata.RelatedIdentifiers
-      getRelatedIdentifiersDerivedDatasetDatasetUsage(List<DerivedDatasetUsage> datasetUsages) {
-    final DataCiteMetadata.RelatedIdentifiers.Builder<Void> relatedIdentifiersBuilder =
-        DataCiteMetadata.RelatedIdentifiers.builder();
-    if (!datasetUsages.isEmpty()) {
-      for (DerivedDatasetUsage du : datasetUsages) {
-        if (du.getDatasetDoi() != null) {
-          relatedIdentifiersBuilder.addRelatedIdentifier(
-              DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
-                  .withRelationType(RelationType.REFERENCES)
-                  .withValue(du.getDatasetDoi().getDoiName())
-                  .withRelatedIdentifierType(RelatedIdentifierType.DOI)
-                  .build());
-        }
-      }
-    }
-
-    return relatedIdentifiersBuilder.build();
   }
 }
