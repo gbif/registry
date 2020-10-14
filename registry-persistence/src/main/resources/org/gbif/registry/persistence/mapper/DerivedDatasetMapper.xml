@@ -68,7 +68,7 @@
     dataset_usages(dataset_key, record_count) AS
     ((VALUES
     <foreach item="item" collection="derivedDatasetUsages" open="(" separator="),(" close=")">
-      cast(#{item.datasetKey} as uuid),#{item.numberRecords}
+      cast(#{item.datasetKey} as uuid),#{item.numberRecords}::integer
     </foreach>
     ))
     SELECT dataset.key, dataset.doi, record_count, #{derivedDatasetDoi} as derived_dataset_doi, dataset.title
