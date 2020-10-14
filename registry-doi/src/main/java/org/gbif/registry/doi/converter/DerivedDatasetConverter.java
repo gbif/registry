@@ -39,8 +39,7 @@ import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
 public final class DerivedDatasetConverter {
 
-  private DerivedDatasetConverter() {
-  }
+  private DerivedDatasetConverter() {}
 
   public static DataCiteMetadata convert(
       DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
