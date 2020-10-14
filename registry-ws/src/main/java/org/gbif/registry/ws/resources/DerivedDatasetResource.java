@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -56,6 +57,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
@@ -96,13 +98,17 @@ public class DerivedDatasetResource {
     try (Scanner scanner = new Scanner(file.getInputStream())) {
       while (scanner.hasNextLine()) {
         String[] lineElements = scanner.nextLine().split(",");
-        records.put(lineElements[0], Long.valueOf(lineElements[1]));
+        if (lineElements.length > 1) {
+          records.put(lineElements[0], Long.valueOf(lineElements[1]));
+        } else {
+          records.put(lineElements[0], null);
+        }
       }
     } catch (IOException e) {
       throw new WebApplicationException(
           "Error while reading file", HttpStatus.INTERNAL_SERVER_ERROR);
     } catch (NumberFormatException e) {
-      LOG.error("Wrong number {}", e.getMessage());
+      LOG.error("Invalid number {}", e.getMessage());
       throw new WebApplicationException("Invalid number " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
@@ -115,8 +121,9 @@ public class DerivedDatasetResource {
     final String nameFromContext = authentication != null ? authentication.getName() : null;
     request.setCreator(nameFromContext);
 
-    if (!occurrenceDownloadService.checkOccurrenceDownloadExists(
-        request.getOriginalDownloadDOI())) {
+    if (request.getOriginalDownloadDOI() != null
+        && !occurrenceDownloadService.checkOccurrenceDownloadExists(
+            request.getOriginalDownloadDOI())) {
       LOG.error("Invalid original download DOI");
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
@@ -158,7 +165,8 @@ public class DerivedDatasetResource {
           "Derived dataset with the DOI was not found", HttpStatus.NOT_FOUND);
     }
 
-    if (!derivedDataset.getCreatedBy().equals(nameFromContext)) {
+    if (!Objects.equals(derivedDataset.getCreatedBy(), nameFromContext)
+        && checkIsNotAdmin(authentication)) {
       LOG.error(
           "User {} is not allowed to update the Derived dataset {}",
           nameFromContext,

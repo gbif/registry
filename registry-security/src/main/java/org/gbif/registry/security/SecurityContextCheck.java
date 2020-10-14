@@ -36,11 +36,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
  * Utility methods to check conditions on {@link Authentication} *** IMPORTANT *** Convention: -
  * ensure methods throws exception - check methods: return boolean
  */
-public class SecurityContextCheck {
+public final class SecurityContextCheck {
 
   private static final Logger LOG = LoggerFactory.getLogger(SecurityContextCheck.class);
 
-  /** Utility class */
+  /**
+   * Utility class
+   */
   private SecurityContextCheck() {}
 
   /**
@@ -48,7 +50,7 @@ public class SecurityContextCheck {
    * UNAUTHORIZED.
    *
    * @throws WebApplicationException UNAUTHORIZED if the user is not present in the {@link
-   *     Authentication}.
+   *                                 Authentication}.
    */
   public static void ensureUserSetInSecurityContext(final Authentication authentication) {
     ensureUserSetInSecurityContext(authentication, HttpStatus.UNAUTHORIZED);
@@ -73,7 +75,7 @@ public class SecurityContextCheck {
    * WebApplicationException} FORBIDDEN.
    *
    * @throws WebApplicationException FORBIDDEN if the {@link Authentication} is null or was not
-   *     obtained using the GBIF authentication scheme.
+   *                                 obtained using the GBIF authentication scheme.
    */
   public static void ensureGbifScheme(final Authentication authentication) {
     if (authentication != null
@@ -90,7 +92,7 @@ public class SecurityContextCheck {
    * this method will throw {@link WebApplicationException} FORBIDDEN.
    *
    * @throws WebApplicationException FORBIDDEN if the {@link Authentication} is null or was obtained
-   *     using the GBIF authentication scheme.
+   *                                 using the GBIF authentication scheme.
    */
   public static void ensureNotGbifScheme(final Authentication authentication) {
     if (authentication != null
@@ -132,7 +134,7 @@ public class SecurityContextCheck {
    * roles.
    *
    * @param roles this methods will return true if the user is at least in one role. If no role is
-   *     provided this method will return false.
+   *              provided this method will return false.
    * @return the user is at least in one of the provided role(s)
    */
   public static boolean checkUserInRole(Authentication authentication, String... roles) {
@@ -148,17 +150,23 @@ public class SecurityContextCheck {
         .anyMatch(role -> authentication.getAuthorities().contains(role));
   }
 
-  /** Check if the user represented by the {@link Authentication} does NOT have the admin role. */
+  /**
+   * Check if the user represented by the {@link Authentication} does NOT have the ADMIN role.
+   */
   public static boolean checkIsNotAdmin(Authentication authentication) {
     return !checkUserInRole(authentication, UserRoles.ADMIN_ROLE);
   }
 
-  /** Check if the user represented by the {@link Authentication} does NOT have the editor role. */
+  /**
+   * Check if the user represented by the {@link Authentication} does NOT have the EDITOR role.
+   */
   public static boolean checkIsNotEditor(Authentication authentication) {
     return !checkUserInRole(authentication, UserRoles.EDITOR_ROLE);
   }
 
-  /** Check if the user represented by the {@link Authentication} does NOT have the APP role. */
+  /**
+   * Check if the user represented by the {@link Authentication} does NOT have the APP role.
+   */
   public static boolean checkIsNotApp(Authentication authentication) {
     return !checkUserInRole(authentication, UserRoles.APP_ROLE);
   }

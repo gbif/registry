@@ -23,6 +23,9 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.registry.doi.DataCiteMetadataBuilderService;
 import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -38,7 +41,8 @@ public class DataCiteMetadataBuilderServiceStub implements DataCiteMetadataBuild
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(DerivedDataset derivedDataset) {
+  public DataCiteMetadata buildMetadata(
+      DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
     return null;
   }
 
