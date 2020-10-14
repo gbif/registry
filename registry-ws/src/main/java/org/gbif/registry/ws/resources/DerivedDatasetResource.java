@@ -122,7 +122,8 @@ public class DerivedDatasetResource {
     request.setCreator(nameFromContext);
 
     if (request.getOriginalDownloadDOI() != null
-        && !occurrenceDownloadService.checkOccurrenceDownloadExists(request.getOriginalDownloadDOI())) {
+        && !occurrenceDownloadService.checkOccurrenceDownloadExists(
+            request.getOriginalDownloadDOI())) {
       LOG.error("Invalid original download DOI");
       throw new WebApplicationException("Invalid original download DOI", HttpStatus.BAD_REQUEST);
     }
