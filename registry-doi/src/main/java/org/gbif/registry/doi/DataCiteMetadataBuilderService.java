@@ -24,8 +24,9 @@ import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
-import javax.annotation.Nullable;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 public interface DataCiteMetadataBuilderService {
 
@@ -42,7 +43,8 @@ public interface DataCiteMetadataBuilderService {
   /**
    * Build the DataCiteMetadata for a DerivedDataset.
    */
-  DataCiteMetadata buildMetadata(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
+  DataCiteMetadata buildMetadata(
+      DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
 
   /**
    * Build the DataCiteMetadata for a Dataset that includes a relation to another DOI.
