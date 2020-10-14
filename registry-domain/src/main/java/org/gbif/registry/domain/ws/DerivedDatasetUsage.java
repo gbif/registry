@@ -41,6 +41,7 @@ public class DerivedDatasetUsage {
     this.datasetDoi = datasetDoi;
     this.derivedDatasetDoi = derivedDatasetDoi;
     this.numberRecords = numberRecords;
+    this.datasetTitle = datasetTitle;
   }
 
   public UUID getDatasetKey() {
