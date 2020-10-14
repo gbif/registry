@@ -62,7 +62,8 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
+  public DataCiteMetadata buildMetadata(
+      DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
     return DerivedDatasetConverter.convert(derivedDataset, derivedDatasetUsages);
   }
 

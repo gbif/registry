@@ -106,7 +106,8 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
     derivedDataset.setCitation(
         MessageFormat.format(citationText, LocalDate.now(UTC).format(REGULAR_DATE_FORMAT), doi));
 
-    DataCiteMetadata metadata = metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
+    DataCiteMetadata metadata =
+        metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
 
     datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
         doi, metadata, derivedDataset.getTarget(), derivedDataset.getRegistrationDate());
@@ -193,9 +194,10 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
 
     for (DerivedDataset derivedDataset : citationsToRegister) {
       LOG.debug("Start registering derivedDataset {}", derivedDataset.getDoi());
-      List<DerivedDatasetUsage> derivedDatasetUsages
-          = derivedDatasetMapper.listDerivedDatasetUsages(derivedDataset.getDoi(), null);
-      DataCiteMetadata metadata = metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
+      List<DerivedDatasetUsage> derivedDatasetUsages =
+          derivedDatasetMapper.listDerivedDatasetUsages(derivedDataset.getDoi(), null);
+      DataCiteMetadata metadata =
+          metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
 
       datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
           derivedDataset.getDoi(),

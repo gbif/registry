@@ -39,7 +39,8 @@ public final class DerivedDatasetConverter {
 
   private DerivedDatasetConverter() {}
 
-  public static DataCiteMetadata convert(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
+  public static DataCiteMetadata convert(
+      DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
     final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
     // Required fields
@@ -102,14 +103,13 @@ public final class DerivedDatasetConverter {
 
   private static void convertRelatedIdentifiers(
       DataCiteMetadata.Builder<Void> builder, List<DerivedDatasetUsage> datasetUsages) {
-    builder.withRelatedIdentifiers(
-        getRelatedIdentifiersDerivedDatasetDatasetUsage(datasetUsages));
+    builder.withRelatedIdentifiers(getRelatedIdentifiersDerivedDatasetDatasetUsage(datasetUsages));
   }
 
-  private static DataCiteMetadata.RelatedIdentifiers getRelatedIdentifiersDerivedDatasetDatasetUsage(
-      List<DerivedDatasetUsage> datasetUsages) {
-    final DataCiteMetadata.RelatedIdentifiers.Builder<Void> relatedIdentifiersBuilder
-        = DataCiteMetadata.RelatedIdentifiers.builder();
+  private static DataCiteMetadata.RelatedIdentifiers
+      getRelatedIdentifiersDerivedDatasetDatasetUsage(List<DerivedDatasetUsage> datasetUsages) {
+    final DataCiteMetadata.RelatedIdentifiers.Builder<Void> relatedIdentifiersBuilder =
+        DataCiteMetadata.RelatedIdentifiers.builder();
     if (!datasetUsages.isEmpty()) {
       for (DerivedDatasetUsage du : datasetUsages) {
         if (du.getDatasetDoi() != null) {
