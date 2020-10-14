@@ -23,10 +23,14 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorN
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
+import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
+import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
 import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
 import java.util.Date;
+import java.util.List;
 
 import static org.gbif.registry.doi.util.DataCiteConstants.GBIF_PUBLISHER;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
@@ -35,7 +39,7 @@ public final class DerivedDatasetConverter {
 
   private DerivedDatasetConverter() {}
 
-  public static DataCiteMetadata convert(DerivedDataset derivedDataset) {
+  public static DataCiteMetadata convert(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
     final DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
     // Required fields
@@ -47,16 +51,7 @@ public final class DerivedDatasetConverter {
     convertResourceType(builder);
 
     // Optional and recommended fields
-    // TODO: 27/08/2020 which ones do we need?
-    //    convertDates(builder);
-    //    convertDescriptions(builder);
-    //    convertLanguage(builder);
-    //    convertContributors(builder);
-    //    convertAlternateIdentifiers(builder);
-    //    convertRelatedIdentifiers(builder);
-    //    convertRightsList(builder);
-    //    convertSubjects(builder);
-    //    convertGeoLocations(builder);
+    convertRelatedIdentifiers(builder, derivedDatasetUsages);
 
     return builder.build();
   }
@@ -91,7 +86,6 @@ public final class DerivedDatasetConverter {
   }
 
   private static void convertPublisher(DataCiteMetadata.Builder<Void> builder) {
-    // TODO: 27/08/2020 who is supposed to be the publisher?
     builder.withPublisher(DataCiteMetadata.Publisher.builder().withValue(GBIF_PUBLISHER).build());
   }
 
@@ -106,5 +100,29 @@ public final class DerivedDatasetConverter {
             .build());
   }
 
-  // TODO: 03/09/2020 convert related identifiers
+  private static void convertRelatedIdentifiers(
+      DataCiteMetadata.Builder<Void> builder, List<DerivedDatasetUsage> datasetUsages) {
+    builder.withRelatedIdentifiers(
+        getRelatedIdentifiersDerivedDatasetDatasetUsage(datasetUsages));
+  }
+
+  private static DataCiteMetadata.RelatedIdentifiers getRelatedIdentifiersDerivedDatasetDatasetUsage(
+      List<DerivedDatasetUsage> datasetUsages) {
+    final DataCiteMetadata.RelatedIdentifiers.Builder<Void> relatedIdentifiersBuilder
+        = DataCiteMetadata.RelatedIdentifiers.builder();
+    if (!datasetUsages.isEmpty()) {
+      for (DerivedDatasetUsage du : datasetUsages) {
+        if (du.getDatasetDoi() != null) {
+          relatedIdentifiersBuilder.addRelatedIdentifier(
+              DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier.builder()
+                  .withRelationType(RelationType.REFERENCES)
+                  .withValue(du.getDatasetDoi().getDoiName())
+                  .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+                  .build());
+        }
+      }
+    }
+
+    return relatedIdentifiersBuilder.build();
+  }
 }
