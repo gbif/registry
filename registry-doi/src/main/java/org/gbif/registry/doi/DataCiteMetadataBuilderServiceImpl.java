@@ -31,6 +31,7 @@ import org.gbif.registry.doi.converter.DatasetConverter;
 import org.gbif.registry.doi.converter.DerivedDatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.domain.ws.DerivedDataset;
+import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.List;
@@ -61,8 +62,8 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
   }
 
   @Override
-  public DataCiteMetadata buildMetadata(DerivedDataset derivedDataset) {
-    return DerivedDatasetConverter.convert(derivedDataset);
+  public DataCiteMetadata buildMetadata(DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages) {
+    return DerivedDatasetConverter.convert(derivedDataset, derivedDatasetUsages);
   }
 
   @Override

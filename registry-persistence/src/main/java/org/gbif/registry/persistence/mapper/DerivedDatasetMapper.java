@@ -49,7 +49,7 @@ public interface DerivedDatasetMapper {
   long countByDataset(@Param("datasetKey") UUID datasetKey);
 
   List<DerivedDatasetUsage> listDerivedDatasetUsages(
-      @Param("derivedDatasetDoi") DOI citationDoi, @Nullable @Param("page") Pageable page);
+      @Param("derivedDatasetDoi") DOI derivedDatasetDoi, @Nullable @Param("page") Pageable page);
 
   long countDerivedDatasetUsages(@Param("derivedDatasetDoi") DOI derivedDatasetDoi);
 
