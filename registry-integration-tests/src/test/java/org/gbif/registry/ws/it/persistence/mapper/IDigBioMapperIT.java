@@ -235,7 +235,8 @@ public class IDigBioMapperIT extends BaseItTest {
 
     collectionMapper.create(col1);
 
-    Set<UUID> colls = iDigBioMapper.findCollectionsByCountry(Country.UNITED_STATES.getIso2LetterCode());
+    Set<UUID> colls =
+        iDigBioMapper.findCollectionsByCountry(Country.UNITED_STATES.getIso2LetterCode());
     assertEquals(1, colls.size());
   }
 }
