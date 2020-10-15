@@ -64,12 +64,12 @@ public class DerivedDatasetMapperIT extends BaseItTest {
     Dataset dataset3 = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset3"));
 
     // create citations
-    DerivedDataset derivedDataset1 = prepareCitation();
+    DerivedDataset derivedDataset1 = prepareDerivedDataset();
     derivedDataset1.setDoi(new DOI("10.21373/dd.doi1"));
     derivedDataset1.setOriginalDownloadDOI(new DOI("10.21373/dl.doi1"));
     mapper.create(derivedDataset1);
 
-    DerivedDataset derivedDataset2 = prepareCitation();
+    DerivedDataset derivedDataset2 = prepareDerivedDataset();
     derivedDataset2.setDoi(new DOI("10.21373/dd.doi2"));
     derivedDataset2.setOriginalDownloadDOI(new DOI("10.21373/dl.doi2"));
     mapper.create(derivedDataset2);
@@ -108,7 +108,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
   @Test
   public void testListByRegistrationDate() {
     // create derivedDatasets
-    DerivedDataset derivedDataset1 = prepareCitation();
+    DerivedDataset derivedDataset1 = prepareDerivedDataset();
     derivedDataset1.setDoi(new DOI("10.21373/dd.doi1"));
     // day before date
     derivedDataset1.setRegistrationDate(
@@ -118,7 +118,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
                 .toInstant()));
     mapper.create(derivedDataset1);
 
-    DerivedDataset derivedDataset2 = prepareCitation();
+    DerivedDataset derivedDataset2 = prepareDerivedDataset();
     derivedDataset2.setDoi(new DOI("10.21373/dd.doi2"));
     // the same date but an hour later
     derivedDataset2.setRegistrationDate(
@@ -128,7 +128,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
                 .toInstant()));
     mapper.create(derivedDataset2);
 
-    DerivedDataset derivedDataset3 = prepareCitation();
+    DerivedDataset derivedDataset3 = prepareDerivedDataset();
     derivedDataset3.setDoi(new DOI("10.21373/dd.doi3"));
     // day after date
     derivedDataset3.setRegistrationDate(
@@ -148,10 +148,11 @@ public class DerivedDatasetMapperIT extends BaseItTest {
     assertEquals(1, derivedDatasets.size());
   }
 
-  private DerivedDataset prepareCitation() {
+  private DerivedDataset prepareDerivedDataset() {
     DerivedDataset derivedDataset = new DerivedDataset();
     derivedDataset.setCreated(new Date());
     derivedDataset.setModified(new Date());
+    derivedDataset.setDescription("DerivedDataset description");
     derivedDataset.setCreatedBy("WS_IT");
     derivedDataset.setModifiedBy("WS_IT");
     derivedDataset.setSourceUrl(URI.create("https://github.com/gbif/registry"));

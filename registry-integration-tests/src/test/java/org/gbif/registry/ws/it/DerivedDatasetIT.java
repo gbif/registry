@@ -98,6 +98,7 @@ public class DerivedDatasetIT extends BaseItTest {
     assertNotNull(actual);
     assertEquals(derivedDataset.getDoi(), actual.getDoi());
     assertEquals(requestData.getOriginalDownloadDOI(), actual.getOriginalDownloadDOI());
+    assertEquals(requestData.getDescription(), actual.getDescription());
     assertEquals(requestData.getSourceUrl(), actual.getSourceUrl());
     assertEquals(requestData.getTitle(), actual.getTitle());
     assertNotNull(actual.getCreated());
@@ -172,6 +173,7 @@ public class DerivedDatasetIT extends BaseItTest {
       DOI originalDownloadDOI, Map<String, Long> relatedDatasets) {
     DerivedDatasetCreationRequest creationRequest = new DerivedDatasetCreationRequest();
     creationRequest.setTitle("Let's test citation");
+    creationRequest.setDescription("Derived dataset description");
     creationRequest.setOriginalDownloadDOI(originalDownloadDOI);
     creationRequest.setSourceUrl(URI.create("https://www.gbif.org"));
     creationRequest.setRelatedDatasets(relatedDatasets);
