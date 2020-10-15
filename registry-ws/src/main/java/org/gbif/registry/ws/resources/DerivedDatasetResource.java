@@ -235,6 +235,7 @@ public class DerivedDatasetResource {
   private DerivedDataset toDerivedDataset(DerivedDatasetCreationRequest request, String creator) {
     DerivedDataset derivedDataset = new DerivedDataset();
     derivedDataset.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
+    derivedDataset.setDescription(request.getDescription());
     derivedDataset.setSourceUrl(request.getSourceUrl());
     derivedDataset.setTitle(request.getTitle());
     derivedDataset.setCreatedBy(creator);
