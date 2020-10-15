@@ -29,10 +29,10 @@ grscicoll:
   portal:
     url: https://www.gbif-dev.org/grscicoll/
 
-citation:
+derivedDataset:
   text: Derived dataset GBIF.org ({0}) Filtered export of GBIF occurrence data https://doi.org/{1}
   cronPattern: 0 0 0 * * *
-  url: htttp://ww.gbif-dev.org/citation/{0}
+  url: https://www.gbif-dev.org/derivedDataset/{0}
 
 # JWT
 jwt:

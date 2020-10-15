@@ -20,7 +20,6 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
-import java.net.URI;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;

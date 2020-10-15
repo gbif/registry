@@ -136,7 +136,8 @@ public class DerivedDatasetResource {
           "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
     }
 
-    return derivedDatasetService.create(toDerivedDataset(request, nameFromContext), derivedDatasetUsages);
+    return derivedDatasetService.create(
+        toDerivedDataset(request, nameFromContext), derivedDatasetUsages);
   }
 
   public DerivedDataset getDerivedDataset(DOI doi) {

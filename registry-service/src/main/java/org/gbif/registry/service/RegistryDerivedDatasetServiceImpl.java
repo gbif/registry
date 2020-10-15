@@ -66,7 +66,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
   private final DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService;
   private final DerivedDatasetMapper derivedDatasetMapper;
   private final DatasetMapper datasetMapper;
-  private final URI derivedDatasetUrl;
+  private final String derivedDatasetTemplateUrl;
   private final String citationText;
 
   public RegistryDerivedDatasetServiceImpl(
@@ -75,14 +75,14 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
       DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService,
       DerivedDatasetMapper derivedDatasetMapper,
       DatasetMapper datasetMapper,
-      @Value("${derivedDataset.url}") String derivedDatasetUrl,
+      @Value("${derivedDataset.url}") String derivedDatasetTemplateUrl,
       @Value("${derivedDataset.text}") String citationText) {
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
     this.datasetDoiDataCiteHandlingService = datasetDoiDataCiteHandlingService;
     this.derivedDatasetMapper = derivedDatasetMapper;
     this.datasetMapper = datasetMapper;
-    this.derivedDatasetUrl = URI.create(derivedDatasetUrl);
+    this.derivedDatasetTemplateUrl = derivedDatasetTemplateUrl;
     this.citationText = citationText;
   }
 
@@ -104,7 +104,10 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
         metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
 
     datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
-        doi, metadata, derivedDatasetUrl, derivedDataset.getRegistrationDate());
+        doi,
+        metadata,
+        URI.create(MessageFormat.format(derivedDatasetTemplateUrl, doi)),
+        derivedDataset.getRegistrationDate());
 
     derivedDatasetMapper.create(derivedDataset);
     Iterators.partition(derivedDatasetUsages.iterator(), BATCH_SIZE)
@@ -179,7 +182,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
       datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
           derivedDataset.getDoi(),
           metadata,
-          derivedDatasetUrl,
+          URI.create(MessageFormat.format(derivedDatasetTemplateUrl, derivedDataset.getDoi())),
           derivedDataset.getRegistrationDate());
     }
   }
