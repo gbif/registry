@@ -20,11 +20,13 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions.Description;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
+import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
@@ -55,6 +57,7 @@ public final class DerivedDatasetConverter {
 
     // Optional and recommended fields
     convertRelatedIdentifiers(builder, derivedDataset, derivedDatasetUsages);
+    convertDescriptions(builder, derivedDataset);
 
     return builder.build();
   }
@@ -132,6 +135,19 @@ public final class DerivedDatasetConverter {
                   .withRelationType(RelationType.IS_DERIVED_FROM)
                   .withValue(derivedDataset.getOriginalDownloadDOI().getDoiName())
                   .withRelatedIdentifierType(RelatedIdentifierType.DOI)
+                  .build());
+    }
+  }
+
+  private static void convertDescriptions(
+      DataCiteMetadata.Builder<Void> builder, DerivedDataset derivedDataset) {
+    if (derivedDataset.getDescription() != null) {
+      builder
+          .withDescriptions()
+          .addDescription(
+              Description.builder()
+                  .withContent(derivedDataset.getDescription())
+                  .withDescriptionType(DescriptionType.ABSTRACT)
                   .build());
     }
   }
