@@ -83,7 +83,7 @@ public class DerivedDatasetIT extends BaseItTest {
     DerivedDatasetCreationRequest requestData = new DerivedDatasetCreationRequest();
     requestData.setTitle("Let's test derivedDataset");
     requestData.setOriginalDownloadDOI(occurrenceDownload.getDoi());
-    requestData.setTarget(URI.create("https://www.gbif.org"));
+    requestData.setSourceUrl(URI.create("https://www.gbif.org"));
     Map<String, Long> relatedDatasets = new HashMap<>();
     relatedDatasets.put(firstDataset.getKey().toString(), 1L);
     relatedDatasets.put(secondDataset.getDoi().getDoiName(), 2L);
@@ -98,7 +98,7 @@ public class DerivedDatasetIT extends BaseItTest {
     assertNotNull(actual);
     assertEquals(derivedDataset.getDoi(), actual.getDoi());
     assertEquals(requestData.getOriginalDownloadDOI(), actual.getOriginalDownloadDOI());
-    assertEquals(requestData.getTarget(), actual.getTarget());
+    assertEquals(requestData.getSourceUrl(), actual.getSourceUrl());
     assertEquals(requestData.getTitle(), actual.getTitle());
     assertNotNull(actual.getCreated());
     assertNotNull(actual.getCreatedBy());
@@ -173,7 +173,7 @@ public class DerivedDatasetIT extends BaseItTest {
     DerivedDatasetCreationRequest creationRequest = new DerivedDatasetCreationRequest();
     creationRequest.setTitle("Let's test citation");
     creationRequest.setOriginalDownloadDOI(originalDownloadDOI);
-    creationRequest.setTarget(URI.create("https://www.gbif.org"));
+    creationRequest.setSourceUrl(URI.create("https://www.gbif.org"));
     creationRequest.setRelatedDatasets(relatedDatasets);
 
     return creationRequest;

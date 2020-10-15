@@ -35,7 +35,7 @@ public class DerivedDatasetTestDataProvider {
     derivedDataset.setModifiedBy("test");
     derivedDataset.setDoi(new DOI("10.21373/dd.abcdef"));
     derivedDataset.setRegistrationDate(new Date());
-    derivedDataset.setTarget(URI.create("gbif.org"));
+    derivedDataset.setSourceUrl(URI.create("gbif.org"));
     derivedDataset.setTitle("Derived dataset title");
 
     return derivedDataset;

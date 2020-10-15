@@ -3,7 +3,7 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.DerivedDatasetMapper">
 
   <sql id="DERIVED_DATASET_FIELDS">
-    doi,original_download_doi,description,citation,title,target,registration_date,created,created_by,modified,modified_by
+    doi,original_download_doi,description,citation,title,source_url,registration_date,created,created_by,modified,modified_by
   </sql>
 
   <sql id="DERIVED_DATASET_FIELD_TYPES">
@@ -12,7 +12,7 @@
     #{derivedDataset.description,jdbcType=VARCHAR},
     #{derivedDataset.citation,jdbcType=VARCHAR},
     #{derivedDataset.title,jdbcType=VARCHAR},
-    #{derivedDataset.target,jdbcType=VARCHAR},
+    #{derivedDataset.sourceUrl,jdbcType=VARCHAR},
     #{derivedDataset.registrationDate,jdbcType=TIMESTAMP},
     now(), <!-- created -->
     #{derivedDataset.createdBy},
@@ -26,7 +26,7 @@
     <result property="description" column="description" javaType="java.lang.String"/>
     <result property="citation" column="citation" javaType="java.lang.String"/>
     <result property="title" column="title" javaType="java.lang.String"/>
-    <result property="target" column="target" javaType="java.net.URI" typeHandler="org.gbif.mybatis.type.UriTypeHandler"/>
+    <result property="sourceUrl" column="source_url" javaType="java.net.URI" typeHandler="org.gbif.mybatis.type.UriTypeHandler"/>
     <result property="registrationDate" column="registration_date" javaType="java.util.Date"/>
     <result property="created" column="created" javaType="java.util.Date"/>
     <result property="createdBy" column="created_by" javaType="java.lang.String"/>
@@ -52,11 +52,12 @@
     VALUES(<include refid="DERIVED_DATASET_FIELD_TYPES"/>)
   </insert>
 
-  <update id="updateTarget">
+  <update id="update">
     UPDATE derived_dataset
-    SET target   = #{target,jdbcType=OTHER},
-    modified = now()
-    WHERE doi = #{doi,jdbcType=OTHER}
+    SET source_url   = #{derivedDataset.sourceUrl,jdbcType=OTHER},
+    modified = now(),
+    modified_by = #{derivedDataset.modifiedBy,jdbcType=VARCHAR}
+    WHERE doi = #{derivedDataset.doi,jdbcType=OTHER}
   </update>
 
   <select id="get" resultType="DerivedDataset" resultMap="DERIVED_DATASET_MAP">

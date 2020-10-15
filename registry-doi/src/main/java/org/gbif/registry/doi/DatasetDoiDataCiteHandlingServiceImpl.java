@@ -129,16 +129,6 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
     }
   }
 
-  @Override
-  public void scheduleDerivedDatasetUpdating(DOI doi, DataCiteMetadata metadata, URI target) {
-    try {
-      doiMessageManagingService.registerDerivedDataset(doi, metadata, target);
-    } catch (InvalidMetadataException e) {
-      LOG.error(DOI_SMTP, "Failed to schedule DOI update for {}", doi, e);
-      failed(doi, e);
-    }
-  }
-
   private void failed(DOI doi, InvalidMetadataException e) {
     // Updates the doi table to FAILED status and uses the error stacktrace as the xml for
     // debugging.

@@ -30,7 +30,7 @@ public class DerivedDataset implements Serializable {
   private String description;
   private String citation;
   private String title;
-  private URI target;
+  private URI sourceUrl;
   private String createdBy;
   private String modifiedBy;
   private Date registrationDate;
@@ -77,12 +77,12 @@ public class DerivedDataset implements Serializable {
     this.title = title;
   }
 
-  public URI getTarget() {
-    return target;
+  public URI getSourceUrl() {
+    return sourceUrl;
   }
 
-  public void setTarget(URI target) {
-    this.target = target;
+  public void setSourceUrl(URI sourceUrl) {
+    this.sourceUrl = sourceUrl;
   }
 
   public String getCreatedBy() {
@@ -135,7 +135,7 @@ public class DerivedDataset implements Serializable {
         && Objects.equals(description, derivedDataset1.description)
         && Objects.equals(citation, derivedDataset1.citation)
         && Objects.equals(title, derivedDataset1.title)
-        && Objects.equals(target, derivedDataset1.target)
+        && Objects.equals(sourceUrl, derivedDataset1.sourceUrl)
         && Objects.equals(createdBy, derivedDataset1.createdBy)
         && Objects.equals(modifiedBy, derivedDataset1.modifiedBy)
         && Objects.equals(registrationDate, derivedDataset1.registrationDate)
@@ -151,7 +151,7 @@ public class DerivedDataset implements Serializable {
         description,
         citation,
         title,
-        target,
+        sourceUrl,
         createdBy,
         modifiedBy,
         registrationDate,
@@ -167,7 +167,7 @@ public class DerivedDataset implements Serializable {
         .add("description=" + description)
         .add("citation='" + citation + "'")
         .add("title='" + title + "'")
-        .add("target=" + target)
+        .add("sourceUrl=" + sourceUrl)
         .add("createdBy='" + createdBy + "'")
         .add("modifiedBy='" + modifiedBy + "'")
         .add("registrationDate=" + registrationDate)

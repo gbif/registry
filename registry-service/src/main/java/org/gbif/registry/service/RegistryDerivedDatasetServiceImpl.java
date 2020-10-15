@@ -16,14 +16,11 @@
 package org.gbif.registry.service;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.DoiData;
-import org.gbif.api.model.common.DoiStatus;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.doi.DataCiteMetadataBuilderService;
 import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
 import org.gbif.registry.doi.DoiIssuingService;
@@ -32,7 +29,6 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
-import org.gbif.registry.persistence.mapper.DoiMapper;
 
 import java.net.URI;
 import java.text.MessageFormat;
@@ -42,8 +38,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
-import javax.xml.bind.JAXBException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
@@ -72,7 +66,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
   private final DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService;
   private final DerivedDatasetMapper derivedDatasetMapper;
   private final DatasetMapper datasetMapper;
-  private final DoiMapper doiMapper;
+  private final URI derivedDatasetUrl;
   private final String citationText;
 
   public RegistryDerivedDatasetServiceImpl(
@@ -81,14 +75,14 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
       DatasetDoiDataCiteHandlingService datasetDoiDataCiteHandlingService,
       DerivedDatasetMapper derivedDatasetMapper,
       DatasetMapper datasetMapper,
-      DoiMapper doiMapper,
-      @Value("${citation.text}") String citationText) {
+      @Value("${derivedDataset.url}") String derivedDatasetUrl,
+      @Value("${derivedDataset.text}") String citationText) {
     this.metadataBuilderService = metadataBuilderService;
     this.doiIssuingService = doiIssuingService;
     this.datasetDoiDataCiteHandlingService = datasetDoiDataCiteHandlingService;
     this.derivedDatasetMapper = derivedDatasetMapper;
     this.datasetMapper = datasetMapper;
-    this.doiMapper = doiMapper;
+    this.derivedDatasetUrl = URI.create(derivedDatasetUrl);
     this.citationText = citationText;
   }
 
@@ -110,7 +104,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
         metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
 
     datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
-        doi, metadata, derivedDataset.getTarget(), derivedDataset.getRegistrationDate());
+        doi, metadata, derivedDatasetUrl, derivedDataset.getRegistrationDate());
 
     derivedDatasetMapper.create(derivedDataset);
     Iterators.partition(derivedDatasetUsages.iterator(), BATCH_SIZE)
@@ -120,25 +114,8 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
   }
 
   @Override
-  public void update(DOI doi, URI target) {
-    DoiData doiData = doiMapper.get(doi);
-
-    if (doiData.getStatus() != DoiStatus.REGISTERED) {
-      throw new IllegalStateException("Can change target only for registered DOI");
-    }
-
-    String xmlMetadata = doiMapper.getMetadata(doi);
-
-    DataCiteMetadata metadata;
-    try {
-      metadata = DataCiteValidator.fromXml(xmlMetadata);
-    } catch (JAXBException e) {
-      throw new IllegalStateException("Can't parse metadata");
-    }
-
-    datasetDoiDataCiteHandlingService.scheduleDerivedDatasetUpdating(doi, metadata, target);
-
-    derivedDatasetMapper.updateTarget(doi, target);
+  public void update(DerivedDataset derivedDataset) {
+    derivedDatasetMapper.update(derivedDataset);
   }
 
   @Override
@@ -186,7 +163,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
         derivedDatasetMapper.listDerivedDatasetUsages(derivedDatasetDoi, page));
   }
 
-  @Scheduled(cron = "${citation.cronPattern}")
+  @Scheduled(cron = "${derivedDataset.cronPattern}")
   public void registerPostponedCitations() {
     LOG.info("Start registering delayed citations");
     List<DerivedDataset> citationsToRegister =
@@ -202,7 +179,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
       datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
           derivedDataset.getDoi(),
           metadata,
-          derivedDataset.getTarget(),
+          derivedDatasetUrl,
           derivedDataset.getRegistrationDate());
     }
   }

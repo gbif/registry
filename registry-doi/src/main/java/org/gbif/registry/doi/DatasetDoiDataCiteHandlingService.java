@@ -48,9 +48,4 @@ public interface DatasetDoiDataCiteHandlingService {
    */
   void scheduleDerivedDatasetRegistration(
       DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate);
-
-  /**
-   * Directly schedule the updating of a Derived Dataset DOI.
-   */
-  void scheduleDerivedDatasetUpdating(DOI doi, DataCiteMetadata metadata, URI target);
 }

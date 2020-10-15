@@ -40,7 +40,4 @@ public class DatasetDoiDataCiteHandlingServiceStub implements DatasetDoiDataCite
   @Override
   public void scheduleDerivedDatasetRegistration(
       DOI doi, DataCiteMetadata metadata, URI target, Date registrationDate) {}
-
-  @Override
-  public void scheduleDerivedDatasetUpdating(DOI doi, DataCiteMetadata metadata, URI target) {}
 }
