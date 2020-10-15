@@ -21,7 +21,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
-import java.net.URI;
 import java.util.List;
 
 public interface RegistryDerivedDatasetService {
