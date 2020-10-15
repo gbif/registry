@@ -175,7 +175,9 @@ public class DerivedDatasetResource {
     }
 
     try {
-      derivedDatasetService.update(derivedDatasetDoi, request.getTarget());
+      derivedDataset.setSourceUrl(request.getSourceUrl());
+      derivedDataset.setModifiedBy(nameFromContext);
+      derivedDatasetService.update(derivedDataset);
     } catch (IllegalStateException e) {
       LOG.error(e.getMessage());
       throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -232,7 +234,7 @@ public class DerivedDatasetResource {
   private DerivedDataset toDerivedDataset(DerivedDatasetCreationRequest request, String creator) {
     DerivedDataset derivedDataset = new DerivedDataset();
     derivedDataset.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
-    derivedDataset.setTarget(request.getTarget());
+    derivedDataset.setSourceUrl(request.getSourceUrl());
     derivedDataset.setTitle(request.getTitle());
     derivedDataset.setCreatedBy(creator);
     derivedDataset.setModifiedBy(creator);

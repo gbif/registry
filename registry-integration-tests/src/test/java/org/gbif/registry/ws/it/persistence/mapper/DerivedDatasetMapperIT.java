@@ -154,7 +154,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
     derivedDataset.setModified(new Date());
     derivedDataset.setCreatedBy("WS_IT");
     derivedDataset.setModifiedBy("WS_IT");
-    derivedDataset.setTarget(URI.create("https://github.com/gbif/registry"));
+    derivedDataset.setSourceUrl(URI.create("https://github.com/gbif/registry"));
     derivedDataset.setTitle("DerivedDataset title");
     derivedDataset.setCitation("New derivedDataset text");
 

@@ -31,7 +31,7 @@ public interface RegistryDerivedDatasetService {
   DerivedDataset create(
       DerivedDataset derivedDataset, List<DerivedDatasetUsage> derivedDatasetUsages);
 
-  void update(DOI doi, URI target);
+  void update(DerivedDataset derivedDataset);
 
   DerivedDataset get(DOI derivedDatasetDoi);
 

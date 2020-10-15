@@ -33,7 +33,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
   private DOI originalDownloadDOI;
   private String title;
   private String description;
-  private URI target;
+  private URI sourceUrl;
   private Date registrationDate;
   private Map<String, Long> relatedDatasets = new HashMap<>();
 
@@ -64,12 +64,12 @@ public class DerivedDatasetCreationRequest implements Serializable {
 
   @NotNull
   @HttpURI
-  public URI getTarget() {
-    return target;
+  public URI getSourceUrl() {
+    return sourceUrl;
   }
 
-  public void setTarget(URI target) {
-    this.target = target;
+  public void setSourceUrl(URI sourceUrl) {
+    this.sourceUrl = sourceUrl;
   }
 
   public Date getRegistrationDate() {
@@ -96,7 +96,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
     return Objects.equals(originalDownloadDOI, that.originalDownloadDOI)
         && Objects.equals(title, that.title)
         && Objects.equals(description, that.description)
-        && Objects.equals(target, that.target)
+        && Objects.equals(sourceUrl, that.sourceUrl)
         && Objects.equals(registrationDate, that.registrationDate)
         && Objects.equals(relatedDatasets, that.relatedDatasets);
   }
@@ -104,7 +104,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(
-        originalDownloadDOI, title, description, target, registrationDate, relatedDatasets);
+        originalDownloadDOI, title, description, sourceUrl, registrationDate, relatedDatasets);
   }
 
   @Override
@@ -113,7 +113,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
         .add("originalDownloadDOI=" + originalDownloadDOI)
         .add("title='" + title + "'")
         .add("creator='" + description + "'")
-        .add("target=" + target)
+        .add("sourceUrl=" + sourceUrl)
         .add("registrationDate=" + registrationDate)
         .add("relatedDatasets=" + relatedDatasets)
         .toString();

@@ -26,16 +26,16 @@ import javax.validation.constraints.NotNull;
 
 public class DerivedDatasetUpdateRequest implements Serializable {
 
-  private URI target;
+  private URI sourceUrl;
 
   @NotNull
   @HttpURI
-  public URI getTarget() {
-    return target;
+  public URI getSourceUrl() {
+    return sourceUrl;
   }
 
-  public void setTarget(URI target) {
-    this.target = target;
+  public void setSourceUrl(URI sourceUrl) {
+    this.sourceUrl = sourceUrl;
   }
 
   @Override
@@ -43,18 +43,18 @@ public class DerivedDatasetUpdateRequest implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     DerivedDatasetUpdateRequest that = (DerivedDatasetUpdateRequest) o;
-    return Objects.equals(target, that.target);
+    return Objects.equals(sourceUrl, that.sourceUrl);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(target);
+    return Objects.hash(sourceUrl);
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", DerivedDatasetUpdateRequest.class.getSimpleName() + "[", "]")
-        .add("target=" + target)
+        .add("sourceUrl=" + sourceUrl)
         .toString();
   }
 }

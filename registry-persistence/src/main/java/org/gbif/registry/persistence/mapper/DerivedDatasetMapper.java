@@ -35,7 +35,7 @@ public interface DerivedDatasetMapper {
 
   void create(@Param("derivedDataset") DerivedDataset derivedDataset);
 
-  void updateTarget(@Param("doi") DOI doi, @Param("target") URI target);
+  void update(@Param("derivedDataset") DerivedDataset derivedDataset);
 
   DerivedDataset get(@Param("doi") DOI doi);
 

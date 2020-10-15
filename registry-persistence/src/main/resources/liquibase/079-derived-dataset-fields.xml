@@ -10,6 +10,8 @@
         ALTER TABLE dataset_derived_dataset ADD COLUMN dataset_title text;
 
         ALTER TABLE derived_dataset ADD CONSTRAINT derived_dataset_description_check CHECK (assert_min_length(description, 1));
+
+        ALTER TABLE derived_dataset RENAME COLUMN target TO source_url;
        ]]>
     </sql>
   </changeSet>
