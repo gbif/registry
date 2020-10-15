@@ -22,6 +22,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -40,6 +41,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -115,7 +117,7 @@ public class IDigBioMapperIT extends BaseItTest {
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(col1.getKey(), mt.getKey());
 
-    List<MachineTagDto> tags = iDigBioMapper.getMachineTags(null);
+    List<MachineTagDto> tags = iDigBioMapper.getIDigBioMachineTags(null);
     assertEquals(1, tags.size());
   }
 
@@ -209,7 +211,31 @@ public class IDigBioMapperIT extends BaseItTest {
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(col1.getKey(), mt.getKey());
 
-    UUID found = iDigBioMapper.findCollectionByIDigBioUuid("urn:uuid:abcd");
-    assertEquals(col1.getKey(), found);
+    Set<UUID> found = iDigBioMapper.findIDigBioCollections("urn:uuid:abcd");
+    assertEquals(col1.getKey(), found.iterator().next());
+  }
+
+  @Test
+  public void findCollectionsByCountryTest() {
+    Address addr1 = new Address();
+    addr1.setAddress("addr");
+    addr1.setCity("city");
+    addr1.setProvince("provi");
+    addr1.setPostalCode("pc");
+    addr1.setCountry(Country.UNITED_STATES);
+    addressMapper.create(addr1);
+
+    Collection col1 = new Collection();
+    col1.setKey(UUID.randomUUID());
+    col1.setCode("c1");
+    col1.setName("n1");
+    col1.setAddress(addr1);
+    col1.setCreatedBy("test");
+    col1.setModifiedBy("test");
+
+    collectionMapper.create(col1);
+
+    Set<UUID> colls = iDigBioMapper.findCollectionsByCountry(Country.UNITED_STATES.getIso2LetterCode());
+    assertEquals(1, colls.size());
   }
 }

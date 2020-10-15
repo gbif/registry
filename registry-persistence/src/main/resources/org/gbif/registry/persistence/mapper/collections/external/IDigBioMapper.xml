@@ -16,7 +16,7 @@
     <result property="institutionAlternativeCodes" column="inst_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>
   </resultMap>
 
-  <select id="getMachineTags" resultMap="MACHINE_TAG_MAP">
+  <select id="getIDigBioMachineTags" resultMap="MACHINE_TAG_MAP">
     SELECT cmt.collection_key as entity_key, mt.namespace, mt.name, mt.value
     FROM machine_tag mt
     INNER JOIN collection_machine_tag cmt ON cmt.machine_tag_key = mt.key
@@ -59,13 +59,20 @@
     </foreach>
   </select>
 
-  <select id="findCollectionByIDigBioUuid" resultType="java.util.UUID">
+  <select id="findIDigBioCollections" resultType="java.util.UUID">
     SELECT c.key
     FROM collection c
     INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
     INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
     WHERE c.deleted IS NULL AND mt.namespace = 'iDigBio.org' and mt.name = 'CollectionUUID'
-          and mt.value = #{iDigBioUuid,jdbcType=VARCHAR}
+          <if test="iDigBioUuid != null"> AND mt.value = #{iDigBioUuid,jdbcType=VARCHAR}</if>
+  </select>
+
+  <select id="findCollectionsByCountry" resultType="java.util.UUID">
+    SELECT c.key
+    FROM collection c
+    INNER JOIN address addr ON addr.key = c.address_key
+    WHERE c.deleted IS NULL AND addr.country = #{countryCode,jdbcType=VARCHAR}
   </select>
 
 </mapper>
