@@ -3,12 +3,13 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.DerivedDatasetMapper">
 
   <sql id="DERIVED_DATASET_FIELDS">
-    doi,original_download_doi,citation,title,target,registration_date,created,created_by,modified,modified_by
+    doi,original_download_doi,description,citation,title,target,registration_date,created,created_by,modified,modified_by
   </sql>
 
   <sql id="DERIVED_DATASET_FIELD_TYPES">
     #{derivedDataset.doi,jdbcType=OTHER},
     #{derivedDataset.originalDownloadDOI,jdbcType=OTHER},
+    #{derivedDataset.description,jdbcType=VARCHAR},
     #{derivedDataset.citation,jdbcType=VARCHAR},
     #{derivedDataset.title,jdbcType=VARCHAR},
     #{derivedDataset.target,jdbcType=VARCHAR},
@@ -22,6 +23,7 @@
   <resultMap id="DERIVED_DATASET_MAP" type="DerivedDataset">
     <result property="doi" column="doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
     <result property="originalDownloadDOI" column="original_download_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="description" column="description" javaType="java.lang.String"/>
     <result property="citation" column="citation" javaType="java.lang.String"/>
     <result property="title" column="title" javaType="java.lang.String"/>
     <result property="target" column="target" javaType="java.net.URI" typeHandler="org.gbif.mybatis.type.UriTypeHandler"/>
@@ -41,7 +43,8 @@
     <result property="datasetKey" column="dataset_key"/>
     <result property="datasetDoi" column="dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
     <result property="derivedDatasetDoi" column="derived_dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
-    <result property="numberRecords" column="record_count" javaType="Long"/>
+    <result property="numberRecords" column="record_count" javaType="java.lang.Long"/>
+    <result property="datasetTitle" column="dataset_title" javaType="java.lang.String"/>
   </resultMap>
 
   <insert id="create" parameterType="DerivedDataset">

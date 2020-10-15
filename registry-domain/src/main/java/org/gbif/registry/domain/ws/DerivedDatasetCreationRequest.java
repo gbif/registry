@@ -16,7 +16,6 @@
 package org.gbif.registry.domain.ws;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.util.HttpURI;
 
 import java.io.Serializable;
@@ -28,13 +27,12 @@ import java.util.Objects;
 import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 
 public class DerivedDatasetCreationRequest implements Serializable {
 
   private DOI originalDownloadDOI;
   private String title;
-  private String creator;
+  private String description;
   private URI target;
   private Date registrationDate;
   private Map<String, Long> relatedDatasets = new HashMap<>();
@@ -56,13 +54,12 @@ public class DerivedDatasetCreationRequest implements Serializable {
     this.title = title;
   }
 
-  @Null(groups = {PrePersist.class})
-  public String getCreator() {
-    return creator;
+  public String getDescription() {
+    return description;
   }
 
-  public void setCreator(String creator) {
-    this.creator = creator;
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   @NotNull
@@ -98,7 +95,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
     DerivedDatasetCreationRequest that = (DerivedDatasetCreationRequest) o;
     return Objects.equals(originalDownloadDOI, that.originalDownloadDOI)
         && Objects.equals(title, that.title)
-        && Objects.equals(creator, that.creator)
+        && Objects.equals(description, that.description)
         && Objects.equals(target, that.target)
         && Objects.equals(registrationDate, that.registrationDate)
         && Objects.equals(relatedDatasets, that.relatedDatasets);
@@ -107,7 +104,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(
-        originalDownloadDOI, title, creator, target, registrationDate, relatedDatasets);
+        originalDownloadDOI, title, description, target, registrationDate, relatedDatasets);
   }
 
   @Override
@@ -115,7 +112,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
     return new StringJoiner(", ", DerivedDatasetCreationRequest.class.getSimpleName() + "[", "]")
         .add("originalDownloadDOI=" + originalDownloadDOI)
         .add("title='" + title + "'")
-        .add("creator='" + creator + "'")
+        .add("creator='" + description + "'")
         .add("target=" + target)
         .add("registrationDate=" + registrationDate)
         .add("relatedDatasets=" + relatedDatasets)

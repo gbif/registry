@@ -119,7 +119,6 @@ public class DerivedDatasetResource {
       DerivedDatasetCreationRequest request, Map<String, Long> relatedDatasets) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
-    request.setCreator(nameFromContext);
 
     if (request.getOriginalDownloadDOI() != null
         && !occurrenceDownloadService.checkOccurrenceDownloadExists(
@@ -137,7 +136,7 @@ public class DerivedDatasetResource {
           "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
     }
 
-    return derivedDatasetService.create(toDerivedDataset(request), derivedDatasetUsages);
+    return derivedDatasetService.create(toDerivedDataset(request, nameFromContext), derivedDatasetUsages);
   }
 
   public DerivedDataset getDerivedDataset(DOI doi) {
@@ -230,13 +229,13 @@ public class DerivedDatasetResource {
     return getRelatedDatasets(new DOI(doiPrefix, doiSuffix), page);
   }
 
-  private DerivedDataset toDerivedDataset(DerivedDatasetCreationRequest request) {
+  private DerivedDataset toDerivedDataset(DerivedDatasetCreationRequest request, String creator) {
     DerivedDataset derivedDataset = new DerivedDataset();
     derivedDataset.setOriginalDownloadDOI(request.getOriginalDownloadDOI());
     derivedDataset.setTarget(request.getTarget());
     derivedDataset.setTitle(request.getTitle());
-    derivedDataset.setCreatedBy(request.getCreator());
-    derivedDataset.setModifiedBy(request.getCreator());
+    derivedDataset.setCreatedBy(creator);
+    derivedDataset.setModifiedBy(creator);
     derivedDataset.setRegistrationDate(request.getRegistrationDate());
 
     return derivedDataset;
