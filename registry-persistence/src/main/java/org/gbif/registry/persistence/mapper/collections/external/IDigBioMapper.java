@@ -27,11 +27,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IDigBioMapper {
 
-  List<MachineTagDto> getMachineTags(@Nullable @Param("collectionKeys") Set<UUID> collectionKeys);
+  List<MachineTagDto> getIDigBioMachineTags(
+      @Nullable @Param("collectionKeys") Set<UUID> collectionKeys);
 
   List<IdentifierDto> getIdentifiers(@Param("collectionKeys") Set<UUID> collectionKeys);
 
   List<CollectionDto> getCollections(@Param("collectionKeys") Set<UUID> collectionKeys);
 
-  UUID findCollectionByIDigBioUuid(@Param("iDigBioUuid") String iDigBioUuid);
+  Set<UUID> findIDigBioCollections(@Nullable @Param("iDigBioUuid") String iDigBioUuid);
+
+  Set<UUID> findCollectionsByCountry(@Param("countryCode") String countryCode);
 }

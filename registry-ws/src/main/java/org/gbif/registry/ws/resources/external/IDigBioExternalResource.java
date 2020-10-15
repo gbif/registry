@@ -17,11 +17,13 @@ package org.gbif.registry.ws.resources.external;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.collections.external.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
+import org.gbif.ws.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +36,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,30 +64,30 @@ public class IDigBioExternalResource {
 
   @NullToNotFound
   @GetMapping
-  public List<IDigBioCollection> getCollectionList() {
-    List<MachineTagDto> machineTagDtos = idigBioMapper.getMachineTags(null);
+  public List<IDigBioCollection> getCollectionList(@Nullable Country country) {
+
+    Set<UUID> collectionKeys = findCollectionKeys(country);
+
+    if (collectionKeys == null || collectionKeys.isEmpty()) {
+      return null;
+    }
+
+    CompletableFuture<List<MachineTagDto>> machineTagsDtoFuture =
+        CompletableFuture.supplyAsync(() -> idigBioMapper.getIDigBioMachineTags(collectionKeys));
+    CompletableFuture<List<IdentifierDto>> identifiersDtoFuture =
+        CompletableFuture.supplyAsync(() -> idigBioMapper.getIdentifiers(collectionKeys));
+    CompletableFuture<List<CollectionDto>> collectionsDtoFuture =
+        CompletableFuture.supplyAsync(() -> idigBioMapper.getCollections(collectionKeys));
+
+    CompletableFuture.allOf(collectionsDtoFuture, machineTagsDtoFuture, identifiersDtoFuture)
+        .join();
+
+    List<MachineTagDto> machineTagDtos = machineTagsDtoFuture.join();
     Map<UUID, Set<MachineTagDto>> machineTagsByCollection =
         machineTagDtos.stream()
             .collect(
                 Collectors.groupingBy(
                     MachineTagDto::getEntityKey, HashMap::new, Collectors.toSet()));
-
-    Set<UUID> collectionKeys = machineTagsByCollection.keySet();
-
-    if (collectionKeys.isEmpty()) {
-      return null;
-    }
-
-    CompletableFuture<List<CollectionDto>> collectionsDtoFuture =
-        CompletableFuture.supplyAsync(() -> idigBioMapper.getCollections(collectionKeys));
-    CompletableFuture<List<IdentifierDto>> identifiersDtoFuture =
-        CompletableFuture.supplyAsync(() -> idigBioMapper.getIdentifiers(collectionKeys));
-
-    CompletableFuture.allOf(collectionsDtoFuture, identifiersDtoFuture).join();
-
-    List<CollectionDto> collectionDtos = collectionsDtoFuture.join();
-    Map<UUID, CollectionDto> collectionsByKey =
-        collectionDtos.stream().collect(Collectors.toMap(CollectionDto::getCollectionKey, c -> c));
 
     List<IdentifierDto> identifierDtos = identifiersDtoFuture.join();
     Map<UUID, Set<IdentifierDto>> identifiersByCollection =
@@ -90,6 +95,10 @@ public class IDigBioExternalResource {
             .collect(
                 Collectors.groupingBy(
                     IdentifierDto::getEntityKey, HashMap::new, Collectors.toSet()));
+
+    List<CollectionDto> collectionDtos = collectionsDtoFuture.join();
+    Map<UUID, CollectionDto> collectionsByKey =
+        collectionDtos.stream().collect(Collectors.toMap(CollectionDto::getCollectionKey, c -> c));
 
     List<IDigBioCollection> result = new ArrayList<>();
     for (UUID k : collectionKeys) {
@@ -107,21 +116,38 @@ public class IDigBioExternalResource {
     return result;
   }
 
+  private Set<UUID> findCollectionKeys(@Nullable Country country) {
+    Set<UUID> collectionKeys;
+    if (country != null) {
+      collectionKeys = idigBioMapper.findCollectionsByCountry(country.getIso2LetterCode());
+    } else {
+      collectionKeys = idigBioMapper.findIDigBioCollections(null);
+    }
+    return collectionKeys;
+  }
+
   @NullToNotFound
   @GetMapping("{iDigBioKey}")
   public IDigBioCollection getCollection(@PathVariable UUID iDigBioKey) {
-    UUID collectionKey = idigBioMapper.findCollectionByIDigBioUuid("urn:uuid:" + iDigBioKey);
+    Set<UUID> collections = idigBioMapper.findIDigBioCollections("urn:uuid:" + iDigBioKey);
 
-    if (collectionKey == null) {
+    if (collections == null || collections.isEmpty()) {
       return null;
     }
+
+    if (collections.size() > 1) {
+      throw new WebApplicationException(
+          "More than 1 collection found for iDigBio UUID " + iDigBioKey, HttpStatus.CONFLICT);
+    }
+
+    UUID collectionKey = collections.iterator().next();
 
     CompletableFuture<List<CollectionDto>> collectionsDtoFuture =
         CompletableFuture.supplyAsync(
             () -> idigBioMapper.getCollections(Collections.singleton(collectionKey)));
     CompletableFuture<List<MachineTagDto>> machineTagsDtoFuture =
         CompletableFuture.supplyAsync(
-            () -> idigBioMapper.getMachineTags(Collections.singleton(collectionKey)));
+            () -> idigBioMapper.getIDigBioMachineTags(Collections.singleton(collectionKey)));
     CompletableFuture<List<IdentifierDto>> identifiersDtoFuture =
         CompletableFuture.supplyAsync(
             () -> idigBioMapper.getIdentifiers(Collections.singleton(collectionKey)));
@@ -150,16 +176,23 @@ public class IDigBioExternalResource {
     iDigBioCollection.setInstitution(collection.getInstitutionName());
     iDigBioCollection.setCollection(collection.getCollectionName());
 
-    machineTags.stream()
-        .filter(t -> t.getName().equals("recordsets"))
-        .map(MachineTagDto::getValue)
-        .findFirst()
-        .ifPresent(iDigBioCollection::setRecordsets);
-    machineTags.stream()
-        .filter(t -> t.getName().equals("recordsetQuery"))
-        .map(MachineTagDto::getValue)
-        .findFirst()
-        .ifPresent(iDigBioCollection::setRecordsetQuery);
+    if (machineTags != null) {
+      machineTags.stream()
+          .filter(t -> t.getName().equals("recordsets"))
+          .map(MachineTagDto::getValue)
+          .findFirst()
+          .ifPresent(iDigBioCollection::setRecordsets);
+      machineTags.stream()
+          .filter(t -> t.getName().equals("recordsetQuery"))
+          .map(MachineTagDto::getValue)
+          .findFirst()
+          .ifPresent(iDigBioCollection::setRecordsetQuery);
+      machineTags.stream()
+          .filter(t -> t.getName().equals("CollectionUUID"))
+          .map(MachineTagDto::getValue)
+          .findFirst()
+          .ifPresent(iDigBioCollection::setCollectionUuid);
+    }
 
     Set<String> institutionCodes =
         collection.getInstitutionAlternativeCodes().stream()
@@ -174,12 +207,6 @@ public class IDigBioExternalResource {
             .collect(Collectors.toSet());
     collectionCodes.add(collection.getCollectionCode());
     iDigBioCollection.setCollectionCode(String.join(", ", collectionCodes).trim());
-
-    machineTags.stream()
-        .filter(t -> t.getName().equals("CollectionUUID"))
-        .map(MachineTagDto::getValue)
-        .findFirst()
-        .ifPresent(iDigBioCollection::setCollectionUuid);
 
     identifiers.stream()
         .filter(i -> i.getType() == IdentifierType.LSID)
