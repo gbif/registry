@@ -6,7 +6,10 @@
   <changeSet id="79" author="mpodolskiy">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
+        ALTER TABLE derived_dataset ADD COLUMN description text;
         ALTER TABLE dataset_derived_dataset ADD COLUMN dataset_title text;
+
+        ALTER TABLE derived_dataset ADD CONSTRAINT derived_dataset_description_check CHECK (assert_min_length(description, 1));
        ]]>
     </sql>
   </changeSet>

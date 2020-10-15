@@ -27,6 +27,7 @@ public class DerivedDataset implements Serializable {
 
   private DOI doi;
   private DOI originalDownloadDOI;
+  private String description;
   private String citation;
   private String title;
   private URI target;
@@ -50,6 +51,14 @@ public class DerivedDataset implements Serializable {
 
   public void setOriginalDownloadDOI(DOI originalDownloadDOI) {
     this.originalDownloadDOI = originalDownloadDOI;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public String getCitation() {
@@ -123,6 +132,7 @@ public class DerivedDataset implements Serializable {
     DerivedDataset derivedDataset1 = (DerivedDataset) o;
     return Objects.equals(doi, derivedDataset1.doi)
         && Objects.equals(originalDownloadDOI, derivedDataset1.originalDownloadDOI)
+        && Objects.equals(description, derivedDataset1.description)
         && Objects.equals(citation, derivedDataset1.citation)
         && Objects.equals(title, derivedDataset1.title)
         && Objects.equals(target, derivedDataset1.target)
@@ -138,6 +148,7 @@ public class DerivedDataset implements Serializable {
     return Objects.hash(
         doi,
         originalDownloadDOI,
+        description,
         citation,
         title,
         target,
@@ -153,6 +164,7 @@ public class DerivedDataset implements Serializable {
     return new StringJoiner(", ", DerivedDataset.class.getSimpleName() + "[", "]")
         .add("doi=" + doi)
         .add("originalDownloadDOI=" + originalDownloadDOI)
+        .add("description=" + description)
         .add("citation='" + citation + "'")
         .add("title='" + title + "'")
         .add("target=" + target)
