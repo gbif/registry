@@ -69,7 +69,7 @@ public class IDigBioExternalResource {
     Set<UUID> collectionKeys = findCollectionKeys(country);
 
     if (collectionKeys == null || collectionKeys.isEmpty()) {
-      return null;
+      return Collections.emptyList();
     }
 
     CompletableFuture<List<MachineTagDto>> machineTagsDtoFuture =
