@@ -67,10 +67,13 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
       </plugin>
-
       <plugin>
         <groupId>org.liquibase</groupId>
         <artifactId>liquibase-maven-plugin</artifactId>
+        <configuration>
+          <changeLogFile>src/main/resources/liquibase/master.xml</changeLogFile>
+          <defaultSchemaName>public</defaultSchemaName>
+        </configuration>
       </plugin>
     </plugins>
   </build>
