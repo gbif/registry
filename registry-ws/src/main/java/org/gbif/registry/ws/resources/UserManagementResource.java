@@ -252,9 +252,9 @@ public class UserManagementResource {
 
   /** For admin console only. */
   @Secured(ADMIN_ROLE)
-  @DeleteMapping("{userKey}")
-  public ResponseEntity<Void> delete(@PathVariable int userKey) {
-    GbifUser user = identityService.getByKey(userKey);
+  @DeleteMapping("{username}")
+  public ResponseEntity<Void> delete(@PathVariable String username) {
+    GbifUser user = identityService.get(username);
 
     if (user == null) {
       return ResponseEntity.notFound().build();
