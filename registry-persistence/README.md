@@ -17,8 +17,8 @@ Name of the created database should be identical in these places:
 ## Update
 Update database manually by liquibase-maven-plugin (use values for db.url, db.username, db.password):
 
-```
-mvn liquibase:update -Dliquibase.url=<db.url> -Dliquibase.username=<db.username> -Dliquibase.password=<db.password> -Dliquibase.changeLogFile=src/main/resources/liquibase/master.xml -Dliquibase.defaultSchemaName=public
+```commandline
+mvn liquibase:update -Dliquibase.url=<db.url> -Dliquibase.username=<db.username> -Dliquibase.password=<db.password>
 ```
 
 Run script under registry-persistence directory.
@@ -31,10 +31,48 @@ Error setting up or running Liquibase: liquibase.exception.SetupException: liqui
 
 run the following maven command:
 
-```
+```commandline
 mvn process-resources
 ```
 
-DB on the environments (dev, uat, prod) should be updated by scripts.
+**DB on the environments (dev, uat, prod) are updated automatically on application startup.**
+
+## Rollback
+
+Each changeset should contain rollback section:
+
+```xml
+<changeSet id="testRollback" author="programmer">
+    <createTable tableName="user">
+        <column name="id" type="int"/>
+        <column name="username" type="varchar(36)"/>
+        <column name="age" type="integer"/>
+    </createTable>
+    <rollback>
+        <dropTable tableName="user"/>
+    </rollback>
+</changeSet>
+```
+
+in order to be able to rollback changes automatically in case of exception.
+
+Rollback may be also performed manually. There are several ways to do that.
+
+By count:
+
+```commandline
+mvn liquibase:rollback -Dliquibase.rollbackCount=1 -Dliquibase.url=<db.url> -Dliquibase.username=<db.username> -Dliquibase.password=<db.password>
+```
+
+`rollbackCount` is a parameter which defines how many changeset will be rolled back.
+
+
+or by date:
+
+```commandline
+mvn liquibase:rollback "-Dliquibase.rollbackDate=Oct 18, 2020" -Dliquibase.url=<db.url> -Dliquibase.username=<db.username> -Dliquibase.password=<db.password>
+```
+
+`rollbackDate` is a parameter which defines date; any changeset executed after that day will be rolled back (including the date).
 
 [Parent](../README.md)
