@@ -98,7 +98,8 @@ public class IDigBioExternalResource {
 
     List<IDigBioCollectionDto> IDigBioCollectionDtos = collectionsDtoFuture.join();
     Map<UUID, IDigBioCollectionDto> collectionsByKey =
-        IDigBioCollectionDtos.stream().collect(Collectors.toMap(IDigBioCollectionDto::getCollectionKey, c -> c));
+        IDigBioCollectionDtos.stream()
+            .collect(Collectors.toMap(IDigBioCollectionDto::getCollectionKey, c -> c));
 
     List<IDigBioCollection> result = new ArrayList<>();
     for (UUID k : collectionKeys) {
@@ -164,12 +165,14 @@ public class IDigBioExternalResource {
     List<IdentifierDto> identifierDtos = identifiersDtoFuture.join();
 
     return convertToIDigBioCollection(
-      IDigBioCollectionDtos.get(0), new HashSet<>(identifierDtos), new HashSet<>(machineTagDtos));
+        IDigBioCollectionDtos.get(0), new HashSet<>(identifierDtos), new HashSet<>(machineTagDtos));
   }
 
   @NotNull
   private IDigBioCollection convertToIDigBioCollection(
-    IDigBioCollectionDto collection, Set<IdentifierDto> identifiers, Set<MachineTagDto> machineTags) {
+      IDigBioCollectionDto collection,
+      Set<IdentifierDto> identifiers,
+      Set<MachineTagDto> machineTags) {
     IDigBioCollection iDigBioCollection = new IDigBioCollection();
     iDigBioCollection.setInstitutionKey(collection.getInstitutionKey());
     iDigBioCollection.setCollectionKey(collection.getCollectionKey());

@@ -202,7 +202,9 @@ public class MyBatisConfiguration {
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);
       configuration.getTypeAliasRegistry().registerAlias("IdentifierDto", IdentifierDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("IDigBioCollectionDto", IDigBioCollectionDto.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("IDigBioCollectionDto", IDigBioCollectionDto.class);
     };
   }
 }
