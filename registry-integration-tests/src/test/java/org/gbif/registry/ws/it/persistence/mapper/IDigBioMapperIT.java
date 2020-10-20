@@ -188,7 +188,8 @@ public class IDigBioMapperIT extends BaseItTest {
     personMapper.create(p2);
     collectionMapper.addContact(col1.getKey(), p2.getKey());
 
-    List<IDigBioCollectionDto> colls = iDigBioMapper.getCollections(Collections.singleton(col1.getKey()));
+    List<IDigBioCollectionDto> colls =
+        iDigBioMapper.getCollections(Collections.singleton(col1.getKey()));
     assertEquals(1, colls.size());
     IDigBioCollectionDto collDto = colls.get(0);
     assertNotNull(collDto.getContact());
