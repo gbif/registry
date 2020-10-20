@@ -113,6 +113,20 @@ oaipmh:
   baseUrl: http://api.gbif-dev.org/v1/oai-pmh/registry
   adminEmail: gbifregistry@mailinator.com
 
+dbmigration:
+  liquibase:
+    default-schema: public
+    change-log: classpath:liquibase/master.xml
+    enabled: true
+  datasource:
+    url: @registry-it.db.url@
+    username: @registry-it.db.username@
+    password: @registry-it.db.password@
+    hikari:
+      idleTimeout: 60000
+      maximumPoolSize: 1
+      minimumIdle: 1
+
 spring:
   #RabbitMQ
   rabbitmq:

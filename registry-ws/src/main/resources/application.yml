@@ -151,7 +151,7 @@ spring:
   # Liquibase
   liquibase:
     change-log: classpath:liquibase/master.xml
-    enabled: false
+    enabled: true
     default-schema: public
   # Mail
   mail:
