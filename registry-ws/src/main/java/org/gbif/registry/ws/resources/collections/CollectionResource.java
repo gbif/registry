@@ -17,12 +17,13 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -31,13 +32,13 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.security.EditorAuthorizationService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -90,72 +91,73 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
   @Override
-  public Collection get(@PathVariable UUID key) {
-    return super.get(key);
+  public CollectionView getCollectionView(@PathVariable UUID key) {
+    CollectionDto collectionDto = collectionMapper.getCollectionDto(key);
+
+    if (collectionDto == null) {
+      return null;
+    }
+
+    return convertToCollectionView(collectionDto);
   }
 
   @GetMapping
   @Override
-  public PagingResponse<Collection> list(
-      @Nullable @RequestParam(value = "q", required = false) String query,
-      @Nullable @RequestParam(value = "institution", required = false) UUID institutionKey,
-      @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
-      @Nullable @RequestParam(value = "code", required = false) String code,
-      @Nullable @RequestParam(value = "name", required = false) String name,
-      @Nullable @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false)
-          String machineTagNamespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String machineTagName,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String machineTagValue,
-      @Nullable @RequestParam(value = "identifierType", required = false)
-          IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total =
-        collectionMapper.count(
-            institutionKey,
-            contactKey,
-            query,
-            code,
-            name,
-            alternativeCode,
-            machineTagNamespace,
-            machineTagName,
-            machineTagValue,
-            identifierType,
-            identifier);
-    return new PagingResponse<>(
-        page,
-        total,
-        new ArrayList<>(
-            collectionMapper.list(
-                institutionKey,
-                contactKey,
-                query,
-                code,
-                name,
-                alternativeCode,
-                machineTagNamespace,
-                machineTagName,
-                machineTagValue,
-                identifierType,
-                identifier,
-                page)));
+  public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
+    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    String query =
+        searchRequest.getQuery() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQuery()))
+            : searchRequest.getQuery();
+
+    CollectionSearchParams params =
+        CollectionSearchParams.builder()
+            .institutionKey(searchRequest.getInstitutionKey())
+            .contactKey(searchRequest.getContactKey())
+            .query(query)
+            .code(searchRequest.getCode())
+            .name(searchRequest.getName())
+            .alternativeCode(searchRequest.getAlternativeCode())
+            .machineTagNamespace(searchRequest.getMachineTagNamespace())
+            .machineTagName(searchRequest.getMachineTagName())
+            .machineTagValue(searchRequest.getMachineTagValue())
+            .identifierType(searchRequest.getIdentifierType())
+            .identifier(searchRequest.getIdentifier())
+            .build();
+
+    long total = collectionMapper.count(params);
+    List<CollectionDto> collectionDtos = collectionMapper.list(params, page);
+
+    List<CollectionView> views =
+        collectionDtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
+
+    return new PagingResponse<>(page, total, views);
   }
 
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Collection> listDeleted(Pageable page) {
+  public PagingResponse<CollectionView> listDeleted(Pageable page) {
     page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(
-        page, collectionMapper.countDeleted(), collectionMapper.deleted(page));
+
+    long total = collectionMapper.countDeleted();
+    List<CollectionDto> dtos = collectionMapper.deleted(page);
+    List<CollectionView> views =
+        dtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
+
+    return new PagingResponse<>(page, total, views);
   }
 
   @GetMapping("suggest")
   @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionMapper.suggest(q);
+  }
+
+  private CollectionView convertToCollectionView(CollectionDto dto) {
+    CollectionView collectionView = new CollectionView(dto.getCollection());
+    collectionView.setInstitutionCode(dto.getInstitutionCode());
+    collectionView.setInstitutionName(dto.getInstitutionName());
+    return collectionView;
   }
 }

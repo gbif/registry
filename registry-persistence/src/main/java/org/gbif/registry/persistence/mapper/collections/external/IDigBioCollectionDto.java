@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public class CollectionDto {
+public class IDigBioCollectionDto {
 
   private UUID collectionKey;
   private String collectionCode;
@@ -285,7 +285,7 @@ public class CollectionDto {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CollectionDto that = (CollectionDto) o;
+    IDigBioCollectionDto that = (IDigBioCollectionDto) o;
     return numberSpecimens == that.numberSpecimens
         && Objects.equals(collectionKey, that.collectionKey)
         && Objects.equals(collectionCode, that.collectionCode)

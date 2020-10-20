@@ -20,6 +20,8 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
@@ -42,9 +44,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionResource}. */
@@ -109,63 +111,58 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     UUID key2 = service.create(collection2);
 
     // query param
-    PagingResponse<Collection> response =
-        service.list(
-            "dummy", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+    PagingResponse<CollectionView> response =
+        service.list(CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response =
-        service.list("", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+    response = service.list(CollectionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(
-            "city", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+        service.list(CollectionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
-    assertEquals(key1, response.getResults().get(0).getKey());
+    assertEquals(key1, response.getResults().get(0).getCollection().getKey());
 
     response =
-        service.list(
-            "city2", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+        service.list(CollectionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
-    assertEquals(key2, response.getResults().get(0).getKey());
+    assertEquals(key2, response.getResults().get(0).getCollection().getKey());
 
     assertEquals(
         2,
         service
-            .list("c", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list(
-                "dum add", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list("<", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list("\"<\"", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list(null, null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list("  ", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
@@ -173,25 +170,27 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(
         1,
         service
-            .list(null, null, null, "c1", null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().code("c1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
         service
-            .list(null, null, null, null, "n2", null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().name("n2").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
         service
-            .list(null, null, null, "c1", "n1", null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                CollectionSearchRequest.builder().code("c1").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list(null, null, null, "c2", "n1", null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                CollectionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
@@ -199,13 +198,15 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(
         1,
         service
-            .list(null, null, null, null, null, "alt", null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                CollectionSearchRequest.builder().alternativeCode("alt").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list(null, null, null, null, null, "foo", null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                CollectionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
@@ -217,7 +218,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(
         1,
         service
-            .list("city3", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
@@ -225,7 +226,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(
         0,
         service
-            .list("city3", null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
@@ -260,52 +261,28 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     collection3.setInstitutionKey(institutionKey2);
     service.create(collection3);
 
-    PagingResponse<Collection> response =
+    PagingResponse<CollectionView> response =
         service.list(
-            null,
-            institutionKey1,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .institutionKey(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(2, response.getResults().size());
 
     response =
         service.list(
-            null,
-            institutionKey2,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .institutionKey(institutionKey2)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
 
     response =
         service.list(
-            null,
-            UUID.randomUUID(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .institutionKey(UUID.randomUUID())
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -341,68 +318,40 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     collection3.setInstitutionKey(institutionKey2);
     service.create(collection3);
 
-    PagingResponse<Collection> response =
+    PagingResponse<CollectionView> response =
         service.list(
-            "code1",
-            institutionKey1,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .query("code1")
+                .institutionKey(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
 
     response =
         service.list(
-            "foo",
-            institutionKey1,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .query("foo")
+                .institutionKey(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(0, response.getResults().size());
 
     response =
         service.list(
-            "code2",
-            institutionKey2,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .query("code2")
+                .institutionKey(institutionKey2)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(0, response.getResults().size());
 
     response =
         service.list(
-            "code2",
-            institutionKey1,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            DEFAULT_PAGE);
+            CollectionSearchRequest.builder()
+                .query("code2")
+                .institutionKey(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
   }
 
@@ -462,48 +411,21 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     Collection collection3 = newEntity();
     UUID key3 = service.create(collection3);
 
-    PagingResponse<Collection> response =
-        service.list(
-            null, null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+    PagingResponse<CollectionView> response =
+        service.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(3, response.getResults().size());
 
     service.delete(key3);
 
-    response =
-        service.list(
-            null, null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+    response = service.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            new PagingRequest(0L, 1));
+        service.list(CollectionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            new PagingRequest(0L, 0));
+        service.list(CollectionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -538,54 +460,24 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         1,
         service
             .list(
-                null,
-                null,
-                personKey1,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                DEFAULT_PAGE)
+                CollectionSearchRequest.builder().contactKey(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
             .list(
-                null,
-                null,
-                personKey2,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                DEFAULT_PAGE)
+                CollectionSearchRequest.builder().contactKey(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
             .list(
-                null,
-                null,
-                UUID.randomUUID(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                DEFAULT_PAGE)
+                CollectionSearchRequest.builder()
+                    .contactKey(UUID.randomUUID())
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 
@@ -594,18 +486,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         1,
         service
             .list(
-                null,
-                null,
-                personKey1,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                DEFAULT_PAGE)
+                CollectionSearchRequest.builder().contactKey(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }

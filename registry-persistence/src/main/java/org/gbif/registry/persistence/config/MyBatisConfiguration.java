@@ -60,7 +60,8 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
-import org.gbif.registry.persistence.mapper.collections.external.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
@@ -138,6 +139,7 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("SciCollection", Collection.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionPerson", Person.class);
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
+      configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
@@ -200,7 +202,7 @@ public class MyBatisConfiguration {
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);
       configuration.getTypeAliasRegistry().registerAlias("IdentifierDto", IdentifierDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("IDigBioCollectionDto", IDigBioCollectionDto.class);
     };
   }
 }

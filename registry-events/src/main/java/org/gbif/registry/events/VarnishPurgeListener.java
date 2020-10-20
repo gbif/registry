@@ -15,10 +15,12 @@
  */
 package org.gbif.registry.events;
 
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.NetworkEntity;
@@ -300,18 +302,18 @@ public class VarnishPurgeListener {
   private void cascadePersonChange(Person... persons) {
     Set<UUID> collectionKeys = new UUIDHashSet();
     for (Person p : persons) {
-      List<Collection> collections =
+      List<CollectionView> collections =
           collectionService
-              .list(null, null, p.getKey(), null, null, null, null, null, null, null, null, null)
+              .list(CollectionSearchRequest.builder().contactKey(p.getKey()).build())
               .getResults();
-      collections.forEach(c -> collectionKeys.add(c.getKey()));
+      collections.forEach(c -> collectionKeys.add(c.getCollection().getKey()));
     }
 
     Set<UUID> institutionKeys = new UUIDHashSet();
     for (Person p : persons) {
       List<Institution> institutions =
           institutionService
-              .list(null, p.getKey(), null, null, null, null, null, null, null, null, null)
+              .list(InstitutionSearchRequest.builder().contactKey(p.getKey()).build())
               .getResults();
       institutions.forEach(i -> institutionKeys.add(i.getKey()));
     }

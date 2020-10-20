@@ -19,9 +19,15 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -45,16 +51,22 @@ public class InstitutionMapperIT extends BaseItTest {
 
   private InstitutionMapper institutionMapper;
   private AddressMapper addressMapper;
+  private MachineTagMapper machineTagMapper;
+  private IdentifierMapper identifierMapper;
 
   @Autowired
   public InstitutionMapperIT(
       InstitutionMapper institutionMapper,
       AddressMapper addressMapper,
+      MachineTagMapper machineTagMapper,
+      IdentifierMapper identifierMapper,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer) {
     super(principalProvider, esServer);
     this.institutionMapper = institutionMapper;
     this.addressMapper = addressMapper;
+    this.machineTagMapper = machineTagMapper;
+    this.identifierMapper = identifierMapper;
   }
 
   @Test
@@ -134,6 +146,12 @@ public class InstitutionMapperIT extends BaseItTest {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
+    institutionMapper.create(inst1);
+
+    MachineTag mt = new MachineTag("ns", "test", "foo");
+    mt.setCreatedBy("test");
+    machineTagMapper.createMachineTag(mt);
+    institutionMapper.addMachineTag(inst1.getKey(), mt.getKey());
 
     Institution inst2 = new Institution();
     inst2.setKey(UUID.randomUUID());
@@ -141,36 +159,83 @@ public class InstitutionMapperIT extends BaseItTest {
     inst2.setName("n2");
     inst2.setCreatedBy("test");
     inst2.setModifiedBy("test");
-
-    institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
+    Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
+    identifier.setCreatedBy("test");
+    identifierMapper.createIdentifier(identifier);
+    institutionMapper.addIdentifier(inst2.getKey(), identifier.getKey());
+
     Pageable page = PAGE.apply(5, 0L);
-    assertEquals(
-        2,
-        institutionMapper
-            .list(null, null, null, null, null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
+
+    assertSearch(InstitutionSearchParams.builder().build(), page, 2);
+    assertSearch(InstitutionSearchParams.builder().code("i1").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().name("n2").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().code("i2").name("n2").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().code("i1").name("n2").build(), page, 0);
+
+    // machine tags
+    assertSearch(InstitutionSearchParams.builder().machineTagNamespace("dummy").build(), page, 0);
+    assertSearch(
+        InstitutionSearchParams.builder().machineTagName(mt.getName()).build(),
+        page,
         1,
-        institutionMapper
-            .list(null, null, "i1", null, null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
+        inst1.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().machineTagName(mt.getName()).build(),
+        page,
         1,
-        institutionMapper
-            .list(null, null, null, "n2", null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
+        inst1.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().machineTagValue(mt.getValue()).build(),
+        page,
         1,
-        institutionMapper
-            .list(null, null, "i2", "n2", null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
-        0,
-        institutionMapper
-            .list(null, null, "i1", "n2", null, null, null, null, null, null, page)
-            .size());
+        inst1.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder()
+            .machineTagName(mt.getName())
+            .machineTagName(mt.getName())
+            .machineTagValue(mt.getValue())
+            .build(),
+        page,
+        1,
+        inst1.getKey());
+
+    // identifiers
+    assertSearch(InstitutionSearchParams.builder().identifier("dummy").build(), page, 0);
+    assertSearch(
+        InstitutionSearchParams.builder()
+            .machineTagName(mt.getName())
+            .machineTagName(mt.getName())
+            .machineTagValue(mt.getValue())
+            .build(),
+        page,
+        1,
+        inst1.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().identifierType(identifier.getType()).build(),
+        page,
+        1,
+        inst2.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().identifier(identifier.getIdentifier()).build(),
+        page,
+        1,
+        inst2.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder()
+            .identifierType(identifier.getType())
+            .identifier(identifier.getIdentifier())
+            .build(),
+        page,
+        1,
+        inst2.getKey());
   }
 
   @Test
@@ -198,47 +263,16 @@ public class InstitutionMapperIT extends BaseItTest {
     institutionMapper.create(inst1);
     institutionMapper.create(inst2);
 
-    Pageable pageable = PAGE.apply(5, 0L);
-
-    List<Institution> cols =
-        institutionMapper.list(
-            "i1 n1", null, null, null, null, null, null, null, null, null, pageable);
-    long count =
-        institutionMapper.count("i1 n1", null, null, null, null, null, null, null, null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals("i1", cols.get(0).getCode());
-    assertEquals("n1", cols.get(0).getName());
-
-    cols =
-        institutionMapper.list(
-            "i2 i1", null, null, null, null, null, null, null, null, null, pageable);
-    count = institutionMapper.count("i2 i1", null, null, null, null, null, null, null, null, null);
-    assertEquals(0, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        institutionMapper.list(
-            "i3", null, null, null, null, null, null, null, null, null, pageable);
-    count = institutionMapper.count("i3", null, null, null, null, null, null, null, null, null);
-    assertEquals(0, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        institutionMapper.list(
-            "n1", null, null, null, null, null, null, null, null, null, pageable);
-    count = institutionMapper.count("n1", null, null, null, null, null, null, null, null, null);
-    assertEquals(2, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        institutionMapper.list(
-            "dummy address fo ", null, null, null, null, null, null, null, null, null, pageable);
-    count =
-        institutionMapper.count(
-            "dummy address fo ", null, null, null, null, null, null, null, null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
+    Pageable page = PAGE.apply(5, 0L);
+    assertSearch(InstitutionSearchParams.builder().query("i1 n1").build(), page, 1, inst1.getKey());
+    assertSearch(InstitutionSearchParams.builder().query("i2 i1").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().query("i3").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().query("n1").build(), page, 2);
+    assertSearch(
+        InstitutionSearchParams.builder().query("dummy address fo ").build(),
+        page,
+        1,
+        inst1.getKey());
   }
 
   @Test
@@ -261,68 +295,43 @@ public class InstitutionMapperIT extends BaseItTest {
     inst2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("i1", "test")));
     institutionMapper.create(inst2);
 
-    Pageable pageable = PAGE.apply(1, 0L);
-    List<Institution> institutions =
-        institutionMapper.list(
-            "i1", null, null, null, null, null, null, null, null, null, pageable);
-    long count =
-        institutionMapper.count("i1", null, null, null, null, null, null, null, null, null);
+    Pageable page = PAGE.apply(1, 0L);
+    assertSearch(InstitutionSearchParams.builder().query("i1 n1").build(), page, 1, inst1.getKey());
+
+    InstitutionSearchParams params = InstitutionSearchParams.builder().query("i1").build();
+    List<Institution> institutions = institutionMapper.list(params, page);
+    long count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
     // it should return the one where the i1 is main code
     assertEquals(inst1.getKey(), institutions.get(0).getKey());
     // there are 2 insts with i1
     assertEquals(2, count);
 
-    institutions =
-        institutionMapper.list(
-            "i2", null, null, null, null, null, null, null, null, null, pageable);
-    count = institutionMapper.count("i2", null, null, null, null, null, null, null, null, null);
+    params = InstitutionSearchParams.builder().query("i2").build();
+    institutions = institutionMapper.list(params, page);
+    count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
-    // it should return the one where the i2 is main code
+    // it should return the one where the i1 is main code
     assertEquals(inst2.getKey(), institutions.get(0).getKey());
-    // there are 2 insts with i2
+    // there are 2 insts with i1
     assertEquals(2, count);
 
-    institutions =
-        institutionMapper.list(
-            null, null, null, null, "i1", null, null, null, null, null, pageable);
-    count = institutionMapper.count(null, null, null, null, "i1", null, null, null, null, null);
-    assertEquals(1, institutions.size());
-    assertEquals(count, institutions.size());
-    assertEquals(inst2.getKey(), institutions.get(0).getKey());
+    assertSearch(
+        InstitutionSearchParams.builder().alternativeCode("i1").build(), page, 1, inst2.getKey());
   }
 
-  @Test
-  public void countTest() {
-    Institution inst1 = new Institution();
-    inst1.setKey(UUID.randomUUID());
-    inst1.setCode("i1");
-    inst1.setName("n1");
-    inst1.setCreatedBy("test");
-    inst1.setModifiedBy("test");
-    inst1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("ii1", "test")));
+  private List<Institution> assertSearch(
+      InstitutionSearchParams params, Pageable page, int expected) {
+    List<Institution> res = institutionMapper.list(params, page);
+    long count = institutionMapper.count(params);
+    assertEquals(expected, count);
+    assertEquals(res.size(), count);
+    return res;
+  }
 
-    Institution inst2 = new Institution();
-    inst2.setKey(UUID.randomUUID());
-    inst2.setCode("i2");
-    inst2.setName("n2");
-    inst2.setCreatedBy("test");
-    inst2.setModifiedBy("test");
-
-    institutionMapper.create(inst1);
-    institutionMapper.create(inst2);
-
-    assertEquals(
-        2, institutionMapper.count(null, null, null, null, null, null, null, null, null, null));
-    assertEquals(
-        1, institutionMapper.count(null, null, "i1", null, null, null, null, null, null, null));
-    assertEquals(
-        1, institutionMapper.count(null, null, null, "n2", null, null, null, null, null, null));
-    assertEquals(
-        1, institutionMapper.count(null, null, "i2", "n2", null, null, null, null, null, null));
-    assertEquals(
-        0, institutionMapper.count(null, null, "i1", "n2", null, null, null, null, null, null));
-    assertEquals(
-        1, institutionMapper.count(null, null, null, null, "ii1", null, null, null, null, null));
+  private void assertSearch(
+      InstitutionSearchParams params, Pageable page, int expected, UUID expectedKey) {
+    List<Institution> res = assertSearch(params, page, expected);
+    assertEquals(expectedKey, res.get(0).getKey());
   }
 }
