@@ -19,6 +19,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
@@ -100,20 +101,21 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     UUID key2 = service.create(institution2);
 
     PagingResponse<Institution> response =
-        service.list("dummy", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+        service.list(InstitutionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response = service.list("", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+    response =
+        service.list(InstitutionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list("city", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+        service.list(InstitutionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
     response =
-        service.list("city2", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+        service.list(InstitutionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
@@ -121,25 +123,27 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         1,
         service
-            .list(null, null, "c1", null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().code("c1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
         service
-            .list(null, null, null, "n2", null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().name("n2").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
         service
-            .list(null, null, "c1", "n1", null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                InstitutionSearchRequest.builder().code("c1").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list(null, null, "c2", "n1", null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                InstitutionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
@@ -147,47 +151,49 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         2,
         service
-            .list("c", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list("dum add", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list("<", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
-            .list("\"<\"", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list(null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list("  ", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
     // alternative code
     response =
-        service.list(null, null, null, null, "alt", null, null, null, null, null, DEFAULT_PAGE);
+        service.list(
+            InstitutionSearchRequest.builder().alternativeCode("alt").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(null, null, null, null, "foo", null, null, null, null, null, DEFAULT_PAGE);
+        service.list(
+            InstitutionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build());
     assertEquals(0, response.getResults().size());
 
     // update address
@@ -198,7 +204,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         1,
         service
-            .list("city3", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
@@ -206,7 +212,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         0,
         service
-            .list("city3", null, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
@@ -271,23 +277,20 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     UUID key3 = service.create(institution3);
 
     PagingResponse<Institution> response =
-        service.list(null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+        service.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(3, response.getResults().size());
 
     service.delete(key3);
 
-    response =
-        service.list(null, null, null, null, null, null, null, null, null, null, DEFAULT_PAGE);
+    response = service.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(
-            null, null, null, null, null, null, null, null, null, null, new PagingRequest(0L, 1));
+        service.list(InstitutionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(
-            null, null, null, null, null, null, null, null, null, null, new PagingRequest(0L, 0));
+        service.list(InstitutionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -321,30 +324,31 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         1,
         service
-            .list(null, personKey1, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactKey(personKey1)
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list(null, personKey2, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactKey(personKey2)
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         service
             .list(
-                null,
-                UUID.randomUUID(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                DEFAULT_PAGE)
+                InstitutionSearchRequest.builder()
+                    .contactKey(UUID.randomUUID())
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 
@@ -352,7 +356,11 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         1,
         service
-            .list(null, personKey2, null, null, null, null, null, null, null, null, DEFAULT_PAGE)
+            .list(
+                InstitutionSearchRequest.builder()
+                    .contactKey(personKey2)
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
   }
