@@ -22,6 +22,10 @@
     <collection property="comments" column="key" select="listComments"/>
   </resultMap>
 
+  <resultMap id="COLLECTION_DTO_MAP" type="CollectionDto" autoMapping="true">
+    <association property="collection" resultMap="COLLECTION_MAP" />
+  </resultMap>
+
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
@@ -103,7 +107,7 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ c.fulltext_search
   </sql>
 
   <insert id="create" parameterType="SciCollection">
@@ -131,6 +135,13 @@
     WHERE c.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="getCollectionDto" resultMap="COLLECTION_DTO_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
+    FROM collection c
+    LEFT JOIN institution inst ON inst.key = c.institution_key
+    WHERE c.key = #{collectionKey,jdbcType=OTHER}
+  </select>
+
   <select id="getInstitutionKey" resultType="java.util.UUID" >
     SELECT institution_key
     FROM collection
@@ -144,55 +155,57 @@
   </select>
 
   <!-- Basic paging search functionality -->
-  <select id="list" resultType="SciCollection" resultMap="COLLECTION_MAP" parameterType="Pageable">
-    SELECT DISTINCT ON (<if test="query != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key) <include refid="COLLECTION_READ_FIELDS"/>
+  <select id="list" resultType="CollectionDto" resultMap="COLLECTION_DTO_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
+          <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
     FROM collection c
-    <if test="query != null" >
+    LEFT JOIN institution inst ON inst.key = c.institution_key
+    <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
     </if>
-    <if test="contactKey != null" >
+    <if test="params.contactKey != null" >
       INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
     </if>
-    <if test="machineTagNamespace != null || machineTagName != null || machineTagValue != null" >
+    <if test="params.machineTagNamespace != null || params.machineTagName != null || params.machineTagValue != null" >
       INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
       INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
     </if>
-    <if test="identifierType != null || identifier != null" >
+    <if test="params.identifierType != null || params.identifier != null" >
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
     WHERE c.deleted IS NULL
-    <if test="institutionKey != null" >
-      AND c.institution_key = #{institutionKey,jdbcType=OTHER}
+    <if test="params.institutionKey != null" >
+      AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
     </if>
-    <if test="contactKey != null" >
-      AND ccp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    <if test="params.contactKey != null" >
+      AND ccp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
     </if>
-    <if test="code != null" >
-      AND c.code = #{code,jdbcType=VARCHAR}
+    <if test="params.code != null" >
+      AND c.code = #{params.code,jdbcType=VARCHAR}
     </if>
-    <if test="alternativeCode != null" >
-      AND c.alternative_codes ?? #{alternativeCode,jdbcType=VARCHAR}
+    <if test="params.alternativeCode != null" >
+      AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
     </if>
-    <if test="name != null" >
-      AND c.name = #{name,jdbcType=VARCHAR}
+    <if test="params.name != null" >
+      AND c.name = #{params.name,jdbcType=VARCHAR}
     </if>
-    <if test="machineTagNamespace != null" >
-      AND mt.namespace = #{machineTagNamespace,jdbcType=VARCHAR}
+    <if test="params.machineTagNamespace != null" >
+      AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
     </if>
-    <if test="machineTagName != null" >
-      AND mt.name = #{machineTagName,jdbcType=VARCHAR}
+    <if test="params.machineTagName != null" >
+      AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
     </if>
-    <if test="machineTagValue != null" >
-      AND mt.value = #{machineTagValue,jdbcType=VARCHAR}
+    <if test="params.machineTagValue != null" >
+      AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
     </if>
-    <if test="identifierType != null" >
-      AND id.type = #{identifierType,jdbcType=OTHER}
+    <if test="params.identifierType != null" >
+      AND id.type = #{params.identifierType,jdbcType=OTHER}
     </if>
-    <if test="identifier != null" >
-      AND id.identifier = #{identifier,jdbcType=VARCHAR}
+    <if test="params.identifier != null" >
+      AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
     </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
+    ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -201,56 +214,57 @@
   <select id="count" resultType="Long">
     SELECT count(DISTINCT c.key)
     FROM collection c
-    <if test="query != null" >
+    <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
     </if>
-    <if test="contactKey != null" >
+    <if test="params.contactKey != null" >
       INNER JOIN collection_collection_person ccp on ccp.collection_key = c.key
     </if>
-    <if test="machineTagNamespace != null || machineTagName != null || machineTagValue != null" >
+    <if test="params.machineTagNamespace != null || params.machineTagName != null || params.machineTagValue != null" >
       INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
       INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
     </if>
-    <if test="identifierType != null || identifier != null" >
+    <if test="params.identifierType != null || params.identifier != null" >
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
     WHERE c.deleted IS NULL
-    <if test="institutionKey != null" >
-      AND c.institution_key = #{institutionKey,jdbcType=OTHER}
+    <if test="params.institutionKey != null" >
+      AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
     </if>
-    <if test="code != null" >
-      AND c.code = #{code,jdbcType=VARCHAR}
+    <if test="params.code != null" >
+      AND c.code = #{params.code,jdbcType=VARCHAR}
     </if>
-    <if test="alternativeCode != null" >
-      AND c.alternative_codes ?? #{alternativeCode,jdbcType=VARCHAR}
+    <if test="params.alternativeCode != null" >
+      AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
     </if>
-    <if test="name != null" >
-      AND c.name = #{name,jdbcType=VARCHAR}
+    <if test="params.name != null" >
+      AND c.name = #{params.name,jdbcType=VARCHAR}
     </if>
-    <if test="contactKey != null" >
-      AND ccp.collection_person_key = #{contactKey,jdbcType=OTHER}
+    <if test="params.contactKey != null" >
+      AND ccp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
     </if>
-    <if test="machineTagNamespace != null" >
-      AND mt.namespace = #{machineTagNamespace,jdbcType=VARCHAR}
+    <if test="params.machineTagNamespace != null" >
+      AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
     </if>
-    <if test="machineTagName != null" >
-      AND mt.name = #{machineTagName,jdbcType=VARCHAR}
+    <if test="params.machineTagName != null" >
+      AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
     </if>
-    <if test="machineTagValue != null" >
-      AND mt.value = #{machineTagValue,jdbcType=VARCHAR}
+    <if test="params.machineTagValue != null" >
+      AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
     </if>
-    <if test="identifierType != null" >
-      AND id.type = #{identifierType,jdbcType=OTHER}
+    <if test="params.identifierType != null" >
+      AND id.type = #{params.identifierType,jdbcType=OTHER}
     </if>
-    <if test="identifier != null" >
-      AND id.identifier = #{identifier,jdbcType=VARCHAR}
+    <if test="params.identifier != null" >
+      AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
     </if>
   </select>
 
-  <select id="deleted" resultType="SciCollection"  resultMap="COLLECTION_MAP" parameterType="Pageable">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+  <select id="deleted" resultType="CollectionDto"  resultMap="COLLECTION_DTO_MAP" parameterType="Pageable">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
     FROM collection c
+    LEFT JOIN institution inst ON inst.key = c.institution_key
     WHERE c.deleted IS NOT NULL
     ORDER BY c.created DESC, c.key
     <if test="page != null" >

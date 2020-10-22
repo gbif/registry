@@ -32,7 +32,7 @@ public interface IDigBioMapper {
 
   List<IdentifierDto> getIdentifiers(@Param("collectionKeys") Set<UUID> collectionKeys);
 
-  List<CollectionDto> getCollections(@Param("collectionKeys") Set<UUID> collectionKeys);
+  List<IDigBioCollectionDto> getCollections(@Param("collectionKeys") Set<UUID> collectionKeys);
 
   Set<UUID> findIDigBioCollections(@Nullable @Param("iDigBioUuid") String iDigBioUuid);
 

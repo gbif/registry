@@ -10,7 +10,7 @@
     <id property="entityKey" column="entity_key"/>
   </resultMap>
 
-  <resultMap id="COLLECTION_MAP" type="CollectionDto" autoMapping="true">
+  <resultMap id="COLLECTION_MAP" type="IDigBioCollectionDto" autoMapping="true">
     <id property="collectionKey" column="collection_key"/>
     <result property="collectionAlternativeCodes" column="coll_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>
     <result property="institutionAlternativeCodes" column="inst_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>

@@ -17,12 +17,12 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -31,12 +31,11 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -95,49 +94,30 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
 
   @GetMapping
   @Override
-  public PagingResponse<Institution> list(
-      @Nullable @RequestParam(value = "q", required = false) String query,
-      @Nullable @RequestParam(value = "contact", required = false) UUID contactKey,
-      @Nullable @RequestParam(value = "code", required = false) String code,
-      @Nullable @RequestParam(value = "name", required = false) String name,
-      @Nullable @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false)
-          String machineTagNamespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String machineTagName,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String machineTagValue,
-      @Nullable @RequestParam(value = "identifierType", required = false)
-          IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total =
-        institutionMapper.count(
-            query,
-            contactKey,
-            code,
-            name,
-            alternativeCode,
-            machineTagNamespace,
-            machineTagName,
-            machineTagValue,
-            identifierType,
-            identifier);
-    return new PagingResponse<>(
-        page,
-        total,
-        institutionMapper.list(
-            query,
-            contactKey,
-            code,
-            name,
-            alternativeCode,
-            machineTagNamespace,
-            machineTagName,
-            machineTagValue,
-            identifierType,
-            identifier,
-            page));
+  public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
+    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    String query =
+        searchRequest.getQuery() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQuery()))
+            : searchRequest.getQuery();
+
+    InstitutionSearchParams params =
+        InstitutionSearchParams.builder()
+            .query(query)
+            .contactKey(searchRequest.getContactKey())
+            .code(searchRequest.getCode())
+            .name(searchRequest.getName())
+            .alternativeCode(searchRequest.getAlternativeCode())
+            .machineTagNamespace(searchRequest.getMachineTagNamespace())
+            .machineTagName(searchRequest.getMachineTagName())
+            .machineTagValue(searchRequest.getMachineTagValue())
+            .identifierType(searchRequest.getIdentifierType())
+            .identifier(searchRequest.getIdentifier())
+            .build();
+
+    long total = institutionMapper.count(params);
+    return new PagingResponse<>(page, total, institutionMapper.list(params, page));
   }
 
   @GetMapping("deleted")
