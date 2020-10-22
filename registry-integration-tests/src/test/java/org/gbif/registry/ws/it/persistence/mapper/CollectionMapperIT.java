@@ -28,6 +28,8 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -149,6 +151,12 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setName("n1");
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
+    collectionMapper.create(col1);
+
+    MachineTag mt = new MachineTag("ns", "test", "foo");
+    mt.setCreatedBy("test");
+    machineTagMapper.createMachineTag(mt);
+    collectionMapper.addMachineTag(col1.getKey(), mt.getKey());
 
     Collection col2 = new Collection();
     col2.setKey(UUID.randomUUID());
@@ -156,6 +164,12 @@ public class CollectionMapperIT extends BaseItTest {
     col2.setName("n2");
     col2.setCreatedBy("test");
     col2.setModifiedBy("test");
+    collectionMapper.create(col2);
+
+    Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
+    identifier.setCreatedBy("test");
+    identifierMapper.createIdentifier(identifier);
+    collectionMapper.addIdentifier(col2.getKey(), identifier.getKey());
 
     Collection col3 = new Collection();
     col3.setKey(UUID.randomUUID());
@@ -163,44 +177,83 @@ public class CollectionMapperIT extends BaseItTest {
     col3.setName("n3");
     col3.setCreatedBy("test");
     col3.setModifiedBy("test");
-
-    collectionMapper.create(col1);
-    collectionMapper.create(col2);
     collectionMapper.create(col3);
 
     Pageable page = PAGE.apply(2, 0L);
-    assertEquals(
-        2,
-        collectionMapper
-            .list(null, null, null, null, null, null, null, null, null, null, null, page)
-            .size());
+    List<CollectionDto> dtos =
+        collectionMapper.list(CollectionSearchParams.builder().build(), page);
+    assertEquals(2, dtos.size());
+    assertEquals(3, collectionMapper.count(CollectionSearchParams.builder().build()));
 
     page = PAGE.apply(5, 0L);
-    assertEquals(
-        3,
-        collectionMapper
-            .list(null, null, null, null, null, null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
+    assertSearch(CollectionSearchParams.builder().build(), page, 3);
+    assertSearch(CollectionSearchParams.builder().code("c1").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().name("n2").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().code("c3").name("n3").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().code("c1").name("n3").build(), page, 0);
+
+    // machine tags
+    assertSearch(CollectionSearchParams.builder().machineTagNamespace("dummy").build(), page, 0);
+    assertSearch(
+        CollectionSearchParams.builder().machineTagName(mt.getName()).build(),
+        page,
         1,
-        collectionMapper
-            .list(null, null, null, "c1", null, null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
+        col1.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().machineTagName(mt.getName()).build(),
+        page,
         1,
-        collectionMapper
-            .list(null, null, null, null, "n2", null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
+        col1.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().machineTagValue(mt.getValue()).build(),
+        page,
         1,
-        collectionMapper
-            .list(null, null, null, "c3", "n3", null, null, null, null, null, null, page)
-            .size());
-    assertEquals(
-        0,
-        collectionMapper
-            .list(null, null, null, "c1", "n3", null, null, null, null, null, null, page)
-            .size());
+        col1.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder()
+            .machineTagName(mt.getName())
+            .machineTagName(mt.getName())
+            .machineTagValue(mt.getValue())
+            .build(),
+        page,
+        1,
+        col1.getKey());
+
+    // identifiers
+    assertSearch(CollectionSearchParams.builder().identifier("dummy").build(), page, 0);
+    assertSearch(
+        CollectionSearchParams.builder()
+            .machineTagName(mt.getName())
+            .machineTagName(mt.getName())
+            .machineTagValue(mt.getValue())
+            .build(),
+        page,
+        1,
+        col1.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().identifierType(identifier.getType()).build(),
+        page,
+        1,
+        col2.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().identifier(identifier.getIdentifier()).build(),
+        page,
+        1,
+        col2.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder()
+            .identifierType(identifier.getType())
+            .identifier(identifier.getIdentifier())
+            .build(),
+        page,
+        1,
+        col2.getKey());
   }
 
   @Test
@@ -219,243 +272,26 @@ public class CollectionMapperIT extends BaseItTest {
 
     collectionMapper.create(col1);
 
-    MachineTag mt = new MachineTag("ns", "test", "foo");
-    mt.setCreatedBy("test");
-    machineTagMapper.createMachineTag(mt);
-    collectionMapper.addMachineTag(col1.getKey(), mt.getKey());
-
     Collection col2 = new Collection();
     col2.setKey(UUID.randomUUID());
     col2.setCode("c2");
     col2.setName("n1");
     col2.setCreatedBy("test");
     col2.setModifiedBy("test");
-
     collectionMapper.create(col2);
 
-    Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
-    identifier.setCreatedBy("test");
-    identifierMapper.createIdentifier(identifier);
-    collectionMapper.addIdentifier(col2.getKey(), identifier.getKey());
+    Pageable page = PAGE.apply(5, 0L);
+    assertSearch(CollectionSearchParams.builder().query("c1 n1").build(), page, 1, col1.getKey());
 
-    Pageable pageable = PAGE.apply(5, 0L);
+    assertSearch(CollectionSearchParams.builder().query("c2 c1").build(), page, 0);
+    assertSearch(CollectionSearchParams.builder().query("c3").build(), page, 0);
+    assertSearch(CollectionSearchParams.builder().query("n1").build(), page, 2);
 
-    List<Collection> cols =
-        collectionMapper.list(
-            null, null, "c1 n1", null, null, null, null, null, null, null, null, pageable);
-    long count =
-        collectionMapper.count(null, null, "c1 n1", null, null, null, null, null, null, null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals("c1", cols.get(0).getCode());
-    assertEquals("n1", cols.get(0).getName());
-
-    cols =
-        collectionMapper.list(
-            null, null, "c2 c1", null, null, null, null, null, null, null, null, pageable);
-    count =
-        collectionMapper.count(null, null, "c2 c1", null, null, null, null, null, null, null, null);
-    assertEquals(0, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        collectionMapper.list(
-            null, null, "c3", null, null, null, null, null, null, null, null, pageable);
-    count =
-        collectionMapper.count(null, null, "c3", null, null, null, null, null, null, null, null);
-    assertEquals(0, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        collectionMapper.list(
-            null, null, "n1", null, null, null, null, null, null, null, null, pageable);
-    count =
-        collectionMapper.count(null, null, "n1", null, null, null, null, null, null, null, null);
-    assertEquals(2, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        collectionMapper.list(
-            null,
-            null,
-            "dummy address fo ",
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            pageable);
-    count =
-        collectionMapper.count(
-            null, null, "dummy address fo ", null, null, null, null, null, null, null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-
-    // machine tags
-    cols =
-        collectionMapper.list(
-            null, null, null, null, null, null, "dummy", null, null, null, null, pageable);
-    count =
-        collectionMapper.count(null, null, null, null, null, null, "dummy", null, null, null, null);
-    assertEquals(0, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        collectionMapper.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            mt.getNamespace(),
-            null,
-            null,
-            null,
-            null,
-            pageable);
-    count =
-        collectionMapper.count(
-            null, null, null, null, null, null, mt.getNamespace(), null, null, null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col1.getKey(), cols.get(0).getKey());
-
-    cols =
-        collectionMapper.list(
-            null, null, null, null, null, null, null, mt.getName(), null, null, null, pageable);
-    count =
-        collectionMapper.count(
-            null, null, null, null, null, null, null, mt.getName(), null, null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col1.getKey(), cols.get(0).getKey());
-
-    cols =
-        collectionMapper.list(
-            null, null, null, null, null, null, null, null, mt.getValue(), null, null, pageable);
-    count =
-        collectionMapper.count(
-            null, null, null, null, null, null, null, null, mt.getValue(), null, null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col1.getKey(), cols.get(0).getKey());
-
-    cols =
-        collectionMapper.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            mt.getNamespace(),
-            mt.getName(),
-            mt.getValue(),
-            null,
-            null,
-            pageable);
-    count =
-        collectionMapper.count(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            mt.getNamespace(),
-            mt.getName(),
-            mt.getValue(),
-            null,
-            null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col1.getKey(), cols.get(0).getKey());
-
-    // identifiers
-    cols =
-        collectionMapper.list(
-            null, null, null, null, null, null, null, null, null, null, "dummy", pageable);
-    count =
-        collectionMapper.count(null, null, null, null, null, null, null, null, null, null, "dummy");
-    assertEquals(0, cols.size());
-    assertEquals(count, cols.size());
-
-    cols =
-        collectionMapper.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            identifier.getType(),
-            null,
-            pageable);
-    count =
-        collectionMapper.count(
-            null, null, null, null, null, null, null, null, null, identifier.getType(), null);
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col2.getKey(), cols.get(0).getKey());
-
-    cols =
-        collectionMapper.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            identifier.getIdentifier(),
-            pageable);
-    count =
-        collectionMapper.count(
-            null, null, null, null, null, null, null, null, null, null, identifier.getIdentifier());
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col2.getKey(), cols.get(0).getKey());
-
-    cols =
-        collectionMapper.list(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            identifier.getType(),
-            identifier.getIdentifier(),
-            pageable);
-    count =
-        collectionMapper.count(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            identifier.getType(),
-            identifier.getIdentifier());
-    assertEquals(1, cols.size());
-    assertEquals(count, cols.size());
-    assertEquals(col2.getKey(), cols.get(0).getKey());
+    assertSearch(
+        CollectionSearchParams.builder().query("dummy address fo ").build(),
+        page,
+        1,
+        col1.getKey());
   }
 
   @Test
@@ -478,78 +314,44 @@ public class CollectionMapperIT extends BaseItTest {
     coll2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("c1", "test")));
     collectionMapper.create(coll2);
 
-    Pageable pageable = PAGE.apply(1, 0L);
-    List<Collection> collections =
-        collectionMapper.list(
-            null, null, "c1", null, null, null, null, null, null, null, null, pageable);
-    long count =
-        collectionMapper.count(null, null, "c1", null, null, null, null, null, null, null, null);
-    assertEquals(1, collections.size());
-    // it should return the one where the c1 is main code
-    assertEquals(coll1.getKey(), collections.get(0).getKey());
-    // there are 2 colls with c1
+    Pageable page = PAGE.apply(1, 0L);
+    CollectionSearchParams params = CollectionSearchParams.builder().query("c1").build();
+    List<CollectionDto> dtos = collectionMapper.list(params, page);
+    long count = collectionMapper.count(params);
+    assertEquals(1, dtos.size());
+    assertEquals(coll1.getKey(), dtos.get(0).getCollection().getKey());
     assertEquals(2, count);
 
-    collections =
-        collectionMapper.list(
-            null, null, "c2", null, null, null, null, null, null, null, null, pageable);
-    count =
-        collectionMapper.count(null, null, "c2", null, null, null, null, null, null, null, null);
-    assertEquals(1, collections.size());
-    // it should return the one where the c2 is main code
-    assertEquals(coll2.getKey(), collections.get(0).getKey());
-    // there are 2 colls with c2
+    page = PAGE.apply(2, 0L);
+    assertSearch(CollectionSearchParams.builder().query("c1").build(), page, 2);
+
+    page = PAGE.apply(1, 0L);
+    params = CollectionSearchParams.builder().query("c2").build();
+    dtos = collectionMapper.list(params, page);
+    count = collectionMapper.count(params);
+    assertEquals(1, dtos.size());
+    assertEquals(coll2.getKey(), dtos.get(0).getCollection().getKey());
     assertEquals(2, count);
 
-    collections =
-        collectionMapper.list(
-            null, null, null, null, null, "c1", null, null, null, null, null, pageable);
-    count =
-        collectionMapper.count(null, null, null, null, null, "c1", null, null, null, null, null);
-    assertEquals(1, collections.size());
-    assertEquals(count, collections.size());
-    assertEquals(coll2.getKey(), collections.get(0).getKey());
+    page = PAGE.apply(2, 0L);
+    assertSearch(CollectionSearchParams.builder().query("c2").build(), page, 2);
+
+    assertSearch(
+        CollectionSearchParams.builder().alternativeCode("c1").build(), page, 1, coll2.getKey());
   }
 
-  @Test
-  public void countTest() {
-    Collection col1 = new Collection();
-    col1.setKey(UUID.randomUUID());
-    col1.setCode("c1");
-    col1.setName("n1");
-    col1.setCreatedBy("test");
-    col1.setModifiedBy("test");
-    col1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("cc1", "test")));
+  private List<CollectionDto> assertSearch(
+      CollectionSearchParams params, Pageable page, int expected) {
+    List<CollectionDto> dtos = collectionMapper.list(params, page);
+    long count = collectionMapper.count(params);
+    assertEquals(expected, count);
+    assertEquals(dtos.size(), count);
+    return dtos;
+  }
 
-    collectionMapper.create(col1);
-
-    assertEquals(
-        1,
-        collectionMapper.count(null, null, null, null, null, null, null, null, null, null, null));
-    assertEquals(
-        0,
-        collectionMapper.count(
-            null, UUID.randomUUID(), null, null, null, null, null, null, null, null, null));
-    assertEquals(
-        1,
-        collectionMapper.count(null, null, "c1", null, null, null, null, null, null, null, null));
-    assertEquals(
-        0,
-        collectionMapper.count(null, null, null, "foo", null, null, null, null, null, null, null));
-    assertEquals(
-        1,
-        collectionMapper.count(null, null, null, "c1", null, null, null, null, null, null, null));
-    assertEquals(
-        1,
-        collectionMapper.count(null, null, null, null, "n1", null, null, null, null, null, null));
-    assertEquals(
-        1,
-        collectionMapper.count(null, null, null, "c1", "n1", null, null, null, null, null, null));
-    assertEquals(
-        0,
-        collectionMapper.count(null, null, null, "c2", "n1", null, null, null, null, null, null));
-    assertEquals(
-        1,
-        collectionMapper.count(null, null, null, null, null, "cc1", null, null, null, null, null));
+  private void assertSearch(
+      CollectionSearchParams params, Pageable page, int expected, UUID expectedKey) {
+    List<CollectionDto> dtos = assertSearch(params, page, expected);
+    assertEquals(expectedKey, dtos.get(0).getCollection().getKey());
   }
 }

@@ -16,19 +16,19 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,21 +41,7 @@ public interface CollectionClient
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Collection> list(
-      @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "institution", required = false) UUID institutionKey,
-      @RequestParam(value = "contact", required = false) UUID contactKey,
-      @RequestParam(value = "code", required = false) String code,
-      @RequestParam(value = "name", required = false) String name,
-      @RequestParam(value = "alternativeCode", required = false) String alternativeCode,
-      @Nullable @RequestParam(value = "machineTagNamespace", required = false)
-          String machineTagNamespace,
-      @Nullable @RequestParam(value = "machineTagName", required = false) String machineTagName,
-      @Nullable @RequestParam(value = "machineTagValue", required = false) String machineTagValue,
-      @Nullable @RequestParam(value = "identifierType", required = false)
-          IdentifierType identifierType,
-      @Nullable @RequestParam(value = "identifier", required = false) String identifier,
-      @SpringQueryMap Pageable page);
+  PagingResponse<CollectionView> list(@SpringQueryMap CollectionSearchRequest searchRequest);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -63,7 +49,7 @@ public interface CollectionClient
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Collection> listDeleted(@SpringQueryMap Pageable page);
+  PagingResponse<CollectionView> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -72,4 +58,18 @@ public interface CollectionClient
   @ResponseBody
   @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  CollectionView getCollectionView(@PathVariable("key") UUID key);
+
+  @Override
+  default Collection get(UUID key) {
+    CollectionView view = getCollectionView(key);
+    return view != null ? view.getCollection() : null;
+  }
 }

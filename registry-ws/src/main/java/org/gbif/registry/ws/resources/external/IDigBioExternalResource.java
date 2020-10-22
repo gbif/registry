@@ -19,7 +19,7 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.persistence.mapper.collections.external.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
@@ -76,7 +76,7 @@ public class IDigBioExternalResource {
         CompletableFuture.supplyAsync(() -> idigBioMapper.getIDigBioMachineTags(collectionKeys));
     CompletableFuture<List<IdentifierDto>> identifiersDtoFuture =
         CompletableFuture.supplyAsync(() -> idigBioMapper.getIdentifiers(collectionKeys));
-    CompletableFuture<List<CollectionDto>> collectionsDtoFuture =
+    CompletableFuture<List<IDigBioCollectionDto>> collectionsDtoFuture =
         CompletableFuture.supplyAsync(() -> idigBioMapper.getCollections(collectionKeys));
 
     CompletableFuture.allOf(collectionsDtoFuture, machineTagsDtoFuture, identifiersDtoFuture)
@@ -96,13 +96,14 @@ public class IDigBioExternalResource {
                 Collectors.groupingBy(
                     IdentifierDto::getEntityKey, HashMap::new, Collectors.toSet()));
 
-    List<CollectionDto> collectionDtos = collectionsDtoFuture.join();
-    Map<UUID, CollectionDto> collectionsByKey =
-        collectionDtos.stream().collect(Collectors.toMap(CollectionDto::getCollectionKey, c -> c));
+    List<IDigBioCollectionDto> IDigBioCollectionDtos = collectionsDtoFuture.join();
+    Map<UUID, IDigBioCollectionDto> collectionsByKey =
+        IDigBioCollectionDtos.stream()
+            .collect(Collectors.toMap(IDigBioCollectionDto::getCollectionKey, c -> c));
 
     List<IDigBioCollection> result = new ArrayList<>();
     for (UUID k : collectionKeys) {
-      CollectionDto collection = collectionsByKey.get(k);
+      IDigBioCollectionDto collection = collectionsByKey.get(k);
       Set<IdentifierDto> identifiers =
           identifiersByCollection.getOrDefault(k, Collections.emptySet());
       Set<MachineTagDto> machineTags = machineTagsByCollection.get(k);
@@ -142,7 +143,7 @@ public class IDigBioExternalResource {
 
     UUID collectionKey = collections.iterator().next();
 
-    CompletableFuture<List<CollectionDto>> collectionsDtoFuture =
+    CompletableFuture<List<IDigBioCollectionDto>> collectionsDtoFuture =
         CompletableFuture.supplyAsync(
             () -> idigBioMapper.getCollections(Collections.singleton(collectionKey)));
     CompletableFuture<List<MachineTagDto>> machineTagsDtoFuture =
@@ -155,8 +156,8 @@ public class IDigBioExternalResource {
     CompletableFuture.allOf(collectionsDtoFuture, machineTagsDtoFuture, identifiersDtoFuture)
         .join();
 
-    List<CollectionDto> collectionDtos = collectionsDtoFuture.join();
-    if (collectionDtos.isEmpty()) {
+    List<IDigBioCollectionDto> IDigBioCollectionDtos = collectionsDtoFuture.join();
+    if (IDigBioCollectionDtos.isEmpty()) {
       return null;
     }
 
@@ -164,12 +165,14 @@ public class IDigBioExternalResource {
     List<IdentifierDto> identifierDtos = identifiersDtoFuture.join();
 
     return convertToIDigBioCollection(
-        collectionDtos.get(0), new HashSet<>(identifierDtos), new HashSet<>(machineTagDtos));
+        IDigBioCollectionDtos.get(0), new HashSet<>(identifierDtos), new HashSet<>(machineTagDtos));
   }
 
   @NotNull
   private IDigBioCollection convertToIDigBioCollection(
-      CollectionDto collection, Set<IdentifierDto> identifiers, Set<MachineTagDto> machineTags) {
+      IDigBioCollectionDto collection,
+      Set<IdentifierDto> identifiers,
+      Set<MachineTagDto> machineTags) {
     IDigBioCollection iDigBioCollection = new IDigBioCollection();
     iDigBioCollection.setInstitutionKey(collection.getInstitutionKey());
     iDigBioCollection.setCollectionKey(collection.getCollectionKey());

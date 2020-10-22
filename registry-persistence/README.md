@@ -35,7 +35,7 @@ run the following maven command:
 mvn process-resources
 ```
 
-DB on the environments (dev, uat, prod) will be updated automatically on application startup.
+**DB on the environments (dev, uat, prod) are updated automatically on application startup.**
 
 ## Rollback
 

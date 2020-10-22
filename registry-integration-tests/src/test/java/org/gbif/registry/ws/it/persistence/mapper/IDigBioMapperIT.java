@@ -30,7 +30,7 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.persistence.mapper.collections.external.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
@@ -188,9 +188,10 @@ public class IDigBioMapperIT extends BaseItTest {
     personMapper.create(p2);
     collectionMapper.addContact(col1.getKey(), p2.getKey());
 
-    List<CollectionDto> colls = iDigBioMapper.getCollections(Collections.singleton(col1.getKey()));
+    List<IDigBioCollectionDto> colls =
+        iDigBioMapper.getCollections(Collections.singleton(col1.getKey()));
     assertEquals(1, colls.size());
-    CollectionDto collDto = colls.get(0);
+    IDigBioCollectionDto collDto = colls.get(0);
     assertNotNull(collDto.getContact());
     assertEquals(uniqueNameUUIDMt.getValue(), collDto.getUniqueNameUUID());
   }

@@ -18,8 +18,8 @@ package org.gbif.registry.persistence.mapper.collections;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.ContactableMapper;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,29 +35,10 @@ public interface InstitutionMapper
     extends BaseMapper<Institution>, ContactableMapper, LookupMapper<Institution> {
 
   List<Institution> list(
-      @Nullable @Param("query") String query,
-      @Nullable @Param("contactKey") UUID contactKey,
-      @Nullable @Param("code") String code,
-      @Nullable @Param("name") String name,
-      @Nullable @Param("alternativeCode") String alternativeCode,
-      @Nullable @Param("machineTagNamespace") String machineTagNamespace,
-      @Nullable @Param("machineTagName") String machineTagName,
-      @Nullable @Param("machineTagValue") String machineTagValue,
-      @Nullable @Param("identifierType") IdentifierType identifierType,
-      @Nullable @Param("identifier") String identifier,
+      @Param("params") InstitutionSearchParams searchParams,
       @Nullable @Param("page") Pageable page);
 
-  long count(
-      @Nullable @Param("query") String query,
-      @Nullable @Param("contactKey") UUID contactKey,
-      @Nullable @Param("code") String code,
-      @Nullable @Param("name") String name,
-      @Nullable @Param("alternativeCode") String alternativeCode,
-      @Nullable @Param("machineTagNamespace") String machineTagNamespace,
-      @Nullable @Param("machineTagName") String machineTagName,
-      @Nullable @Param("machineTagValue") String machineTagValue,
-      @Nullable @Param("identifierType") IdentifierType identifierType,
-      @Nullable @Param("identifier") String identifier);
+  long count(@Param("params") InstitutionSearchParams searchParams);
 
   /** A simple suggest by title service. */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
