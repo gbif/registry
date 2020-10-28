@@ -3,10 +3,10 @@ Authorization: Basic <>
 Content-Type: application/json
 
 # Optional parameters:
-# originalDownloadDOI, registrationDate, relatedDatasets
+# originalDownloadDOI, registrationDate, relatedDatasets, description
 {
   "originalDownloadDOI": "10.21373/dl.njvgg8",
-  "target": "https://github.com/gbif/registry",
+  "sourceUrl": "https://github.com/gbif/registry",
   "title": "Derived dataset",
   "registrationDate": "2020-09-22T14:09:22.000+0000",
   "relatedDatasets": {

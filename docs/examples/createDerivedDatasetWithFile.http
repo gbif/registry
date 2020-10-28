@@ -16,7 +16,7 @@ Content-Type: application/json
 # originalDownloadDOI, registrationDate
 {
   "originalDownloadDOI": "10.21373/dl.njvgg8",
-  "target": "https://github.com/gbif/registry",
+  "sourceUrl": "https://github.com/gbif/registry",
   "title": "Citation multipart request",
   "registrationDate": "2020-09-12T19:09:22.000+0000"
 }

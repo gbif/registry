@@ -3,5 +3,5 @@ Content-Type: application/json
 Authorization: Basic <>
 
 {
-  "target": "https://gbif.org"
+  "sourceUrl": "https://gbif.org"
 }
