@@ -247,8 +247,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
             .contains(dataset.getKey());
 
     // In special cases, datasets retain the citation provided by the publisher.
-    boolean generateGbifCitation = !(isObisDataset
-      || Constants.IUCN_DATASET_KEY.equals(dataset.getKey()));
+    boolean generateGbifCitation =
+        !(isObisDataset || Constants.IUCN_DATASET_KEY.equals(dataset.getKey()));
 
     Citation originalCitation = dataset.getCitation();
 
