@@ -64,9 +64,6 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryDatasetServiceImpl.class);
 
-  private static final UUID IUCN_DATASET_KEY =
-      UUID.fromString("19491596-35ae-4a91-9a98-85cf505f1bd3");
-
   // HTML sanitizer policy for paragraph
   private static final PolicyFactory PARAGRAPH_HTML_SANITIZER =
       new HtmlPolicyBuilder()
@@ -233,8 +230,6 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
    *
    * https://github.com/gbif/registry/issues/43 (OBIS)
    * https://github.com/gbif/portal-feedback/issues/1819 (CoL)
-   * @param dataset
-   * @return
    */
   private Dataset setGeneratedCitation(Dataset dataset) {
     if (dataset == null
@@ -246,15 +241,18 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       return dataset;
     }
 
-    boolean notObisDataset =
-        !datasetKeysInNetworkCache
+    boolean isObisDataset =
+        datasetKeysInNetworkCache
             .getUnchecked(Constants.OBIS_NETWORK_KEY)
             .contains(dataset.getKey());
 
+    // In special cases, datasets retain the citation provided by the publisher.
+    boolean generateGbifCitation = !(isObisDataset
+      || Constants.IUCN_DATASET_KEY.equals(dataset.getKey()));
+
     Citation originalCitation = dataset.getCitation();
 
-    if (notObisDataset
-        || dataset.getKey() != IUCN_DATASET_KEY
+    if (generateGbifCitation
         || originalCitation == null
         || Strings.isNullOrEmpty(originalCitation.getText())) {
       // if the citation already exists keep it and only change the text. That allows us to keep the
