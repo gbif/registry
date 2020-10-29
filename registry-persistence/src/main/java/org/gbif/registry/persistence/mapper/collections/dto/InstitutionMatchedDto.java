@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public class InstitutionMatchedDto implements EntityMatchedDto {
   private String code;
   private Country addressCountry;
   private Country mailingAddressCountry;
-  private List<Identifier> identifiers;
+  private List<String> identifiers;
 
   @Override
   public UUID getKey() {
@@ -75,11 +74,11 @@ public class InstitutionMatchedDto implements EntityMatchedDto {
     this.mailingAddressCountry = mailingAddressCountry;
   }
 
-  public List<Identifier> getIdentifiers() {
+  public List<String> getIdentifiers() {
     return identifiers;
   }
 
-  public void setIdentifiers(List<Identifier> identifiers) {
+  public void setIdentifiers(List<String> identifiers) {
     this.identifiers = identifiers;
   }
 }

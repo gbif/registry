@@ -21,7 +21,7 @@
 
   <resultMap id="INSTITUTION_MATCHED_DTO_MAP" type="InstitutionMatchedDto" autoMapping="true">
     <id property="key" column="key"/>
-    <collection property="identifiers" column="key" select="listIdentifiers"/>
+    <collection property="identifiers" column="key" select="listIdentifierValues"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
@@ -301,7 +301,7 @@
     <if test="alternativeCode != null" >
       AND i.alternative_codes ?? trim(#{alternativeCode,jdbcType=VARCHAR})
     </if>
-    LIMIT 10
+    LIMIT 5
   </select>
 
   <!-- TAGS -->
@@ -340,6 +340,13 @@
 
   <select id="listIdentifiers" resultType="Identifier">
     SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    FROM identifier INNER JOIN institution_identifier ON identifier_key = key
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+
+  <select id="listIdentifierValues" resultType="java.lang.String">
+    SELECT identifier.identifier
     FROM identifier INNER JOIN institution_identifier ON identifier_key = key
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC

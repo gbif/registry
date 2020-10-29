@@ -221,8 +221,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     }
 
     if (dto.getIdentifiers() != null
-        && dto.getIdentifiers().stream()
-            .anyMatch(i -> i.getIdentifier().equals(ownerInstitutionCode))) {
+        && dto.getIdentifiers().stream().anyMatch(i -> i.equals(ownerInstitutionCode))) {
       return true;
     }
 
