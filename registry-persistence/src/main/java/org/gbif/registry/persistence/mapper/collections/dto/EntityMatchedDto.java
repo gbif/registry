@@ -13,23 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper.collections;
+package org.gbif.registry.persistence.mapper.collections.dto;
 
-import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
+import org.gbif.api.vocabulary.Country;
 
-import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
+public interface EntityMatchedDto {
 
-import org.apache.ibatis.annotations.Param;
+  UUID getKey();
 
-public interface LookupMapper<T extends EntityMatchedDto> {
+  String getName();
 
-  List<T> lookup(
-      @Nullable @Param("key") UUID key,
-      @Nullable @Param("code") String code,
-      @Nullable @Param("identifier") String identifier,
-      @Nullable @Param("names") List<String> names,
-      @Nullable @Param("alternativeCode") String alternativeCode);
+  String getCode();
+
+  Country getAddressCountry();
+
+  Country getMailingAddressCountry();
 }

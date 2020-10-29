@@ -26,6 +26,10 @@
     <association property="collection" resultMap="COLLECTION_MAP" />
   </resultMap>
 
+  <resultMap id="COLLECTION_MATCHED_DTO_MAP" type="CollectionMatchedDto" autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
@@ -299,27 +303,37 @@
     collection_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="lookup" resultMap="COLLECTION_MAP">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+  <select id="lookup" resultMap="COLLECTION_MATCHED_DTO_MAP">
+    SELECT c.key, c.name, c.code, i.key institutionKey, i.code institutionCode, i.name institutionName,
+           addr.country addressCountry, mailing_addr.country mailingAddressCountry
     FROM collection c
+    LEFT JOIN institution i ON i.key = c.institution_key
+    LEFT JOIN address addr ON addr.key = i.address_key
+    LEFT JOIN address mailing_addr ON mailing_addr.key = i.mailing_address_key
     <if test="identifier != null" >
       INNER JOIN collection_identifier ci ON ci.collection_key = c.key
       INNER JOIN identifier id ON ci.identifier_key = id."key"
     </if>
     WHERE c.deleted is null
+    <if test="key != null" >
+      AND c.key = #{key,jdbcType=VARCHAR}
+    </if>
     <if test="code != null" >
       AND trim(c.code) = trim(#{code,jdbcType=VARCHAR})
     </if>
     <if test="identifier != null" >
       AND regexp_replace(trim(id.identifier), 'http://|https://|urn:uuid:|urn:lsid:', '') = regexp_replace(trim(#{identifier,jdbcType=VARCHAR}), 'http://|https://|urn:uuid:|urn:lsid:', '')
     </if>
-    <if test="name != null" >
-      AND regexp_replace(quote_literal(unaccent(lower(trim(c.name)))),'\s+','','g') = regexp_replace(quote_literal(unaccent(lower(trim(#{name,jdbcType=VARCHAR})))),'\s+','','g')
+    <if test="names != null" >
+      AND
+      <foreach collection="names" item="name" separator=" OR ">
+        regexp_replace(quote_literal(unaccent(lower(trim(c.name)))),'\s+','','g') = regexp_replace(quote_literal(unaccent(lower(trim(#{name,jdbcType=VARCHAR})))),'\s+','','g')
+      </foreach>
     </if>
     <if test="alternativeCode != null" >
       AND c.alternative_codes ?? trim(#{alternativeCode,jdbcType=VARCHAR})
     </if>
-    LIMIT 20
+    LIMIT 10
   </select>
 
   <!-- TAGS -->

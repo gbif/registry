@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 
 import java.util.List;
@@ -33,7 +34,7 @@ import org.springframework.stereotype.Repository;
 /** Mapper for {@link Collection} entities. */
 @Repository
 public interface CollectionMapper
-    extends BaseMapper<Collection>, ContactableMapper, LookupMapper<Collection> {
+    extends BaseMapper<Collection>, ContactableMapper, LookupMapper<CollectionMatchedDto> {
 
   List<CollectionDto> list(
       @Param("params") CollectionSearchParams searchParams, @Nullable @Param("page") Pageable page);
