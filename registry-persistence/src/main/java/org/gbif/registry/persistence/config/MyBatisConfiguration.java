@@ -142,8 +142,12 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("CollectionPerson", Person.class);
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("InstitutionMatchedDto", InstitutionMatchedDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("CollectionMatchedDto", CollectionMatchedDto.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("InstitutionMatchedDto", InstitutionMatchedDto.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("CollectionMatchedDto", CollectionMatchedDto.class);
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
