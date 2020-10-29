@@ -15,16 +15,17 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
-import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.lookup.CollectionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.registry.DatasetService;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.service.collections.lookup.Matches;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,10 +33,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;
@@ -50,18 +53,22 @@ import static org.gbif.api.model.collections.lookup.Match.exact;
 import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 
 @Component
-public class CollectionMatcher extends BaseMatcher<Collection> {
+public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, CollectionMatched> {
 
   private final CollectionMapper collectionMapper;
 
   @Autowired
-  public CollectionMatcher(CollectionMapper collectionMapper, DatasetService datasetService) {
-    super(datasetService);
+  public CollectionMatcher(
+      CollectionMapper collectionMapper,
+      DatasetService datasetService,
+      @Value("${api.root.url}") String apiBaseUrl) {
+    super(datasetService, apiBaseUrl);
     this.collectionMapper = collectionMapper;
   }
 
-  public Matches<Collection> matchCollections(LookupParams params, Set<UUID> institutionMatches) {
-    Matches<Collection> matches = new Matches<>();
+  public Matches<CollectionMatched> matchCollections(
+      LookupParams params, Set<UUID> institutionMatches) {
+    Matches<CollectionMatched> matches = new Matches<>();
 
     matchWithMachineTags(params.getDatasetKey(), machineTagProcessor(params))
         .ifPresent(matches::setMachineTagMatchesMap);
@@ -81,7 +88,7 @@ public class CollectionMatcher extends BaseMatcher<Collection> {
     return setAccepted(matches);
   }
 
-  private Matches<Collection> setAccepted(Matches<Collection> matches) {
+  private Matches<CollectionMatched> setAccepted(Matches<CollectionMatched> matches) {
     matches.setAcceptedMatch(
         chooseAccepted(
             extractMatches(matches.getMachineTagMatchesMap()),
@@ -93,7 +100,7 @@ public class CollectionMatcher extends BaseMatcher<Collection> {
     return matches;
   }
 
-  private BiConsumer<MachineTag, Map<UUID, Match<Collection>>> machineTagProcessor(
+  private BiConsumer<MachineTag, Map<UUID, Match<CollectionMatched>>> machineTagProcessor(
       LookupParams params) {
     return (mt, matchesMap) -> {
       if (COLLECTION_TAG_NAME.equals(mt.getName())) {
@@ -105,90 +112,115 @@ public class CollectionMatcher extends BaseMatcher<Collection> {
     };
   }
 
-  private Optional<Map<UUID, Match<Collection>>> findExactMatches(
+  private Optional<Map<UUID, Match<CollectionMatched>>> findExactMatches(
       LookupParams params, Set<UUID> institutionMatches) {
     if (!params.containsCollectionParams()) {
       return Optional.empty();
     }
 
-    Map<UUID, Match<Collection>> exactMatches = new HashMap<>();
+    Map<UUID, Match<CollectionMatched>> exactMatches = new HashMap<>();
     // find by code and identifier
-    List<Collection> collectionsFoundByCodeAndId =
+    List<CollectionMatchedDto> collectionsFoundByCodeAndId =
         findByCodeAndId(params.getCollectionCode(), params.getCollectionId());
     // if found we don't look for more matches since these are exact matches
     collectionsFoundByCodeAndId.forEach(
-        c -> {
-          Match<Collection> exactMatch = exact(c, CODE_MATCH, IDENTIFIER_MATCH);
-          exactMatches.put(c.getKey(), exactMatch);
-          checkCountryMatch(params, exactMatch);
-          checkInstitutionCollectionMisMatch(exactMatch, institutionMatches);
+        dto -> {
+          Match<CollectionMatched> exactMatch =
+              exact(toEntityMatched(dto), CODE_MATCH, IDENTIFIER_MATCH);
+          exactMatches.put(dto.getKey(), exactMatch);
+          if (matchesCountry(dto, params.getCountry())) {
+            exactMatch.addReason(Match.Reason.COUNTRY_MATCH);
+          }
+          if (!isMatchWithInstitutions(dto, institutionMatches)) {
+            exactMatch.addReason(INST_COLL_MISMATCH);
+          }
         });
 
     return exactMatches.isEmpty() ? Optional.empty() : Optional.of(exactMatches);
   }
 
-  private Optional<Map<UUID, Match<Collection>>> findFuzzyMatches(
-      LookupParams params, Matches<Collection> matches, Set<UUID> institutionMatches) {
+  private Optional<Map<UUID, Match<CollectionMatched>>> findFuzzyMatches(
+      LookupParams params, Matches<CollectionMatched> matches, Set<UUID> institutionMatches) {
     if (!params.containsCollectionParams()) {
       return Optional.empty();
     }
 
-    Map<UUID, Match<Collection>> fuzzyMatches = new HashMap<>();
-    BiConsumer<List<Collection>, Match.Reason> addFuzzyCollMatch =
+    Map<UUID, Match<CollectionMatched>> fuzzyMatches = new HashMap<>();
+    BiConsumer<List<CollectionMatchedDto>, Match.Reason> addFuzzyCollMatch =
         (l, r) ->
             l.stream()
-                .filter(c -> !matches.getExactMatchesMap().containsKey(c.getKey()))
+                .filter(dto -> !matches.getExactMatchesMap().containsKey(dto.getKey()))
                 .forEach(
-                    c -> {
-                      Match<Collection> fuzzyMatch =
-                          fuzzyMatches.computeIfAbsent(c.getKey(), k -> fuzzy(c)).addReason(r);
-                      checkCountryMatch(params, fuzzyMatch);
-                      checkInstitutionCollectionMisMatch(fuzzyMatch, institutionMatches);
+                    dto -> {
+                      Match<CollectionMatched> fuzzyMatch =
+                          fuzzyMatches
+                              .computeIfAbsent(dto.getKey(), k -> fuzzy(toEntityMatched(dto)))
+                              .addReason(r);
+                      if (matchesCountry(dto, params.getCountry())) {
+                        fuzzyMatch.addReason(Match.Reason.COUNTRY_MATCH);
+                      }
+                      if (!isMatchWithInstitutions(dto, institutionMatches)) {
+                        fuzzyMatch.addReason(INST_COLL_MISMATCH);
+                      }
                     });
 
     // find matches by code
-    addFuzzyCollMatch.accept(findByCode(params.getCollectionCode()), CODE_MATCH);
+    CompletableFuture<List<CollectionMatchedDto>> codeSearch =
+        CompletableFuture.supplyAsync(() -> findByCode(params.getCollectionCode()));
 
     // find matches by identifier
-    addFuzzyCollMatch.accept(findByIdentifier(params.getCollectionId()), IDENTIFIER_MATCH);
+    CompletableFuture<List<CollectionMatchedDto>> identifierSearch =
+        CompletableFuture.supplyAsync(() -> findByIdentifier(params.getCollectionId()));
 
     // find matches by alternative code
-    addFuzzyCollMatch.accept(
-        findByAlternativeCode(params.getCollectionCode()), ALTERNATIVE_CODE_MATCH);
+    CompletableFuture<List<CollectionMatchedDto>> altCodeSearch =
+        CompletableFuture.supplyAsync(() -> findByAlternativeCode(params.getCollectionCode()));
 
-    // find matches using the code as name
-    addFuzzyCollMatch.accept(findByName(params.getCollectionCode()), NAME_MATCH);
-
-    // find matches using the id as name
-    addFuzzyCollMatch.accept(findByName(params.getCollectionId()), NAME_MATCH);
+    // find matches using the code and id as name
+    CompletableFuture<List<CollectionMatchedDto>> nameSearch =
+        CompletableFuture.supplyAsync(
+            () -> findByName(params.getCollectionCode(), params.getCollectionId()));
 
     // find matches by using the id as key
-    addFuzzyCollMatch.accept(findByKey(params.getCollectionId()), KEY_MATCH);
+    CompletableFuture<List<CollectionMatchedDto>> keySearch =
+        CompletableFuture.supplyAsync(() -> findByKey(params.getCollectionId()));
+
+    CompletableFuture.allOf(codeSearch, identifierSearch, altCodeSearch, nameSearch, keySearch);
+
+    // add results to the matches
+    addFuzzyCollMatch.accept(codeSearch.join(), CODE_MATCH);
+    addFuzzyCollMatch.accept(identifierSearch.join(), IDENTIFIER_MATCH);
+    addFuzzyCollMatch.accept(altCodeSearch.join(), ALTERNATIVE_CODE_MATCH);
+    addFuzzyCollMatch.accept(nameSearch.join(), NAME_MATCH);
+    addFuzzyCollMatch.accept(keySearch.join(), KEY_MATCH);
 
     return fuzzyMatches.isEmpty() ? Optional.empty() : Optional.of(fuzzyMatches);
   }
 
-  private void checkInstitutionCollectionMisMatch(
-      Match<Collection> match, Set<UUID> institutionMatches) {
-    if (!isMatchWithInstitutions(match.getEntityMatched(), institutionMatches)) {
-      match.addReason(INST_COLL_MISMATCH);
-    }
-  }
-
-  private boolean isMatchWithInstitutions(Collection c, Set<UUID> institutionMatches) {
+  private boolean isMatchWithInstitutions(CollectionMatchedDto dto, Set<UUID> institutionMatches) {
     return institutionMatches.isEmpty()
-        || c.getInstitutionKey() == null
-        || institutionMatches.contains(c.getInstitutionKey());
+        || dto.getInstitutionKey() == null
+        || institutionMatches.contains(dto.getInstitutionKey());
   }
 
   @Override
-  LookupMapper<Collection> getLookupMapper() {
+  LookupMapper<CollectionMatchedDto> getLookupMapper() {
     return collectionMapper;
   }
 
   @Override
-  BaseMapper<Collection> getBaseMapper() {
-    return collectionMapper;
+  CollectionMatched toEntityMatched(CollectionMatchedDto dto) {
+    CollectionMatched collectionMatched = new CollectionMatched();
+    collectionMatched.setKey(dto.getKey());
+    collectionMatched.setCode(dto.getCode());
+    collectionMatched.setName(dto.getName());
+    collectionMatched.setSelf(URI.create(apiBaseUrl + "grscicoll/collection/" + dto.getKey()));
+    collectionMatched.setInstitutionKey(dto.getInstitutionKey());
+    collectionMatched.setInstitutionCode(dto.getInstitutionCode());
+    collectionMatched.setInstitutionName(dto.getInstitutionName());
+    collectionMatched.setInstitutionLink(
+        URI.create(apiBaseUrl + "grscicoll/institution/" + dto.getInstitutionKey()));
+    return collectionMatched;
   }
 
   @Override

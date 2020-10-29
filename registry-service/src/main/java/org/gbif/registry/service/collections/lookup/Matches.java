@@ -15,7 +15,7 @@
  */
 package org.gbif.registry.service.collections.lookup;
 
-import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.Match;
 
 import java.util.HashMap;
@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /** Wraps the response from the GrSciColl matchers. */
-public class Matches<T extends CollectionEntity> {
+public class Matches<T extends EntityMatched> {
   private Map<UUID, Match<T>> machineTagMatchesMap = new HashMap<>();
   private Map<UUID, Match<T>> exactMatchesMap = new HashMap<>();
   private Map<UUID, Match<T>> fuzzyMatchesMap = new HashMap<>();

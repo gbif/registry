@@ -15,22 +15,24 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
-import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.registry.DatasetService;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.service.collections.lookup.Matches;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -38,28 +40,39 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.api.model.collections.lookup.Match.Reason.*;
+import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.CODE_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.COLLECTION_TO_INSTITUTION_TAG;
+import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.INSTITUTION_TAG;
+import static org.gbif.api.model.collections.lookup.Match.Reason.KEY_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.Reason.PROBABLY_ON_LOAN;
 import static org.gbif.api.model.collections.lookup.Match.exact;
 import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 
 @Component
-public class InstitutionMatcher extends BaseMatcher<Institution> {
+public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, InstitutionMatched> {
 
   private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[\\h\\s+]");
   private final InstitutionMapper institutionMapper;
 
   @Autowired
-  public InstitutionMatcher(InstitutionMapper institutionMapper, DatasetService datasetService) {
-    super(datasetService);
+  public InstitutionMatcher(
+      InstitutionMapper institutionMapper,
+      DatasetService datasetService,
+      @Value("${api.root.url}") String apiBaseUrl) {
+    super(datasetService, apiBaseUrl);
     this.institutionMapper = institutionMapper;
   }
 
-  public Matches<Institution> matchInstitutions(LookupParams params) {
-    Matches<Institution> matches = new Matches<>();
+  public Matches<InstitutionMatched> matchInstitutions(LookupParams params) {
+    Matches<InstitutionMatched> matches = new Matches<>();
 
     matchWithMachineTags(params.getDatasetKey(), machineTagProcessor(params))
         .ifPresent(matches::setMachineTagMatchesMap);
@@ -79,7 +92,7 @@ public class InstitutionMatcher extends BaseMatcher<Institution> {
     return setAccepted(matches);
   }
 
-  private Matches<Institution> setAccepted(Matches<Institution> matches) {
+  private Matches<InstitutionMatched> setAccepted(Matches<InstitutionMatched> matches) {
     matches.setAcceptedMatch(
         chooseAccepted(
             extractMatches(matches.getMachineTagMatchesMap()),
@@ -92,7 +105,7 @@ public class InstitutionMatcher extends BaseMatcher<Institution> {
     return matches;
   }
 
-  private BiConsumer<MachineTag, Map<UUID, Match<Institution>>> machineTagProcessor(
+  private BiConsumer<MachineTag, Map<UUID, Match<InstitutionMatched>>> machineTagProcessor(
       LookupParams params) {
     return (mt, matchesMap) -> {
       if (INSTITUTION_TAG_NAME.equals(mt.getName())) {
@@ -104,103 +117,131 @@ public class InstitutionMatcher extends BaseMatcher<Institution> {
     };
   }
 
-  private Optional<Map<UUID, Match<Institution>>> findExactMatches(LookupParams params) {
+  private Optional<Map<UUID, Match<InstitutionMatched>>> findExactMatches(LookupParams params) {
     if (!params.containsInstitutionParams()) {
       return Optional.empty();
     }
 
-    Map<UUID, Match<Institution>> exactMatches = new HashMap<>();
+    Map<UUID, Match<InstitutionMatched>> exactMatches = new HashMap<>();
     // find by code and identifier.
-    List<Institution> institutionsFoundByCodeAndId =
+    List<InstitutionMatchedDto> institutionsFoundByCodeAndId =
         findByCodeAndId(params.getInstitutionCode(), params.getInstitutionId());
     // if found we don't look for more matches since these are exact matches
     institutionsFoundByCodeAndId.forEach(
-        i -> {
-          Match<Institution> exactMatch = exact(i, CODE_MATCH, IDENTIFIER_MATCH);
-          exactMatches.put(i.getKey(), exactMatch);
-          checkCountryMatch(params, exactMatch);
-          checkOwnerInstitutionMismatch(params, exactMatch);
+        dto -> {
+          Match<InstitutionMatched> exactMatch =
+              exact(toEntityMatched(dto), CODE_MATCH, IDENTIFIER_MATCH);
+          exactMatches.put(dto.getKey(), exactMatch);
+          if (matchesCountry(dto, params.getCountry())) {
+            exactMatch.addReason(Match.Reason.COUNTRY_MATCH);
+          }
+          if (!matchesOwnerInstitution(dto, params.getOwnerInstitutionCode())) {
+            exactMatch.addReason(PROBABLY_ON_LOAN);
+          }
         });
 
     return exactMatches.isEmpty() ? Optional.empty() : Optional.of(exactMatches);
   }
 
-  private Optional<Map<UUID, Match<Institution>>> findFuzzyMatches(
-      LookupParams params, Matches<Institution> allMatches) {
+  private Optional<Map<UUID, Match<InstitutionMatched>>> findFuzzyMatches(
+      LookupParams params, Matches<InstitutionMatched> allMatches) {
     if (!params.containsInstitutionParams()) {
       return Optional.empty();
     }
 
-    Map<UUID, Match<Institution>> fuzzyMatches = new HashMap<>();
-    BiConsumer<List<Institution>, Match.Reason> addFuzzyInstMatch =
+    Map<UUID, Match<InstitutionMatched>> fuzzyMatches = new HashMap<>();
+    BiConsumer<List<InstitutionMatchedDto>, Match.Reason> addFuzzyInstMatch =
         (l, r) ->
             l.stream()
-                .filter(i -> !allMatches.getExactMatchesMap().containsKey(i.getKey()))
+                .filter(dto -> !allMatches.getExactMatchesMap().containsKey(dto.getKey()))
                 .forEach(
-                    i -> {
-                      Match<Institution> fuzzyMatch =
-                          fuzzyMatches.computeIfAbsent(i.getKey(), k -> fuzzy(i)).addReason(r);
-                      checkCountryMatch(params, fuzzyMatch);
-                      checkOwnerInstitutionMismatch(params, fuzzyMatch);
+                    dto -> {
+                      Match<InstitutionMatched> fuzzyMatch =
+                          fuzzyMatches
+                              .computeIfAbsent(dto.getKey(), k -> fuzzy(toEntityMatched(dto)))
+                              .addReason(r);
+                      if (matchesCountry(dto, params.getCountry())) {
+                        fuzzyMatch.addReason(Match.Reason.COUNTRY_MATCH);
+                      }
+                      if (!matchesOwnerInstitution(dto, params.getOwnerInstitutionCode())) {
+                        fuzzyMatch.addReason(PROBABLY_ON_LOAN);
+                      }
                     });
 
     // find matches by code
-    addFuzzyInstMatch.accept(findByCode(params.getInstitutionCode()), CODE_MATCH);
+    CompletableFuture<List<InstitutionMatchedDto>> codeSearch =
+        CompletableFuture.supplyAsync(() -> findByCode(params.getInstitutionCode()));
 
     // find matches by identifier
-    addFuzzyInstMatch.accept(findByIdentifier(params.getInstitutionId()), IDENTIFIER_MATCH);
+    CompletableFuture<List<InstitutionMatchedDto>> identifierSearch =
+        CompletableFuture.supplyAsync(() -> findByIdentifier(params.getInstitutionId()));
 
     // find matches by alternative code
-    addFuzzyInstMatch.accept(
-        findByAlternativeCode(params.getInstitutionCode()), ALTERNATIVE_CODE_MATCH);
+    CompletableFuture<List<InstitutionMatchedDto>> altCodeSearch =
+        CompletableFuture.supplyAsync(() -> findByAlternativeCode(params.getInstitutionCode()));
 
-    // find matches by using the code as name
-    addFuzzyInstMatch.accept(findByName(params.getInstitutionCode()), NAME_MATCH);
-
-    // find matches by using the id as name
-    addFuzzyInstMatch.accept(findByName(params.getInstitutionId()), NAME_MATCH);
+    // find matches by using the code and the id as name
+    CompletableFuture<List<InstitutionMatchedDto>> nameSearch =
+        CompletableFuture.supplyAsync(
+            () -> findByName(params.getInstitutionCode(), params.getInstitutionId()));
 
     // find matches by using the id as key
-    addFuzzyInstMatch.accept(findByKey(params.getInstitutionId()), KEY_MATCH);
+    CompletableFuture<List<InstitutionMatchedDto>> keySearch =
+        CompletableFuture.supplyAsync(() -> findByKey(params.getInstitutionId()));
+
+    CompletableFuture.allOf(codeSearch, identifierSearch, altCodeSearch, nameSearch, keySearch)
+        .join();
+
+    // add results to the matches
+    addFuzzyInstMatch.accept(codeSearch.join(), CODE_MATCH);
+    addFuzzyInstMatch.accept(identifierSearch.join(), IDENTIFIER_MATCH);
+    addFuzzyInstMatch.accept(altCodeSearch.join(), ALTERNATIVE_CODE_MATCH);
+    addFuzzyInstMatch.accept(nameSearch.join(), NAME_MATCH);
+    addFuzzyInstMatch.accept(keySearch.join(), KEY_MATCH);
 
     return fuzzyMatches.isEmpty() ? Optional.empty() : Optional.of(fuzzyMatches);
   }
 
-  private void checkOwnerInstitutionMismatch(LookupParams params, Match<Institution> match) {
-    if (Strings.isNullOrEmpty(params.getOwnerInstitutionCode())) {
-      return;
+  private boolean matchesOwnerInstitution(InstitutionMatchedDto dto, String ownerInstitutionCode) {
+    if (Strings.isNullOrEmpty(ownerInstitutionCode)) {
+      return true;
     }
-    if (match.getEntityMatched().getCode().equals(params.getOwnerInstitutionCode().trim())) {
-      return;
+
+    if (dto.getCode().equals(ownerInstitutionCode.trim())) {
+      return true;
     }
 
     UnaryOperator<String> nameNormalizer =
         s -> StringUtils.stripAccents(WHITESPACE_PATTERN.matcher(s).replaceAll(""));
 
     if (nameNormalizer
-        .apply(match.getEntityMatched().getName())
-        .equalsIgnoreCase(nameNormalizer.apply(params.getOwnerInstitutionCode()))) {
-      return;
+        .apply(dto.getName())
+        .equalsIgnoreCase(nameNormalizer.apply(ownerInstitutionCode))) {
+      return true;
     }
 
-    if (match.getEntityMatched().getIdentifiers() != null
-        && match.getEntityMatched().getIdentifiers().stream()
-            .anyMatch(i -> i.getIdentifier().equals(params.getOwnerInstitutionCode()))) {
-      return;
+    if (dto.getIdentifiers() != null
+        && dto.getIdentifiers().stream()
+            .anyMatch(i -> i.getIdentifier().equals(ownerInstitutionCode))) {
+      return true;
     }
 
-    // if the owner code doesn't match with the entity matched we add a reason
-    match.getReasons().add(PROBABLY_ON_LOAN);
+    return false;
   }
 
   @Override
-  LookupMapper<Institution> getLookupMapper() {
+  LookupMapper<InstitutionMatchedDto> getLookupMapper() {
     return institutionMapper;
   }
 
   @Override
-  BaseMapper<Institution> getBaseMapper() {
-    return institutionMapper;
+  InstitutionMatched toEntityMatched(InstitutionMatchedDto dto) {
+    InstitutionMatched institutionMatched = new InstitutionMatched();
+    institutionMatched.setKey(dto.getKey());
+    institutionMatched.setCode(dto.getCode());
+    institutionMatched.setName(dto.getName());
+    institutionMatched.setSelf(URI.create(apiBaseUrl + "grscicoll/institution/" + dto.getKey()));
+    return institutionMatched;
   }
 
   @Override
