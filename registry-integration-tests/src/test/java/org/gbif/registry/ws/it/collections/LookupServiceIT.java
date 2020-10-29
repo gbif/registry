@@ -19,6 +19,8 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.lookup.CollectionMatched;
+import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.model.collections.lookup.Match;
@@ -145,7 +147,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -153,7 +155,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
     assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
@@ -173,7 +175,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -181,7 +183,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
     assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
@@ -201,7 +203,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -209,7 +211,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
@@ -229,7 +231,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -238,7 +240,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
@@ -261,7 +263,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
     assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(2, institutionMatch.getReasons().size());
@@ -270,7 +272,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(2, collectionMatch.getReasons().size());
@@ -298,7 +300,8 @@ public class LookupServiceIT extends BaseItTest {
     assertNull(result.getCollectionMatch().getStatus());
     assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
 
-    Match<Institution> alternative = result.getAlternativeMatches().getInstitutionMatches().get(0);
+    Match<InstitutionMatched> alternative =
+        result.getAlternativeMatches().getInstitutionMatches().get(0);
     assertEquals(Match.MatchType.EXACT, alternative.getMatchType());
     assertEquals(i2.getKey(), alternative.getEntityMatched().getKey());
     assertEquals(3, alternative.getReasons().size());
@@ -320,7 +323,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -328,7 +331,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(3, collectionMatch.getReasons().size());
@@ -350,7 +353,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -381,7 +384,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.MACHINE_TAG, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -389,7 +392,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.MACHINE_TAG, collectionMatch.getMatchType());
     assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
@@ -420,7 +423,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.MACHINE_TAG, institutionMatch.getMatchType());
     assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
@@ -428,7 +431,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
-    Match<Collection> collectionMatch = result.getCollectionMatch();
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.MACHINE_TAG, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
@@ -450,7 +453,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(2, institutionMatch.getReasons().size());
@@ -459,7 +462,8 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
 
     assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
-    Match<Institution> alternative = result.getAlternativeMatches().getInstitutionMatches().get(0);
+    Match<InstitutionMatched> alternative =
+        result.getAlternativeMatches().getInstitutionMatches().get(0);
     assertEquals(Match.MatchType.FUZZY, alternative.getMatchType());
     assertEquals(i2.getKey(), alternative.getEntityMatched().getKey());
     assertEquals(1, alternative.getReasons().size());
@@ -480,7 +484,7 @@ public class LookupServiceIT extends BaseItTest {
 
     // Should
     assertNotNull(result.getInstitutionMatch());
-    Match<Institution> institutionMatch = result.getInstitutionMatch();
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
     assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(2, institutionMatch.getReasons().size());

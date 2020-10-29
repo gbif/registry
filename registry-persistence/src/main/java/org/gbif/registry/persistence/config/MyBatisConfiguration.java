@@ -61,6 +61,8 @@ import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
@@ -140,6 +142,8 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("CollectionPerson", Person.class);
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("InstitutionMatchedDto", InstitutionMatchedDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("CollectionMatchedDto", CollectionMatchedDto.class);
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
