@@ -91,7 +91,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
 
     return new BaseEmailModel(
         emailAddresses,
-        emailType.getSubject(locale, emailType, subjectParams),
+        emailType.getSubject(locale, subjectParams),
         htmlBody,
         ccAddresses);
   }

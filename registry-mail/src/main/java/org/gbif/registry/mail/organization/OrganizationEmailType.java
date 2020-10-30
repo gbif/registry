@@ -17,9 +17,10 @@ package org.gbif.registry.mail.organization;
 
 import org.gbif.registry.mail.EmailType;
 
-import java.text.MessageFormat;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.ResourceBundle;
+
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 /** Type of emails related to organization endorsement */
 public enum OrganizationEmailType implements EmailType {
@@ -33,8 +34,16 @@ public enum OrganizationEmailType implements EmailType {
   /** Email 'Password reminder'. */
   PASSWORD_REMINDER("passwordReminder", "organization_password_reminder.ftl");
 
+  private static final ResourceBundleMessageSource MESSAGE_SOURCE;
+
   private final String key;
   private final String template;
+
+  static {
+    MESSAGE_SOURCE = new ResourceBundleMessageSource();
+    MESSAGE_SOURCE.setBasename("email/subjects/organization_email_subjects");
+    MESSAGE_SOURCE.setDefaultEncoding(StandardCharsets.UTF_8.displayName());
+  }
 
   OrganizationEmailType(String key, String template) {
     this.key = key;
@@ -52,13 +61,7 @@ public enum OrganizationEmailType implements EmailType {
   }
 
   @Override
-  public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
-    ResourceBundle bundle = ResourceBundle.getBundle("email/subjects/email_subjects", locale);
-    String rawSubjectString = bundle.getString(emailType.getKey());
-    if (subjectParams.length == 0) {
-      return rawSubjectString;
-    } else {
-      return MessageFormat.format(rawSubjectString, (Object[]) subjectParams);
-    }
+  public String getSubject(Locale locale, String... subjectParams) {
+    return MESSAGE_SOURCE.getMessage(this.getKey(), subjectParams, locale);
   }
 }
