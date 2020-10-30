@@ -38,9 +38,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Strings;
 
 import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;
@@ -61,8 +58,6 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
   public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
   public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
 
-  private static final Logger LOG = LoggerFactory.getLogger(BaseMatcher.class);
-
   private final DatasetService datasetService;
   protected final String apiBaseUrl;
 
@@ -72,13 +67,8 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
   }
 
   protected Optional<Set<Match<R>>> matchWithMachineTags(
-      UUID datasetKey, BiConsumer<MachineTag, Map<UUID, Match<R>>> tagProcessor) {
-    if (datasetKey == null) {
-      return Optional.empty();
-    }
-
-    List<MachineTag> machineTags = getDatasetMachineTags(datasetKey);
-    if (machineTags.isEmpty()) {
+      List<MachineTag> machineTags, BiConsumer<MachineTag, Map<UUID, Match<R>>> tagProcessor) {
+    if (machineTags == null || machineTags.isEmpty()) {
       return Optional.empty();
     }
 
@@ -111,16 +101,6 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
               .addReason(reason);
         }
       }
-    }
-  }
-
-  private List<MachineTag> getDatasetMachineTags(UUID datasetKey) {
-    try {
-      // done in a try-catch since we may get non-existing dataset keys
-      return datasetService.listMachineTags(datasetKey);
-    } catch (Exception ex) {
-      LOG.warn("Couldn't find dataset for key {}", datasetKey);
-      return Collections.emptyList();
     }
   }
 

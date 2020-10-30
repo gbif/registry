@@ -63,10 +63,11 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     this.institutionMapper = institutionMapper;
   }
 
-  public Matches<InstitutionMatched> matchInstitutions(LookupParams params) {
+  public Matches<InstitutionMatched> matchInstitutions(
+      LookupParams params, List<MachineTag> datasetMachineTags) {
     Matches<InstitutionMatched> matches = new Matches<>();
 
-    matchWithMachineTags(params.getDatasetKey(), machineTagProcessor(params))
+    matchWithMachineTags(datasetMachineTags, machineTagProcessor(params))
         .ifPresent(matches::setMachineTagMatches);
 
     if (isEnoughMatches(params, matches)) {

@@ -58,10 +58,10 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
   }
 
   public Matches<CollectionMatched> matchCollections(
-      LookupParams params, Set<UUID> institutionMatches) {
+      LookupParams params, Set<UUID> institutionMatches, List<MachineTag> datasetMachineTags) {
     Matches<CollectionMatched> matches = new Matches<>();
 
-    matchWithMachineTags(params.getDatasetKey(), machineTagProcessor(params))
+    matchWithMachineTags(datasetMachineTags, machineTagProcessor(params))
         .ifPresent(matches::setMachineTagMatches);
 
     if (isEnoughMatches(params, matches)) {
