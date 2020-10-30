@@ -30,4 +30,16 @@ public interface EntityMatchedDto {
   Country getAddressCountry();
 
   Country getMailingAddressCountry();
+
+  boolean isKeyMatch();
+
+  boolean isCodeMatch();
+
+  boolean isAlternativeCodeMatch();
+
+  boolean isIdentifierMatch();
+
+  boolean isNameMatchWithIdentifier();
+
+  boolean isNameMatchWithCode();
 }

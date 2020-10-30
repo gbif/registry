@@ -27,9 +27,7 @@ import org.apache.ibatis.annotations.Param;
 public interface LookupMapper<T extends EntityMatchedDto> {
 
   List<T> lookup(
-      @Nullable @Param("key") UUID key,
       @Nullable @Param("code") String code,
       @Nullable @Param("identifier") String identifier,
-      @Nullable @Param("names") List<String> names,
-      @Nullable @Param("alternativeCode") String alternativeCode);
+      @Nullable @Param("key") UUID key);
 }

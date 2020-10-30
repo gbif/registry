@@ -37,7 +37,6 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +49,8 @@ import static org.gbif.api.model.collections.lookup.Match.Reason.COUNTRY_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.KEY_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
+import static org.gbif.api.model.collections.lookup.Match.exact;
+import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 
 /** Base matcher that contains common methods for the GrSciColl matchers. */
 public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMatched> {
@@ -70,67 +71,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     this.apiBaseUrl = apiBaseUrl;
   }
 
-  protected List<T> findByCodeAndId(String code, String id) {
-    if (!Strings.isNullOrEmpty(code) && !Strings.isNullOrEmpty(id)) {
-      return getLookupMapper().lookup(null, code, id, null, null);
-    }
-    return Collections.emptyList();
-  }
-
-  protected List<T> findByAlternativeCode(String alternativeCode) {
-    if (!Strings.isNullOrEmpty(alternativeCode)) {
-      return getLookupMapper().lookup(null, null, null, null, alternativeCode);
-    }
-    return Collections.emptyList();
-  }
-
-  protected List<T> findByCode(String code) {
-    if (!Strings.isNullOrEmpty(code)) {
-      return getLookupMapper().lookup(null, code, null, null, null);
-    }
-    return Collections.emptyList();
-  }
-
-  protected List<T> findByName(String... names) {
-    List<String> namesList = parseParamsList(names);
-    if (!namesList.isEmpty()) {
-      return getLookupMapper().lookup(null, null, null, namesList, null);
-    }
-    return Collections.emptyList();
-  }
-
-  protected List<T> findByIdentifier(String id) {
-    if (!Strings.isNullOrEmpty(id)) {
-      return getLookupMapper().lookup(null, null, id, null, null);
-    }
-    return Collections.emptyList();
-  }
-
-  protected List<T> findByKey(String keyAsString) {
-    if (!Strings.isNullOrEmpty(keyAsString)) {
-      try {
-        T entity = findByKey(UUID.fromString(keyAsString));
-        if (entity != null) {
-          return Collections.singletonList(entity);
-        }
-      } catch (Exception ex) {
-        LOG.warn("Couldn't find entity by key: {}", keyAsString, ex);
-      }
-    }
-    return Collections.emptyList();
-  }
-
-  private T findByKey(UUID key) {
-    if (key != null) {
-      List<T> dtos = getLookupMapper().lookup(key, null, null, null, null);
-      if (dtos.size() == 1) {
-        return dtos.get(0);
-      }
-    }
-    return null;
-  }
-
-  protected Optional<Map<UUID, Match<R>>> matchWithMachineTags(
+  protected Optional<Set<Match<R>>> matchWithMachineTags(
       UUID datasetKey, BiConsumer<MachineTag, Map<UUID, Match<R>>> tagProcessor) {
     if (datasetKey == null) {
       return Optional.empty();
@@ -146,7 +87,9 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         .filter(isMachineTagSupported())
         .forEach(mt -> tagProcessor.accept(mt, matchesMap));
 
-    return matchesMap.isEmpty() ? Optional.empty() : Optional.of(matchesMap);
+    return matchesMap.isEmpty()
+        ? Optional.empty()
+        : Optional.of(new HashSet<>(matchesMap.values()));
   }
 
   protected void addMachineTagMatch(
@@ -161,10 +104,10 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       String mtCode = mt.getValue().substring(val[0].length() + 1);
 
       if (!Strings.isNullOrEmpty(param) && mtCode.equals(param)) {
-        T entity = findByKey(mtKey);
-        if (entity != null) {
+        List<T> entity = getLookupMapper().lookup(null, null, mtKey);
+        if (entity != null && entity.size() == 1) {
           matchesMap
-              .computeIfAbsent(mtKey, k -> Match.machineTag(toEntityMatched(entity)))
+              .computeIfAbsent(mtKey, k -> Match.machineTag(toEntityMatched(entity.get(0))))
               .addReason(reason);
         }
       }
@@ -276,10 +219,6 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     return !matches.isEmpty() && !params.isVerbose();
   }
 
-  protected Set<Match<R>> extractMatches(Map<UUID, Match<R>> map) {
-    return !map.isEmpty() ? new HashSet<>(map.values()) : Collections.emptySet();
-  }
-
   protected Set<Match<R>> filterMatches(
       Set<Match<R>> matches, Predicate<Match<R>> filterCondition) {
     return filterCondition != null
@@ -287,11 +226,51 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         : matches;
   }
 
-  private static List<String> parseParamsList(String... params) {
-    if (params != null) {
-      return Stream.of(params).filter(c -> !Strings.isNullOrEmpty(c)).collect(Collectors.toList());
+  protected List<T> getDbMatches(String codeParam, String identifierParam) {
+    String code = !Strings.isNullOrEmpty(codeParam) ? codeParam.trim() : null;
+    String identifier = !Strings.isNullOrEmpty(identifierParam) ? identifierParam.trim() : null;
+
+    if (code == null && identifier == null) {
+      return Collections.emptyList();
     }
-    return Collections.emptyList();
+
+    UUID key = null;
+    if (identifier != null) {
+      try {
+        key = UUID.fromString(identifier);
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+
+    return getLookupMapper().lookup(code, identifier, key);
+  }
+
+  protected Match<R> createMatch(Set<Match<R>> exactMatches, Set<Match<R>> fuzzyMatches, T dto) {
+    Match<R> match = null;
+    if (dto.isCodeMatch() && dto.isIdentifierMatch()) {
+      match = exact(toEntityMatched(dto), CODE_MATCH, IDENTIFIER_MATCH);
+      exactMatches.add(match);
+    } else {
+      match = fuzzy(toEntityMatched(dto));
+      fuzzyMatches.add(match);
+      if (dto.isKeyMatch()) {
+        match.addReason(KEY_MATCH);
+      }
+      if (dto.isCodeMatch()) {
+        match.addReason(CODE_MATCH);
+      }
+      if (dto.isIdentifierMatch()) {
+        match.addReason(IDENTIFIER_MATCH);
+      }
+      if (dto.isAlternativeCodeMatch()) {
+        match.addReason(ALTERNATIVE_CODE_MATCH);
+      }
+      if (dto.isNameMatchWithCode() || dto.isNameMatchWithIdentifier()) {
+        match.addReason(NAME_MATCH);
+      }
+    }
+    return match;
   }
 
   abstract LookupMapper<T> getLookupMapper();

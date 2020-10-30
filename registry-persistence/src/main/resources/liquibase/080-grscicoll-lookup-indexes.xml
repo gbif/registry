@@ -1,0 +1,34 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="80" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+          CREATE OR REPLACE FUNCTION normalize_name(input text)
+          RETURNS text AS
+          $BODY$
+              select regexp_replace(quote_literal(unaccent(lower(trim(input)))),'\s+','','g');
+          $BODY$
+          LANGUAGE SQL
+          IMMUTABLE
+          RETURNS NULL ON NULL INPUT;
+
+          CREATE INDEX normalized_institution_name_idx ON institution(normalize_name(name));
+          CREATE INDEX normalized_collection_name_idx ON collection(normalize_name(name));
+
+          CREATE OR REPLACE FUNCTION normalize_identifier(input text)
+          RETURNS text AS
+          $BODY$
+              select regexp_replace(trim(input), 'http://|https://|urn:uuid:|urn:lsid:', '');
+          $BODY$
+          LANGUAGE SQL
+          IMMUTABLE
+          RETURNS NULL ON NULL INPUT;
+
+          CREATE INDEX normalized_identifier_idx ON identifier(normalize_identifier(identifier));
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

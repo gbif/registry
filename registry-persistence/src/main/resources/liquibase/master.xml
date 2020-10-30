@@ -85,4 +85,5 @@
   <include file="liquibase/077-challenge-code-data-field.xml" />
   <include file="liquibase/078-download-format-bionomia.xml" />
   <include file="liquibase/079-derived-dataset-fields.xml" />
+  <include file="liquibase/080-grscicoll-lookup-indexes.xml" />
 </databaseChangeLog>
