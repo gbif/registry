@@ -274,34 +274,41 @@
   </select>
 
   <select id="lookup" resultMap="INSTITUTION_MATCHED_DTO_MAP">
-    SELECT i.key, i.name, i.code, addr.country addressCountry, mailing_addr.country mailingAddressCountry
+    SELECT DISTINCT ON (i.key) i.key, i.name, i.code, addr.country addressCountry, mailing_addr.country mailingAddressCountry
+    <if test="key != null" >
+      ,i.key = #{key,jdbcType=OTHER} AS key_match
+    </if>
+    <if test="identifier != null" >
+      ,normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AS identifier_match
+      ,normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AS name_match_with_identifier
+    </if>
+    <if test="code != null" >
+      ,i.code = #{code,jdbcType=VARCHAR} AS code_match
+      ,i.alternative_codes ?? #{code,jdbcType=VARCHAR} AS alternative_code_match
+      ,normalize_name(i.name) = normalize_name(#{code,jdbcType=VARCHAR}) AS name_match_with_code
+    </if>
     FROM institution i
     LEFT JOIN address addr ON addr.key = i.address_key
     LEFT JOIN address mailing_addr ON mailing_addr.key = i.mailing_address_key
     <if test="identifier != null" >
-      INNER JOIN institution_identifier ii ON ii.institution_key = i.key
-      INNER JOIN identifier id ON ii.identifier_key = id."key"
+      LEFT JOIN institution_identifier ii ON ii.institution_key = i.key
+      LEFT JOIN identifier id ON ii.identifier_key = id."key"
     </if>
-    WHERE i.deleted is null
-    <if test="key != null" >
-      AND i.key = #{key,jdbcType=VARCHAR}
-    </if>
-    <if test="code != null" >
-      AND trim(i.code) = trim(#{code,jdbcType=VARCHAR})
-    </if>
-    <if test="identifier != null" >
-      AND regexp_replace(trim(id.identifier), 'http://|https://|urn:uuid:|urn:lsid:', '') = regexp_replace(trim(#{identifier,jdbcType=VARCHAR}), 'http://|https://|urn:uuid:|urn:lsid:', '')
-    </if>
-    <if test="names != null" >
-      AND
-      <foreach collection="names" item="name" separator=" OR ">
-        regexp_replace(quote_literal(unaccent(lower(trim(i.name)))),'\s+','','g') = regexp_replace(quote_literal(unaccent(lower(trim(#{name,jdbcType=VARCHAR})))),'\s+','','g')
-      </foreach>
-    </if>
-    <if test="alternativeCode != null" >
-      AND i.alternative_codes ?? trim(#{alternativeCode,jdbcType=VARCHAR})
-    </if>
-    LIMIT 5
+    <where>
+      <if test="key != null" >
+        i.key = #{key,jdbcType=OTHER}
+      </if>
+      <if test="identifier != null" >
+        OR normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR})
+        OR normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR})
+      </if>
+      <if test="code != null" >
+        OR i.code = #{code,jdbcType=VARCHAR}
+        OR i.alternative_codes ?? #{code,jdbcType=VARCHAR}
+        OR normalize_name(i.name) = normalize_name(#{code,jdbcType=VARCHAR})
+      </if>
+      AND i.deleted is null
+    </where>
   </select>
 
   <!-- TAGS -->

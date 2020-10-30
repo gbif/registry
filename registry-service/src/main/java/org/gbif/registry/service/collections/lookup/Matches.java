@@ -18,59 +18,56 @@ package org.gbif.registry.service.collections.lookup;
 import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.Match;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 /** Wraps the response from the GrSciColl matchers. */
 public class Matches<T extends EntityMatched> {
-  private Map<UUID, Match<T>> machineTagMatchesMap = new HashMap<>();
-  private Map<UUID, Match<T>> exactMatchesMap = new HashMap<>();
-  private Map<UUID, Match<T>> fuzzyMatchesMap = new HashMap<>();
+  private Set<Match<T>> machineTagMatches = new HashSet<>();
+  private Set<Match<T>> exactMatches = new HashSet<>();
+  private Set<Match<T>> fuzzyMatches = new HashSet<>();
   private Match<T> acceptedMatch;
 
   public Set<Match<T>> getAllMatches() {
     Set<Match<T>> all = new HashSet<>();
-    if (machineTagMatchesMap != null) {
-      all.addAll(machineTagMatchesMap.values());
+    if (machineTagMatches != null) {
+      all.addAll(machineTagMatches);
     }
-    if (exactMatchesMap != null) {
-      all.addAll(exactMatchesMap.values());
+    if (exactMatches != null) {
+      all.addAll(exactMatches);
     }
-    if (fuzzyMatchesMap != null) {
-      all.addAll(fuzzyMatchesMap.values());
+    if (fuzzyMatches != null) {
+      all.addAll(fuzzyMatches);
     }
     return all;
   }
 
   public boolean isEmpty() {
-    return machineTagMatchesMap.isEmpty() && exactMatchesMap.isEmpty() && fuzzyMatchesMap.isEmpty();
+    return machineTagMatches.isEmpty() && exactMatches.isEmpty() && fuzzyMatches.isEmpty();
   }
 
-  public Map<UUID, Match<T>> getMachineTagMatchesMap() {
-    return machineTagMatchesMap;
+  public Set<Match<T>> getMachineTagMatches() {
+    return machineTagMatches;
   }
 
-  public void setMachineTagMatchesMap(Map<UUID, Match<T>> machineTagMatchesMap) {
-    this.machineTagMatchesMap = machineTagMatchesMap;
+  public void setMachineTagMatches(Set<Match<T>> machineTagMatches) {
+    this.machineTagMatches = machineTagMatches;
   }
 
-  public Map<UUID, Match<T>> getExactMatchesMap() {
-    return exactMatchesMap;
+  public Set<Match<T>> getExactMatches() {
+    return exactMatches;
   }
 
-  public void setExactMatchesMap(Map<UUID, Match<T>> exactMatchesMap) {
-    this.exactMatchesMap = exactMatchesMap;
+  public void setExactMatches(Set<Match<T>> exactMatches) {
+    this.exactMatches = exactMatches;
   }
 
-  public Map<UUID, Match<T>> getFuzzyMatchesMap() {
-    return fuzzyMatchesMap;
+  public Set<Match<T>> getFuzzyMatches() {
+    return fuzzyMatches;
   }
 
-  public void setFuzzyMatchesMap(Map<UUID, Match<T>> fuzzyMatchesMap) {
-    this.fuzzyMatchesMap = fuzzyMatchesMap;
+  public void setFuzzyMatches(Set<Match<T>> fuzzyMatches) {
+    this.fuzzyMatches = fuzzyMatches;
   }
 
   public Match<T> getAcceptedMatch() {
