@@ -90,10 +90,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
         FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, templateDataModel);
 
     return new BaseEmailModel(
-        emailAddresses,
-        emailType.getSubject(locale, emailType, subjectParams),
-        htmlBody,
-        ccAddresses);
+        emailAddresses, emailType.getSubject(locale, subjectParams), htmlBody, ccAddresses);
   }
 
   private Configuration createFreemarkerConfiguration(Locale locale) {

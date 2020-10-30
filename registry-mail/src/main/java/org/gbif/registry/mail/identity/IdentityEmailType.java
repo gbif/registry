@@ -17,9 +17,10 @@ package org.gbif.registry.mail.identity;
 
 import org.gbif.registry.mail.EmailType;
 
-import java.text.MessageFormat;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
-import java.util.ResourceBundle;
+
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * Type of emails related to 'identity' functionality like: welcome email, create new account and reset
@@ -62,8 +63,16 @@ public enum IdentityEmailType implements EmailType {
    */
   EMAIL_CHANGED("emailChanged", "email_changed.ftl");
 
+  private static final ResourceBundleMessageSource MESSAGE_SOURCE;
+
   private final String key;
   private final String template;
+
+  static {
+    MESSAGE_SOURCE = new ResourceBundleMessageSource();
+    MESSAGE_SOURCE.setBasename("email/subjects/identity_email_subjects");
+    MESSAGE_SOURCE.setDefaultEncoding(StandardCharsets.UTF_8.displayName());
+  }
 
   IdentityEmailType(String key, String template) {
     this.key = key;
@@ -81,14 +90,7 @@ public enum IdentityEmailType implements EmailType {
   }
 
   @Override
-  public String getSubject(Locale locale, EmailType emailType, String... subjectParams) {
-    ResourceBundle bundle =
-        ResourceBundle.getBundle("email/subjects/identity_email_subjects", locale);
-    String rawSubjectString = bundle.getString(emailType.getKey());
-    if (subjectParams.length == 0) {
-      return rawSubjectString;
-    } else {
-      return MessageFormat.format(rawSubjectString, (Object[]) subjectParams);
-    }
+  public String getSubject(Locale locale, String... subjectParams) {
+    return MESSAGE_SOURCE.getMessage(this.getKey(), subjectParams, locale);
   }
 }
