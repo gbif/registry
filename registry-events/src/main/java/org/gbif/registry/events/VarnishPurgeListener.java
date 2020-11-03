@@ -304,7 +304,7 @@ public class VarnishPurgeListener {
     for (Person p : persons) {
       List<CollectionView> collections =
           collectionService
-              .list(CollectionSearchRequest.builder().contactKey(p.getKey()).build())
+              .list(CollectionSearchRequest.builder().contact(p.getKey()).build())
               .getResults();
       collections.forEach(c -> collectionKeys.add(c.getCollection().getKey()));
     }
@@ -313,7 +313,7 @@ public class VarnishPurgeListener {
     for (Person p : persons) {
       List<Institution> institutions =
           institutionService
-              .list(InstitutionSearchRequest.builder().contactKey(p.getKey()).build())
+              .list(InstitutionSearchRequest.builder().contact(p.getKey()).build())
               .getResults();
       institutions.forEach(i -> institutionKeys.add(i.getKey()));
     }

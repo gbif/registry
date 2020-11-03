@@ -113,8 +113,8 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
 
     CollectionSearchParams params =
         CollectionSearchParams.builder()
-            .institutionKey(searchRequest.getInstitutionKey())
-            .contactKey(searchRequest.getContactKey())
+            .institutionKey(searchRequest.getInstitution())
+            .contactKey(searchRequest.getContact())
             .query(query)
             .code(searchRequest.getCode())
             .name(searchRequest.getName())
