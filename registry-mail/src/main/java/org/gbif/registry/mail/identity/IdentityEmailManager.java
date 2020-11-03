@@ -101,7 +101,7 @@ public class IdentityEmailManager {
     try {
       return generateConfirmationEmailModel(
           user,
-          generateConfirmUserUrl(user.getUserName(), challengeCode.getCode()),
+          generateConfirmUserUrl(user.getLocale(), user.getUserName(), challengeCode.getCode()),
           IdentityEmailType.NEW_USER);
     } catch (TemplateException e) {
       throw new IOException(e);
@@ -113,7 +113,7 @@ public class IdentityEmailManager {
     try {
       return generateConfirmationEmailModel(
           user,
-          generateResetPasswordUrl(user.getUserName(), challengeCode.getCode()),
+          generateResetPasswordUrl(user.getLocale(), user.getUserName(), challengeCode.getCode()),
           IdentityEmailType.RESET_PASSWORD);
     } catch (TemplateException e) {
       throw new IOException(e);
@@ -162,7 +162,7 @@ public class IdentityEmailManager {
   public BaseEmailModel generateAccountEmailChangeEmailModel(
       GbifUser user, String newEmail, ChallengeCode challengeCode) throws IOException {
     try {
-      URL url = generateChangeEmailUrl(user.getUserName(), challengeCode.getCode(), newEmail);
+      URL url = generateChangeEmailUrl(user.getLocale(), user.getUserName(), challengeCode.getCode(), newEmail);
       BaseTemplateDataModel dataModel =
           new AccountChangeEmailTemplateDataModel(
               user.getUserName(), url, user.getEmail(), newEmail);
@@ -190,29 +190,32 @@ public class IdentityEmailManager {
     }
   }
 
-  private URL generateConfirmUserUrl(String userName, UUID confirmationKey)
+  private URL generateConfirmUserUrl(Locale locale, String userName, UUID confirmationKey)
       throws MalformedURLException {
     return new URL(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getConfirmUser(),
+            locale != null ? locale : Locale.ENGLISH,
             userName,
             confirmationKey.toString()));
   }
 
-  private URL generateResetPasswordUrl(String userName, UUID confirmationKey)
+  private URL generateResetPasswordUrl(Locale locale, String userName, UUID confirmationKey)
       throws MalformedURLException {
     return new URL(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getResetPassword(),
+            locale != null ? locale : Locale.ENGLISH,
             userName,
             confirmationKey.toString()));
   }
 
-  private URL generateChangeEmailUrl(String userName, UUID confirmationKey, String email)
+  private URL generateChangeEmailUrl(Locale locale, String userName, UUID confirmationKey, String email)
       throws MalformedURLException, UnsupportedEncodingException {
     return new URL(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
+            locale != null ? locale : Locale.ENGLISH,
             userName,
             confirmationKey.toString(),
             URLEncoder.encode(email, StandardCharsets.UTF_8.name())));
