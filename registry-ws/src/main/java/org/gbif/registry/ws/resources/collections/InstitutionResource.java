@@ -105,7 +105,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
     InstitutionSearchParams params =
         InstitutionSearchParams.builder()
             .query(query)
-            .contactKey(searchRequest.getContactKey())
+            .contactKey(searchRequest.getContact())
             .code(searchRequest.getCode())
             .name(searchRequest.getName())
             .alternativeCode(searchRequest.getAlternativeCode())

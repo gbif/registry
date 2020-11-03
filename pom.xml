@@ -96,7 +96,7 @@
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-download-query-tools.version>1.34</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.45</gbif-postal-service.version>
-    <gbif-api.version>0.124</gbif-api.version>
+    <gbif-api.version>0.125-SNAPSHOT</gbif-api.version>
     <gbif-directory.version>1.10</gbif-directory.version>
     <gbif-metrics.version>1.0</gbif-metrics.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>

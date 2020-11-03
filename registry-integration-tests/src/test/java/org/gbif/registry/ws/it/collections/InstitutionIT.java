@@ -324,21 +324,13 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         1,
         service
-            .list(
-                InstitutionSearchRequest.builder()
-                    .contactKey(personKey1)
-                    .page(DEFAULT_PAGE)
-                    .build())
+            .list(InstitutionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list(
-                InstitutionSearchRequest.builder()
-                    .contactKey(personKey2)
-                    .page(DEFAULT_PAGE)
-                    .build())
+            .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
@@ -346,7 +338,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
         service
             .list(
                 InstitutionSearchRequest.builder()
-                    .contactKey(UUID.randomUUID())
+                    .contact(UUID.randomUUID())
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -356,11 +348,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(
         1,
         service
-            .list(
-                InstitutionSearchRequest.builder()
-                    .contactKey(personKey2)
-                    .page(DEFAULT_PAGE)
-                    .build())
+            .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }

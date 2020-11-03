@@ -264,7 +264,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     PagingResponse<CollectionView> response =
         service.list(
             CollectionSearchRequest.builder()
-                .institutionKey(institutionKey1)
+                .institution(institutionKey1)
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(2, response.getResults().size());
@@ -272,7 +272,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     response =
         service.list(
             CollectionSearchRequest.builder()
-                .institutionKey(institutionKey2)
+                .institution(institutionKey2)
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(1, response.getResults().size());
@@ -280,7 +280,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     response =
         service.list(
             CollectionSearchRequest.builder()
-                .institutionKey(UUID.randomUUID())
+                .institution(UUID.randomUUID())
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(0, response.getResults().size());
@@ -322,7 +322,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         service.list(
             CollectionSearchRequest.builder()
                 .query("code1")
-                .institutionKey(institutionKey1)
+                .institution(institutionKey1)
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(1, response.getResults().size());
@@ -331,7 +331,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         service.list(
             CollectionSearchRequest.builder()
                 .query("foo")
-                .institutionKey(institutionKey1)
+                .institution(institutionKey1)
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(0, response.getResults().size());
@@ -340,7 +340,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         service.list(
             CollectionSearchRequest.builder()
                 .query("code2")
-                .institutionKey(institutionKey2)
+                .institution(institutionKey2)
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(0, response.getResults().size());
@@ -349,7 +349,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         service.list(
             CollectionSearchRequest.builder()
                 .query("code2")
-                .institutionKey(institutionKey1)
+                .institution(institutionKey1)
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(1, response.getResults().size());
@@ -459,15 +459,13 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(
         1,
         service
-            .list(
-                CollectionSearchRequest.builder().contactKey(personKey1).page(DEFAULT_PAGE).build())
+            .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
         service
-            .list(
-                CollectionSearchRequest.builder().contactKey(personKey2).page(DEFAULT_PAGE).build())
+            .list(CollectionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
@@ -475,7 +473,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         service
             .list(
                 CollectionSearchRequest.builder()
-                    .contactKey(UUID.randomUUID())
+                    .contact(UUID.randomUUID())
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -485,8 +483,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(
         1,
         service
-            .list(
-                CollectionSearchRequest.builder().contactKey(personKey1).page(DEFAULT_PAGE).build())
+            .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
