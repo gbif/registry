@@ -39,6 +39,8 @@ import org.gbif.ws.security.KeyStore;
 import java.util.Collections;
 import java.util.UUID;
 
+import javax.validation.ValidationException;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionResource}. */
@@ -486,6 +489,26 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
             .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void createCollectionWithoutCodeTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+    Collection c = newEntity();
+    c.setCode(null);
+    assertThrows(ValidationException.class, () -> service.create(c));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void updateCollectionWithoutCodeTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+    Collection c = newEntity();
+    service.create(c);
+
+    c.setCode(null);
+    assertThrows(IllegalArgumentException.class, () -> service.update(c));
   }
 
   @Override

@@ -35,6 +35,8 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.UUID;
 
+import javax.validation.ValidationException;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionResource}. */
@@ -351,6 +354,26 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
             .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void createInstitutionWithoutCodeTest(ServiceType serviceType) {
+    InstitutionService service = (InstitutionService) getService(serviceType);
+    Institution i = newEntity();
+    i.setCode(null);
+    assertThrows(ValidationException.class, () -> service.create(i));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void updateInstitutionWithoutCodeTest(ServiceType serviceType) {
+    InstitutionService service = (InstitutionService) getService(serviceType);
+    Institution i = newEntity();
+    service.create(i);
+
+    i.setCode(null);
+    assertThrows(IllegalArgumentException.class, () -> service.update(i));
   }
 
   @Override

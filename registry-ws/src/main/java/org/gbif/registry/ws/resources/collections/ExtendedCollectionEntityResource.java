@@ -17,8 +17,10 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
@@ -182,6 +184,7 @@ public abstract class ExtendedCollectionEntityResource<
     preUpdate(entity);
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
+    checkCodeUpdate(entity, entityOld);
 
     if (entityOld.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
@@ -264,5 +267,27 @@ public abstract class ExtendedCollectionEntityResource<
   @Override
   public List<Person> listContacts(@PathVariable UUID key) {
     return contactableMapper.listContacts(key);
+  }
+
+  /**
+   * Some iDigBio collections and institutions don't have code and we allow that in the DB but not
+   * in the API.
+   */
+  protected void checkCodeUpdate(T newEntity, T oldEntity) {
+    if (newEntity instanceof Institution) {
+      Institution newInstitution = (Institution) newEntity;
+      Institution oldInstitution = (Institution) oldEntity;
+
+      if (newInstitution.getCode() == null && oldInstitution.getCode() != null) {
+        throw new IllegalArgumentException("Not allowed to delete the code of an institution");
+      }
+    } else if (newEntity instanceof Collection) {
+      Collection newCollection = (Collection) newEntity;
+      Collection oldCollection = (Collection) oldEntity;
+
+      if (newCollection.getCode() == null && oldCollection.getCode() != null) {
+        throw new IllegalArgumentException("Not allowed to delete the code of a collection");
+      }
+    }
   }
 }
