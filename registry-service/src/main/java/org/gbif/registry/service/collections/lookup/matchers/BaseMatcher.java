@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
@@ -58,11 +57,10 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
   public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
   public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
 
-  private final DatasetService datasetService;
+
   protected final String apiBaseUrl;
 
-  protected BaseMatcher(DatasetService datasetService, String apiBaseUrl) {
-    this.datasetService = datasetService;
+  protected BaseMatcher(String apiBaseUrl) {
     this.apiBaseUrl = apiBaseUrl;
   }
 

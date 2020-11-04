@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.lookup.CollectionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
@@ -51,9 +50,8 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
   @Autowired
   public CollectionMatcher(
       CollectionMapper collectionMapper,
-      DatasetService datasetService,
       @Value("${api.root.url}") String apiBaseUrl) {
-    super(datasetService, apiBaseUrl);
+    super(apiBaseUrl);
     this.collectionMapper = collectionMapper;
   }
 

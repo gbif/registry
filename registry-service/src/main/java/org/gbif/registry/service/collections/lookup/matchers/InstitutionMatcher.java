@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
@@ -57,9 +56,8 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
   @Autowired
   public InstitutionMatcher(
       InstitutionMapper institutionMapper,
-      DatasetService datasetService,
       @Value("${api.root.url}") String apiBaseUrl) {
-    super(datasetService, apiBaseUrl);
+    super(apiBaseUrl);
     this.institutionMapper = institutionMapper;
   }
 
