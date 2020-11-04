@@ -162,7 +162,9 @@ public class IdentityEmailManager {
   public BaseEmailModel generateAccountEmailChangeEmailModel(
       GbifUser user, String newEmail, ChallengeCode challengeCode) throws IOException {
     try {
-      URL url = generateChangeEmailUrl(user.getLocale(), user.getUserName(), challengeCode.getCode(), newEmail);
+      URL url =
+          generateChangeEmailUrl(
+              user.getLocale(), user.getUserName(), challengeCode.getCode(), newEmail);
       BaseTemplateDataModel dataModel =
           new AccountChangeEmailTemplateDataModel(
               user.getUserName(), url, user.getEmail(), newEmail);
@@ -210,7 +212,8 @@ public class IdentityEmailManager {
             confirmationKey.toString()));
   }
 
-  private URL generateChangeEmailUrl(Locale locale, String userName, UUID confirmationKey, String email)
+  private URL generateChangeEmailUrl(
+      Locale locale, String userName, UUID confirmationKey, String email)
       throws MalformedURLException, UnsupportedEncodingException {
     return new URL(
         MessageFormat.format(
