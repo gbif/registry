@@ -304,7 +304,7 @@
   </delete>
 
   <select id="lookup" resultMap="COLLECTION_MATCHED_DTO_MAP">
-    SELECT c.key, c.name, c.code, i.key institutionKey, i.code institutionCode, i.name institutionName,
+    SELECT DISTINCT ON (c.key) c.key, c.name, c.code, i.key institutionKey, i.code institutionCode, i.name institutionName,
     addr.country addressCountry, mailing_addr.country mailingAddressCountry
     <if test="key != null" >
       ,c.key = #{key,jdbcType=OTHER} AS key_match
