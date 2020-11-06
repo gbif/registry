@@ -8,6 +8,11 @@ The GBIF Registry is a core component of the architecture responsible for provid
 
 As a distributed network, the registry serves a central coordination mechanism, used for example to allow publishers to declare their existence and for data integrating components to discover how to access published datasets and interoperate with the publisher.
 
+## Contributing
+* All changes must go to the **dev** branch for testing before merging to master.
+* PR are preferred for complex functionality. **Please target the dev branch**.
+* Simple changes can be committed without review.
+
 ## Code style
 
 The registry uses [github action](.github/workflows/main.yml) with google code format (code formatting) and spotless-maven-plugin (import order, license header).
