@@ -202,7 +202,7 @@ public class UserManagementResource {
       }
 
       boolean fromTrustedApp = SecurityContextCheck.checkUserInRole(authentication, APP_ROLE);
-      Set<UserRole> initiatorRoles = updateInitiator == null ? null : updateInitiator.getRoles();
+      Set<UserRole> initiatorRoles = updateInitiator != null ? updateInitiator.getRoles() : null;
 
       GbifUser user =
           UserUpdateRulesManager.applyUpdate(
