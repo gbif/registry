@@ -368,12 +368,44 @@ public class PipelinesHistoryIT extends BaseItTest {
         () ->
             service.runPipelineAttempt(
                 datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false));
+  }
 
-    // update stape to FAILED
+  @ParameterizedTest
+  @EnumSource(
+          value = ServiceType.class,
+          names = {"CLIENT"})
+  public void runPipelineAttemptInRunningStateMarkPreviousAsFailedTest(ServiceType serviceType) {
+    PipelinesHistoryService service =
+            getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+    // create one process with one step
+    final UUID datasetKey1 = createDataset();
+    final int attempt = 1;
+    long processKey =
+            pipelinesHistoryClient.createPipelineProcess(
+                    new PipelineProcessParameters(datasetKey1, attempt));
+
+    PipelineExecution execution =
+            new PipelineExecution()
+                    .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
+                    .setRerunReason("rerun")
+                    .setRemarks("remarks");
+    long executionKey = pipelinesHistoryClient.addPipelineExecution(processKey, execution);
+
+    long stepKey = service.addPipelineStep(
+            processKey,
+            executionKey,
+            new PipelineStep()
+                    .setMessage("message")
+                    .setRunner(StepRunner.STANDALONE)
+                    .setType(StepType.ABCD_TO_VERBATIM)
+                    .setState(PipelineStep.Status.RUNNING));
+
+
     service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, true);
 
-    // has to be run without issues
-    service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false);
+
+    PipelineStep stepCreated = service.getPipelineStep(processKey, executionKey, stepKey);
+    assertEquals(PipelineStep.Status.FAILED, stepCreated.getState());
   }
 
   private UUID createDataset() {
