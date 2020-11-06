@@ -307,7 +307,8 @@ public class PipelinesHistoryIT extends BaseItTest {
 
     // run the process
     final String rerunReason = "test reason";
-    service.runPipelineAttempt(datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason);
+    service.runPipelineAttempt(
+        datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason, false);
 
     // check that the DB was updated
     PipelineProcess process = service.getPipelineProcess(datasetKey1, attempt);
@@ -315,7 +316,8 @@ public class PipelinesHistoryIT extends BaseItTest {
 
     // run the process without attempt now
     final String rerunReason2 = "test reason 2";
-    service.runPipelineAttempt(datasetKey1, StepType.DWCA_TO_VERBATIM.name(), rerunReason2, false);
+    service.runPipelineAttempt(
+        datasetKey1, StepType.DWCA_TO_VERBATIM.name(), rerunReason2, false, false);
 
     // check that the DB was updated again
     process = service.getPipelineProcess(datasetKey1, attempt);
@@ -358,14 +360,20 @@ public class PipelinesHistoryIT extends BaseItTest {
         IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
-                datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test"));
+                datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test", false));
 
     // run process without attempt and expect a bad request since the step is in running state
     assertThrows(
         IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
-                datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false));
+                datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false));
+
+    // update stape to FAILED
+    service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, true);
+
+    // has to be run without issues
+    service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false);
   }
 
   private UUID createDataset() {

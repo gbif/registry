@@ -145,4 +145,13 @@ public interface PipelineProcessMapper {
       @Nullable @Param("finishedMax") LocalDateTime finishedMax,
       @Nullable @Param("rerunReason") String rerunReason,
       @Nullable @Param("pipelinesVersion") String pipelinesVersion);
+
+  /**
+   * Update a {@link PipelineStep.Status} to an existing {@link PipelineExecution}.
+   *
+   * @param pipelineExecutionKey key of the process where we want to update the status
+   * @param status status to update
+   */
+  void updatePipelineStatus(
+          @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("status") PipelineStep.Status status);
 }

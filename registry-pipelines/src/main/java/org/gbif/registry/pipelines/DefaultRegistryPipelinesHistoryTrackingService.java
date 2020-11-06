@@ -106,7 +106,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       boolean useLastSuccessful,
       boolean markPreviousAttemptAsFailed) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
-    return runPipelineAttempt(datasetKey, attempt, steps, reason, user, prefix, markPreviousAttemptAsFailed);
+    return runPipelineAttempt(
+        datasetKey, attempt, steps, reason, user, prefix, markPreviousAttemptAsFailed);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -138,7 +139,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         () ->
             doOnAllDatasets(
                 datasetKey ->
-                    runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful, markPreviousAttemptAsFailed),
+                    runLastAttempt(
+                        datasetKey,
+                        steps,
+                        reason,
+                        user,
+                        prefix,
+                        useLastSuccessful,
+                        markPreviousAttemptAsFailed),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -285,8 +293,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
-  private PipelineStep.Status markPreviousAttemptAsFailed(PipelineProcess pipelineProcess) {
-    return null;
+  private void markPreviousAttemptAsFailed(PipelineProcess pipelineProcess) {
+    // get last execution
+    PipelineExecution lastExecution =
+        pipelineProcess.getExecutions().stream()
+            .max(Comparator.comparing(PipelineExecution::getCreated))
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Couldn't find las execution for process: " + pipelineProcess));
+
+    mapper.updatePipelineStatus(lastExecution.getKey(), PipelineStep.Status.FAILED);
   }
 
   @Override
@@ -333,11 +350,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     PipelineStep.Status status = getStatus(process);
 
     if (markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
-      status = markPreviousAttemptAsFailed(process);
+      markPreviousAttemptAsFailed(process);
     }
 
     // Checks that the pipelines is not in RUNNING state
-    if (status == PipelineStep.Status.RUNNING) {
+    if (!markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
           .setSteps(steps)
