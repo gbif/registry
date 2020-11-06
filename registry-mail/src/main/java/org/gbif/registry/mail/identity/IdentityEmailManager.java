@@ -103,7 +103,8 @@ public class IdentityEmailManager {
       return generateConfirmationEmailModel(
           user,
           generateConfirmUserUrl(user.getLocale(), user.getUserName(), challengeCode.getCode())
-          .normalize().toURL(),
+              .normalize()
+              .toURL(),
           IdentityEmailType.NEW_USER);
     } catch (URISyntaxException | TemplateException e) {
       throw new IOException(e);
@@ -116,7 +117,8 @@ public class IdentityEmailManager {
       return generateConfirmationEmailModel(
           user,
           generateResetPasswordUrl(user.getLocale(), user.getUserName(), challengeCode.getCode())
-          .normalize().toURL(),
+              .normalize()
+              .toURL(),
           IdentityEmailType.RESET_PASSWORD);
     } catch (URISyntaxException | TemplateException e) {
       throw new IOException(e);
@@ -167,9 +169,9 @@ public class IdentityEmailManager {
     try {
       URL url =
           generateChangeEmailUrl(
-              user.getLocale(), user.getUserName(), challengeCode.getCode(), newEmail)
-          .normalize()
-          .toURL();
+                  user.getLocale(), user.getUserName(), challengeCode.getCode(), newEmail)
+              .normalize()
+              .toURL();
       BaseTemplateDataModel dataModel =
           new AccountChangeEmailTemplateDataModel(
               user.getUserName(), url, user.getEmail(), newEmail);
