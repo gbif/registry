@@ -15,17 +15,15 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import java.util.List;
-
 public class InstitutionMatchedDto extends BaseEntityMatchedDto {
 
-  private List<String> identifiers;
+  private String identifier;
 
-  public List<String> getIdentifiers() {
-    return identifiers;
+  public String getIdentifier() {
+    return identifier;
   }
 
-  public void setIdentifiers(List<String> identifiers) {
-    this.identifiers = identifiers;
+  public void setIdentifier(String identifier) {
+    this.identifier = identifier;
   }
 }
