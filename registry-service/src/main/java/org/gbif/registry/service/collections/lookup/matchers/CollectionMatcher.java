@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.lookup.CollectionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
@@ -27,6 +26,7 @@ import org.gbif.registry.service.collections.lookup.Matches;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,10 +50,8 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
 
   @Autowired
   public CollectionMatcher(
-      CollectionMapper collectionMapper,
-      DatasetService datasetService,
-      @Value("${api.root.url}") String apiBaseUrl) {
-    super(datasetService, apiBaseUrl);
+      CollectionMapper collectionMapper, @Value("${api.root.url}") String apiBaseUrl) {
+    super(apiBaseUrl);
     this.collectionMapper = collectionMapper;
   }
 
@@ -61,8 +59,8 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
       LookupParams params, Set<UUID> institutionMatches, List<MachineTag> datasetMachineTags) {
     Matches<CollectionMatched> matches = new Matches<>();
 
-    matchWithMachineTags(datasetMachineTags, machineTagProcessor(params))
-        .ifPresent(matches::setMachineTagMatches);
+    matches.setMachineTagMatches(
+        matchWithMachineTags(datasetMachineTags, machineTagProcessor(params)));
 
     if (isEnoughMatches(params, matches)) {
       return setAccepted(matches);
@@ -74,17 +72,30 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
     Set<Match<CollectionMatched>> exactMatches = new HashSet<>();
     Set<Match<CollectionMatched>> fuzzyMatches = new HashSet<>();
 
+    // the queries may return duplicates because a collection can match with several fields
+    Map<UUID, CollectionMatchedDto> dtosMap = new HashMap<>();
     dbMatches.forEach(
         dto -> {
-          Match<CollectionMatched> match = createMatch(exactMatches, fuzzyMatches, dto);
-
-          if (matchesCountry(dto, params.getCountry())) {
-            match.addReason(Match.Reason.COUNTRY_MATCH);
-          }
-          if (!isMatchWithInstitutions(dto, institutionMatches)) {
-            match.addReason(INST_COLL_MISMATCH);
+          if (dtosMap.containsKey(dto.getKey())) {
+            updateMatches(dtosMap.get(dto.getKey()), dto);
+          } else {
+            dtosMap.put(dto.getKey(), dto);
           }
         });
+
+    dtosMap
+        .values()
+        .forEach(
+            dto -> {
+              Match<CollectionMatched> match = createMatch(exactMatches, fuzzyMatches, dto);
+
+              if (matchesCountry(dto, params.getCountry())) {
+                match.addReason(Match.Reason.COUNTRY_MATCH);
+              }
+              if (!isMatchWithInstitutions(dto, institutionMatches)) {
+                match.addReason(INST_COLL_MISMATCH);
+              }
+            });
 
     matches.setExactMatches(exactMatches);
     matches.setFuzzyMatches(fuzzyMatches);

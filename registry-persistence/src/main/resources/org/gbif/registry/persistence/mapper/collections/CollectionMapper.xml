@@ -303,44 +303,56 @@
     collection_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
   </delete>
 
+  <!-- LOOKUP -->
+  <sql id="LOOKUP_MATCH_FIELDS">
+    c.key, c.name, c.code, c.institution_key, c.address_key, c.mailing_address_key
+  </sql>
+
   <select id="lookup" resultMap="COLLECTION_MATCHED_DTO_MAP">
-    SELECT DISTINCT ON (c.key) c.key, c.name, c.code, i.key institutionKey, i.code institutionCode, i.name institutionName,
-    addr.country addressCountry, mailing_addr.country mailingAddressCountry
-    <if test="key != null" >
-      ,c.key = #{key,jdbcType=OTHER} AS key_match
-    </if>
-    <if test="identifier != null" >
-      ,normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AS identifier_match
-      ,normalize_name(c.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AS name_match_with_identifier
-    </if>
-    <if test="code != null" >
-      ,c.code = #{code,jdbcType=VARCHAR} AS code_match
-      ,c.alternative_codes ?? #{code,jdbcType=VARCHAR} AS alternative_code_match
-      ,normalize_name(c.name) = normalize_name(#{code,jdbcType=VARCHAR}) AS name_match_with_code
-    </if>
-    FROM collection c
-    LEFT JOIN institution i ON i.key = c.institution_key
-    LEFT JOIN address addr ON addr.key = i.address_key
-    LEFT JOIN address mailing_addr ON mailing_addr.key = i.mailing_address_key
-    <if test="identifier != null" >
-      LEFT JOIN collection_identifier ci ON ci.collection_key = c.key
-      LEFT JOIN identifier id ON ci.identifier_key = id."key"
-    </if>
-    <where>
+    SELECT matches.*, i.code institutionCode, i.name institutionName, addr.country addressCountry, mailing_addr.country mailingAddressCountry
+    FROM (
+    <trim prefixOverrides="UNION ALL">
       <if test="key != null" >
-        c.key = #{key,jdbcType=OTHER}
+        SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+        1 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+        FROM collection c
+        WHERE c.key = #{key,jdbcType=OTHER} AND c.deleted is null
       </if>
       <if test="identifier != null" >
-        OR normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR})
-        OR normalize_name(c.name) = normalize_name(#{identifier,jdbcType=VARCHAR})
+        UNION ALL
+          SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+          0 AS key_match, 1 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+          FROM collection c
+          INNER JOIN collection_identifier ci ON ci.collection_key = c.key
+          INNER JOIN identifier id ON ci.identifier_key = id."key"
+          WHERE normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AND c.deleted is null
+        UNION ALL
+          SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+          0 AS key_match, 0 AS identifier_match, 1 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+          FROM collection c
+          WHERE normalize_name(c.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AND c.deleted is null
       </if>
       <if test="code != null" >
-        OR c.code = #{code,jdbcType=VARCHAR}
-        OR c.alternative_codes ?? #{code,jdbcType=VARCHAR}
-        OR normalize_name(c.name) = normalize_name(#{code,jdbcType=VARCHAR})
+        UNION ALL
+          SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+          FROM collection c
+          WHERE c.code = #{code,jdbcType=VARCHAR} AND c.deleted is null
+        UNION ALL
+          SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match, 0 AS name_match_with_code
+          FROM collection c
+          WHERE c.alternative_codes ?? #{code,jdbcType=VARCHAR} AND c.deleted is null
+        UNION ALL
+          SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 1 AS name_match_with_code
+          FROM collection c
+          WHERE normalize_name(c.name) = normalize_name(#{code,jdbcType=VARCHAR}) AND c.deleted is null
       </if>
-      AND c.deleted is null
-    </where>
+    </trim>) AS matches
+    LEFT JOIN institution i ON i.key = matches.institution_key
+    LEFT JOIN address addr ON addr.key = matches.address_key
+    LEFT JOIN address mailing_addr ON mailing_addr.key = matches.mailing_address_key
   </select>
 
   <!-- TAGS -->

@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
@@ -27,6 +26,7 @@ import org.gbif.registry.service.collections.lookup.Matches;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,10 +56,8 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
 
   @Autowired
   public InstitutionMatcher(
-      InstitutionMapper institutionMapper,
-      DatasetService datasetService,
-      @Value("${api.root.url}") String apiBaseUrl) {
-    super(datasetService, apiBaseUrl);
+      InstitutionMapper institutionMapper, @Value("${api.root.url}") String apiBaseUrl) {
+    super(apiBaseUrl);
     this.institutionMapper = institutionMapper;
   }
 
@@ -67,8 +65,8 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
       LookupParams params, List<MachineTag> datasetMachineTags) {
     Matches<InstitutionMatched> matches = new Matches<>();
 
-    matchWithMachineTags(datasetMachineTags, machineTagProcessor(params))
-        .ifPresent(matches::setMachineTagMatches);
+    matches.setMachineTagMatches(
+        matchWithMachineTags(datasetMachineTags, machineTagProcessor(params)));
 
     if (isEnoughMatches(params, matches)) {
       return setAccepted(matches);
@@ -80,17 +78,41 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     Set<Match<InstitutionMatched>> exactMatches = new HashSet<>();
     Set<Match<InstitutionMatched>> fuzzyMatches = new HashSet<>();
 
+    // the queries may return duplicates because we retrieve the list of identifiers in the same
+    // query. Also, if an institution matches with several fields it will be duplicated
+    Map<UUID, InstitutionMatchedDto> dtosMap = new HashMap<>();
+    Map<UUID, Set<String>> identifiersMap = new HashMap<>();
     dbMatches.forEach(
         dto -> {
-          Match<InstitutionMatched> match = createMatch(exactMatches, fuzzyMatches, dto);
-
-          if (matchesCountry(dto, params.getCountry())) {
-            match.addReason(Match.Reason.COUNTRY_MATCH);
+          if (dtosMap.containsKey(dto.getKey())) {
+            updateMatches(dtosMap.get(dto.getKey()), dto);
+          } else {
+            dtosMap.put(dto.getKey(), dto);
           }
-          if (!matchesOwnerInstitution(dto, params.getOwnerInstitutionCode())) {
-            match.addReason(POSSIBLY_ON_LOAN);
+
+          if (identifiersMap.containsKey(dto.getKey())) {
+            identifiersMap.get(dto.getKey()).add(dto.getIdentifier());
+          } else {
+            Set<String> ids = new HashSet<>();
+            ids.add(dto.getIdentifier());
+            identifiersMap.put(dto.getKey(), ids);
           }
         });
+
+    dtosMap
+        .values()
+        .forEach(
+            dto -> {
+              Match<InstitutionMatched> match = createMatch(exactMatches, fuzzyMatches, dto);
+
+              if (matchesCountry(dto, params.getCountry())) {
+                match.addReason(Match.Reason.COUNTRY_MATCH);
+              }
+              if (!matchesOwnerInstitution(
+                  dto, identifiersMap.get(dto.getKey()), params.getOwnerInstitutionCode())) {
+                match.addReason(POSSIBLY_ON_LOAN);
+              }
+            });
 
     matches.setExactMatches(exactMatches);
     matches.setFuzzyMatches(fuzzyMatches);
@@ -123,7 +145,8 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     };
   }
 
-  private boolean matchesOwnerInstitution(InstitutionMatchedDto dto, String ownerInstitutionCode) {
+  private boolean matchesOwnerInstitution(
+      InstitutionMatchedDto dto, Set<String> identifiers, String ownerInstitutionCode) {
     if (Strings.isNullOrEmpty(ownerInstitutionCode)) {
       return true;
     }
@@ -141,8 +164,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
       return true;
     }
 
-    if (dto.getIdentifiers() != null
-        && dto.getIdentifiers().stream().anyMatch(i -> i.equals(ownerInstitutionCode))) {
+    if (identifiers != null && identifiers.stream().anyMatch(i -> i.equals(ownerInstitutionCode))) {
       return true;
     }
 
