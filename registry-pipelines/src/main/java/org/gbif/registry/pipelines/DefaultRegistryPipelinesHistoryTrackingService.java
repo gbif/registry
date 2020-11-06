@@ -15,14 +15,16 @@
  */
 package org.gbif.registry.pipelines;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -31,40 +33,9 @@ import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
-import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
-import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
-import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
-import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
-import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
+import org.gbif.common.messaging.api.messages.*;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.pipelines.util.PredicateUtils;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,11 +44,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /** Service that allows to re-run pipeline steps on an specific attempt. */
 @Service
@@ -127,9 +103,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String reason,
       String user,
       String prefix,
-      boolean useLastSuccessful) {
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
-    return runPipelineAttempt(datasetKey, attempt, steps, reason, user, prefix);
+    return runPipelineAttempt(datasetKey, attempt, steps, reason, user, prefix, markPreviousAttemptAsFailed);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -154,13 +131,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String user,
       List<UUID> datasetsToExclude,
       List<UUID> datasetsToInclude,
-      boolean useLastSuccessful) {
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
             doOnAllDatasets(
                 datasetKey ->
-                    runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful),
+                    runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful, markPreviousAttemptAsFailed),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -307,6 +285,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
+  private PipelineStep.Status markPreviousAttemptAsFailed(PipelineProcess pipelineProcess) {
+    return null;
+  }
+
   @Override
   public PagingResponse<PipelineProcess> history(Pageable pageable) {
     long count = mapper.count(null, null);
@@ -338,7 +320,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set<StepType> steps,
       String reason,
       String user,
-      String prefix) {
+      String prefix,
+      boolean markPreviousAttemptAsFailed) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -347,8 +330,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
+    PipelineStep.Status status = getStatus(process);
+
+    if (markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
+      status = markPreviousAttemptAsFailed(process);
+    }
+
     // Checks that the pipelines is not in RUNNING state
-    if (getStatus(process) == PipelineStep.Status.RUNNING) {
+    if (status == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
           .setSteps(steps)

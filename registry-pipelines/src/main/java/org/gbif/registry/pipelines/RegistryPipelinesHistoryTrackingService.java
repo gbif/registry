@@ -44,6 +44,8 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param prefix if triggered for all datasets
    * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
    *     latest.
+   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
+   *      during processing a dataset  
    * @return a response containing the request result
    */
   RunPipelineResponse runLastAttempt(
@@ -52,7 +54,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String reason,
       String user,
       String prefix,
-      boolean useLastSuccessful);
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed);
 
   /**
    * Executes the last crawl attempt for all datasets.
@@ -64,6 +67,8 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param datasetsToInclude included dataset keys
    * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
    *     latest.
+   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
+   *      during processing a dataset
    * @return the response of the execution request
    */
   RunPipelineResponse runLastAttempt(
@@ -72,7 +77,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String user,
       List<UUID> datasetsToExclude,
       List<UUID> datasetsToInclude,
-      boolean useLastSuccessful);
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed);
 
   /**
    * Executes a previously run attempt.
@@ -83,10 +89,18 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param reason textual justification of why it has to be re-executed
    * @param user the user who is running the attempt
    * @param prefix if triggered for all datasets
+   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
+   *      during processing a dataset
    * @return the response of the execution request
    */
   RunPipelineResponse runPipelineAttempt(
-      UUID datasetKey, int attempt, Set<StepType> steps, String reason, String user, String prefix);
+      UUID datasetKey,
+      int attempt,
+      Set<StepType> steps,
+      String reason,
+      String user,
+      String prefix,
+      boolean markPreviousAttemptAsFailed);
 
   /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.
