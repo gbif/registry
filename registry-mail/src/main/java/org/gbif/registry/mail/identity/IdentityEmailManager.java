@@ -202,7 +202,7 @@ public class IdentityEmailManager {
     return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getConfirmUser(),
-            locale != null ? locale : "",
+            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
             userName,
             confirmationKey.toString()));
   }
@@ -212,7 +212,7 @@ public class IdentityEmailManager {
     return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getResetPassword(),
-            locale != null ? locale : "",
+            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
             userName,
             confirmationKey.toString()));
   }
@@ -223,7 +223,7 @@ public class IdentityEmailManager {
     return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
-            locale != null ? locale : "",
+            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
             userName,
             confirmationKey.toString(),
             URLEncoder.encode(email, StandardCharsets.UTF_8.name())));
