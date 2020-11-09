@@ -118,6 +118,8 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "steps", required = false) String steps,
       @RequestParam(value = "reason", required = false) String reason,
       @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
+      @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
+              boolean markPreviousAttemptAsFailed,
       @RequestBody(required = false) RunAllParams runAllParams);
 
   @RequestMapping(method = RequestMethod.POST, value = "run/{datasetKey}")
@@ -127,7 +129,9 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @PathVariable("datasetKey") UUID datasetKey,
       @RequestParam(value = "steps", required = false) String steps,
       @RequestParam(value = "reason", required = false) String reason,
-      @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful);
+      @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
+      @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
+              boolean markPreviousAttemptAsFailed);
 
   @RequestMapping(method = RequestMethod.POST, value = "run/{datasetKey}/{attempt}")
   @ResponseBody
@@ -136,5 +140,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @PathVariable("datasetKey") UUID datasetKey,
       @PathVariable("attempt") int attempt,
       @RequestParam(value = "steps", required = false) String steps,
-      @RequestParam(value = "reason", required = false) String reason);
+      @RequestParam(value = "reason", required = false) String reason,
+      @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
+              boolean markPreviousAttemptAsFailed);
 }
