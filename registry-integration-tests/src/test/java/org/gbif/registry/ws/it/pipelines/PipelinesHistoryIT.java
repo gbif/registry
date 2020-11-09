@@ -371,9 +371,7 @@ public class PipelinesHistoryIT extends BaseItTest {
   }
 
   @ParameterizedTest
-  @EnumSource(
-          value = ServiceType.class,
-          names = {"CLIENT"})
+  @EnumSource(ServiceType.class)
   public void runPipelineAttemptInRunningStateMarkPreviousAsFailedTest(ServiceType serviceType) {
     PipelinesHistoryService service =
             getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
