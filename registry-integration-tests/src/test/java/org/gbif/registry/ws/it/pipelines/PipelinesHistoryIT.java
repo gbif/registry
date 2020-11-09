@@ -374,33 +374,40 @@ public class PipelinesHistoryIT extends BaseItTest {
   @EnumSource(ServiceType.class)
   public void runPipelineAttemptInRunningStateMarkPreviousAsFailedTest(ServiceType serviceType) {
     PipelinesHistoryService service =
-            getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
+        getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     // create one process with one step
     final UUID datasetKey1 = createDataset();
     final int attempt = 1;
     long processKey =
-            pipelinesHistoryClient.createPipelineProcess(
-                    new PipelineProcessParameters(datasetKey1, attempt));
+        pipelinesHistoryClient.createPipelineProcess(
+            new PipelineProcessParameters(datasetKey1, attempt));
 
     PipelineExecution execution =
-            new PipelineExecution()
-                    .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
-                    .setRerunReason("rerun")
-                    .setRemarks("remarks");
+        new PipelineExecution()
+            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM))
+            .setRerunReason("rerun")
+            .setRemarks("remarks");
     long executionKey = pipelinesHistoryClient.addPipelineExecution(processKey, execution);
 
-    long stepKey = service.addPipelineStep(
+    long stepKey =
+        service.addPipelineStep(
             processKey,
             executionKey,
             new PipelineStep()
-                    .setMessage("message")
-                    .setRunner(StepRunner.STANDALONE)
-                    .setType(StepType.ABCD_TO_VERBATIM)
-                    .setState(PipelineStep.Status.RUNNING));
-
+                .setMessage(
+                    "{\"datasetUuid\":\"418a6571-b6c1-4db0-b90e-8f36bde4c80e\",\"datasetType\":\"SAMPLING_EVENT\",\"source\":"
+                        + "\"http://gbif.vm.ntnu.no/ipt/archive.do?r=setesdal_veg_data\",\"attempt\":109,\"validationReport\":"
+                        + "{\"datasetKey\":\"418a6571-b6c1-4db0-b90e-8f36bde4c80e\",\"occurrenceReport\":{\"checkedRecords\":11961,"
+                        + "\"uniqueTriplets\":0,\"allRecordsChecked\":true,\"recordsWithInvalidTriplets\":11961,\"uniqueOccurrenceIds\":11961,"
+                        + "\"recordsMissingOccurrenceId\":0,\"invalidationReason\":null,\"valid\":true},\"genericReport\":{\"checkedRecords\":1630,"
+                        + "\"allRecordsChecked\":true,\"duplicateIds\":[],\"rowNumbersMissingId\":[],\"invalidationReason\":null,\"valid\":true},"
+                        + "\"invalidationReason\":null,\"valid\":true},\"pipelineSteps\":[\"DWCA_TO_VERBATIM\",\"HDFS_VIEW\","
+                        + "\"VERBATIM_TO_INTERPRETED\",\"INTERPRETED_TO_INDEX\"],\"endpointType\":\"DWC_ARCHIVE\",\"platform\":\"ALL\"}")
+                .setRunner(StepRunner.STANDALONE)
+                .setType(StepType.ABCD_TO_VERBATIM)
+                .setState(PipelineStep.Status.RUNNING));
 
     service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, true);
-
 
     PipelineStep stepCreated = service.getPipelineStep(processKey, executionKey, stepKey);
     assertEquals(PipelineStep.Status.FAILED, stepCreated.getState());
