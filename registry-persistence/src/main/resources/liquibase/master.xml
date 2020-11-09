@@ -87,4 +87,5 @@
   <include file="liquibase/079-derived-dataset-fields.xml" />
   <include file="liquibase/080-grscicoll-lookup-indexes.xml" />
   <include file="liquibase/081-grscicoll-constraints-updated.xml" />
+  <include file="liquibase/082-functions-migrated-to-plpgsql.xml" />
 </databaseChangeLog>
