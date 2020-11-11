@@ -1,0 +1,15 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="83" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE INDEX occurrence_download_doi_idx ON occurrence_download (doi);
+        CREATE INDEX dataset_doi_idx ON dataset (doi);
+        CREATE INDEX identifier_idx ON identifier (identifier);
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
