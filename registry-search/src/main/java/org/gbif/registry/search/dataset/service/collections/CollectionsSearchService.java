@@ -19,7 +19,6 @@ import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,49 +26,42 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 import org.elasticsearch.common.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-// TODO: tests
+/** Service to lookup GRSciColl institutions and collections. */
 @Service
 public class CollectionsSearchService {
 
-  private static final String HIGHLIGHT_DELIMITER = "<b>";
+  private static final Pattern HIGHLIGHT_PATTERN = Pattern.compile(".*<b>.+</b>.*");
 
-  private CollectionsSearchMapper searchMapper;
+  private final CollectionsSearchMapper searchMapper;
 
   @Autowired
   public CollectionsSearchService(CollectionsSearchMapper searchMapper) {
     this.searchMapper = searchMapper;
   }
 
-  public List<SearchResponse> search(String query, boolean highlight) {
+  public List<CollectionsSearchResponse> search(String query, boolean highlight) {
     List<SearchDto> dtos = searchMapper.search(query, highlight);
 
-    Map<UUID, SearchDto> dtosMap = new HashMap<>();
+    // the query can return duplicates so we need an auxiliary map to filter duplicates
+    Map<UUID, CollectionsSearchResponse> responsesMap = new HashMap<>();
+    List<CollectionsSearchResponse> responses = new ArrayList<>();
     dtos.forEach(
         dto -> {
-          if (dtosMap.containsKey(dto.getKey())) {
-            SearchDto existing = dtosMap.get(dto.getKey());
-            mergeDtos(existing, dto);
-          } else {
-            dtosMap.put(dto.getKey(), dto);
+          if (responsesMap.containsKey(dto.getKey())) {
+            if (highlight) {
+              CollectionsSearchResponse existing = responsesMap.get(dto.getKey());
+              addMatches(existing, dto);
+            }
+            return;
           }
-        });
 
-    List<SearchDto> sortedDtos =
-        dtosMap.values().stream()
-            .sorted(Comparator.comparing(SearchDto::getScore).reversed())
-            .collect(Collectors.toList());
-
-    // the query can return duplicates
-    List<SearchResponse> responses = new ArrayList<>();
-    sortedDtos.forEach(
-        dto -> {
-          SearchResponse response = new SearchResponse();
+          CollectionsSearchResponse response = new CollectionsSearchResponse();
           response.setType(dto.getType());
           response.setCode(dto.getCode());
           response.setKey(dto.getKey());
@@ -82,59 +74,18 @@ public class CollectionsSearchService {
           }
 
           if (highlight) {
-            Set<SearchResponse.Match> matches = createMatches(dto);
-            if (!matches.isEmpty()) {
-              response.setMatches(matches);
-            }
+            addMatches(response, dto);
           }
 
           responses.add(response);
+          responsesMap.put(dto.getKey(), response);
         });
 
     return responses;
   }
 
-  private void mergeDtos(SearchDto existing, SearchDto newDto) {
-    if (!Strings.isNullOrEmpty(newDto.getCodeHighlight())) {
-      existing.setCodeHighlight(newDto.getCodeHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getNameHighlight())) {
-      existing.setNameHighlight(newDto.getNameHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getDescriptionHighlight())) {
-      existing.setDescriptionHighlight(newDto.getDescriptionHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getAlternativeCodesHighlight())) {
-      existing.setAlternativeCodesHighlight(newDto.getAlternativeCodesHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getAddressHighlight())) {
-      existing.setAddressHighlight(newDto.getAddressHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getCityHighlight())) {
-      existing.setCityHighlight(newDto.getCityHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getProvinceHighlight())) {
-      existing.setProvinceHighlight(newDto.getProvinceHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getCountryHighlight())) {
-      existing.setCountryHighlight(newDto.getCountryHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getMailAddressHighlight())) {
-      existing.setMailAddressHighlight(newDto.getMailAddressHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getMailCityHighlight())) {
-      existing.setMailCityHighlight(newDto.getMailCityHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getMailProvinceHighlight())) {
-      existing.setMailProvinceHighlight(newDto.getMailProvinceHighlight());
-    }
-    if (!Strings.isNullOrEmpty(newDto.getMailCountryHighlight())) {
-      existing.setMailCountryHighlight(newDto.getMailCountryHighlight());
-    }
-  }
-
-  private Set<SearchResponse.Match> createMatches(SearchDto dto) {
-    Set<SearchResponse.Match> matches = new HashSet<>();
+  private void addMatches(CollectionsSearchResponse response, SearchDto dto) {
+    Set<CollectionsSearchResponse.Match> matches = new HashSet<>();
     createHighlightMatch(dto.getCodeHighlight(), "code").ifPresent(matches::add);
     createHighlightMatch(dto.getNameHighlight(), "name").ifPresent(matches::add);
     createHighlightMatch(dto.getDescriptionHighlight(), "description").ifPresent(matches::add);
@@ -148,13 +99,20 @@ public class CollectionsSearchService {
     createHighlightMatch(dto.getMailCityHighlight(), "mailingCity").ifPresent(matches::add);
     createHighlightMatch(dto.getMailProvinceHighlight(), "mailingProvince").ifPresent(matches::add);
     createHighlightMatch(dto.getMailCountryHighlight(), "mailingCountry").ifPresent(matches::add);
-    return matches;
+
+    if (!matches.isEmpty()) {
+      if (response.getMatches() == null) {
+        response.setMatches(matches);
+      } else {
+        response.getMatches().addAll(matches);
+      }
+    }
   }
 
-  private static Optional<SearchResponse.Match> createHighlightMatch(
+  private static Optional<CollectionsSearchResponse.Match> createHighlightMatch(
       String highlight, String fieldName) {
-    if (!Strings.isNullOrEmpty(highlight) && highlight.contains(HIGHLIGHT_DELIMITER)) {
-      SearchResponse.Match match = new SearchResponse.Match();
+    if (!Strings.isNullOrEmpty(highlight) && HIGHLIGHT_PATTERN.matcher(highlight).matches()) {
+      CollectionsSearchResponse.Match match = new CollectionsSearchResponse.Match();
       match.setField(fieldName);
       match.setSnippet(highlight);
       return Optional.of(match);
