@@ -19,7 +19,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-public class SearchResponse {
+/** Models the response for the {@link CollectionsSearchService}. */
+public class CollectionsSearchResponse {
 
   private String type;
   private UUID key;

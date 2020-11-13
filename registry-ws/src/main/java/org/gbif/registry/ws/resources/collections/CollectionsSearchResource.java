@@ -15,8 +15,8 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.registry.search.dataset.service.collections.CollectionsSearchResponse;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
-import org.gbif.registry.search.dataset.service.collections.SearchResponse;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ public class CollectionsSearchResource {
   }
 
   @GetMapping
-  public List<SearchResponse> searchCollections(
+  public List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "highlight", defaultValue = "false") boolean highlight) {
     return collectionsSearchService.search(query, highlight);

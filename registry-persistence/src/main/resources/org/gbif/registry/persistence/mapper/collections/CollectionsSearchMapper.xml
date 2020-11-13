@@ -29,7 +29,7 @@
       (
         SELECT DISTINCT ON (i.key)
         i.key, i.code, i.name, i.description, i.alternative_codes,
-        'institution' AS type, <if test="q != null" >9 AS score, to_tsquery('english',trim(#{q})) query,</if> i.address_key, i.mailing_address_key,
+        'institution' AS type, <if test="q != null" >9 AS score, to_tsquery('english',quote_literal(trim(#{q}))) query,</if> i.address_key, i.mailing_address_key,
         null::uuid institution_key, null institution_name, null institution_code
         FROM institution i
         WHERE i.deleted IS NULL AND i.code = trim(#{q})
@@ -51,7 +51,7 @@
       (
         SELECT DISTINCT ON (c.key)
         c.key, c.code, c.name, c.description, c.alternative_codes,
-        'collection' AS type, <if test="q != null" >9 AS score, to_tsquery('english',trim(#{q})) query,</if> c.address_key, c.mailing_address_key,
+        'collection' AS type, <if test="q != null" >9 AS score, to_tsquery('english',quote_literal(trim(#{q}))) query,</if> c.address_key, c.mailing_address_key,
         i.key institution_key, i.name institution_name, i.code institution_code
         FROM collection c
         LEFT JOIN institution i ON i.key = c.institution_key
