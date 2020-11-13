@@ -288,18 +288,18 @@
       WHERE i.key = #{key,jdbcType=OTHER} AND i.deleted is null
     </if>
     <if test="identifier != null" >
-    UNION ALL
-      SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-      0 AS key_match, 1 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
-      FROM institution i
-      INNER JOIN institution_identifier ii ON ii.institution_key = i.key
-      INNER JOIN identifier id ON ii.identifier_key = id."key"
-      WHERE normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
-    UNION ALL
-      SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-      0 AS key_match, 0 AS identifier_match, 1 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
-      FROM institution i
-      WHERE normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
+      UNION ALL
+        SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+        0 AS key_match, 1 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+        FROM institution i
+        INNER JOIN institution_identifier ii ON ii.institution_key = i.key
+        INNER JOIN identifier id ON ii.identifier_key = id."key"
+        WHERE normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
+      UNION ALL
+        SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+        0 AS key_match, 0 AS identifier_match, 1 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+        FROM institution i
+        WHERE normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
     </if>
     <if test="code != null" >
       UNION ALL
