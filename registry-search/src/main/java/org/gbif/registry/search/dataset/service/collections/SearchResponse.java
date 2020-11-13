@@ -15,7 +15,8 @@
  */
 package org.gbif.registry.search.dataset.service.collections;
 
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 public class SearchResponse {
@@ -27,7 +28,7 @@ public class SearchResponse {
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
-  private List<Match> matches;
+  private Set<Match> matches;
 
   public String getType() {
     return type;
@@ -85,11 +86,11 @@ public class SearchResponse {
     this.institutionName = institutionName;
   }
 
-  public List<Match> getMatches() {
+  public Set<Match> getMatches() {
     return matches;
   }
 
-  public void setMatches(List<Match> matches) {
+  public void setMatches(Set<Match> matches) {
     this.matches = matches;
   }
 
@@ -112,6 +113,18 @@ public class SearchResponse {
     public void setSnippet(String snippet) {
       this.snippet = snippet;
     }
-  }
 
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      Match match = (Match) o;
+      return Objects.equals(field, match.field) && Objects.equals(snippet, match.snippet);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(field, snippet);
+    }
+  }
 }

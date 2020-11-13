@@ -19,6 +19,7 @@ import java.util.UUID;
 
 public class SearchDto {
 
+  private float score;
   private String type;
   private UUID key;
   private String code;
@@ -39,6 +40,14 @@ public class SearchDto {
   private String mailCityHighlight;
   private String mailProvinceHighlight;
   private String mailCountryHighlight;
+
+  public float getScore() {
+    return score;
+  }
+
+  public void setScore(float score) {
+    this.score = score;
+  }
 
   public String getType() {
     return type;
