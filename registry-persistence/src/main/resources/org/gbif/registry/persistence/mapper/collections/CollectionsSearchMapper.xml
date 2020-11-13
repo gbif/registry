@@ -6,8 +6,8 @@
   <resultMap id="SEARCH_DTO_MAP" type="SearchDto" autoMapping="true" />
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
-    SELECT matches.type, matches.key, matches.code, matches.name, matches.institution_key, matches.institution_code, matches.institution_name
-    <if test="query != null &amp;&amp; highlight" >
+    SELECT <if test="q != null">matches.score,</if> matches.type, matches.key, matches.code, matches.name, matches.institution_key, matches.institution_code, matches.institution_name
+    <if test="q != null &amp;&amp; highlight" >
       ,ts_headline(matches.code, query) code_highlight, ts_headline(matches.name, query) name_highlight, ts_headline(matches.description, query) description_highlight
       ,ts_headline(array_to_string(akeys(matches.alternative_codes), ' '), query) alternative_codes_highlight
       ,ts_headline(ad.address, query) address_highlight,ts_headline(ad.city, query) city_highlight,ts_headline(ad.province, query) province_highlight,ts_headline(ad.country, query) country_highlight
@@ -15,37 +15,55 @@
     </if>
     FROM (
       (
-        SELECT DISTINCT ON (<if test="query != null">ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
+        SELECT DISTINCT ON (<if test="q != null">ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
           i.key, i.code, i.name, i.description, i.alternative_codes,
-          'institution' AS type, <if test="query != null" >ts_rank_cd(i.fulltext_search, query) score, query,</if> i.address_key, i.mailing_address_key,
-          null institution_key, null institution_name, null institution_code
+          'institution' AS type, <if test="q != null" >ts_rank_cd(i.fulltext_search, query) score, query,</if> i.address_key, i.mailing_address_key,
+          null::uuid institution_key, null institution_name, null institution_code
         FROM institution i
-        <if test="query != null" >
-          INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+','&amp;','g')) AS query ON query @@ fulltext_search
+        <if test="q != null" >
+          INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
         </if>
         WHERE i.deleted IS NULL
-        ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
       )
       UNION ALL
       (
-        SELECT DISTINCT ON (<if test="query != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
+        SELECT DISTINCT ON (i.key)
+        i.key, i.code, i.name, i.description, i.alternative_codes,
+        'institution' AS type, <if test="q != null" >9 AS score, to_tsquery('english',trim(#{q})) query,</if> i.address_key, i.mailing_address_key,
+        null::uuid institution_key, null institution_name, null institution_code
+        FROM institution i
+        WHERE i.deleted IS NULL AND i.code = trim(#{q})
+      )
+      UNION ALL
+      (
+        SELECT DISTINCT ON (<if test="q != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
         c.key, c.code, c.name, c.description, c.alternative_codes,
-        'collection' AS type, <if test="query != null" >ts_rank_cd(c.fulltext_search, query) score, query,</if> c.address_key, c.mailing_address_key,
+        'collection' AS type, <if test="q != null" >ts_rank_cd(c.fulltext_search, query) score, query,</if> c.address_key, c.mailing_address_key,
         i.key institution_key, i.name institution_name, i.code institution_code
         FROM collection c
-        <if test="query != null" >
-          INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+','&amp;','g')) AS query ON query @@ fulltext_search
+        <if test="q != null" >
+          INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
         </if>
         LEFT JOIN institution i ON i.key = c.institution_key
         WHERE c.deleted IS NULL
-        ORDER BY <if test="query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
+      )
+      UNION ALL
+      (
+        SELECT DISTINCT ON (c.key)
+        c.key, c.code, c.name, c.description, c.alternative_codes,
+        'collection' AS type, <if test="q != null" >9 AS score, to_tsquery('english',trim(#{q})) query,</if> c.address_key, c.mailing_address_key,
+        i.key institution_key, i.name institution_name, i.code institution_code
+        FROM collection c
+        LEFT JOIN institution i ON i.key = c.institution_key
+        WHERE c.deleted IS NULL AND c.code = trim(#{q})
       )
     ) AS matches
     LEFT JOIN address ad ON ad.key = matches.address_key
     LEFT JOIN address mail ON mail.key = matches.mailing_address_key
-    <if test="query != null" >
+    <if test="q != null" >
       ORDER BY matches.score desc
     </if>
     LIMIT 20
   </select>
+
 </mapper>
