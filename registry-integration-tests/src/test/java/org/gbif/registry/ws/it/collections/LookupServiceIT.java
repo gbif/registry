@@ -385,7 +385,7 @@ public class LookupServiceIT extends BaseItTest {
     // Should
     assertNotNull(result.getInstitutionMatch());
     Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
-    assertEquals(Match.MatchType.MACHINE_TAG, institutionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXPLICIT_MAPPING, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
     assertTrue(institutionMatch.getReasons().contains(Match.Reason.INSTITUTION_TAG));
@@ -393,7 +393,7 @@ public class LookupServiceIT extends BaseItTest {
 
     assertNotNull(result.getCollectionMatch());
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
-    assertEquals(Match.MatchType.MACHINE_TAG, collectionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXPLICIT_MAPPING, collectionMatch.getMatchType());
     assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.COLLECTION_TAG));
@@ -424,7 +424,7 @@ public class LookupServiceIT extends BaseItTest {
     // Should
     assertNotNull(result.getInstitutionMatch());
     Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
-    assertEquals(Match.MatchType.MACHINE_TAG, institutionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXPLICIT_MAPPING, institutionMatch.getMatchType());
     assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
     assertTrue(institutionMatch.getReasons().contains(Match.Reason.COLLECTION_TO_INSTITUTION_TAG));
@@ -432,7 +432,7 @@ public class LookupServiceIT extends BaseItTest {
 
     assertNotNull(result.getCollectionMatch());
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
-    assertEquals(Match.MatchType.MACHINE_TAG, collectionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXPLICIT_MAPPING, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.INSTITUTION_TO_COLLECTION_TAG));
