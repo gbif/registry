@@ -153,5 +153,6 @@ public interface PipelineProcessMapper {
    * @param status status to update
    */
   void updatePipelineStatus(
-          @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("status") PipelineStep.Status status);
+      @Param("pipelineExecutionKey") long pipelineExecutionKey,
+      @Param("status") PipelineStep.Status status);
 }
