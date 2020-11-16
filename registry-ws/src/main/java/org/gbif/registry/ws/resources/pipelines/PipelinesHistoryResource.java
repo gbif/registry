@@ -175,7 +175,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @RequestParam("reason") String reason,
       @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-              boolean markPreviousAttemptAsFailed,
+          boolean markPreviousAttemptAsFailed,
       @RequestBody(required = false) RunAllParams runAllParams) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -203,7 +203,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @RequestParam("reason") String reason,
       @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-              boolean markPreviousAttemptAsFailed) {
+          boolean markPreviousAttemptAsFailed) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.runLastAttempt(
         datasetKey,
@@ -229,7 +229,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       @RequestParam("steps") String steps,
       @RequestParam("reason") String reason,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-              boolean markPreviousAttemptAsFailed) {
+          boolean markPreviousAttemptAsFailed) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.runPipelineAttempt(
         datasetKey,

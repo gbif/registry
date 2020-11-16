@@ -45,7 +45,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
    *     latest.
    * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
-   *      during processing a dataset  
+   *      during processing a dataset
    * @return a response containing the request result
    */
   RunPipelineResponse runLastAttempt(
