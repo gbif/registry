@@ -93,7 +93,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         List<T> entity = getLookupMapper().lookup(null, null, mtKey);
         if (entity != null && entity.size() == 1) {
           matchesMap
-              .computeIfAbsent(mtKey, k -> Match.machineTag(toEntityMatched(entity.get(0))))
+              .computeIfAbsent(mtKey, k -> Match.explicitMapping(toEntityMatched(entity.get(0))))
               .addReason(reason);
         }
       }
@@ -113,7 +113,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         acceptedMatch.setStatus(Match.Status.ACCEPTED);
         return acceptedMatch;
       }
-      return Match.none(Match.Status.AMBIGUOUS_MACHINE_TAGS);
+      return Match.none(Match.Status.AMBIGUOUS_EXPLICIT_MAPPINGS);
     } else if (!exactMatches.isEmpty()) {
       Set<Match<R>> filteredMatched = filterMatches(exactMatches, exactExcludeFilter);
       if (filteredMatched.isEmpty()) {
