@@ -107,9 +107,9 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     String query =
-        searchRequest.getQuery() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQuery()))
-            : searchRequest.getQuery();
+        searchRequest.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            : searchRequest.getQ();
 
     CollectionSearchParams params =
         CollectionSearchParams.builder()

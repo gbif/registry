@@ -292,4 +292,10 @@
     </where>
   </select>
 
+  <update id="updatePipelineStatus">
+    UPDATE pipeline_step
+    SET state = #{status,jdbcType=OTHER}
+    WHERE pipeline_execution_key = #{pipelineExecutionKey,jdbcType=BIGINT}
+  </update>
+
 </mapper>

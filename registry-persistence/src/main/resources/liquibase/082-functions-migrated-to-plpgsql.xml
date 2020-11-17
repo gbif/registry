@@ -1,0 +1,33 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="82" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+         CREATE OR REPLACE FUNCTION normalize_name(input text)
+         RETURNS text AS
+          $$
+          BEGIN
+              RETURN regexp_replace(quote_literal(unaccent(lower(trim(input)))),'\s+','','g');
+          END;
+          $$
+          LANGUAGE plpgsql
+          IMMUTABLE
+          RETURNS NULL ON NULL INPUT;
+
+          CREATE OR REPLACE FUNCTION normalize_identifier(input text)
+          RETURNS text AS
+          $$
+          BEGIN
+              RETURN regexp_replace(trim(input), 'http://|https://|urn:uuid:|urn:lsid:', '');
+          END;
+          $$
+          LANGUAGE plpgsql
+          IMMUTABLE
+          RETURNS NULL ON NULL INPUT;
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

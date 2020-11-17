@@ -127,9 +127,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String reason,
       String user,
       String prefix,
-      boolean useLastSuccessful) {
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed) {
     int attempt = findAttempt(datasetKey, steps, useLastSuccessful);
-    return runPipelineAttempt(datasetKey, attempt, steps, reason, user, prefix);
+    return runPipelineAttempt(
+        datasetKey, attempt, steps, reason, user, prefix, markPreviousAttemptAsFailed);
   }
 
   private int findAttempt(UUID datasetKey, Set<StepType> steps, boolean useLastSuccessful) {
@@ -154,13 +156,21 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       String user,
       List<UUID> datasetsToExclude,
       List<UUID> datasetsToInclude,
-      boolean useLastSuccessful) {
+      boolean useLastSuccessful,
+      boolean markPreviousAttemptAsFailed) {
     String prefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
     CompletableFuture.runAsync(
         () ->
             doOnAllDatasets(
                 datasetKey ->
-                    runLastAttempt(datasetKey, steps, reason, user, prefix, useLastSuccessful),
+                    runLastAttempt(
+                        datasetKey,
+                        steps,
+                        reason,
+                        user,
+                        prefix,
+                        useLastSuccessful,
+                        markPreviousAttemptAsFailed),
                 datasetsToExclude,
                 datasetsToInclude),
         executorService);
@@ -307,6 +317,19 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
   }
 
+  private void markPreviousAttemptAsFailed(PipelineProcess pipelineProcess) {
+    // get last execution
+    PipelineExecution lastExecution =
+        pipelineProcess.getExecutions().stream()
+            .max(Comparator.comparing(PipelineExecution::getCreated))
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Couldn't find las execution for process: " + pipelineProcess));
+
+    mapper.updatePipelineStatus(lastExecution.getKey(), PipelineStep.Status.FAILED);
+  }
+
   @Override
   public PagingResponse<PipelineProcess> history(Pageable pageable) {
     long count = mapper.count(null, null);
@@ -338,7 +361,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       Set<StepType> steps,
       String reason,
       String user,
-      String prefix) {
+      String prefix,
+      boolean markPreviousAttemptAsFailed) {
     Objects.requireNonNull(datasetKey, "DatasetKey can't be null");
     Objects.requireNonNull(steps, "Steps can't be null");
     Objects.requireNonNull(reason, "Reason can't be null");
@@ -347,8 +371,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
+    PipelineStep.Status status = getStatus(process);
+
+    if (markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
+      markPreviousAttemptAsFailed(process);
+    }
+
     // Checks that the pipelines is not in RUNNING state
-    if (getStatus(process) == PipelineStep.Status.RUNNING) {
+    if (!markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
           .setSteps(steps)

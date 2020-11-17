@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.BaseEntityMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
 import org.gbif.registry.service.collections.lookup.Matches;
 
@@ -57,17 +58,16 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
   public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
   public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
 
-
   protected final String apiBaseUrl;
 
   protected BaseMatcher(String apiBaseUrl) {
     this.apiBaseUrl = apiBaseUrl;
   }
 
-  protected Optional<Set<Match<R>>> matchWithMachineTags(
+  protected Set<Match<R>> matchWithMachineTags(
       List<MachineTag> machineTags, BiConsumer<MachineTag, Map<UUID, Match<R>>> tagProcessor) {
     if (machineTags == null || machineTags.isEmpty()) {
-      return Optional.empty();
+      return Collections.emptySet();
     }
 
     Map<UUID, Match<R>> matchesMap = new HashMap<>();
@@ -75,9 +75,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         .filter(isMachineTagSupported())
         .forEach(mt -> tagProcessor.accept(mt, matchesMap));
 
-    return matchesMap.isEmpty()
-        ? Optional.empty()
-        : Optional.of(new HashSet<>(matchesMap.values()));
+    return matchesMap.isEmpty() ? Collections.emptySet() : new HashSet<>(matchesMap.values());
   }
 
   protected void addMachineTagMatch(
@@ -95,7 +93,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         List<T> entity = getLookupMapper().lookup(null, null, mtKey);
         if (entity != null && entity.size() == 1) {
           matchesMap
-              .computeIfAbsent(mtKey, k -> Match.machineTag(toEntityMatched(entity.get(0))))
+              .computeIfAbsent(mtKey, k -> Match.explicitMapping(toEntityMatched(entity.get(0))))
               .addReason(reason);
         }
       }
@@ -115,7 +113,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         acceptedMatch.setStatus(Match.Status.ACCEPTED);
         return acceptedMatch;
       }
-      return Match.none(Match.Status.AMBIGUOUS_MACHINE_TAGS);
+      return Match.none(Match.Status.AMBIGUOUS_EXPLICIT_MAPPINGS);
     } else if (!exactMatches.isEmpty()) {
       Set<Match<R>> filteredMatched = filterMatches(exactMatches, exactExcludeFilter);
       if (filteredMatched.isEmpty()) {
@@ -186,11 +184,8 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
   }
 
   protected boolean matchesCountry(T dto, Country country) {
-    if (country == null) {
-      return false;
-    }
-
-    return dto.getAddressCountry() == country || dto.getMailingAddressCountry() == country;
+    return country != null
+        && (dto.getAddressCountry() == country || dto.getMailingAddressCountry() == country);
   }
 
   protected boolean isEnoughMatches(LookupParams params, Matches<R> matches) {
@@ -204,22 +199,27 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         : matches;
   }
 
+  private static UUID parseUUID(String value) {
+    try {
+      return value != null ? UUID.fromString(value) : null;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private static String cleanString(String value) {
+    return !Strings.isNullOrEmpty(value) ? value.trim() : null;
+  }
+
   protected List<T> getDbMatches(String codeParam, String identifierParam) {
-    String code = !Strings.isNullOrEmpty(codeParam) ? codeParam.trim() : null;
-    String identifier = !Strings.isNullOrEmpty(identifierParam) ? identifierParam.trim() : null;
+    String code = cleanString(codeParam);
+    String identifier = cleanString(identifierParam);
 
     if (code == null && identifier == null) {
       return Collections.emptyList();
     }
 
-    UUID key = null;
-    if (identifier != null) {
-      try {
-        key = UUID.fromString(identifier);
-      } catch (Exception e) {
-        // ignore
-      }
-    }
+    UUID key = parseUUID(identifier);
 
     return getLookupMapper().lookup(code, identifier, key);
   }
@@ -232,23 +232,51 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     } else {
       match = fuzzy(toEntityMatched(dto));
       fuzzyMatches.add(match);
-      if (dto.isKeyMatch()) {
-        match.addReason(KEY_MATCH);
-      }
-      if (dto.isCodeMatch()) {
-        match.addReason(CODE_MATCH);
-      }
-      if (dto.isIdentifierMatch()) {
-        match.addReason(IDENTIFIER_MATCH);
-      }
-      if (dto.isAlternativeCodeMatch()) {
-        match.addReason(ALTERNATIVE_CODE_MATCH);
-      }
-      if (dto.isNameMatchWithCode() || dto.isNameMatchWithIdentifier()) {
-        match.addReason(NAME_MATCH);
-      }
+      match.setReasons(getMatchReasons(dto));
     }
     return match;
+  }
+
+  protected Set<Match.Reason> getMatchReasons(T dto) {
+    Set<Match.Reason> reasons = new HashSet<>();
+    if (dto.isKeyMatch()) {
+      reasons.add(KEY_MATCH);
+    }
+    if (dto.isCodeMatch()) {
+      reasons.add(CODE_MATCH);
+    }
+    if (dto.isIdentifierMatch()) {
+      reasons.add(IDENTIFIER_MATCH);
+    }
+    if (dto.isAlternativeCodeMatch()) {
+      reasons.add(ALTERNATIVE_CODE_MATCH);
+    }
+    if (dto.isNameMatchWithCode() || dto.isNameMatchWithIdentifier()) {
+      reasons.add(NAME_MATCH);
+    }
+
+    return reasons;
+  }
+
+  protected static <T extends BaseEntityMatchedDto> void updateMatches(T existing, T newDto) {
+    if (newDto.isKeyMatch()) {
+      existing.setKeyMatch(true);
+    }
+    if (newDto.isCodeMatch()) {
+      existing.setCodeMatch(true);
+    }
+    if (newDto.isIdentifierMatch()) {
+      existing.setIdentifierMatch(true);
+    }
+    if (newDto.isAlternativeCodeMatch()) {
+      existing.setAlternativeCodeMatch(true);
+    }
+    if (newDto.isNameMatchWithCode()) {
+      existing.setNameMatchWithCode(true);
+    }
+    if (newDto.isNameMatchWithIdentifier()) {
+      existing.setNameMatchWithIdentifier(true);
+    }
   }
 
   abstract LookupMapper<T> getLookupMapper();

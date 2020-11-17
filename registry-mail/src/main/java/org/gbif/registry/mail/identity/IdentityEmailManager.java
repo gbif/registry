@@ -31,7 +31,8 @@ import org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -101,9 +102,11 @@ public class IdentityEmailManager {
     try {
       return generateConfirmationEmailModel(
           user,
-          generateConfirmUserUrl(user.getUserName(), challengeCode.getCode()),
+          generateConfirmUserUrl(user.getLocale(), user.getUserName(), challengeCode.getCode())
+              .normalize()
+              .toURL(),
           IdentityEmailType.NEW_USER);
-    } catch (TemplateException e) {
+    } catch (URISyntaxException | TemplateException e) {
       throw new IOException(e);
     }
   }
@@ -113,9 +116,11 @@ public class IdentityEmailManager {
     try {
       return generateConfirmationEmailModel(
           user,
-          generateResetPasswordUrl(user.getUserName(), challengeCode.getCode()),
+          generateResetPasswordUrl(user.getLocale(), user.getUserName(), challengeCode.getCode())
+              .normalize()
+              .toURL(),
           IdentityEmailType.RESET_PASSWORD);
-    } catch (TemplateException e) {
+    } catch (URISyntaxException | TemplateException e) {
       throw new IOException(e);
     }
   }
@@ -162,14 +167,18 @@ public class IdentityEmailManager {
   public BaseEmailModel generateAccountEmailChangeEmailModel(
       GbifUser user, String newEmail, ChallengeCode challengeCode) throws IOException {
     try {
-      URL url = generateChangeEmailUrl(user.getUserName(), challengeCode.getCode(), newEmail);
+      URL url =
+          generateChangeEmailUrl(
+                  user.getLocale(), user.getUserName(), challengeCode.getCode(), newEmail)
+              .normalize()
+              .toURL();
       BaseTemplateDataModel dataModel =
           new AccountChangeEmailTemplateDataModel(
               user.getUserName(), url, user.getEmail(), newEmail);
       Locale locale = getLocale(user);
       return emailTemplateProcessor.buildEmail(
           IdentityEmailType.CHANGE_EMAIL, Collections.singleton(newEmail), dataModel, locale);
-    } catch (TemplateException e) {
+    } catch (URISyntaxException | TemplateException e) {
       throw new IOException(e);
     }
   }
@@ -190,29 +199,33 @@ public class IdentityEmailManager {
     }
   }
 
-  private URL generateConfirmUserUrl(String userName, UUID confirmationKey)
-      throws MalformedURLException {
-    return new URL(
+  private URI generateConfirmUserUrl(Locale locale, String userName, UUID confirmationKey)
+      throws URISyntaxException {
+    return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getConfirmUser(),
+            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
             userName,
             confirmationKey.toString()));
   }
 
-  private URL generateResetPasswordUrl(String userName, UUID confirmationKey)
-      throws MalformedURLException {
-    return new URL(
+  private URI generateResetPasswordUrl(Locale locale, String userName, UUID confirmationKey)
+      throws URISyntaxException {
+    return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getResetPassword(),
+            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
             userName,
             confirmationKey.toString()));
   }
 
-  private URL generateChangeEmailUrl(String userName, UUID confirmationKey, String email)
-      throws MalformedURLException, UnsupportedEncodingException {
-    return new URL(
+  private URI generateChangeEmailUrl(
+      Locale locale, String userName, UUID confirmationKey, String email)
+      throws URISyntaxException, UnsupportedEncodingException {
+    return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
+            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
             userName,
             confirmationKey.toString(),
             URLEncoder.encode(email, StandardCharsets.UTF_8.name())));
