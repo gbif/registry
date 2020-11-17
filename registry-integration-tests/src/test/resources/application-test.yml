@@ -16,9 +16,9 @@ identity:
   surety:
     mail:
       urlTemplate:
-        confirmUser: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
-        resetPassword: https://www.gbif-dev.org/user/confirm?username={0}&code={1}
-        changeEmail: https://www.gbif-dev.org/user/change-email?username={0}&code={1}&email={2}
+        confirmUser: https://demo.gbif-dev.org/{0}/user/confirm?username={1}&code={2}
+        resetPassword: https://demo.gbif-dev.org/{0}/user/confirm?username={1}&code={2}
+        changeEmail: https://demo.gbif-dev.org/{0}/user/change-email?username={1}&code={2}&email={3}
 
 application:
   key: gbif.app.it

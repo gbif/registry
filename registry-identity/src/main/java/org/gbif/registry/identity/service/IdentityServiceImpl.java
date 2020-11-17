@@ -122,6 +122,8 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
         if (userByEmail != null) {
           return withError(ModelMutationError.EMAIL_ALREADY_IN_USE);
         } else {
+          // copy settings if locale was updated
+          currentUser.setSettings(user.getSettings());
           userSuretyDelegate.onChangeEmail(currentUser, user.getEmail());
         }
 

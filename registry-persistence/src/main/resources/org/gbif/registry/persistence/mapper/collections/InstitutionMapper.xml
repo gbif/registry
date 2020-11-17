@@ -21,7 +21,6 @@
 
   <resultMap id="INSTITUTION_MATCHED_DTO_MAP" type="InstitutionMatchedDto" autoMapping="true">
     <id property="key" column="key"/>
-    <collection property="identifiers" column="key" select="listIdentifierValues"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
@@ -273,42 +272,57 @@
     WHERE deleted IS NOT NULL
   </select>
 
+  <!-- LOOKUP -->
+  <sql id="LOOKUP_MATCH_FIELDS">
+    i.key, i.name, i.code, i.address_key, i.mailing_address_key
+  </sql>
+
   <select id="lookup" resultMap="INSTITUTION_MATCHED_DTO_MAP">
-    SELECT DISTINCT ON (i.key) i.key, i.name, i.code, addr.country addressCountry, mailing_addr.country mailingAddressCountry
+    SELECT matches.*, addr.country addressCountry, mailing_addr.country mailingAddressCountry, id.identifier
+    FROM (
+    <trim prefixOverrides="UNION ALL">
     <if test="key != null" >
-      ,i.key = #{key,jdbcType=OTHER} AS key_match
+      SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+      1 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+      FROM institution i
+      WHERE i.key = #{key,jdbcType=OTHER} AND i.deleted is null
     </if>
     <if test="identifier != null" >
-      ,normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AS identifier_match
-      ,normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AS name_match_with_identifier
+    UNION ALL
+      SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+      0 AS key_match, 1 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+      FROM institution i
+      INNER JOIN institution_identifier ii ON ii.institution_key = i.key
+      INNER JOIN identifier id ON ii.identifier_key = id."key"
+      WHERE normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
+    UNION ALL
+      SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+      0 AS key_match, 0 AS identifier_match, 1 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+      FROM institution i
+      WHERE normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
     </if>
     <if test="code != null" >
-      ,i.code = #{code,jdbcType=VARCHAR} AS code_match
-      ,i.alternative_codes ?? #{code,jdbcType=VARCHAR} AS alternative_code_match
-      ,normalize_name(i.name) = normalize_name(#{code,jdbcType=VARCHAR}) AS name_match_with_code
+      UNION ALL
+        SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+        0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+        FROM institution i
+        WHERE i.code = #{code,jdbcType=VARCHAR} AND i.deleted is null
+      UNION ALL
+        SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+        0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match, 0 AS name_match_with_code
+        FROM institution i
+        WHERE i.alternative_codes ?? #{code,jdbcType=VARCHAR} AND i.deleted is null
+      UNION ALL
+        SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+        0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 1 AS name_match_with_code
+        FROM institution i
+        WHERE normalize_name(i.name) = normalize_name(#{code,jdbcType=VARCHAR}) AND i.deleted is null
     </if>
-    FROM institution i
-    LEFT JOIN address addr ON addr.key = i.address_key
-    LEFT JOIN address mailing_addr ON mailing_addr.key = i.mailing_address_key
-    <if test="identifier != null" >
-      LEFT JOIN institution_identifier ii ON ii.institution_key = i.key
-      LEFT JOIN identifier id ON ii.identifier_key = id."key"
-    </if>
-    <where>
-      <if test="key != null" >
-        i.key = #{key,jdbcType=OTHER}
-      </if>
-      <if test="identifier != null" >
-        OR normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR})
-        OR normalize_name(i.name) = normalize_name(#{identifier,jdbcType=VARCHAR})
-      </if>
-      <if test="code != null" >
-        OR i.code = #{code,jdbcType=VARCHAR}
-        OR i.alternative_codes ?? #{code,jdbcType=VARCHAR}
-        OR normalize_name(i.name) = normalize_name(#{code,jdbcType=VARCHAR})
-      </if>
-      AND i.deleted is null
-    </where>
+    </trim>) AS matches
+    LEFT JOIN institution_identifier ii ON ii.institution_key = matches.key
+    LEFT JOIN identifier id ON ii.identifier_key = id."key"
+    LEFT JOIN address addr ON addr.key = matches.address_key
+    LEFT JOIN address mailing_addr ON mailing_addr.key = matches.mailing_address_key
   </select>
 
   <!-- TAGS -->
@@ -347,13 +361,6 @@
 
   <select id="listIdentifiers" resultType="Identifier">
     SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
-    FROM identifier INNER JOIN institution_identifier ON identifier_key = key
-    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
-    ORDER BY created DESC
-  </select>
-
-  <select id="listIdentifierValues" resultType="java.lang.String">
-    SELECT identifier.identifier
     FROM identifier INNER JOIN institution_identifier ON identifier_key = key
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
