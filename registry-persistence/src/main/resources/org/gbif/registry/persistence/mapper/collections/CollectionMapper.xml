@@ -314,40 +314,58 @@
     <trim prefixOverrides="UNION ALL">
       <if test="key != null" >
         SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-        1 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+        1 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
+        0 AS name_match_with_code, 0 AS explicit_mapping
         FROM collection c
         WHERE c.key = #{key,jdbcType=OTHER} AND c.deleted is null
       </if>
       <if test="identifier != null" >
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-          0 AS key_match, 1 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+          0 AS key_match, 1 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
+          0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
           INNER JOIN collection_identifier ci ON ci.collection_key = c.key
-          INNER JOIN identifier id ON ci.identifier_key = id."key"
+          INNER JOIN identifier id ON ci.identifier_key = id.key
           WHERE normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-          0 AS key_match, 0 AS identifier_match, 1 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+          0 AS key_match, 0 AS identifier_match, 1 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
+          0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
           WHERE normalize_name(c.name) = normalize_name(#{identifier,jdbcType=VARCHAR}) AND c.deleted is null
       </if>
       <if test="code != null" >
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match, 0 AS name_match_with_code
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 1 AS code_match, 0 AS alternative_code_match,
+          0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
           WHERE c.code = #{code,jdbcType=VARCHAR} AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match, 0 AS name_match_with_code
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 1 AS alternative_code_match,
+          0 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
           WHERE c.alternative_codes ?? #{code,jdbcType=VARCHAR} AND c.deleted is null
         UNION ALL
           SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
-          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match, 1 AS name_match_with_code
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
+          1 AS name_match_with_code, 0 AS explicit_mapping
           FROM collection c
           WHERE normalize_name(c.name) = normalize_name(#{code,jdbcType=VARCHAR}) AND c.deleted is null
+      </if>
+      <if test="datasetKey != null">
+        UNION ALL
+          SELECT DISTINCT ON (c.key) <include refid="LOOKUP_MATCH_FIELDS"/>,
+          0 AS key_match, 0 AS identifier_match, 0 AS name_match_with_identifier, 0 AS code_match, 0 AS alternative_code_match,
+          0 AS name_match_with_code, 1 AS explicit_mapping
+          FROM collection c
+          INNER JOIN collection_occurrence_mapping com ON com.collection_key = c.key
+          INNER JOIN occurrence_mapping om ON om.key = com.occurrence_mapping_key
+          WHERE c.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
+          <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
+          <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
       </if>
     </trim>) AS matches
     LEFT JOIN institution i ON i.key = matches.institution_key
@@ -518,5 +536,31 @@
     collection_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
   <!-- END COMMENTS -->
+
+  <!-- OCCURRENCE MAPPINGS -->
+  <insert id="addOccurrenceMapping">
+    INSERT INTO collection_occurrence_mapping(collection_key, occurrence_mapping_key)
+    VALUES(
+    #{targetEntityKey,jdbcType=OTHER},
+    #{occurrenceMappingKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <update id="deleteOccurrenceMapping">
+    DELETE FROM occurrence_mapping USING collection_occurrence_mapping
+    WHERE
+    occurrence_mapping_key = occurrence_mapping.key
+    AND collection_key = #{targetEntityKey,jdbcType=OTHER}
+    AND occurrence_mapping_key = #{occurrenceMappingKey,jdbcType=INTEGER}
+  </update>
+
+  <select id="listOccurrenceMappings" resultType="org.gbif.api.model.collections.OccurrenceMapping">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper.OCCURRENCE_MAPPING_FIELDS"/>
+    FROM occurrence_mapping
+    INNER JOIN collection_occurrence_mapping  iom ON iom.occurrence_mapping_key = key
+    WHERE iom.collection_key = #{targetEntityKey,jdbcType=OTHER}
+    ORDER BY created DESC
+  </select>
+  <!-- END EXPLICIT MAPPINGS -->
 
 </mapper>

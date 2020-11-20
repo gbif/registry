@@ -1,0 +1,31 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="84" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+          CREATE TABLE occurrence_mapping(
+            key serial NOT NULL PRIMARY KEY,
+            code varchar CHECK (assert_min_length(code, 1)),
+            identifier varchar CHECK (assert_min_length(identifier, 1)),
+            dataset_key uuid NOT NULL REFERENCES dataset(key) ON DELETE CASCADE,
+            created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
+	          created timestamptz NOT NULL DEFAULT now());
+
+	        CREATE TABLE institution_occurrence_mapping (
+            institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+            occurrence_mapping_key int4 NOT NULL REFERENCES occurrence_mapping(key) ON DELETE CASCADE,
+            PRIMARY KEY (institution_key, occurrence_mapping_key)
+          );
+
+          CREATE TABLE collection_occurrence_mapping (
+            collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+            occurrence_mapping_key int4 NOT NULL REFERENCES occurrence_mapping(key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_key, occurrence_mapping_key)
+          );
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

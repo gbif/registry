@@ -21,14 +21,10 @@ import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.model.collections.lookup.Match;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.registry.service.collections.lookup.matchers.CollectionMatcher;
 import org.gbif.registry.service.collections.lookup.matchers.InstitutionMatcher;
 
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -47,32 +43,23 @@ public class DefaultLookupService implements LookupService {
 
   private final InstitutionMatcher institutionMatcher;
   private final CollectionMatcher collectionMatcher;
-  private final DatasetService datasetService;
 
   @Autowired
   public DefaultLookupService(
-      InstitutionMatcher institutionMatcher,
-      CollectionMatcher collectionMatcher,
-      DatasetService datasetService) {
+      InstitutionMatcher institutionMatcher, CollectionMatcher collectionMatcher) {
     this.institutionMatcher = institutionMatcher;
     this.collectionMatcher = collectionMatcher;
-    this.datasetService = datasetService;
   }
 
   @Override
   public LookupResult lookup(LookupParams params) {
     LookupResult result = new LookupResult();
 
-    // get the machine tags of the dataset that will be used by the matchers
-    List<MachineTag> datasetMachineTags = getDatasetMachineTags(params.getDatasetKey());
-
-    Matches<InstitutionMatched> institutionMatches =
-        institutionMatcher.matchInstitutions(params, datasetMachineTags);
+    Matches<InstitutionMatched> institutionMatches = institutionMatcher.matchInstitutions(params);
     result.setInstitutionMatch(institutionMatches.getAcceptedMatch());
 
     Matches<CollectionMatched> collectionMatches =
-        collectionMatcher.matchCollections(
-            params, getInstitutionsMatched(institutionMatches), datasetMachineTags);
+        collectionMatcher.matchCollections(params, getInstitutionsMatched(institutionMatches));
     result.setCollectionMatch(collectionMatches.getAcceptedMatch());
 
     if (params.isVerbose()) {
@@ -98,19 +85,5 @@ public class DefaultLookupService implements LookupService {
     return institutionMatches.getAllMatches().stream()
         .map(m -> m.getEntityMatched().getKey())
         .collect(Collectors.toSet());
-  }
-
-  private List<MachineTag> getDatasetMachineTags(UUID datasetKey) {
-    if (datasetKey == null) {
-      return Collections.emptyList();
-    }
-
-    try {
-      // done in a try-catch since we may get non-existing dataset keys
-      return datasetService.listMachineTags(datasetKey);
-    } catch (Exception ex) {
-      LOG.warn("Couldn't find dataset for key {}", datasetKey);
-      return Collections.emptyList();
-    }
   }
 }

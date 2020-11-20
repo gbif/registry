@@ -23,15 +23,15 @@ import java.util.Set;
 
 /** Wraps the response from the GrSciColl matchers. */
 public class Matches<T extends EntityMatched> {
-  private Set<Match<T>> machineTagMatches = new HashSet<>();
+  private Set<Match<T>> explicitMatches = new HashSet<>();
   private Set<Match<T>> exactMatches = new HashSet<>();
   private Set<Match<T>> fuzzyMatches = new HashSet<>();
   private Match<T> acceptedMatch;
 
   public Set<Match<T>> getAllMatches() {
     Set<Match<T>> all = new HashSet<>();
-    if (machineTagMatches != null) {
-      all.addAll(machineTagMatches);
+    if (explicitMatches != null) {
+      all.addAll(explicitMatches);
     }
     if (exactMatches != null) {
       all.addAll(exactMatches);
@@ -43,15 +43,15 @@ public class Matches<T extends EntityMatched> {
   }
 
   public boolean isEmpty() {
-    return machineTagMatches.isEmpty() && exactMatches.isEmpty() && fuzzyMatches.isEmpty();
+    return explicitMatches.isEmpty() && exactMatches.isEmpty() && fuzzyMatches.isEmpty();
   }
 
-  public Set<Match<T>> getMachineTagMatches() {
-    return machineTagMatches;
+  public Set<Match<T>> getExplicitMatches() {
+    return explicitMatches;
   }
 
-  public void setMachineTagMatches(Set<Match<T>> machineTagMatches) {
-    this.machineTagMatches = machineTagMatches;
+  public void setExplicitMatches(Set<Match<T>> explicitMatches) {
+    this.explicitMatches = explicitMatches;
   }
 
   public Set<Match<T>> getExactMatches() {

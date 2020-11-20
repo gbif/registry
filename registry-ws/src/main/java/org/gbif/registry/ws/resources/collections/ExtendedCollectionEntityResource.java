@@ -21,6 +21,8 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
@@ -31,6 +33,7 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
+import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
@@ -43,6 +46,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.ws.WebApplicationException;
 
@@ -56,6 +60,8 @@ import javax.validation.groups.Default;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -80,9 +86,9 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class ExtendedCollectionEntityResource<
         T extends
-            CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable
-                & Commentable>
-    extends BaseCollectionEntityResource<T> implements ContactService {
+            CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable & Commentable
+                & OccurrenceMappeable>
+    extends BaseCollectionEntityResource<T> implements ContactService, OccurrenceMappingService {
 
   private final BaseMapper<T> baseMapper;
   private final AddressMapper addressMapper;
@@ -90,6 +96,7 @@ public abstract class ExtendedCollectionEntityResource<
   private final TagMapper tagMapper;
   private final MachineTagMapper machineTagMapper;
   private final IdentifierMapper identifierMapper;
+  private final OccurrenceMappingMapper occurrenceMappingMapper;
   private final EventManager eventManager;
   private final Class<T> objectClass;
 
@@ -101,6 +108,7 @@ public abstract class ExtendedCollectionEntityResource<
       ContactableMapper contactableMapper,
       MachineTagMapper machineTagMapper,
       CommentMapper commentMapper,
+      OccurrenceMappingMapper occurrenceMappingMapper,
       EventManager eventManager,
       Class<T> objectClass,
       EditorAuthorizationService userAuthService,
@@ -121,6 +129,7 @@ public abstract class ExtendedCollectionEntityResource<
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
+    this.occurrenceMappingMapper = occurrenceMappingMapper;
     this.eventManager = eventManager;
     this.objectClass = objectClass;
   }
@@ -267,6 +276,47 @@ public abstract class ExtendedCollectionEntityResource<
   @Override
   public List<Person> listContacts(@PathVariable UUID key) {
     return contactableMapper.listContacts(key);
+  }
+
+  @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
+  @Transactional
+  @Trim
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Override
+  public int addOccurrenceMapping(
+      @PathVariable("key") UUID entityKey, @RequestBody OccurrenceMapping occurrenceMapping) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    occurrenceMapping.setCreatedBy(authentication.getName());
+    checkArgument(
+        occurrenceMapping.getKey() == null, "Unable to create an entity which already has a key");
+    occurrenceMappingMapper.createOccurrenceMapping(occurrenceMapping);
+    baseMapper.addOccurrenceMapping(entityKey, occurrenceMapping.getKey());
+
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            entityKey, objectClass, OccurrenceMapping.class));
+
+    return occurrenceMapping.getKey();
+  }
+
+  @GetMapping("{key}/occurrenceMapping")
+  @Nullable
+  @Override
+  public List<OccurrenceMapping> listOccurrenceMappings(@NotNull @PathVariable("key") UUID uuid) {
+    return baseMapper.listOccurrenceMappings(uuid);
+  }
+
+  @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Transactional
+  @Override
+  public void deleteOccurrenceMapping(
+      @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
+    baseMapper.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            entityKey, objectClass, OccurrenceMapping.class));
   }
 
   /**

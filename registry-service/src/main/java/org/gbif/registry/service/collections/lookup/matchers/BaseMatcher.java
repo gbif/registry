@@ -18,7 +18,6 @@ package org.gbif.registry.service.collections.lookup.matchers;
 import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.BaseEntityMatchedDto;
@@ -27,14 +26,11 @@ import org.gbif.registry.service.collections.lookup.Matches;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -47,6 +43,7 @@ import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATC
 import static org.gbif.api.model.collections.lookup.Match.Reason.KEY_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
 import static org.gbif.api.model.collections.lookup.Match.exact;
+import static org.gbif.api.model.collections.lookup.Match.explicitMapping;
 import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 
 /** Base matcher that contains common methods for the GrSciColl matchers. */
@@ -64,52 +61,16 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     this.apiBaseUrl = apiBaseUrl;
   }
 
-  protected Set<Match<R>> matchWithMachineTags(
-      List<MachineTag> machineTags, BiConsumer<MachineTag, Map<UUID, Match<R>>> tagProcessor) {
-    if (machineTags == null || machineTags.isEmpty()) {
-      return Collections.emptySet();
-    }
-
-    Map<UUID, Match<R>> matchesMap = new HashMap<>();
-    machineTags.stream()
-        .filter(isMachineTagSupported())
-        .forEach(mt -> tagProcessor.accept(mt, matchesMap));
-
-    return matchesMap.isEmpty() ? Collections.emptySet() : new HashSet<>(matchesMap.values());
-  }
-
-  protected void addMachineTagMatch(
-      MachineTag mt, String param, Map<UUID, Match<R>> matchesMap, Match.Reason reason) {
-    if (Strings.isNullOrEmpty(param)) {
-      return;
-    }
-
-    String[] val = mt.getValue().split(":");
-    if (val.length > 1) {
-      UUID mtKey = UUID.fromString(val[0]);
-      String mtCode = mt.getValue().substring(val[0].length() + 1);
-
-      if (!Strings.isNullOrEmpty(param) && mtCode.equals(param)) {
-        List<T> entity = getLookupMapper().lookup(null, null, mtKey);
-        if (entity != null && entity.size() == 1) {
-          matchesMap
-              .computeIfAbsent(mtKey, k -> Match.explicitMapping(toEntityMatched(entity.get(0))))
-              .addReason(reason);
-        }
-      }
-    }
-  }
-
   protected Match<R> chooseAccepted(
-      Set<Match<R>> machineTagMatches,
+      Set<Match<R>> explicitMatches,
       Set<Match<R>> exactMatches,
       Set<Match<R>> fuzzyMatches,
       Predicate<Match<R>> exactExcludeFilter,
       Predicate<Match<R>> fuzzyExcludeFilter,
       Match.Status filterStatus) {
-    if (!machineTagMatches.isEmpty()) {
-      if (machineTagMatches.size() == 1) {
-        Match<R> acceptedMatch = machineTagMatches.iterator().next();
+    if (!explicitMatches.isEmpty()) {
+      if (explicitMatches.size() == 1) {
+        Match<R> acceptedMatch = explicitMatches.iterator().next();
         acceptedMatch.setStatus(Match.Status.ACCEPTED);
         return acceptedMatch;
       }
@@ -211,7 +172,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     return !Strings.isNullOrEmpty(value) ? value.trim() : null;
   }
 
-  protected List<T> getDbMatches(String codeParam, String identifierParam) {
+  protected List<T> getDbMatches(String codeParam, String identifierParam, UUID datasetKey) {
     String code = cleanString(codeParam);
     String identifier = cleanString(identifierParam);
 
@@ -221,14 +182,21 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
 
     UUID key = parseUUID(identifier);
 
-    return getLookupMapper().lookup(code, identifier, key);
+    return getLookupMapper().lookup(code, identifier, key, datasetKey);
   }
 
-  protected Match<R> createMatch(Set<Match<R>> exactMatches, Set<Match<R>> fuzzyMatches, T dto) {
+  protected Match<R> createMatch(
+      Set<Match<R>> exactMatches,
+      Set<Match<R>> fuzzyMatches,
+      Set<Match<R>> explicitMatches,
+      T dto) {
     Match<R> match = null;
     if (dto.isCodeMatch() && dto.isIdentifierMatch()) {
       match = exact(toEntityMatched(dto), CODE_MATCH, IDENTIFIER_MATCH);
       exactMatches.add(match);
+    } else if (dto.isExplicitMapping()) {
+      match = explicitMapping(toEntityMatched(dto));
+      explicitMatches.add(match);
     } else {
       match = fuzzy(toEntityMatched(dto));
       fuzzyMatches.add(match);
@@ -277,11 +245,12 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     if (newDto.isNameMatchWithIdentifier()) {
       existing.setNameMatchWithIdentifier(true);
     }
+    if (newDto.isExplicitMapping()) {
+      existing.setExplicitMapping(true);
+    }
   }
 
   abstract LookupMapper<T> getLookupMapper();
 
   abstract R toEntityMatched(T dto);
-
-  abstract Predicate<MachineTag> isMachineTagSupported();
 }

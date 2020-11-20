@@ -18,22 +18,18 @@ package org.gbif.registry.service.collections.lookup.matchers;
 import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.service.collections.lookup.Matches;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
@@ -44,8 +40,6 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.api.model.collections.lookup.Match.Reason.COLLECTION_TO_INSTITUTION_TAG;
-import static org.gbif.api.model.collections.lookup.Match.Reason.INSTITUTION_TAG;
 import static org.gbif.api.model.collections.lookup.Match.Reason.POSSIBLY_ON_LOAN;
 
 @Component
@@ -61,22 +55,16 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     this.institutionMapper = institutionMapper;
   }
 
-  public Matches<InstitutionMatched> matchInstitutions(
-      LookupParams params, List<MachineTag> datasetMachineTags) {
+  public Matches<InstitutionMatched> matchInstitutions(LookupParams params) {
     Matches<InstitutionMatched> matches = new Matches<>();
-
-    matches.setMachineTagMatches(
-        matchWithMachineTags(datasetMachineTags, machineTagProcessor(params)));
 
     if (isEnoughMatches(params, matches)) {
       return setAccepted(matches);
     }
 
     List<InstitutionMatchedDto> dbMatches =
-        getDbMatches(params.getInstitutionCode(), params.getInstitutionId());
-
-    Set<Match<InstitutionMatched>> exactMatches = new HashSet<>();
-    Set<Match<InstitutionMatched>> fuzzyMatches = new HashSet<>();
+        getDbMatches(
+            params.getInstitutionCode(), params.getInstitutionId(), params.getDatasetKey());
 
     // the queries may return duplicates because we retrieve the list of identifiers in the same
     // query. Also, if an institution matches with several fields it will be duplicated
@@ -99,11 +87,15 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
           }
         });
 
+    Set<Match<InstitutionMatched>> exactMatches = new HashSet<>();
+    Set<Match<InstitutionMatched>> fuzzyMatches = new HashSet<>();
+    Set<Match<InstitutionMatched>> explicitMatches = new HashSet<>();
     dtosMap
         .values()
         .forEach(
             dto -> {
-              Match<InstitutionMatched> match = createMatch(exactMatches, fuzzyMatches, dto);
+              Match<InstitutionMatched> match =
+                  createMatch(exactMatches, fuzzyMatches, explicitMatches, dto);
 
               if (matchesCountry(dto, params.getCountry())) {
                 match.addReason(Match.Reason.COUNTRY_MATCH);
@@ -116,6 +108,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
 
     matches.setExactMatches(exactMatches);
     matches.setFuzzyMatches(fuzzyMatches);
+    matches.setExplicitMatches(explicitMatches);
 
     return setAccepted(matches);
   }
@@ -123,7 +116,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
   private Matches<InstitutionMatched> setAccepted(Matches<InstitutionMatched> matches) {
     matches.setAcceptedMatch(
         chooseAccepted(
-            matches.getMachineTagMatches(),
+            matches.getExplicitMatches(),
             matches.getExactMatches(),
             matches.getFuzzyMatches(),
             m -> !m.getReasons().contains(POSSIBLY_ON_LOAN),
@@ -131,18 +124,6 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
             Match.Status.AMBIGUOUS_OWNER));
 
     return matches;
-  }
-
-  private BiConsumer<MachineTag, Map<UUID, Match<InstitutionMatched>>> machineTagProcessor(
-      LookupParams params) {
-    return (mt, matchesMap) -> {
-      if (INSTITUTION_TAG_NAME.equals(mt.getName())) {
-        addMachineTagMatch(mt, params.getInstitutionCode(), matchesMap, INSTITUTION_TAG);
-      } else if (COLLECTION_TO_INSTITUTION_TAG_NAME.equals(mt.getName())) {
-        addMachineTagMatch(
-            mt, params.getCollectionCode(), matchesMap, COLLECTION_TO_INSTITUTION_TAG);
-      }
-    };
   }
 
   private boolean matchesOwnerInstitution(
@@ -185,13 +166,5 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     institutionMatched.setSelfLink(
         URI.create(apiBaseUrl + "grscicoll/institution/" + dto.getKey()));
     return institutionMatched;
-  }
-
-  @Override
-  Predicate<MachineTag> isMachineTagSupported() {
-    return mt ->
-        mt.getNamespace().equals(PROCESSING_NAMESPACE)
-            && Arrays.asList(INSTITUTION_TAG_NAME, COLLECTION_TO_INSTITUTION_TAG_NAME)
-                .contains(mt.getName());
   }
 }

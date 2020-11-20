@@ -32,6 +32,7 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
   private boolean alternativeCodeMatch;
   private boolean nameMatchWithCode;
   private boolean nameMatchWithIdentifier;
+  private boolean explicitMapping;
 
   @Override
   public UUID getKey() {
@@ -130,5 +131,14 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
 
   public void setNameMatchWithIdentifier(boolean nameMatchWithIdentifier) {
     this.nameMatchWithIdentifier = nameMatchWithIdentifier;
+  }
+
+  @Override
+  public boolean isExplicitMapping() {
+    return explicitMapping;
+  }
+
+  public void setExplicitMapping(boolean explicitMapping) {
+    this.explicitMapping = explicitMapping;
   }
 }

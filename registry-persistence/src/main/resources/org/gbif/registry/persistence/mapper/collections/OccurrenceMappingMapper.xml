@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper">
+
+  <sql id="OCCURRENCE_MAPPING_FIELDS">
+    key, code, identifier, dataset_key, created_by, created
+  </sql>
+
+  <insert id="createOccurrenceMapping" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO occurrence_mapping(code, identifier, dataset_key, created_by, created)
+    VALUES(
+      #{code,jdbcType=VARCHAR},
+      #{identifier,jdbcType=VARCHAR},
+      #{datasetKey,jdbcType=OTHER},
+      #{createdBy,jdbcType=VARCHAR},
+      now()
+    )
+  </insert>
+
+</mapper>

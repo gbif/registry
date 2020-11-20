@@ -311,6 +311,9 @@ public abstract class BaseCollectionEntityResource<
   @Override
   public void deleteMachineTags(UUID targetEntityKey, String namespace) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, null);
+    eventManager.post(
+        ChangedCollectionEntityComponentEvent.newInstance(
+            targetEntityKey, objectClass, MachineTag.class));
   }
 
   /**

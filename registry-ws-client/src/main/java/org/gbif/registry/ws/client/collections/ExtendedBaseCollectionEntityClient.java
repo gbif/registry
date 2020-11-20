@@ -17,11 +17,13 @@ package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
+import org.gbif.api.service.collections.OccurrenceMappingService;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,7 +37,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 public interface ExtendedBaseCollectionEntityClient<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
-    extends BaseCollectionEntityClient<T>, ContactService {
+    extends BaseCollectionEntityClient<T>, ContactService, OccurrenceMappingService {
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -55,4 +57,28 @@ public interface ExtendedBaseCollectionEntityClient<
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contact/{personKey}")
   @Override
   void removeContact(@PathVariable("key") UUID key, @PathVariable("personKey") UUID personKey);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/occurrenceMapping",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  int addOccurrenceMapping(
+      @PathVariable("key") UUID key, @RequestBody OccurrenceMapping occurrenceMapping);
+
+  @RequestMapping(
+      method = RequestMethod.DELETE,
+      value = "{key}/occurrenceMapping/{occurrenceMappingKey}")
+  @Override
+  void deleteOccurrenceMapping(
+      @PathVariable("key") UUID key,
+      @PathVariable("occurrenceMappingKey") int occurrenceMappingKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/occurrenceMapping",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID key);
 }
