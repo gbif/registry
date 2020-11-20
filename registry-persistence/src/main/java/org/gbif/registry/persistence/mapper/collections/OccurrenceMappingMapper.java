@@ -13,35 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper.collections.dto;
+package org.gbif.registry.persistence.mapper.collections;
 
-import org.gbif.api.vocabulary.Country;
+import org.gbif.api.model.collections.OccurrenceMapping;
 
-import java.util.UUID;
+import org.springframework.stereotype.Repository;
 
-public interface EntityMatchedDto {
+@Repository
+public interface OccurrenceMappingMapper {
 
-  UUID getKey();
+  int createOccurrenceMapping(OccurrenceMapping occurrenceMapping);
 
-  String getName();
-
-  String getCode();
-
-  Country getAddressCountry();
-
-  Country getMailingAddressCountry();
-
-  boolean isKeyMatch();
-
-  boolean isCodeMatch();
-
-  boolean isAlternativeCodeMatch();
-
-  boolean isIdentifierMatch();
-
-  boolean isNameMatchWithIdentifier();
-
-  boolean isNameMatchWithCode();
-
-  boolean isExplicitMapping();
 }

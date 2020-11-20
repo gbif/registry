@@ -18,15 +18,32 @@ package org.gbif.registry.ws.it.collections;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.Node;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.NodeType;
+import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.PersonClient;
@@ -43,20 +60,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class ExtendedCollectionEntityIT<
         T extends
-            CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable
-                & Commentable>
+            CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable & Commentable
+                & OccurrenceMappeable>
     extends BaseCollectionEntityIT<T> {
 
   protected final PersonService personResource;
   protected final PersonService personClient;
+  protected final DatasetService datasetService;
+  private final NodeService nodeService;
+  private final OrganizationService organizationService;
+  private final InstallationService installationService;
 
   public ExtendedCollectionEntityIT(
       CrudService<T> resource,
       Class<? extends CrudService<T>> cls,
       PersonService personResource,
+      DatasetService datasetService,
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
@@ -65,6 +91,10 @@ public abstract class ExtendedCollectionEntityIT<
     super(resource, cls, principalProvider, esServer, identityService, localServerPort, keyStore);
     this.personResource = personResource;
     this.personClient = prepareClient(localServerPort, keyStore, PersonClient.class);
+    this.datasetService = datasetService;
+    this.nodeService = nodeService;
+    this.organizationService = organizationService;
+    this.installationService = installationService;
   }
 
   @ParameterizedTest
@@ -193,5 +223,61 @@ public abstract class ExtendedCollectionEntityIT<
     entity = service.get(entityKey);
     assertNull(entity.getAddress());
     assertNull(entity.getMailingAddress());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void occurrenceMappingsTest(ServiceType serviceType) {
+    CrudService<T> service = getService(serviceType);
+    OccurrenceMappingService occurrenceMappingService = (OccurrenceMappingService) service;
+
+    T entity = newEntity();
+    UUID entityKey = service.create(entity);
+
+    Dataset dataset = createDataset();
+    OccurrenceMapping occurrenceMapping = new OccurrenceMapping();
+    occurrenceMapping.setCode("code");
+    occurrenceMapping.setDatasetKey(dataset.getKey());
+    int occurrenceMappingKey =
+        occurrenceMappingService.addOccurrenceMapping(entityKey, occurrenceMapping);
+
+    List<OccurrenceMapping> mappings = occurrenceMappingService.listOccurrenceMappings(entityKey);
+    assertEquals(1, mappings.size());
+
+    occurrenceMappingService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    mappings = occurrenceMappingService.listOccurrenceMappings(entityKey);
+    assertTrue(mappings.isEmpty());
+  }
+
+  private Dataset createDataset() {
+    Node node = new Node();
+    node.setTitle("node");
+    node.setType(NodeType.COUNTRY);
+    node.setParticipationStatus(ParticipationStatus.AFFILIATE);
+    nodeService.create(node);
+
+    Organization org = new Organization();
+    org.setEndorsingNodeKey(node.getKey());
+    org.setTitle("organization");
+    org.setLanguage(Language.ABKHAZIAN);
+    org.setPassword("testtttt");
+    organizationService.create(org);
+
+    Installation installation = new Installation();
+    installation.setTitle("title");
+    installation.setOrganizationKey(org.getKey());
+    installation.setType(InstallationType.BIOCASE_INSTALLATION);
+    installationService.create(installation);
+
+    Dataset dataset = new Dataset();
+    dataset.setTitle("title");
+    dataset.setInstallationKey(installation.getKey());
+    dataset.setPublishingOrganizationKey(org.getKey());
+    dataset.setType(DatasetType.CHECKLIST);
+    dataset.setLanguage(Language.ABKHAZIAN);
+    dataset.setLicense(License.CC0_1_0);
+    datasetService.create(dataset);
+
+    return dataset;
   }
 }

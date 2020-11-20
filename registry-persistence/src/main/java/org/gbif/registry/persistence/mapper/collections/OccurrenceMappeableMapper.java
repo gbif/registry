@@ -15,20 +15,25 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
+import org.gbif.api.model.collections.OccurrenceMapping;
 
 import java.util.List;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
 
-public interface LookupMapper<T extends EntityMatchedDto> {
+@Repository
+public interface OccurrenceMappeableMapper {
 
-  List<T> lookup(
-      @Nullable @Param("code") String code,
-      @Nullable @Param("identifier") String identifier,
-      @Nullable @Param("key") UUID key,
-      @Nullable @Param("datasetKey") UUID datasetKey);
+  int addOccurrenceMapping(
+      @Param("targetEntityKey") UUID entityKey,
+      @Param("occurrenceMappingKey") int occurrenceMappingKey);
+
+  int deleteOccurrenceMapping(
+      @Param("targetEntityKey") UUID entityKey,
+      @Param("occurrenceMappingKey") int occurrenceMappingKey);
+
+  List<OccurrenceMapping> listOccurrenceMappings(
+      @Param("targetEntityKey") UUID occurrenceMappingKey);
 }

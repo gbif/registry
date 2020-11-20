@@ -24,6 +24,10 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
@@ -63,6 +67,10 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   public InstitutionIT(
       InstitutionService institutionResource,
       PersonService personResource,
+      DatasetService datasetService,
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
@@ -72,6 +80,10 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
         institutionResource,
         InstitutionClient.class,
         personResource,
+        datasetService,
+        nodeService,
+        organizationService,
+        installationService,
         principalProvider,
         esServer,
         identityService,

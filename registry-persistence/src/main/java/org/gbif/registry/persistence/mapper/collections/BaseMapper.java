@@ -30,7 +30,11 @@ import org.apache.ibatis.annotations.Param;
 
 /** Generic mapper for CRUD operations. Initially implemented for collections. */
 public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable & Commentable>
-    extends TaggableMapper, IdentifiableMapper, MachineTaggableMapper<T>, CommentableMapper {
+    extends TaggableMapper,
+        IdentifiableMapper,
+        MachineTaggableMapper<T>,
+        CommentableMapper,
+        OccurrenceMappeableMapper {
 
   T get(@Param("key") UUID key);
 

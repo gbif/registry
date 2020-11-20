@@ -27,6 +27,10 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
@@ -71,6 +75,10 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
       InstitutionService institutionResource,
       CollectionService collectionResource,
       PersonService personResource,
+      DatasetService datasetService,
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
@@ -80,6 +88,10 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         collectionResource,
         CollectionClient.class,
         personResource,
+        datasetService,
+        nodeService,
+        organizationService,
+        installationService,
         principalProvider,
         esServer,
         identityService,
