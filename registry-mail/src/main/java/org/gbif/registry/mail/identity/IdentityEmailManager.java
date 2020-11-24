@@ -240,7 +240,9 @@ public class IdentityEmailManager {
   }
 
   private String getOrEmptyLocaleTag(Locale locale) {
-    return locale != null && !locale.equals(Locale.ENGLISH) ? locale.toLanguageTag().toLowerCase() : "";
+    return locale != null && !locale.equals(Locale.ENGLISH)
+        ? locale.toLanguageTag().toLowerCase()
+        : "";
   }
 
   private String findSuitableLocaleTagAmongAvailable(Locale locale) {
