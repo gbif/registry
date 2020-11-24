@@ -90,5 +90,5 @@
   <include file="liquibase/082-functions-migrated-to-plpgsql.xml" />
   <include file="liquibase/083-indexes-for-mendeley-crawler.xml" />
   <include file="liquibase/084-grscicoll-lookup-explicit-mappings-table.xml" />
-  <!-- TODO: add the last one og grscicoll when ready -->
+  <include file="liquibase/085-grscicoll-triggers-updated.xml" />
 </databaseChangeLog>
