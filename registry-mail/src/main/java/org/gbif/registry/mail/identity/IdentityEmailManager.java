@@ -204,7 +204,7 @@ public class IdentityEmailManager {
     return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getConfirmUser(),
-            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
+            getOrEmptyLocaleTag(locale),
             userName,
             confirmationKey.toString()));
   }
@@ -214,7 +214,7 @@ public class IdentityEmailManager {
     return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getResetPassword(),
-            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
+            getOrEmptyLocaleTag(locale),
             userName,
             confirmationKey.toString()));
   }
@@ -225,7 +225,7 @@ public class IdentityEmailManager {
     return new URI(
         MessageFormat.format(
             identityMailConfigProperties.getUrlTemplate().getChangeEmail(),
-            locale != null && !locale.equals(Locale.ENGLISH) ? locale : "",
+            getOrEmptyLocaleTag(locale),
             userName,
             confirmationKey.toString(),
             URLEncoder.encode(email, StandardCharsets.UTF_8.name())));
@@ -237,6 +237,12 @@ public class IdentityEmailManager {
         .map(this::findSuitableLocaleTagAmongAvailable)
         .map(Locale::forLanguageTag)
         .orElse(Locale.ENGLISH);
+  }
+
+  private String getOrEmptyLocaleTag(Locale locale) {
+    return locale != null && !locale.equals(Locale.ENGLISH)
+        ? locale.toLanguageTag().toLowerCase()
+        : "";
   }
 
   private String findSuitableLocaleTagAmongAvailable(Locale locale) {
