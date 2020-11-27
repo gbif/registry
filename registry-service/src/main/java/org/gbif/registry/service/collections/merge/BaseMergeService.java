@@ -82,9 +82,12 @@ public abstract class BaseMergeService<
     T entityToReplace = baseMapper.get(entityToReplaceKey);
     checkArgument(
         entityToReplace != null, "Not found entity to replace with key " + entityToReplaceKey);
+    checkArgument(entityToReplace.getDeleted() == null, "Cannot merge a deleted entity");
 
     T replacement = baseMapper.get(replacementKey);
     checkArgument(replacement != null, "Not found replacement entity with key " + replacementKey);
+    checkArgument(
+        replacement.getDeleted() == null, "Cannot merge an entity with a deleted replacement");
 
     // check IH_IRN identifiers. If both entities have them we don't allow to do the replacement
     // because we wouldn't know how to sync them with IH: if we move it to the replacement this
