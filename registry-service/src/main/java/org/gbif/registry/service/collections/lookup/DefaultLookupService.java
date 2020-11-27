@@ -29,8 +29,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +36,6 @@ import static org.gbif.api.model.collections.lookup.Match.MATCH_TYPE_COMPARATOR;
 
 @Service
 public class DefaultLookupService implements LookupService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultLookupService.class);
 
   private final InstitutionMatcher institutionMatcher;
   private final CollectionMatcher collectionMatcher;

@@ -33,7 +33,11 @@ import org.springframework.stereotype.Repository;
 /** Mapper for {@link Institution} entities. */
 @Repository
 public interface InstitutionMapper
-    extends BaseMapper<Institution>, ContactableMapper, LookupMapper<InstitutionMatchedDto> {
+    extends BaseMapper<Institution>,
+        ContactableMapper,
+        LookupMapper<InstitutionMatchedDto>,
+        OccurrenceMappeableMapper,
+        MergeableMapper {
 
   List<Institution> list(
       @Param("params") InstitutionSearchParams searchParams,

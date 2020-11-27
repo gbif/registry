@@ -46,8 +46,10 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.security.EditorAuthorizationService;
+import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
@@ -97,6 +99,8 @@ public abstract class ExtendedCollectionEntityResource<
   private final MachineTagMapper machineTagMapper;
   private final IdentifierMapper identifierMapper;
   private final OccurrenceMappingMapper occurrenceMappingMapper;
+  private final OccurrenceMappeableMapper occurrenceMappeableMapper;
+  private final MergeService mergeService;
   private final EventManager eventManager;
   private final Class<T> objectClass;
 
@@ -109,6 +113,8 @@ public abstract class ExtendedCollectionEntityResource<
       MachineTagMapper machineTagMapper,
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
+      OccurrenceMappeableMapper occurrenceMappeableMapper,
+      MergeService mergeService,
       EventManager eventManager,
       Class<T> objectClass,
       EditorAuthorizationService userAuthService,
@@ -130,6 +136,8 @@ public abstract class ExtendedCollectionEntityResource<
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
     this.occurrenceMappingMapper = occurrenceMappingMapper;
+    this.occurrenceMappeableMapper = occurrenceMappeableMapper;
+    this.mergeService = mergeService;
     this.eventManager = eventManager;
     this.objectClass = objectClass;
   }
@@ -291,7 +299,7 @@ public abstract class ExtendedCollectionEntityResource<
     checkArgument(
         occurrenceMapping.getKey() == null, "Unable to create an entity which already has a key");
     occurrenceMappingMapper.createOccurrenceMapping(occurrenceMapping);
-    baseMapper.addOccurrenceMapping(entityKey, occurrenceMapping.getKey());
+    occurrenceMappeableMapper.addOccurrenceMapping(entityKey, occurrenceMapping.getKey());
 
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(
@@ -304,7 +312,7 @@ public abstract class ExtendedCollectionEntityResource<
   @Nullable
   @Override
   public List<OccurrenceMapping> listOccurrenceMappings(@NotNull @PathVariable("key") UUID uuid) {
-    return baseMapper.listOccurrenceMappings(uuid);
+    return occurrenceMappeableMapper.listOccurrenceMappings(uuid);
   }
 
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
@@ -313,10 +321,17 @@ public abstract class ExtendedCollectionEntityResource<
   @Override
   public void deleteOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
-    baseMapper.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    occurrenceMappeableMapper.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(
             entityKey, objectClass, OccurrenceMapping.class));
+  }
+
+  @PostMapping(value = "{key}/merge", consumes = MediaType.TEXT_PLAIN_VALUE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public void merge(@PathVariable("key") UUID entityKey, @RequestBody UUID replacementKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    mergeService.merge(entityKey, replacementKey, authentication.getName());
   }
 
   /**

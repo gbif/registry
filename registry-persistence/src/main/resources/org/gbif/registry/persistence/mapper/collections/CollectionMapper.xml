@@ -20,6 +20,7 @@
     <collection property="identifiers" column="key" select="listIdentifiers"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
     <collection property="comments" column="key" select="listComments"/>
+    <collection property="occurrenceMappings" column="key" select="listOccurrenceMappings"/>
   </resultMap>
 
   <resultMap id="COLLECTION_DTO_MAP" type="CollectionDto" autoMapping="true">
@@ -41,7 +42,8 @@
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
-    c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes
+    c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
+    c.replaced_by
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -563,4 +565,33 @@
   </select>
   <!-- END EXPLICIT MAPPINGS -->
 
+  <!-- MERGE -->
+  <update id="replace">
+    UPDATE collection
+    SET deleted = now(),
+    replaced_by = #{replacementKey,jdbcType=OTHER}
+    WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
+  </update>
+
+  <update id="moveIdentifier">
+    UPDATE collection_identifier
+    SET collection_key = #{targetEntityKey,jdbcType=OTHER}
+    WHERE collection_key = #{sourceEntityKey,jdbcType=OTHER}
+    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+  </update>
+
+  <update id="moveMachineTag">
+    UPDATE collection_machine_tag
+    SET collection_key = #{targetEntityKey,jdbcType=OTHER}
+    WHERE collection_key = #{sourceEntityKey,jdbcType=OTHER}
+    AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+  </update>
+
+  <update id="moveOccurrenceMapping">
+    UPDATE collection_occurrence_mapping
+    SET collection_key = #{targetEntityKey,jdbcType=OTHER}
+    WHERE collection_key = #{sourceEntityKey,jdbcType=OTHER}
+    AND occurrence_mapping_key = #{occurrenceMappingKey,jdbcType=INTEGER}
+  </update>
+  <!-- END MERGE -->
 </mapper>

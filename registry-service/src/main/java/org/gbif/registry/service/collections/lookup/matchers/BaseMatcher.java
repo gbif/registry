@@ -49,12 +49,6 @@ import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 /** Base matcher that contains common methods for the GrSciColl matchers. */
 public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMatched> {
 
-  public static final String PROCESSING_NAMESPACE = "processing.gbif.org";
-  public static final String INSTITUTION_TAG_NAME = "institutionCode";
-  public static final String COLLECTION_TAG_NAME = "collectionCode";
-  public static final String COLLECTION_TO_INSTITUTION_TAG_NAME = "collectionToInstitutionCode";
-  public static final String INSTITUTION_TO_COLLECTION_TAG_NAME = "institutionToCollectionCode";
-
   protected final String apiBaseUrl;
 
   protected BaseMatcher(String apiBaseUrl) {

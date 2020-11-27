@@ -34,6 +34,7 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.security.EditorAuthorizationService;
+import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
 import java.util.List;
 import java.util.UUID;
@@ -70,6 +71,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
       EditorAuthorizationService userAuthService,
+      InstitutionMergeService institutionMergeService,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
@@ -81,6 +83,8 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         machineTagMapper,
         commentMapper,
         occurrenceMappingMapper,
+        institutionMapper,
+        institutionMergeService,
         eventManager,
         Institution.class,
         userAuthService,
