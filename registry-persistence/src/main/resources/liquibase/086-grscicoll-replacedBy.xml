@@ -1,0 +1,25 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="86" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE institution ADD COLUMN replaced_by uuid;
+        ALTER TABLE collection ADD COLUMN replaced_by uuid;
+
+        ALTER TABLE institution_identifier ADD UNIQUE (identifier_key);
+        ALTER TABLE institution_occurrence_mapping ADD UNIQUE (occurrence_mapping_key);
+        ALTER TABLE institution_tag ADD UNIQUE (tag_key);
+
+        ALTER TABLE collection_identifier ADD UNIQUE (identifier_key);
+        ALTER TABLE collection_occurrence_mapping ADD UNIQUE (occurrence_mapping_key);
+        ALTER TABLE collection_tag ADD UNIQUE (tag_key);
+
+        ALTER TABLE collection_person_identifier ADD UNIQUE (identifier_key);
+        ALTER TABLE collection_person_tag ADD UNIQUE (tag_key);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

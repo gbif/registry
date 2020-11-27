@@ -15,25 +15,27 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.gbif.api.model.collections.OccurrenceMapping;
-
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
 
-@Repository
-public interface OccurrenceMappeableMapper {
+public interface MergeableMapper {
 
-  int addOccurrenceMapping(
-      @Param("targetEntityKey") UUID entityKey,
+  void replace(
+      @Param("targetEntityKey") UUID targetEntityKey, @Param("replacementKey") UUID replacementKey);
+
+  void moveIdentifier(
+      @Param("sourceEntityKey") UUID sourceEntityKey,
+      @Param("targetEntityKey") UUID targetEntityKey,
+      @Param("identifierKey") int identifierKey);
+
+  void moveMachineTag(
+      @Param("sourceEntityKey") UUID sourceEntityKey,
+      @Param("targetEntityKey") UUID targetEntityKey,
+      @Param("machineTagKey") int machineTagKey);
+
+  void moveOccurrenceMapping(
+      @Param("sourceEntityKey") UUID sourceEntityKey,
+      @Param("targetEntityKey") UUID targetEntityKey,
       @Param("occurrenceMappingKey") int occurrenceMappingKey);
-
-  int deleteOccurrenceMapping(
-      @Param("targetEntityKey") UUID entityKey,
-      @Param("occurrenceMappingKey") int occurrenceMappingKey);
-
-  List<OccurrenceMapping> listOccurrenceMappings(
-      @Param("targetEntityKey") UUID targetEntityKey);
 }

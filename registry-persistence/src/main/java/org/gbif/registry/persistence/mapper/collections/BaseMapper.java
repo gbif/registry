@@ -33,8 +33,7 @@ public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable 
     extends TaggableMapper,
         IdentifiableMapper,
         MachineTaggableMapper<T>,
-        CommentableMapper,
-        OccurrenceMappeableMapper {
+        CommentableMapper{
 
   T get(@Param("key") UUID key);
 

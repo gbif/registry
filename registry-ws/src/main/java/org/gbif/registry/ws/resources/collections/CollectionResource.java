@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.security.EditorAuthorizationService;
+import org.gbif.registry.service.collections.merge.CollectionMergeService;
 
 import java.util.List;
 import java.util.UUID;
@@ -74,6 +75,7 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
       OccurrenceMappingMapper occurrenceMappingMapper,
       EventManager eventManager,
       EditorAuthorizationService userAuthService,
+      CollectionMergeService collectionMergeService,
       WithMyBatis withMyBatis) {
     super(
         collectionMapper,
@@ -84,6 +86,8 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
         machineTagMapper,
         commentMapper,
         occurrenceMappingMapper,
+        collectionMapper,
+        collectionMergeService,
         eventManager,
         Collection.class,
         userAuthService,
