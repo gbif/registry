@@ -23,5 +23,4 @@ import org.springframework.stereotype.Repository;
 public interface OccurrenceMappingMapper {
 
   int createOccurrenceMapping(OccurrenceMapping occurrenceMapping);
-
 }

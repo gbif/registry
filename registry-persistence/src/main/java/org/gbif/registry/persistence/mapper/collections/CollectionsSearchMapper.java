@@ -25,6 +25,5 @@ import org.apache.ibatis.annotations.Param;
 
 public interface CollectionsSearchMapper {
 
-  List<SearchDto> search(
-      @Nullable @Param("q") String query, @Param("highlight") boolean highlight);
+  List<SearchDto> search(@Nullable @Param("q") String query, @Param("highlight") boolean highlight);
 }
