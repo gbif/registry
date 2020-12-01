@@ -327,7 +327,7 @@ public abstract class ExtendedCollectionEntityResource<
             entityKey, objectClass, OccurrenceMapping.class));
   }
 
-  @PostMapping(value = "{key}/merge", consumes = MediaType.TEXT_PLAIN_VALUE)
+  @PostMapping(value = "{key}/merge")
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
