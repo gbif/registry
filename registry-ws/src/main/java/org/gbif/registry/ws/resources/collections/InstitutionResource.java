@@ -40,15 +40,23 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
@@ -61,6 +69,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
+  private final InstitutionMergeService institutionMergeService;
 
   public InstitutionResource(
       InstitutionMapper institutionMapper,
@@ -90,6 +99,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         userAuthService,
         withMyBatis);
     this.institutionMapper = institutionMapper;
+    this.institutionMergeService = institutionMergeService;
   }
 
   @GetMapping("{key}")
@@ -139,5 +149,38 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
   @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return institutionMapper.suggest(q);
+  }
+
+  @PostMapping("{key}/convertToCollection")
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public UUID convertToCollection(
+      @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return institutionMergeService.convertToCollection(
+        entityKey,
+        params.institutionForNewCollection,
+        params.nameForNewInstitution,
+        authentication.getName());
+  }
+
+  private static final class ConvertToCollectionParams {
+    UUID institutionForNewCollection;
+    String nameForNewInstitution;
+
+    public UUID getInstitutionForNewCollection() {
+      return institutionForNewCollection;
+    }
+
+    public void setInstitutionForNewCollection(UUID institutionForNewCollection) {
+      this.institutionForNewCollection = institutionForNewCollection;
+    }
+
+    public String getNameForNewInstitution() {
+      return nameForNewInstitution;
+    }
+
+    public void setNameForNewInstitution(String nameForNewInstitution) {
+      this.nameForNewInstitution = nameForNewInstitution;
+    }
   }
 }

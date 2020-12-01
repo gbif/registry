@@ -68,13 +68,13 @@ public abstract class BaseMergeServiceIT<
                 & Taggable & Commentable>
     extends BaseItTest {
 
-  private final MergeService mergeService;
-  private final CrudService<T> crudService;
-  private final IdentifierService identifierService;
-  private final ContactService contactService;
-  private final MachineTagService machineTagService;
-  private final OccurrenceMappingService occurrenceMappingService;
-  private final PersonService personService;
+  protected final MergeService mergeService;
+  protected final CrudService<T> crudService;
+  protected final IdentifierService identifierService;
+  protected final ContactService contactService;
+  protected final MachineTagService machineTagService;
+  protected final OccurrenceMappingService occurrenceMappingService;
+  protected final PersonService personService;
 
   @Autowired private DatasetService datasetService;
   @Autowired private NodeService nodeService;
@@ -198,7 +198,7 @@ public abstract class BaseMergeServiceIT<
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), null));
   }
 
-  private Dataset createDataset() {
+  protected Dataset createDataset() {
     Node node = new Node();
     node.setTitle("node");
     node.setType(NodeType.COUNTRY);

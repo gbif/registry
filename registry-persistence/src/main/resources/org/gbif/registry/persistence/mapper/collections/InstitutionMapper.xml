@@ -36,7 +36,7 @@
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
-    i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by
+    i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection
   </sql>
 
   <sql id="INSTITUTION_PARAMS_CREATE">
@@ -570,6 +570,13 @@
     SET institution_key = #{targetEntityKey,jdbcType=OTHER}
     WHERE institution_key = #{sourceEntityKey,jdbcType=OTHER}
     AND occurrence_mapping_key = #{occurrenceMappingKey,jdbcType=INTEGER}
+  </update>
+
+  <update id="convertToCollection">
+    UPDATE institution
+    SET deleted = now(),
+        converted_to_collection = #{collectionKey,jdbcType=OTHER}
+    WHERE key = #{institutionKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
 </mapper>

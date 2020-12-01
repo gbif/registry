@@ -16,31 +16,46 @@
 package org.gbif.registry.service.collections.merge;
 
 import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 
 import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Strings;
+
+import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
 
 /** Service to merge duplicated {@link Institution}. */
 @Service
 public class InstitutionMergeService extends BaseMergeService<Institution> {
 
+  private final InstitutionMapper institutionMapper;
   private final CollectionMapper collectionMapper;
+  private final MachineTagMapper machineTagMapper;
+  private final OccurrenceMappingMapper occurrenceMappingMapper;
 
   @Autowired
   public InstitutionMergeService(
       InstitutionMapper institutionMapper,
       CollectionMapper collectionMapper,
       IdentifierMapper identifierMapper,
+      MachineTagMapper machineTagMapper,
+      OccurrenceMappingMapper occurrenceMappingMapper,
       PersonMapper personMapper) {
     super(
         institutionMapper,
@@ -49,12 +64,115 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         identifierMapper,
         institutionMapper,
         personMapper);
+    this.institutionMapper = institutionMapper;
     this.collectionMapper = collectionMapper;
+    this.machineTagMapper = machineTagMapper;
+    this.occurrenceMappingMapper = occurrenceMappingMapper;
+  }
+
+  public UUID convertToCollection(
+      UUID institutionKey,
+      @Nullable UUID institutionKeyForNewCollection,
+      @Nullable String newInstitutionName,
+      String user) {
+    checkArgument(institutionKey != null, "Institution key is required");
+    checkArgument(!Strings.isNullOrEmpty(user), "User is required");
+    checkArgument(
+        institutionKeyForNewCollection != null || !Strings.isNullOrEmpty(newInstitutionName),
+        "Either the institution key for the new collection or a name to create a new institution are required");
+
+    Institution institutionToConvert = institutionMapper.get(institutionKey);
+    checkArgument(
+        institutionToConvert.getDeleted() == null, "Cannot convert a deleted institution");
+
+    long count =
+        collectionMapper.count(
+            CollectionSearchParams.builder().institutionKey(institutionKey).build());
+    checkArgument(count == 0, "Cannot convert an institution that has collections");
+
+    Collection newCollection = new Collection();
+    newCollection.setKey(UUID.randomUUID());
+    newCollection.setCode(institutionToConvert.getCode());
+    newCollection.setAlternativeCodes(institutionToConvert.getAlternativeCodes());
+    newCollection.setName(institutionToConvert.getName());
+    newCollection.setDescription(institutionToConvert.getDescription());
+    newCollection.setGeography(institutionToConvert.getGeographicDescription());
+    newCollection.setTaxonomicCoverage(institutionToConvert.getTaxonomicDescription());
+    newCollection.setEmail(institutionToConvert.getEmail());
+    newCollection.setPhone(institutionToConvert.getPhone());
+    newCollection.setHomepage(institutionToConvert.getHomepage());
+    newCollection.setCatalogUrl(institutionToConvert.getCatalogUrl());
+    newCollection.setApiUrl(institutionToConvert.getApiUrl());
+    newCollection.setAddress(institutionToConvert.getAddress());
+    newCollection.setMailingAddress(institutionToConvert.getMailingAddress());
+    newCollection.setCreatedBy(user);
+    newCollection.setModifiedBy(user);
+
+    // if there is no institution passed we need to create a new institution
+    if (institutionKeyForNewCollection == null) {
+      Institution newInstitution = new Institution();
+      newInstitution.setKey(UUID.randomUUID());
+      newInstitution.setCode(institutionToConvert.getCode());
+      newInstitution.setName(newInstitutionName);
+      newInstitution.setCreatedBy(user);
+      newInstitution.setModifiedBy(user);
+      institutionMapper.create(newInstitution);
+
+      newCollection.setInstitutionKey(newInstitution.getKey());
+    } else {
+      Institution institutionForNewCollection =
+          institutionMapper.get(institutionKeyForNewCollection);
+      checkArgument(
+          institutionForNewCollection.getDeleted() == null,
+          "Cannot assign the new collection to a deleted institution");
+
+      newCollection.setInstitutionKey(institutionKeyForNewCollection);
+    }
+
+    collectionMapper.create(newCollection);
+    institutionMapper.convertToCollection(institutionKey, newCollection.getKey());
+
+    // move the identifiers
+    institutionToConvert
+        .getIdentifiers()
+        .forEach(
+            i -> {
+              institutionMapper.deleteIdentifier(institutionKey, i.getKey());
+              identifierMapper.createIdentifier(i);
+              collectionMapper.addIdentifier(newCollection.getKey(), i.getKey());
+            });
+
+    // move the machine tags
+    institutionToConvert
+        .getMachineTags()
+        .forEach(
+            mt -> {
+              institutionMapper.deleteMachineTag(institutionKey, mt.getKey());
+              machineTagMapper.createMachineTag(mt);
+              collectionMapper.addMachineTag(newCollection.getKey(), mt.getKey());
+            });
+
+    // move the occurrence mappings
+    institutionToConvert
+        .getOccurrenceMappings()
+        .forEach(
+            om -> {
+              institutionMapper.deleteOccurrenceMapping(institutionKey, om.getKey());
+              occurrenceMappingMapper.createOccurrenceMapping(om);
+              collectionMapper.addOccurrenceMapping(newCollection.getKey(), om.getKey());
+            });
+
+    // copy the contacts
+    institutionToConvert
+        .getContacts()
+        .forEach(c -> collectionMapper.addContact(newCollection.getKey(), c.getKey()));
+
+    return newCollection.getKey();
   }
 
   @Override
-  void checkExtraPreconditions(Institution entityToReplace, Institution replacement) {
-    // there is no extra preconditions
+  void checkMergeExtraPreconditions(Institution entityToReplace, Institution replacement) {
+    // there is no extra preconditions for the merge
   }
 
   @Override

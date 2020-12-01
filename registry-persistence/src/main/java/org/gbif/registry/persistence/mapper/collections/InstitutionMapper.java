@@ -60,4 +60,7 @@ public interface InstitutionMapper
    * @return the keys of the institutions
    */
   List<UUID> findByIdentifier(@Nullable @Param("identifier") String identifier);
+
+  void convertToCollection(
+      @Param("institutionKey") UUID institutionKey, @Param("collectionKey") UUID collectionKey);
 }
