@@ -78,6 +78,9 @@ public abstract class BaseMergeService<
   @Transactional
   public void merge(UUID entityToReplaceKey, UUID replacementKey, String user) {
     checkArgument(user != null, "User is required");
+    checkArgument(
+        !entityToReplaceKey.equals(replacementKey),
+        "The replacement has to be different than the entity to replace");
 
     T entityToReplace = baseMapper.get(entityToReplaceKey);
     checkArgument(
