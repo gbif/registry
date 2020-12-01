@@ -6,8 +6,9 @@
   <changeSet id="86" author="mlopez">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-        ALTER TABLE institution ADD COLUMN replaced_by uuid;
-        ALTER TABLE collection ADD COLUMN replaced_by uuid;
+        ALTER TABLE institution ADD COLUMN replaced_by uuid REFERENCES institution(key) ON DELETE CASCADE;
+        ALTER TABLE institution ADD COLUMN converted_to_collection uuid REFERENCES collection(key) ON DELETE CASCADE;
+        ALTER TABLE collection ADD COLUMN replaced_by uuid REFERENCES collection(key) ON DELETE CASCADE;
 
         ALTER TABLE institution_identifier ADD UNIQUE (identifier_key);
         ALTER TABLE institution_occurrence_mapping ADD UNIQUE (occurrence_mapping_key);

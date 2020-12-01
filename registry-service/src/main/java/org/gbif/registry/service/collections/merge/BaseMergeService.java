@@ -52,11 +52,11 @@ public abstract class BaseMergeService<
                 & Taggable & Commentable>
     implements MergeService {
 
-  private final BaseMapper<T> baseMapper;
-  private final MergeableMapper mergeableMapper;
-  private final ContactableMapper contactableMapper;
-  private final IdentifierMapper identifierMapper;
-  private final OccurrenceMappeableMapper occurrenceMappeableMapper;
+  protected final BaseMapper<T> baseMapper;
+  protected final MergeableMapper mergeableMapper;
+  protected final ContactableMapper contactableMapper;
+  protected final IdentifierMapper identifierMapper;
+  protected final OccurrenceMappeableMapper occurrenceMappeableMapper;
   protected final PersonMapper personMapper;
 
   protected BaseMergeService(
@@ -99,10 +99,13 @@ public abstract class BaseMergeService<
           "Cannot do the replacement because both entities have an IH IRN identifier");
     }
 
-    checkExtraPreconditions(entityToReplace, replacement);
+    checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
     mergeableMapper.replace(entityToReplaceKey, replacementKey);
+
+    // merge entity fields
+    baseMapper.update(mergeEntityFields(entityToReplace, replacement));
 
     // copy the identifiers
     entityToReplace
@@ -127,9 +130,6 @@ public abstract class BaseMergeService<
     keyIdentifier.setCreatedBy(user);
     identifierMapper.createIdentifier(keyIdentifier);
     baseMapper.addIdentifier(replacementKey, keyIdentifier.getKey());
-
-    // merge entity fields
-    baseMapper.update(mergeEntityFields(entityToReplace, replacement));
 
     // update occurrence mappings
     List<OccurrenceMapping> occMappings =
@@ -201,7 +201,7 @@ public abstract class BaseMergeService<
     return new ArrayList<>(uniqueValues);
   }
 
-  abstract void checkExtraPreconditions(T entityToReplace, T replacement);
+  abstract void checkMergeExtraPreconditions(T entityToReplace, T replacement);
 
   abstract T mergeEntityFields(T entityToReplace, T replacement);
 

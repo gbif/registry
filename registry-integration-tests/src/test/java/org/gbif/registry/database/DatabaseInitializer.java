@@ -99,6 +99,8 @@ public class DatabaseInitializer implements BeforeEachCallback {
       connection.prepareStatement("DELETE FROM institution_collection_person").execute();
       connection.prepareStatement("DELETE FROM institution_identifier").execute();
       connection.prepareStatement("DELETE FROM institution_tag").execute();
+      connection.prepareStatement("DELETE FROM institution_occurrence_mapping").executeUpdate();
+      connection.prepareStatement("DELETE FROM collection_occurrence_mapping").executeUpdate();
       connection.prepareStatement("DELETE FROM collection_person").execute();
       connection.prepareStatement("DELETE FROM collection").execute();
       connection.prepareStatement("DELETE FROM institution").execute();

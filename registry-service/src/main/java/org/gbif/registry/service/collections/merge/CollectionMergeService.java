@@ -46,7 +46,7 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   }
 
   @Override
-  void checkExtraPreconditions(Collection entityToReplace, Collection replacement) {
+  void checkMergeExtraPreconditions(Collection entityToReplace, Collection replacement) {
     if (entityToReplace.getInstitutionKey() != null
         && !entityToReplace.getInstitutionKey().equals(replacement.getInstitutionKey())) {
       throw new IllegalArgumentException(
