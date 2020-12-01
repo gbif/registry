@@ -329,9 +329,21 @@ public abstract class ExtendedCollectionEntityResource<
 
   @PostMapping(value = "{key}/merge", consumes = MediaType.TEXT_PLAIN_VALUE)
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void merge(@PathVariable("key") UUID entityKey, @RequestBody UUID replacementKey) {
+  public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    mergeService.merge(entityKey, replacementKey, authentication.getName());
+    mergeService.merge(entityKey, params.replacementEntityKey, authentication.getName());
+  }
+
+  private static class MergeParams {
+    private UUID replacementEntityKey;
+
+    public UUID getReplacementEntityKey() {
+      return replacementEntityKey;
+    }
+
+    public void setReplacementEntityKey(UUID replacementEntityKey) {
+      this.replacementEntityKey = replacementEntityKey;
+    }
   }
 
   /**

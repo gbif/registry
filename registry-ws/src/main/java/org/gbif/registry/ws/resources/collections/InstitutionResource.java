@@ -158,21 +158,21 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return institutionMergeService.convertToCollection(
         entityKey,
-        params.institutionForNewCollection,
+        params.institutionForNewCollectionKey,
         params.nameForNewInstitution,
         authentication.getName());
   }
 
   private static final class ConvertToCollectionParams {
-    UUID institutionForNewCollection;
+    UUID institutionForNewCollectionKey;
     String nameForNewInstitution;
 
-    public UUID getInstitutionForNewCollection() {
-      return institutionForNewCollection;
+    public UUID getInstitutionForNewCollectionKey() {
+      return institutionForNewCollectionKey;
     }
 
-    public void setInstitutionForNewCollection(UUID institutionForNewCollection) {
-      this.institutionForNewCollection = institutionForNewCollection;
+    public void setInstitutionForNewCollectionKey(UUID institutionForNewCollectionKey) {
+      this.institutionForNewCollectionKey = institutionForNewCollectionKey;
     }
 
     public String getNameForNewInstitution() {
