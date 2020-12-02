@@ -1,7 +1,3 @@
-[![Build Status](https://builds.gbif.org/job/registry/badge/icon?plastic)](https://builds.gbif.org/job/registry/)
-[![Quality Gate Status](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.registry%3Aregistry-parent&metric=alert_status)](https://sonar.gbif.org/dashboard?id=org.gbif.registry%3Aregistry-parent)
-[![Coverage](https://sonar.gbif.org/api/project_badges/measure?project=org.gbif.registry%3Aregistry-parent&metric=coverage)](http://sonar.gbif.org/dashboard?id=org.gbif.registry%3Aregistry-parent)
-
 # GBIF Registry
 
 The GBIF Registry is a core component of the architecture responsible for providing the authoritative source of information on GBIF participants (Nodes), institutions (e.g. data publishers), datasets, networks their interrelationships and the means to identify and access them.
