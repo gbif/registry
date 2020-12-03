@@ -129,6 +129,13 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     om1.setDatasetKey(dataset.getKey());
     occurrenceMappingService.addOccurrenceMapping(toConvert.getKey(), om1);
 
+    // collections
+    Collection c1 = new Collection();
+    c1.setName("coll");
+    c1.setCode("c1");
+    c1.setInstitutionKey(toConvert.getKey());
+    collectionService.create(c1);
+
     final String newInstitutionName = "new institution";
     UUID newCollectionKey =
         institutionMergeService.convertToCollection(
@@ -146,6 +153,9 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     Institution newInstitution = institutionService.get(newCollection.getInstitutionKey());
     assertEquals(newCollection.getCode(), newInstitution.getCode());
     assertEquals(newInstitutionName, newInstitution.getName());
+
+    Collection c1Updated = collectionService.get(c1.getKey());
+    assertEquals(newInstitution.getKey(), c1Updated.getInstitutionKey());
 
     assertEquals(1, newCollection.getIdentifiers().size());
     assertEquals(1, newCollection.getMachineTags().size());
@@ -176,26 +186,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
 
     Collection newCollection = collectionService.get(newCollectionKey);
     assertEquals(another.getKey(), newCollection.getInstitutionKey());
-  }
-
-  @Test
-  public void convertToCollectionWithCollectionsTest() {
-    Institution toConvert = new Institution();
-    toConvert.setCode("tco");
-    toConvert.setName("to convert");
-    toConvert.setDescription("desc");
-    institutionService.create(toConvert);
-
-    Collection coll = new Collection();
-    coll.setCode("c");
-    coll.setName("coll");
-    coll.setInstitutionKey(toConvert.getKey());
-    collectionService.create(coll);
-
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            institutionMergeService.convertToCollection(toConvert.getKey(), null, "test", "user"));
   }
 
   @Test

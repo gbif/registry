@@ -59,6 +59,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -154,12 +155,16 @@ public abstract class BaseMergeServiceIT<
 
     contactService.addContact(replacement.getKey(), p1.getKey());
 
-    mergeService.merge(toReplace.getKey(), replacement.getKey(), "test");
+    final String user = "test";
+    mergeService.merge(toReplace.getKey(), replacement.getKey(), user);
 
     T replaced = crudService.get(toReplace.getKey());
     T replacementUpdated = crudService.get(replacement.getKey());
 
     assertEquals(0, replaced.getIdentifiers().size());
+    assertNotEquals(toReplace.getModified(), replaced.getModified());
+    assertEquals(user, replaced.getModifiedBy());
+    assertEquals(user, replacementUpdated.getModifiedBy());
     assertEquals(2, replacementUpdated.getIdentifiers().size());
     assertEquals(1, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
