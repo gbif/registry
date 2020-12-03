@@ -85,11 +85,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     checkArgument(
         institutionToConvert.getDeleted() == null, "Cannot convert a deleted institution");
 
-    long count =
-        collectionMapper.count(
-            CollectionSearchParams.builder().institutionKey(institutionKey).build());
-    checkArgument(count == 0, "Cannot convert an institution that has collections");
-
     Collection newCollection = new Collection();
     newCollection.setKey(UUID.randomUUID());
     newCollection.setCode(institutionToConvert.getCode());
@@ -131,6 +126,10 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
 
     collectionMapper.create(newCollection);
     institutionMapper.convertToCollection(institutionKey, newCollection.getKey());
+
+    // move the collections
+    moveCollectionsToAnotherInstitution(
+        institutionToConvert.getKey(), newCollection.getInstitutionKey());
 
     // move the identifiers
     institutionToConvert
@@ -208,14 +207,18 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
           personMapper.update(p);
         });
 
+    moveCollectionsToAnotherInstitution(entityToReplace.getKey(), replacement.getKey());
+  }
+
+  private void moveCollectionsToAnotherInstitution(
+      UUID sourceInstitutionKey, UUID targetInstitutionKey) {
     // move the collections to the entity to keep
     List<CollectionDto> collections =
         collectionMapper.list(
-            CollectionSearchParams.builder().institutionKey(entityToReplace.getKey()).build(),
-            null);
+            CollectionSearchParams.builder().institutionKey(sourceInstitutionKey).build(), null);
     collections.forEach(
         c -> {
-          c.getCollection().setInstitutionKey(replacement.getKey());
+          c.getCollection().setInstitutionKey(targetInstitutionKey);
           collectionMapper.update(c.getCollection());
         });
   }

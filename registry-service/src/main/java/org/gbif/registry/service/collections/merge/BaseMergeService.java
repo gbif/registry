@@ -105,10 +105,14 @@ public abstract class BaseMergeService<
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
+    entityToReplace.setModifiedBy(user);
+    baseMapper.update(entityToReplace);
     mergeableMapper.replace(entityToReplaceKey, replacementKey);
 
     // merge entity fields
-    baseMapper.update(mergeEntityFields(entityToReplace, replacement));
+    T updatedEntityToReplace = mergeEntityFields(entityToReplace, replacement);
+    updatedEntityToReplace.setModifiedBy(user);
+    baseMapper.update(updatedEntityToReplace);
 
     // copy the identifiers
     entityToReplace
