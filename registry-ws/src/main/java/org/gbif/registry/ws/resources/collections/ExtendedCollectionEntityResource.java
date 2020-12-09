@@ -148,7 +148,7 @@ public abstract class ExtendedCollectionEntityResource<
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public UUID create(@RequestBody T entity) {
+  public UUID create(@RequestBody @Trim T entity) {
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
     preCreate(entity);
 
@@ -194,6 +194,7 @@ public abstract class ExtendedCollectionEntityResource<
   @PutMapping(
       value = {"", "{key}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
@@ -293,7 +294,7 @@ public abstract class ExtendedCollectionEntityResource<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public int addOccurrenceMapping(
-      @PathVariable("key") UUID entityKey, @RequestBody OccurrenceMapping occurrenceMapping) {
+      @PathVariable("key") UUID entityKey, @RequestBody @Trim OccurrenceMapping occurrenceMapping) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     occurrenceMapping.setCreatedBy(authentication.getName());
     checkArgument(

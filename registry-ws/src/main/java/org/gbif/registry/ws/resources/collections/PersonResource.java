@@ -118,7 +118,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public UUID create(@RequestBody Person person) {
+  public UUID create(@RequestBody @Trim Person person) {
     checkArgument(person.getKey() == null, "Unable to create an entity which already has a key");
     preCreate(person);
 
@@ -160,6 +160,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   @PutMapping(
       value = {"", "{key}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override

@@ -157,7 +157,7 @@ public abstract class BaseCollectionEntityResource<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public int addIdentifier(
-      @PathVariable("key") UUID entityKey, @RequestBody Identifier identifier) {
+      @PathVariable("key") UUID entityKey, @RequestBody @Trim Identifier identifier) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     identifier.setCreatedBy(authentication.getName());
     int identifierKey =
@@ -192,7 +192,7 @@ public abstract class BaseCollectionEntityResource<
   @Trim
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
-  public int addTag(@PathVariable("key") UUID entityKey, @RequestBody Tag tag) {
+  public int addTag(@PathVariable("key") UUID entityKey, @RequestBody @Trim Tag tag) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     tag.setCreatedBy(authentication.getName());
     int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
