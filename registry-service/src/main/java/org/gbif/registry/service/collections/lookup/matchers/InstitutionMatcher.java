@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.api.model.collections.lookup.Match.Reason.POSSIBLY_ON_LOAN;
+import static org.gbif.api.model.collections.lookup.Match.Reason.DIFFERENT_OWNER;
 
 @Component
 public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, InstitutionMatched> {
@@ -102,7 +102,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
               }
               if (!matchesOwnerInstitution(
                   dto, identifiersMap.get(dto.getKey()), params.getOwnerInstitutionCode())) {
-                match.addReason(POSSIBLY_ON_LOAN);
+                match.addReason(DIFFERENT_OWNER);
               }
             });
 
@@ -119,8 +119,8 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
             matches.getExplicitMatches(),
             matches.getExactMatches(),
             matches.getFuzzyMatches(),
-            m -> !m.getReasons().contains(POSSIBLY_ON_LOAN),
-            m -> !m.getReasons().contains(POSSIBLY_ON_LOAN),
+            m -> !m.getReasons().contains(DIFFERENT_OWNER),
+            m -> !m.getReasons().contains(DIFFERENT_OWNER),
             Match.Status.AMBIGUOUS_OWNER));
 
     return matches;
