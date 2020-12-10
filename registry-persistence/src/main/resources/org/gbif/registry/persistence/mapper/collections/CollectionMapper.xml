@@ -424,11 +424,14 @@
     collection_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
+  <!-- we don't want to return deleted collections in the identifier resolver -->
   <select id="findByIdentifier" resultType="java.util.UUID">
-    SELECT ci.collection_key
-    FROM collection_identifier ci
+    SELECT c.key
+    FROM collection c
+    INNER JOIN collection_identifier ci ON ci.collection_key = c.key
     INNER JOIN identifier i ON i."key" = ci.identifier_key
-    WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
+    WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '')
+      AND c.deleted IS NULL;
   </select>
   <!-- END IDENTIFIERS -->
 
