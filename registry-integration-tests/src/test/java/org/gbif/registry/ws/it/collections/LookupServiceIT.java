@@ -297,7 +297,7 @@ public class LookupServiceIT extends BaseItTest {
     assertEquals(3, alternative.getReasons().size());
     assertTrue(alternative.getReasons().contains(Match.Reason.CODE_MATCH));
     assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
-    assertTrue(alternative.getReasons().contains(Match.Reason.POSSIBLY_ON_LOAN));
+    assertTrue(alternative.getReasons().contains(Match.Reason.DIFFERENT_OWNER));
   }
 
   @Test
