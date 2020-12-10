@@ -76,10 +76,22 @@ public class IdentifierResolverIT extends BaseItTest {
     collection.setModifiedBy(TEST_USER);
     UUID collectionKey = collectionService.create(collection);
 
+    Collection deleted = new Collection();
+    deleted.setCode("c2");
+    deleted.setName("col2");
+    deleted.setCreatedBy(TEST_USER);
+    deleted.setModifiedBy(TEST_USER);
+    UUID deletedKey = collectionService.create(deleted);
+    collectionService.delete(deletedKey);
+
     // add identifier to collection
     Identifier id1 = new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER1);
     id1.setCreatedBy(TEST_USER);
     collectionService.addIdentifier(collectionKey, id1);
+
+    Identifier idDeleted = new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER1);
+    idDeleted.setCreatedBy(TEST_USER);
+    collectionService.addIdentifier(deletedKey, idDeleted);
 
     // there could be duplicates since we don't check it
     Identifier id2 = new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER1);
@@ -109,10 +121,22 @@ public class IdentifierResolverIT extends BaseItTest {
     institution.setModifiedBy(TEST_USER);
     UUID institutionKey = institutionService.create(institution);
 
+    Institution deleted = new Institution();
+    deleted.setCode("i2");
+    deleted.setName("inst2");
+    deleted.setCreatedBy(TEST_USER);
+    deleted.setModifiedBy(TEST_USER);
+    UUID deletedKey = institutionService.create(deleted);
+    institutionService.delete(deletedKey);
+
     // add identifiers to institution
     Identifier id3 = new Identifier(IdentifierType.LSID, IDENTIFIER2);
     id3.setCreatedBy(TEST_USER);
     institutionService.addIdentifier(institutionKey, id3);
+
+    Identifier idDeleted = new Identifier(IdentifierType.LSID, IDENTIFIER2);
+    idDeleted.setCreatedBy(TEST_USER);
+    institutionService.addIdentifier(deletedKey, idDeleted);
 
     Identifier id4 = new Identifier(IdentifierType.GRSCICOLL_URI, IDENTIFIER3);
     id4.setCreatedBy(TEST_USER);

@@ -393,11 +393,14 @@
     institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
+  <!-- we don't want to return deleted institutions in the identifier resolver -->
   <select id="findByIdentifier" resultType="java.util.UUID">
-    SELECT ii.institution_key
-    FROM institution_identifier ii
+    SELECT inst.key
+    FROM institution inst
+    INNER JOIN institution_identifier ii ON ii.institution_key = inst.key
     INNER JOIN identifier i ON i."key" = ii.identifier_key
-    WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '');
+    WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '')
+      AND inst.deleted IS NULL;
   </select>
   <!-- END IDENTIFIERS -->
 
