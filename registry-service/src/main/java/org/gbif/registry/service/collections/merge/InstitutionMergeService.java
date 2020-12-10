@@ -63,7 +63,9 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         institutionMapper,
         identifierMapper,
         institutionMapper,
-        personMapper);
+        personMapper,
+        machineTagMapper,
+        occurrenceMappingMapper);
     this.institutionMapper = institutionMapper;
     this.collectionMapper = collectionMapper;
     this.machineTagMapper = machineTagMapper;
@@ -136,7 +138,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .getIdentifiers()
         .forEach(
             i -> {
-              institutionMapper.deleteIdentifier(institutionKey, i.getKey());
               identifierMapper.createIdentifier(i);
               collectionMapper.addIdentifier(newCollection.getKey(), i.getKey());
             });
@@ -146,7 +147,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .getMachineTags()
         .forEach(
             mt -> {
-              institutionMapper.deleteMachineTag(institutionKey, mt.getKey());
               machineTagMapper.createMachineTag(mt);
               collectionMapper.addMachineTag(newCollection.getKey(), mt.getKey());
             });
@@ -156,7 +156,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .getOccurrenceMappings()
         .forEach(
             om -> {
-              institutionMapper.deleteOccurrenceMapping(institutionKey, om.getKey());
               occurrenceMappingMapper.createOccurrenceMapping(om);
               collectionMapper.addOccurrenceMapping(newCollection.getKey(), om.getKey());
             });

@@ -161,18 +161,19 @@ public abstract class BaseMergeServiceIT<
     T replaced = crudService.get(toReplace.getKey());
     T replacementUpdated = crudService.get(replacement.getKey());
 
-    assertEquals(0, replaced.getIdentifiers().size());
+    assertEquals(1, replaced.getIdentifiers().size());
     assertNotEquals(toReplace.getModified(), replaced.getModified());
     assertEquals(user, replaced.getModifiedBy());
     assertEquals(user, replacementUpdated.getModifiedBy());
     assertEquals(2, replacementUpdated.getIdentifiers().size());
-    assertEquals(1, replaced.getMachineTags().size());
+    assertEquals(2, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
     assertEquals(2, replacementUpdated.getContacts().size());
     assertEquals(a2, replacementUpdated.getAddress());
     assertEquals(ma1, replacementUpdated.getMailingAddress());
     assertEquals(replacement.getCreatedBy(), replacementUpdated.getCreatedBy());
     assertNull(replacementUpdated.getDeleted());
+    assertEquals(1, replaced.getOccurrenceMappings().size());
     assertEquals(1, replacementUpdated.getOccurrenceMappings().size());
 
     extraAsserts(replaced, replacement, replacementUpdated);

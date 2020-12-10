@@ -27,9 +27,11 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.MergeableMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 
 import java.lang.reflect.InvocationTargetException;
@@ -58,6 +60,8 @@ public abstract class BaseMergeService<
   protected final IdentifierMapper identifierMapper;
   protected final OccurrenceMappeableMapper occurrenceMappeableMapper;
   protected final PersonMapper personMapper;
+  private final MachineTagMapper machineTagMapper;
+  private final OccurrenceMappingMapper occurrenceMappingMapper;
 
   protected BaseMergeService(
       BaseMapper<T> baseMapper,
@@ -65,13 +69,17 @@ public abstract class BaseMergeService<
       ContactableMapper contactableMapper,
       IdentifierMapper identifierMapper,
       OccurrenceMappeableMapper occurrenceMappeableMapper,
-      PersonMapper personMapper) {
+      PersonMapper personMapper,
+      MachineTagMapper machineTagMapper,
+      OccurrenceMappingMapper occurrenceMappingMapper) {
     this.baseMapper = baseMapper;
     this.mergeableMapper = mergeableMapper;
     this.contactableMapper = contactableMapper;
     this.identifierMapper = identifierMapper;
     this.occurrenceMappeableMapper = occurrenceMappeableMapper;
     this.personMapper = personMapper;
+    this.machineTagMapper = machineTagMapper;
+    this.occurrenceMappingMapper = occurrenceMappingMapper;
   }
 
   @Override
@@ -118,13 +126,20 @@ public abstract class BaseMergeService<
     entityToReplace
         .getIdentifiers()
         .forEach(
-            i -> mergeableMapper.moveIdentifier(entityToReplaceKey, replacementKey, i.getKey()));
+            i -> {
+              identifierMapper.createIdentifier(i);
+              baseMapper.addIdentifier(replacementKey, i.getKey());
+            });
 
     // copy iDigBio machine tags
+    // TODO: what if the replacement has idigbio machine tags already?
     entityToReplace.getMachineTags().stream()
         .filter(mt -> mt.getNamespace().equals("iDigBio.org"))
         .forEach(
-            mt -> mergeableMapper.moveMachineTag(entityToReplaceKey, replacementKey, mt.getKey()));
+            mt -> {
+              machineTagMapper.createMachineTag(mt);
+              baseMapper.addMachineTag(replacementKey, mt.getKey());
+            });
 
     // merge contacts
     Objects.requireNonNull(entityToReplace.getContacts()).stream()
@@ -141,9 +156,10 @@ public abstract class BaseMergeService<
     // update occurrence mappings
     List<OccurrenceMapping> occMappings =
         occurrenceMappeableMapper.listOccurrenceMappings(entityToReplaceKey);
-    occMappings.forEach(
-        om ->
-            mergeableMapper.moveOccurrenceMapping(entityToReplaceKey, replacementKey, om.getKey()));
+    occMappings.forEach(om -> {
+      occurrenceMappingMapper.createOccurrenceMapping(om);
+      occurrenceMappeableMapper.addOccurrenceMapping(replacementKey, om.getKey());
+    });
 
     additionalOperations(entityToReplace, replacement);
   }

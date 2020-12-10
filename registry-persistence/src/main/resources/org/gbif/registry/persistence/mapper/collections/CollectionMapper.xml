@@ -575,26 +575,5 @@
     replaced_by = #{replacementKey,jdbcType=OTHER}
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
-
-  <update id="moveIdentifier">
-    UPDATE collection_identifier
-    SET collection_key = #{targetEntityKey,jdbcType=OTHER}
-    WHERE collection_key = #{sourceEntityKey,jdbcType=OTHER}
-    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
-  </update>
-
-  <update id="moveMachineTag">
-    UPDATE collection_machine_tag
-    SET collection_key = #{targetEntityKey,jdbcType=OTHER}
-    WHERE collection_key = #{sourceEntityKey,jdbcType=OTHER}
-    AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
-  </update>
-
-  <update id="moveOccurrenceMapping">
-    UPDATE collection_occurrence_mapping
-    SET collection_key = #{targetEntityKey,jdbcType=OTHER}
-    WHERE collection_key = #{sourceEntityKey,jdbcType=OTHER}
-    AND occurrence_mapping_key = #{occurrenceMappingKey,jdbcType=INTEGER}
-  </update>
   <!-- END MERGE -->
 </mapper>

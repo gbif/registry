@@ -555,27 +555,6 @@
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <update id="moveIdentifier">
-    UPDATE institution_identifier
-    SET institution_key = #{targetEntityKey,jdbcType=OTHER}
-    WHERE institution_key = #{sourceEntityKey,jdbcType=OTHER}
-    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
-  </update>
-
-  <update id="moveMachineTag">
-    UPDATE institution_machine_tag
-    SET institution_key = #{targetEntityKey,jdbcType=OTHER}
-    WHERE institution_key = #{sourceEntityKey,jdbcType=OTHER}
-    AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
-  </update>
-
-  <update id="moveOccurrenceMapping">
-    UPDATE institution_occurrence_mapping
-    SET institution_key = #{targetEntityKey,jdbcType=OTHER}
-    WHERE institution_key = #{sourceEntityKey,jdbcType=OTHER}
-    AND occurrence_mapping_key = #{occurrenceMappingKey,jdbcType=INTEGER}
-  </update>
-
   <update id="convertToCollection">
     UPDATE institution
     SET deleted = now(),

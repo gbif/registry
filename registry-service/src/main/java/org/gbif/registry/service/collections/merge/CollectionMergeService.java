@@ -19,7 +19,9 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Person;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 
 import java.util.List;
@@ -35,14 +37,18 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   protected CollectionMergeService(
       CollectionMapper collectionMapper,
       IdentifierMapper identifierMapper,
-      PersonMapper personMapper) {
+      PersonMapper personMapper,
+      MachineTagMapper machineTagMapper,
+      OccurrenceMappingMapper occurrenceMappingMapper) {
     super(
         collectionMapper,
         collectionMapper,
         collectionMapper,
         identifierMapper,
         collectionMapper,
-        personMapper);
+        personMapper,
+        machineTagMapper,
+        occurrenceMappingMapper);
   }
 
   @Override
