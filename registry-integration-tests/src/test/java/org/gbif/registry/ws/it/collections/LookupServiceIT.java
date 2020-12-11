@@ -214,6 +214,7 @@ public class LookupServiceIT extends BaseItTest {
     // State
     LookupParams params = new LookupParams();
     params.setInstitutionCode(i2.getAlternativeCodes().get(0).getCode());
+    params.setOwnerInstitutionCode(i2.getAlternativeCodes().get(0).getCode());
     params.setCollectionCode(c2.getAlternativeCodes().get(0).getCode());
 
     // When
@@ -521,12 +522,12 @@ public class LookupServiceIT extends BaseItTest {
     // Should
     assertNotNull(result.getInstitutionMatch());
     Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
-    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
     assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(2, institutionMatch.getReasons().size());
     assertTrue(institutionMatch.getReasons().contains(Match.Reason.KEY_MATCH));
     assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
-    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
   }
 
   private Dataset createDataset() {

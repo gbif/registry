@@ -62,14 +62,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       Predicate<Match<R>> exactExcludeFilter,
       Predicate<Match<R>> fuzzyExcludeFilter,
       Match.Status filterStatus) {
-    if (!explicitMatches.isEmpty()) {
-      if (explicitMatches.size() == 1) {
-        Match<R> acceptedMatch = explicitMatches.iterator().next();
-        acceptedMatch.setStatus(Match.Status.ACCEPTED);
-        return acceptedMatch;
-      }
-      return Match.none(Match.Status.AMBIGUOUS_EXPLICIT_MAPPINGS);
-    } else if (!exactMatches.isEmpty()) {
+    if (!exactMatches.isEmpty()) {
       Set<Match<R>> filteredMatched = filterMatches(exactMatches, exactExcludeFilter);
       if (filteredMatched.isEmpty()) {
         return Match.none(filterStatus);
@@ -84,6 +77,13 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         return acceptedMatch;
       }
       return Match.none(Match.Status.AMBIGUOUS);
+    } else if (!explicitMatches.isEmpty()) {
+      if (explicitMatches.size() == 1) {
+        Match<R> acceptedMatch = explicitMatches.iterator().next();
+        acceptedMatch.setStatus(Match.Status.ACCEPTED);
+        return acceptedMatch;
+      }
+      return Match.none(Match.Status.AMBIGUOUS_EXPLICIT_MAPPINGS);
     } else if (!fuzzyMatches.isEmpty()) {
       Set<Match<R>> filteredMatched = filterMatches(fuzzyMatches, fuzzyExcludeFilter);
       if (filteredMatched.isEmpty()) {
@@ -130,8 +130,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
                 || match.getReasons().contains(IDENTIFIER_MATCH)
                 || match.getReasons().contains(KEY_MATCH))
             && (match.getReasons().contains(NAME_MATCH)
-                || match.getReasons().contains(ALTERNATIVE_CODE_MATCH)
-                || match.getReasons().contains(KEY_MATCH));
+                || match.getReasons().contains(ALTERNATIVE_CODE_MATCH));
   }
 
   private Predicate<Match<R>> isCountryMatch() {
@@ -185,8 +184,14 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       Set<Match<R>> explicitMatches,
       T dto) {
     Match<R> match = null;
-    if (dto.isCodeMatch() && dto.isIdentifierMatch()) {
-      match = exact(toEntityMatched(dto), CODE_MATCH, IDENTIFIER_MATCH);
+    if (dto.isCodeMatch() && (dto.isIdentifierMatch() || dto.isKeyMatch())) {
+      match = exact(toEntityMatched(dto), CODE_MATCH);
+      if (dto.isIdentifierMatch()) {
+        match.getReasons().add(IDENTIFIER_MATCH);
+      }
+      if (dto.isKeyMatch()) {
+        match.getReasons().add(KEY_MATCH);
+      }
       exactMatches.add(match);
     } else if (dto.isExplicitMapping()) {
       match = explicitMapping(toEntityMatched(dto));

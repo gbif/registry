@@ -53,10 +53,6 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
       LookupParams params, Set<UUID> institutionMatches) {
     Matches<CollectionMatched> matches = new Matches<>();
 
-    if (isEnoughMatches(params, matches)) {
-      return setAccepted(matches);
-    }
-
     List<CollectionMatchedDto> dbMatches =
         getDbMatches(params.getCollectionCode(), params.getCollectionId(), params.getDatasetKey());
 

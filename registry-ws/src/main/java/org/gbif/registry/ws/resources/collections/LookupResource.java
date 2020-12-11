@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.vocabulary.Country;
@@ -40,15 +41,18 @@ public class LookupResource {
     this.lookupService = lookupService;
   }
 
+  @Trim
   @GetMapping
   public LookupResult lookup(
       @Nullable @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-      @Nullable @RequestParam(value = "institutionCode", required = false) String institutionCode,
-      @Nullable @RequestParam(value = "institutionId", required = false) String institutionId,
-      @Nullable @RequestParam(value = "ownerInstitutionCode", required = false)
+      @Nullable @RequestParam(value = "institutionCode", required = false) @Trim
+          String institutionCode,
+      @Nullable @RequestParam(value = "institutionId", required = false) @Trim String institutionId,
+      @Nullable @RequestParam(value = "ownerInstitutionCode", required = false) @Trim
           String ownerInstitutionCode,
-      @Nullable @RequestParam(value = "collectionCode", required = false) String collectionCode,
-      @Nullable @RequestParam(value = "collectionId", required = false) String collectionId,
+      @Nullable @RequestParam(value = "collectionCode", required = false) @Trim
+          String collectionCode,
+      @Nullable @RequestParam(value = "collectionId", required = false) @Trim String collectionId,
       @Nullable Country country,
       @Nullable @RequestParam(value = "verbose", required = false) boolean verbose) {
 

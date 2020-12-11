@@ -22,6 +22,7 @@
 
   <resultMap id="INSTITUTION_MATCHED_DTO_MAP" type="InstitutionMatchedDto" autoMapping="true">
     <id property="key" column="key"/>
+    <result property="alternativeCodes" column="alternative_codes" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
@@ -275,7 +276,7 @@
 
   <!-- LOOKUP -->
   <sql id="LOOKUP_MATCH_FIELDS">
-    i.key, i.name, i.code, i.address_key, i.mailing_address_key
+    i.key, i.name, i.code, i.address_key, i.mailing_address_key, akeys(i.alternative_codes) AS alternative_codes
   </sql>
 
   <select id="lookup" resultMap="INSTITUTION_MATCHED_DTO_MAP">
