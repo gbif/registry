@@ -2,7 +2,8 @@
   "dataset" : {
     "_source": {
       "excludes": [
-        "taxonKey"
+        "taxonKey",
+        "metadata"
       ]
     },
     "dynamic_templates": [
