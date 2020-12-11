@@ -110,6 +110,11 @@ public abstract class BaseMergeService<
           "Cannot do the replacement because both entities have an IH IRN identifier");
     }
 
+    if (isIDigBioRecord(entityToReplace) && isIDigBioRecord(replacement)) {
+      throw new IllegalArgumentException(
+          "Cannot do the replacement because both entities are iDigBio records");
+    }
+
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
@@ -132,7 +137,6 @@ public abstract class BaseMergeService<
             });
 
     // copy iDigBio machine tags
-    // TODO: what if the replacement has idigbio machine tags already?
     entityToReplace.getMachineTags().stream()
         .filter(mt -> mt.getNamespace().equals("iDigBio.org"))
         .forEach(
@@ -156,16 +160,21 @@ public abstract class BaseMergeService<
     // update occurrence mappings
     List<OccurrenceMapping> occMappings =
         occurrenceMappeableMapper.listOccurrenceMappings(entityToReplaceKey);
-    occMappings.forEach(om -> {
-      occurrenceMappingMapper.createOccurrenceMapping(om);
-      occurrenceMappeableMapper.addOccurrenceMapping(replacementKey, om.getKey());
-    });
+    occMappings.forEach(
+        om -> {
+          occurrenceMappingMapper.createOccurrenceMapping(om);
+          occurrenceMappeableMapper.addOccurrenceMapping(replacementKey, om.getKey());
+        });
 
     additionalOperations(entityToReplace, replacement);
   }
 
   protected boolean containsIHIdentifier(T entity) {
     return entity.getIdentifiers().stream().anyMatch(i -> i.getType() == IdentifierType.IH_IRN);
+  }
+
+  protected boolean isIDigBioRecord(T entity) {
+    return entity.getMachineTags().stream().anyMatch(mt -> mt.getNamespace().equals("iDigBio.org"));
   }
 
   protected void setNullFields(T target, T source) {

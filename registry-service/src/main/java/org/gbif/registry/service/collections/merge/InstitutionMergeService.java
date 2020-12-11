@@ -86,6 +86,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     Institution institutionToConvert = institutionMapper.get(institutionKey);
     checkArgument(
         institutionToConvert.getDeleted() == null, "Cannot convert a deleted institution");
+    checkArgument(!isIDigBioRecord(institutionToConvert), "Cannot convert an iDigBio institution");
 
     Collection newCollection = new Collection();
     newCollection.setKey(UUID.randomUUID());

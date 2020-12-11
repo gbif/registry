@@ -329,7 +329,7 @@ public abstract class ExtendedCollectionEntityResource<
   }
 
   @PostMapping(value = "{key}/merge")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured(GRSCICOLL_ADMIN_ROLE)
   public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     mergeService.merge(entityKey, params.replacementEntityKey, authentication.getName());
