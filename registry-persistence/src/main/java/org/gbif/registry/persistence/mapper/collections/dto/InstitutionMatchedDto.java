@@ -15,9 +15,12 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
+import java.util.List;
+
 public class InstitutionMatchedDto extends BaseEntityMatchedDto {
 
   private String identifier;
+  private List<String> alternativeCodes;
 
   public String getIdentifier() {
     return identifier;
@@ -25,5 +28,13 @@ public class InstitutionMatchedDto extends BaseEntityMatchedDto {
 
   public void setIdentifier(String identifier) {
     this.identifier = identifier;
+  }
+
+  public List<String> getAlternativeCodes() {
+    return alternativeCodes;
+  }
+
+  public void setAlternativeCodes(List<String> alternativeCodes) {
+    this.alternativeCodes = alternativeCodes;
   }
 }

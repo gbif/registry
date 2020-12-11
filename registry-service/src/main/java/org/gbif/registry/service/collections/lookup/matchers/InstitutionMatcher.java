@@ -58,10 +58,6 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
   public Matches<InstitutionMatched> matchInstitutions(LookupParams params) {
     Matches<InstitutionMatched> matches = new Matches<>();
 
-    if (isEnoughMatches(params, matches)) {
-      return setAccepted(matches);
-    }
-
     List<InstitutionMatchedDto> dbMatches =
         getDbMatches(
             params.getInstitutionCode(), params.getInstitutionId(), params.getDatasetKey());
@@ -132,7 +128,11 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
       return true;
     }
 
-    if (dto.getCode().equals(ownerInstitutionCode.trim())) {
+    if (dto.getCode().equals(ownerInstitutionCode)) {
+      return true;
+    }
+
+    if (dto.getAlternativeCodes().contains(ownerInstitutionCode)) {
       return true;
     }
 
