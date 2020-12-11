@@ -30,12 +30,12 @@ import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -47,15 +47,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -72,7 +70,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -147,7 +144,7 @@ public class DatasetJsonConverter {
     this.mapper = mapper;
     this.occurrenceEsClient = occurrenceEsClient;
     this.occurrenceIndex = occurrenceIndex;
-    consumers.add(this::metadataConsumer);
+    consumers.add(this::maintenanceFieldsTransforms);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
     consumers.add(this::addOccurrenceSpeciesCounts);
@@ -183,25 +180,6 @@ public class DatasetJsonConverter {
   @SneakyThrows
   public String convertAsJsonString(Dataset dataset) {
     return mapper.writeValueAsString(convert(dataset));
-  }
-
-  private void metadataConsumer(ObjectNode dataset) {
-    try (InputStream stream =
-        gbifWsClient.getMetadataDocument(UUID.fromString(dataset.get("key").asText()))) {
-      if (stream != null) {
-        FullTextSaxHandler handler = new FullTextSaxHandler();
-        SAXParser p = saxFactory.newSAXParser();
-        // parse does close the stream
-        p.parse(stream, handler);
-        dataset.put("metadata", handler.getFullText());
-      }
-    } catch (ParserConfigurationException e) {
-      throw new IllegalStateException("XML Parser not working on this system", e);
-    } catch (SAXException e) {
-      log.warn("Cannot parse original metadata xml for dataset {}", dataset);
-    } catch (Exception e) {
-      log.error("Unable to index metadata document for dataset {}", dataset, e);
-    }
   }
 
   private void addTitles(ObjectNode dataset) {
@@ -287,12 +265,19 @@ public class DatasetJsonConverter {
                 .doubleValue()));
   }
 
+  private void maintenanceFieldsTransforms(ObjectNode dataset) {
+    Optional.ofNullable(dataset.get("maintenanceDescription"))
+        .filter(p -> StringUtils.isBlank(p.asText()))
+        .ifPresent(p -> dataset.put("maintenanceDescription", (String) null));
+    Optional.ofNullable(dataset.get("maintenanceUpdateFrequency"))
+        .filter(JsonNode::isNull)
+        .ifPresent(p -> dataset.put("maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKOWN.toString()));
+  }
+
   private void enumTransforms(ObjectNode dataset) {
     Optional.ofNullable(dataset.get("license"))
-        .ifPresent(
-            licenseUrl ->
-                License.fromLicenseUrl(licenseUrl.asText())
-                    .ifPresent(license -> dataset.put("license", license.name())));
+        .flatMap(licenseUrl -> License.fromLicenseUrl(licenseUrl.asText()))
+        .ifPresent(license -> dataset.put("license", license.name()));
   }
 
   private void addDecades(Dataset dataset, ObjectNode datasetJsonNode) {
