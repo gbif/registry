@@ -183,11 +183,13 @@ public abstract class BaseMergeServiceIT<
   public void preconditionsTest() {
     T e1 = createEntityToReplace();
     crudService.create(e1);
-    identifierService.addIdentifier(e1.getKey(), new Identifier(IdentifierType.IH_IRN, "test"));
+    Identifier id1 = new Identifier(IdentifierType.IH_IRN, "test");
+    identifierService.addIdentifier(e1.getKey(), id1);
 
     T e2 = createReplacement();
     crudService.create(e2);
-    identifierService.addIdentifier(e2.getKey(), new Identifier(IdentifierType.IH_IRN, "test"));
+    Identifier id2 = new Identifier(IdentifierType.IH_IRN, "test");
+    identifierService.addIdentifier(e2.getKey(), id2);
 
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), "user"));
@@ -202,6 +204,15 @@ public abstract class BaseMergeServiceIT<
 
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), null));
+
+    // test that we can't merge 2 idigbio entities
+    identifierService.deleteIdentifier(e1.getKey(), id1.getKey());
+    identifierService.deleteIdentifier(e2.getKey(), id2.getKey());
+
+    machineTagService.addMachineTag(e1.getKey(), new MachineTag("iDigBio.org", "foo", "bar"));
+    machineTagService.addMachineTag(e2.getKey(), new MachineTag("iDigBio.org", "foo2", "bar2"));
+    assertThrows(
+        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), "user"));
   }
 
   protected Dataset createDataset() {
