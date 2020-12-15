@@ -271,7 +271,10 @@ public class DatasetJsonConverter {
         .ifPresent(p -> dataset.put("maintenanceDescription", (String) null));
     Optional.ofNullable(dataset.get("maintenanceUpdateFrequency"))
         .filter(JsonNode::isNull)
-        .ifPresent(p -> dataset.put("maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKOWN.toString()));
+        .ifPresent(
+            p ->
+                dataset.put(
+                    "maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKOWN.toString()));
   }
 
   private void enumTransforms(ObjectNode dataset) {

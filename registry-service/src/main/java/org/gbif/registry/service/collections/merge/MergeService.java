@@ -19,6 +19,5 @@ import java.util.UUID;
 
 public interface MergeService {
 
-  void merge(UUID entityToReplaceKey, UUID replacementKey, String user) ;
-
+  void merge(UUID entityToReplaceKey, UUID replacementKey, String user);
 }

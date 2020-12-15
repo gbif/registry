@@ -34,6 +34,5 @@ public interface OccurrenceMappeableMapper {
       @Param("targetEntityKey") UUID entityKey,
       @Param("occurrenceMappingKey") int occurrenceMappingKey);
 
-  List<OccurrenceMapping> listOccurrenceMappings(
-      @Param("targetEntityKey") UUID targetEntityKey);
+  List<OccurrenceMapping> listOccurrenceMappings(@Param("targetEntityKey") UUID targetEntityKey);
 }
