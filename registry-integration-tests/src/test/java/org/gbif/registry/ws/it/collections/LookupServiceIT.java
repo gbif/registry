@@ -58,8 +58,6 @@ public class LookupServiceIT extends BaseItTest {
   private final OrganizationService organizationService;
   private final InstallationService installationService;
 
-  // TODO: test con cambio
-
   @Autowired
   public LookupServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
