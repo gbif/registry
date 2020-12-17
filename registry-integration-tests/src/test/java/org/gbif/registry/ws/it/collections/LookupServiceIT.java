@@ -16,34 +16,16 @@
 package org.gbif.registry.ws.it.collections;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.lookup.CollectionMatched;
-import org.gbif.api.model.collections.lookup.InstitutionMatched;
-import org.gbif.api.model.collections.lookup.LookupParams;
-import org.gbif.api.model.collections.lookup.LookupResult;
-import org.gbif.api.model.collections.lookup.Match;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.lookup.*;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.NodeType;
-import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -75,6 +57,8 @@ public class LookupServiceIT extends BaseItTest {
   private final NodeService nodeService;
   private final OrganizationService organizationService;
   private final InstallationService installationService;
+
+  // TODO: test con cambio
 
   @Autowired
   public LookupServiceIT(
@@ -479,9 +463,14 @@ public class LookupServiceIT extends BaseItTest {
   @Test
   public void countryMatchTest() {
     // State
+    // we create an institution with duplicated code
+    Institution duplicated = new Institution();
+    duplicated.setCode(i1.getCode());
+    duplicated.setName("Institution 3");
+    institutionService.create(duplicated);
+
     LookupParams params = new LookupParams();
     params.setInstitutionCode(i1.getCode());
-    params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
     params.setCountry(Country.AFGHANISTAN);
     params.setVerbose(true);
 
@@ -502,9 +491,9 @@ public class LookupServiceIT extends BaseItTest {
     Match<InstitutionMatched> alternative =
         result.getAlternativeMatches().getInstitutionMatches().get(0);
     assertEquals(Match.MatchType.FUZZY, alternative.getMatchType());
-    assertEquals(i2.getKey(), alternative.getEntityMatched().getKey());
+    assertEquals(duplicated.getKey(), alternative.getEntityMatched().getKey());
     assertEquals(1, alternative.getReasons().size());
-    assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertTrue(alternative.getReasons().contains(Match.Reason.CODE_MATCH));
     assertNull(alternative.getStatus());
   }
 
@@ -528,6 +517,46 @@ public class LookupServiceIT extends BaseItTest {
     assertTrue(institutionMatch.getReasons().contains(Match.Reason.KEY_MATCH));
     assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
     assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+  }
+
+  @Test
+  public void identifierDisambiguationTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
+    params.setInstitutionCode(i1.getCode());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+
+    assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
+    Match<InstitutionMatched> alternative =
+        result.getAlternativeMatches().getInstitutionMatches().get(0);
+    assertEquals(Match.MatchType.FUZZY, alternative.getMatchType());
+    assertEquals(i1.getKey(), alternative.getEntityMatched().getKey());
+    assertEquals(1, alternative.getReasons().size());
+    assertTrue(alternative.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertNull(alternative.getStatus());
+
+    // we duplicate one identifier and there shouldn't be a match
+    institutionService.addIdentifier(
+        i1.getKey(),
+        new Identifier(IdentifierType.LSID, i2.getIdentifiers().get(0).getIdentifier()));
+
+    params.setInstitutionCode(null);
+    result = lookupService.lookup(params);
+    assertEquals(Match.MatchType.NONE, result.getInstitutionMatch().getMatchType());
+    assertEquals(2, result.getAlternativeMatches().getInstitutionMatches().size());
   }
 
   private Dataset createDataset() {
