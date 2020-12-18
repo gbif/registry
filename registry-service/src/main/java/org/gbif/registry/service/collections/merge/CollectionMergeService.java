@@ -29,6 +29,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Preconditions;
+
 /** Service to merge duplicated {@link Collection}. */
 @Service
 public class CollectionMergeService extends BaseMergeService<Collection> {
@@ -58,6 +60,10 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
       throw new IllegalArgumentException(
           "Cannot do the replacement because the collections don't belong to the same institution");
     }
+    Preconditions.checkArgument(
+        entityToReplace.getReplacedBy() == null, "Cannot merge an entity that was replaced");
+    Preconditions.checkArgument(
+        replacement.getReplacedBy() == null, "Cannot do a merge with an entity that was replaced");
   }
 
   @Override

@@ -523,6 +523,17 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertThrows(IllegalArgumentException.class, () -> service.update(c));
   }
 
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void updateAndReplaceTest(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+    Collection c = newEntity();
+    service.create(c);
+
+    c.setReplacedBy(UUID.randomUUID());
+    assertThrows(IllegalArgumentException.class, () -> service.update(c));
+  }
+
   @Override
   protected Collection newEntity() {
     Collection collection = new Collection();

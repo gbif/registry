@@ -297,7 +297,7 @@
       0 AS name_match_with_code, 0 AS explicit_mapping
       FROM institution i
       INNER JOIN institution_identifier ii ON ii.institution_key = i.key
-      INNER JOIN identifier id ON ii.identifier_key = id."key"
+      INNER JOIN identifier id ON ii.identifier_key = id."key" AND id.type != 'GRSCICOLL_ID'
       WHERE normalize_identifier(id.identifier) = normalize_identifier(#{identifier,jdbcType=VARCHAR}) AND i.deleted is null
     UNION ALL
       SELECT DISTINCT ON (i.key) <include refid="LOOKUP_MATCH_FIELDS"/>,

@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
@@ -86,6 +87,9 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     Institution institutionToConvert = institutionMapper.get(institutionKey);
     checkArgument(
         institutionToConvert.getDeleted() == null, "Cannot convert a deleted institution");
+    checkArgument(
+        institutionToConvert.getConvertedToCollection() == null,
+        "Cannot convert an already converted institution");
     checkArgument(!isIDigBioRecord(institutionToConvert), "Cannot convert an iDigBio institution");
 
     Collection newCollection = new Collection();
@@ -171,7 +175,10 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
 
   @Override
   void checkMergeExtraPreconditions(Institution entityToReplace, Institution replacement) {
-    // there is no extra preconditions for the merge
+    Preconditions.checkArgument(
+        entityToReplace.getReplacedBy() == null, "Cannot merge an entity that was replaced");
+    Preconditions.checkArgument(
+        replacement.getReplacedBy() == null, "Cannot do a merge with an entity that was replaced");
   }
 
   @Override
