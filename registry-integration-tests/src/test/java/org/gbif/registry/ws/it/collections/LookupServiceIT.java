@@ -86,6 +86,7 @@ public class LookupServiceIT extends BaseItTest {
     Address address1 = new Address();
     address1.setCountry(Country.AFGHANISTAN);
     i1.setAddress(address1);
+    i1.getIdentifiers().add(new Identifier(IdentifierType.GRSCICOLL_ID, "12345"));
     institutionService.create(i1);
 
     i2.setCode("I2");
@@ -97,6 +98,7 @@ public class LookupServiceIT extends BaseItTest {
     c1.setCode("C1");
     c1.setName("Collection 1");
     c1.setInstitutionKey(i1.getKey());
+    c1.getIdentifiers().add(new Identifier(IdentifierType.GRSCICOLL_ID, "54321"));
     collectionService.create(c1);
 
     c2.setCode("C2");
@@ -555,6 +557,26 @@ public class LookupServiceIT extends BaseItTest {
     result = lookupService.lookup(params);
     assertEquals(Match.MatchType.NONE, result.getInstitutionMatch().getMatchType());
     assertEquals(2, result.getAlternativeMatches().getInstitutionMatches().size());
+  }
+
+  @Test
+  public void ignoreIdentifiersTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionId(i1.getIdentifiers().get(0).getIdentifier());
+    params.setCollectionId(c1.getIdentifiers().get(0).getIdentifier());
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.NONE, institutionMatch.getMatchType());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.NONE, collectionMatch.getMatchType());
   }
 
   private Dataset createDataset() {

@@ -17,21 +17,9 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.registry.events.EventManager;
@@ -66,21 +54,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Base class to implement the main methods of {@link CollectionEntity} that are also @link *
- * Taggable}, {@link Identifiable} and {@link Contactable}. * *
+ * Base class to implement the main methods of {@link CollectionEntity} that are also @link
+ * Taggable}, {@link Identifiable} and {@link Contactable}.
  *
  * <p>It inherits from {@link BaseCollectionEntityResource} to test the CRUD operations.
  */
@@ -203,6 +185,7 @@ public abstract class ExtendedCollectionEntityResource<
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
     checkCodeUpdate(entity, entityOld);
+    checkReplacedEntitiesUpdate(entity, entityOld);
 
     if (entityOld.getDeleted() != null) {
       // if it's deleted we only allow to update it if we undelete it
@@ -365,6 +348,36 @@ public abstract class ExtendedCollectionEntityResource<
 
       if (newCollection.getCode() == null && oldCollection.getCode() != null) {
         throw new IllegalArgumentException("Not allowed to delete the code of a collection");
+      }
+    }
+  }
+
+  /**
+   * Replaced and converted entities cannot be updated or restored. Also, they can't be replaced or
+   * converted in an update
+   */
+  protected void checkReplacedEntitiesUpdate(T newEntity, T oldEntity) {
+    if (newEntity instanceof Institution) {
+      Institution newInstitution = (Institution) newEntity;
+      Institution oldInstitution = (Institution) oldEntity;
+
+      if (oldInstitution.getReplacedBy() != null
+          || oldInstitution.getConvertedToCollection() != null) {
+        throw new IllegalArgumentException(
+            "Not allowed to update a replaced or converted institution");
+      } else if (newInstitution.getReplacedBy() != null
+          || newInstitution.getConvertedToCollection() != null) {
+        throw new IllegalArgumentException(
+            "Not allowed to replace or convert an institution while updating");
+      }
+    } else if (newEntity instanceof Collection) {
+      Collection newCollection = (Collection) newEntity;
+      Collection oldCollection = (Collection) oldEntity;
+
+      if (oldCollection.getReplacedBy() != null) {
+        throw new IllegalArgumentException("Not allowed to update a replaced collection");
+      } else if (newCollection.getReplacedBy() != null) {
+        throw new IllegalArgumentException("Not allowed to replace a collection while updating");
       }
     }
   }

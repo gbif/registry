@@ -46,11 +46,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link InstitutionResource}. */
 public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
@@ -385,6 +381,21 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     service.create(i);
 
     i.setCode(null);
+    assertThrows(IllegalArgumentException.class, () -> service.update(i));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void updateAndReplaceTest(ServiceType serviceType) {
+    InstitutionService service = (InstitutionService) getService(serviceType);
+    Institution i = newEntity();
+    service.create(i);
+
+    i.setReplacedBy(UUID.randomUUID());
+    assertThrows(IllegalArgumentException.class, () -> service.update(i));
+
+    i.setReplacedBy(null);
+    i.setConvertedToCollection(UUID.randomUUID());
     assertThrows(IllegalArgumentException.class, () -> service.update(i));
   }
 
