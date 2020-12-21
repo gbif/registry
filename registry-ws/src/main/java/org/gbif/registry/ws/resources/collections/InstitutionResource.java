@@ -130,6 +130,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
             .machineTagValue(searchRequest.getMachineTagValue())
             .identifierType(searchRequest.getIdentifierType())
             .identifier(searchRequest.getIdentifier())
+            .country(searchRequest.getCountry())
             .build();
 
     long total = institutionMapper.count(params);

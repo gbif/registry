@@ -177,6 +177,9 @@
       INNER JOIN institution_identifier ii on ii.institution_key = i.key
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
+    <if test="params.country != null">
+      INNER JOIN address addr ON addr.key = i.address_key
+    </if>
     WHERE i.deleted IS NULL
     <if test="params.contactKey != null" >
       AND icp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
@@ -204,6 +207,9 @@
     </if>
     <if test="params.identifier != null" >
       AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
+    </if>
+    <if test="params.country != null">
+      AND addr.country = #{params.country,jdbcType=VARCHAR}
     </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
     <if test="page != null" >
@@ -228,6 +234,9 @@
       INNER JOIN institution_identifier ii on ii.institution_key = i.key
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
+    <if test="params.country != null">
+      INNER JOIN address addr ON addr.key = i.address_key
+    </if>
     WHERE i.deleted IS NULL
     <if test="params.contactKey != null" >
       AND icp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
@@ -255,6 +264,9 @@
     </if>
     <if test="params.identifier != null" >
       AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
+    </if>
+    <if test="params.country != null">
+      AND addr.country = #{params.country,jdbcType=VARCHAR}
     </if>
   </select>
 

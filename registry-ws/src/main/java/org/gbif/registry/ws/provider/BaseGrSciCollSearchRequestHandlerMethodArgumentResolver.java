@@ -18,6 +18,7 @@ package org.gbif.registry.ws.provider;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.ws.server.provider.PageableProvider;
 
@@ -59,5 +60,17 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     request.setMachineTagNamespace(webRequest.getParameter("machineTagNamespace"));
     request.setMachineTagValue(webRequest.getParameter("machineTagValue"));
     request.setQ(webRequest.getParameter("q"));
+
+    String countryParam = webRequest.getParameter("country");
+    if (!Strings.isNullOrEmpty(countryParam)) {
+      Country country = Country.fromIsoCode(countryParam);
+
+      if (country == null) {
+        // if nothing found also try by enum name
+        country = VocabularyUtils.lookupEnum(countryParam, Country.class);
+      }
+
+      request.setCountry(country);
+    }
   }
 }

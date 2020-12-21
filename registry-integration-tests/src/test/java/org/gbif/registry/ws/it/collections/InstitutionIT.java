@@ -28,6 +28,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
@@ -46,7 +47,11 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionResource}. */
 public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
@@ -98,6 +103,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
+    address.setCountry(Country.DENMARK);
     institution1.setAddress(address);
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = service.create(institution1);
@@ -108,6 +114,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
+    address2.setCountry(Country.SPAIN);
     institution2.setAddress(address2);
     UUID key2 = service.create(institution2);
 
@@ -205,6 +212,19 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     response =
         service.list(
             InstitutionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build());
+    assertEquals(0, response.getResults().size());
+
+    response =
+        service.list(
+            InstitutionSearchRequest.builder().country(Country.SPAIN).page(DEFAULT_PAGE).build());
+    assertEquals(1, response.getResults().size());
+    assertEquals(key2, response.getResults().get(0).getKey());
+    response =
+        service.list(
+            InstitutionSearchRequest.builder()
+                .country(Country.AFGHANISTAN)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(0, response.getResults().size());
 
     // update address

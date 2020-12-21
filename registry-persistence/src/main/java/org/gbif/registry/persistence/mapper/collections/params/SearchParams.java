@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.UUID;
@@ -33,6 +34,7 @@ public abstract class SearchParams {
   @Nullable String machineTagValue;
   @Nullable IdentifierType identifierType;
   @Nullable String identifier;
+  @Nullable Country country;
 
   @Nullable
   public UUID getContactKey() {
@@ -122,5 +124,14 @@ public abstract class SearchParams {
 
   public void setIdentifier(@Nullable String identifier) {
     this.identifier = identifier;
+  }
+
+  @Nullable
+  public Country getCountry() {
+    return country;
+  }
+
+  public void setCountry(@Nullable Country country) {
+    this.country = country;
   }
 }
