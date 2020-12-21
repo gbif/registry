@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.UUID;
@@ -36,6 +37,7 @@ public class InstitutionSearchParams extends SearchParams {
     String machineTagValue;
     IdentifierType identifierType;
     String identifier;
+    Country country;
 
     public Builder contactKey(UUID contactKey) {
       this.contactKey = contactKey;
@@ -87,6 +89,11 @@ public class InstitutionSearchParams extends SearchParams {
       return this;
     }
 
+    public Builder country(Country country) {
+      this.country = country;
+      return this;
+    }
+
     public InstitutionSearchParams build() {
       InstitutionSearchParams params = new InstitutionSearchParams();
       params.setContactKey(contactKey);
@@ -99,6 +106,7 @@ public class InstitutionSearchParams extends SearchParams {
       params.setMachineTagValue(machineTagValue);
       params.setIdentifier(identifier);
       params.setIdentifierType(identifierType);
+      params.setCountry(country);
       return params;
     }
   }

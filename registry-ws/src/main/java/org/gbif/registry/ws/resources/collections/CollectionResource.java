@@ -131,6 +131,7 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
             .machineTagValue(searchRequest.getMachineTagValue())
             .identifierType(searchRequest.getIdentifierType())
             .identifier(searchRequest.getIdentifier())
+            .country(searchRequest.getCountry())
             .build();
 
     long total = collectionMapper.count(params);

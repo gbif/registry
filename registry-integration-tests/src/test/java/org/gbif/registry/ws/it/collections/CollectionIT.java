@@ -15,11 +15,7 @@
  */
 package org.gbif.registry.ws.it.collections;
 
-import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -31,6 +27,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
@@ -41,6 +38,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import javax.validation.ValidationException;
@@ -112,6 +110,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
+    address.setCountry(Country.DENMARK);
     collection1.setAddress(address);
     collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = service.create(collection1);
@@ -122,6 +121,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
+    address2.setCountry(Country.SPAIN);
     collection2.setAddress(address2);
     UUID key2 = service.create(collection2);
 
@@ -222,6 +222,25 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         service
             .list(
                 CollectionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    // country
+    List<CollectionView> results =
+        service
+            .list(
+                CollectionSearchRequest.builder().country(Country.SPAIN).page(DEFAULT_PAGE).build())
+            .getResults();
+    assertEquals(1, results.size());
+    assertEquals(key2, results.get(0).getCollection().getKey());
+    assertEquals(
+        0,
+        service
+            .list(
+                CollectionSearchRequest.builder()
+                    .country(Country.AFGHANISTAN)
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 
