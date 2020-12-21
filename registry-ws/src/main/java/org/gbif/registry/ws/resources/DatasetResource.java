@@ -573,7 +573,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
           old.getLicense());
       dataset.setLicense(old.getLicense());
     }
-    update(dataset, old.getIdentifiers(), old.getDoi(), dataset.getModifiedBy());
+
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    update(dataset, old.getIdentifiers(), old.getDoi(), authentication.getName());
   }
 
   /**
