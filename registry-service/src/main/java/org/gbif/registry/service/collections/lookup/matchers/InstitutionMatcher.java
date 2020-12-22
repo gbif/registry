@@ -74,12 +74,14 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
             dtosMap.put(dto.getKey(), dto);
           }
 
-          if (identifiersMap.containsKey(dto.getKey())) {
-            identifiersMap.get(dto.getKey()).add(dto.getIdentifier());
-          } else {
-            Set<String> ids = new HashSet<>();
-            ids.add(dto.getIdentifier());
-            identifiersMap.put(dto.getKey(), ids);
+          if (!Strings.isNullOrEmpty(dto.getIdentifier())) {
+            if (identifiersMap.containsKey(dto.getKey())) {
+              identifiersMap.get(dto.getKey()).add(dto.getIdentifier());
+            } else {
+              Set<String> ids = new HashSet<>();
+              ids.add(dto.getIdentifier());
+              identifiersMap.put(dto.getKey(), ids);
+            }
           }
         });
 
