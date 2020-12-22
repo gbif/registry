@@ -575,7 +575,18 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    update(dataset, old.getIdentifiers(), old.getDoi(), authentication.getName());
+    String user = null;
+    // this method is also used by some CLIs and in these cases the authenticated user can be null
+    if (authentication != null) {
+      user = authentication.getName();
+    } else if (!Strings.isNullOrEmpty(dataset.getModifiedBy())) {
+      // this can also be null since it's not a required field
+      user = dataset.getModifiedBy();
+    } else {
+      user = old.getModifiedBy();
+    }
+
+    update(dataset, old.getIdentifiers(), old.getDoi(), user);
   }
 
   /**
