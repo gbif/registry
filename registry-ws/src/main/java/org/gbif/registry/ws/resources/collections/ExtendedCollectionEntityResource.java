@@ -16,9 +16,9 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
@@ -56,9 +56,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Base class to implement the main methods of {@link CollectionEntity} that are also @link
