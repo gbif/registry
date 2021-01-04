@@ -438,4 +438,9 @@ public class MockDatasetMapper implements DatasetMapper {
   public List<Tag> listTags(@Param("targetEntityKey") UUID targetEntityKey) {
     return null;
   }
+
+  @Override
+  public String gridded(UUID datasetKey) {
+    return null;
+  }
 }

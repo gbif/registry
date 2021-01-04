@@ -731,6 +731,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return pagingResponse(page, datasetMapper.countSubdatasets(), datasetMapper.subdatasets(page));
   }
 
+  @GetMapping("{key}/gridded")
+  @Override
+  public String gridded(@PathVariable("key") UUID datasetKey) {
+    return datasetMapper.gridded(datasetKey);
+  }
+
   @GetMapping("{key}/metadata")
   @Override
   public List<Metadata> listMetadata(

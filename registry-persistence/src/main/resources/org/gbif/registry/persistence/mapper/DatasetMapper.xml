@@ -677,4 +677,10 @@
     </if>
   </select>
 
+  <select id="gridded" resultType="String">
+    SELECT grids
+    FROM dataset_gridded
+    WHERE dataset_key = #{key,jdbcType=OTHER}
+  </select>
+
 </mapper>

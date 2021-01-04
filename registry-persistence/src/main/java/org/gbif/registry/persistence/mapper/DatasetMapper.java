@@ -141,4 +141,6 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
    * @return The list of distinct installations that serves at least one dataset.
    */
   List<Installation> listDistinctInstallations(@Nullable @Param("page") Pageable page);
+
+  String gridded(@Param("datasetKey") UUID datasetKey);
 }
