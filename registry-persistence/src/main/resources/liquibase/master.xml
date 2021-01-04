@@ -92,4 +92,5 @@
   <include file="liquibase/084-grscicoll-lookup-explicit-mappings-table.xml" />
   <include file="liquibase/085-grscicoll-triggers-updated.xml" />
   <include file="liquibase/086-grscicoll-replacedBy.xml" />
+  <include file="liquibase/087-dataset-gridded.xml" />
 </databaseChangeLog>
