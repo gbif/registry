@@ -680,7 +680,7 @@
   <select id="gridded" resultType="String">
     SELECT grids
     FROM dataset_gridded
-    WHERE dataset_key = #{key,jdbcType=OTHER}
+    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
 
 </mapper>
