@@ -1,0 +1,24 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="87" author="nvolik" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+          CREATE TABLE IF NOT exists dataset_gridded (
+              "key" bigserial NOT NULL,
+              dataset_key uuid NOT NULL,
+              total_count int,
+              min_dist float,
+              min_dist_count int,
+              "percent" float,
+              max_percent float,
+              CONSTRAINT dataset_gridded_pk PRIMARY KEY (key)
+          );
+
+          CREATE INDEX IF NOT EXISTS dataset_griddeds_dataset_key_idx ON dataset_gridded(dataset_key);
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
