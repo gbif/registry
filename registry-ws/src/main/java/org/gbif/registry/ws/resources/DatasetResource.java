@@ -33,6 +33,7 @@ import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.Grid;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
@@ -733,8 +734,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @GetMapping("{key}/gridded")
   @Override
-  public String gridded(@PathVariable("key") UUID datasetKey) {
-    return datasetMapper.gridded(datasetKey);
+  public List<Grid> listGrids(@PathVariable("key") UUID datasetKey) {
+    return datasetMapper.listGrids(datasetKey);
   }
 
   @GetMapping("{key}/metadata")

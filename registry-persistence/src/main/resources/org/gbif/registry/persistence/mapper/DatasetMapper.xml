@@ -677,10 +677,16 @@
     </if>
   </select>
 
-  <select id="gridded" resultType="String">
-    SELECT grids
-    FROM dataset_gridded
-    WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+  <select id="listGrids" resultType="org.gbif.api.model.registry.Grid">
+    SELECT
+      dg.key,
+      dg.total_count,
+      dg.min_dist,
+      dg.min_dist_count,
+      dg.percent,
+      dg.max_percent
+    FROM dataset_gridded dg
+    WHERE dg.dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
 
 </mapper>

@@ -17,6 +17,7 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Grid;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
@@ -142,5 +143,5 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
    */
   List<Installation> listDistinctInstallations(@Nullable @Param("page") Pageable page);
 
-  String gridded(@Param("datasetKey") UUID datasetKey);
+  List<Grid> listGrids(@Param("datasetKey") UUID datasetKey);
 }
