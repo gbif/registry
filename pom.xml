@@ -83,6 +83,7 @@
 
     <spring-cloud-zookeeper.version>2.2.0.RELEASE</spring-cloud-zookeeper.version>
     <spring-cloud-openfeign.version>2.2.1.RELEASE</spring-cloud-openfeign.version>
+    <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
     <zookeeper.version>3.4.14</zookeeper.version>
     <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
@@ -207,6 +208,11 @@
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-openfeign</artifactId>
         <version>${spring-cloud-openfeign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.codecentric</groupId>
+        <artifactId>spring-boot-admin-starter-client</artifactId>
+        <version>${spring-boot-admin.version}</version>
       </dependency>
 
       <!-- GBIF dependencies -->
