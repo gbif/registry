@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.Grid;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
@@ -436,6 +437,11 @@ public class MockDatasetMapper implements DatasetMapper {
 
   @Override
   public List<Tag> listTags(@Param("targetEntityKey") UUID targetEntityKey) {
+    return null;
+  }
+
+  @Override
+  public List<Grid> listGrids(UUID datasetKey) {
     return null;
   }
 }
