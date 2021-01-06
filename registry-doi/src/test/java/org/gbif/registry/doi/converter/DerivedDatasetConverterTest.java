@@ -21,6 +21,7 @@ import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +48,9 @@ public class DerivedDatasetConverterTest {
     relatedDatasets.add(derivedDatasetUsage1);
     relatedDatasets.add(derivedDatasetUsage2);
 
-    String expectedMetadataXml = getXmlMetadataFromFile("metadata/metadata-derived-dataset.xml");
+    String expectedMetadataXml = getXmlMetadataFromFile("metadata/metadata-derived-dataset.xml")
+        .replace("<publicationYear>2020</publicationYear>",
+            "<publicationYear>" + LocalDate.now().getYear() + "</publicationYear>");
 
     // when
     DataCiteMetadata actualMetadata =
