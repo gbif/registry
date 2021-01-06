@@ -15,7 +15,7 @@ The overall matching process for each entity is as follows:
 
 ![](docs/grscicoll_lookup.png)
 
-[1]
+**[1]**
 
 The identifier match also includes the matches by key (UUID).
 
@@ -23,13 +23,13 @@ Also, there are some specific conditions based on the entity type:
 - Institutions: if the `ownerInstitutionCode` is different than the institutions matched we discard them and
 flag them as `AMBIGUOUS_OWNER`
 
-[2]
+**[2]**
 
 When the `datasetKey` param is provided and there is no exact matches we check the [occurrence mappings](https://github.com/gbif/gbif-api/blob/master/src/main/java/org/gbif/api/model/collections/OccurrenceMapping.java).
 Both the `code` and the `identifier` are optional in the `OccurrenceMapping`. They can be used to refine the mappings
 when there are more than 1 possible combination within a dataset.
 
-[3]
+**[3]**
 
 A fuzzy match happens when some fields match but not the `code` and the `identifier` at the same time. Examples of these matches are:
 - Only the `code` matches
@@ -50,6 +50,7 @@ flag them as `AMBIGUOUS_OWNER`
 - Collections: if the institution of the collections found doesn't match with the institutions previously matched we discard
 them and flag them as `AMBIGUOUS_INSTITUTION_MISMATCH`
 
+<br/>
 
 Finally, if we want to know more about the matches there are 2 things that can help us:
 - The `reasons` field in the response shows all the fields that matched
