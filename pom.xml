@@ -133,10 +133,7 @@
     <lombok.version>1.18.10</lombok.version>
 
     <xmlunit.version>2.6.3</xmlunit.version>
-    <cucumber.version>4.8.0</cucumber.version>
-    <junit-jupiter.version>5.5.2</junit-jupiter.version>
     <hikaricp.version>3.2.0</hikaricp.version>
-    <mockito-junit-jupiter.version>3.1.0</mockito-junit-jupiter.version>
 
     <datacite.api.base.url />
     <datacite.user />
@@ -641,30 +638,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>io.cucumber</groupId>
-        <artifactId>cucumber-java</artifactId>
-        <version>${cucumber.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.cucumber</groupId>
-        <artifactId>cucumber-spring</artifactId>
-        <version>${cucumber.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>io.cucumber</groupId>
-        <artifactId>cucumber-junit</artifactId>
-        <version>${cucumber.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
-        <version>${junit-jupiter.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
         <groupId>org.jvnet.mock-javamail</groupId>
         <artifactId>mock-javamail</artifactId>
         <version>${mock-javamail.version}</version>
@@ -686,12 +659,6 @@
         <groupId>io.zonky.test</groupId>
         <artifactId>embedded-database-spring-test</artifactId>
         <version>${embedded-database-spring-test.version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-junit-jupiter</artifactId>
-        <version>${mockito-junit-jupiter.version}</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
