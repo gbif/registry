@@ -51,4 +51,6 @@ flag them as `AMBIGUOUS_OWNER`
 them and flag them as `AMBIGUOUS_INSTITUTION_MISMATCH`
 
 
-Finally, if we want to know more we can send the `verbose` parameter as `true` and all the matches found will be returned.
+Finally, if we want to know more about the matches there are 2 things that can help us:
+- The `reasons` field in the response shows all the fields that matched
+- We can send the `verbose` parameter as `true` and all the matches found will be returned
