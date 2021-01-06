@@ -50,7 +50,7 @@ flag them as `AMBIGUOUS_OWNER`
 - Collections: if the institution of the collections found doesn't match with the institutions previously matched we discard
 them and flag them as `AMBIGUOUS_INSTITUTION_MISMATCH`
 
-<br/><br/>
+<br/>
 
 Finally, if we want to know more about the matches there are 2 things that can help us:
 - The `reasons` field in the response shows all the fields that matched
