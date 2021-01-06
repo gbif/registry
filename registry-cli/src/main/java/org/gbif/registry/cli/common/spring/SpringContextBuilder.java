@@ -47,7 +47,6 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
@@ -246,7 +245,6 @@ public class SpringContextBuilder {
   /** Class to help with the loading and injection of */
   @SpringBootApplication(
       exclude = {
-        ElasticsearchAutoConfiguration.class,
         ElasticSearchRestHealthContributorAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
         LiquibaseAutoConfiguration.class,
