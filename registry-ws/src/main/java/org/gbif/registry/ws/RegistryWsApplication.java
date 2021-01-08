@@ -25,10 +25,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication(
-    exclude = {
-      ElasticSearchRestHealthContributorAutoConfiguration.class
-    })
+@SpringBootApplication(exclude = {ElasticSearchRestHealthContributorAutoConfiguration.class})
 @MapperScan("org.gbif.registry.persistence.mapper")
 @EnableConfigurationProperties
 @ComponentScan(

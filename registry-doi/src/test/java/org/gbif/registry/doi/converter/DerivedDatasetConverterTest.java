@@ -48,9 +48,11 @@ public class DerivedDatasetConverterTest {
     relatedDatasets.add(derivedDatasetUsage1);
     relatedDatasets.add(derivedDatasetUsage2);
 
-    String expectedMetadataXml = getXmlMetadataFromFile("metadata/metadata-derived-dataset.xml")
-        .replace("<publicationYear>2020</publicationYear>",
-            "<publicationYear>" + LocalDate.now().getYear() + "</publicationYear>");
+    String expectedMetadataXml =
+        getXmlMetadataFromFile("metadata/metadata-derived-dataset.xml")
+            .replace(
+                "<publicationYear>2020</publicationYear>",
+                "<publicationYear>" + LocalDate.now().getYear() + "</publicationYear>");
 
     // when
     DataCiteMetadata actualMetadata =
