@@ -165,13 +165,21 @@ public class DoiSynchronizer {
       return false;
     }
 
-    // ensure we only have 1 dataset linked to this DOI
-    if (datasetsFromDOI.size() != 1) {
-      return false;
+    Dataset dataset = datasetsFromDOI.get(0);
+
+    // cound non-deleted datasets and remember the last one
+    int countNonDeleted = 0;
+    for (Dataset d : datasetsFromDOI) {
+      if (d.getDeleted() != null) {
+        countNonDeleted++;
+        dataset = d;
+      }
     }
 
-    // get the Dataset from the right source
-    Dataset dataset = datasetsFromDOI.get(0);
+    // ensure we have only one non-deleted dataset
+    if (countNonDeleted != 1) {
+      return false;
+    }
 
     DOI datasetDoi = dataset.getDoi();
     if (doi.equals(datasetDoi)) {
