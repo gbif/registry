@@ -15,15 +15,19 @@
  */
 package org.gbif.registry.cli.doisynchronizer.diagnostic;
 
+import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
+
 import java.io.PrintStream;
 
 /** Print a report from a {@link GbifDOIDiagnosticResult} to the defined {@link PrintStream}. */
 public class DoiDiagnosticPrinter {
 
-  private PrintStream out;
+  private final PrintStream out;
+  private final DoiSynchronizerConfiguration config;
 
-  public DoiDiagnosticPrinter(PrintStream out) {
+  public DoiDiagnosticPrinter(PrintStream out, DoiSynchronizerConfiguration config) {
     this.out = out;
+    this.config = config;
   }
 
   public void printReport(GbifDOIDiagnosticResult result) {
@@ -40,6 +44,12 @@ public class DoiDiagnosticPrinter {
     if (result.isDoiExistsAtDatacite()) {
       out.println("DOI Status at Datacite?: " + result.getDataciteDoiStatus());
       out.println("Datacite Metadata equals?: " + result.isMetadataEquals());
+      if (!result.isMetadataEquals() && config.displayMetadataDiff) {
+        out.println("***************");
+        out.println("Metadata difference:");
+        out.println(result.getDifference());
+        out.println("***************");
+      }
       out.println("Datacite target URI: " + result.getDataciteTarget());
     }
     out.println("------------");

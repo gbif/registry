@@ -20,7 +20,9 @@ import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiService;
+import org.gbif.doi.util.Difference;
 import org.gbif.doi.util.MetadataUtils;
+import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -34,8 +36,7 @@ public class DoiDiagnostician {
 
   private static final Logger LOG = LoggerFactory.getLogger(DoiDiagnostician.class);
 
-  private final DoiDiagnosticPrinter diagnosticPrinter = new DoiDiagnosticPrinter(System.out);
-
+  private final DoiDiagnosticPrinter diagnosticPrinter;
   private final DoiMapper doiMapper;
   private final DoiService dataCiteService;
   private final DatasetMapper datasetMapper;
@@ -45,11 +46,13 @@ public class DoiDiagnostician {
       DoiMapper doiMapper,
       DoiService dataCiteService,
       DatasetMapper datasetMapper,
-      OccurrenceDownloadMapper downloadMapper) {
+      OccurrenceDownloadMapper downloadMapper,
+      DoiSynchronizerConfiguration config) {
     this.doiMapper = doiMapper;
     this.dataCiteService = dataCiteService;
     this.datasetMapper = datasetMapper;
     this.downloadMapper = downloadMapper;
+    this.diagnosticPrinter = new DoiDiagnosticPrinter(System.out, config);
   }
 
   /** Report the current status of a DOI */
@@ -97,6 +100,9 @@ public class DoiDiagnostician {
         dataCiteDoiMetadataXml = dataCiteService.getMetadata(doi);
         metadataEquals =
             MetadataUtils.metadataEquals(registryDoiMetadataXml, dataCiteDoiMetadataXml);
+
+        Difference difference = MetadataUtils.metadataDifference(registryDoiMetadataXml, dataCiteDoiMetadataXml);
+        doiGbifDataciteDiagnostic.setDifference(difference.toString());
       } catch (DoiException e) {
         LOG.error("Can't compare DOI metadata", e);
       }

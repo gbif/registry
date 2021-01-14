@@ -69,6 +69,9 @@ public class DoiSynchronizerConfiguration {
   @Parameter(names = {"--list-failed-doi"})
   public boolean listFailedDOI = false;
 
+  @Parameter(names = {"--display-metadata-diff"})
+  public boolean displayMetadataDiff = false;
+
   @Override
   public String toString() {
     return new StringJoiner(", ", DoiSynchronizerConfiguration.class.getSimpleName() + "[", "]")
@@ -84,6 +87,7 @@ public class DoiSynchronizerConfiguration {
         .add("skipDiagnostic=" + skipDiagnostic)
         .add("export=" + export)
         .add("listFailedDOI=" + listFailedDOI)
+        .add("displayMetadataDiff=" + displayMetadataDiff)
         .toString();
   }
 }
