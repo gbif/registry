@@ -39,6 +39,7 @@ public abstract class GbifDOIDiagnosticResult {
   protected DoiStatus dataciteDoiStatus;
   protected URI dataciteTarget;
   protected boolean metadataEquals;
+  protected String difference;
 
   /** Mechanism to let concrete classes provide contextual content to the diagnostic */
   public abstract List<String> getContextInformation();
@@ -89,5 +90,13 @@ public abstract class GbifDOIDiagnosticResult {
 
   public void setDataciteTarget(URI dataciteTarget) {
     this.dataciteTarget = dataciteTarget;
+  }
+
+  public String getDifference() {
+    return difference;
+  }
+
+  public void setDifference(String difference) {
+    this.difference = difference;
   }
 }

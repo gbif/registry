@@ -90,7 +90,7 @@ public class DoiSynchronizer {
     this.userMapper = context.getBean(UserMapper.class);
     this.diagnostician =
         new DoiDiagnostician(
-            doiMapper, context.getBean(DoiService.class), datasetMapper, downloadMapper);
+            doiMapper, context.getBean(DoiService.class), datasetMapper, downloadMapper, config);
   }
 
   /** Handle a single DOI provided as String */
@@ -167,10 +167,10 @@ public class DoiSynchronizer {
 
     Dataset dataset = datasetsFromDOI.get(0);
 
-    // cound non-deleted datasets and remember the last one
+    // count non-deleted datasets and remember the last one
     int countNonDeleted = 0;
     for (Dataset d : datasetsFromDOI) {
-      if (d.getDeleted() != null) {
+      if (d.getDeleted() == null) {
         countNonDeleted++;
         dataset = d;
       }
@@ -178,6 +178,7 @@ public class DoiSynchronizer {
 
     // ensure we have only one non-deleted dataset
     if (countNonDeleted != 1) {
+      LOG.error("Found {} non-deleted datasets. There should be only one", countNonDeleted);
       return false;
     }
 

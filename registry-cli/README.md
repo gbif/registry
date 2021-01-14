@@ -33,12 +33,13 @@ java -jar registry-cli.jar doi-synchronizer --log-config logback-doi-synchronize
 Options:
 
  * `--doi`: specify a single DOI
- * `--doi-list <DOI file>`: specify a list of DOIs stored in a file, one DOI per line.
+ * `--doi-list <DOI file>`: specify a list of DOIs stored in a file, one DOI per line
  * `--fix-doi`: try to rebuild the DataCite metadata document and to resend it to the `doi-updater` cli. Used with `--doi`
- of `--doi-list`.
+ of `--doi-list`
  * `--list-failed-doi`: list all DOIs from the database (dataset and download) with the status FAILED
- * `--doi <doi> --export`: export the DataCite metadata document from the database into the file.
- * `--skip-dia`: skip the diagnostic, used with `--doi-list <DOI file> --fix-doi` to not print the diagnostic of each DOIs.
+ * `--doi <doi> --export`: export the DataCite metadata document from the database into the file
+ * `--skip-dia`: skip the diagnostic, used with `--doi-list <DOI file> --fix-doi` to not print the diagnostic of each DOIs
+ * `--display-metadata-diff`: display metadata difference between GBIF and DataCite if they do not match
 
 ### dataset-updater
 Temporary tool to force the update of a dataset in the database by re-interpreting its metadata document (EML).
