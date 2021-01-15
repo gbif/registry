@@ -178,19 +178,19 @@ public class LookupServiceIT extends BaseItTest {
     // Should
     assertNotNull(result.getInstitutionMatch());
     Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
-    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
     assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
     assertEquals(1, institutionMatch.getReasons().size());
     assertEquals(Match.Reason.IDENTIFIER_MATCH, institutionMatch.getReasons().iterator().next());
-    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
 
     assertNotNull(result.getCollectionMatch());
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
-    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(1, collectionMatch.getReasons().size());
     assertEquals(Match.Reason.IDENTIFIER_MATCH, collectionMatch.getReasons().iterator().next());
-    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
   @Test
@@ -321,7 +321,7 @@ public class LookupServiceIT extends BaseItTest {
     // State
     LookupParams params = new LookupParams();
     params.setInstitutionCode(i1.getCode());
-    params.setCollectionId(c2.getIdentifiers().get(0).getIdentifier());
+    params.setCollectionCode(c2.getCode());
 
     // When
     LookupResult result = lookupService.lookup(params);
@@ -425,7 +425,7 @@ public class LookupServiceIT extends BaseItTest {
 
     OccurrenceMapping occMappingI22 = new OccurrenceMapping();
     occMappingI22.setDatasetKey(d1.getKey());
-    occMappingI22.setCode("foo2");
+    occMappingI22.setIdentifier("id_test");
     institutionService.addOccurrenceMapping(i2.getKey(), occMappingI22);
 
     OccurrenceMapping occMappingC2 = new OccurrenceMapping();
@@ -435,12 +435,13 @@ public class LookupServiceIT extends BaseItTest {
 
     OccurrenceMapping occMappingC22 = new OccurrenceMapping();
     occMappingC22.setDatasetKey(d1.getKey());
-    occMappingC22.setIdentifier("id_test");
+    occMappingC22.setIdentifier("id_test2");
     collectionService.addOccurrenceMapping(c2.getKey(), occMappingC22);
 
     LookupParams params = new LookupParams();
     params.setDatasetKey(d1.getKey());
-    params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
+    params.setInstitutionCode(occMappingI2.getCode());
+    params.setInstitutionId(occMappingI22.getIdentifier());
     params.setCollectionCode(occMappingC2.getCode());
     params.setCollectionId(occMappingC22.getIdentifier());
     params.setDatasetKey(d1.getKey());
