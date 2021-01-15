@@ -19,8 +19,10 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NetworkService;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
@@ -28,6 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("network")
@@ -50,4 +53,12 @@ public interface NetworkClient extends NetworkEntityClient<Network>, NetworkServ
   @Override
   void removeConstituent(
       @PathVariable("key") UUID key, @PathVariable("datasetKey") UUID datasetKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "suggest",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
 }
