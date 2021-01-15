@@ -93,7 +93,12 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
         .forEach(
             dto -> {
               Match<InstitutionMatched> match =
-                  createMatch(exactMatches, fuzzyMatches, explicitMatches, dto);
+                  createMatch(
+                      exactMatches,
+                      fuzzyMatches,
+                      explicitMatches,
+                      dto,
+                      params.getInstitutionCode());
 
               if (matchesCountry(dto, params.getCountry())) {
                 match.addReason(Match.Reason.COUNTRY_MATCH);

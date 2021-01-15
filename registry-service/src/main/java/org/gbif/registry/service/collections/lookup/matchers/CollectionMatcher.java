@@ -75,7 +75,8 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
         .forEach(
             dto -> {
               Match<CollectionMatched> match =
-                  createMatch(exactMatches, fuzzyMatches, explicitMatches, dto);
+                  createMatch(
+                      exactMatches, fuzzyMatches, explicitMatches, dto, params.getCollectionCode());
 
               if (matchesCountry(dto, params.getCountry())) {
                 match.addReason(Match.Reason.COUNTRY_MATCH);

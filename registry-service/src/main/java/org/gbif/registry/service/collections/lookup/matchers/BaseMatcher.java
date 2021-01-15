@@ -188,10 +188,16 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       Set<Match<R>> exactMatches,
       Set<Match<R>> fuzzyMatches,
       Set<Match<R>> explicitMatches,
-      T dto) {
+      T dto,
+      String codeParam) {
     Match<R> match = null;
-    if (dto.isCodeMatch() && (dto.isIdentifierMatch() || dto.isKeyMatch())) {
-      match = exact(toEntityMatched(dto), CODE_MATCH);
+    if ((dto.isCodeMatch() || Strings.isNullOrEmpty(codeParam))
+        && (dto.isIdentifierMatch() || dto.isKeyMatch())) {
+      // exact if both code and id match or code is not provided and id matches
+      match = exact(toEntityMatched(dto));
+      if (dto.isCodeMatch()) {
+        match.getReasons().add(CODE_MATCH);
+      }
       if (dto.isIdentifierMatch()) {
         match.getReasons().add(IDENTIFIER_MATCH);
       }

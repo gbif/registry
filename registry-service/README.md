@@ -17,6 +17,8 @@ The overall matching process for each entity is as follows:
 
 **[1]**
 
+If the code is not provided and the identifier matches it's considered a exact match.
+
 The identifier match also includes the matches by key (UUID).
 
 Also, there are some specific conditions based on the entity type:
