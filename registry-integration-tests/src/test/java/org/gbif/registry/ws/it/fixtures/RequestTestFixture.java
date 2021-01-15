@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY;
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 import static org.gbif.ws.util.SecurityConstants.GBIF_SCHEME;
 import static org.gbif.ws.util.SecurityConstants.HEADER_CONTENT_MD5;
 import static org.gbif.ws.util.SecurityConstants.HEADER_GBIF_USER;
@@ -101,6 +102,18 @@ public class RequestTestFixture {
 
   public ResultActions postRequest(String path) throws Exception {
     return mvc.perform(post(path));
+  }
+
+  public ResultActions deleteRequest(String username, String path) throws Exception {
+    return mvc.perform(delete(path).with(httpBasic(username, TEST_PASSWORD)));
+  }
+
+  public ResultActions deleteRequest(String username, String password, String path) throws Exception {
+    return mvc.perform(delete(path).with(httpBasic(username, password)));
+  }
+
+  public ResultActions postRequest(String username, String path) throws Exception {
+    return mvc.perform(post(path).with(httpBasic(username, TEST_PASSWORD)));
   }
 
   public ResultActions postRequest(String username, String password, String path) throws Exception {

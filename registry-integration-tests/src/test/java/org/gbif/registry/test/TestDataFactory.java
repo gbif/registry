@@ -152,4 +152,8 @@ public class TestDataFactory {
   public Network newNetwork() {
     return networks.newInstance();
   }
+
+  public Network newPersistedNetwork() {
+    return networks.newPersistedInstance();
+  }
 }

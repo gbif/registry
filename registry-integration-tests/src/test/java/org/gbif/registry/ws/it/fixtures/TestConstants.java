@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.it.fixtures;
 
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.UserRole;
 
@@ -54,6 +55,7 @@ public class TestConstants {
   public static final String TEST_GRSCICOLL_ADMIN = "grscicoll_admin";
   public static final String TEST_PASSWORD = "password";
 
+  public static final DOI TEST_DOI = new DOI("10.21373/abcde");
   public static final String DATASET_NAME = "Test Dataset Registry2 Sjælland";
   public static final String DOI = "http://dx.doi.org/10.1234/timbo";
   public static final String DATASET_DESCRIPTION = "Description of Test Dataset";

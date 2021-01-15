@@ -75,17 +75,20 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   private static final Pattern DATASET_PATTERN_CREATE = Pattern.compile("^/dataset$");
 
   // for PUT and DELETE requests which contains key
-  private static final String ENTITY_KEY = "^/?%s/([a-f0-9-]+).*";
   private static final Pattern NODE_PATTERN_UPDATE_DELETE =
-      Pattern.compile(String.format(ENTITY_KEY, "node"));
+      Pattern.compile("^/?node/([a-f0-9-]+).*");
   private static final Pattern NETWORK_PATTERN_UPDATE_DELETE =
-      Pattern.compile(String.format(ENTITY_KEY, "network"));
+      Pattern.compile("^/?network/([a-f0-9-]+).*");
   private static final Pattern ORGANIZATION_PATTERN_UPDATE_DELETE =
-      Pattern.compile(String.format(ENTITY_KEY, "organization"));
+      Pattern.compile("^/?organization/([a-f0-9-]+).*");
   private static final Pattern INSTALLATION_PATTERN_UPDATE_DELETE =
-      Pattern.compile(String.format(ENTITY_KEY, "installation"));
+      Pattern.compile("^/?installation/([a-f0-9-]+).*");
   private static final Pattern DATASET_PATTERN_UPDATE_DELETE =
-      Pattern.compile(String.format(ENTITY_KEY, "dataset"));
+      Pattern.compile("^/?dataset/([a-f0-9-]+).*");
+
+  // for POST requests add constituent to network
+  private static final Pattern NETWORK_PATTERN_CONSTITUENT_CREATE =
+      Pattern.compile("^/network/([a-f0-9-]+).*/constituents/([a-f0-9-]+).*$");
 
   private final EditorAuthorizationService userAuthService;
   private final AuthenticationFacade authenticationFacade;
@@ -138,6 +141,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
 
   private void ensureCreateRequest(String username, HttpServletRequest request) {
     String path = request.getRequestURI().toLowerCase();
+    Matcher matcher;
     if (DATASET_PATTERN_CREATE.matcher(path).matches()) {
       Dataset entity = null;
       try {
@@ -180,6 +184,12 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       throw new WebApplicationException(
           MessageFormat.format("User {0} is not allowed to create networks", username),
           HttpStatus.FORBIDDEN);
+    } else if ((matcher = NETWORK_PATTERN_CONSTITUENT_CREATE.matcher(path)).find()) {
+      ensureNetworkEntity(
+          "network",
+          UUID.fromString(matcher.group(1)),
+          username,
+          userAuthService::allowedToModifyEntity);
     }
   }
 

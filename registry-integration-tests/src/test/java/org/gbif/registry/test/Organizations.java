@@ -32,10 +32,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class Organizations extends JsonBackedData<Organization> {
 
-  private static NodeService nodeService;
-  private static OrganizationService organizationService;
+  private NodeService nodeService;
+  private OrganizationService organizationService;
 
-  private static Nodes nodes;
+  private Nodes nodes;
 
   public static final String ORGANIZATION_TITLE = "The BGBM";
 
