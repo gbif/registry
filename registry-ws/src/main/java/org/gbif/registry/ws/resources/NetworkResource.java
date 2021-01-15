@@ -47,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @Validated
 @Primary
@@ -115,14 +116,14 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @PostMapping("{key}/constituents/{datasetKey}")
-  @Secured(ADMIN_ROLE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
   }
 
   @DeleteMapping("{key}/constituents/{datasetKey}")
-  @Secured(ADMIN_ROLE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {

@@ -19,7 +19,6 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.UserCreation;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
-import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
@@ -52,19 +51,16 @@ public class UserIT extends BaseItTest {
 
   private final UserTestFixture userTestFixture;
   private final RequestTestFixture requestTestFixture;
-  private final IdentitySuretyTestHelper identitySuretyTestHelper;
 
   @Autowired
   public UserIT(
       UserTestFixture userTestFixture,
       RequestTestFixture requestTestFixture,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
-      IdentitySuretyTestHelper identitySuretyTestHelper) {
+      EsManageServer esServer) {
     super(simplePrincipalProvider, esServer);
     this.userTestFixture = userTestFixture;
     this.requestTestFixture = requestTestFixture;
-    this.identitySuretyTestHelper = identitySuretyTestHelper;
   }
 
   @Test
