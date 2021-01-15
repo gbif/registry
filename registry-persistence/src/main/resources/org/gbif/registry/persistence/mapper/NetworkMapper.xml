@@ -428,4 +428,13 @@
       AND ide.type=#{type,jdbcType=OTHER}
     </if>
   </select>
+
+  <!-- Simple suggest -->
+  <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
+    SELECT key,title FROM (
+                            (SELECT key,title FROM network WHERE title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                            UNION ALL
+                            (SELECT key,title FROM network WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                          ) t1 LIMIT 25
+  </select>
 </mapper>

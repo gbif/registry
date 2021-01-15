@@ -20,7 +20,10 @@ import org.gbif.api.model.registry.Network;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.apache.ibatis.annotations.Param;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -36,4 +39,7 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
 
   /** @return the list of networks a dataset is a constituent of */
   List<Network> listByDataset(@Param("datasetKey") UUID datasetKey);
+
+  /** A simple suggest by title service. */
+  List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 }

@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.domain.ws.NetworkRequestSearchParams;
 import org.gbif.registry.events.EventManager;
@@ -29,6 +30,7 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.security.EditorAuthorizationService;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -42,6 +44,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
@@ -128,5 +131,11 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
+  }
+
+  @GetMapping("suggest")
+  @Override
+  public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
+    return networkMapper.suggest(label);
   }
 }
