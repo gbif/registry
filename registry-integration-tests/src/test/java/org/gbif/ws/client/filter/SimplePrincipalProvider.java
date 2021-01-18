@@ -15,8 +15,8 @@
  */
 package org.gbif.ws.client.filter;
 
-import org.gbif.api.model.common.User;
-import org.gbif.api.model.common.UserPrincipal;
+import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.common.GbifUserPrincipal;
 
 import java.security.Principal;
 import java.util.function.Supplier;
@@ -31,15 +31,15 @@ import com.google.common.base.Strings;
  */
 public class SimplePrincipalProvider implements Supplier<Principal> {
 
-  private UserPrincipal current;
+  private GbifUserPrincipal current;
 
   public void setPrincipal(String username) {
     if (Strings.isNullOrEmpty(username)) {
       current = null;
     } else {
-      User user = new User();
+      GbifUser user = new GbifUser();
       user.setUserName(username);
-      current = new UserPrincipal(user);
+      current = new GbifUserPrincipal(user);
     }
   }
 
