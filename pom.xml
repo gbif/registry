@@ -97,7 +97,7 @@
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-download-query-tools.version>1.36</gbif-download-query-tools.version>
     <gbif-postal-service.version>0.45</gbif-postal-service.version>
-    <gbif-api.version>0.134-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.134</gbif-api.version>
     <gbif-directory.version>1.10</gbif-directory.version>
     <gbif-metrics.version>1.0</gbif-metrics.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
@@ -524,16 +524,16 @@
         <version>${janino-logback.version}</version>
         <scope>runtime</scope>
       </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-classic</artifactId>
-        <version>${logback.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>ch.qos.logback</groupId>
-        <artifactId>logback-core</artifactId>
-        <version>${logback.version}</version>
-      </dependency>
+<!--      <dependency>-->
+<!--        <groupId>ch.qos.logback</groupId>-->
+<!--        <artifactId>logback-classic</artifactId>-->
+<!--        <version>${logback.version}</version>-->
+<!--      </dependency>-->
+<!--      <dependency>-->
+<!--        <groupId>ch.qos.logback</groupId>-->
+<!--        <artifactId>logback-core</artifactId>-->
+<!--        <version>${logback.version}</version>-->
+<!--      </dependency>-->
       <dependency>
         <groupId>net.logstash.logback</groupId>
         <artifactId>logstash-logback-encoder</artifactId>
