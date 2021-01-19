@@ -108,7 +108,8 @@ public class RequestTestFixture {
     return mvc.perform(delete(path).with(httpBasic(username, TEST_PASSWORD)));
   }
 
-  public ResultActions deleteRequest(String username, String password, String path) throws Exception {
+  public ResultActions deleteRequest(String username, String password, String path)
+      throws Exception {
     return mvc.perform(delete(path).with(httpBasic(username, password)));
   }
 
