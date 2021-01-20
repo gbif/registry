@@ -155,6 +155,11 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public int countWithFilter(@org.jetbrains.annotations.Nullable Country country, @org.jetbrains.annotations.Nullable DatasetType type, @org.jetbrains.annotations.Nullable UUID installationKey, @org.jetbrains.annotations.Nullable Date from, @org.jetbrains.annotations.Nullable Date to) {
+    return 0;
+  }
+
+  @Override
   public List<Dataset> listDatasetsByInstallation(
       @Param("installationKey") UUID installationKey, @Nullable @Param("page") Pageable page) {
     return null;

@@ -222,6 +222,11 @@
     <if test="country != null" >
       AND o.country = #{country,jdbcType=OTHER}
     </if>
+    <if test="_parameter.containsKey('installationKey') and installationKey != null" >
+      AND d.installation_key = #{installationKey}
+    </if>
+    <if test="_parameter.containsKey('dateFrom') and dateFrom != null" > AND d.modified &gt;= #{dateFrom}</if>
+    <if test="_parameter.containsKey('dateTo') and dateTo != null" > AND d.modified &lt; #{dateTo}</if>
   </select>
 
   <!-- TAGS -->
