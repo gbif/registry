@@ -128,4 +128,11 @@ public interface OrganizationMapper
       @Nullable @Param("query") String query,
       @Param("country") Country country,
       @Param("isEndorsed") Boolean isEndorsed);
+
+  /** Count all the publishing organizations that are part of this network. */
+  long countPublishingOrganizationsInNetwork(@Param("networkKey") UUID networkKey);
+
+  /** Obtains a list of all the publishing organizations that are part of this network. */
+  List<Organization> listPublishingOrganizationsInNetwork(
+      @Param("networkKey") UUID networkKey, @Nullable @Param("page") Pageable page);
 }
