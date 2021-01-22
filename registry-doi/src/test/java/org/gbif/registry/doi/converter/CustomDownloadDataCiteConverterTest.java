@@ -37,7 +37,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlunit.matchers.CompareMatcher;
@@ -47,8 +47,8 @@ import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CustomDownloadDataCiteConverterTest {
 
