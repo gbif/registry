@@ -17,9 +17,10 @@ package org.gbif.registry.metasync.util.converter;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DateTimeConverterTest {
 
@@ -52,21 +53,21 @@ public class DateTimeConverterTest {
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27T06:11:22+00:00")).toDate());
     assertEquals(
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27T06:11:22Z")).toDate());
     assertEquals(
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "20160127T061122Z")).toDate());
 
@@ -74,21 +75,21 @@ public class DateTimeConverterTest {
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27T09:11:22+03:00")).toDate());
     assertEquals(
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27T03:11:22-03:00")).toDate());
     assertEquals(
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27T03:11:22−03:00")).toDate());
 
@@ -96,7 +97,7 @@ public class DateTimeConverterTest {
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "20160127T061122Z")).toDate());
   }
@@ -111,14 +112,14 @@ public class DateTimeConverterTest {
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27 06:11:22")).toDate());
     assertEquals(
         new DateTime()
             .withZone(DateTimeZone.UTC)
             .withDate(2016, 1, 27)
-            .withTime(06, 11, 22, 0)
+            .withTime(6, 11, 22, 0)
             .toDate(),
         ((DateTime) converter.convert(DateTime.class, "2016-01-27 09:11:22+0300")).toDate());
     assertEquals(
@@ -140,9 +141,9 @@ public class DateTimeConverterTest {
         new DateTime().withDate(2016, 1, 1).withTimeAtStartOfDay(),
         converter.convert(DateTime.class, "2016/01"));
 
-    assertEquals(null, converter.convert(DateTime.class, ":"));
-    assertEquals(null, converter.convert(DateTime.class, ""));
-    assertEquals(null, converter.convert(DateTime.class, "ABCDEFGHIJKM"));
-    assertEquals(null, converter.convert(DateTime.class, "ABCD"));
+    assertNull(converter.convert(DateTime.class, ":"));
+    assertNull(converter.convert(DateTime.class, ""));
+    assertNull(converter.convert(DateTime.class, "ABCDEFGHIJKM"));
+    assertNull(converter.convert(DateTime.class, "ABCD"));
   }
 }

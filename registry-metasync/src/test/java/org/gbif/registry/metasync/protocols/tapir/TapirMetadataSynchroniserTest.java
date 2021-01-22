@@ -37,27 +37,31 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.argThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TapirMetadataSynchroniserTest {
 
   @Mock private HttpClient client;
   private TapirMetadataSynchroniser synchroniser;
   private Installation installation;
 
-  @Before
+  @BeforeEach
   public void setup() {
     synchroniser = new TapirMetadataSynchroniser(client);
 
@@ -71,10 +75,10 @@ public class TapirMetadataSynchroniserTest {
   @Test
   public void testCanHandle() {
     installation.setType(InstallationType.BIOCASE_INSTALLATION);
-    assertThat(synchroniser.canHandle(installation)).isFalse();
+    assertFalse(synchroniser.canHandle(installation));
 
     installation.setType(InstallationType.TAPIR_INSTALLATION);
-    assertThat(synchroniser.canHandle(installation)).isTrue();
+    assertTrue(synchroniser.canHandle(installation));
   }
 
   /** A simple test to see if multiple datasets are parsed successfully. */
@@ -89,23 +93,23 @@ public class TapirMetadataSynchroniserTest {
                 HttpGetMatcher.matchUrl(
                     "http://localhost/nmr?op=s&t=http%3A%2F%2Frs.gbif.org%2Ftemplates%2Ftapir%2Fdwc%2F1.4%2Fsci_name_range.xml&count=true&start=0&limit=1&lower=AAA&upper=zzz"))))
         .thenReturn(prepareResponse(200, "tapir/search1.xml"));
-    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
-    assertThat(syncResult.deletedDatasets).isEmpty();
-    assertThat(syncResult.existingDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).hasSize(1);
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<>());
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertTrue(syncResult.existingDatasets.isEmpty());
+    assertEquals(1, syncResult.addedDatasets.size());
 
     Dataset ds1 = syncResult.addedDatasets.get(0);
-    assertThat(ds1.getTitle()).isEqualTo("Natural History Museum Rotterdam");
-    assertThat(ds1.getLicense()).isNull();
-    assertThat(ds1.getRights()).isNull();
-    assertThat(ds1.getContacts()).hasSize(2);
-    assertThat(ds1.getMachineTags()).hasSize(2);
-    assertThat(ds1.getDoi()).isEqualTo(new DOI("10.1234/doi"));
+    assertEquals("Natural History Museum Rotterdam", ds1.getTitle());
+    assertNull(ds1.getLicense());
+    assertNull(ds1.getRights());
+    assertEquals(2, ds1.getContacts().size());
+    assertEquals(2, ds1.getMachineTags().size());
+    assertEquals(new DOI("10.1234/doi"), ds1.getDoi());
 
     // Assert the declared record count machine tag was found, and that its value was 167348
     MachineTag count = MachineTagUtils.firstTag(ds1, TagName.DECLARED_COUNT);
-    assertThat(count).isNotNull();
-    assertThat(Integer.valueOf(count.getValue())).isEqualTo(167348);
+    assertNotNull(count);
+    assertEquals(167348, Integer.parseInt(count.getValue()));
   }
 
   /**
@@ -123,18 +127,18 @@ public class TapirMetadataSynchroniserTest {
                 HttpGetMatcher.matchUrl(
                     "http://localhost/nmr?op=s&t=http%3A%2F%2Frs.gbif.org%2Ftemplates%2Ftapir%2Fdwc%2F1.4%2Fsci_name_range.xml&count=true&start=0&limit=1&lower=AAA&upper=zzz"))))
         .thenReturn(prepareResponse(200, "tapir/search1.xml"));
-    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
-    assertThat(syncResult.deletedDatasets).isEmpty();
-    assertThat(syncResult.existingDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).hasSize(1);
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<>());
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertTrue(syncResult.existingDatasets.isEmpty());
+    assertEquals(1, syncResult.addedDatasets.size());
 
     Dataset ds1 = syncResult.addedDatasets.get(0);
-    assertThat(ds1.getTitle()).isEqualTo("Natural History Museum Rotterdam (2)");
-    assertThat(ds1.getLicense()).isEqualTo(License.CC_BY_4_0);
-    assertThat(ds1.getRights()).isNull();
-    assertThat(ds1.getContacts()).hasSize(2);
-    assertThat(ds1.getMachineTags()).hasSize(2);
-    assertThat(ds1.getDoi()).isEqualTo(new DOI("10.1234/doi"));
+    assertEquals("Natural History Museum Rotterdam (2)", ds1.getTitle());
+    assertEquals(License.CC_BY_4_0, ds1.getLicense());
+    assertNull(ds1.getRights());
+    assertEquals(2, ds1.getContacts().size());
+    assertEquals(2, ds1.getMachineTags().size());
+    assertEquals(new DOI("10.1234/doi"), ds1.getDoi());
   }
 
   @Test
@@ -153,11 +157,11 @@ public class TapirMetadataSynchroniserTest {
         .thenReturn(prepareResponse(200, "tapir/search1.xml"));
     SyncResult syncResult =
         synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
-    assertThat(syncResult.deletedDatasets).hasSize(1);
-    assertThat(syncResult.existingDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).hasSize(1);
+    assertEquals(1, syncResult.deletedDatasets.size());
+    assertTrue(syncResult.existingDatasets.isEmpty());
+    assertEquals(1, syncResult.addedDatasets.size());
 
-    assertThat(syncResult.deletedDatasets.get(0).getTitle()).isEqualTo("Foobar");
+    assertEquals("Foobar", syncResult.deletedDatasets.get(0).getTitle());
   }
 
   @Test
@@ -180,14 +184,14 @@ public class TapirMetadataSynchroniserTest {
 
     SyncResult syncResult =
         synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
-    assertThat(syncResult.deletedDatasets).describedAs("Deleted datasets").isEmpty();
-    assertThat(syncResult.existingDatasets).hasSize(1);
-    assertThat(syncResult.addedDatasets).isEmpty();
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertEquals(1, syncResult.existingDatasets.size());
+    assertTrue(syncResult.addedDatasets.isEmpty());
 
-    assertThat(syncResult.existingDatasets.get(dataset).getTitle())
-        .isEqualTo("Natural History Museum Rotterdam");
+    assertEquals("Natural History Museum Rotterdam", syncResult.existingDatasets.get(dataset).getTitle());
   }
 
+  @SuppressWarnings("UnstableApiUsage")
   public HttpResponse prepareResponse(int responseStatus, String fileName) throws IOException {
     HttpResponse response =
         new BasicHttpResponse(

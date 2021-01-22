@@ -26,11 +26,11 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.gbif.api.model.common.DOI.TEST_PREFIX;
 import static org.gbif.registry.metadata.CitationGenerator.getAuthors;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Unit tests related to {@link CitationGenerator}. */
 public class CitationGeneratorTest {
