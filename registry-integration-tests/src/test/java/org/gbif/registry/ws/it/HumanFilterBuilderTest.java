@@ -19,6 +19,8 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import org.junit.jupiter.api.Test;
@@ -35,21 +37,26 @@ public class HumanFilterBuilderTest {
    * values. Test copied from download-query-tools, but added here again as we might have a
    * different GBIF API version in use.
    */
+  @SuppressWarnings("unchecked")
   @Test
-  public void testEnumResourceBundle() throws Exception {
+  public void testEnumResourceBundle() {
+    List<String> missingKeys = new ArrayList<>();
+
     for (OccurrenceSearchParameter p : OccurrenceSearchParameter.values()) {
       if (p.type().isEnum()) {
         if (p.type() != Country.class && p.type() != Continent.class) {
           Class<Enum<?>> vocab = (Class<Enum<?>>) p.type();
           // make sure we have en entry for all possible enum values
           for (Enum<?> e : vocab.getEnumConstants()) {
-            assertTrue(
-                resourceBundle.containsKey(
-                    "enum." + vocab.getSimpleName().toLowerCase() + "." + e.name()),
-                "Missing enum resource bundle entry for " + vocab.getSimpleName() + "." + e.name());
+            if (!resourceBundle.containsKey(
+                "enum." + vocab.getSimpleName().toLowerCase() + "." + e.name())) {
+              missingKeys.add(vocab.getSimpleName() + "." + e.name());
+            }
           }
         }
       }
     }
+
+    assertTrue(missingKeys.isEmpty(), "Missing enum resource bundle entries for " + missingKeys.toString());
   }
 }
