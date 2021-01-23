@@ -78,6 +78,7 @@ public class DatabaseInitializer implements BeforeEachCallback {
       connection.prepareStatement("DELETE FROM dataset_tag").execute();
       connection.prepareStatement("DELETE FROM dataset_identifier").execute();
       connection.prepareStatement("DELETE FROM dataset_comment").execute();
+      connection.prepareStatement("DELETE FROM dataset_network").execute();
       connection.prepareStatement("DELETE FROM network_contact").execute();
       connection.prepareStatement("DELETE FROM network_endpoint").execute();
       connection.prepareStatement("DELETE FROM network_machine_tag").execute();
@@ -124,7 +125,6 @@ public class DatabaseInitializer implements BeforeEachCallback {
       /*
        * These tables aren't truncated, so we probably aren't testing them properly.
        * – crawl_history
-       * – dataset_network
        * – dataset_occurrence_download
        * – download_statistics
        * – download_user_statistics
