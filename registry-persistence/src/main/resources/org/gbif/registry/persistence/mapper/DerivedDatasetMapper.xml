@@ -56,6 +56,8 @@
   <update id="update">
     UPDATE derived_dataset
     SET source_url   = #{derivedDataset.sourceUrl,jdbcType=OTHER},
+    description = #{derivedDataset.description,jdbcType=VARCHAR},
+    title = #{derivedDataset.title,jdbcType=VARCHAR},
     modified = now(),
     modified_by = #{derivedDataset.modifiedBy,jdbcType=VARCHAR}
     WHERE doi = #{derivedDataset.doi,jdbcType=OTHER}

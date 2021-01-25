@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -176,7 +177,9 @@ public class DerivedDatasetResource {
     }
 
     try {
-      derivedDataset.setSourceUrl(request.getSourceUrl());
+      Optional.ofNullable(request.getSourceUrl()).ifPresent(derivedDataset::setSourceUrl);
+      Optional.ofNullable(request.getDescription()).ifPresent(derivedDataset::setDescription);
+      Optional.ofNullable(request.getTitle()).ifPresent(derivedDataset::setTitle);
       derivedDataset.setModifiedBy(nameFromContext);
       derivedDatasetService.update(derivedDataset);
     } catch (IllegalStateException e) {

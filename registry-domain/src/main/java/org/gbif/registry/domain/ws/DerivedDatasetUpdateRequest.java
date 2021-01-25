@@ -22,13 +22,12 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import javax.validation.constraints.NotNull;
-
 public class DerivedDatasetUpdateRequest implements Serializable {
 
   private URI sourceUrl;
+  private String title;
+  private String description;
 
-  @NotNull
   @HttpURI
   public URI getSourceUrl() {
     return sourceUrl;
@@ -38,23 +37,43 @@ public class DerivedDatasetUpdateRequest implements Serializable {
     this.sourceUrl = sourceUrl;
   }
 
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     DerivedDatasetUpdateRequest that = (DerivedDatasetUpdateRequest) o;
-    return Objects.equals(sourceUrl, that.sourceUrl);
+    return Objects.equals(sourceUrl, that.sourceUrl)
+        && Objects.equals(title, that.title)
+        && Objects.equals(description, that.description);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sourceUrl);
+    return Objects.hash(sourceUrl, title, description);
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", DerivedDatasetUpdateRequest.class.getSimpleName() + "[", "]")
         .add("sourceUrl=" + sourceUrl)
+        .add("title=" + title)
+        .add("description=" + description)
         .toString();
   }
 }

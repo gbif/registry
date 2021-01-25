@@ -118,6 +118,18 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
 
   @Override
   public void update(DerivedDataset derivedDataset) {
+    List<DerivedDatasetUsage> derivedDatasetUsages = listRelatedDatasets(derivedDataset.getDoi());
+
+    DataCiteMetadata metadata =
+        metadataBuilderService.buildMetadata(derivedDataset, derivedDatasetUsages);
+
+    datasetDoiDataCiteHandlingService.scheduleDerivedDatasetRegistration(
+        derivedDataset.getDoi(),
+        metadata,
+        URI.create(MessageFormat.format(derivedDatasetTemplateUrl, derivedDataset.getDoi())),
+        null
+    );
+
     derivedDatasetMapper.update(derivedDataset);
   }
 
@@ -164,6 +176,11 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
         page,
         derivedDatasetMapper.countDerivedDatasetUsages(derivedDatasetDoi),
         derivedDatasetMapper.listDerivedDatasetUsages(derivedDatasetDoi, page));
+  }
+
+  @Override
+  public List<DerivedDatasetUsage> listRelatedDatasets(DOI derivedDatasetDoi) {
+    return derivedDatasetMapper.listDerivedDatasetUsages(derivedDatasetDoi, null);
   }
 
   @Scheduled(cron = "${derivedDataset.cronPattern}")
