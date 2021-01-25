@@ -16,6 +16,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.model.literature.LiteratureType;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
@@ -133,7 +134,7 @@ public class EnumerationResource {
         new CachingMetadataReaderFactory(resourcePatternResolver);
 
     List<Class<? extends Serializable>> classes =
-        Arrays.asList(Country.class, PreservationType.class, PipelineStep.class);
+        Arrays.asList(Country.class, PreservationType.class, PipelineStep.class, LiteratureType.class);
 
     ImmutableSortedMap<String, Enum<?>[]> result;
     try {

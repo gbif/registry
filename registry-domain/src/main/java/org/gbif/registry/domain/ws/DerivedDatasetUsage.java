@@ -24,22 +24,23 @@ import java.util.UUID;
 public class DerivedDatasetUsage {
 
   private UUID datasetKey;
-  private DOI datasetDoi;
+  private DOI datasetDOI;
   private String datasetTitle;
-  private DOI derivedDatasetDoi;
+  private DOI derivedDatasetDOI;
   private Long numberRecords;
+  private String citation;
 
   public DerivedDatasetUsage() {}
 
   public DerivedDatasetUsage(
       UUID datasetKey,
-      DOI datasetDoi,
-      DOI derivedDatasetDoi,
+      DOI datasetDOI,
+      DOI derivedDatasetDOI,
       Long numberRecords,
       String datasetTitle) {
     this.datasetKey = datasetKey;
-    this.datasetDoi = datasetDoi;
-    this.derivedDatasetDoi = derivedDatasetDoi;
+    this.datasetDOI = datasetDOI;
+    this.derivedDatasetDOI = derivedDatasetDOI;
     this.numberRecords = numberRecords;
     this.datasetTitle = datasetTitle;
   }
@@ -52,12 +53,12 @@ public class DerivedDatasetUsage {
     this.datasetKey = datasetKey;
   }
 
-  public DOI getDatasetDoi() {
-    return datasetDoi;
+  public DOI getDatasetDOI() {
+    return datasetDOI;
   }
 
-  public void setDatasetDoi(DOI datasetDoi) {
-    this.datasetDoi = datasetDoi;
+  public void setDatasetDOI(DOI datasetDOI) {
+    this.datasetDOI = datasetDOI;
   }
 
   public String getDatasetTitle() {
@@ -68,12 +69,12 @@ public class DerivedDatasetUsage {
     this.datasetTitle = datasetTitle;
   }
 
-  public DOI getDerivedDatasetDoi() {
-    return derivedDatasetDoi;
+  public DOI getDerivedDatasetDOI() {
+    return derivedDatasetDOI;
   }
 
-  public void setDerivedDatasetDoi(DOI derivedDatasetDoi) {
-    this.derivedDatasetDoi = derivedDatasetDoi;
+  public void setDerivedDatasetDOI(DOI derivedDatasetDOI) {
+    this.derivedDatasetDOI = derivedDatasetDOI;
   }
 
   public Long getNumberRecords() {
@@ -84,31 +85,41 @@ public class DerivedDatasetUsage {
     this.numberRecords = numberRecords;
   }
 
+  public String getCitation() {
+    return citation;
+  }
+
+  public void setCitation(String citation) {
+    this.citation = citation;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     DerivedDatasetUsage that = (DerivedDatasetUsage) o;
     return Objects.equals(datasetKey, that.datasetKey)
-        && Objects.equals(datasetDoi, that.datasetDoi)
+        && Objects.equals(datasetDOI, that.datasetDOI)
         && Objects.equals(datasetTitle, that.datasetTitle)
-        && Objects.equals(derivedDatasetDoi, that.derivedDatasetDoi)
+        && Objects.equals(derivedDatasetDOI, that.derivedDatasetDOI)
+        && Objects.equals(citation, that.citation)
         && Objects.equals(numberRecords, that.numberRecords);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(datasetKey, datasetDoi, datasetTitle, derivedDatasetDoi, numberRecords);
+    return Objects.hash(datasetKey, datasetDOI, datasetTitle, derivedDatasetDOI, numberRecords);
   }
 
   @Override
   public String toString() {
     return new StringJoiner(", ", DerivedDatasetUsage.class.getSimpleName() + "[", "]")
         .add("datasetKey=" + datasetKey)
-        .add("datasetDoi=" + datasetDoi)
+        .add("datasetDoi=" + datasetDOI)
         .add("datasetTitle=" + datasetTitle)
-        .add("derivedDatasetDoi=" + derivedDatasetDoi)
+        .add("derivedDatasetDoi=" + derivedDatasetDOI)
         .add("numberRecords=" + numberRecords)
+        .add("citation=" + citation)
         .toString();
   }
 }

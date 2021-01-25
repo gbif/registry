@@ -26,7 +26,7 @@ import javax.xml.validation.Validator;
 
 import org.xml.sax.SAXException;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * XML validation helper class.

@@ -28,19 +28,19 @@ import java.util.UUID;
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletResponse;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class EditorAuthorizationFilterTest {
 
   private static final UUID KEY = UUID.randomUUID();
@@ -201,28 +201,23 @@ public class EditorAuthorizationFilterTest {
   }
 
   @Test
-  public void testOrganizationPutNullUserFail() throws Exception {
+  public void testOrganizationPutNullUserFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
     when(mockRequest.getMethod()).thenReturn("PUT");
     when(mockAuthentication.getName()).thenReturn(null);
 
-    try {
-      // WHEN
-      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
-      fail("WebApplicationException is expected");
-    } catch (WebApplicationException e) {
-      // THEN
-      verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest).getRequestURI();
-      verify(mockRequest, atLeast(2)).getMethod();
-      verify(mockAuthentication).getName();
-    }
+    // WHEN & THEN
+    assertThrows(WebApplicationException.class, () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication).getName();
   }
 
   @Test
-  public void testOrganizationPutNotNullButNotEditorUserFail() throws Exception {
+  public void testOrganizationPutNotNullButNotEditorUserFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
@@ -230,23 +225,18 @@ public class EditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
 
-    try {
-      // WHEN
-      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
-      fail("WebApplicationException is expected");
-    } catch (WebApplicationException e) {
-      // THEN
-      verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest).getRequestURI();
-      verify(mockRequest, atLeast(2)).getMethod();
-      verify(mockAuthentication, atLeastOnce()).getName();
-      verify(mockAuthentication, atLeast(2)).getAuthorities();
-    }
+    // WHEN & THEN
+    assertThrows(WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
   }
 
   @Test
-  public void testOrganizationPutNotNullEditorUserButWithoutRightsOnThisEntityFail()
-      throws Exception {
+  public void testOrganizationPutNotNullEditorUserButWithoutRightsOnThisEntityFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY);
@@ -255,23 +245,19 @@ public class EditorAuthorizationFilterTest {
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
     when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(false);
 
-    try {
-      // WHEN
-      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
-      fail("WebApplicationException is expected");
-    } catch (WebApplicationException e) {
-      // THEN
-      verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest).getRequestURI();
-      verify(mockRequest, atLeast(2)).getMethod();
-      verify(mockAuthentication, atLeastOnce()).getName();
-      verify(mockAuthentication, atLeast(2)).getAuthorities();
-      verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
-    }
+    // WHEN & THEN
+    assertThrows(WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
   }
 
   @Test
-  public void testDatasetPutNotNullEditorUserButWithoutRightsOnThisEntityFail() throws Exception {
+  public void testDatasetPutNotNullEditorUserButWithoutRightsOnThisEntityFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/dataset/" + KEY);
@@ -280,24 +266,19 @@ public class EditorAuthorizationFilterTest {
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
     when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(false);
 
-    try {
-      // WHEN
-      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
-      fail("WebApplicationException is expected");
-    } catch (WebApplicationException e) {
-      // THEN
-      verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest).getRequestURI();
-      verify(mockRequest, atLeast(2)).getMethod();
-      verify(mockAuthentication, atLeastOnce()).getName();
-      verify(mockAuthentication, atLeast(2)).getAuthorities();
-      verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
-    }
+    // WHEN & THEN
+    assertThrows(WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
+    verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
   }
 
   @Test
-  public void testInstallationPostNotNullEditorUserButWithoutRightsOnThisEntityFail()
-      throws Exception {
+  public void testInstallationPostNotNullEditorUserButWithoutRightsOnThisEntityFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/installation");
@@ -309,24 +290,21 @@ public class EditorAuthorizationFilterTest {
             any(String.class), any(Installation.class)))
         .thenReturn(false);
 
-    try {
-      // WHEN
-      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
-      fail("WebApplicationException is expected");
-    } catch (WebApplicationException e) {
-      // THEN
-      verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest, atLeastOnce()).getRequestURI();
-      verify(mockRequest, atLeast(2)).getMethod();
-      verify(mockAuthentication, atLeastOnce()).getName();
-      verify(mockAuthentication, atLeast(2)).getAuthorities();
-      verify(mockEditorAuthService)
-          .allowedToModifyInstallation(any(String.class), any(Installation.class));
-    }
+    // WHEN & THEN
+    assertThrows(WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    // THEN
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest, atLeastOnce()).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
+    verify(mockEditorAuthService)
+        .allowedToModifyInstallation(any(String.class), any(Installation.class));
   }
 
   @Test
-  public void testNetworkPostNotNullEditorUserButWithoutRightsOnThisEntityFail() throws Exception {
+  public void testNetworkPostNotNullEditorUserButWithoutRightsOnThisEntityFail() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/network");
@@ -334,18 +312,14 @@ public class EditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 
-    try {
-      // WHEN
-      filter.doFilter(mockRequest, mockResponse, mockFilterChain);
-      fail("WebApplicationException is expected");
-    } catch (WebApplicationException e) {
-      // THEN
-      verify(mockAuthenticationFacade).getAuthentication();
-      verify(mockRequest, atLeastOnce()).getRequestURI();
-      verify(mockRequest, atLeast(2)).getMethod();
-      verify(mockAuthentication, atLeastOnce()).getName();
-      verify(mockAuthentication, atLeast(2)).getAuthorities();
-    }
+    // WHEN & THEN
+    assertThrows(WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    verify(mockAuthenticationFacade).getAuthentication();
+    verify(mockRequest, atLeastOnce()).getRequestURI();
+    verify(mockRequest, atLeast(2)).getMethod();
+    verify(mockAuthentication, atLeastOnce()).getName();
+    verify(mockAuthentication, atLeast(2)).getAuthorities();
   }
 
   @Test

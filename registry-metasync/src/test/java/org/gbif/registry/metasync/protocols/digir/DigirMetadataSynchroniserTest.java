@@ -36,28 +36,32 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DigirMetadataSynchroniserTest {
 
-  @Mock private HttpClient client;
+  @Mock
+  private HttpClient client;
   private DigirMetadataSynchroniser synchroniser;
   private Installation installation;
 
-  @Before
+  @BeforeEach
   public void setup() {
     synchroniser = new DigirMetadataSynchroniser(client);
 
@@ -71,20 +75,22 @@ public class DigirMetadataSynchroniserTest {
   @Test
   public void testCanHandle() {
     installation.setType(InstallationType.BIOCASE_INSTALLATION);
-    assertThat(synchroniser.canHandle(installation)).isFalse();
+    assertFalse(synchroniser.canHandle(installation));
 
     installation.setType(InstallationType.DIGIR_INSTALLATION);
-    assertThat(synchroniser.canHandle(installation)).isTrue();
+    assertTrue(synchroniser.canHandle(installation));
   }
 
-  /** A simple test to see if multiple datasets are parsed successfully. */
+  /**
+   * A simple test to see if multiple datasets are parsed successfully.
+   */
   @Test
   public void testAddedDatasets() throws Exception {
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "digir/test1.xml"));
-    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
-    assertThat(syncResult.deletedDatasets).isEmpty();
-    assertThat(syncResult.existingDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).hasSize(8);
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<>());
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertTrue(syncResult.existingDatasets.isEmpty());
+    assertEquals(8, syncResult.addedDatasets.size());
   }
 
   /**
@@ -94,25 +100,25 @@ public class DigirMetadataSynchroniserTest {
   @Test
   public void testAddedDataset() throws Exception {
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "digir/test2.xml"));
-    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<Dataset>());
-    assertThat(syncResult.deletedDatasets).isEmpty();
-    assertThat(syncResult.existingDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).hasSize(1);
+    SyncResult syncResult = synchroniser.syncInstallation(installation, new ArrayList<>());
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertTrue(syncResult.existingDatasets.isEmpty());
+    assertEquals(1, syncResult.addedDatasets.size());
 
     Dataset dataset = syncResult.addedDatasets.get(0);
-    assertThat(dataset.getTitle())
-        .isEqualTo("Distribution of benthic foraminifera of sediment core PS1388-3");
-    assertThat(dataset.getHomepage())
-        .isEqualTo(URI.create("http://doi.pangaea.de/doi:10.1594/PANGAEA.51131"));
-    assertThat(dataset.getCitation().getText())
-        .isEqualTo(
-            "Mackensen, Andreas; Grobe, Hannes; Hubberten, Hans-Wolfgang; Spieß, Volkhard; Fütterer, Dieter K (1989): Distribution of benthic foraminifera of sediment core PS1388-3, doi:10.1594/PANGAEA.51131");
-    assertThat(dataset.getIdentifiers().size())
-        .isEqualTo(0); // verify that we don't create an identifier for the DOI
-    assertThat(dataset.getDoi().getDoiName()).isEqualTo("10.1594/pangaea.51131");
+    assertEquals("Distribution of benthic foraminifera of sediment core PS1388-3", dataset.getTitle());
+    assertEquals(URI.create("http://doi.pangaea.de/doi:10.1594/PANGAEA.51131"), dataset.getHomepage());
+    assertNotNull(dataset.getCitation());
+    assertEquals(
+        "Mackensen, Andreas; Grobe, Hannes; Hubberten, Hans-Wolfgang; Spieß, Volkhard; Fütterer, Dieter K " +
+            "(1989): Distribution of benthic foraminifera of sediment core PS1388-3, doi:10.1594/PANGAEA.51131",
+        dataset.getCitation().getText()
+    );
+    assertTrue(dataset.getIdentifiers().isEmpty()); // verify that we don't create an identifier for the DOI
+    assertEquals("10.1594/pangaea.51131", dataset.getDoi().getDoiName());
     // endpoints
-    assertThat(dataset.getEndpoints().size()).isEqualTo(1);
-    assertThat(dataset.getEndpoints().get(0).getType()).isEqualTo(EndpointType.DIGIR);
+    assertEquals(1, dataset.getEndpoints().size());
+    assertEquals(EndpointType.DIGIR, dataset.getEndpoints().get(0).getType());
   }
 
   @Test
@@ -124,11 +130,11 @@ public class DigirMetadataSynchroniserTest {
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "digir/test2.xml"));
     SyncResult syncResult =
         synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
-    assertThat(syncResult.deletedDatasets).hasSize(1);
-    assertThat(syncResult.existingDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).hasSize(1);
+    assertEquals(1, syncResult.deletedDatasets.size());
+    assertTrue(syncResult.existingDatasets.isEmpty());
+    assertEquals(1, syncResult.addedDatasets.size());
 
-    assertThat(syncResult.deletedDatasets.get(0).getTitle()).isEqualTo("Foobar");
+    assertEquals("Foobar", syncResult.deletedDatasets.get(0).getTitle());
   }
 
   @Test
@@ -140,15 +146,17 @@ public class DigirMetadataSynchroniserTest {
     when(client.execute(any(HttpGet.class))).thenReturn(prepareResponse(200, "digir/test2.xml"));
     SyncResult syncResult =
         synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
-    assertThat(syncResult.deletedDatasets).describedAs("Deleted datasets").isEmpty();
-    assertThat(syncResult.existingDatasets).hasSize(1);
-    assertThat(syncResult.addedDatasets).isEmpty();
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertEquals(1, syncResult.existingDatasets.size());
+    assertTrue(syncResult.addedDatasets.isEmpty());
 
-    assertThat(syncResult.existingDatasets.get(dataset).getTitle())
-        .isEqualTo("Distribution of benthic foraminifera of sediment core PS1388-3");
+    assertEquals("Distribution of benthic foraminifera of sediment core PS1388-3",
+        syncResult.existingDatasets.get(dataset).getTitle());
   }
 
-  /** Make sure the determination of DiGIR endpoint type is catching DIGIR_MANIS. */
+  /**
+   * Make sure the determination of DiGIR endpoint type is catching DIGIR_MANIS.
+   */
   @Test
   public void testDetermineEndpointType() {
     // populate map with namespace (conceptualSchema) / schemaLocation key value pair
@@ -156,15 +164,16 @@ public class DigirMetadataSynchroniserTest {
     schemas.put(
         "http://digir.net/schema/conceptual/darwin/2003/1.0",
         URI.create("http://bnhm.berkeley.museum/manis/DwC/darwin2jrw030315.xsd"));
-    assertThat(synchroniser.determineEndpointType(schemas)).isEqualTo(EndpointType.DIGIR_MANIS);
+    assertEquals(EndpointType.DIGIR_MANIS, synchroniser.determineEndpointType(schemas));
     // reset, try another
     schemas.clear();
     schemas.put(
         "http://digir.net/schema/conceptual/darwin/2003/1.0",
         URI.create("http://bnhm.berkeley.edu/DwC/bnhm_dc2_schema.xsd"));
-    assertThat(synchroniser.determineEndpointType(schemas)).isEqualTo(EndpointType.DIGIR_MANIS);
+    assertEquals(EndpointType.DIGIR_MANIS, synchroniser.determineEndpointType(schemas));
   }
 
+  @SuppressWarnings("UnstableApiUsage")
   public HttpResponse prepareResponse(int responseStatus, String fileName) throws IOException {
     HttpResponse response =
         new BasicHttpResponse(

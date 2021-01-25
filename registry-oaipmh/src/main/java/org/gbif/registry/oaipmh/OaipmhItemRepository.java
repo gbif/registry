@@ -35,6 +35,7 @@ import org.gbif.ws.util.ExtraMediaTypes;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +62,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.COUNTRY;
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.DATASET_TYPE;
@@ -181,20 +181,20 @@ public class OaipmhItemRepository implements ItemRepository {
   public ListItemIdentifiersResult getItemIdentifiers(
       List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) {
     // ask for length+1 to determine if there are more results
-    List<Dataset> datasetList = getDatasetListFromFilters(offset, length + 1, set, from, until);
-    List<ItemIdentifier> results = Lists.newArrayListWithCapacity(datasetList.size());
+    DatasetListWithTotalSize datasetList = getDatasetListFromFilters(offset, length + 1, set, from, until);
+    List<ItemIdentifier> results = new ArrayList<>(datasetList.size());
 
     boolean hasMoreResults = (datasetList.size() == length + 1);
     // remove last element, it was only retrieve to determine hasMoreResults
     if (hasMoreResults) {
-      datasetList.remove(datasetList.size() - 1);
+      datasetList.getList().remove(datasetList.size() - 1);
     }
 
-    for (Dataset dataset : datasetList) {
+    for (Dataset dataset : datasetList.getList()) {
       results.add(toOaipmhItemIdentifier(dataset));
     }
 
-    return new ListItemIdentifiersResult(hasMoreResults, results);
+    return new ListItemIdentifiersResult(hasMoreResults, results, datasetList.getTotalSize());
   }
 
   /** See {@link #getItems(List, int, int, String, Date, Date) getItems} */
@@ -249,17 +249,17 @@ public class OaipmhItemRepository implements ItemRepository {
       List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) {
 
     // ask for length+1 to determine if there are more results
-    List<Dataset> datasetList = getDatasetListFromFilters(offset, length + 1, set, from, until);
-    List<Item> results = Lists.newArrayListWithCapacity(datasetList.size());
+    DatasetListWithTotalSize datasetList = getDatasetListFromFilters(offset, length + 1, set, from, until);
+    List<Item> results = new ArrayList<>(datasetList.size());
 
     boolean hasMoreResults = (datasetList.size() == length + 1);
     // remove last element, it was only retrieve to determine hasMoreResults
     if (hasMoreResults) {
-      datasetList.remove(datasetList.size() - 1);
+      datasetList.getList().remove(datasetList.size() - 1);
     }
 
     PagingResponse<Dataset> pagingResponse = new PagingResponse<>();
-    pagingResponse.setResults(datasetList);
+    pagingResponse.setResults(datasetList.getList());
     pagingResponse = datasetService.augmentWithMetadata(pagingResponse);
 
     try {
@@ -270,7 +270,7 @@ public class OaipmhItemRepository implements ItemRepository {
       // caused by https://github.com/DSpace/xoai/issues/31
       LOG.error("Failed to serialize datasets to DC/EML", e);
     }
-    return new ListItemsResults(hasMoreResults, results);
+    return new ListItemsResults(hasMoreResults, results, datasetList.getTotalSize());
   }
 
   /**
@@ -354,7 +354,7 @@ public class OaipmhItemRepository implements ItemRepository {
       publishingCountry = organization.getCountry();
     }
 
-    List<Set> sets = Lists.newArrayList();
+    List<Set> sets = new ArrayList<>();
     sets.add(new Set(INSTALLATION.getSubsetPrefix() + dataset.getInstallationKey().toString()));
     sets.add(new Set(DATASET_TYPE.getSubsetPrefix() + dataset.getType().toString()));
     if (publishingCountry != null) {
@@ -364,19 +364,20 @@ public class OaipmhItemRepository implements ItemRepository {
   }
 
   /**
-   * Get a list of {@link Dataset} based on filter(s).
+   * Get a list of {@link Dataset} with total count based on filter(s).
    *
    * @param set set name in the form of set:subset {@see
    *     http://www.openarchives.org/OAI/openarchivesprotocol.html#Set} XOAI library validates the
    *     set before calling the ItemRepository so we do not validate it again here.
-   * @return list of matching {@link Dataset}. Never null.
+   * @return list of matching {@link Dataset} with total count. Never null.
    */
-  private List<Dataset> getDatasetListFromFilters(
+  private DatasetListWithTotalSize getDatasetListFromFilters(
       int offset, int length, String set, Date from, Date until) {
 
     Optional<SetIdentification> setIdentification = OaipmhSetRepository.parseSetName(set);
 
     List<Dataset> datasetList;
+    int datasetCount;
     if (setIdentification.isPresent()) {
       Country country = null;
       UUID installationKey = null;
@@ -403,12 +404,47 @@ public class OaipmhItemRepository implements ItemRepository {
               from,
               until,
               new PagingRequest(offset, length));
+      datasetCount =
+          datasetMapper.countWithFilter(country, datasetType, installationKey, from, until);
     } else {
       datasetList =
           datasetMapper.listWithFilter(
               null, null, null, from, until, new PagingRequest(offset, length));
+      datasetCount =
+          datasetMapper.countWithFilter(null, null, null, from, until);
     }
 
-    return datasetList;
+    return new DatasetListWithTotalSize(datasetCount, datasetList);
+  }
+
+  private static class DatasetListWithTotalSize {
+
+    private int totalSize;
+    private List<Dataset> list;
+
+    public DatasetListWithTotalSize(int totalSize, List<Dataset> list) {
+      this.totalSize = totalSize;
+      this.list = list;
+    }
+
+    public int size() {
+      return list.size();
+    }
+
+    public int getTotalSize() {
+      return totalSize;
+    }
+
+    public void setTotalSize(int totalSize) {
+      this.totalSize = totalSize;
+    }
+
+    public List<Dataset> getList() {
+      return list;
+    }
+
+    public void setList(List<Dataset> list) {
+      this.list = list;
+    }
   }
 }

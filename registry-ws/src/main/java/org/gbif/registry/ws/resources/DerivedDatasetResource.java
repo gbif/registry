@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -43,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -133,7 +135,7 @@ public class DerivedDatasetResource {
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
       throw new WebApplicationException(
-          "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
+          "Invalid related datasets identifiers: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     return derivedDatasetService.create(
@@ -176,7 +178,9 @@ public class DerivedDatasetResource {
     }
 
     try {
-      derivedDataset.setSourceUrl(request.getSourceUrl());
+      Optional.ofNullable(request.getSourceUrl()).ifPresent(derivedDataset::setSourceUrl);
+      Optional.ofNullable(request.getDescription()).ifPresent(derivedDataset::setDescription);
+      Optional.ofNullable(request.getTitle()).ifPresent(derivedDataset::setTitle);
       derivedDataset.setModifiedBy(nameFromContext);
       derivedDatasetService.update(derivedDataset);
     } catch (IllegalStateException e) {
@@ -186,9 +190,10 @@ public class DerivedDatasetResource {
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}")
-  public DerivedDataset getDerivedDataset(
+  public ResponseEntity<DerivedDataset> getDerivedDataset(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
-    return getDerivedDataset(new DOI(doiPrefix, doiSuffix));
+    DerivedDataset result = getDerivedDataset(new DOI(doiPrefix, doiSuffix));
+    return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
   }
 
   @GetMapping("dataset/{key}")
@@ -214,9 +219,10 @@ public class DerivedDatasetResource {
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}/citation")
-  public String getCitationText(
+  public ResponseEntity<String> getCitationText(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
-    return getCitationText(new DOI(doiPrefix, doiSuffix));
+    String result = getCitationText(new DOI(doiPrefix, doiSuffix));
+    return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
   }
 
   public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(

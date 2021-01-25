@@ -586,4 +586,24 @@
                             (SELECT key,title FROM organization WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
                           ) t1 LIMIT 25
   </select>
+
+  <select id="countPublishingOrganizationsInNetwork" resultType="Long">
+    SELECT count(DISTINCT o.key)
+    FROM dataset d
+    INNER JOIN dataset_network dn ON dn.dataset_key = d.key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dn.network_key = #{networkKey,jdbcType=OTHER} AND d.deleted IS NULL
+  </select>
+
+  <select id="listPublishingOrganizationsInNetwork" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
+    FROM dataset d
+    INNER JOIN dataset_network dn ON dn.dataset_key = d.key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dn.network_key = #{networkKey,jdbcType=OTHER} AND d.deleted IS NULL
+    ORDER BY o.key, o.created DESC
+    <if test="page != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
 </mapper>

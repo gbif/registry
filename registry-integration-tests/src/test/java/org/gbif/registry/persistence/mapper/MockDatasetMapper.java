@@ -154,6 +154,16 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public int countWithFilter(
+      @Nullable @Param("country") Country country,
+      @Nullable @Param("type") DatasetType type,
+      @Nullable @Param("installation_key") UUID installationKey,
+      @Nullable @Param("date_from") Date from,
+      @Nullable @Param("date_to") Date to) {
+    return 0;
+  }
+
+  @Override
   public List<Dataset> listDatasetsByInstallation(
       @Param("installationKey") UUID installationKey, @Nullable @Param("page") Pageable page) {
     return null;

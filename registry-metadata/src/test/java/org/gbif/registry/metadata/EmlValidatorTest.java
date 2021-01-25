@@ -17,7 +17,9 @@ package org.gbif.registry.metadata;
 
 import javax.xml.transform.stream.StreamSource;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class EmlValidatorTest {
 
@@ -46,34 +48,38 @@ public class EmlValidatorTest {
     validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample8-v1.1.xml"));
   }
 
-  @Test(expected = InvalidEmlException.class)
+  @Test
   public void testValidateEmlMetadataProfileSampleV11Fails() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample5-v1.1.xml"));
+    assertThrows(InvalidEmlException.class,
+        () -> validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample5-v1.1.xml")));
   }
 
-  @Test(expected = InvalidEmlException.class)
+  @Test
   public void testValidateEmlMetadataProfileSampleV11Fails2() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample6-v1.1.xml"));
+    assertThrows(InvalidEmlException.class,
+        () -> validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample6-v1.1.xml")));
   }
 
-  @Test(expected = InvalidEmlException.class)
+  @Test
   public void testValidateFail() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    validator.validate("<eml><dataset/></eml>");
+    assertThrows(InvalidEmlException.class, () -> validator.validate("<eml><dataset/></eml>"));
   }
 
-  @Test(expected = InvalidEmlException.class)
+  @Test
   public void testValidateIpt() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    validator.validate(getEMLMetadataAsStreamSource("eml/ipt_eml.xml"));
+    assertThrows(InvalidEmlException.class,
+        () -> validator.validate(getEMLMetadataAsStreamSource("eml/ipt_eml.xml")));
   }
 
   // see https://github.com/gbif/registry/issues/26
-  @Test(expected = InvalidEmlException.class)
+  @Test
   public void testDownloadEml() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    validator.validate(getEMLMetadataAsStreamSource("eml/download_metadata.xml"));
+    assertThrows(InvalidEmlException.class,
+        () -> validator.validate(getEMLMetadataAsStreamSource("eml/download_metadata.xml")));
   }
 }

@@ -93,6 +93,14 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   int countWithFilter(
       @Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type);
 
+  /** Count all datasets having all non null filters given. */
+  int countWithFilter(
+      @Nullable @Param("country") Country country,
+      @Nullable @Param("type") DatasetType type,
+      @Nullable @Param("installationKey") UUID installationKey,
+      @Nullable @Param("dateFrom") Date from,
+      @Nullable @Param("dateTo") Date to);
+
   /** Obtains a list of all the datasets hosted by the given installation. */
   List<Dataset> listDatasetsByInstallation(
       @Param("installationKey") UUID installationKey, @Nullable @Param("page") Pageable page);

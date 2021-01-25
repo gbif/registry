@@ -19,7 +19,7 @@
     #{details,jdbcType=VARCHAR}
   </sql>
 
-  <insert id="create" parameterType="org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage">
+  <insert id="create" parameterType="org.gbif.api.model.registry.metasync.MetasyncHistory">
     INSERT INTO metasync_history(<include refid="METASYNC_HISTORY_FIELDS"/>)
     VALUES(<include refid="METASYNC_HISTORY_FIELDS_TYPES"/>)
   </insert>
