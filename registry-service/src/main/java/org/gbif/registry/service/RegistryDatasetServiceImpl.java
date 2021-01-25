@@ -328,7 +328,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         } else {
           DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
           derivedDatasetUsage.setDatasetKey(key);
-          derivedDatasetUsage.setDatasetDoi(dataset.getDoi());
+          derivedDatasetUsage.setDatasetDOI(dataset.getDoi());
           derivedDatasetUsage.setNumberRecords(item.getValue());
           result.add(derivedDatasetUsage);
         }
@@ -343,7 +343,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
           Dataset dataset = datasets.get(0);
           DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
           derivedDatasetUsage.setDatasetKey(dataset.getKey());
-          derivedDatasetUsage.setDatasetDoi(dataset.getDoi());
+          derivedDatasetUsage.setDatasetDOI(dataset.getDoi());
           derivedDatasetUsage.setNumberRecords(item.getValue());
           result.add(derivedDatasetUsage);
         }

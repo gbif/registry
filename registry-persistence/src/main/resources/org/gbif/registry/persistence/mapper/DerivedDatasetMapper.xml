@@ -20,7 +20,7 @@
     #{derivedDataset.modifiedBy}
   </sql>
 
-  <resultMap id="DERIVED_DATASET_MAP" type="DerivedDataset">
+  <resultMap id="DERIVED_DATASET_MAP" type="org.gbif.registry.domain.ws.DerivedDataset">
     <result property="doi" column="doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
     <result property="originalDownloadDOI" column="original_download_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
     <result property="description" column="description" javaType="java.lang.String"/>
@@ -36,18 +36,19 @@
 
 
   <sql id="DERIVED_DATASET_USAGE_FIELDS">
-    dataset_key, dataset_doi, derived_dataset_doi, record_count, dataset_title
+    ddd.dataset_key, ddd.dataset_doi, ddd.derived_dataset_doi, ddd.record_count, ddd.dataset_title, dd.citation
   </sql>
 
-  <resultMap id="DERIVED_DATASET_USAGE_MAP" type="deriveddatasetusage">
+  <resultMap id="DERIVED_DATASET_USAGE_MAP" type="org.gbif.registry.domain.ws.DerivedDatasetUsage">
     <result property="datasetKey" column="dataset_key"/>
-    <result property="datasetDoi" column="dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
-    <result property="derivedDatasetDoi" column="derived_dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="datasetDOI" column="dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
+    <result property="derivedDatasetDOI" column="derived_dataset_doi" javaType="org.gbif.api.model.common.DOI" typeHandler="org.gbif.registry.persistence.mapper.handler.DOITypeHandler"/>
     <result property="numberRecords" column="record_count" javaType="java.lang.Long"/>
     <result property="datasetTitle" column="dataset_title" javaType="java.lang.String"/>
+    <result property="citation" column="citation" javaType="java.lang.String"/>
   </resultMap>
 
-  <insert id="create" parameterType="DerivedDataset">
+  <insert id="create" parameterType="org.gbif.registry.domain.ws.DerivedDataset">
     INSERT INTO derived_dataset(<include refid="DERIVED_DATASET_FIELDS"/>)
     VALUES(<include refid="DERIVED_DATASET_FIELD_TYPES"/>)
   </insert>
@@ -60,7 +61,7 @@
     WHERE doi = #{derivedDataset.doi,jdbcType=OTHER}
   </update>
 
-  <select id="get" resultType="DerivedDataset" resultMap="DERIVED_DATASET_MAP">
+  <select id="get" resultType="org.gbif.registry.domain.ws.DerivedDataset" resultMap="DERIVED_DATASET_MAP">
     SELECT <include refid="DERIVED_DATASET_FIELDS"/>
     FROM derived_dataset
     WHERE doi = #{doi,jdbcType=OTHER}

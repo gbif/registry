@@ -113,13 +113,13 @@ public final class DerivedDatasetConverter {
     // include related datasets
     if (!datasetUsages.isEmpty()) {
       for (DerivedDatasetUsage du : datasetUsages) {
-        if (du.getDatasetDoi() != null) {
+        if (du.getDatasetDOI() != null) {
           builder
               .withRelatedIdentifiers()
               .addRelatedIdentifier(
                   RelatedIdentifier.builder()
                       .withRelationType(RelationType.REFERENCES)
-                      .withValue(du.getDatasetDoi().getDoiName())
+                      .withValue(du.getDatasetDOI().getDoiName())
                       .withRelatedIdentifierType(RelatedIdentifierType.DOI)
                       .build());
         }
