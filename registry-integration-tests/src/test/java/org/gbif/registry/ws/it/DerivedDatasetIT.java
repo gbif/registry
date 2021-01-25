@@ -22,6 +22,7 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
+import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -44,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
 import static java.util.stream.Collectors.toMap;
 import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredicateDownload;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DerivedDatasetIT extends BaseItTest {
@@ -68,7 +70,7 @@ public class DerivedDatasetIT extends BaseItTest {
   }
 
   @Test
-  public void testCreateCitation() {
+  public void testCreateUpdateDerivedDataset() {
     // create download
     Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownloadService.create(occurrenceDownload);
@@ -88,27 +90,45 @@ public class DerivedDatasetIT extends BaseItTest {
     relatedDatasets.put(firstDataset.getKey().toString(), 1L);
     relatedDatasets.put(secondDataset.getDoi().getDoiName(), 2L);
     requestData.setRelatedDatasets(relatedDatasets);
+    // create derivedDataset
     DerivedDataset derivedDataset = derivedDatasetResource.create(requestData);
 
-    // create derivedDataset
-    DerivedDataset actual =
+    // check created
+    DerivedDataset created =
         derivedDatasetResource.getDerivedDataset(
             derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix());
 
-    assertNotNull(actual);
-    assertEquals(derivedDataset.getDoi(), actual.getDoi());
-    assertEquals(requestData.getOriginalDownloadDOI(), actual.getOriginalDownloadDOI());
-    assertEquals(requestData.getDescription(), actual.getDescription());
-    assertEquals(requestData.getSourceUrl(), actual.getSourceUrl());
-    assertEquals(requestData.getTitle(), actual.getTitle());
-    assertNotNull(actual.getCreated());
-    assertNotNull(actual.getCreatedBy());
-    assertNotNull(actual.getModified());
-    assertNotNull(actual.getModifiedBy());
+    assertNotNull(created);
+    assertEquals(derivedDataset.getDoi(), created.getDoi());
+    assertEquals(requestData.getOriginalDownloadDOI(), created.getOriginalDownloadDOI());
+    assertEquals(requestData.getDescription(), created.getDescription());
+    assertEquals(requestData.getSourceUrl(), created.getSourceUrl());
+    assertEquals(requestData.getTitle(), created.getTitle());
+    assertNotNull(created.getCreated());
+    assertNotNull(created.getCreatedBy());
+    assertNotNull(created.getModified());
+    assertNotNull(created.getModifiedBy());
+
+    // Try update
+    DerivedDatasetUpdateRequest updateRequest = new DerivedDatasetUpdateRequest();
+    updateRequest.setTitle("Updated title");
+    updateRequest.setDescription("Updated description");
+    updateRequest.setSourceUrl(URI.create("gbif.org"));
+    // update derivedDataset
+    derivedDatasetResource.update(derivedDataset.getDoi(), updateRequest);
+
+    // check updated
+    DerivedDataset updated = derivedDatasetResource.getDerivedDataset(derivedDataset.getDoi());
+    assertEquals("Updated title", updated.getTitle());
+    assertEquals("Updated description", updated.getDescription());
+    assertNotEquals(created.getSourceUrl(), updated.getSourceUrl());
+    assertEquals(created.getCreated(), updated.getCreated());
+    assertEquals(created.getCreatedBy(), updated.getCreatedBy());
+    assertNotEquals(created.getModified(), updated.getModified());
   }
 
   @Test
-  public void testDatasetCitation() {
+  public void testDerivedDatasetDatasetUsages() {
     // create download
     Download occurrenceDownload = getTestInstancePredicateDownload();
     occurrenceDownloadService.create(occurrenceDownload);
