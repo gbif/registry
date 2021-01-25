@@ -16,17 +16,16 @@
 package org.gbif.registry.test;
 
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.UUID;
 
 @Component
 public class Networks extends JsonBackedData<Network> {
