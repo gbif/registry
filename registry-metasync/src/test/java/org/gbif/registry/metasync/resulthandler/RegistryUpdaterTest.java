@@ -47,26 +47,28 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.argThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class RegistryUpdaterTest {
 
   private static TapirMetadataSynchroniser synchroniser;
@@ -78,7 +80,7 @@ public class RegistryUpdaterTest {
   private Installation installation;
   private Endpoint endpoint;
 
-  @BeforeClass
+  @BeforeAll
   public static void init() throws IOException {
     HttpClient client = mock(HttpClient.class);
     // mock endpoint responses
@@ -94,7 +96,7 @@ public class RegistryUpdaterTest {
     synchroniser = new TapirMetadataSynchroniser(client);
   }
 
-  @Before
+  @BeforeEach
   public void setup() {
     // same Endpoint for Installation and Dataset
     endpoint = new Endpoint();
@@ -198,17 +200,17 @@ public class RegistryUpdaterTest {
         synchroniser.syncInstallation(installation, Lists.newArrayList(dataset));
 
     // ensure updated dataset recognized as existing already
-    assertThat(syncResult.existingDatasets).hasSize(1);
-    assertThat(syncResult.deletedDatasets).isEmpty();
-    assertThat(syncResult.addedDatasets).isEmpty();
+    assertEquals(1, syncResult.existingDatasets.size());
+    assertTrue(syncResult.deletedDatasets.isEmpty());
+    assertTrue(syncResult.addedDatasets.isEmpty());
 
     // ensure updated dataset wasn't assigned a new License (no machine readable license existed in
     // metadata response)
     // and rights statement was set to null
     Dataset updated = syncResult.existingDatasets.get(dataset);
-    assertThat(updated.getTitle()).isEqualTo("Pontaurus");
-    assertThat(updated.getLicense()).isEqualTo(License.UNSPECIFIED);
-    assertThat(updated.getRights()).isNull();
+    assertEquals("Pontaurus", updated.getTitle());
+    assertEquals(License.UNSPECIFIED, updated.getLicense());
+    assertNull(updated.getRights());
 
     // update Dataset in Registry, and assert existing license stays CC-BY (not overwritten by
     // updated dataset)

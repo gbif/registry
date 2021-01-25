@@ -56,14 +56,15 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.io.input.ReaderInputStream;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class DatasetParserTest {
 
@@ -101,12 +102,8 @@ public class DatasetParserTest {
   }
 
   private void assertIllegalArg(String classpathFile) throws IOException {
-    try {
-      MetadataType type = DatasetParser.detectParserType(FileUtils.classpathStream(classpathFile));
-      fail("IllegalArgumentException expected for file " + classpathFile + ", but found " + type);
-    } catch (IllegalArgumentException e) {
-
-    }
+    assertThrows(IllegalArgumentException.class,
+        () -> DatasetParser.detectParserType(FileUtils.classpathStream(classpathFile)));
   }
 
   @Test
@@ -120,10 +117,10 @@ public class DatasetParserTest {
     }
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testBuildProtocol() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/eml-protocol.xml"));
-    d.getTitle();
+    assertThrows(IllegalArgumentException.class,
+        () -> DatasetParser.build(FileUtils.classpathStream("eml/eml-protocol.xml")));
   }
 
   private Contact contactByType(Dataset d, ContactType type) {

@@ -29,9 +29,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
@@ -39,10 +39,10 @@ import com.google.common.collect.Lists;
 import static org.gbif.config.RegistryWsClientFactory.datasetService;
 import static org.gbif.config.RegistryWsClientFactory.datasetServiceReadOnly;
 import static org.gbif.config.RegistryWsClientFactory.installationService;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Ignore("Requires live UAT API")
+@Disabled("Requires live UAT API")
 public class RegistryWsIT {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(RegistryWsIT.class);
   private static final String DATASET_TITLE = "Dataset - Ws Client Demo";
@@ -55,7 +55,7 @@ public class RegistryWsIT {
    * existing organization (endorsed already) is used as both the publishing organization for the
    * dataset, and the hosting organization for the installation.
    */
-  @BeforeClass
+  @BeforeAll
   public static void createDataset() {
     // Publishing and hosting organization: Test Organization #1, endorsed by DanBIF
     UUID organizationKey = UUID.fromString("0a16da09-7719-40de-8d4f-56a15ed52fb6");

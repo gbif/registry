@@ -198,13 +198,18 @@
 
     <!-- Test dependencies -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -232,7 +237,6 @@
             <usedDependency>org.springframework.boot:spring-boot-starter-amqp</usedDependency>
             <usedDependency>org.springframework.boot:spring-boot-starter-security</usedDependency>
             <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
-            <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
           </usedDependencies>
         </configuration>
         <executions>

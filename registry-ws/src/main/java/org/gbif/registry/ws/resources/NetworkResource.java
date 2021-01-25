@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.domain.ws.NetworkRequestSearchParams;
@@ -27,6 +28,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.security.EditorAuthorizationService;
 
@@ -60,6 +62,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
 
   private final DatasetMapper datasetMapper;
   private final NetworkMapper networkMapper;
+  private final OrganizationMapper organizationMapper;
 
   public NetworkResource(
       MapperServiceLocator mapperServiceLocator,
@@ -75,6 +78,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
         withMyBatis);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
+    this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
   }
 
   @GetMapping("{key}")
@@ -137,5 +141,14 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
     return networkMapper.suggest(label);
+  }
+
+  @GetMapping("{key}/organization")
+  @Override
+  public PagingResponse<Organization> publishingOrganizations(@PathVariable("key") UUID networkKey, Pageable page) {
+    return new PagingResponse<>(
+        page,
+        organizationMapper.countPublishingOrganizationsInNetwork(networkKey),
+        organizationMapper.listPublishingOrganizationsInNetwork(networkKey, page));
   }
 }

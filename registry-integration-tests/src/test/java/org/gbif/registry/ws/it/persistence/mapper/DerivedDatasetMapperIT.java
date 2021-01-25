@@ -99,10 +99,12 @@ public class DerivedDatasetMapperIT extends BaseItTest {
         mapper.listDerivedDatasetUsages(derivedDataset2.getDoi(), new PagingRequest());
     assertNotNull(usages);
     assertEquals(1, usages.size());
+    assertNotNull(usages.get(0).getCitation());
 
     usages = mapper.listDerivedDatasetUsages(derivedDataset1.getDoi(), new PagingRequest());
     assertNotNull(usages);
     assertEquals(3, usages.size());
+    assertNotNull(usages.get(0).getCitation());
   }
 
   @Test

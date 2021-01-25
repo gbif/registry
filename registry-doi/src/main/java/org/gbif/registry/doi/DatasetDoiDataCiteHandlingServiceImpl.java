@@ -71,8 +71,7 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
   @Override
   public void datasetChanged(Dataset dataset, @Nullable DOI previousDoi) {
     // When configured, we can skip the DOI logic for some dataset when the getParentDatasetKey is
-    // in the
-    // parentDatasetExcludeList
+    // in the parentDatasetExcludeList
     if (dataset.getParentDatasetKey() != null
         && parentDatasetExcludeList.contains(dataset.getParentDatasetKey())) {
       LOG.info(

@@ -44,10 +44,10 @@ public class DerivedDatasetTestDataProvider {
   public static DerivedDatasetUsage prepareDerivedDatasetUsage(
       DOI derivedDatasetDoi, DOI datasetDoi, Long count) {
     DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
-    derivedDatasetUsage.setDatasetDoi(datasetDoi);
+    derivedDatasetUsage.setDatasetDOI(datasetDoi);
     derivedDatasetUsage.setDatasetKey(UUID.randomUUID());
     derivedDatasetUsage.setDatasetTitle("Related dataset");
-    derivedDatasetUsage.setDerivedDatasetDoi(derivedDatasetDoi);
+    derivedDatasetUsage.setDerivedDatasetDOI(derivedDatasetDoi);
     derivedDatasetUsage.setNumberRecords(count);
 
     return derivedDatasetUsage;

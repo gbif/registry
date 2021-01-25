@@ -18,18 +18,18 @@ package org.gbif.registry.metadata;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class CleanUtilsTest {
 
   @Test
-  public void testRemoveEmptyStrings() throws Exception {
+  public void testRemoveEmptyStrings() {
     Contact c = new Contact();
     c.setFirstName("");
     c.setLastName("  ");
@@ -50,7 +50,7 @@ public class CleanUtilsTest {
   }
 
   @Test
-  public void testRemoveEmptyStringsCitation() throws Exception {
+  public void testRemoveEmptyStringsCitation() {
     Citation c = new Citation();
     c.setText("");
     c.setIdentifier("");

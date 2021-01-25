@@ -18,13 +18,14 @@ package org.gbif.registry.metadata.parse.converter;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DateConverterTest {
-  private DateConverter converter = new DateConverter();
+
+  private final DateConverter converter = new DateConverter();
 
   @Test
   public void parseDates() throws Throwable {
@@ -33,8 +34,7 @@ public class DateConverterTest {
     assertLang(2000, 1, 1, 1, "2000");
   }
 
-  private void assertLang(Integer year, Integer month, Integer day, Integer millis, String value)
-      throws Throwable {
+  private void assertLang(Integer year, Integer month, Integer day, Integer millis, String value) {
     Date d = (Date) converter.convertToType(Date.class, value);
 
     Calendar cal = Calendar.getInstance();
