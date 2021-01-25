@@ -135,7 +135,7 @@ public class DerivedDatasetResource {
     } catch (IllegalArgumentException e) {
       LOG.error("Invalid related datasets identifiers");
       throw new WebApplicationException(
-          "Invalid related datasets identifiers", HttpStatus.BAD_REQUEST);
+          "Invalid related datasets identifiers: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     return derivedDatasetService.create(
