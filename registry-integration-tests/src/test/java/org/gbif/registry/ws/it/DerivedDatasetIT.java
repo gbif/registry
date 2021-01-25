@@ -94,9 +94,7 @@ public class DerivedDatasetIT extends BaseItTest {
     DerivedDataset derivedDataset = derivedDatasetResource.create(requestData);
 
     // check created
-    DerivedDataset created =
-        derivedDatasetResource.getDerivedDataset(
-            derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix());
+    DerivedDataset created = derivedDatasetResource.getDerivedDataset(derivedDataset.getDoi());
 
     assertNotNull(created);
     assertEquals(derivedDataset.getDoi(), created.getDoi());
