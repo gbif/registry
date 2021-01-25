@@ -36,8 +36,10 @@ import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +47,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
@@ -312,35 +313,57 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   public List<DerivedDatasetUsage> ensureDerivedDatasetDatasetUsagesValid(Map<String, Long> data) {
     LOG.debug("Ensure citation dataset usages {}", data);
     List<DerivedDatasetUsage> result = new ArrayList<>();
+    Set<UUID> usedDatasetKeys = new HashSet<>();
 
     for (Map.Entry<String, Long> item : data.entrySet()) {
       String datasetKeyOrDoi = item.getKey();
-      LOG.debug("Try identifier {}", datasetKeyOrDoi);
+      LOG.debug("Try identifier [{}]", datasetKeyOrDoi);
 
+      // validate datasets with UUID
       if (RegistryDoiUtils.isUuid(datasetKeyOrDoi)) {
-        LOG.debug("Identifier {} is a valid UUID", datasetKeyOrDoi);
+        LOG.debug("Identifier [{}] is a valid UUID", datasetKeyOrDoi);
         UUID key = UUID.fromString(datasetKeyOrDoi);
         Dataset dataset = datasetMapper.get(key);
 
+        // no dataset with the identifier - throw an exception
         if (dataset == null) {
-          LOG.error("Dataset with the UUID {} was not found", datasetKeyOrDoi);
-          throw new IllegalArgumentException();
+          LOG.error("Dataset with the key [{}] was not found", datasetKeyOrDoi);
+          throw new IllegalArgumentException("Dataset with the key [" + datasetKeyOrDoi + "] was not found");
+        // duplicated record - should be listed only once
+        } else if (usedDatasetKeys.contains(dataset.getKey())) {
+          throw new IllegalArgumentException(
+              "Duplicated keys, dataset with the identifier [" + datasetKeyOrDoi + "] already present");
         } else {
+          usedDatasetKeys.add(dataset.getKey());
           DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
           derivedDatasetUsage.setDatasetKey(key);
           derivedDatasetUsage.setDatasetDOI(dataset.getDoi());
           derivedDatasetUsage.setNumberRecords(item.getValue());
           result.add(derivedDatasetUsage);
         }
+      // validate datasets with DOI
       } else if (DOI.isParsable(datasetKeyOrDoi)) {
-        LOG.debug("Identifier {} is a valid DOI", datasetKeyOrDoi);
+        LOG.debug("Identifier [{}] is a valid DOI", datasetKeyOrDoi);
         List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
+        // get first not deleted one
+        Optional<Dataset> datasetWrapper = datasets.stream()
+            .filter(d -> d.getDeleted() == null)
+            .findFirst();
 
-        if (CollectionUtils.isEmpty(datasets)) {
-          LOG.error("Dataset with the DOI {} was not found", datasetKeyOrDoi);
-          throw new IllegalArgumentException();
+        // no dataset with the identifier - throw an exception
+        if (!datasetWrapper.isPresent()) {
+          LOG.error("Dataset with the DOI [{}] was not found", datasetKeyOrDoi);
+          LOG.debug("There are deleted datasets with the DOI [{}]", datasetKeyOrDoi);
+          throw new IllegalArgumentException("Dataset with the DOI [" + datasetKeyOrDoi + "] was not found");
+        }
+
+        Dataset dataset = datasetWrapper.get();
+        // duplicated record - should be listed only once
+        if (usedDatasetKeys.contains(dataset.getKey())) {
+          throw new IllegalArgumentException(
+              "Duplicated keys, dataset with the identifier [" + datasetKeyOrDoi + "] already present");
         } else {
-          Dataset dataset = datasets.get(0);
+          usedDatasetKeys.add(dataset.getKey());
           DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
           derivedDatasetUsage.setDatasetKey(dataset.getKey());
           derivedDatasetUsage.setDatasetDOI(dataset.getDoi());
@@ -348,8 +371,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
           result.add(derivedDatasetUsage);
         }
       } else {
-        LOG.error("Identifier {} is not UUID or DOI", datasetKeyOrDoi);
-        throw new IllegalArgumentException();
+        LOG.error("Identifier [{}] is not UUID or DOI", datasetKeyOrDoi);
+        throw new IllegalArgumentException("Identifier [" + datasetKeyOrDoi + "] is not UUID or DOI");
       }
     }
 
