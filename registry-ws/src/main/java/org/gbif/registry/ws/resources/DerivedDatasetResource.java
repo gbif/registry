@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -189,9 +190,10 @@ public class DerivedDatasetResource {
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}")
-  public DerivedDataset getDerivedDataset(
+  public ResponseEntity<DerivedDataset> getDerivedDataset(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
-    return getDerivedDataset(new DOI(doiPrefix, doiSuffix));
+    DerivedDataset result = getDerivedDataset(new DOI(doiPrefix, doiSuffix));
+    return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
   }
 
   @GetMapping("dataset/{key}")
@@ -217,9 +219,10 @@ public class DerivedDatasetResource {
   }
 
   @GetMapping("{doiPrefix}/{doiSuffix}/citation")
-  public String getCitationText(
+  public ResponseEntity<String> getCitationText(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
-    return getCitationText(new DOI(doiPrefix, doiSuffix));
+    String result = getCitationText(new DOI(doiPrefix, doiSuffix));
+    return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
   }
 
   public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(
