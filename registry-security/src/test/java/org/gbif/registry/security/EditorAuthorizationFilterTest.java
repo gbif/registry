@@ -209,7 +209,9 @@ public class EditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(null);
 
     // WHEN & THEN
-    assertThrows(WebApplicationException.class, () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
     verify(mockRequest, atLeast(2)).getMethod();
@@ -226,7 +228,8 @@ public class EditorAuthorizationFilterTest {
     doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
 
     // WHEN & THEN
-    assertThrows(WebApplicationException.class,
+    assertThrows(
+        WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
@@ -246,7 +249,8 @@ public class EditorAuthorizationFilterTest {
     when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(false);
 
     // WHEN & THEN
-    assertThrows(WebApplicationException.class,
+    assertThrows(
+        WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
@@ -267,7 +271,8 @@ public class EditorAuthorizationFilterTest {
     when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(false);
 
     // WHEN & THEN
-    assertThrows(WebApplicationException.class,
+    assertThrows(
+        WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
@@ -291,7 +296,8 @@ public class EditorAuthorizationFilterTest {
         .thenReturn(false);
 
     // WHEN & THEN
-    assertThrows(WebApplicationException.class,
+    assertThrows(
+        WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
@@ -313,7 +319,8 @@ public class EditorAuthorizationFilterTest {
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 
     // WHEN & THEN
-    assertThrows(WebApplicationException.class,
+    assertThrows(
+        WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest, atLeastOnce()).getRequestURI();

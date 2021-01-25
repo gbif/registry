@@ -128,7 +128,8 @@ public class BiocaseMetadataSynchroniserTest {
     assertEquals(new DOI("10.1234/doi"), dataset.getDoi());
     assertEquals("Collections of Phytoplankton at BGBM", dataset.getTitle());
     assertNotNull(dataset.getCitation());
-    assertEquals("Jahn, R. (Ed.) 2013+ (continuously updated): Collections of Phytoplankton at BGBM",
+    assertEquals(
+        "Jahn, R. (Ed.) 2013+ (continuously updated): Collections of Phytoplankton at BGBM",
         dataset.getCitation().getText());
 
     // endpoints
@@ -155,7 +156,8 @@ public class BiocaseMetadataSynchroniserTest {
     assertNull(dataset.getDoi());
     assertEquals("Mammals housed at MHNG, Geneva", dataset.getTitle());
     assertNotNull(dataset.getCitation());
-    assertEquals("Ruedi M. Mammals housed at MHNG, Geneva. Muséum d'histoire naturelle de la Ville de Genève",
+    assertEquals(
+        "Ruedi M. Mammals housed at MHNG, Geneva. Muséum d'histoire naturelle de la Ville de Genève",
         dataset.getCitation().getText());
 
     // endpoints

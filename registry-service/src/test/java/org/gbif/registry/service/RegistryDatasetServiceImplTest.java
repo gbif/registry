@@ -50,10 +50,8 @@ class RegistryDatasetServiceImplTest {
   private final DOI DOI_1 = new DOI("10.21373/12345");
   private final DOI DOI_2 = new DOI("10.21373/54321");
 
-  @Mock
-  private DatasetMapper datasetMapper;
-  @InjectMocks
-  private RegistryDatasetServiceImpl registryDatasetService;
+  @Mock private DatasetMapper datasetMapper;
+  @InjectMocks private RegistryDatasetServiceImpl registryDatasetService;
 
   @Test
   public void testEnsureDerivedDatasetDatasetUsagesValidDuplicates() {
@@ -63,10 +61,12 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(UUID_1_STR, 1L);
     datasetUsages.put(DOI_1_STR, 2L);
     when(datasetMapper.get(UUID_1)).thenReturn(dataset);
-    when(datasetMapper.listByDOI(DOI_1_STR, new PagingRequest())).thenReturn(Collections.singletonList(dataset));
+    when(datasetMapper.listByDOI(DOI_1_STR, new PagingRequest()))
+        .thenReturn(Collections.singletonList(dataset));
 
     // when & then
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages));
     verify(datasetMapper).get(UUID_1);
     verify(datasetMapper).listByDOI(DOI_1_STR, new PagingRequest());
@@ -80,7 +80,8 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(DOI_1_STR, 2L);
 
     // when & then
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages));
     verify(datasetMapper).get(UUID_1);
   }
@@ -92,7 +93,8 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(DOI_1_STR, 2L); // no dataset with this DOI
 
     // when & then
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages));
   }
 
@@ -103,7 +105,8 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put("1111-1111", 1L);
 
     // when & then
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages));
   }
 
@@ -116,11 +119,12 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(UUID_1_STR, 1L);
     datasetUsages.put(DOI_1_STR, 2L);
     when(datasetMapper.get(UUID_1)).thenReturn(dataset1);
-    when(datasetMapper.listByDOI(DOI_1_STR, new PagingRequest())).thenReturn(Collections.singletonList(dataset2));
+    when(datasetMapper.listByDOI(DOI_1_STR, new PagingRequest()))
+        .thenReturn(Collections.singletonList(dataset2));
 
     // when
-    List<DerivedDatasetUsage> derivedDatasetUsages
-        = registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages);
+    List<DerivedDatasetUsage> derivedDatasetUsages =
+        registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages);
 
     // then
     assertFalse(derivedDatasetUsages.isEmpty());

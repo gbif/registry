@@ -145,7 +145,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
 
   @GetMapping("{key}/organization")
   @Override
-  public PagingResponse<Organization> publishingOrganizations(@PathVariable("key") UUID networkKey, Pageable page) {
+  public PagingResponse<Organization> publishingOrganizations(
+      @PathVariable("key") UUID networkKey, Pageable page) {
     return new PagingResponse<>(
         page,
         organizationMapper.countPublishingOrganizationsInNetwork(networkKey),

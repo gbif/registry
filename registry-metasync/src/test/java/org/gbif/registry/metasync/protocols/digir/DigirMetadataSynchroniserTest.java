@@ -56,8 +56,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class DigirMetadataSynchroniserTest {
 
-  @Mock
-  private HttpClient client;
+  @Mock private HttpClient client;
   private DigirMetadataSynchroniser synchroniser;
   private Installation installation;
 
@@ -106,15 +105,19 @@ public class DigirMetadataSynchroniserTest {
     assertEquals(1, syncResult.addedDatasets.size());
 
     Dataset dataset = syncResult.addedDatasets.get(0);
-    assertEquals("Distribution of benthic foraminifera of sediment core PS1388-3", dataset.getTitle());
-    assertEquals(URI.create("http://doi.pangaea.de/doi:10.1594/PANGAEA.51131"), dataset.getHomepage());
+    assertEquals(
+        "Distribution of benthic foraminifera of sediment core PS1388-3", dataset.getTitle());
+    assertEquals(
+        URI.create("http://doi.pangaea.de/doi:10.1594/PANGAEA.51131"), dataset.getHomepage());
     assertNotNull(dataset.getCitation());
     assertEquals(
-        "Mackensen, Andreas; Grobe, Hannes; Hubberten, Hans-Wolfgang; Spieß, Volkhard; Fütterer, Dieter K " +
-            "(1989): Distribution of benthic foraminifera of sediment core PS1388-3, doi:10.1594/PANGAEA.51131",
-        dataset.getCitation().getText()
-    );
-    assertTrue(dataset.getIdentifiers().isEmpty()); // verify that we don't create an identifier for the DOI
+        "Mackensen, Andreas; Grobe, Hannes; Hubberten, Hans-Wolfgang; Spieß, Volkhard; Fütterer, Dieter K "
+            + "(1989): Distribution of benthic foraminifera of sediment core PS1388-3, doi:10.1594/PANGAEA.51131",
+        dataset.getCitation().getText());
+    assertTrue(
+        dataset
+            .getIdentifiers()
+            .isEmpty()); // verify that we don't create an identifier for the DOI
     assertEquals("10.1594/pangaea.51131", dataset.getDoi().getDoiName());
     // endpoints
     assertEquals(1, dataset.getEndpoints().size());
@@ -150,7 +153,8 @@ public class DigirMetadataSynchroniserTest {
     assertEquals(1, syncResult.existingDatasets.size());
     assertTrue(syncResult.addedDatasets.isEmpty());
 
-    assertEquals("Distribution of benthic foraminifera of sediment core PS1388-3",
+    assertEquals(
+        "Distribution of benthic foraminifera of sediment core PS1388-3",
         syncResult.existingDatasets.get(dataset).getTitle());
   }
 

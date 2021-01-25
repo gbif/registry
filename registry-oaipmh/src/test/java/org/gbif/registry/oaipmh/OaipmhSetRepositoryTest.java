@@ -90,24 +90,24 @@ public class OaipmhSetRepositoryTest {
     OaipmhSetRepository setRepository = new OaipmhSetRepository(mockDatasetMapper);
     assertTrue(
         setRepository.exists(
-                OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
-                    + installationUUIDRepitle.toString()),
+            OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
+                + installationUUIDRepitle.toString()),
         "Should find Set provided in test data:" + installationUUIDRepitle.toString());
     assertFalse(
         setRepository.exists(
-                OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
-                    + UUID.randomUUID().toString()),
+            OaipmhSetRepository.SetType.INSTALLATION.getSubsetPrefix()
+                + UUID.randomUUID().toString()),
         "Should not find a Set for random Installation key");
 
     assertTrue(
         setRepository.exists(
-                OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
-                    + Country.DENMARK.getIso2LetterCode()),
+            OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
+                + Country.DENMARK.getIso2LetterCode()),
         "Should find Set provided in test data:" + Country.DENMARK.getIso2LetterCode());
     assertFalse(
         setRepository.exists(
-                OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
-                    + Country.AUSTRALIA.getIso2LetterCode()),
+            OaipmhSetRepository.SetType.COUNTRY.getSubsetPrefix()
+                + Country.AUSTRALIA.getIso2LetterCode()),
         "Should not find Set not provided in test data:" + Country.AUSTRALIA.getIso2LetterCode());
   }
 }

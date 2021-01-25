@@ -181,7 +181,8 @@ public class OaipmhItemRepository implements ItemRepository {
   public ListItemIdentifiersResult getItemIdentifiers(
       List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) {
     // ask for length+1 to determine if there are more results
-    DatasetListWithTotalSize datasetList = getDatasetListFromFilters(offset, length + 1, set, from, until);
+    DatasetListWithTotalSize datasetList =
+        getDatasetListFromFilters(offset, length + 1, set, from, until);
     List<ItemIdentifier> results = new ArrayList<>(datasetList.size());
 
     boolean hasMoreResults = (datasetList.size() == length + 1);
@@ -249,7 +250,8 @@ public class OaipmhItemRepository implements ItemRepository {
       List<ScopedFilter> list, int offset, int length, String set, Date from, Date until) {
 
     // ask for length+1 to determine if there are more results
-    DatasetListWithTotalSize datasetList = getDatasetListFromFilters(offset, length + 1, set, from, until);
+    DatasetListWithTotalSize datasetList =
+        getDatasetListFromFilters(offset, length + 1, set, from, until);
     List<Item> results = new ArrayList<>(datasetList.size());
 
     boolean hasMoreResults = (datasetList.size() == length + 1);
@@ -410,8 +412,7 @@ public class OaipmhItemRepository implements ItemRepository {
       datasetList =
           datasetMapper.listWithFilter(
               null, null, null, from, until, new PagingRequest(offset, length));
-      datasetCount =
-          datasetMapper.countWithFilter(null, null, null, from, until);
+      datasetCount = datasetMapper.countWithFilter(null, null, null, from, until);
     }
 
     return new DatasetListWithTotalSize(datasetCount, datasetList);
