@@ -16,6 +16,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.search.KeyTitleResult;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +24,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
-import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.springframework.stereotype.Repository;
 
 @Repository
