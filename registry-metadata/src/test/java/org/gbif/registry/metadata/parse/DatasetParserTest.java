@@ -102,7 +102,8 @@ public class DatasetParserTest {
   }
 
   private void assertIllegalArg(String classpathFile) throws IOException {
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> DatasetParser.detectParserType(FileUtils.classpathStream(classpathFile)));
   }
 
@@ -119,7 +120,8 @@ public class DatasetParserTest {
 
   @Test
   public void testBuildProtocol() throws Exception {
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(
+        IllegalArgumentException.class,
         () -> DatasetParser.build(FileUtils.classpathStream("eml/eml-protocol.xml")));
   }
 

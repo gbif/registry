@@ -51,15 +51,21 @@ public class EmlValidatorTest {
   @Test
   public void testValidateEmlMetadataProfileSampleV11Fails() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    assertThrows(InvalidEmlException.class,
-        () -> validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample5-v1.1.xml")));
+    assertThrows(
+        InvalidEmlException.class,
+        () ->
+            validator.validate(
+                getEMLMetadataAsStreamSource("eml-metadata-profile/sample5-v1.1.xml")));
   }
 
   @Test
   public void testValidateEmlMetadataProfileSampleV11Fails2() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    assertThrows(InvalidEmlException.class,
-        () -> validator.validate(getEMLMetadataAsStreamSource("eml-metadata-profile/sample6-v1.1.xml")));
+    assertThrows(
+        InvalidEmlException.class,
+        () ->
+            validator.validate(
+                getEMLMetadataAsStreamSource("eml-metadata-profile/sample6-v1.1.xml")));
   }
 
   @Test
@@ -71,7 +77,8 @@ public class EmlValidatorTest {
   @Test
   public void testValidateIpt() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    assertThrows(InvalidEmlException.class,
+    assertThrows(
+        InvalidEmlException.class,
         () -> validator.validate(getEMLMetadataAsStreamSource("eml/ipt_eml.xml")));
   }
 
@@ -79,7 +86,8 @@ public class EmlValidatorTest {
   @Test
   public void testDownloadEml() throws Exception {
     EmlValidator validator = EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1);
-    assertThrows(InvalidEmlException.class,
+    assertThrows(
+        InvalidEmlException.class,
         () -> validator.validate(getEMLMetadataAsStreamSource("eml/download_metadata.xml")));
   }
 }
