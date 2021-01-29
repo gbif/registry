@@ -166,6 +166,15 @@
           "countNN": { "type": "integer" },
           "distanceNN": { "type": "float" }
         }
+      },
+      "temporalCoverages": {
+        "type": "object",
+        "properties": {
+          "@type":  { "type": "keyword"},
+          "start": { "type": "date" },
+          "end": { "type": "date" },
+          "date": { "type": "date" }
+        }
       }
     }
 }
