@@ -103,7 +103,8 @@ public class DoiDiagnostician {
         metadataEquals =
             MetadataUtils.metadataEquals(registryDoiMetadataXml, dataCiteDoiMetadataXml);
 
-        Difference difference = MetadataUtils.metadataDifference(registryDoiMetadataXml, dataCiteDoiMetadataXml);
+        Difference difference =
+            MetadataUtils.metadataDifference(registryDoiMetadataXml, dataCiteDoiMetadataXml);
         doiGbifDataciteDiagnostic.setDifference(difference.toString());
       } catch (DoiException e) {
         LOG.error("Can't compare DOI metadata", e);
@@ -129,11 +130,9 @@ public class DoiDiagnostician {
     // Try to load the Dataset from its DOI and alternate identifier
     // deleted datasets are jettisoned
     datasetDiagnosticResult.appendRelatedDataset(
-        datasetMapper.listByDOI(doi.getDoiName(), null)
-            .stream()
+        datasetMapper.listByDOI(doi.getDoiName(), null).stream()
             .filter(d -> d.getDeleted() != null)
-            .collect(Collectors.toList())
-    );
+            .collect(Collectors.toList()));
 
     if (datasetDiagnosticResult.isLinkedToASingleDataset()) {
       datasetDiagnosticResult.setDoiIsInAlternateIdentifiers(

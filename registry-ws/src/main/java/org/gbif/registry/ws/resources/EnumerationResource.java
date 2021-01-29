@@ -134,7 +134,8 @@ public class EnumerationResource {
         new CachingMetadataReaderFactory(resourcePatternResolver);
 
     List<Class<? extends Serializable>> classes =
-        Arrays.asList(Country.class, PreservationType.class, PipelineStep.class, LiteratureType.class);
+        Arrays.asList(
+            Country.class, PreservationType.class, PipelineStep.class, LiteratureType.class);
 
     ImmutableSortedMap<String, Enum<?>[]> result;
     try {

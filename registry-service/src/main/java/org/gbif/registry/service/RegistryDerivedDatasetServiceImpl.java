@@ -127,8 +127,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
         derivedDataset.getDoi(),
         metadata,
         URI.create(MessageFormat.format(derivedDatasetTemplateUrl, derivedDataset.getDoi())),
-        null
-    );
+        null);
 
     derivedDatasetMapper.update(derivedDataset);
   }
