@@ -57,6 +57,8 @@ public class HumanFilterBuilderTest {
       }
     }
 
-    assertTrue(missingKeys.isEmpty(), "Missing enum resource bundle entries for " + missingKeys.toString());
+    assertTrue(
+        missingKeys.isEmpty(),
+        "Missing enum resource bundle entries for " + missingKeys.toString());
   }
 }

@@ -328,11 +328,14 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         // no dataset with the identifier - throw an exception
         if (dataset == null) {
           LOG.error("Dataset with the key [{}] was not found", datasetKeyOrDoi);
-          throw new IllegalArgumentException("Dataset with the key [" + datasetKeyOrDoi + "] was not found");
-        // duplicated record - should be listed only once
+          throw new IllegalArgumentException(
+              "Dataset with the key [" + datasetKeyOrDoi + "] was not found");
+          // duplicated record - should be listed only once
         } else if (usedDatasetKeys.contains(dataset.getKey())) {
           throw new IllegalArgumentException(
-              "Duplicated keys, dataset with the identifier [" + datasetKeyOrDoi + "] already present");
+              "Duplicated keys, dataset with the identifier ["
+                  + datasetKeyOrDoi
+                  + "] already present");
         } else {
           usedDatasetKeys.add(dataset.getKey());
           DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
@@ -341,27 +344,29 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
           derivedDatasetUsage.setNumberRecords(item.getValue());
           result.add(derivedDatasetUsage);
         }
-      // validate datasets with DOI
+        // validate datasets with DOI
       } else if (DOI.isParsable(datasetKeyOrDoi)) {
         LOG.debug("Identifier [{}] is a valid DOI", datasetKeyOrDoi);
         List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
         // get first not deleted one
-        Optional<Dataset> datasetWrapper = datasets.stream()
-            .filter(d -> d.getDeleted() == null)
-            .findFirst();
+        Optional<Dataset> datasetWrapper =
+            datasets.stream().filter(d -> d.getDeleted() == null).findFirst();
 
         // no dataset with the identifier - throw an exception
         if (!datasetWrapper.isPresent()) {
           LOG.error("Dataset with the DOI [{}] was not found", datasetKeyOrDoi);
           LOG.debug("There are deleted datasets with the DOI [{}]", datasetKeyOrDoi);
-          throw new IllegalArgumentException("Dataset with the DOI [" + datasetKeyOrDoi + "] was not found");
+          throw new IllegalArgumentException(
+              "Dataset with the DOI [" + datasetKeyOrDoi + "] was not found");
         }
 
         Dataset dataset = datasetWrapper.get();
         // duplicated record - should be listed only once
         if (usedDatasetKeys.contains(dataset.getKey())) {
           throw new IllegalArgumentException(
-              "Duplicated keys, dataset with the identifier [" + datasetKeyOrDoi + "] already present");
+              "Duplicated keys, dataset with the identifier ["
+                  + datasetKeyOrDoi
+                  + "] already present");
         } else {
           usedDatasetKeys.add(dataset.getKey());
           DerivedDatasetUsage derivedDatasetUsage = new DerivedDatasetUsage();
@@ -372,7 +377,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         }
       } else {
         LOG.error("Identifier [{}] is not UUID or DOI", datasetKeyOrDoi);
-        throw new IllegalArgumentException("Identifier [" + datasetKeyOrDoi + "] is not UUID or DOI");
+        throw new IllegalArgumentException(
+            "Identifier [" + datasetKeyOrDoi + "] is not UUID or DOI");
       }
     }
 

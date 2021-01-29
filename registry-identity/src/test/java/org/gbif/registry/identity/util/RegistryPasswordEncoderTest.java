@@ -34,8 +34,7 @@ public class RegistryPasswordEncoderTest {
         Arguments.of("markus", "$S$Dy6/BMI3AoImMSlZGHhEkXgKbUenX7yS2SNgmj7NsrA9JPqH01kW"),
         Arguments.of("carla", "$S$DN6evrfX6JzGw./kDKHhON8VEUp7tDbF0gyZYhX1Uw4Y3udFN47w"),
         Arguments.of("pia", "$S$DnuHhGOmUVLBYF.kXnE9ZD6ffqnFz7GPxWaikVFLh1JAymnJkdB3"),
-        Arguments.of("password1", "$S$D1UoWp.wjyDqA1oxwy/MjuSuQnYWsRtSzJGF4vVzdKAN1eh9sIVd")
-    );
+        Arguments.of("password1", "$S$D1UoWp.wjyDqA1oxwy/MjuSuQnYWsRtSzJGF4vVzdKAN1eh9sIVd"));
   }
 
   /** Verify that preencoded passwords can be encoded again (e.g. for auth). */

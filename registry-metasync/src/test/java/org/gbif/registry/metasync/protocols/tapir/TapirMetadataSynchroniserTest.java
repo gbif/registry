@@ -188,7 +188,8 @@ public class TapirMetadataSynchroniserTest {
     assertEquals(1, syncResult.existingDatasets.size());
     assertTrue(syncResult.addedDatasets.isEmpty());
 
-    assertEquals("Natural History Museum Rotterdam", syncResult.existingDatasets.get(dataset).getTitle());
+    assertEquals(
+        "Natural History Museum Rotterdam", syncResult.existingDatasets.get(dataset).getTitle());
   }
 
   @SuppressWarnings("UnstableApiUsage")
