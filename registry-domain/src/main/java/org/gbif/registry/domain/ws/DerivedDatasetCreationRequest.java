@@ -15,18 +15,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import com.fasterxml.jackson.databind.node.NullNode;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.util.HttpURI;
 
@@ -41,6 +29,19 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.fasterxml.jackson.databind.node.NullNode;
 
 @JsonDeserialize(using = DerivedDatasetCreationRequest.Deserializer.class)
 public class DerivedDatasetCreationRequest implements Serializable {
@@ -137,8 +138,8 @@ public class DerivedDatasetCreationRequest implements Serializable {
   public static class Deserializer extends JsonDeserializer<DerivedDatasetCreationRequest> {
 
     @Override
-    public DerivedDatasetCreationRequest deserialize(
-        JsonParser jp, DeserializationContext ctxt) throws IOException {
+    public DerivedDatasetCreationRequest deserialize(JsonParser jp, DeserializationContext ctxt)
+        throws IOException {
       ObjectCodec objectCodec = ctxt.getParser().getCodec();
       ((ObjectMapper) objectCodec).enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
       DerivedDatasetCreationRequest result = new DerivedDatasetCreationRequest();
@@ -164,7 +165,8 @@ public class DerivedDatasetCreationRequest implements Serializable {
             .ifPresent(result::setSourceUrl);
 
         JsonNode originalDownloadDoiJsonNode = node.get("originalDownloadDOI");
-        if (originalDownloadDoiJsonNode != null && !(originalDownloadDoiJsonNode instanceof NullNode)) {
+        if (originalDownloadDoiJsonNode != null
+            && !(originalDownloadDoiJsonNode instanceof NullNode)) {
           currentJp = originalDownloadDoiJsonNode.traverse(objectCodec);
           currentJp.nextToken();
 
@@ -178,8 +180,7 @@ public class DerivedDatasetCreationRequest implements Serializable {
           currentJp.nextToken();
 
           Map<String, Long> relatedDatasets =
-              objectCodec.readValue(currentJp, new TypeReference<Map<String, Long>>() {
-              });
+              objectCodec.readValue(currentJp, new TypeReference<Map<String, Long>>() {});
           result.setRelatedDatasets(relatedDatasets);
         }
 
