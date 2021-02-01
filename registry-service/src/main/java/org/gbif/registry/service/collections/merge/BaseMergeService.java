@@ -19,31 +19,21 @@ import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.persistence.mapper.collections.MergeableMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.collections.*;
+import org.gbif.registry.security.SecurityContextCheck;
+import org.gbif.registry.security.UserRoles;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.UnaryOperator;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -84,8 +74,10 @@ public abstract class BaseMergeService<
 
   @Override
   @Transactional
-  public void merge(UUID entityToReplaceKey, UUID replacementKey, String user) {
-    checkArgument(user != null, "User is required");
+  public void merge(UUID entityToReplaceKey, UUID replacementKey) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    checkArgument(authentication.isAuthenticated());
     checkArgument(
         !entityToReplaceKey.equals(replacementKey),
         "The replacement has to be different than the entity to replace");
@@ -110,21 +102,24 @@ public abstract class BaseMergeService<
           "Cannot do the replacement because both entities have an IH IRN identifier");
     }
 
-    if (isIDigBioRecord(entityToReplace) && isIDigBioRecord(replacement)) {
+    if (!SecurityContextCheck.checkUserInRole(
+            authentication, UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE)
+        && isIDigBioRecord(entityToReplace)
+        && isIDigBioRecord(replacement)) {
       throw new IllegalArgumentException(
-          "Cannot do the replacement because both entities are iDigBio records");
+          "Cannot do the replacement because both entities are iDigBio records and the user is not an iDigBio editor");
     }
 
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
-    entityToReplace.setModifiedBy(user);
+    entityToReplace.setModifiedBy(authentication.getName());
     baseMapper.update(entityToReplace);
     mergeableMapper.replace(entityToReplaceKey, replacementKey);
 
     // merge entity fields
     T updatedEntityToReplace = mergeEntityFields(entityToReplace, replacement);
-    updatedEntityToReplace.setModifiedBy(user);
+    updatedEntityToReplace.setModifiedBy(authentication.getName());
     baseMapper.update(updatedEntityToReplace);
 
     // copy the identifiers
@@ -153,7 +148,7 @@ public abstract class BaseMergeService<
     // add the UUID key of the replaced entity as an identifier of the replacement
     Identifier keyIdentifier =
         new Identifier(IdentifierType.UUID, entityToReplace.getKey().toString());
-    keyIdentifier.setCreatedBy(user);
+    keyIdentifier.setCreatedBy(authentication.getName());
     identifierMapper.createIdentifier(keyIdentifier);
     baseMapper.addIdentifier(replacementKey, keyIdentifier.getKey());
 

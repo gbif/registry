@@ -27,6 +27,8 @@ import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
+import org.gbif.registry.security.SecurityContextCheck;
+import org.gbif.registry.security.UserRoles;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +36,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
@@ -76,10 +80,11 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
   public UUID convertToCollection(
       UUID institutionKey,
       @Nullable UUID institutionKeyForNewCollection,
-      @Nullable String newInstitutionName,
-      String user) {
+      @Nullable String newInstitutionName) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
     checkArgument(institutionKey != null, "Institution key is required");
-    checkArgument(!Strings.isNullOrEmpty(user), "User is required");
+    checkArgument(authentication.isAuthenticated());
     checkArgument(
         institutionKeyForNewCollection != null || !Strings.isNullOrEmpty(newInstitutionName),
         "Either the institution key for the new collection or a name to create a new institution are required");
@@ -90,7 +95,12 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     checkArgument(
         institutionToConvert.getConvertedToCollection() == null,
         "Cannot convert an already converted institution");
-    checkArgument(!isIDigBioRecord(institutionToConvert), "Cannot convert an iDigBio institution");
+
+    if (!SecurityContextCheck.checkUserInRole(
+            authentication, UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE)
+        && isIDigBioRecord(institutionToConvert)) {
+      throw new IllegalArgumentException("Cannot convert an iDigBio institution");
+    }
 
     Collection newCollection = new Collection();
     newCollection.setKey(UUID.randomUUID());
@@ -107,8 +117,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     newCollection.setApiUrl(institutionToConvert.getApiUrl());
     newCollection.setAddress(institutionToConvert.getAddress());
     newCollection.setMailingAddress(institutionToConvert.getMailingAddress());
-    newCollection.setCreatedBy(user);
-    newCollection.setModifiedBy(user);
+    newCollection.setCreatedBy(authentication.getName());
+    newCollection.setModifiedBy(authentication.getName());
 
     // if there is no institution passed we need to create a new institution
     if (institutionKeyForNewCollection == null) {
@@ -116,8 +126,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
       newInstitution.setKey(UUID.randomUUID());
       newInstitution.setCode(institutionToConvert.getCode());
       newInstitution.setName(newInstitutionName);
-      newInstitution.setCreatedBy(user);
-      newInstitution.setModifiedBy(user);
+      newInstitution.setCreatedBy(authentication.getName());
+      newInstitution.setModifiedBy(authentication.getName());
       institutionMapper.create(newInstitution);
 
       newCollection.setInstitutionKey(newInstitution.getKey());

@@ -10,6 +10,7 @@ This module includes security, authorization and role model functionality.
 - `APP`
 - `GRSCICOLL_ADMIN`
 - `GRSCICOLL_EDITOR`
+- `IDIGBIO_GRSCICOLL_EDITOR`
 
 
 ## Security filters
