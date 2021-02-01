@@ -59,6 +59,10 @@
       <artifactId>mockito-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.registry</groupId>
+      <artifactId>registry-security</artifactId>
+    </dependency>
   </dependencies>
 
 </project>

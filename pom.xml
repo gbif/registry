@@ -84,7 +84,7 @@
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
 
     <!-- GBIF -->
-    <gbif-api.version>0.137</gbif-api.version>
+    <gbif-api.version>0.138-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.40</gbif-common.version>
     <gbif-common-mybatis.version>0.31</gbif-common-mybatis.version>
     <gbif-common-ws.version>1.12</gbif-common-ws.version>
@@ -131,7 +131,7 @@
     <xmlunit.version>2.6.3</xmlunit.version>
     <testcontainers-elasticsearch.version>1.15.0-rc2</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
-    <embedded-database-spring-test.version>1.5.3</embedded-database-spring-test.version>
+    <embedded-database-spring-test.version>1.6.2</embedded-database-spring-test.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
 
     <!-- Configurable -->
