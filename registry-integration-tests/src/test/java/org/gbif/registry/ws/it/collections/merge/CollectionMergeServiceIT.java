@@ -31,9 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/**
- * Tests the {@link CollectionMergeService}.
- */
+/** Tests the {@link CollectionMergeService}. */
 public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
 
   private final CollectionMergeService collectionMergeService;
@@ -79,7 +77,7 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
     Collection replacement = createReplacement();
     collectionService.create(replacement);
 
-    collectionMergeService.merge(toReplace.getKey(), replacement.getKey(), "test");
+    collectionMergeService.merge(toReplace.getKey(), replacement.getKey());
 
     Person p3Updated = personService.get(p3.getKey());
     assertEquals(replacement.getKey(), p3Updated.getPrimaryCollectionKey());
@@ -107,7 +105,7 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> collectionMergeService.merge(toReplace.getKey(), replacement.getKey(), "user"));
+        () -> collectionMergeService.merge(toReplace.getKey(), replacement.getKey()));
   }
 
   @Override
