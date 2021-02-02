@@ -94,7 +94,7 @@ class DerivedDatasetCreationRequestTest {
         "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n" +
         "  \"title\": \"Derived dataset\",\n" +
         "  \"description\": \"Derived dataset description\",\n" +
-        "  \"registrationDate\": \"2020-0129\",\n" +
+        "  \"registrationDate\": \"2020-01-29\",\n" +
         "  \"relatedDatasets\": {\n" +
         "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 1,\n" +
         "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2\n" +
