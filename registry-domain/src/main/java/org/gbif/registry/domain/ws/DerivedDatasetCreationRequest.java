@@ -15,18 +15,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
-import com.fasterxml.jackson.databind.node.NullNode;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.util.HttpURI;
 
@@ -37,12 +25,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringJoiner;
 
 import javax.validation.constraints.NotNull;
 
-@JsonDeserialize(using = DerivedDatasetCreationRequest.Deserializer.class)
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+
 public class DerivedDatasetCreationRequest implements Serializable {
 
   private DOI originalDownloadDOI;
@@ -95,12 +90,13 @@ public class DerivedDatasetCreationRequest implements Serializable {
     this.registrationDate = registrationDate;
   }
 
+  @JsonDeserialize(using = UniqueKeyRelatedDatasetsDeserializer.class)
   public Map<String, Long> getRelatedDatasets() {
     return relatedDatasets;
   }
 
   public void setRelatedDatasets(Map<String, Long> relatedDatasets) {
-    this.relatedDatasets = relatedDatasets;
+    this.relatedDatasets = relatedDatasets != null ? relatedDatasets : new HashMap<>();
   }
 
   @Override
@@ -134,68 +130,36 @@ public class DerivedDatasetCreationRequest implements Serializable {
         .toString();
   }
 
-  public static class Deserializer extends JsonDeserializer<DerivedDatasetCreationRequest> {
+  private static class UniqueKeyRelatedDatasetsDeserializer extends JsonDeserializer<Map<String, Long>> {
 
     @Override
-    public DerivedDatasetCreationRequest deserialize(
+    public Map<String, Long> deserialize(
         JsonParser jp, DeserializationContext ctxt) throws IOException {
       ObjectCodec objectCodec = ctxt.getParser().getCodec();
-      ((ObjectMapper) objectCodec).enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
-      DerivedDatasetCreationRequest result = new DerivedDatasetCreationRequest();
-      JsonParser currentJp;
+      Map<String, Long> result;
 
       try {
-        JsonNode node = objectCodec.readTree(jp);
+        Map<String, Long> deserialized = objectCodec.readValue(jp, new TypeReference<UniqueKeyHashMap<String, Long>>() {
+        });
 
-        Optional.ofNullable(node.get("title"))
-            .filter(n -> !(n instanceof NullNode))
-            .map(JsonNode::asText)
-            .ifPresent(result::setTitle);
-
-        Optional.ofNullable(node.get("description"))
-            .filter(n -> !(n instanceof NullNode))
-            .map(JsonNode::asText)
-            .ifPresent(result::setDescription);
-
-        Optional.ofNullable(node.get("sourceUrl"))
-            .filter(n -> !(n instanceof NullNode))
-            .map(JsonNode::asText)
-            .map(URI::create)
-            .ifPresent(result::setSourceUrl);
-
-        JsonNode originalDownloadDoiJsonNode = node.get("originalDownloadDOI");
-        if (originalDownloadDoiJsonNode != null && !(originalDownloadDoiJsonNode instanceof NullNode)) {
-          currentJp = originalDownloadDoiJsonNode.traverse(objectCodec);
-          currentJp.nextToken();
-
-          DOI doi = ctxt.readValue(currentJp, DOI.class);
-          result.setOriginalDownloadDOI(doi);
-        }
-
-        JsonNode relatedDatasetsJsonNode = node.get("relatedDatasets");
-        if (relatedDatasetsJsonNode != null && !(relatedDatasetsJsonNode instanceof NullNode)) {
-          currentJp = relatedDatasetsJsonNode.traverse(objectCodec);
-          currentJp.nextToken();
-
-          Map<String, Long> relatedDatasets =
-              objectCodec.readValue(currentJp, new TypeReference<Map<String, Long>>() {
-              });
-          result.setRelatedDatasets(relatedDatasets);
-        }
-
-        JsonNode registrationDateJsonNode = node.get("registrationDate");
-        if (registrationDateJsonNode != null && !(registrationDateJsonNode instanceof NullNode)) {
-          JsonParser registrationDateJsonParser = registrationDateJsonNode.traverse(objectCodec);
-          registrationDateJsonParser.nextToken();
-
-          Date registrationDate = objectCodec.readValue(registrationDateJsonParser, Date.class);
-          result.setRegistrationDate(registrationDate);
-        }
+        result = deserialized != null ? deserialized : new HashMap<>();
       } catch (IllegalArgumentException | MismatchedInputException e) {
         throw JsonMappingException.from(jp, e.getMessage(), e);
       }
 
       return result;
+    }
+  }
+
+  // Throws exception if key is already present
+  private static class UniqueKeyHashMap<K, V> extends HashMap<K, V> {
+
+    @Override
+    public V put(K key, V value) {
+      if (containsKey(key)) {
+        throw new IllegalArgumentException("Duplicate field " + key);
+      }
+      return super.put(key, value);
     }
   }
 }
