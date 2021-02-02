@@ -37,4 +37,6 @@ public class UserRoles {
   public static final String GRSCICOLL_ADMIN_ROLE = "GRSCICOLL_ADMIN";
 
   public static final String GRSCICOLL_EDITOR_ROLE = "GRSCICOLL_EDITOR";
+
+  public static final String IDIGBIO_GRSCICOLL_EDITOR_ROLE = "IDIGBIO_GRSCICOLL_EDITOR";
 }

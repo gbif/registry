@@ -48,6 +48,7 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -57,7 +58,9 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -102,6 +105,7 @@ public abstract class BaseMergeServiceIT<
     this.personService = personService;
   }
 
+  @WithMockUser(username = "aa")
   @Test
   public void mergeTest() {
     T toReplace = createEntityToReplace();
@@ -155,16 +159,15 @@ public abstract class BaseMergeServiceIT<
 
     contactService.addContact(replacement.getKey(), p1.getKey());
 
-    final String user = "test";
-    mergeService.merge(toReplace.getKey(), replacement.getKey(), user);
+    mergeService.merge(toReplace.getKey(), replacement.getKey());
 
     T replaced = crudService.get(toReplace.getKey());
     T replacementUpdated = crudService.get(replacement.getKey());
 
     assertEquals(1, replaced.getIdentifiers().size());
     assertNotEquals(toReplace.getModified(), replaced.getModified());
-    assertEquals(user, replaced.getModifiedBy());
-    assertEquals(user, replacementUpdated.getModifiedBy());
+    assertEquals(getSimplePrincipalProvider().get().getName(), replaced.getModifiedBy());
+    assertEquals(getSimplePrincipalProvider().get().getName(), replacementUpdated.getModifiedBy());
     assertEquals(2, replacementUpdated.getIdentifiers().size());
     assertEquals(2, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
@@ -192,18 +195,13 @@ public abstract class BaseMergeServiceIT<
     identifierService.addIdentifier(e2.getKey(), id2);
 
     assertThrows(
-        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), "user"));
+        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> mergeService.merge(e1.getKey(), UUID.randomUUID(), "user"));
+        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), UUID.randomUUID()));
 
     assertThrows(
-        IllegalArgumentException.class,
-        () -> mergeService.merge(UUID.randomUUID(), e2.getKey(), "user"));
-
-    assertThrows(
-        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), null));
+        IllegalArgumentException.class, () -> mergeService.merge(UUID.randomUUID(), e2.getKey()));
 
     // test that we can't merge 2 idigbio entities
     identifierService.deleteIdentifier(e1.getKey(), id1.getKey());
@@ -212,7 +210,11 @@ public abstract class BaseMergeServiceIT<
     machineTagService.addMachineTag(e1.getKey(), new MachineTag("iDigBio.org", "foo", "bar"));
     machineTagService.addMachineTag(e2.getKey(), new MachineTag("iDigBio.org", "foo2", "bar2"));
     assertThrows(
-        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey(), "user"));
+        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
+
+    // if the user has the idigbio role we can merge them
+    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR);
+    assertDoesNotThrow(() -> mergeService.merge(e1.getKey(), e2.getKey()));
   }
 
   protected Dataset createDataset() {

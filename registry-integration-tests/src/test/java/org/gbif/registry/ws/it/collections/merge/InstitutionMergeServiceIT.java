@@ -26,6 +26,7 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -35,6 +36,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -93,7 +95,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     Institution replacement = createReplacement();
     institutionService.create(replacement);
 
-    institutionMergeService.merge(toReplace.getKey(), replacement.getKey(), "test");
+    institutionMergeService.merge(toReplace.getKey(), replacement.getKey());
 
     Person p3Updated = personService.get(p3.getKey());
     assertEquals(replacement.getKey(), p3Updated.getPrimaryInstitutionKey());
@@ -138,8 +140,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
 
     final String newInstitutionName = "new institution";
     UUID newCollectionKey =
-        institutionMergeService.convertToCollection(
-            toConvert.getKey(), null, newInstitutionName, "user");
+        institutionMergeService.convertToCollection(toConvert.getKey(), null, newInstitutionName);
 
     Institution converted = institutionService.get(toConvert.getKey());
     assertNotNull(converted.getDeleted());
@@ -177,8 +178,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     institutionService.create(another);
 
     UUID newCollectionKey =
-        institutionMergeService.convertToCollection(
-            toConvert.getKey(), another.getKey(), null, "user");
+        institutionMergeService.convertToCollection(toConvert.getKey(), another.getKey(), null);
 
     Institution converted = institutionService.get(toConvert.getKey());
     assertNotNull(converted.getDeleted());
@@ -192,7 +192,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
   public void convertToCollectionMissingArgsTest() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> institutionMergeService.convertToCollection(UUID.randomUUID(), null, null, "user"));
+        () -> institutionMergeService.convertToCollection(UUID.randomUUID(), null, null));
   }
 
   @Test
@@ -207,8 +207,11 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
 
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            institutionMergeService.convertToCollection(toConvert.getKey(), null, "test", "user"));
+        () -> institutionMergeService.convertToCollection(toConvert.getKey(), null, "test"));
+
+    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR);
+    assertDoesNotThrow(
+        () -> institutionMergeService.convertToCollection(toConvert.getKey(), null, "test"));
   }
 
   @Override
