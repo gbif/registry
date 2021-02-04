@@ -27,6 +27,7 @@ import org.gbif.registry.domain.ws.LegacyInstallation;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
+import org.gbif.registry.security.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.DatasetRequestSearchParamsHandlerMethodArgumentResolver;
@@ -55,6 +56,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.xml.MarshallingHttpMessageConverter;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
@@ -66,6 +68,11 @@ import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
+  @Override
+  public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(new AuthPreCheckInterceptor());
+  }
 
   @Override
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
