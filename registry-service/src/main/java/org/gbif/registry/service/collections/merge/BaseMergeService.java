@@ -32,6 +32,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
+import com.google.common.base.Strings;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,7 +79,7 @@ public abstract class BaseMergeService<
   public void merge(UUID entityToReplaceKey, UUID replacementKey) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    checkArgument(authentication.isAuthenticated());
+    checkArgument(!Strings.isNullOrEmpty(authentication.getName()));
     checkArgument(
         !entityToReplaceKey.equals(replacementKey),
         "The replacement has to be different than the entity to replace");
