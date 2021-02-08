@@ -35,13 +35,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
 
@@ -83,8 +83,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
       @Nullable String newInstitutionName) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+    checkArgument(!Strings.isNullOrEmpty(authentication.getName()));
     checkArgument(institutionKey != null, "Institution key is required");
-    checkArgument(authentication.isAuthenticated());
     checkArgument(
         institutionKeyForNewCollection != null || !Strings.isNullOrEmpty(newInstitutionName),
         "Either the institution key for the new collection or a name to create a new institution are required");
