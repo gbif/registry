@@ -60,6 +60,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @Validated
 @Primary
@@ -223,7 +224,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @DeleteMapping("{key}/contact/{contactKey}")
-  @Secured(ADMIN_ROLE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
       @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
@@ -231,6 +232,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public int addContact(@PathVariable("key") UUID targetEntityKey, @RequestBody Contact contact) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
