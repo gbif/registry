@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.persistence.mapper;
 
+import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.registry.MachineTag;
 
 import org.springframework.stereotype.Repository;
@@ -23,4 +24,6 @@ import org.springframework.stereotype.Repository;
 public interface MachineTagMapper {
 
   int createMachineTag(MachineTag machineTag);
+
+  MachineTag get(@Param("key") int key);
 }
