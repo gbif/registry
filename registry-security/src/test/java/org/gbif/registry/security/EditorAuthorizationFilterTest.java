@@ -52,7 +52,10 @@ import static org.mockito.Mockito.when;
 public class EditorAuthorizationFilterTest {
 
   private static final UUID KEY = UUID.randomUUID();
+  private static final int SUB_KEY = 123;
   private static final String USERNAME = "user";
+  private static final String CONTENT = "{\"key\": \"" + KEY + "\"}";
+  private static final Organization ORG = new Organization();
   private static final List<GrantedAuthority> ROLES_EDITOR_ONLY =
       Collections.singletonList(new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE));
   private static final List<GrantedAuthority> ROLES_USER_ONLY =
@@ -61,7 +64,6 @@ public class EditorAuthorizationFilterTest {
       Arrays.asList(
           new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE),
           new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE));
-  private static final List<GrantedAuthority> ROLES_EMPTY = Collections.emptyList();
 
   @Mock private GbifHttpServletRequestWrapper mockRequest;
   @Mock private HttpServletResponse mockResponse;
@@ -69,7 +71,7 @@ public class EditorAuthorizationFilterTest {
   @Mock private AuthenticationFacade mockAuthenticationFacade;
   @Mock private EditorAuthorizationService mockEditorAuthService;
   @Mock private Authentication mockAuthentication;
-  @Spy private ObjectMapper objectMapper = new ObjectMapper();
+  @Spy private final ObjectMapper objectMapper = new ObjectMapper();
   @InjectMocks private EditorAuthorizationFilter filter;
 
   @Test
@@ -81,9 +83,9 @@ public class EditorAuthorizationFilterTest {
     when(mockRequest.getContent()).thenReturn("{\"key\": \"" + KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    when(mockEditorAuthService.allowedToModifyOrganization(
-            any(String.class), any(Organization.class)))
-        .thenReturn(true);
+    when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, ORG)).thenReturn(true);
+    when(objectMapper.readValue(CONTENT, Organization.class)).thenReturn(ORG);
+    when(mockRequest.getContent()).thenReturn(CONTENT);
 
     // WHEN
     filter.doFilter(mockRequest, mockResponse, mockFilterChain);
@@ -95,7 +97,7 @@ public class EditorAuthorizationFilterTest {
     verify(mockAuthentication, atLeastOnce()).getName();
     verify(mockAuthentication, atLeast(2)).getAuthorities();
     verify(mockEditorAuthService)
-        .allowedToModifyOrganization(any(String.class), any(Organization.class));
+        .allowedToModifyOrganization(USERNAME, ORG);
   }
 
   @Test
@@ -181,7 +183,7 @@ public class EditorAuthorizationFilterTest {
     // THEN
     verify(mockAuthenticationFacade).getAuthentication();
     verify(mockRequest).getRequestURI();
-    verify(mockRequest).getMethod();
+    verify(mockRequest, atLeastOnce()).getMethod();
   }
 
   @Test
@@ -333,7 +335,7 @@ public class EditorAuthorizationFilterTest {
   public void testOrganizationDeleteNotNullAdminUserSuccess() throws Exception {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endpoint");
+    when(mockRequest.getRequestURI()).thenReturn("/organization/" + KEY + "/endpoint/" + SUB_KEY);
     when(mockRequest.getMethod()).thenReturn("DELETE");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_ADMIN_AND_EDITOR).when(mockAuthentication).getAuthorities();
