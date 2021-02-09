@@ -37,7 +37,6 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -96,7 +95,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   public InstallationResource(
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
-      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis,
       @Autowired(required = false) MessagePublisher messagePublisher) {
     super(
@@ -104,7 +102,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         mapperServiceLocator,
         Installation.class,
         eventManager,
-        userAuthService,
         withMyBatis);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();

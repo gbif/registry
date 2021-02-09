@@ -66,7 +66,6 @@ import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.ws.NotFoundException;
 
@@ -155,7 +154,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       EventManager eventManager,
       RegistryDatasetService registryDatasetService,
       @Qualifier("datasetSearchServiceEs") DatasetSearchService searchService,
-      EditorAuthorizationService userAuthService,
       DatasetDoiDataCiteHandlingService doiDataCiteHandlingService,
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiIssuingService doiIssuingService,
@@ -166,7 +164,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         mapperServiceLocator,
         Dataset.class,
         eventManager,
-        userAuthService,
         withMyBatis);
     this.registryDatasetService = registryDatasetService;
     this.searchService = searchService;

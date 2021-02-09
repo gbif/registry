@@ -17,6 +17,7 @@ package org.gbif.registry.security;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 
@@ -43,6 +44,28 @@ public interface EditorAuthorizationService {
    * @return true if rights exist for this user to delete the tag.
    */
   boolean allowedToDeleteMachineTag(@Nullable String name, int machineTagKey);
+
+  /**
+   * Checks whether a given user is allowed to modify the GBIF_DEFAULT_TERM namespace.
+   *
+   * @param name name from the security context
+   * @param datasetKey the dataset key
+   * @param machineTag the machine tag in question
+   * @return true if the user is allowed to modify the namespace.
+   */
+  boolean allowedToCreateMachineTag(
+      @Nullable String name, @Nullable UUID datasetKey, @Nullable MachineTag machineTag);
+
+  /**
+   * Checks whether a given user is allowed to modify the GBIF_DEFAULT_TERM namespace.
+   *
+   * @param name name from the security context
+   * @param datasetKey the dataset key
+   * @param machineTagKey the machine tag in question
+   * @return true if the user is allowed to modify the namespace.
+   */
+  boolean allowedToDeleteMachineTag(
+      @Nullable String name, @Nullable UUID datasetKey, int machineTagKey);
 
   /**
    * Checks whether a given registry entity is explicitly part of the list of entities for an editor

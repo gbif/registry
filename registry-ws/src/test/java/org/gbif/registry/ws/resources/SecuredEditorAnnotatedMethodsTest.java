@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.EditorAuthorizationFilter;
@@ -55,20 +56,70 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class SecuredEditorAnnotatedMethodsTest {
 
+  private static final Set<String> TEST_DATA = prepareTestData();
   private static final UUID KEY = UUID.randomUUID();
-  private static final String CONTENT = "{\"key\": \"" + KEY + "\"}";
   private static final Organization ORG = new Organization();
   private static final Dataset DATASET = new Dataset();
   private static final Installation INSTALLATION = new Installation();
+  private static final MachineTag MACHINE_TAG = new MachineTag();
   private static final String SUB_KEY = "123";
+  private static final int SUB_KEY_INT = 123;
+  private static final String CONTENT = "{\"key\": \"" + KEY + "\"}";
+  private static final String CONTENT_SUB_KEY = "{\"key\": \"" + SUB_KEY + "\"}";
   private static final UUID SUB_DATASET_KEY = UUID.randomUUID();
   private static final String USERNAME = "user";
-  private static final Pattern RESOURCE_WITHOUT_KEY = Pattern.compile("^/[A-Za-z-_]+$");
+  private static final String NAMESPACE = "some-namescpace.gbif.org";
+  private static final String TAG_NAME = "sometag";
   private static final List<GrantedAuthority> ROLES_EDITOR_ONLY =
       Collections.singletonList(new SimpleGrantedAuthority(UserRoles.EDITOR_ROLE));
   private static final List<String> ALWAYS_FAILING_REQUESTS =
       Arrays.asList("POST /node", "POST /network", "PUT /node", "PUT /network");
   public static final String SPACE = " ";
+
+  private static final Pattern DATASET_RESOURCE_WITHOUT_KEY = Pattern.compile("^/dataset$");
+  private static final List<Pattern> DATASET_RESOURCE_WITH_KEY = Arrays.asList(
+      Pattern.compile("^/dataset/[0-9a-f-]+$"),
+      Pattern.compile("^/dataset/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|document)$"),
+      Pattern.compile("^/dataset/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier)/[0-9]+$")
+  );
+
+  private static final Pattern INSTALLATION_RESOURCE_WITHOUT_KEY = Pattern.compile("^/installation$");
+  private static final List<Pattern> INSTALLATION_RESOURCE_WITH_KEY = Arrays.asList(
+      Pattern.compile("^/installation/[0-9a-f-]+$"),
+      Pattern.compile("^/installation/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier)$"),
+      Pattern.compile("^/installation/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier)/[0-9]+$")
+  );
+
+  private static final Pattern ORGANIZATION_RESOURCE_WITHOUT_KEY = Pattern.compile("^/organization$");
+  private static final List<Pattern> ORGANIZATION_RESOURCE_WITH_KEY = Arrays.asList(
+      Pattern.compile("^/organization/[0-9a-f-]+$"),
+      Pattern.compile("^/organization/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|password|endorsement)$"),
+      Pattern.compile("^/organization/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier)/[0-9]+$")
+  );
+
+  private static final Pattern NODE_NETWORK_RESOURCE_WITHOUT_KEY = Pattern.compile("^/(node|network)$");
+
+  private static final List<Pattern> NODE_NETWORK_RESOURCE_WITH_KEY = Arrays.asList(
+      Pattern.compile("^/(node|network)/[0-9a-f-]+$"),
+      Pattern.compile("^/(node|network)/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier)$"),
+      Pattern.compile("^/(node|network)/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|constituents)/[a-f0-9-]+$")
+  );
+
+  private static final List<Pattern> PIPELINES_RESOURCE = Arrays.asList(
+      Pattern.compile("^/pipelines/history/run/[a-f0-9-]+$"),
+      Pattern.compile("^/pipelines/history/run/[a-f0-9-]+/[0-9]+$")
+  );
+
+  private static final Pattern MACHINE_TAG_RESOURCE_WITHOUT_KEY =
+      Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag$");
+
+  private static final Pattern MACHINE_TAG_RESOURCE_WITH_INT_KEY =
+      Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[0-9]+$");
+
+  private static final List<Pattern> MACHINE_TAG_RESOURCE_WITH_KEY = Arrays.asList(
+      Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[A-Za-z0-9-.]+$"),
+      Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[A-Za-z0-9-.]+/[A-Za-z0-9-.]+$")
+  );
 
   @Mock
   private GbifHttpServletRequestWrapper mockRequest;
@@ -82,8 +133,12 @@ public class SecuredEditorAnnotatedMethodsTest {
   @InjectMocks
   private EditorAuthorizationFilter filter;
 
-  // Finds all methods annotated by Secured(EDITOR_ROLE) by reflection
   public static Stream<String> testData() {
+    return TEST_DATA.stream();
+  }
+
+  // Finds all methods annotated by Secured(EDITOR_ROLE) by reflection
+  private static Set<String> prepareTestData() {
     Set<String> data = new HashSet<>();
     // scan package
     Reflections reflections = new Reflections("org.gbif.registry");
@@ -122,24 +177,24 @@ public class SecuredEditorAnnotatedMethodsTest {
       }
     }
 
-    return data.stream();
+    return data;
   }
 
   @ParameterizedTest(name = "[{index}] {0}")
   @MethodSource("testData")
   public void testEditorAuthFail(String requestTemplate) throws Exception {
     // GIVEN
-    String path = replaceVariables(requestTemplate);
-    String[] requestItems = path.split(SPACE);
+    String requestPathWithMethod = replaceVariables(requestTemplate);
+    String[] requestItems = requestPathWithMethod.split(SPACE);
     String methodType = requestItems[0];
     String requestPath = requestItems[1];
-    boolean isResourceWithoutKey = RESOURCE_WITHOUT_KEY.matcher(requestPath).matches();
+
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn(replaceVariables(requestPath));
+    when(mockRequest.getRequestURI()).thenReturn(requestPath);
     when(mockRequest.getMethod()).thenReturn(methodType);
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    mockSpecific(requestPath, isResourceWithoutKey, false);
+    mockSpecific(requestPath, false);
 
     // WHEN & THEN
     WebApplicationException exception = assertThrows(
@@ -151,7 +206,7 @@ public class SecuredEditorAnnotatedMethodsTest {
     verify(mockRequest, atLeast(2)).getMethod();
     verify(mockAuthentication, atLeastOnce()).getName();
     verify(mockAuthentication, atLeast(2)).getAuthorities();
-    verifySpecific(requestPath, isResourceWithoutKey);
+    verifySpecific(requestPath);
   }
 
   @ParameterizedTest(name = "[{index}] {0}")
@@ -159,17 +214,17 @@ public class SecuredEditorAnnotatedMethodsTest {
   public void testEditorAuthSuccess(String requestTemplate) throws Exception {
     // GIVEN
     boolean isFailingRequest = ALWAYS_FAILING_REQUESTS.contains(requestTemplate);
-    String path = replaceVariables(requestTemplate);
-    String[] requestItems = path.split(SPACE);
+    String requestPathWithMethod = replaceVariables(requestTemplate);
+    String[] requestItems = requestPathWithMethod.split(SPACE);
     String methodType = requestItems[0];
     String requestPath = requestItems[1];
-    boolean isResourceWithoutKey = RESOURCE_WITHOUT_KEY.matcher(requestPath).matches();
+
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn(replaceVariables(requestPath));
+    when(mockRequest.getRequestURI()).thenReturn(requestPath);
     when(mockRequest.getMethod()).thenReturn(methodType);
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    mockSpecific(requestPath, isResourceWithoutKey, true);
+    mockSpecific(requestPath, true);
 
     // WHEN & THEN
     if (isFailingRequest) {
@@ -182,93 +237,82 @@ public class SecuredEditorAnnotatedMethodsTest {
     verify(mockRequest, atLeast(2)).getMethod();
     verify(mockAuthentication, atLeastOnce()).getName();
     verify(mockAuthentication, atLeast(2)).getAuthorities();
-    verifySpecific(requestPath, isResourceWithoutKey);
+    verifySpecific(requestPath);
   }
 
   // mock request specific things
-  private void mockSpecific(String requestPath, boolean isResourceWithoutKey, boolean isAllowedToModify) throws Exception {
-    String resourceName = requestPath.split("/")[1];
-    switch (resourceName) {
-      case "organization":
-        if (isResourceWithoutKey) {
-          when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, ORG)).thenReturn(isAllowedToModify);
-          when(objectMapper.readValue(CONTENT, Organization.class)).thenReturn(ORG);
-          when(mockRequest.getContent()).thenReturn(CONTENT);
-        } else {
-          when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(isAllowedToModify);
-        }
-        break;
-      case "dataset":
-        if (isResourceWithoutKey) {
-          when(mockEditorAuthService.allowedToModifyDataset(USERNAME, DATASET)).thenReturn(isAllowedToModify);
-          when(objectMapper.readValue(CONTENT, Dataset.class)).thenReturn(DATASET);
-          when(mockRequest.getContent()).thenReturn(CONTENT);
-        } else {
-          when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(isAllowedToModify);
-        }
-        break;
-      case "installation":
-        if (isResourceWithoutKey) {
-          when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, INSTALLATION)).thenReturn(isAllowedToModify);
-          when(objectMapper.readValue(CONTENT, Installation.class)).thenReturn(INSTALLATION);
-          when(mockRequest.getContent()).thenReturn(CONTENT);
-        } else {
-          when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, KEY)).thenReturn(isAllowedToModify);
-        }
-        break;
-      case "network":
-      case "node":
-        if (!isResourceWithoutKey) {
-          when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(isAllowedToModify);
-        }
-        break;
-      case "pipelines":
-        when(mockEditorAuthService.allowedToModifyDataset(USERNAME, SUB_DATASET_KEY)).thenReturn(isAllowedToModify);
-        break;
-      default:
-        throw new IllegalStateException("mock specific for " + resourceName + " not implemented");
+  @SuppressWarnings("StatementWithEmptyBody")
+  private void mockSpecific(String requestPath, boolean isAllowedToModify) throws Exception {
+    if (DATASET_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToModifyDataset(USERNAME, DATASET)).thenReturn(isAllowedToModify);
+      when(objectMapper.readValue(CONTENT, Dataset.class)).thenReturn(DATASET);
+      when(mockRequest.getContent()).thenReturn(CONTENT);
+    } else if (DATASET_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      when(mockEditorAuthService.allowedToModifyDataset(USERNAME, KEY)).thenReturn(isAllowedToModify);
+    } else if (INSTALLATION_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, INSTALLATION)).thenReturn(isAllowedToModify);
+      when(objectMapper.readValue(CONTENT, Installation.class)).thenReturn(INSTALLATION);
+      when(mockRequest.getContent()).thenReturn(CONTENT);
+    } else if (INSTALLATION_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      when(mockEditorAuthService.allowedToModifyInstallation(USERNAME, KEY)).thenReturn(isAllowedToModify);
+    } else if (ORGANIZATION_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, ORG)).thenReturn(isAllowedToModify);
+      when(objectMapper.readValue(CONTENT, Organization.class)).thenReturn(ORG);
+      when(mockRequest.getContent()).thenReturn(CONTENT);
+    } else if (ORGANIZATION_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      when(mockEditorAuthService.allowedToModifyOrganization(USERNAME, KEY)).thenReturn(isAllowedToModify);
+    } else if (NODE_NETWORK_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(isAllowedToModify);
+    } else if (NODE_NETWORK_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      // do nothing
+    } else if (PIPELINES_RESOURCE.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      when(mockEditorAuthService.allowedToModifyDataset(USERNAME, SUB_DATASET_KEY)).thenReturn(isAllowedToModify);
+    } else if (MACHINE_TAG_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToCreateMachineTag(USERNAME, KEY, MACHINE_TAG)).thenReturn(isAllowedToModify);
+      when(objectMapper.readValue(CONTENT_SUB_KEY, MachineTag.class)).thenReturn(MACHINE_TAG);
+      when(mockRequest.getContent()).thenReturn(CONTENT_SUB_KEY);
+    } else if (MACHINE_TAG_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
+      when(mockEditorAuthService.allowedToDeleteMachineTag(USERNAME, KEY, SUB_KEY_INT)).thenReturn(isAllowedToModify);
+    } else if (MACHINE_TAG_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      when(mockEditorAuthService.allowedToModifyNamespace(USERNAME, NAMESPACE)).thenReturn(isAllowedToModify);
+    } else {
+      throw new IllegalStateException("mock specific for " + requestPath + " not implemented");
     }
   }
 
   // verify request specific things
-  private void verifySpecific(String requestPath, boolean isResourceWithoutKey) {
-    String resourceName = requestPath.split("/")[1];
-    switch (resourceName) {
-      case "organization":
-        if (isResourceWithoutKey) {
-          verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, ORG);
-          verify(mockRequest).getContent();
-        } else {
-          verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
-        }
-        break;
-      case "dataset":
-        if (isResourceWithoutKey) {
-          verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, DATASET);
-          verify(mockRequest).getContent();
-        } else {
-          verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
-        }
-        break;
-      case "installation":
-        if (isResourceWithoutKey) {
-          verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, INSTALLATION);
-          verify(mockRequest).getContent();
-        } else {
-          verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, KEY);
-        }
-        break;
-      case "node":
-      case "network":
-        if (!isResourceWithoutKey) {
-          verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
-        }
-        break;
-      case "pipelines":
-        verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, SUB_DATASET_KEY);
-        break;
-      default:
-        throw new IllegalStateException("verify specific for " + resourceName + " not implemented");
+  @SuppressWarnings("StatementWithEmptyBody")
+  private void verifySpecific(String requestPath) {
+    if (DATASET_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, DATASET);
+      verify(mockRequest).getContent();
+    } else if (DATASET_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, KEY);
+    } else if (INSTALLATION_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, INSTALLATION);
+      verify(mockRequest).getContent();
+    } else if (INSTALLATION_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      verify(mockEditorAuthService).allowedToModifyInstallation(USERNAME, KEY);
+    } else if (ORGANIZATION_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, ORG);
+      verify(mockRequest).getContent();
+    } else if (ORGANIZATION_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, KEY);
+    } else if (NODE_NETWORK_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
+    } else if (NODE_NETWORK_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      // do nothing
+    } else if (PIPELINES_RESOURCE.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, SUB_DATASET_KEY);
+    } else if (MACHINE_TAG_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToCreateMachineTag(USERNAME, KEY, MACHINE_TAG);
+      verify(mockRequest).getContent();
+    } else if (MACHINE_TAG_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
+      verify(mockEditorAuthService).allowedToDeleteMachineTag(USERNAME, KEY, SUB_KEY_INT);
+    } else if (MACHINE_TAG_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
+      verify(mockEditorAuthService).allowedToModifyNamespace(USERNAME, NAMESPACE);
+    } else {
+      throw new IllegalStateException("verify specific for " + requestPath + " not implemented");
     }
   }
 
@@ -283,7 +327,11 @@ public class SecuredEditorAnnotatedMethodsTest {
         .replace("{datasetKey}", SUB_DATASET_KEY.toString())
         .replace("{processKey}", SUB_KEY)
         .replace("{executionKey}", SUB_KEY)
-        .replace("{attempt}", SUB_KEY);
+        .replace("{attempt}", SUB_KEY)
+        .replace("{machineTagKey:[0-9]+}", SUB_KEY)
+        .replace("{namespace:.*[^0-9]+.*}", NAMESPACE)
+        .replace("{namespace}", NAMESPACE)
+        .replace("{name}", TAG_NAME);
   }
 
   private static String prependWithSlash(String path) {

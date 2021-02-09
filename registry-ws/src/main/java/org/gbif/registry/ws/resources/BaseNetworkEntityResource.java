@@ -46,16 +46,10 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.security.EditorAuthorizationService;
-import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.registry.security.UserRoles;
-import org.gbif.ws.WebApplicationException;
 
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -63,7 +57,6 @@ import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -117,7 +110,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final EndpointMapper endpointMapper;
   private final IdentifierMapper identifierMapper;
   private final EventManager eventManager;
-  private final EditorAuthorizationService userAuthService;
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
 
@@ -126,7 +118,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
       MapperServiceLocator mapperServiceLocator,
       Class<T> objectClass,
       EventManager eventManager,
-      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     this.mapper = mapper;
     this.commentMapper = mapperServiceLocator.getCommentMapper();
@@ -137,7 +128,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.identifierMapper = mapperServiceLocator.getIdentifierMapper();
     this.objectClass = objectClass;
     this.eventManager = eventManager;
-    this.userAuthService = userAuthService;
     this.withMyBatis = withMyBatis;
   }
 
@@ -319,6 +309,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Trim
   @Transactional
   @Override
@@ -327,18 +318,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
-    if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-        || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
-            && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-            && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
-      machineTag.setCreatedBy(nameFromContext);
-      return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
-    } else {
-      throw new WebApplicationException(
-          MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
-          HttpStatus.FORBIDDEN);
-    }
+    machineTag.setCreatedBy(nameFromContext);
+    return withMyBatis.addMachineTag(machineTagMapper, mapper, targetEntityKey, machineTag);
   }
 
   @Transactional
@@ -362,40 +343,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * The webservice method to delete a machine tag. Ensures that the caller is authorized to perform
    * the action by looking at the namespace.
    */
-  @SuppressWarnings("unchecked")
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteMachineTag(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    List<MachineTag> machineTags = mapper.listMachineTags(targetEntityKey);
-    Optional<MachineTag> optMachineTag =
-        machineTags.stream().filter(m -> m.getKey() == machineTagKey).findFirst();
-
-    if (optMachineTag.isPresent()) {
-      MachineTag machineTag = optMachineTag.get();
-
-      if (SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-          || userAuthService.allowedToModifyNamespace(nameFromContext, machineTag.getNamespace())
-          || (SecurityContextCheck.checkUserInRole(authentication, EDITOR_ROLE)
-              && TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-              && userAuthService.allowedToModifyDataset(nameFromContext, targetEntityKey))) {
-        mapper.deleteMachineTag(targetEntityKey, machineTagKey);
-
-      } else {
-        throw new WebApplicationException(
-            MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
-            HttpStatus.FORBIDDEN);
-      }
-    } else {
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "Machine tag {0} was not found for the entity with key {1}",
-              machineTagKey, targetEntityKey),
-          HttpStatus.NOT_FOUND);
-    }
+    mapper.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**
@@ -403,18 +356,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(
-          MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
-          HttpStatus.FORBIDDEN);
-    }
     mapper.deleteMachineTags(targetEntityKey, namespace, null);
   }
 
@@ -428,20 +373,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * that the caller is authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable String namespace,
       @PathVariable String name) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    if (!SecurityContextCheck.checkUserInRole(authentication, UserRoles.ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(
-          MessageFormat.format("User {0} is not allowed to modify entity", nameFromContext),
-          HttpStatus.FORBIDDEN);
-    }
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
