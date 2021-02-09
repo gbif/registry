@@ -97,7 +97,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   }
 
   @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public long createPipelineProcess(@RequestBody PipelineProcessParameters params) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -107,7 +107,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
 
   /** Adds a new pipeline execution. */
   @PostMapping(value = "process/{processKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public long addPipelineExecution(
       @PathVariable("processKey") long processKey,
@@ -121,7 +121,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   @PostMapping(
       value = "process/{processKey}/{executionKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public long addPipelineStep(
       @PathVariable("processKey") long processKey,
@@ -145,7 +145,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   @PutMapping(
       value = "process/{processKey}/{executionKey}/{stepKey}",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public void updatePipelineStepStatusAndMetrics(
       @PathVariable("processKey") long processKey,
@@ -168,7 +168,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
    * optional fields.
    */
   @PostMapping(value = "run", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public RunPipelineResponse runAll(
       @RequestParam("steps") String steps,
