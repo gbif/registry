@@ -90,6 +90,7 @@ public class GrSciCollEditorAuthorizationService {
 
     UUID persistedInstitutionKey = collectionMapper.getInstitutionKey(collectionKey);
     if (collectionInMessageBody != null
+        && collectionInMessageBody.getInstitutionKey() != null
         && !persistedInstitutionKey.equals(collectionInMessageBody.getInstitutionKey())) {
       // check if the user has permissions in the new institution
       if (!userRightsMapper.keyExistsForUser(
