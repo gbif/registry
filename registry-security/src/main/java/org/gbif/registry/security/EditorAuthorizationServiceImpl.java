@@ -17,10 +17,13 @@ package org.gbif.registry.security;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
+import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 
@@ -41,16 +44,19 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
   private final InstallationMapper installationMapper;
+  private final MachineTagMapper machineTagMapper;
 
   public EditorAuthorizationServiceImpl(
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
       InstallationMapper installationMapper,
-      UserRightsMapper userRightsMapper) {
+      UserRightsMapper userRightsMapper,
+      MachineTagMapper machineTagMapper) {
     this.organizationMapper = organizationMapper;
     this.datasetMapper = datasetMapper;
     this.installationMapper = installationMapper;
     this.userRightsMapper = userRightsMapper;
+    this.machineTagMapper = machineTagMapper;
   }
 
   @Override
@@ -67,6 +73,33 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       return false;
     }
     return userRightsMapper.allowedToDeleteMachineTag(name, machineTagKey);
+  }
+
+  @Override
+  public boolean allowedToCreateMachineTag(String name, UUID datasetKey, MachineTag machineTag) {
+    if (name == null || datasetKey == null || machineTag == null) {
+      return false;
+    }
+
+    return allowedToModifyNamespace(name, machineTag.getNamespace()) ||
+        (TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+        && allowedToModifyDataset(name, datasetKey));
+  }
+
+  @Override
+  public boolean allowedToDeleteMachineTag(String name, UUID datasetKey, int machineTagKey) {
+    if (name == null || datasetKey == null) {
+      return false;
+    }
+
+    MachineTag machineTag = machineTagMapper.get(machineTagKey);
+    if (machineTag == null) {
+      return false;
+    }
+
+    return allowedToModifyNamespace(name, machineTag.getNamespace()) ||
+        (TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
+        && allowedToModifyDataset(name, datasetKey));
   }
 
   @Override

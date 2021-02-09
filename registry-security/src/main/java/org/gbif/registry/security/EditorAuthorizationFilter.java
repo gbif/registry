@@ -17,6 +17,7 @@ package org.gbif.registry.security;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.ws.WebApplicationException;
@@ -75,41 +76,46 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
 
   // filtered GET methods
   public static final List<Pattern> GET_RESOURCES_TO_FILTER = Collections.singletonList(
-      Pattern.compile("^GET /(organization)/([a-f0-9-]+)/password$"));
+      Pattern.compile("^GET /(organization)/([a-f0-9-]+)/password$", Pattern.CASE_INSENSITIVE));
 
   // filtered POST methods
   public static final List<Pattern> POST_RESOURCES_TO_FILTER = Arrays.asList(
-      Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)$"),
-      Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)/[0-9]+$"),
-      Pattern.compile("^POST /(dataset)/([a-f0-9-]+)/document$"),
-      Pattern.compile("^POST /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$"),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)$"),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment$"),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag$"),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$"),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint$"),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier$"));
+      Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)/[0-9]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(dataset)/([a-f0-9-]+)/document$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier$", Pattern.CASE_INSENSITIVE));
 
   // filtered PUT methods
   public static final List<Pattern> PUT_RESOURCES_TO_FILTER = Arrays.asList(
-      Pattern.compile("^PUT /(organization)/([a-f0-9-]+)/endorsement$"),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)$"),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)$"),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$"),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$"));
+      Pattern.compile("^PUT /(organization)/([a-f0-9-]+)/endorsement$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^PUT /(organization|dataset|installation|node|network)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$", Pattern.CASE_INSENSITIVE));
 
   // filtered DELETE methods
   public static final List<Pattern> DELETE_RESOURCES_TO_FILTER = Arrays.asList(
-      Pattern.compile("^DELETE /(organization)/([a-f0-9-]+)/endorsement$"),
-      Pattern.compile("^DELETE /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$"),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)$"),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment/[0-9]+$"),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag/[0-9]+$"),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$"),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint/[0-9]+$"),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier/[0-9]+$"));
+      Pattern.compile("^DELETE /(organization)/([a-f0-9-]+)/endorsement$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment/[0-9]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag/[0-9]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([0-9]+)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([a-z0-9.-]+)$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([a-z0-9.-]+)/[a-z0-9.-]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint/[0-9]+$", Pattern.CASE_INSENSITIVE),
+      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier/[0-9]+$", Pattern.CASE_INSENSITIVE));
 
   public static final String PIPELINES = "pipelines";
+  public static final String MACHINE_TAG = "machineTag";
   public static final String ORGANIZATION = "organization";
   public static final String DATASET = "dataset";
   public static final String INSTALLATION = "installation";
@@ -139,7 +145,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
     // all other roles are taken care by simple 'Secured' or JSR250 annotations
     // on the resource methods
     final Authentication authentication = authenticationFacade.getAuthentication();
-    final String path = request.getRequestURI().toLowerCase();
+    final String path = request.getRequestURI();
 
     // method + path
     // e.g. POST /organization/8d453ca7-553f-40d2-8054-82708dc354f6/comment
@@ -168,7 +174,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         if (checkIsNotEditor(authentication)) {
           throw new WebApplicationException("User has no editor rights", HttpStatus.FORBIDDEN);
         }
-        ensureRequest(username, pathMatcherOpt.get(), request);
+        ensureRequest(username, path, pathMatcherOpt.get(), request);
       }
     }
 
@@ -202,70 +208,167 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * If so do nothing, if not throw {@link WebApplicationException}.
    *
    * @param username username
-   * @param matcher matcher which contains the match between request path and pattern
-   * @param request request
+   * @param path     request path
+   * @param matcher  matcher which contains the match between request path and pattern
+   * @param request  request
    */
-  private void ensureRequest(String username, Matcher matcher, HttpServletRequest request) {
+  private void ensureRequest(String username, String path, Matcher matcher, HttpServletRequest request) {
     int groupCount = matcher.groupCount();
     LOG.debug("Matcher groups: {}", groupCount);
-    String resourceName;
-    String resourceKey = null;
+    String resourceName; // resource name (e.g. dataset)
+    String resourceKey = null; // resource key (id of the primary resource)
+    String subKey = null; // sub resource key (e.g. id of the identifier)
 
     // one group - requests like POST /organization - no entity key
     if (groupCount == 1) {
       resourceName = matcher.group(1);
-    // two groups - requests like PUT /dataset/{key} - with entity key
-    } else if (groupCount > 1) {
+      // two groups - requests like PUT /dataset/{key} - with entity key
+    } else if (groupCount == 2) {
       resourceName = matcher.group(1);
       resourceKey = matcher.group(2);
+      // three groups - machine tag DELETE requests
+    } else if (groupCount == 3) {
+      resourceName = matcher.group(1);
+      resourceKey = matcher.group(2);
+      subKey = matcher.group(3);
     } else {
       LOG.error("Unexpected exception. Something wrong with request: user {}, path {}",
-          username, request.getRequestURI());
+          username, path);
       throw new WebApplicationException(
           MessageFormat.format(
               "Unexpected exception. Something wrong with request: user {0}, path {1}",
-              username, request.getRequestURI()),
+              username, path),
           HttpStatus.FORBIDDEN);
     }
     LOG.debug("Extracted from the request path: resource name [{}] and resource key [{}]", resourceName, resourceKey);
 
     // pipelines requests
     if (PIPELINES.equals(resourceName)) {
-      if (resourceKey != null) {
-        ensurePipelinesRunRequest(username, resourceKey);
+      ensurePipelinesRunRequest(username, resourceKey);
+    }
+    // machine tag requests
+    else if (path.contains(MACHINE_TAG)) {
+      if (subKey != null) {
+        ensureMachineTagRequestWithKey(resourceName, username, resourceKey, subKey);
       } else {
-        LOG.error("[resourceKey] is expected to be present. User: {}, path: {}",
-            username, request.getRequestURI());
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "[resourceKey] is expected to be present. User: {0}, path: {1}",
-                username, request.getRequestURI()),
-            HttpStatus.FORBIDDEN);
+        ensureMachineTagRequestWithoutKey(resourceName, username, resourceKey, request);
       }
+    }
     // network entities requests
-    } else if (NETWORK_ENTITIES.contains(resourceName)) {
+    else if (NETWORK_ENTITIES.contains(resourceName)) {
       if (resourceKey != null) {
         ensureNetworkEntityRequestWithKey(resourceName, username, resourceKey);
       } else {
         ensureNetworkEntityRequestWithoutKey(resourceName, username, request);
       }
+    } else {
+      LOG.error("Unexpected exception. Something wrong with request: user {}, path {}",
+          username, path);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "Unexpected exception. Something wrong with request: user {0}, path {1}",
+              username, path),
+          HttpStatus.FORBIDDEN);
     }
+  }
+
+  /**
+   * Ensure machine tag request is allowed for the user.
+   * If so do nothing, if not throw {@link WebApplicationException}.
+   * No key present in the path so this tries to deserialize body.
+   *
+   * @param entityName  network entity name (e.g. dataset, organization)
+   * @param username    username
+   * @param resourceKey network entity key
+   * @param request     tag key or namespace
+   */
+  private void ensureMachineTagRequestWithoutKey(String entityName, String username, String resourceKey, HttpServletRequest request) {
+    if (resourceKey == null || isNotUuid(resourceKey)) {
+      LOG.error("resourceKey is expected to be a valid non-null UUID. User: {}, resourceKey: {}",
+          username, resourceKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "resourceKey is expected to be a valid non-null UUID. User: {0}, resourceKey: {1}",
+              username, resourceKey),
+          HttpStatus.FORBIDDEN);
+    }
+
+    try {
+      MachineTag machineTag =
+          objectMapper.readValue(
+              ((GbifHttpServletRequestWrapper) request).getContent(), MachineTag.class);
+
+      if (!userAuthService.allowedToCreateMachineTag(username, UUID.fromString(resourceKey), machineTag)) {
+        LOG.warn("User {} is not allowed to add machine tags to {} {}", username, entityName, resourceKey);
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to add machine tags to the {1} {2}", username, entityName, resourceKey),
+            HttpStatus.FORBIDDEN);
+      } else {
+        LOG.debug("User {} is allowed to add machine tags to {} {}", username, entityName, resourceKey);
+      }
+    } catch (JsonProcessingException e) {
+      LOG.error("Failed to deserialize JSON", e);
+      throw new WebApplicationException("Failed to deserialize JSON", HttpStatus.FORBIDDEN);
+    }
+  }
+
+  /**
+   * Ensure machine tag request is allowed for the user.
+   * If so do nothing, if not throw {@link WebApplicationException}.
+   * Use subKey (tag key or namespace name).
+   *
+   * @param entityName  network entity name (e.g. dataset, organization)
+   * @param username    username
+   * @param resourceKey network entity key
+   * @param subKey      tag key or namespace
+   */
+  private void ensureMachineTagRequestWithKey(String entityName, String username, String resourceKey, String subKey) {
+    if (resourceKey == null || isNotUuid(resourceKey)) {
+      LOG.error("resourceKey is expected to be a valid non-null UUID. User: {}, resourceKey: {}",
+          username, resourceKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "resourceKey is expected to be a valid non-null UUID. User: {0}, resourceKey: {1}",
+              username, resourceKey),
+          HttpStatus.FORBIDDEN);
+    }
+
+    if (isInt(subKey)) {
+      if (!userAuthService.allowedToDeleteMachineTag(username, UUID.fromString(resourceKey), Integer.parseInt(subKey))) {
+        LOG.warn("User {} is not allowed to delete machine tags from {} {}", username, entityName, resourceKey);
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to delete machine tags from {1} {2}", username, entityName, resourceKey),
+            HttpStatus.FORBIDDEN);
+      }
+    } else {
+      if (!userAuthService.allowedToModifyNamespace(username, subKey)) {
+        LOG.warn("User {} is not allowed to delete machine tags from {} {}", username, entityName, resourceKey);
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to delete machine tags from {1} {2}", username, entityName, resourceKey),
+            HttpStatus.FORBIDDEN);
+      }
+    }
+
+    LOG.debug("User {} is allowed to delete machine tags from {} {}", username, entityName, resourceKey);
   }
 
   /**
    * Ensure pipelines request is allowed for the user.
    * If so do nothing, if not throw {@link WebApplicationException}.
    *
-   * @param username username
+   * @param username    username
    * @param resourceKey resourceKey
    */
   private void ensurePipelinesRunRequest(String username, String resourceKey) {
-    if (isNotUuid(resourceKey)) {
-      LOG.error("[resourceKey] is expected to be valid UUID. User: {}, resourceKey: {}",
+    if (resourceKey == null || isNotUuid(resourceKey)) {
+      LOG.error("resourceKey is expected to be a valid non-null UUID. User: {}, resourceKey: {}",
           username, resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "[resourceKey] is expected to be valid UUID. User: {0}, resourceKey: {1}",
+              "resourceKey is expected to be a valid non-null UUID. User: {0}, resourceKey: {1}",
               username, resourceKey),
           HttpStatus.FORBIDDEN);
     }
@@ -286,8 +389,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * If so do nothing, if not throw {@link WebApplicationException}.
    *
    * @param entityName network entity name (e.g. dataset, organization)
-   * @param username username
-   * @param request HTTP request
+   * @param username   username
+   * @param request    HTTP request
    */
   private void ensureNetworkEntityRequestWithoutKey(String entityName, String username, HttpServletRequest request) {
     NetworkEntity entity;
@@ -349,17 +452,17 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * Ensure network entity request (with resource key) is allowed for the user.
    * If so do nothing, if not throw {@link WebApplicationException}.
    *
-   * @param entityName network entity name (e.g. dataset, organization)
-   * @param username username
+   * @param entityName  network entity name (e.g. dataset, organization)
+   * @param username    username
    * @param resourceKey network entity key
    */
   private void ensureNetworkEntityRequestWithKey(String entityName, String username, String resourceKey) {
     if (isNotUuid(resourceKey)) {
-      LOG.error("[resourceKey] is expected to be valid UUID. User: {}, resourceKey: {}",
+      LOG.error("resourceKey is expected to be valid UUID. User: {}, resourceKey: {}",
           username, resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "[resourceKey] is expected to be valid UUID. User: {0}, resourceKey: {1}",
+              "resourceKey is expected to be valid UUID. User: {0}, resourceKey: {1}",
               username, resourceKey),
           HttpStatus.FORBIDDEN);
     }
@@ -413,7 +516,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   /**
    * Check if string is NOT UUID
    *
-   * @param str string
+   * @param str string to check
    * @return true - string is NOT UUID, false otherwise
    */
   @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -423,6 +526,21 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       return false;
     } catch (IllegalArgumentException e) {
       return true;
+    }
+  }
+
+  /**
+   * Check if string is int
+   *
+   * @param str string to check
+   * @return true - string is int, false otherwise
+   */
+  private boolean isInt(String str) {
+    try {
+      Integer.parseInt(str);
+      return true;
+    } catch (NumberFormatException er) {
+      return false;
     }
   }
 }

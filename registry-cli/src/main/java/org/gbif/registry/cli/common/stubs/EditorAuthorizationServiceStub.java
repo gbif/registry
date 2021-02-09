@@ -17,6 +17,7 @@ package org.gbif.registry.cli.common.stubs;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.registry.security.EditorAuthorizationService;
@@ -35,6 +36,16 @@ public class EditorAuthorizationServiceStub implements EditorAuthorizationServic
 
   @Override
   public boolean allowedToDeleteMachineTag(String user, int machineTagKey) {
+    return false;
+  }
+
+  @Override
+  public boolean allowedToCreateMachineTag(String name, UUID datasetKey, MachineTag machineTag) {
+    return false;
+  }
+
+  @Override
+  public boolean allowedToDeleteMachineTag(String name, UUID datasetKey, int machineTagKey) {
     return false;
   }
 

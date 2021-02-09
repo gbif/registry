@@ -36,7 +36,6 @@ import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -78,14 +77,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
       Augmenter nodeAugmenter,
-      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(
         mapperServiceLocator.getNodeMapper(),
         mapperServiceLocator,
         Node.class,
         eventManager,
-        userAuthService,
         withMyBatis);
     this.nodeMapper = mapperServiceLocator.getNodeMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();

@@ -30,7 +30,6 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
-import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -67,14 +66,12 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   public NetworkResource(
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
-      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(
         mapperServiceLocator.getNetworkMapper(),
         mapperServiceLocator,
         Network.class,
         eventManager,
-        userAuthService,
         withMyBatis);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();

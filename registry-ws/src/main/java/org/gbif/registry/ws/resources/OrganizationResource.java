@@ -39,9 +39,7 @@ import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
-import org.gbif.ws.WebApplicationException;
 
-import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -52,8 +50,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -89,8 +85,6 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 public class OrganizationResource extends BaseNetworkEntityResource<Organization>
     implements OrganizationService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(OrganizationResource.class);
-
   public static final int MINIMUM_PASSWORD_SIZE = 12;
   public static final int MAXIMUM_PASSWORD_SIZE = 15;
   private static final String ALLOWED_CHARACTERS =
@@ -113,7 +107,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         mapperServiceLocator,
         Organization.class,
         eventManager,
-        userAuthService,
         withMyBatis);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
@@ -378,12 +371,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public boolean confirmEndorsement(UUID organizationKey) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
-
-    allowedToEndorseOrganization(authentication, organization);
-
     return organizationEndorsementService.confirmEndorsement(organizationKey);
   }
 
@@ -402,12 +391,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public boolean revokeEndorsement(UUID organizationKey) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
-
-    allowedToEndorseOrganization(authentication, organization);
-
     return organizationEndorsementService.revokeEndorsement(organizationKey);
   }
 
@@ -424,25 +409,5 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     }
 
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-  }
-
-  private void allowedToEndorseOrganization(
-      Authentication authentication, Organization organization) {
-    String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    // If  the user is only an EDITOR, they must have node permission.
-    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)
-        && !userAuthService.allowedToModifyEntity(
-            nameFromContext, organization.getEndorsingNodeKey())) {
-      LOG.warn(
-          "User {} is not allowed to endorse organization {}",
-          nameFromContext,
-          organization.getKey());
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "User {0} is not allowed to endorse organization {1}",
-              nameFromContext, organization.getKey()),
-          HttpStatus.FORBIDDEN);
-    }
   }
 }
