@@ -2,6 +2,10 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.MachineTagMapper">
 
+  <resultMap id="MACHINETAG_MAP" type="org.gbif.api.model.registry.MachineTag" autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
   <sql id="WRITABLE_MACHINETAG_FIELDS">
     namespace,name,value,created,created_by
   </sql>
@@ -22,4 +26,11 @@
     INSERT INTO machine_tag(<include refid="WRITABLE_MACHINETAG_FIELDS"/>)
     VALUES(<include refid="WRITABLE_MACHINETAG_FIELD_TYPES"/>)
   </insert>
+
+  <select id="get" resultMap="MACHINETAG_MAP">
+    SELECT <include refid="MACHINETAG_FIELDS"/>
+    FROM machine_tag mt
+    WHERE mt.key = #{key,jdbcType=OTHER}
+  </select>
+
 </mapper>
