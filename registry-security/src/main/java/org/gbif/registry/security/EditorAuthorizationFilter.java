@@ -108,8 +108,6 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment/[0-9]+$", Pattern.CASE_INSENSITIVE),
       Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag/[0-9]+$", Pattern.CASE_INSENSITIVE),
       Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([0-9]+)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([a-z0-9.-]+)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([a-z0-9.-]+)/[a-z0-9.-]+$", Pattern.CASE_INSENSITIVE),
       Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$", Pattern.CASE_INSENSITIVE),
       Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint/[0-9]+$", Pattern.CASE_INSENSITIVE),
       Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier/[0-9]+$", Pattern.CASE_INSENSITIVE));
@@ -262,11 +260,11 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         ensureNetworkEntityRequestWithoutKey(resourceName, username, request);
       }
     } else {
-      LOG.error("Unexpected exception. Something wrong with request: user {}, path {}",
+      LOG.error("Unexpected exception. Something wrong with the request: user {}, path {}",
           username, path);
       throw new WebApplicationException(
           MessageFormat.format(
-              "Unexpected exception. Something wrong with request: user {0}, path {1}",
+              "Unexpected exception. Something wrong with the request: user {0}, path {1}",
               username, path),
           HttpStatus.FORBIDDEN);
     }
@@ -282,14 +280,13 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param resourceKey network entity key
    * @param request     tag key or namespace
    */
-  private void ensureMachineTagRequestWithoutKey(String entityName, String username, String resourceKey, HttpServletRequest request) {
+  private void ensureMachineTagRequestWithoutKey(
+      String entityName, String username, String resourceKey, HttpServletRequest request) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
-      LOG.error("resourceKey is expected to be a valid non-null UUID. User: {}, resourceKey: {}",
-          username, resourceKey);
+      LOG.error("resource key is expected to be a valid non-null UUID. resource key: {}", resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "resourceKey is expected to be a valid non-null UUID. User: {0}, resourceKey: {1}",
-              username, resourceKey),
+              "resource key is expected to be a valid non-null UUID. resource key: {0}", resourceKey),
           HttpStatus.FORBIDDEN);
     }
 
@@ -316,40 +313,36 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   /**
    * Ensure machine tag request is allowed for the user.
    * If so do nothing, if not throw {@link WebApplicationException}.
-   * Use subKey (tag key or namespace name).
+   * Uses machineTagKey.
    *
-   * @param entityName  network entity name (e.g. dataset, organization)
-   * @param username    username
-   * @param resourceKey network entity key
-   * @param subKey      tag key or namespace
+   * @param entityName    network entity name (e.g. dataset, organization)
+   * @param username      username
+   * @param resourceKey   network entity key
+   * @param machineTagKey the machine tag key
    */
-  private void ensureMachineTagRequestWithKey(String entityName, String username, String resourceKey, String subKey) {
+  private void ensureMachineTagRequestWithKey(String entityName, String username, String resourceKey, String machineTagKey) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
-      LOG.error("resourceKey is expected to be a valid non-null UUID. User: {}, resourceKey: {}",
-          username, resourceKey);
+      LOG.error("resource key is expected to be a valid non-null UUID. resource key: {}", resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "resourceKey is expected to be a valid non-null UUID. User: {0}, resourceKey: {1}",
-              username, resourceKey),
+              "resource key is expected to be a valid non-null UUID. resource key: {0}", resourceKey),
           HttpStatus.FORBIDDEN);
     }
 
-    if (isInt(subKey)) {
-      if (!userAuthService.allowedToDeleteMachineTag(username, UUID.fromString(resourceKey), Integer.parseInt(subKey))) {
-        LOG.warn("User {} is not allowed to delete machine tags from {} {}", username, entityName, resourceKey);
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "User {0} is not allowed to delete machine tags from {1} {2}", username, entityName, resourceKey),
-            HttpStatus.FORBIDDEN);
-      }
-    } else {
-      if (!userAuthService.allowedToModifyNamespace(username, subKey)) {
-        LOG.warn("User {} is not allowed to delete machine tags from {} {}", username, entityName, resourceKey);
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "User {0} is not allowed to delete machine tags from {1} {2}", username, entityName, resourceKey),
-            HttpStatus.FORBIDDEN);
-      }
+    if (isNotInt(machineTagKey)) {
+      LOG.error("machine tag is expected to be a valid integer. machine tag key: {}", machineTagKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "machine tag is expected to be a valid integer. machine tag key: {0}", machineTagKey),
+          HttpStatus.FORBIDDEN);
+    }
+
+    if (!userAuthService.allowedToDeleteMachineTag(username, UUID.fromString(resourceKey), Integer.parseInt(machineTagKey))) {
+      LOG.warn("User {} is not allowed to delete machine tags from {} {}", username, entityName, resourceKey);
+      throw new WebApplicationException(
+          MessageFormat.format(
+              "User {0} is not allowed to delete machine tags from {1} {2}", username, entityName, resourceKey),
+          HttpStatus.FORBIDDEN);
     }
 
     LOG.debug("User {} is allowed to delete machine tags from {} {}", username, entityName, resourceKey);
@@ -364,12 +357,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    */
   private void ensurePipelinesRunRequest(String username, String resourceKey) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
-      LOG.error("resourceKey is expected to be a valid non-null UUID. User: {}, resourceKey: {}",
-          username, resourceKey);
+      LOG.error("resource key is expected to be a valid non-null UUID. resource key: {}", resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "resourceKey is expected to be a valid non-null UUID. User: {0}, resourceKey: {1}",
-              username, resourceKey),
+              "resource key is expected to be a valid non-null UUID. resource key: {0}", resourceKey),
           HttpStatus.FORBIDDEN);
     }
 
@@ -422,12 +413,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
               MessageFormat.format("User {0} is not allowed to create {1}", username, entityName),
               HttpStatus.FORBIDDEN);
         default:
-          LOG.error("Unexpected network entity. User: {}, entityName: {}",
-              username, entityName);
+          LOG.error("Unexpected network entity. entity name: {}", entityName);
           throw new WebApplicationException(
               MessageFormat.format(
-                  "Unexpected network entity. User: {0}, entityName: {1}",
-                  username, entityName),
+                  "Unexpected network entity. entity name: {0}", entityName),
               HttpStatus.FORBIDDEN);
       }
 
@@ -458,12 +447,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    */
   private void ensureNetworkEntityRequestWithKey(String entityName, String username, String resourceKey) {
     if (isNotUuid(resourceKey)) {
-      LOG.error("resourceKey is expected to be valid UUID. User: {}, resourceKey: {}",
-          username, resourceKey);
+      LOG.error("resource key is expected to be valid UUID. resource key: {}", resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "resourceKey is expected to be valid UUID. User: {0}, resourceKey: {1}",
-              username, resourceKey),
+              "resource key is expected to be valid UUID. resource key: {0}", resourceKey),
           HttpStatus.FORBIDDEN);
     }
 
@@ -483,12 +470,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         checkAllowedToModifyEntity = userAuthService::allowedToModifyEntity;
         break;
       default:
-        LOG.error("Unexpected network entity. User: {}, entityName: {}",
-            username, entityName);
+        LOG.error("Unexpected network entity. entity name: {}", entityName);
         throw new WebApplicationException(
             MessageFormat.format(
-                "Unexpected network entity. User: {0}, entityName: {1}",
-                username, entityName),
+                "Unexpected network entity. entity name: {0}", entityName),
             HttpStatus.FORBIDDEN);
     }
 
@@ -530,17 +515,17 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Check if string is int
+   * Check if string is NOT int
    *
    * @param str string to check
    * @return true - string is int, false otherwise
    */
-  private boolean isInt(String str) {
+  private boolean isNotInt(String str) {
     try {
       Integer.parseInt(str);
-      return true;
-    } catch (NumberFormatException er) {
       return false;
+    } catch (NumberFormatException er) {
+      return true;
     }
   }
 }
