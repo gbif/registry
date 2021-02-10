@@ -25,8 +25,10 @@ public interface UserRightsMapper {
 
   boolean keyExistsForUser(@Param("username") String username, @Param("key") UUID key);
 
+  @Deprecated
   boolean namespaceExistsForUser(@Param("username") String username, @Param("ns") String namespace);
 
+  @Deprecated
   boolean allowedToDeleteMachineTag(
       @Param("username") String username, @Param("key") int machineTagKey);
 }
