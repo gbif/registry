@@ -34,6 +34,7 @@ public interface EditorAuthorizationService {
    * @param ns the namespace in question
    * @return true if the user is allowed to modify the namespace.
    */
+  @Deprecated
   boolean allowedToModifyNamespace(@Nullable String name, String ns);
 
   /**
@@ -43,10 +44,11 @@ public interface EditorAuthorizationService {
    * @param machineTagKey the machine tag in question
    * @return true if rights exist for this user to delete the tag.
    */
+  @Deprecated
   boolean allowedToDeleteMachineTag(@Nullable String name, int machineTagKey);
 
   /**
-   * Checks whether a given user is allowed to modify the GBIF_DEFAULT_TERM namespace.
+   * Checks whether a given user is allowed to create machine tag.
    *
    * @param name name from the security context
    * @param datasetKey the dataset key
@@ -57,7 +59,7 @@ public interface EditorAuthorizationService {
       @Nullable String name, @Nullable UUID datasetKey, @Nullable MachineTag machineTag);
 
   /**
-   * Checks whether a given user is allowed to modify the GBIF_DEFAULT_TERM namespace.
+   * Checks whether a given user is allowed to delete machine tag.
    *
    * @param name name from the security context
    * @param datasetKey the dataset key
