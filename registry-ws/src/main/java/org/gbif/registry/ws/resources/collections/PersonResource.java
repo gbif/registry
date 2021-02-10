@@ -37,7 +37,6 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.security.EditorAuthorizationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -85,7 +84,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
       MachineTagMapper machineTagMapper,
       CommentMapper commentMapper,
       EventManager eventManager,
-      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(
         personMapper,
@@ -93,7 +91,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
         machineTagMapper,
         identifierMapper,
         commentMapper,
-        userAuthService,
         eventManager,
         Person.class,
         withMyBatis);
