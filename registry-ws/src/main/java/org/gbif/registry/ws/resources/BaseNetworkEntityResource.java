@@ -356,7 +356,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
@@ -373,7 +373,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * that the caller is authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured(ADMIN_ROLE)
   @Override
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
