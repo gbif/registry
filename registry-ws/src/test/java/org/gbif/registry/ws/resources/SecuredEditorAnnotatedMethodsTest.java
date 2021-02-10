@@ -116,11 +116,6 @@ public class SecuredEditorAnnotatedMethodsTest {
   private static final Pattern MACHINE_TAG_RESOURCE_WITH_INT_KEY =
       Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[0-9]+$");
 
-  private static final List<Pattern> MACHINE_TAG_RESOURCE_WITH_KEY = Arrays.asList(
-      Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[A-Za-z0-9-.]+$"),
-      Pattern.compile("^/(organization|dataset|installation|node|network)/[0-9a-f-]+/machineTag/[A-Za-z0-9-.]+/[A-Za-z0-9-.]+$")
-  );
-
   @Mock
   private GbifHttpServletRequestWrapper mockRequest;
   @Mock private HttpServletResponse mockResponse;
@@ -264,7 +259,7 @@ public class SecuredEditorAnnotatedMethodsTest {
     } else if (NODE_NETWORK_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
       when(mockEditorAuthService.allowedToModifyEntity(USERNAME, KEY)).thenReturn(isAllowedToModify);
     } else if (NODE_NETWORK_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
-      // do nothing
+      // do nothing, these requests always fail
     } else if (PIPELINES_RESOURCE.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
       when(mockEditorAuthService.allowedToModifyDataset(USERNAME, SUB_DATASET_KEY)).thenReturn(isAllowedToModify);
     } else if (MACHINE_TAG_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
@@ -273,8 +268,6 @@ public class SecuredEditorAnnotatedMethodsTest {
       when(mockRequest.getContent()).thenReturn(CONTENT_SUB_KEY);
     } else if (MACHINE_TAG_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
       when(mockEditorAuthService.allowedToDeleteMachineTag(USERNAME, KEY, SUB_KEY_INT)).thenReturn(isAllowedToModify);
-    } else if (MACHINE_TAG_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
-      when(mockEditorAuthService.allowedToModifyNamespace(USERNAME, NAMESPACE)).thenReturn(isAllowedToModify);
     } else {
       throw new IllegalStateException("mock specific for " + requestPath + " not implemented");
     }
@@ -301,7 +294,7 @@ public class SecuredEditorAnnotatedMethodsTest {
     } else if (NODE_NETWORK_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
       verify(mockEditorAuthService).allowedToModifyEntity(USERNAME, KEY);
     } else if (NODE_NETWORK_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
-      // do nothing
+      // do nothing, these requests always fail
     } else if (PIPELINES_RESOURCE.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
       verify(mockEditorAuthService).allowedToModifyDataset(USERNAME, SUB_DATASET_KEY);
     } else if (MACHINE_TAG_RESOURCE_WITHOUT_KEY.matcher(requestPath).matches()) {
@@ -309,8 +302,6 @@ public class SecuredEditorAnnotatedMethodsTest {
       verify(mockRequest).getContent();
     } else if (MACHINE_TAG_RESOURCE_WITH_INT_KEY.matcher(requestPath).matches()) {
       verify(mockEditorAuthService).allowedToDeleteMachineTag(USERNAME, KEY, SUB_KEY_INT);
-    } else if (MACHINE_TAG_RESOURCE_WITH_KEY.stream().anyMatch(p -> p.matcher(requestPath).matches())) {
-      verify(mockEditorAuthService).allowedToModifyNamespace(USERNAME, NAMESPACE);
     } else {
       throw new IllegalStateException("verify specific for " + requestPath + " not implemented");
     }
