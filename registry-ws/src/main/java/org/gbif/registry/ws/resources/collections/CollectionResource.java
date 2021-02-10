@@ -74,7 +74,6 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
       EventManager eventManager,
-      EditorAuthorizationService userAuthService,
       CollectionMergeService collectionMergeService,
       WithMyBatis withMyBatis) {
     super(
@@ -90,7 +89,6 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
         collectionMergeService,
         eventManager,
         Collection.class,
-        userAuthService,
         withMyBatis);
     this.collectionMapper = collectionMapper;
   }

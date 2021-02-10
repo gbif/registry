@@ -45,9 +45,6 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.security.EditorAuthorizationService;
-import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
 import java.util.UUID;
@@ -57,7 +54,6 @@ import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -92,7 +88,6 @@ public abstract class BaseCollectionEntityResource<
   private final IdentifierMapper identifierMapper;
   private final CommentMapper commentMapper;
   private final EventManager eventManager;
-  final EditorAuthorizationService userAuthService;
   private final WithMyBatis withMyBatis;
 
   protected BaseCollectionEntityResource(
@@ -101,7 +96,6 @@ public abstract class BaseCollectionEntityResource<
       MachineTagMapper machineTagMapper,
       IdentifierMapper identifierMapper,
       CommentMapper commentMapper,
-      EditorAuthorizationService userAuthService,
       EventManager eventManager,
       Class<T> objectClass,
       WithMyBatis withMyBatis) {
@@ -112,7 +106,6 @@ public abstract class BaseCollectionEntityResource<
     this.commentMapper = commentMapper;
     this.eventManager = eventManager;
     this.objectClass = objectClass;
-    this.userAuthService = userAuthService;
     this.withMyBatis = withMyBatis;
   }
 
@@ -316,26 +309,6 @@ public abstract class BaseCollectionEntityResource<
             targetEntityKey, objectClass, MachineTag.class));
   }
 
-  /**
-   * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
-   * that the caller is authorized to perform the action by looking at the namespace.
-   */
-  @DeleteMapping("{key}/machineTag/{namespace}/{name}")
-  public void deleteMachineTags(
-      @PathVariable("key") UUID targetEntityKey,
-      @PathVariable String namespace,
-      @PathVariable String name,
-      Authentication authentication) {
-    final String nameFromContext = authentication != null ? authentication.getName() : null;
-
-    if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
-        && !userAuthService.allowedToModifyNamespace(nameFromContext, namespace)) {
-      throw new WebApplicationException(
-          "User is not allowed to modify collection " + nameFromContext, HttpStatus.FORBIDDEN);
-    }
-    deleteMachineTags(targetEntityKey, namespace, name);
-  }
-
   @Override
   public void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
@@ -344,8 +317,17 @@ public abstract class BaseCollectionEntityResource<
             targetEntityKey, objectClass, MachineTag.class));
   }
 
+  /**
+   * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
+   * that the caller is authorized to perform the action by looking at the namespace.
+   */
+  @DeleteMapping("{key}/machineTag/{namespace}/{name}")
+  @Secured(GRSCICOLL_ADMIN_ROLE)
   @Override
-  public void deleteMachineTags(UUID targetEntityKey, String namespace, String name) {
+  public void deleteMachineTags(
+      @PathVariable("key") UUID targetEntityKey,
+      @PathVariable("namespace") String namespace,
+      @PathVariable("name") String name) {
     baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
     eventManager.post(
         ChangedCollectionEntityComponentEvent.newInstance(

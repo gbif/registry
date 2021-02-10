@@ -17,9 +17,21 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.*;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.registry.events.EventManager;
@@ -36,7 +48,6 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.ws.WebApplicationException;
 
@@ -100,7 +111,6 @@ public abstract class ExtendedCollectionEntityResource<
       MergeService mergeService,
       EventManager eventManager,
       Class<T> objectClass,
-      EditorAuthorizationService userAuthService,
       WithMyBatis withMyBatis) {
     super(
         baseMapper,
@@ -108,7 +118,6 @@ public abstract class ExtendedCollectionEntityResource<
         machineTagMapper,
         identifierMapper,
         commentMapper,
-        userAuthService,
         eventManager,
         objectClass,
         withMyBatis);
