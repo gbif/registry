@@ -233,6 +233,7 @@ public abstract class BaseCollectionEntityResource<
    */
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
+  @Secured(GRSCICOLL_ADMIN_ROLE)
   @Trim
   @Transactional
   @Override
@@ -270,6 +271,7 @@ public abstract class BaseCollectionEntityResource<
    * the action by looking at the namespace.
    */
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
+  @Secured(GRSCICOLL_ADMIN_ROLE)
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
     deleteMachineTag(targetEntityKey, machineTagKey);
@@ -291,6 +293,7 @@ public abstract class BaseCollectionEntityResource<
    * authorized to perform the action by looking at the namespace.
    */
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
+  @Secured(GRSCICOLL_ADMIN_ROLE)
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
     deleteMachineTags(targetEntityKey, namespace);
