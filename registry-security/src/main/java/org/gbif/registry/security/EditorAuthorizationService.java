@@ -49,6 +49,7 @@ public interface EditorAuthorizationService {
 
   /**
    * Checks whether a given user is allowed to create machine tag.
+   * Available only for users with rights to the dataset.
    *
    * @param name name from the security context
    * @param datasetKey the dataset key
@@ -60,6 +61,7 @@ public interface EditorAuthorizationService {
 
   /**
    * Checks whether a given user is allowed to delete machine tag.
+   * Available only for users with rights to the dataset.
    *
    * @param name name from the security context
    * @param datasetKey the dataset key

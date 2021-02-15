@@ -236,7 +236,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
           MessageFormat.format(
               "Unexpected exception. Something wrong with request: user {0}, path {1}",
               username, path),
-          HttpStatus.FORBIDDEN);
+          HttpStatus.BAD_REQUEST);
     }
     LOG.debug("Extracted from the request path: resource name [{}] and resource key [{}]", resourceName, resourceKey);
 
@@ -266,7 +266,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
           MessageFormat.format(
               "Unexpected exception. Something wrong with the request: user {0}, path {1}",
               username, path),
-          HttpStatus.FORBIDDEN);
+          HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -283,11 +283,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   private void ensureMachineTagRequestWithoutKey(
       String entityName, String username, String resourceKey, HttpServletRequest request) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
-      LOG.error("resource key is expected to be a valid non-null UUID. resource key: {}", resourceKey);
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "resource key is expected to be a valid non-null UUID. resource key: {0}", resourceKey),
-          HttpStatus.FORBIDDEN);
+      // invalid request, it fails later
+      LOG.debug("Invalid machine tag request without key. entityName [{}], username [{}], resourceKey [{}]",
+          entityName, username, resourceKey);
+      return;
     }
 
     try {
@@ -306,7 +305,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       }
     } catch (JsonProcessingException e) {
       LOG.error("Failed to deserialize JSON", e);
-      throw new WebApplicationException("Failed to deserialize JSON", HttpStatus.FORBIDDEN);
+      throw new WebApplicationException("Failed to deserialize JSON", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -321,20 +320,11 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param machineTagKey the machine tag key
    */
   private void ensureMachineTagRequestWithKey(String entityName, String username, String resourceKey, String machineTagKey) {
-    if (resourceKey == null || isNotUuid(resourceKey)) {
-      LOG.error("resource key is expected to be a valid non-null UUID. resource key: {}", resourceKey);
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "resource key is expected to be a valid non-null UUID. resource key: {0}", resourceKey),
-          HttpStatus.FORBIDDEN);
-    }
-
-    if (isNotInt(machineTagKey)) {
-      LOG.error("machine tag is expected to be a valid integer. machine tag key: {}", machineTagKey);
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "machine tag is expected to be a valid integer. machine tag key: {0}", machineTagKey),
-          HttpStatus.FORBIDDEN);
+    if (resourceKey == null || isNotUuid(resourceKey) || isNotInt(machineTagKey)) {
+      // invalid request, it fails later
+      LOG.debug("Invalid machine tag request with key. entityName [{}], username [{}], resourceKey [{}], machineTagKey [{}]",
+          entityName, username, resourceKey, machineTagKey);
+      return;
     }
 
     if (!userAuthService.allowedToDeleteMachineTag(username, UUID.fromString(resourceKey), Integer.parseInt(machineTagKey))) {
@@ -357,11 +347,9 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    */
   private void ensurePipelinesRunRequest(String username, String resourceKey) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
-      LOG.error("resource key is expected to be a valid non-null UUID. resource key: {}", resourceKey);
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "resource key is expected to be a valid non-null UUID. resource key: {0}", resourceKey),
-          HttpStatus.FORBIDDEN);
+      // invalid request, it fails later
+      LOG.debug("Invalid pipelines request. username [{}], resourceKey [{}]", username, resourceKey);
+      return;
     }
 
     if (!userAuthService.allowedToModifyDataset(username, UUID.fromString(resourceKey))) {
@@ -417,7 +405,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
           throw new WebApplicationException(
               MessageFormat.format(
                   "Unexpected network entity. entity name: {0}", entityName),
-              HttpStatus.FORBIDDEN);
+              HttpStatus.BAD_REQUEST);
       }
 
       if (!checkAllowedToModifyEntity.apply(username, entity)) {
@@ -433,7 +421,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       }
     } catch (JsonProcessingException e) {
       LOG.error("Failed to deserialize JSON", e);
-      throw new WebApplicationException("Failed to deserialize JSON", HttpStatus.FORBIDDEN);
+      throw new WebApplicationException("Failed to deserialize JSON", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -447,11 +435,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    */
   private void ensureNetworkEntityRequestWithKey(String entityName, String username, String resourceKey) {
     if (isNotUuid(resourceKey)) {
-      LOG.error("resource key is expected to be valid UUID. resource key: {}", resourceKey);
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "resource key is expected to be valid UUID. resource key: {0}", resourceKey),
-          HttpStatus.FORBIDDEN);
+      // invalid request, it fails later
+      LOG.debug("Invalid network entity request with key. entityName [{}], username [{}], resourceKey [{}]",
+          entityName, username, resourceKey);
+      return;
     }
 
     BiFunction<String, UUID, Boolean> checkAllowedToModifyEntity;
@@ -474,7 +461,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         throw new WebApplicationException(
             MessageFormat.format(
                 "Unexpected network entity. entity name: {0}", entityName),
-            HttpStatus.FORBIDDEN);
+            HttpStatus.BAD_REQUEST);
     }
 
     if (!checkAllowedToModifyEntity.apply(username, UUID.fromString(resourceKey))) {
