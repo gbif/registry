@@ -16,6 +16,7 @@
 package org.gbif.registry.security.config;
 
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
+import org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
@@ -84,7 +85,8 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         .addFilterAfter(context.getBean(LegacyAuthorizationFilter.class), IdentityFilter.class)
         .addFilterAfter(context.getBean(AppIdentityFilter.class), LegacyAuthorizationFilter.class)
         .addFilterAfter(context.getBean(JwtRequestFilter.class), AppIdentityFilter.class)
-        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), JwtRequestFilter.class)
+        .addFilterAfter(context.getBean(AuthPreCheckCreationRequestFilter.class), JwtRequestFilter.class)
+        .addFilterAfter(context.getBean(EditorAuthorizationFilter.class), AuthPreCheckCreationRequestFilter.class)
         .addFilterAfter(
             context.getBean(GrSciCollEditorAuthorizationFilter.class),
             EditorAuthorizationFilter.class)

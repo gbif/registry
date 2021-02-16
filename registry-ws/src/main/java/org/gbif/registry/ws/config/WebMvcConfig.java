@@ -27,7 +27,7 @@ import org.gbif.registry.domain.ws.LegacyInstallation;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
-import org.gbif.registry.security.AuthPreCheckInterceptor;
+import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.DatasetRequestSearchParamsHandlerMethodArgumentResolver;

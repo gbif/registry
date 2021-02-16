@@ -26,4 +26,10 @@
              )
   </select>
 
+  <select id="getKeysByUser" resultType="java.util.UUID">
+    SELECT key
+    FROM editor_rights
+    WHERE username = #{username}
+  </select>
+
 </mapper>
