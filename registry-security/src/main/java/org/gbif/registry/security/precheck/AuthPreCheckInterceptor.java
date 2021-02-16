@@ -1,5 +1,6 @@
-package org.gbif.registry.security;
+package org.gbif.registry.security.precheck;
 
+import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.Arrays;
@@ -15,18 +16,17 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 /**
- * Intercepts all the requests and stops the execution chain for all the requests that contain the query
- * param {{@link #CHECK_PERMISSIONS_PARAM}} as <strong>true</strong>.
+ * Intercepts all the requests and stops the execution chain for all the requests that contain the
+ * query param {{@link #CHECK_PERMISSIONS_ONLY_PARAM}} as <strong>true</strong>.
  */
 public class AuthPreCheckInterceptor extends HandlerInterceptorAdapter {
 
-  static final String CHECK_PERMISSIONS_PARAM = "checkPermissionsOnly";
+  public static final String CHECK_PERMISSIONS_ONLY_PARAM = "checkPermissionsOnly";
 
   @Override
-  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-      throws Exception {
-    if (request.getParameter(CHECK_PERMISSIONS_PARAM) != null
-        && request.getParameter(CHECK_PERMISSIONS_PARAM).equalsIgnoreCase("true")) {
+  public boolean preHandle(
+      HttpServletRequest request, HttpServletResponse response, Object handler) {
+    if (containsCheckPermissionsOnlyParam(request)) {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
       if (handler instanceof HandlerMethod) {
@@ -51,5 +51,10 @@ public class AuthPreCheckInterceptor extends HandlerInterceptorAdapter {
     }
 
     return true;
+  }
+
+  static boolean containsCheckPermissionsOnlyParam(HttpServletRequest request) {
+    return request.getParameter(CHECK_PERMISSIONS_ONLY_PARAM) != null
+        && request.getParameter(CHECK_PERMISSIONS_ONLY_PARAM).equalsIgnoreCase("true");
   }
 }

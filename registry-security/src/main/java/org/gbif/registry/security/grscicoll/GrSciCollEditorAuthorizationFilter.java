@@ -52,6 +52,9 @@ import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSec
  * passed. First of all any resource method is required to have the role included in the Secured or
  * RolesAllowed annotation. Secondly this request filter needs to be passed for POST/PUT/DELETE
  * requests that act on existing and UUID identified collection entities.
+ *
+ * <p>NOTE that this filter should be in sync with {@link
+ * org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter}.
  */
 @Component
 public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
@@ -59,16 +62,20 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   private static final Logger LOG =
       LoggerFactory.getLogger(GrSciCollEditorAuthorizationFilter.class);
 
-  private static final Pattern ENTITY_PATTERN =
+  public static final String GRSCICOLL_PATH = "grscicoll";
+  public static final Pattern ENTITY_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+).*");
-  private static final Pattern FIRST_CLASS_ENTITY_UPDATE =
+  public static final Pattern FIRST_CLASS_ENTITY_UPDATE =
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
-  private static final Pattern IDENTIFIER_PATTERN_DELETE =
+  public static final Pattern IDENTIFIER_PATTERN_DELETE =
       Pattern.compile(
           ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/identifier/([0-9]+).*");
 
-  private static final Pattern INST_COLL_CREATE_PATTERN =
+  public static final Pattern INST_COLL_CREATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)$");
+
+  public static final String INSTITUTION = "institution";
+  public static final String COLLECTION = "collection";
 
   private final GrSciCollEditorAuthorizationService authService;
   private final AuthenticationFacade authenticationFacade;
@@ -94,7 +101,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
 
     // skip GET and OPTIONS requests and only check requests to grscicoll
-    if (isNotGetOrOptionsRequest(request) && path.contains("grscicoll")) {
+    if (isNotGetOrOptionsRequest(request) && path.contains(GRSCICOLL_PATH)) {
       // user must NOT be null if the resource requires editor rights restrictions
       ensureUserSetInSecurityContext(authentication, HttpStatus.FORBIDDEN);
       final String username = authentication.getName();
@@ -163,11 +170,11 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       String entityType = createEntityMatch.group(1);
 
       boolean allowed = true;
-      if ("institution".equalsIgnoreCase(entityType)) {
+      if (INSTITUTION.equalsIgnoreCase(entityType)) {
         allowed = false;
       }
 
-      if ("collection".equalsIgnoreCase(entityType)) {
+      if (COLLECTION.equalsIgnoreCase(entityType)) {
         Collection collection = readEntity(request, Collection.class);
         if (collection == null || collection.getInstitutionKey() == null) {
           allowed = false;

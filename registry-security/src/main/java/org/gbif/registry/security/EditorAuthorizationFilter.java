@@ -58,15 +58,18 @@ import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSec
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be
  * passed. First of all any resource method is required to have the role included in the Secured
- * annotation. Secondly this request filter needs to be passed for POST/PUT/DELETE/GET
- * requests that act on existing and UUID identified main registry entities such as dataset,
- * organization, node, installation and network.
+ * annotation. Secondly this request filter needs to be passed for POST/PUT/DELETE/GET requests that
+ * act on existing and UUID identified main registry entities such as dataset, organization, node,
+ * installation and network.
  *
- * <p>In order to do authorization the key of these entities is extracted from the requested path
- * or from the request body.
+ * <p>In order to do authorization the key of these entities is extracted from the requested path or
+ * from the request body.
  *
  * <p>NOTE: Request path patterns do not expect query parameters. So in case of adding new paths
  * please make sure they work properly with or without query parameters!
+ *
+ * <p>NOTE that this filter should be in sync with {@link
+ * org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter}.
  */
 @SuppressWarnings("NullableProblems")
 @Component

@@ -1,4 +1,4 @@
-package org.gbif.registry.security;
+package org.gbif.registry.security.precheck;
 
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
@@ -24,23 +24,23 @@ public class AuthPreCheckInterceptorTest {
 
   @Test
   public void checkPermissionsOnlyRequestTest() throws Exception {
-    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_PARAM))
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
         .thenReturn("true");
     assertFalse(authPreCheckInterceptor.preHandle(mockRequest, mockResponse, new Object()));
 
-    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_PARAM))
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
         .thenReturn("TRUE");
     assertFalse(authPreCheckInterceptor.preHandle(mockRequest, mockResponse, new Object()));
 
-    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_PARAM))
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
         .thenReturn("True");
     assertFalse(authPreCheckInterceptor.preHandle(mockRequest, mockResponse, new Object()));
 
-    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_PARAM))
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
         .thenReturn("false");
     assertTrue(authPreCheckInterceptor.preHandle(mockRequest, mockResponse, new Object()));
 
-    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_PARAM))
+    when(mockRequest.getParameter(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM))
         .thenReturn(null);
     assertTrue(authPreCheckInterceptor.preHandle(mockRequest, mockResponse, new Object()));
   }
