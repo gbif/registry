@@ -72,4 +72,16 @@ public interface CollectionClient
     CollectionView view = getCollectionView(key);
     return view != null ? view.getCollection() : null;
   }
+
+  @Override
+  default List<Collection> listPossibleDuplicates(Collection collection) {
+    return listPossibleDuplicates(collection.getKey());
+  }
+
+  @RequestMapping(
+    method = RequestMethod.GET,
+    value = "{key}/possibleDuplicates",
+    produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  List<Collection> listPossibleDuplicates(@PathVariable("key") UUID key);
 }

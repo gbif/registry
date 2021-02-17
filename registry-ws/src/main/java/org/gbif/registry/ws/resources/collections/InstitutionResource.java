@@ -155,6 +155,16 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         entityKey, params.institutionForNewCollectionKey, params.nameForNewInstitution);
   }
 
+  @GetMapping("{key}/possibleDuplicates")
+  public List<Institution> listPossibleDuplicates(@PathVariable("key") UUID key) {
+    return listPossibleDuplicates(institutionMapper.get(key));
+  }
+
+  @Override
+  public List<Institution> listPossibleDuplicates(Institution institution) {
+    return institutionMapper.findPossibleDuplicates(institution);
+  }
+
   private static final class ConvertToCollectionParams {
     UUID institutionForNewCollectionKey;
     String nameForNewInstitution;

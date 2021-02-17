@@ -320,6 +320,42 @@ public class InstitutionMapperIT extends BaseItTest {
         InstitutionSearchParams.builder().alternativeCode("i1").build(), page, 1, inst2.getKey());
   }
 
+  @Test
+  public void findPossibleDuplicatesTest() {
+    Institution i1 = new Institution();
+    i1.setKey(UUID.randomUUID());
+    i1.setCode("i1");
+    i1.setName("MY name");
+    i1.setCreatedBy("test");
+    i1.setModifiedBy("test");
+    i1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("iOne", "test")));
+    institutionMapper.create(i1);
+
+    Institution i2 = new Institution();
+    i2.setKey(UUID.randomUUID());
+    i2.setCode("i2");
+    i2.setName("my Náme");
+    i2.setCreatedBy("test");
+    i2.setModifiedBy("test");
+    i2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("iTwo", "test")));
+    institutionMapper.create(i2);
+
+    assertEquals(1, institutionMapper.findPossibleDuplicates(i1).size());
+
+    Institution i3 = new Institution();
+    i3.setKey(UUID.randomUUID());
+    i3.setCode("foo");
+    i3.setName("my  name ");
+    assertEquals(2, institutionMapper.findPossibleDuplicates(i3).size());
+
+    i3.setName("foo");
+    i3.setCode("i1");
+    assertEquals(1, institutionMapper.findPossibleDuplicates(i3).size());
+
+    i3.setCode("iTwo");
+    assertEquals(1, institutionMapper.findPossibleDuplicates(i3).size());
+  }
+
   private List<Institution> assertSearch(
       InstitutionSearchParams params, Pageable page, int expected) {
     List<Institution> res = institutionMapper.list(params, page);

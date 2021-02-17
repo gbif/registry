@@ -15,7 +15,11 @@
  */
 package org.gbif.registry.ws.it.collections;
 
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -551,6 +555,32 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     c.setReplacedBy(UUID.randomUUID());
     assertThrows(IllegalArgumentException.class, () -> service.update(c));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listPossibleDuplicates(ServiceType serviceType) {
+    CollectionService service = (CollectionService) getService(serviceType);
+
+    Collection collection1 = newEntity();
+    UUID key1 = service.create(collection1);
+    collection1.setKey(key1);
+
+    Collection collection2 = newEntity();
+    collection2.setCode(collection1.getCode());
+    UUID key2 = service.create(collection2);
+    collection2.setKey(key2);
+
+    Collection collection3 = newEntity();
+    collection3.setName(UUID.randomUUID().toString());
+    UUID key3 = service.create(collection3);
+    collection3.setKey(key3);
+
+    List<Collection> duplicates = service.listPossibleDuplicates(collection1);
+    assertEquals(1, duplicates.size());
+
+    duplicates = service.listPossibleDuplicates(collection3);
+    assertEquals(0, duplicates.size());
   }
 
   @Override

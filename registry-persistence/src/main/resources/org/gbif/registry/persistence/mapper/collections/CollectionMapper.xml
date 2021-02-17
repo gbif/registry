@@ -588,4 +588,14 @@
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
+
+  <select id="findPossibleDuplicates" resultMap="COLLECTION_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    WHERE c.deleted IS NULL AND c.key != #{entity.key,jdbcType=OTHER} AND
+    (normalize_name(c.name) = normalize_name(#{entity.name,jdbcType=VARCHAR})
+    OR c.code = #{entity.code,jdbcType=VARCHAR}
+    OR exist(alternative_codes, #{entity.code,jdbcType=VARCHAR})
+    )
+  </select>
 </mapper>
