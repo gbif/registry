@@ -340,6 +340,42 @@ public class CollectionMapperIT extends BaseItTest {
         CollectionSearchParams.builder().alternativeCode("c1").build(), page, 1, coll2.getKey());
   }
 
+  @Test
+  public void findPossibleDuplicatesTest() {
+    Collection c1 = new Collection();
+    c1.setKey(UUID.randomUUID());
+    c1.setCode("c1");
+    c1.setName("MY name");
+    c1.setCreatedBy("test");
+    c1.setModifiedBy("test");
+    c1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("cOne", "test")));
+    collectionMapper.create(c1);
+
+    Collection c2 = new Collection();
+    c2.setKey(UUID.randomUUID());
+    c2.setCode("c2");
+    c2.setName("my Náme");
+    c2.setCreatedBy("test");
+    c2.setModifiedBy("test");
+    c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("cTwo", "test")));
+    collectionMapper.create(c2);
+
+    assertEquals(1, collectionMapper.findPossibleDuplicates(c1).size());
+
+    Collection c3 = new Collection();
+    c3.setKey(UUID.randomUUID());
+    c3.setCode("foo");
+    c3.setName("my  name ");
+    assertEquals(2, collectionMapper.findPossibleDuplicates(c3).size());
+
+    c3.setName("foo");
+    c3.setCode("c1");
+    assertEquals(1, collectionMapper.findPossibleDuplicates(c3).size());
+
+    c3.setCode("cTwo");
+    assertEquals(1, collectionMapper.findPossibleDuplicates(c3).size());
+  }
+
   private List<CollectionDto> assertSearch(
       CollectionSearchParams params, Pageable page, int expected) {
     List<CollectionDto> dtos = collectionMapper.list(params, page);

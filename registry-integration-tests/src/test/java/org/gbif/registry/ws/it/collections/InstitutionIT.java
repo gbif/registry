@@ -38,6 +38,7 @@ import org.gbif.ws.security.KeyStore;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import javax.validation.ValidationException;
@@ -417,6 +418,32 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     i.setReplacedBy(null);
     i.setConvertedToCollection(UUID.randomUUID());
     assertThrows(IllegalArgumentException.class, () -> service.update(i));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void listPossibleDuplicates(ServiceType serviceType) {
+    InstitutionService service = (InstitutionService) getService(serviceType);
+
+    Institution institution1 = newEntity();
+    UUID key1 = service.create(institution1);
+    institution1.setKey(key1);
+
+    Institution institution2 = newEntity();
+    institution2.setCode(institution1.getCode());
+    UUID key2 = service.create(institution2);
+    institution2.setKey(key2);
+
+    Institution institution3 = newEntity();
+    institution3.setName(UUID.randomUUID().toString());
+    UUID key3 = service.create(institution3);
+    institution3.setKey(key3);
+
+    List<Institution> duplicates = service.listPossibleDuplicates(institution1);
+    assertEquals(1, duplicates.size());
+
+    duplicates = service.listPossibleDuplicates(institution3);
+    assertEquals(0, duplicates.size());
   }
 
   @Override

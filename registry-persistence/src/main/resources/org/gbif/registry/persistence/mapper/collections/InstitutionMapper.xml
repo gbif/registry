@@ -574,4 +574,15 @@
     WHERE key = #{institutionKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
+
+  <select id="findPossibleDuplicates" resultMap="INSTITUTION_MAP">
+    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    WHERE i.deleted IS NULL AND i.key != #{entity.key,jdbcType=OTHER} AND
+      (normalize_name(i.name) = normalize_name(#{entity.name,jdbcType=VARCHAR})
+       OR i.code = #{entity.code,jdbcType=VARCHAR}
+       OR exist(alternative_codes, #{entity.code,jdbcType=VARCHAR})
+      )
+  </select>
+
 </mapper>

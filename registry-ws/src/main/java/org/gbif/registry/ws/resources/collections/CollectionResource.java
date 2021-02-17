@@ -35,7 +35,6 @@ import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
-import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 
 import java.util.List;
@@ -158,6 +157,16 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
   @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionMapper.suggest(q);
+  }
+
+  @GetMapping("{key}/possibleDuplicates")
+  public List<Collection> listPossibleDuplicates(@PathVariable("key") UUID key) {
+    return collectionMapper.findPossibleDuplicates(collectionMapper.get(key));
+  }
+
+  @Override
+  public List<Collection> listPossibleDuplicates(Collection collection) {
+    return collectionMapper.findPossibleDuplicates(collection);
   }
 
   private CollectionView convertToCollectionView(CollectionDto dto) {
