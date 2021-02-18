@@ -94,5 +94,5 @@
   <include file="liquibase/086-grscicoll-replacedBy.xml" />
   <include file="liquibase/087-dataset-gridded.xml" />
   <include file="liquibase/088-add-coldp-endpoint-type.xml" />
-  <include file="liquibase/089-add-fuzzystrmatch-extension.xml" />
+  <include file="liquibase/089-add-pg_trgm-extension.xml" />
 </databaseChangeLog>
