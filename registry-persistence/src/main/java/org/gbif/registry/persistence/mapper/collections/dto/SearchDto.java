@@ -41,6 +41,8 @@ public class SearchDto {
   private String mailProvinceHighlight;
   private String mailCountryHighlight;
 
+  private boolean similarityMatch;
+
   public float getScore() {
     return score;
   }
@@ -199,5 +201,13 @@ public class SearchDto {
 
   public void setMailCountryHighlight(String mailCountryHighlight) {
     this.mailCountryHighlight = mailCountryHighlight;
+  }
+
+  public boolean isSimilarityMatch() {
+    return similarityMatch;
+  }
+
+  public void setSimilarityMatch(boolean similarityMatch) {
+    this.similarityMatch = similarityMatch;
   }
 }

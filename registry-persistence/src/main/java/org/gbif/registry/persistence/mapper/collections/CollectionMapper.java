@@ -70,6 +70,4 @@ public interface CollectionMapper
   UUID getInstitutionKey(@Param("collectionKey") UUID collectionKey);
 
   CollectionDto getCollectionDto(@Param("collectionKey") UUID collectionKey);
-
-  List<Collection> findPossibleDuplicates(@Param("entity") Collection collection);
 }

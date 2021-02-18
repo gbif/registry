@@ -38,6 +38,8 @@ public class InstitutionSearchParams extends SearchParams {
     IdentifierType identifierType;
     String identifier;
     Country country;
+    String city;
+    String fuzzyName;
 
     public Builder contactKey(UUID contactKey) {
       this.contactKey = contactKey;
@@ -94,6 +96,16 @@ public class InstitutionSearchParams extends SearchParams {
       return this;
     }
 
+    public Builder city(String city) {
+      this.city = city;
+      return this;
+    }
+
+    public Builder fuzzyName(String fuzzyName) {
+      this.fuzzyName = fuzzyName;
+      return this;
+    }
+
     public InstitutionSearchParams build() {
       InstitutionSearchParams params = new InstitutionSearchParams();
       params.setContactKey(contactKey);
@@ -107,6 +119,8 @@ public class InstitutionSearchParams extends SearchParams {
       params.setIdentifier(identifier);
       params.setIdentifierType(identifierType);
       params.setCountry(country);
+      params.setCity(city);
+      params.setFuzzyName(fuzzyName);
       return params;
     }
   }

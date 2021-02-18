@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -146,6 +147,13 @@ public class InstitutionMapperIT extends BaseItTest {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
+
+    Address addressInst1 = new Address();
+    addressInst1.setCountry(Country.DENMARK);
+    addressInst1.setCity("Copenhagen");
+    addressMapper.create(addressInst1);
+    inst1.setAddress(addressInst1);
+
     institutionMapper.create(inst1);
 
     MachineTag mt = new MachineTag("ns", "test", "foo");
@@ -166,13 +174,32 @@ public class InstitutionMapperIT extends BaseItTest {
     identifierMapper.createIdentifier(identifier);
     institutionMapper.addIdentifier(inst2.getKey(), identifier.getKey());
 
+    Institution inst3 = new Institution();
+    inst3.setKey(UUID.randomUUID());
+    inst3.setCode("i3");
+    inst3.setName("Name of the third institution");
+    inst3.setCreatedBy("test");
+    inst3.setModifiedBy("test");
+    institutionMapper.create(inst3);
+
+
     Pageable page = PAGE.apply(5, 0L);
 
-    assertSearch(InstitutionSearchParams.builder().build(), page, 2);
+    assertSearch(InstitutionSearchParams.builder().build(), page, 3);
     assertSearch(InstitutionSearchParams.builder().code("i1").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().name("n2").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().code("i2").name("n2").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().code("i1").name("n2").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().fuzzyName("nime of third institution").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("nime of third institution").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
+    assertSearch(
+        InstitutionSearchParams.builder().city("Copenhagen").country(Country.DENMARK).build(),
+        page,
+        1);
+    assertSearch(
+        InstitutionSearchParams.builder().city("CPH").country(Country.DENMARK).build(), page, 0);
 
     // machine tags
     assertSearch(InstitutionSearchParams.builder().machineTagNamespace("dummy").build(), page, 0);
@@ -318,42 +345,6 @@ public class InstitutionMapperIT extends BaseItTest {
 
     assertSearch(
         InstitutionSearchParams.builder().alternativeCode("i1").build(), page, 1, inst2.getKey());
-  }
-
-  @Test
-  public void findPossibleDuplicatesTest() {
-    Institution i1 = new Institution();
-    i1.setKey(UUID.randomUUID());
-    i1.setCode("i1");
-    i1.setName("MY name");
-    i1.setCreatedBy("test");
-    i1.setModifiedBy("test");
-    i1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("iOne", "test")));
-    institutionMapper.create(i1);
-
-    Institution i2 = new Institution();
-    i2.setKey(UUID.randomUUID());
-    i2.setCode("i2");
-    i2.setName("my Náme");
-    i2.setCreatedBy("test");
-    i2.setModifiedBy("test");
-    i2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("iTwo", "test")));
-    institutionMapper.create(i2);
-
-    assertEquals(1, institutionMapper.findPossibleDuplicates(i1).size());
-
-    Institution i3 = new Institution();
-    i3.setKey(UUID.randomUUID());
-    i3.setCode("foo");
-    i3.setName("my  name ");
-    assertEquals(2, institutionMapper.findPossibleDuplicates(i3).size());
-
-    i3.setName("foo");
-    i3.setCode("i1");
-    assertEquals(1, institutionMapper.findPossibleDuplicates(i3).size());
-
-    i3.setCode("iTwo");
-    assertEquals(1, institutionMapper.findPossibleDuplicates(i3).size());
   }
 
   private List<Institution> assertSearch(

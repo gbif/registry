@@ -63,6 +63,4 @@ public interface InstitutionMapper
 
   void convertToCollection(
       @Param("institutionKey") UUID institutionKey, @Param("collectionKey") UUID collectionKey);
-
-  List<Institution> findPossibleDuplicates(@Param("entity") Institution institution);
 }

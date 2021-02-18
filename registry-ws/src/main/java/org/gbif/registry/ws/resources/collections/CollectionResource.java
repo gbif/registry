@@ -129,6 +129,8 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
             .identifierType(searchRequest.getIdentifierType())
             .identifier(searchRequest.getIdentifier())
             .country(searchRequest.getCountry())
+            .city(searchRequest.getCity())
+            .fuzzyName(searchRequest.getFuzzyName())
             .build();
 
     long total = collectionMapper.count(params);
@@ -157,16 +159,6 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
   @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionMapper.suggest(q);
-  }
-
-  @GetMapping("{key}/possibleDuplicates")
-  public List<Collection> listPossibleDuplicates(@PathVariable("key") UUID key) {
-    return collectionMapper.findPossibleDuplicates(collectionMapper.get(key));
-  }
-
-  @Override
-  public List<Collection> listPossibleDuplicates(Collection collection) {
-    return collectionMapper.findPossibleDuplicates(collection);
   }
 
   private CollectionView convertToCollectionView(CollectionDto dto) {

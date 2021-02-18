@@ -35,6 +35,8 @@ public abstract class SearchParams {
   @Nullable IdentifierType identifierType;
   @Nullable String identifier;
   @Nullable Country country;
+  @Nullable String city;
+  @Nullable String fuzzyName;
 
   @Nullable
   public UUID getContactKey() {
@@ -133,5 +135,23 @@ public abstract class SearchParams {
 
   public void setCountry(@Nullable Country country) {
     this.country = country;
+  }
+
+  @Nullable
+  public String getCity() {
+    return city;
+  }
+
+  public void setCity(@Nullable String city) {
+    this.city = city;
+  }
+
+  @Nullable
+  public String getFuzzyName() {
+    return fuzzyName;
+  }
+
+  public void setFuzzyName(@Nullable String fuzzyName) {
+    this.fuzzyName = fuzzyName;
   }
 }

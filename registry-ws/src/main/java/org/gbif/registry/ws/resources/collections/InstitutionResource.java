@@ -127,6 +127,8 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
             .identifierType(searchRequest.getIdentifierType())
             .identifier(searchRequest.getIdentifier())
             .country(searchRequest.getCountry())
+            .city(searchRequest.getCity())
+            .fuzzyName(searchRequest.getFuzzyName())
             .build();
 
     long total = institutionMapper.count(params);
@@ -153,16 +155,6 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
     return institutionMergeService.convertToCollection(
         entityKey, params.institutionForNewCollectionKey, params.nameForNewInstitution);
-  }
-
-  @GetMapping("{key}/possibleDuplicates")
-  public List<Institution> listPossibleDuplicates(@PathVariable("key") UUID key) {
-    return listPossibleDuplicates(institutionMapper.get(key));
-  }
-
-  @Override
-  public List<Institution> listPossibleDuplicates(Institution institution) {
-    return institutionMapper.findPossibleDuplicates(institution);
   }
 
   private static final class ConvertToCollectionParams {

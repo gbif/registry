@@ -39,7 +39,8 @@ public class CollectionsSearchResource {
   @GetMapping
   public List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "highlight", defaultValue = "false") boolean highlight) {
-    return collectionsSearchService.search(query, highlight);
+      @RequestParam(value = "highlight", defaultValue = "false") boolean highlight,
+      @RequestParam(value = "limit", defaultValue = "20") int limit) {
+    return collectionsSearchService.search(query, highlight, limit);
   }
 }

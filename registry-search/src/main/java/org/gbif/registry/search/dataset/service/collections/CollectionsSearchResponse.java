@@ -120,12 +120,12 @@ public class CollectionsSearchResponse {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       Match match = (Match) o;
-      return Objects.equals(field, match.field) && Objects.equals(snippet, match.snippet);
+      return Objects.equals(field, match.field);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(field, snippet);
+      return Objects.hash(field);
     }
   }
 }
