@@ -57,17 +57,4 @@ public interface InstitutionClient
   @ResponseBody
   @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
-
-  @Override
-  default List<Institution> listPossibleDuplicates(Institution institution) {
-    return listPossibleDuplicates(institution.getKey());
-  }
-
-  @RequestMapping(
-    method = RequestMethod.GET,
-    value = "{key}/possibleDuplicates",
-    produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  List<Institution> listPossibleDuplicates(@PathVariable("key") UUID key);
-
 }

@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.common.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,7 @@ public class CollectionsSearchService {
     this.searchMapper = searchMapper;
   }
 
-  public List<CollectionsSearchResponse> search(String query, boolean highlight) {
+  public List<CollectionsSearchResponse> search(String query, boolean highlight, int limit) {
     List<SearchDto> dtos = searchMapper.search(query, highlight);
 
     // the query can return duplicates so we need an auxiliary map to filter duplicates
@@ -81,13 +82,12 @@ public class CollectionsSearchService {
           responsesMap.put(dto.getKey(), response);
         });
 
-    return responses;
+    return responses.stream().limit(limit).collect(Collectors.toList());
   }
 
   private void addMatches(CollectionsSearchResponse response, SearchDto dto) {
     Set<CollectionsSearchResponse.Match> matches = new HashSet<>();
     createHighlightMatch(dto.getCodeHighlight(), "code").ifPresent(matches::add);
-    createHighlightMatch(dto.getNameHighlight(), "name").ifPresent(matches::add);
     createHighlightMatch(dto.getDescriptionHighlight(), "description").ifPresent(matches::add);
     createHighlightMatch(dto.getAlternativeCodesHighlight(), "alternativeCode")
         .ifPresent(matches::add);
@@ -99,6 +99,17 @@ public class CollectionsSearchService {
     createHighlightMatch(dto.getMailCityHighlight(), "mailingCity").ifPresent(matches::add);
     createHighlightMatch(dto.getMailProvinceHighlight(), "mailingProvince").ifPresent(matches::add);
     createHighlightMatch(dto.getMailCountryHighlight(), "mailingCountry").ifPresent(matches::add);
+
+    Optional<CollectionsSearchResponse.Match> nameMatch =
+        createHighlightMatch(dto.getNameHighlight(), "name");
+    if (nameMatch.isPresent()) {
+      matches.add(nameMatch.get());
+    } else if (dto.isSimilarityMatch()) {
+      CollectionsSearchResponse.Match match = new CollectionsSearchResponse.Match();
+      match.setField("name");
+      match.setSnippet(dto.getName());
+      matches.add(match);
+    }
 
     if (!matches.isEmpty()) {
       if (response.getMatches() == null) {

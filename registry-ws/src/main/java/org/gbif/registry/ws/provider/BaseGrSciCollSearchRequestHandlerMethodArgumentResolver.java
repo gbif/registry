@@ -60,6 +60,8 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     request.setMachineTagNamespace(webRequest.getParameter("machineTagNamespace"));
     request.setMachineTagValue(webRequest.getParameter("machineTagValue"));
     request.setQ(webRequest.getParameter("q"));
+    request.setCity(webRequest.getParameter("city"));
+    request.setFuzzyName(webRequest.getParameter("fuzzyName"));
 
     String countryParam = webRequest.getParameter("country");
     if (!Strings.isNullOrEmpty(countryParam)) {

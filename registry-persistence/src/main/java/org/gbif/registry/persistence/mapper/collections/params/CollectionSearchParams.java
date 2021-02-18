@@ -52,6 +52,8 @@ public class CollectionSearchParams extends SearchParams {
     IdentifierType identifierType;
     String identifier;
     Country country;
+    String city;
+    String fuzzyName;
 
     public Builder institutionKey(UUID institutionKey) {
       this.institutionKey = institutionKey;
@@ -113,6 +115,16 @@ public class CollectionSearchParams extends SearchParams {
       return this;
     }
 
+    public Builder city(String city) {
+      this.city = city;
+      return this;
+    }
+
+    public Builder fuzzyName(String fuzzyName) {
+      this.fuzzyName = fuzzyName;
+      return this;
+    }
+
     public CollectionSearchParams build() {
       CollectionSearchParams params = new CollectionSearchParams();
       params.setInstitutionKey(institutionKey);
@@ -127,6 +139,8 @@ public class CollectionSearchParams extends SearchParams {
       params.setIdentifier(identifier);
       params.setIdentifierType(identifierType);
       params.setCountry(country);
+      params.setCity(city);
+      params.setFuzzyName(fuzzyName);
       return params;
     }
   }

@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
@@ -151,6 +152,13 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setName("n1");
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
+
+    Address addressCol1 = new Address();
+    addressCol1.setCountry(Country.DENMARK);
+    addressCol1.setCity("Copenhagen");
+    addressMapper.create(addressCol1);
+    col1.setAddress(addressCol1);
+
     collectionMapper.create(col1);
 
     MachineTag mt = new MachineTag("ns", "test", "foo");
@@ -179,18 +187,35 @@ public class CollectionMapperIT extends BaseItTest {
     col3.setModifiedBy("test");
     collectionMapper.create(col3);
 
+    Collection col4 = new Collection();
+    col4.setKey(UUID.randomUUID());
+    col4.setCode("c4");
+    col4.setName("name of fourth collection");
+    col4.setCreatedBy("test");
+    col4.setModifiedBy("test");
+    collectionMapper.create(col4);
+
     Pageable page = PAGE.apply(2, 0L);
     List<CollectionDto> dtos =
         collectionMapper.list(CollectionSearchParams.builder().build(), page);
     assertEquals(2, dtos.size());
-    assertEquals(3, collectionMapper.count(CollectionSearchParams.builder().build()));
 
     page = PAGE.apply(5, 0L);
-    assertSearch(CollectionSearchParams.builder().build(), page, 3);
+    assertSearch(CollectionSearchParams.builder().build(), page, 4);
     assertSearch(CollectionSearchParams.builder().code("c1").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().name("n2").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().code("c3").name("n3").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().code("c1").name("n3").build(), page, 0);
+    assertSearch(CollectionSearchParams.builder().fuzzyName("nime of fourth collection").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("nime of fourth collection").build(), page, 0);
+    assertSearch(CollectionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
+    assertSearch(
+        CollectionSearchParams.builder().city("Copenhagen").country(Country.DENMARK).build(),
+        page,
+        1);
+    assertSearch(
+        CollectionSearchParams.builder().city("CPH").country(Country.DENMARK).build(), page, 0);
 
     // machine tags
     assertSearch(CollectionSearchParams.builder().machineTagNamespace("dummy").build(), page, 0);
@@ -338,42 +363,6 @@ public class CollectionMapperIT extends BaseItTest {
 
     assertSearch(
         CollectionSearchParams.builder().alternativeCode("c1").build(), page, 1, coll2.getKey());
-  }
-
-  @Test
-  public void findPossibleDuplicatesTest() {
-    Collection c1 = new Collection();
-    c1.setKey(UUID.randomUUID());
-    c1.setCode("c1");
-    c1.setName("MY name");
-    c1.setCreatedBy("test");
-    c1.setModifiedBy("test");
-    c1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("cOne", "test")));
-    collectionMapper.create(c1);
-
-    Collection c2 = new Collection();
-    c2.setKey(UUID.randomUUID());
-    c2.setCode("c2");
-    c2.setName("my Náme");
-    c2.setCreatedBy("test");
-    c2.setModifiedBy("test");
-    c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("cTwo", "test")));
-    collectionMapper.create(c2);
-
-    assertEquals(1, collectionMapper.findPossibleDuplicates(c1).size());
-
-    Collection c3 = new Collection();
-    c3.setKey(UUID.randomUUID());
-    c3.setCode("foo");
-    c3.setName("my  name ");
-    assertEquals(2, collectionMapper.findPossibleDuplicates(c3).size());
-
-    c3.setName("foo");
-    c3.setCode("c1");
-    assertEquals(1, collectionMapper.findPossibleDuplicates(c3).size());
-
-    c3.setCode("cTwo");
-    assertEquals(1, collectionMapper.findPossibleDuplicates(c3).size());
   }
 
   private List<CollectionDto> assertSearch(

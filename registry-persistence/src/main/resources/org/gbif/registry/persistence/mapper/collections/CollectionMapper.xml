@@ -162,8 +162,11 @@
 
   <!-- Basic paging search functionality -->
   <select id="list" resultType="CollectionDto" resultMap="COLLECTION_DTO_MAP" parameterType="Pageable">
-    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
-          <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
+    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(c.fulltext_search, query), </if>
+                        <if test="params.fuzzyName != null" >similarity_score, </if>
+                        c.created, c.key)
+          <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode,
+          similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
     FROM collection c
     LEFT JOIN institution inst ON inst.key = c.institution_key
     <if test="params.query != null" >
@@ -180,7 +183,7 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
-    <if test="params.country != null">
+    <if test="params.country != null || params.city != null">
       INNER JOIN address addr ON addr.key = c.address_key
     </if>
     WHERE c.deleted IS NULL
@@ -217,7 +220,15 @@
     <if test="params.country != null" >
       AND addr.country = #{params.country,jdbcType=OTHER}
     </if>
-    ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>c.created DESC, c.key
+    <if test="params.city != null" >
+      AND normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+    </if>
+    <if test="params.fuzzyName != null" >
+      AND similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
+    </if>
+    ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
+             <if test="params.fuzzyName != null" >similarity_score DESC, </if>
+             c.created DESC, c.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -240,7 +251,7 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
-    <if test="params.country != null">
+    <if test="params.country != null || params.city != null">
       INNER JOIN address addr ON addr.key = c.address_key
     </if>
     WHERE c.deleted IS NULL
@@ -275,7 +286,13 @@
       AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
     </if>
     <if test="params.country != null">
-      AND addr.country = 'ES'
+      AND addr.country = #{params.country,jdbcType=OTHER}
+    </if>
+    <if test="params.city != null" >
+      AND normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+    </if>
+    <if test="params.fuzzyName != null" >
+      AND similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
     </if>
   </select>
 
@@ -589,13 +606,4 @@
   </update>
   <!-- END MERGE -->
 
-  <select id="findPossibleDuplicates" resultMap="COLLECTION_MAP">
-    SELECT <include refid="COLLECTION_READ_FIELDS"/>
-    FROM collection c
-    WHERE c.deleted IS NULL AND c.key != #{entity.key,jdbcType=OTHER} AND
-    (normalize_name(c.name) = normalize_name(#{entity.name,jdbcType=VARCHAR})
-    OR c.code = #{entity.code,jdbcType=VARCHAR}
-    OR exist(alternative_codes, #{entity.code,jdbcType=VARCHAR})
-    )
-  </select>
 </mapper>

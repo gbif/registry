@@ -95,7 +95,7 @@ public class CollectionsSearchIT extends BaseItTest {
     addressC1.setCity("Oviedo");
     addressC1.setProvince("Asturias");
     addressC1.setAddress("fake street");
-    c2.setAddress(addressC1);
+    c1.setAddress(addressC1);
     collectionService.create(c1);
 
     c2.setCode("C2");
@@ -108,12 +108,12 @@ public class CollectionsSearchIT extends BaseItTest {
 
   @Test
   public void searchByCodeTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("I1", true);
+    List<CollectionsSearchResponse> responses = searchService.search("I1", true, 10);
     assertEquals(3, responses.size());
     assertEquals(i1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getMatches().size());
 
-    responses = searchService.search("i1", true);
+    responses = searchService.search("i1", true, 10);
     assertEquals(3, responses.size());
     assertEquals(i11.getKey(), responses.get(0).getKey());
     assertEquals(2, responses.get(0).getMatches().size());
@@ -121,61 +121,66 @@ public class CollectionsSearchIT extends BaseItTest {
 
   @Test
   public void searchByNameTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("Collection", true);
+    List<CollectionsSearchResponse> responses = searchService.search("Collection", true, 10);
     assertEquals(2, responses.size());
 
-    responses = searchService.search("Collection 2", true);
-    assertEquals(1, responses.size());
-    assertEquals(c2.getKey(), responses.get(0).getKey());
+    responses = searchService.search("Collection 2", true, 10);
+    assertEquals(2, responses.size());
     assertEquals(1, responses.get(0).getMatches().size());
+    assertEquals(1, responses.get(1).getMatches().size());
+
+    responses = searchService.search("Colllection 1", true, 10);
+    assertEquals(2, responses.size());
+    assertEquals(1, responses.get(0).getMatches().size());
+    assertEquals(1, responses.get(1).getMatches().size());
   }
 
   @Test
   public void searchByAlternativeCodesTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("II2", true);
+    List<CollectionsSearchResponse> responses = searchService.search("II2", true, 10);
     assertEquals(1, responses.size());
     assertEquals(i2.getKey(), responses.get(0).getKey());
 
-    responses = searchService.search("test", true);
+    responses = searchService.search("test", true, 10);
     assertEquals(0, responses.size());
   }
 
   @Test
   public void searchByAddressFieldsTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("street", true);
+    List<CollectionsSearchResponse> responses = searchService.search("street", true, 10);
     assertEquals(2, responses.size());
 
-    responses = searchService.search(Country.SPAIN.getIso2LetterCode(), true);
+    responses = searchService.search(Country.SPAIN.getIso2LetterCode(), true, 10);
     assertEquals(1, responses.size());
-    assertEquals(c2.getKey(), responses.get(0).getKey());
+    assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getMatches().size());
 
-    responses = searchService.search("oviedo", true);
+    responses = searchService.search("oviedo", true, 10);
     assertEquals(1, responses.size());
-    assertEquals(c2.getKey(), responses.get(0).getKey());
+    assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getMatches().size());
 
-    responses = searchService.search("street asturias", true);
+    responses = searchService.search("street asturias", true, 10);
     assertEquals(1, responses.size());
-    assertEquals(c2.getKey(), responses.get(0).getKey());
+    assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(2, responses.get(0).getMatches().size());
   }
 
   @Test
-  public void searchWithoutHighlighTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("Collection", false);
+  public void searchWithoutHighlightTest() {
+    List<CollectionsSearchResponse> responses = searchService.search("Collection", false, 10);
     assertNull(responses.get(0).getMatches());
   }
 
   @Test
   public void noMatchesTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("nothing", false);
+    List<CollectionsSearchResponse> responses = searchService.search("nothing", false, 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search("collection made up", false);
+    responses = searchService.search("collection made up", false, 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search("I1 made up", false);
+    responses = searchService.search("I1 made up", false, 10);
     assertEquals(0, responses.size());
   }
 }
