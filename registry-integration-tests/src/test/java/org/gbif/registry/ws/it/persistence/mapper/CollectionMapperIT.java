@@ -159,6 +159,12 @@ public class CollectionMapperIT extends BaseItTest {
     addressMapper.create(addressCol1);
     col1.setAddress(addressCol1);
 
+    Address mailAddressCol1 = new Address();
+    mailAddressCol1.setCountry(Country.DENMARK);
+    mailAddressCol1.setCity("Odense");
+    addressMapper.create(mailAddressCol1);
+    col1.setMailingAddress(mailAddressCol1);
+
     collectionMapper.create(col1);
 
     MachineTag mt = new MachineTag("ns", "test", "foo");
@@ -210,6 +216,7 @@ public class CollectionMapperIT extends BaseItTest {
     assertSearch(CollectionSearchParams.builder().query("nime of fourth collection").build(), page, 0);
     assertSearch(CollectionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
     assertSearch(CollectionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
+    assertSearch(CollectionSearchParams.builder().city("Odense").build(), page, 1);
     assertSearch(
         CollectionSearchParams.builder().city("Copenhagen").country(Country.DENMARK).build(),
         page,
