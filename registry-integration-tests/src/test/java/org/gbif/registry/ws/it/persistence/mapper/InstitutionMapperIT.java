@@ -154,6 +154,12 @@ public class InstitutionMapperIT extends BaseItTest {
     addressMapper.create(addressInst1);
     inst1.setAddress(addressInst1);
 
+    Address mailAddressCol1 = new Address();
+    mailAddressCol1.setCountry(Country.DENMARK);
+    mailAddressCol1.setCity("Odense");
+    addressMapper.create(mailAddressCol1);
+    inst1.setMailingAddress(mailAddressCol1);
+
     institutionMapper.create(inst1);
 
     MachineTag mt = new MachineTag("ns", "test", "foo");
@@ -194,6 +200,7 @@ public class InstitutionMapperIT extends BaseItTest {
     assertSearch(InstitutionSearchParams.builder().query("nime of third institution").build(), page, 0);
     assertSearch(InstitutionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().city("Odense").build(), page, 1);
     assertSearch(
         InstitutionSearchParams.builder().city("Copenhagen").country(Country.DENMARK).build(),
         page,

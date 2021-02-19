@@ -181,7 +181,8 @@
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
     <if test="params.country != null || params.city != null">
-      INNER JOIN address addr ON addr.key = i.address_key
+      LEFT JOIN address addr ON addr.key = i.address_key
+      LEFT JOIN address mail_addr ON mail_addr.key = i.mailing_address_key
     </if>
     WHERE i.deleted IS NULL
     <if test="params.contactKey != null" >
@@ -212,10 +213,12 @@
       AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
     </if>
     <if test="params.country != null">
-      AND addr.country = #{params.country,jdbcType=VARCHAR}
+      AND (addr.country = #{params.country,jdbcType=OTHER} OR mail_addr.country = #{params.country,jdbcType=OTHER})
     </if>
     <if test="params.city != null" >
-      AND normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+      AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+           OR
+           normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
     </if>
     <if test="params.fuzzyName != null" >
       AND similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
@@ -246,7 +249,8 @@
       INNER JOIN identifier id on id.key = ii.identifier_key
     </if>
     <if test="params.country != null || params.city != null">
-      INNER JOIN address addr ON addr.key = i.address_key
+      LEFT JOIN address addr ON addr.key = i.address_key
+      LEFT JOIN address mail_addr ON mail_addr.key = i.mailing_address_key
     </if>
     WHERE i.deleted IS NULL
     <if test="params.contactKey != null" >
@@ -277,10 +281,12 @@
       AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
     </if>
     <if test="params.country != null">
-      AND addr.country = #{params.country,jdbcType=VARCHAR}
+      AND (addr.country = #{params.country,jdbcType=OTHER} OR mail_addr.country = #{params.country,jdbcType=OTHER})
     </if>
     <if test="params.city != null" >
-      AND normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+      AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+           OR
+           normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
     </if>
     <if test="params.fuzzyName != null" >
       AND similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
