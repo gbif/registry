@@ -32,11 +32,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
-import com.google.common.base.Strings;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
