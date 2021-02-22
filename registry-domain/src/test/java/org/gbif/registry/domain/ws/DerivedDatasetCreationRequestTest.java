@@ -39,18 +39,19 @@ class DerivedDatasetCreationRequestTest {
   @Test
   public void testInvalidDoiDeser() {
     // given
-    String json = "{\n" +
-        "  \"originalDownloadDOI\": \"11.21373/dl.njvgg8\",\n" +
-        "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n" +
-        "  \"title\": \"Derived dataset\",\n" +
-        "  \"description\": \"Derived dataset description\",\n" +
-        "  \"registrationDate\": \"2020-09-22T14:09:22.000+0000\",\n" +
-        "  \"relatedDatasets\": {\n" +
-        "    \"10.21373/1llmgl\": 1,\n" +
-        "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2,\n" +
-        "    \"10.21373/abcdef\": 3\n" +
-        "  }\n" +
-        "}";
+    String json =
+        "{\n"
+            + "  \"originalDownloadDOI\": \"11.21373/dl.njvgg8\",\n"
+            + "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n"
+            + "  \"title\": \"Derived dataset\",\n"
+            + "  \"description\": \"Derived dataset description\",\n"
+            + "  \"registrationDate\": \"2020-09-22T14:09:22.000+0000\",\n"
+            + "  \"relatedDatasets\": {\n"
+            + "    \"10.21373/1llmgl\": 1,\n"
+            + "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2,\n"
+            + "    \"10.21373/abcdef\": 3\n"
+            + "  }\n"
+            + "}";
 
     // when & then
     JsonMappingException exception =
@@ -64,18 +65,19 @@ class DerivedDatasetCreationRequestTest {
   @Test
   public void testInvalidRegistrationDateDeser() {
     // given
-    String json = "{\n" +
-        "  \"originalDownloadDOI\": \"10.21373/dl.njvgg8\",\n" +
-        "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n" +
-        "  \"title\": \"Derived dataset\",\n" +
-        "  \"description\": \"Derived dataset description\",\n" +
-        "  \"registrationDate\": \"2020-0129\",\n" +
-        "  \"relatedDatasets\": {\n" +
-        "    \"10.21373/1llmgl\": 1,\n" +
-        "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2,\n" +
-        "    \"10.21373/abcdef\": 3\n" +
-        "  }\n" +
-        "}";
+    String json =
+        "{\n"
+            + "  \"originalDownloadDOI\": \"10.21373/dl.njvgg8\",\n"
+            + "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n"
+            + "  \"title\": \"Derived dataset\",\n"
+            + "  \"description\": \"Derived dataset description\",\n"
+            + "  \"registrationDate\": \"2020-0129\",\n"
+            + "  \"relatedDatasets\": {\n"
+            + "    \"10.21373/1llmgl\": 1,\n"
+            + "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2,\n"
+            + "    \"10.21373/abcdef\": 3\n"
+            + "  }\n"
+            + "}";
 
     // when & then
     JsonMappingException exception =
@@ -89,17 +91,18 @@ class DerivedDatasetCreationRequestTest {
   @Test
   public void testRegisteredDatasetsDuplicatesDeser() {
     // given
-    String json = "{\n" +
-        "  \"originalDownloadDOI\": \"10.21373/dl.njvgg8\",\n" +
-        "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n" +
-        "  \"title\": \"Derived dataset\",\n" +
-        "  \"description\": \"Derived dataset description\",\n" +
-        "  \"registrationDate\": \"2020-01-29\",\n" +
-        "  \"relatedDatasets\": {\n" +
-        "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 1,\n" +
-        "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2\n" +
-        "  }\n" +
-        "}";
+    String json =
+        "{\n"
+            + "  \"originalDownloadDOI\": \"10.21373/dl.njvgg8\",\n"
+            + "  \"sourceUrl\": \"https://github.com/gbif/registry\",\n"
+            + "  \"title\": \"Derived dataset\",\n"
+            + "  \"description\": \"Derived dataset description\",\n"
+            + "  \"registrationDate\": \"2020-01-29\",\n"
+            + "  \"relatedDatasets\": {\n"
+            + "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 1,\n"
+            + "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2\n"
+            + "  }\n"
+            + "}";
 
     // when & then
     JsonMappingException exception =
@@ -112,18 +115,19 @@ class DerivedDatasetCreationRequestTest {
   @Test
   public void testInvalidSourceUrlDeser() {
     // given
-    String json = "{\n" +
-        "  \"originalDownloadDOI\": \"10.21373/dl.njvgg8\",\n" +
-        "  \"sourceUrl\": \"://github.com/gbif/registry\",\n" +
-        "  \"title\": \"Derived dataset\",\n" +
-        "  \"description\": \"Derived dataset description\",\n" +
-        "  \"registrationDate\": \"2020-0129\",\n" +
-        "  \"relatedDatasets\": {\n" +
-        "    \"10.21373/1llmgl\": 1,\n" +
-        "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2,\n" +
-        "    \"10.21373/abcdef\": 3\n" +
-        "  }\n" +
-        "}";
+    String json =
+        "{\n"
+            + "  \"originalDownloadDOI\": \"10.21373/dl.njvgg8\",\n"
+            + "  \"sourceUrl\": \"://github.com/gbif/registry\",\n"
+            + "  \"title\": \"Derived dataset\",\n"
+            + "  \"description\": \"Derived dataset description\",\n"
+            + "  \"registrationDate\": \"2020-0129\",\n"
+            + "  \"relatedDatasets\": {\n"
+            + "    \"10.21373/1llmgl\": 1,\n"
+            + "    \"9579eaa0-f762-11e1-a439-00145eb45e9a\": 2,\n"
+            + "    \"10.21373/abcdef\": 3\n"
+            + "  }\n"
+            + "}";
 
     // when & then
     JsonMappingException exception =
@@ -138,18 +142,20 @@ class DerivedDatasetCreationRequestTest {
   public void testNullsDeser() throws Exception {
     // given
     // use nulls explicitly to be sure they'll be deserialized properly
-    String json = "{\n" +
-        "  \"originalDownloadDOI\": null,\n" +
-        "  \"sourceUrl\": null,\n" +
-        "  \"registrationDate\": null,\n" +
-        "  \"description\": null,\n" +
-        "  \"title\": null,\n" +
-        "  \"relatedDatasets\": null" +
-        "}";
+    String json =
+        "{\n"
+            + "  \"originalDownloadDOI\": null,\n"
+            + "  \"sourceUrl\": null,\n"
+            + "  \"registrationDate\": null,\n"
+            + "  \"description\": null,\n"
+            + "  \"title\": null,\n"
+            + "  \"relatedDatasets\": null"
+            + "}";
     DerivedDatasetCreationRequest expected = new DerivedDatasetCreationRequest();
 
     // when
-    DerivedDatasetCreationRequest actual = objectMapper.readValue(json, DerivedDatasetCreationRequest.class);
+    DerivedDatasetCreationRequest actual =
+        objectMapper.readValue(json, DerivedDatasetCreationRequest.class);
 
     // then
     assertEquals(expected, actual);
@@ -162,7 +168,8 @@ class DerivedDatasetCreationRequestTest {
 
     // when
     String json = objectMapper.writeValueAsString(source);
-    DerivedDatasetCreationRequest actual = objectMapper.readValue(json, DerivedDatasetCreationRequest.class);
+    DerivedDatasetCreationRequest actual =
+        objectMapper.readValue(json, DerivedDatasetCreationRequest.class);
 
     // then
     assertEquals(source, actual);
@@ -175,7 +182,8 @@ class DerivedDatasetCreationRequestTest {
 
     // when
     String json = objectMapper.writeValueAsString(source);
-    DerivedDatasetCreationRequest actual = objectMapper.readValue(json, DerivedDatasetCreationRequest.class);
+    DerivedDatasetCreationRequest actual =
+        objectMapper.readValue(json, DerivedDatasetCreationRequest.class);
 
     // then
     assertEquals(source, actual);

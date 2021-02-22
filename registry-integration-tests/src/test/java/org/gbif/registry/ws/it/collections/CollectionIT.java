@@ -250,22 +250,17 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     // city
     results =
-      service
-        .list(
-          CollectionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build())
-        .getResults();
+        service
+            .list(CollectionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build())
+            .getResults();
     assertEquals(1, results.size());
     assertEquals(key2, results.get(0).getCollection().getKey());
     assertEquals(
-      0,
-      service
-        .list(
-          CollectionSearchRequest.builder()
-            .city("foo")
-            .page(DEFAULT_PAGE)
-            .build())
-        .getResults()
-        .size());
+        0,
+        service
+            .list(CollectionSearchRequest.builder().city("foo").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
 
     // update address
     collection2 = service.get(key2);
