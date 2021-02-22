@@ -188,7 +188,6 @@ public class InstitutionMapperIT extends BaseItTest {
     inst3.setModifiedBy("test");
     institutionMapper.create(inst3);
 
-
     Pageable page = PAGE.apply(5, 0L);
 
     assertSearch(InstitutionSearchParams.builder().build(), page, 3);
@@ -196,8 +195,10 @@ public class InstitutionMapperIT extends BaseItTest {
     assertSearch(InstitutionSearchParams.builder().name("n2").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().code("i2").name("n2").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().code("i1").name("n2").build(), page, 0);
-    assertSearch(InstitutionSearchParams.builder().fuzzyName("nime of third institution").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().query("nime of third institution").build(), page, 0);
+    assertSearch(
+        InstitutionSearchParams.builder().fuzzyName("nime of third institution").build(), page, 1);
+    assertSearch(
+        InstitutionSearchParams.builder().query("nime of third institution").build(), page, 0);
     assertSearch(InstitutionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
     assertSearch(InstitutionSearchParams.builder().city("Odense").build(), page, 1);

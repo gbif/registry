@@ -130,17 +130,18 @@ public class DerivedDatasetCreationRequest implements Serializable {
         .toString();
   }
 
-  private static class UniqueKeyRelatedDatasetsDeserializer extends JsonDeserializer<Map<String, Long>> {
+  private static class UniqueKeyRelatedDatasetsDeserializer
+      extends JsonDeserializer<Map<String, Long>> {
 
     @Override
-    public Map<String, Long> deserialize(
-        JsonParser jp, DeserializationContext ctxt) throws IOException {
+    public Map<String, Long> deserialize(JsonParser jp, DeserializationContext ctxt)
+        throws IOException {
       ObjectCodec objectCodec = ctxt.getParser().getCodec();
       Map<String, Long> result;
 
       try {
-        Map<String, Long> deserialized = objectCodec.readValue(jp, new TypeReference<UniqueKeyHashMap<String, Long>>() {
-        });
+        Map<String, Long> deserialized =
+            objectCodec.readValue(jp, new TypeReference<UniqueKeyHashMap<String, Long>>() {});
 
         result = deserialized != null ? deserialized : new HashMap<>();
       } catch (IllegalArgumentException | MismatchedInputException e) {

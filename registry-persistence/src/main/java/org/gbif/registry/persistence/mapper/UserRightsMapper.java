@@ -34,5 +34,4 @@ public interface UserRightsMapper {
   @Deprecated
   boolean allowedToDeleteMachineTag(
       @Param("username") String username, @Param("key") int machineTagKey);
-
 }

@@ -78,42 +78,85 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   private static final Logger LOG = LoggerFactory.getLogger(EditorAuthorizationFilter.class);
 
   // filtered GET methods
-  public static final List<Pattern> GET_RESOURCES_TO_FILTER = Collections.singletonList(
-      Pattern.compile("^GET /(organization)/([a-f0-9-]+)/password$", Pattern.CASE_INSENSITIVE));
+  public static final List<Pattern> GET_RESOURCES_TO_FILTER =
+      Collections.singletonList(
+          Pattern.compile("^GET /(organization)/([a-f0-9-]+)/password$", Pattern.CASE_INSENSITIVE));
 
   // filtered POST methods
-  public static final List<Pattern> POST_RESOURCES_TO_FILTER = Arrays.asList(
-      Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)/[0-9]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(dataset)/([a-f0-9-]+)/document$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier$", Pattern.CASE_INSENSITIVE));
+  public static final List<Pattern> POST_RESOURCES_TO_FILTER =
+      Arrays.asList(
+          Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(pipelines)/history/run/([a-f0-9-]+)/[0-9]+$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile("^POST /(dataset)/([a-f0-9-]+)/document$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^POST /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier$",
+              Pattern.CASE_INSENSITIVE));
 
   // filtered PUT methods
-  public static final List<Pattern> PUT_RESOURCES_TO_FILTER = Arrays.asList(
-      Pattern.compile("^PUT /(organization)/([a-f0-9-]+)/endorsement$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$", Pattern.CASE_INSENSITIVE));
+  public static final List<Pattern> PUT_RESOURCES_TO_FILTER =
+      Arrays.asList(
+          Pattern.compile(
+              "^PUT /(organization)/([a-f0-9-]+)/endorsement$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^PUT /(organization|dataset|installation|node|network)$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^PUT /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$",
+              Pattern.CASE_INSENSITIVE));
 
   // filtered DELETE methods
-  public static final List<Pattern> DELETE_RESOURCES_TO_FILTER = Arrays.asList(
-      Pattern.compile("^DELETE /(organization)/([a-f0-9-]+)/endorsement$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment/[0-9]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag/[0-9]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([0-9]+)$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint/[0-9]+$", Pattern.CASE_INSENSITIVE),
-      Pattern.compile("^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier/[0-9]+$", Pattern.CASE_INSENSITIVE));
+  public static final List<Pattern> DELETE_RESOURCES_TO_FILTER =
+      Arrays.asList(
+          Pattern.compile(
+              "^DELETE /(organization)/([a-f0-9-]+)/endorsement$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(network)/([a-f0-9-]+)/constituents/[a-f0-9-]+$", Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/comment/[0-9]+$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/tag/[0-9]+$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/machineTag/([0-9]+)$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/contact/[0-9]+$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/endpoint/[0-9]+$",
+              Pattern.CASE_INSENSITIVE),
+          Pattern.compile(
+              "^DELETE /(organization|dataset|installation|node|network)/([a-f0-9-]+)/identifier/[0-9]+$",
+              Pattern.CASE_INSENSITIVE));
 
   public static final String PIPELINES = "pipelines";
   public static final String MACHINE_TAG = "machineTag";
@@ -122,8 +165,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   public static final String INSTALLATION = "installation";
   public static final String NODE = "node";
   public static final String NETWORK = "network";
-  public static final List<String> NETWORK_ENTITIES = Arrays.asList(
-      "organization", "dataset", "installation", "node", "network");
+  public static final List<String> NETWORK_ENTITIES =
+      Arrays.asList("organization", "dataset", "installation", "node", "network");
 
   private final EditorAuthorizationService userAuthService;
   private final AuthenticationFacade authenticationFacade;
@@ -155,8 +198,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
 
     // try to find a proper matcher for the request
     Optional<Matcher> pathMatcherOpt =
-        getResourcesListToFilterByMethodType(request.getMethod())
-            .stream()
+        getResourcesListToFilterByMethodType(request.getMethod()).stream()
             .map(p -> p.matcher(requestString))
             .filter(Matcher::matches)
             .findFirst();
@@ -213,7 +255,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param matcher  matcher which contains the match between request path and pattern
    * @param request  request
    */
-  private void ensureRequest(String username, String path, Matcher matcher, HttpServletRequest request) {
+  private void ensureRequest(
+      String username, String path, Matcher matcher, HttpServletRequest request) {
     int groupCount = matcher.groupCount();
     LOG.debug("Matcher groups: {}", groupCount);
     String resourceName; // resource name (e.g. dataset)
@@ -233,15 +276,18 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       resourceKey = matcher.group(2);
       subKey = matcher.group(3);
     } else {
-      LOG.error("Unexpected exception. Something wrong with request: user {}, path {}",
-          username, path);
+      LOG.error(
+          "Unexpected exception. Something wrong with request: user {}, path {}", username, path);
       throw new WebApplicationException(
           MessageFormat.format(
               "Unexpected exception. Something wrong with request: user {0}, path {1}",
               username, path),
           HttpStatus.BAD_REQUEST);
     }
-    LOG.debug("Extracted from the request path: resource name [{}] and resource key [{}]", resourceName, resourceKey);
+    LOG.debug(
+        "Extracted from the request path: resource name [{}] and resource key [{}]",
+        resourceName,
+        resourceKey);
 
     // pipelines requests
     if (PIPELINES.equals(resourceName)) {
@@ -263,8 +309,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         ensureNetworkEntityRequestWithoutKey(resourceName, username, request);
       }
     } else {
-      LOG.error("Unexpected exception. Something wrong with the request: user {}, path {}",
-          username, path);
+      LOG.error(
+          "Unexpected exception. Something wrong with the request: user {}, path {}",
+          username,
+          path);
       throw new WebApplicationException(
           MessageFormat.format(
               "Unexpected exception. Something wrong with the request: user {0}, path {1}",
@@ -287,8 +335,11 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       String entityName, String username, String resourceKey, HttpServletRequest request) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
       // invalid request, it fails later
-      LOG.debug("Invalid machine tag request without key. entityName [{}], username [{}], resourceKey [{}]",
-          entityName, username, resourceKey);
+      LOG.debug(
+          "Invalid machine tag request without key. entityName [{}], username [{}], resourceKey [{}]",
+          entityName,
+          username,
+          resourceKey);
       return;
     }
 
@@ -297,14 +348,21 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
           objectMapper.readValue(
               ((GbifHttpServletRequestWrapper) request).getContent(), MachineTag.class);
 
-      if (!userAuthService.allowedToCreateMachineTag(username, UUID.fromString(resourceKey), machineTag)) {
-        LOG.warn("User {} is not allowed to add machine tags to {} {}", username, entityName, resourceKey);
+      if (!userAuthService.allowedToCreateMachineTag(
+          username, UUID.fromString(resourceKey), machineTag)) {
+        LOG.warn(
+            "User {} is not allowed to add machine tags to {} {}",
+            username,
+            entityName,
+            resourceKey);
         throw new WebApplicationException(
             MessageFormat.format(
-                "User {0} is not allowed to add machine tags to the {1} {2}", username, entityName, resourceKey),
+                "User {0} is not allowed to add machine tags to the {1} {2}",
+                username, entityName, resourceKey),
             HttpStatus.FORBIDDEN);
       } else {
-        LOG.debug("User {} is allowed to add machine tags to {} {}", username, entityName, resourceKey);
+        LOG.debug(
+            "User {} is allowed to add machine tags to {} {}", username, entityName, resourceKey);
       }
     } catch (JsonProcessingException e) {
       LOG.error("Failed to deserialize JSON", e);
@@ -322,23 +380,35 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param resourceKey   network entity key
    * @param machineTagKey the machine tag key
    */
-  private void ensureMachineTagRequestWithKey(String entityName, String username, String resourceKey, String machineTagKey) {
+  private void ensureMachineTagRequestWithKey(
+      String entityName, String username, String resourceKey, String machineTagKey) {
     if (resourceKey == null || isNotUuid(resourceKey) || isNotInt(machineTagKey)) {
       // invalid request, it fails later
-      LOG.debug("Invalid machine tag request with key. entityName [{}], username [{}], resourceKey [{}], machineTagKey [{}]",
-          entityName, username, resourceKey, machineTagKey);
+      LOG.debug(
+          "Invalid machine tag request with key. entityName [{}], username [{}], resourceKey [{}], machineTagKey [{}]",
+          entityName,
+          username,
+          resourceKey,
+          machineTagKey);
       return;
     }
 
-    if (!userAuthService.allowedToDeleteMachineTag(username, UUID.fromString(resourceKey), Integer.parseInt(machineTagKey))) {
-      LOG.warn("User {} is not allowed to delete machine tags from {} {}", username, entityName, resourceKey);
+    if (!userAuthService.allowedToDeleteMachineTag(
+        username, UUID.fromString(resourceKey), Integer.parseInt(machineTagKey))) {
+      LOG.warn(
+          "User {} is not allowed to delete machine tags from {} {}",
+          username,
+          entityName,
+          resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "User {0} is not allowed to delete machine tags from {1} {2}", username, entityName, resourceKey),
+              "User {0} is not allowed to delete machine tags from {1} {2}",
+              username, entityName, resourceKey),
           HttpStatus.FORBIDDEN);
     }
 
-    LOG.debug("User {} is allowed to delete machine tags from {} {}", username, entityName, resourceKey);
+    LOG.debug(
+        "User {} is allowed to delete machine tags from {} {}", username, entityName, resourceKey);
   }
 
   /**
@@ -351,7 +421,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   private void ensurePipelinesRunRequest(String username, String resourceKey) {
     if (resourceKey == null || isNotUuid(resourceKey)) {
       // invalid request, it fails later
-      LOG.debug("Invalid pipelines request. username [{}], resourceKey [{}]", username, resourceKey);
+      LOG.debug(
+          "Invalid pipelines request. username [{}], resourceKey [{}]", username, resourceKey);
       return;
     }
 
@@ -359,7 +430,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       LOG.warn("User {} is not allowed to run pipelines for the dataset {}", username, resourceKey);
       throw new WebApplicationException(
           MessageFormat.format(
-              "User {0} is not allowed to run pipelines for the dataset {1}", username, resourceKey),
+              "User {0} is not allowed to run pipelines for the dataset {1}",
+              username, resourceKey),
           HttpStatus.FORBIDDEN);
     } else {
       LOG.debug("User {} is allowed to run pipelines for the dataset {}", username, resourceKey);
@@ -374,7 +446,8 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param username   username
    * @param request    HTTP request
    */
-  private void ensureNetworkEntityRequestWithoutKey(String entityName, String username, HttpServletRequest request) {
+  private void ensureNetworkEntityRequestWithoutKey(
+      String entityName, String username, HttpServletRequest request) {
     NetworkEntity entity;
     try {
       BiFunction<String, NetworkEntity, Boolean> checkAllowedToModifyEntity;
@@ -383,19 +456,22 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
           entity =
               objectMapper.readValue(
                   ((GbifHttpServletRequestWrapper) request).getContent(), Dataset.class);
-          checkAllowedToModifyEntity = (name, e) -> userAuthService.allowedToModifyDataset(name, ((Dataset) e));
+          checkAllowedToModifyEntity =
+              (name, e) -> userAuthService.allowedToModifyDataset(name, ((Dataset) e));
           break;
         case ORGANIZATION:
           entity =
               objectMapper.readValue(
                   ((GbifHttpServletRequestWrapper) request).getContent(), Organization.class);
-          checkAllowedToModifyEntity = (name, e) -> userAuthService.allowedToModifyOrganization(name, ((Organization) e));
+          checkAllowedToModifyEntity =
+              (name, e) -> userAuthService.allowedToModifyOrganization(name, ((Organization) e));
           break;
         case INSTALLATION:
           entity =
               objectMapper.readValue(
                   ((GbifHttpServletRequestWrapper) request).getContent(), Installation.class);
-          checkAllowedToModifyEntity = (name, e) -> userAuthService.allowedToModifyInstallation(name, ((Installation) e));
+          checkAllowedToModifyEntity =
+              (name, e) -> userAuthService.allowedToModifyInstallation(name, ((Installation) e));
           break;
         case NETWORK:
         case NODE:
@@ -406,14 +482,16 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
         default:
           LOG.error("Unexpected network entity. entity name: {}", entityName);
           throw new WebApplicationException(
-              MessageFormat.format(
-                  "Unexpected network entity. entity name: {0}", entityName),
+              MessageFormat.format("Unexpected network entity. entity name: {0}", entityName),
               HttpStatus.BAD_REQUEST);
       }
 
       if (!checkAllowedToModifyEntity.apply(username, entity)) {
-        LOG.warn("User {} is not allowed to create or modify {} {}",
-            username, entityName, entity.getKey() != null ? entity.getKey() : "");
+        LOG.warn(
+            "User {} is not allowed to create or modify {} {}",
+            username,
+            entityName,
+            entity.getKey() != null ? entity.getKey() : "");
         throw new WebApplicationException(
             MessageFormat.format(
                 "User {0} is not allowed to create or modify {1} {2}",
@@ -436,11 +514,15 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
    * @param username    username
    * @param resourceKey network entity key
    */
-  private void ensureNetworkEntityRequestWithKey(String entityName, String username, String resourceKey) {
+  private void ensureNetworkEntityRequestWithKey(
+      String entityName, String username, String resourceKey) {
     if (isNotUuid(resourceKey)) {
       // invalid request, it fails later
-      LOG.debug("Invalid network entity request with key. entityName [{}], username [{}], resourceKey [{}]",
-          entityName, username, resourceKey);
+      LOG.debug(
+          "Invalid network entity request with key. entityName [{}], username [{}], resourceKey [{}]",
+          entityName,
+          username,
+          resourceKey);
       return;
     }
 
@@ -462,8 +544,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
       default:
         LOG.error("Unexpected network entity. entity name: {}", entityName);
         throw new WebApplicationException(
-            MessageFormat.format(
-                "Unexpected network entity. entity name: {0}", entityName),
+            MessageFormat.format("Unexpected network entity. entity name: {0}", entityName),
             HttpStatus.BAD_REQUEST);
     }
 
