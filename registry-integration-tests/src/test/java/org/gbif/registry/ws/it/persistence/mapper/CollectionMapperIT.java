@@ -212,8 +212,10 @@ public class CollectionMapperIT extends BaseItTest {
     assertSearch(CollectionSearchParams.builder().name("n2").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().code("c3").name("n3").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().code("c1").name("n3").build(), page, 0);
-    assertSearch(CollectionSearchParams.builder().fuzzyName("nime of fourth collection").build(), page, 1);
-    assertSearch(CollectionSearchParams.builder().query("nime of fourth collection").build(), page, 0);
+    assertSearch(
+        CollectionSearchParams.builder().fuzzyName("nime of fourth collection").build(), page, 1);
+    assertSearch(
+        CollectionSearchParams.builder().query("nime of fourth collection").build(), page, 0);
     assertSearch(CollectionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
     assertSearch(CollectionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
     assertSearch(CollectionSearchParams.builder().city("Odense").build(), page, 1);

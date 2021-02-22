@@ -96,8 +96,7 @@ public class EditorAuthorizationFilterTest {
     verify(mockRequest, atLeast(2)).getMethod();
     verify(mockAuthentication, atLeastOnce()).getName();
     verify(mockAuthentication, atLeast(2)).getAuthorities();
-    verify(mockEditorAuthService)
-        .allowedToModifyOrganization(USERNAME, ORG);
+    verify(mockEditorAuthService).allowedToModifyOrganization(USERNAME, ORG);
   }
 
   @Test

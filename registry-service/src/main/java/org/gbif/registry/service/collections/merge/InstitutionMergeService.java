@@ -35,13 +35,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
 
