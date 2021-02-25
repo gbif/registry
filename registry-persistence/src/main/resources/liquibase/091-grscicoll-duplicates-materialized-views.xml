@@ -1,0 +1,33 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="91" author="mlopez" runInTransaction="false" ignore="true">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE MATERIALIZED VIEW IF NOT EXISTS institution_duplicate_mv AS
+        SELECT DISTINCT ON(greatest(i1.key, i2."key"), least(i1.key, i2."key"))
+               i1.key key1, i1.code code1, i1.name name1, a1.country physicalCountry1, a1.city physicalCity1, ma1.country mailingCountry1, ma1.city mailingCity1,
+               i2."key" key2, i2.code code2, i2."name" name2, a2.country physicalCountry2, a2.city physicalCity2, ma2.country mailingCountry2, ma2.city mailingCity2,
+               i1.code = i2.code as code_match, similar_name(i1."name", i2."name") as fuzzy_name_match, normalize_name(i1."name") = normalize_name(i2."name") as name_match,
+               (normalize_name(a1.city) = normalize_name(a2.city)
+                  OR normalize_name(a1.city) = normalize_name(ma2.city)
+                  OR normalize_name(ma1.city) = normalize_name(a2.city)
+                  OR normalize_name(ma1.city) = normalize_name(ma2.city)) as city_match,
+               (a1.country = a2.country
+                  OR a1.country = ma2.country
+                  OR ma1.country = a2.country
+                  OR ma1.country = ma2.country) as country_match, now() as generated_date
+          FROM institution i1
+          INNER JOIN institution i2 ON i1.key != i2.key and (i1.code = i2.code or similar_name(i1."name", i2."name") or normalize_name(i1."name") = normalize_name(i2."name"))
+          LEFT JOIN address a1 ON i1.address_key = a1.key
+          LEFT JOIN address a2 ON i2.address_key = a2.key
+          LEFT JOIN address ma1 ON i1.mailing_address_key = ma1.key
+          LEFT JOIN address ma2 ON i2.mailing_address_key = ma2.key;
+
+       	CREATE UNIQUE INDEX IF NOT EXISTS institution_duplicate_mv_unique_idx ON institution_duplicate_mv(key1, key2, code_match, fuzzy_name_match, name_match, city_match, country_match);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
