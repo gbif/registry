@@ -19,6 +19,9 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.duplicates.Duplicate;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -37,15 +40,24 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.net.URI;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.validation.ValidationException;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -90,6 +102,15 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
         identityService,
         localServerPort,
         keyStore);
+  }
+
+  @BeforeAll
+  public static void createMaterializedViews() throws SQLException {
+    Connection connection = database.getTestDatabase().getConnection();
+    // create materialized view for testing
+    ScriptUtils.executeSqlScript(
+        connection, new ClassPathResource("/scripts/create_institution_duplicates_mv.sql"));
+    connection.close();
   }
 
   @ParameterizedTest
@@ -425,6 +446,83 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     i.setReplacedBy(null);
     i.setConvertedToCollection(UUID.randomUUID());
     assertThrows(IllegalArgumentException.class, () -> service.update(i));
+  }
+
+  @Test
+  public void possibleDuplicatesTest() {
+    InstitutionClient instClient = (InstitutionClient) client;
+
+    // same code
+    DuplicatesRequest request = new DuplicatesRequest();
+    request.setSameCode(true);
+
+    DuplicatesResult result = instClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(3, result.getDuplicates().get(0).size());
+
+    // same fuzzy name
+    request = new DuplicatesRequest();
+    request.setSameFuzzyName(true);
+
+    result = instClient.findPossibleDuplicates(request);
+    assertEquals(2, result.getDuplicates().size());
+    assertEquals(3, result.getDuplicates().get(0).size());
+    assertEquals(2, result.getDuplicates().get(1).size());
+
+    // same fuzzy name and city
+    request = new DuplicatesRequest();
+    request.setSameFuzzyName(true);
+    request.setSameCity(true);
+
+    result = instClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(2, result.getDuplicates().get(0).size());
+    Set<UUID> keysFound =
+        result.getDuplicates().get(0).stream().map(Duplicate::getKey).collect(Collectors.toSet());
+    assertEquals(2, keysFound.size());
+
+    // exclude keys
+    request.setExcludeKeys(new ArrayList<>(keysFound));
+    result = instClient.findPossibleDuplicates(request);
+    assertTrue(result.getDuplicates().isEmpty());
+
+    // same name and city
+    request = new DuplicatesRequest();
+    request.setSameName(true);
+    request.setSameCity(true);
+    result = instClient.findPossibleDuplicates(request);
+    assertTrue(result.getDuplicates().isEmpty());
+
+    // same name and not same city
+    request.setSameCity(false);
+    result = instClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(2, result.getDuplicates().get(0).size());
+    assertEquals(
+        2, result.getDuplicates().get(0).stream().map(Duplicate::getKey).distinct().count());
+
+    // filtering by country
+    request.setInCountries(Collections.singletonList(Country.DENMARK.getIso2LetterCode()));
+    result = instClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(2, result.getDuplicates().get(0).size());
+    assertEquals(
+        2, result.getDuplicates().get(0).stream().map(Duplicate::getKey).distinct().count());
+
+    request.setInCountries(Collections.singletonList(Country.SPAIN.getIso2LetterCode()));
+    result = instClient.findPossibleDuplicates(request);
+    assertTrue(result.getDuplicates().isEmpty());
+
+    // excluding country
+    request.setInCountries(null);
+    request.setNotInCountries(Collections.singletonList(Country.DENMARK.getIso2LetterCode()));
+    result = instClient.findPossibleDuplicates(request);
+    assertTrue(result.getDuplicates().isEmpty());
+
+    request.setNotInCountries(Collections.singletonList(Country.SPAIN.getIso2LetterCode()));
+    result = instClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(2, result.getDuplicates().get(0).size());
   }
 
   @Override

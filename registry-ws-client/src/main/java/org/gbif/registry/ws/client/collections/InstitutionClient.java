@@ -16,6 +16,8 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -55,4 +57,11 @@ public interface InstitutionClient
   @ResponseBody
   @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "possibleDuplicates",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  DuplicatesResult findPossibleDuplicates(@SpringQueryMap DuplicatesRequest request);
 }

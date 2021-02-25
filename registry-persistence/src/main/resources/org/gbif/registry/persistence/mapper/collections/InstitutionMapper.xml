@@ -221,7 +221,7 @@
            normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
     </if>
     <if test="params.fuzzyName != null" >
-      AND similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
+      AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
     </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
@@ -289,7 +289,7 @@
            normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
     </if>
     <if test="params.fuzzyName != null" >
-      AND similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
+      AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
     </if>
   </select>
 
@@ -597,5 +597,79 @@
     WHERE key = #{institutionKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
+
+  <select id="findPossibleDuplicates" resultType="DuplicateDto">
+    SELECT key1, code1, name1, physicalCountry1, physicalCity1, mailingCountry1, mailingCity1,
+    key2, code2, name2, physicalCountry2, physicalCity2, mailingCountry2, mailingCity2,
+    code_match, name_match, city_match, country_match, generated_date
+    FROM institution_duplicate_mv
+    <where>
+      <if test="params.sameCode != null" >
+        code_match = #{params.sameCode}
+      </if>
+      <if test="params.sameName != null" >
+        AND name_match = #{params.sameName}
+      </if>
+      <if test="params.sameFuzzyName != null" >
+        AND fuzzy_name_match = #{params.sameFuzzyName}
+      </if>
+      <if test="params.sameCity != null" >
+        AND city_match = #{params.sameCity}
+      </if>
+      <if test="params.sameCountry != null" >
+        AND country_match = #{params.sameCountry}
+      </if>
+      <if test="params.inCountries != null and params.inCountries.size > 0" >
+        AND (
+          physicalCountry1 IN
+          <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+          OR mailingCountry1 IN
+          <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+          OR physicalCountry2 IN
+          <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+          OR mailingCountry2 IN
+          <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>
+        )
+      </if>
+      <if test="params.notInCountries != null and params.notInCountries.size > 0" >
+        AND (
+          (physicalCountry1 IS NULL OR physicalCountry1 NOT IN
+          <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>)
+          AND (mailingCountry1 IS NULL OR mailingCountry1 NOT IN
+          <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>)
+          AND (physicalCountry2 IS NULL OR physicalCountry2 NOT IN
+          <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>)
+          AND (mailingCountry2 IS NULL OR mailingCountry2 NOT IN
+          <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+            #{item}
+          </foreach>)
+        )
+      </if>
+      <if test="params.excludeKeys != null and params.excludeKeys.size > 0" >
+        AND key1 NOT IN
+        <foreach item="item" collection="params.excludeKeys" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+        AND key2 NOT IN
+        <foreach item="item" collection="params.excludeKeys" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      </if>
+    </where>
+  </select>
 
 </mapper>
