@@ -19,9 +19,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.ContactableMapper;
-import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
-import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 
 import java.util.List;
@@ -65,6 +63,4 @@ public interface InstitutionMapper
 
   void convertToCollection(
       @Param("institutionKey") UUID institutionKey, @Param("collectionKey") UUID collectionKey);
-
-  List<DuplicateDto> findPossibleDuplicates(@Param("params") DuplicatesSearchParams params);
 }

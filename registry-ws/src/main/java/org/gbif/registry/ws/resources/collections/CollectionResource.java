@@ -17,6 +17,8 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
@@ -35,6 +37,8 @@ import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 
 import java.util.List;
@@ -50,6 +54,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 /**
@@ -63,6 +68,7 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;
+  private final DuplicatesService duplicatesService;
 
   public CollectionResource(
       CollectionMapper collectionMapper,
@@ -74,6 +80,7 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
       OccurrenceMappingMapper occurrenceMappingMapper,
       EventManager eventManager,
       CollectionMergeService collectionMergeService,
+      DuplicatesService duplicatesService,
       WithMyBatis withMyBatis) {
     super(
         collectionMapper,
@@ -90,6 +97,7 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
         Collection.class,
         withMyBatis);
     this.collectionMapper = collectionMapper;
+    this.duplicatesService = duplicatesService;
   }
 
   @GetMapping("{key}")
@@ -159,6 +167,27 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
   @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionMapper.suggest(q);
+  }
+
+  @GetMapping("possibleDuplicates")
+  public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
+    Preconditions.checkArgument(
+        !request.isEmpty(), "At least one param to check the same field is required");
+
+    return duplicatesService.findPossibleDuplicateCollections(
+        DuplicatesSearchParams.builder()
+            .sameFuzzyName(request.getSameFuzzyName())
+            .sameName(request.getSameName())
+            .sameCode(request.getSameCode())
+            .sameCountry(request.getSameCountry())
+            .sameCity(request.getSameCity())
+            .inCountries(request.getInCountries())
+            .notInCountries(request.getNotInCountries())
+            .excludeKeys(request.getExcludeKeys())
+            .sameInstitutionKey(request.getSameInstitution())
+            .inInstitutions(request.getInInstitutions())
+            .notInInstitutions(request.getNotInInstitutions())
+            .build());
   }
 
   private CollectionView convertToCollectionView(CollectionDto dto) {

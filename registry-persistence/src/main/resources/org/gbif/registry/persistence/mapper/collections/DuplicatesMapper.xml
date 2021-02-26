@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.DuplicatesMapper">
+
+  <select id="getInstitutionDuplicates" resultType="DuplicateDto">
+    SELECT key1, code1, name1, physical_country1, physical_city1, mailing_country1, mailing_city1,
+    key2, code2, name2, physical_country2, physical_city2, mailing_country2, mailing_city2,
+    code_match, name_match, city_match, country_match, generated_date
+    FROM institution_duplicates_mv
+    <where>
+      <if test="params.sameCode != null" >
+        code_match = #{params.sameCode}
+      </if>
+      <if test="params.sameName != null" >
+        AND name_match = #{params.sameName}
+      </if>
+      <if test="params.sameFuzzyName != null" >
+        AND fuzzy_name_match = #{params.sameFuzzyName}
+      </if>
+      <if test="params.sameCity != null" >
+        AND city_match = #{params.sameCity}
+      </if>
+      <if test="params.sameCountry != null" >
+        AND country_match = #{params.sameCountry}
+      </if>
+      <include refid="checkInCountriesParam"/>
+      <include refid="checkNotInCountriesParam"/>
+      <include refid="checkExcludeKeysParam"/>
+    </where>
+  </select>
+
+  <select id="getCollectionDuplicates" resultType="DuplicateDto">
+    SELECT key1, code1, name1, institution_key1, physical_country1, physical_city1, mailing_country1, mailing_city1,
+    key2, code2, name2, institution_key2, physical_country2, physical_city2, mailing_country2, mailing_city2,
+    code_match, name_match, institution_key_match, city_match, country_match, generated_date
+    FROM collection_duplicates_mv
+    <where>
+      <if test="params.sameCode != null" >
+        code_match = #{params.sameCode}
+      </if>
+      <if test="params.sameName != null" >
+        AND name_match = #{params.sameName}
+      </if>
+      <if test="params.sameFuzzyName != null" >
+        AND fuzzy_name_match = #{params.sameFuzzyName}
+      </if>
+      <if test="params.sameCity != null" >
+        AND city_match = #{params.sameCity}
+      </if>
+      <if test="params.sameCountry != null" >
+        AND country_match = #{params.sameCountry}
+      </if>
+      <if test="params.sameInstitutionKey != null" >
+        AND institution_key_match = #{params.sameInstitutionKey}
+      </if>
+      <if test="params.inInstitutions != null and params.inInstitutions.size > 0" >
+        AND (
+        institution_key1 IN
+        <foreach item="item" collection="params.inInstitutions" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+        OR institution_key2 IN
+        <foreach item="item" collection="params.inInstitutions" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+        )
+      </if>
+      <if test="params.notInInstitutions != null and params.notInInstitutions.size > 0" >
+        AND (
+          (institution_key1 IS NULL OR institution_key1 NOT IN
+          <foreach item="item" collection="params.notInInstitutions" open="(" separator="," close=")">
+            #{item}
+          </foreach>)
+          AND (institution_key2 IS NULL OR institution_key2 NOT IN
+          <foreach item="item" collection="params.notInInstitutions" open="(" separator="," close=")">
+            #{item}
+          </foreach>)
+        )
+      </if>
+      <include refid="checkInCountriesParam"/>
+      <include refid="checkNotInCountriesParam"/>
+      <include refid="checkExcludeKeysParam"/>
+    </where>
+  </select>
+
+  <sql id="checkInCountriesParam">
+    <if test="params.inCountries != null and params.inCountries.size > 0" >
+      AND (
+        physical_country1 IN
+        <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+        OR mailing_country1 IN
+        <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+        OR physical_country2 IN
+        <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+        OR mailing_country2 IN
+        <foreach item="item" collection="params.inCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      )
+    </if>
+  </sql>
+
+  <sql id="checkNotInCountriesParam">
+    <if test="params.notInCountries != null and params.notInCountries.size > 0" >
+      AND (
+        (physical_country1 IS NULL OR physical_country1 NOT IN
+        <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>)
+        AND (mailing_country1 IS NULL OR mailing_country1 NOT IN
+        <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>)
+        AND (physical_country2 IS NULL OR physical_country2 NOT IN
+        <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>)
+        AND (mailing_country2 IS NULL OR mailing_country2 NOT IN
+        <foreach item="item" collection="params.notInCountries" open="(" separator="," close=")">
+          #{item}
+        </foreach>)
+      )
+    </if>
+  </sql>
+
+  <sql id="checkExcludeKeysParam">
+    <if test="params.excludeKeys != null and params.excludeKeys.size > 0" >
+      AND key1 NOT IN
+      <foreach item="item" collection="params.excludeKeys" open="(" separator="," close=")">
+        #{item}
+      </foreach>
+      AND key2 NOT IN
+      <foreach item="item" collection="params.excludeKeys" open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
+  </sql>
+
+</mapper>
