@@ -312,7 +312,7 @@ public abstract class ExtendedCollectionEntityIT<
 
     DuplicatesResult result = wsClient.findPossibleDuplicates(request);
     assertEquals(1, result.getDuplicates().size());
-    assertEquals(3, result.getDuplicates().get(0).size());
+    assertEquals(4, result.getDuplicates().get(0).size());
 
     // same fuzzy name
     request = new DuplicatesRequest();

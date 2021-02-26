@@ -7,7 +7,9 @@ import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +17,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DuplicatesService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DuplicatesService.class);
 
   private final DuplicatesMapper duplicatesMapper;
 
@@ -46,9 +52,7 @@ public class DuplicatesService {
         dtos.stream().collect(Collectors.groupingBy(DuplicateDto::getKey1));
 
     // list to store the groups of duplicates
-    List<Set<Duplicate>> duplicates = new ArrayList<>();
-    // aux list to keep track of the keys of each created group
-    List<Set<UUID>> groupsCreated = new ArrayList<>();
+    Map<Set<UUID>, Set<Duplicate>> duplicates = new HashMap<>();
 
     // we sort them so the bigger groups are created first and it's easier to find subsets of these
     // groups that should be discarded
@@ -91,15 +95,26 @@ public class DuplicatesService {
                     groupKeys.add(v.getKey2());
                   });
 
-              // add the group if it doesn't exist already
-              if (groupsCreated.stream().noneMatch(g -> g.containsAll(groupKeys))) {
-                duplicates.add(duplicatesGroup);
-                groupsCreated.add(groupKeys);
+              List<Set<UUID>> groupsFound =
+                  duplicates.keySet().stream()
+                      .filter(g -> !Collections.disjoint(g, groupKeys))
+                      .collect(Collectors.toList());
+
+              if (groupsFound.isEmpty()) {
+                // the group doesn't exist so we add it
+                duplicates.put(groupKeys, duplicatesGroup);
+              } else {
+                // the group exists so we only add the missing duplicates
+                if (groupsFound.size() > 1) {
+                  // this should never happen
+                  LOG.warn("More than 1 duplicates found for dtos: {}", dtos);
+                }
+                duplicates.get(groupsFound.get(0)).addAll(duplicatesGroup);
               }
             });
 
     DuplicatesResult result = new DuplicatesResult();
-    result.setDuplicates(duplicates);
+    result.setDuplicates(new ArrayList<>(duplicates.values()));
     // all the dtos are supposed to have the same generated date
     result.setGenerationDate(dtos.get(0).getGeneratedDate());
 

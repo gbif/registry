@@ -3,6 +3,7 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 import org.gbif.api.vocabulary.Country;
 
 import java.time.LocalDateTime;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 public class DuplicateDto {
@@ -242,5 +243,37 @@ public class DuplicateDto {
 
   public void setInstitutionKeyMatch(boolean institutionKeyMatch) {
     this.institutionKeyMatch = institutionKeyMatch;
+  }
+
+  @Override
+  public String toString() {
+    return new StringJoiner(", ", DuplicateDto.class.getSimpleName() + "[", "]")
+        .add("key1=" + key1)
+        .add("code1='" + code1 + "'")
+        .add("name1='" + name1 + "'")
+        .add("physicalCountry1=" + physicalCountry1)
+        .add("physicalCity1='" + physicalCity1 + "'")
+        .add("mailingCountry1=" + mailingCountry1)
+        .add("mailingCity1='" + mailingCity1 + "'")
+        .add("created1=" + created1)
+        .add("modified1=" + modified1)
+        .add("key2=" + key2)
+        .add("code2='" + code2 + "'")
+        .add("name2='" + name2 + "'")
+        .add("physicalCountry2=" + physicalCountry2)
+        .add("physicalCity2='" + physicalCity2 + "'")
+        .add("mailingCountry2=" + mailingCountry2)
+        .add("mailingCity2='" + mailingCity2 + "'")
+        .add("created2=" + created2)
+        .add("modified2=" + modified2)
+        .add("generatedDate=" + generatedDate)
+        .add("codeMatch=" + codeMatch)
+        .add("nameMatch=" + nameMatch)
+        .add("cityMatch=" + cityMatch)
+        .add("countryMatch=" + countryMatch)
+        .add("institutionKey1=" + institutionKey1)
+        .add("institutionKey2=" + institutionKey2)
+        .add("institutionKeyMatch=" + institutionKeyMatch)
+        .toString();
   }
 }
