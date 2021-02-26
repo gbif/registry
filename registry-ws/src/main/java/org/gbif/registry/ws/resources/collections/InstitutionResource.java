@@ -17,6 +17,8 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -32,7 +34,9 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
 import java.util.List;
@@ -50,6 +54,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
@@ -67,6 +72,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
 
   private final InstitutionMapper institutionMapper;
   private final InstitutionMergeService institutionMergeService;
+  private final DuplicatesService duplicatesService;
 
   public InstitutionResource(
       InstitutionMapper institutionMapper,
@@ -77,6 +83,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
       InstitutionMergeService institutionMergeService,
+      DuplicatesService duplicatesService,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
@@ -95,6 +102,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         withMyBatis);
     this.institutionMapper = institutionMapper;
     this.institutionMergeService = institutionMergeService;
+    this.duplicatesService = duplicatesService;
   }
 
   @GetMapping("{key}")
@@ -155,6 +163,24 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
     return institutionMergeService.convertToCollection(
         entityKey, params.institutionForNewCollectionKey, params.nameForNewInstitution);
+  }
+
+  @GetMapping("possibleDuplicates")
+  public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
+    Preconditions.checkArgument(
+        !request.isEmpty(), "At least one param to check the same field is required");
+
+    return duplicatesService.findPossibleDuplicateInstitutions(
+        DuplicatesSearchParams.builder()
+            .sameFuzzyName(request.getSameFuzzyName())
+            .sameName(request.getSameName())
+            .sameCode(request.getSameCode())
+            .sameCountry(request.getSameCountry())
+            .sameCity(request.getSameCity())
+            .inCountries(request.getInCountries())
+            .notInCountries(request.getNotInCountries())
+            .excludeKeys(request.getExcludeKeys())
+            .build());
   }
 
   private static final class ConvertToCollectionParams {
