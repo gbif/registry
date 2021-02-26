@@ -6,27 +6,60 @@
   <changeSet id="91" author="mlopez" runInTransaction="false" ignore="true">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-        CREATE MATERIALIZED VIEW IF NOT EXISTS institution_duplicate_mv AS
-        SELECT DISTINCT ON(greatest(i1.key, i2."key"), least(i1.key, i2."key"))
-               i1.key key1, i1.code code1, i1.name name1, a1.country physicalCountry1, a1.city physicalCity1, ma1.country mailingCountry1, ma1.city mailingCity1,
-               i2."key" key2, i2.code code2, i2."name" name2, a2.country physicalCountry2, a2.city physicalCity2, ma2.country mailingCountry2, ma2.city mailingCity2,
-               i1.code = i2.code as code_match, similar_name(i1."name", i2."name") as fuzzy_name_match, normalize_name(i1."name") = normalize_name(i2."name") as name_match,
-               (normalize_name(a1.city) = normalize_name(a2.city)
-                  OR normalize_name(a1.city) = normalize_name(ma2.city)
-                  OR normalize_name(ma1.city) = normalize_name(a2.city)
-                  OR normalize_name(ma1.city) = normalize_name(ma2.city)) as city_match,
-               (a1.country = a2.country
-                  OR a1.country = ma2.country
-                  OR ma1.country = a2.country
-                  OR ma1.country = ma2.country) as country_match, now() as generated_date
-          FROM institution i1
-          INNER JOIN institution i2 ON i1.key != i2.key and (i1.code = i2.code or similar_name(i1."name", i2."name") or normalize_name(i1."name") = normalize_name(i2."name"))
-          LEFT JOIN address a1 ON i1.address_key = a1.key
-          LEFT JOIN address a2 ON i2.address_key = a2.key
-          LEFT JOIN address ma1 ON i1.mailing_address_key = ma1.key
-          LEFT JOIN address ma2 ON i2.mailing_address_key = ma2.key;
+        CREATE MATERIALIZED VIEW IF NOT EXISTS institution_duplicates_mv AS
+        SELECT DISTINCT ON(greatest(i1.key, i2.key), least(i1.key, i2.key))
+             i1.key key1, i1.code code1, i1.name name1,
+             a1.country physical_country1, a1.city physical_city1, ma1.country mailing_country1, ma1.city mailing_city1,
+             i2.key key2, i2.code code2, i2.name name2,
+             a2.country physical_country2, a2.city physical_city2, ma2.country mailing_country2, ma2.city mailing_city2,
+             i1.code = i2.code AS code_match, similar_name(i1.name, i2.name) AS fuzzy_name_match, normalize_name(i1.name) = normalize_name(i2.name) AS name_match,
+             (normalize_name(a1.city) = normalize_name(a2.city)
+                OR normalize_name(a1.city) = normalize_name(ma2.city)
+                OR normalize_name(ma1.city) = normalize_name(a2.city)
+                OR normalize_name(ma1.city) = normalize_name(ma2.city)) AS city_match,
+             (a1.country = a2.country
+                OR a1.country = ma2.country
+                OR ma1.country = a2.country
+                OR ma1.country = ma2.country) AS country_match,
+             now() AS generated_date
+        FROM institution i1
+        INNER JOIN institution i2 ON i1.key != i2.key
+            AND (i1.code = i2.code or similar_name(i1.name, i2.name) or normalize_name(i1.name) = normalize_name(i2.name))
+        LEFT JOIN address a1 ON i1.address_key = a1.key
+        LEFT JOIN address a2 ON i2.address_key = a2.key
+        LEFT JOIN address ma1 ON i1.mailing_address_key = ma1.key
+        LEFT JOIN address ma2 ON i2.mailing_address_key = ma2.key;
 
-       	CREATE UNIQUE INDEX IF NOT EXISTS institution_duplicate_mv_unique_idx ON institution_duplicate_mv(key1, key2, code_match, fuzzy_name_match, name_match, city_match, country_match);
+       	CREATE UNIQUE INDEX IF NOT EXISTS institution_duplicates_mv_unique_idx
+       	  ON institution_duplicates_mv(key1, key2, code_match, fuzzy_name_match, name_match, city_match, country_match);
+
+        CREATE MATERIALIZED VIEW IF NOT EXISTS collection_duplicates_mv AS
+        SELECT DISTINCT ON(greatest(c1.key, c2.key), least(c1.key, c2.key))
+             c1.key key1, c1.code code1, c1.name name1, c1.institution_key institution_key1,
+             a1.country physical_country1, a1.city physical_city1, ma1.country mailing_country1, ma1.city mailing_city1,
+             c2.key key2, c2.code code2, c2.name name2, c2.institution_key institution_key2,
+             a2.country physical_country2, a2.city physical_city2, ma2.country mailing_country2, ma2.city mailing_city2,
+             c1.code = c2.code AS code_match, similar_name(c1.name, c2.name) AS fuzzy_name_match,
+             normalize_name(c1.name) = normalize_name(c2.name) AS name_match, c1.institution_key = c2.institution_key AS institution_key_match
+             (normalize_name(a1.city) = normalize_name(a2.city)
+                OR normalize_name(a1.city) = normalize_name(ma2.city)
+                OR normalize_name(ma1.city) = normalize_name(a2.city)
+                OR normalize_name(ma1.city) = normalize_name(ma2.city)) AS city_match,
+             (a1.country = a2.country
+                OR a1.country = ma2.country
+                OR ma1.country = a2.country
+                OR ma1.country = ma2.country) AS country_match,
+             now() AS generated_date
+        FROM collection c1
+        INNER JOIN collection c2 ON c1.key != c2.key
+            AND (c1.code = c2.code or similar_name(c1.name, c2.name) or normalize_name(c1.name) = normalize_name(c2.name))
+        LEFT JOIN address a1 ON c1.address_key = a1.key
+        LEFT JOIN address a2 ON c2.address_key = a2.key
+        LEFT JOIN address ma1 ON c1.mailing_address_key = ma1.key
+        LEFT JOIN address ma2 ON c2.mailing_address_key = ma2.key;
+
+       	CREATE UNIQUE INDEX IF NOT EXISTS collection_duplicates_mv_unique_idx
+       	  ON collection_duplicates_mv(key1, key2, code_match, fuzzy_name_match, name_match, city_match, country_match, institution_key_match);
       ]]>
     </sql>
   </changeSet>

@@ -31,6 +31,11 @@ public class DuplicateDto {
   private boolean cityMatch;
   private boolean countryMatch;
 
+  // only for collections
+  private UUID institutionKey1;
+  private UUID institutionKey2;
+  private boolean institutionKeyMatch;
+
   public UUID getKey1() {
     return key1;
   }
@@ -213,5 +218,29 @@ public class DuplicateDto {
 
   public void setCountryMatch(boolean countryMatch) {
     this.countryMatch = countryMatch;
+  }
+
+  public UUID getInstitutionKey1() {
+    return institutionKey1;
+  }
+
+  public void setInstitutionKey1(UUID institutionKey1) {
+    this.institutionKey1 = institutionKey1;
+  }
+
+  public UUID getInstitutionKey2() {
+    return institutionKey2;
+  }
+
+  public void setInstitutionKey2(UUID institutionKey2) {
+    this.institutionKey2 = institutionKey2;
+  }
+
+  public boolean isInstitutionKeyMatch() {
+    return institutionKeyMatch;
+  }
+
+  public void setInstitutionKeyMatch(boolean institutionKeyMatch) {
+    this.institutionKeyMatch = institutionKeyMatch;
   }
 }

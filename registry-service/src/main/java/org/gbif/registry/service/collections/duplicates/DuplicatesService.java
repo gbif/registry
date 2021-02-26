@@ -2,7 +2,7 @@ package org.gbif.registry.service.collections.duplicates;
 
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.DuplicatesMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 
@@ -21,16 +21,22 @@ import org.springframework.stereotype.Service;
 @Service
 public class DuplicatesService {
 
-  private final InstitutionMapper institutionMapper;
+  private final DuplicatesMapper duplicatesMapper;
 
   @Autowired
-  public DuplicatesService(InstitutionMapper institutionMapper) {
-    this.institutionMapper = institutionMapper;
+  public DuplicatesService(DuplicatesMapper duplicatesMapper) {
+    this.duplicatesMapper = duplicatesMapper;
   }
 
   public DuplicatesResult findPossibleDuplicateInstitutions(DuplicatesSearchParams params) {
-    List<DuplicateDto> dtos = institutionMapper.findPossibleDuplicates(params);
+    return processDBResults(duplicatesMapper.getInstitutionDuplicates(params));
+  }
 
+  public DuplicatesResult findPossibleDuplicateCollections(DuplicatesSearchParams params) {
+    return processDBResults(duplicatesMapper.getCollectionDuplicates(params));
+  }
+
+  private DuplicatesResult processDBResults(List<DuplicateDto> dtos) {
     if (dtos.isEmpty()) {
       return new DuplicatesResult();
     }
@@ -68,6 +74,7 @@ public class DuplicatesService {
                     duplicate1.setPhysicalCountry(v.getPhysicalCountry1());
                     duplicate1.setMailingCity(v.getMailingCity1());
                     duplicate1.setMailingCountry(v.getMailingCountry1());
+                    duplicate1.setInstitutionKey(v.getInstitutionKey1());
                     duplicatesGroup.add(duplicate1);
                     groupKeys.add(v.getKey1());
 
@@ -79,6 +86,7 @@ public class DuplicatesService {
                     duplicate2.setPhysicalCountry(v.getPhysicalCountry2());
                     duplicate2.setMailingCity(v.getMailingCity2());
                     duplicate2.setMailingCountry(v.getMailingCountry2());
+                    duplicate2.setInstitutionKey(v.getInstitutionKey2());
                     duplicatesGroup.add(duplicate2);
                     groupKeys.add(v.getKey2());
                   });

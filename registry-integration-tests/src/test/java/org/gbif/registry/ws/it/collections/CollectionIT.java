@@ -20,6 +20,9 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.duplicates.Duplicate;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -41,12 +44,16 @@ import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.validation.ValidationException;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -569,6 +576,35 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     c.setReplacedBy(UUID.randomUUID());
     assertThrows(IllegalArgumentException.class, () -> service.update(c));
+  }
+
+  @Test
+  public void possibleDuplicatesTest() {
+    testDuplicatesCommonCases();
+
+    CollectionClient collClient = (CollectionClient) client;
+
+    DuplicatesRequest request = new DuplicatesRequest();
+    request.setSameInstitution(true);
+    request.setSameCode(true);
+
+    DuplicatesResult result = collClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(2, result.getDuplicates().get(0).size());
+
+    Set<UUID> keysFound =
+        result.getDuplicates().get(0).stream()
+            .map(Duplicate::getInstitutionKey)
+            .collect(Collectors.toSet());
+    request.setInInstitutions(new ArrayList<>(keysFound));
+    result = collClient.findPossibleDuplicates(request);
+    assertEquals(1, result.getDuplicates().size());
+    assertEquals(2, result.getDuplicates().get(0).size());
+
+    request.setInInstitutions(null);
+    request.setNotInInstitutions(new ArrayList<>(keysFound));
+    result = collClient.findPossibleDuplicates(request);
+    assertEquals(0, result.getDuplicates().size());
   }
 
   @Override

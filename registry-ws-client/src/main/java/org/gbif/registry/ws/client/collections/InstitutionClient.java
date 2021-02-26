@@ -57,11 +57,4 @@ public interface InstitutionClient
   @ResponseBody
   @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
-
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "possibleDuplicates",
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  DuplicatesResult findPossibleDuplicates(@SpringQueryMap DuplicatesRequest request);
 }
