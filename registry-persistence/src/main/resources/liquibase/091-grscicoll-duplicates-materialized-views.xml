@@ -40,7 +40,7 @@
              c2.key key2, c2.code code2, c2.name name2, c2.institution_key institution_key2,
              a2.country physical_country2, a2.city physical_city2, ma2.country mailing_country2, ma2.city mailing_city2,
              c1.code = c2.code AS code_match, similar_name(c1.name, c2.name) AS fuzzy_name_match,
-             normalize_name(c1.name) = normalize_name(c2.name) AS name_match, c1.institution_key = c2.institution_key AS institution_key_match
+             normalize_name(c1.name) = normalize_name(c2.name) AS name_match, c1.institution_key = c2.institution_key AS institution_key_match,
              (normalize_name(a1.city) = normalize_name(a2.city)
                 OR normalize_name(a1.city) = normalize_name(ma2.city)
                 OR normalize_name(ma1.city) = normalize_name(a2.city)
