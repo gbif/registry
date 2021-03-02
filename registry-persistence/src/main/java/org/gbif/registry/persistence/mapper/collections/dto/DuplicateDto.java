@@ -31,6 +31,7 @@ public class DuplicateDto {
   private boolean nameMatch;
   private boolean cityMatch;
   private boolean countryMatch;
+  private boolean fuzzyNameMatch;
 
   // only for collections
   private UUID institutionKey1;
@@ -221,6 +222,14 @@ public class DuplicateDto {
     this.countryMatch = countryMatch;
   }
 
+  public boolean isFuzzyNameMatch() {
+    return fuzzyNameMatch;
+  }
+
+  public void setFuzzyNameMatch(boolean fuzzyNameMatch) {
+    this.fuzzyNameMatch = fuzzyNameMatch;
+  }
+
   public UUID getInstitutionKey1() {
     return institutionKey1;
   }
@@ -271,6 +280,7 @@ public class DuplicateDto {
         .add("nameMatch=" + nameMatch)
         .add("cityMatch=" + cityMatch)
         .add("countryMatch=" + countryMatch)
+        .add("fuzzyNameMatch=" + fuzzyNameMatch)
         .add("institutionKey1=" + institutionKey1)
         .add("institutionKey2=" + institutionKey2)
         .add("institutionKeyMatch=" + institutionKeyMatch)

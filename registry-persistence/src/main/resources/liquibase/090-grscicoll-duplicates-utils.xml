@@ -16,6 +16,12 @@
         LANGUAGE plpgsql
         IMMUTABLE
         RETURNS NULL ON NULL INPUT;
+
+        CREATE INDEX institution_address_key_idx ON institution(address_key);
+        CREATE INDEX institution_mailing_address_key_idx ON institution(mailing_address_key);
+
+        CREATE INDEX collection_address_key_idx ON collection(address_key);
+        CREATE INDEX collection_mailing_address_key_idx ON collection(mailing_address_key);
       ]]>
     </sql>
   </changeSet>

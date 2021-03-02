@@ -5,7 +5,7 @@
   <select id="getInstitutionDuplicates" resultType="DuplicateDto">
     SELECT key1, code1, name1, physical_country1, physical_city1, mailing_country1, mailing_city1,
     key2, code2, name2, physical_country2, physical_city2, mailing_country2, mailing_city2,
-    code_match, name_match, city_match, country_match, generated_date
+    code_match, name_match, fuzzy_name_match, city_match, country_match, generated_date
     FROM institution_duplicates_mv
     <where>
       <if test="params.sameCode != null" >
@@ -32,7 +32,7 @@
   <select id="getCollectionDuplicates" resultType="DuplicateDto">
     SELECT key1, code1, name1, institution_key1, physical_country1, physical_city1, mailing_country1, mailing_city1,
     key2, code2, name2, institution_key2, physical_country2, physical_city2, mailing_country2, mailing_city2,
-    code_match, name_match, institution_key_match, city_match, country_match, generated_date
+    code_match, name_match, fuzzy_name_match, institution_key_match, city_match, country_match, generated_date
     FROM collection_duplicates_mv
     <where>
       <if test="params.sameCode != null" >
