@@ -98,6 +98,7 @@ public class SecuredEditorAnnotatedMethodsTest {
   private static final List<Pattern> DATASET_RESOURCE_WITH_KEY =
       Arrays.asList(
           Pattern.compile("^/dataset/[0-9a-f-]+$"),
+          Pattern.compile("^/dataset/[0-9a-f-]+/crawl$"),
           Pattern.compile(
               "^/dataset/[0-9a-f-]+/(comment|tag|contact|endpoint|identifier|document)$"),
           Pattern.compile(

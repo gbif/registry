@@ -835,7 +835,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * crawl, and applies necessary security.
    */
   @PostMapping("{key}/crawl")
-  @Secured(ADMIN_ROLE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawl(
       @PathVariable("key") UUID datasetKey,
       @RequestParam(value = "platform", required = false) String platform) {
