@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -35,17 +36,22 @@ public class DuplicatesService {
   }
 
   public DuplicatesResult findPossibleDuplicateInstitutions(DuplicatesSearchParams params) {
-    return processDBResults(duplicatesMapper.getInstitutionDuplicates(params));
+    return processDBResults(duplicatesMapper::getInstitutionDuplicates, params);
   }
 
   public DuplicatesResult findPossibleDuplicateCollections(DuplicatesSearchParams params) {
-    return processDBResults(duplicatesMapper.getCollectionDuplicates(params));
+    return processDBResults(duplicatesMapper::getCollectionDuplicates, params);
   }
 
-  private DuplicatesResult processDBResults(List<DuplicateDto> dtos) {
+  private DuplicatesResult processDBResults(
+      Function<DuplicatesSearchParams, List<DuplicateDto>> dtosFn, DuplicatesSearchParams params) {
+    List<DuplicateDto> dtos = dtosFn.apply(params);
+
     if (dtos.isEmpty()) {
       return new DuplicatesResult();
     }
+
+    boolean transitive = assumeTransitiveClusters(params);
 
     // group by key1
     Map<UUID, List<DuplicateDto>> duplicatesMap =
@@ -58,7 +64,7 @@ public class DuplicatesService {
     // groups that should be discarded
     duplicatesMap.values().stream()
         // we sort them so the bigger groups are created first and it's easier to find subsets of
-        // these groups that should be discarded
+        // these groups that should be discarded. Specially useful for non-transitive clusters
         .sorted(Comparator.comparing(List::size, Comparator.reverseOrder()))
         .forEach(
             groupValues -> {
@@ -95,10 +101,22 @@ public class DuplicatesService {
                     groupKeys.add(v.getKey2());
                   });
 
-              List<Set<UUID>> groupsFound =
-                  duplicates.keySet().stream()
-                      .filter(g -> !Collections.disjoint(g, groupKeys))
-                      .collect(Collectors.toList());
+              List<Set<UUID>> groupsFound;
+              if (transitive) {
+                // for transitive clusters we check if there is a group that contains at least 1 of
+                // the keys of this new group
+                groupsFound =
+                    duplicates.keySet().stream()
+                        .filter(g -> !Collections.disjoint(g, groupKeys))
+                        .collect(Collectors.toList());
+              } else {
+                // for non-transitive clusters we check if there is a group that already contains
+                // all the keys of this new group so we merge groups
+                groupsFound =
+                    duplicates.keySet().stream()
+                        .filter(g -> g.containsAll(groupKeys))
+                        .collect(Collectors.toList());
+              }
 
               if (groupsFound.isEmpty()) {
                 // the group doesn't exist so we add it
@@ -107,7 +125,7 @@ public class DuplicatesService {
                 // the group exists so we only add the missing duplicates
                 if (groupsFound.size() > 1) {
                   // this should never happen
-                  LOG.warn("More than 1 duplicates found for dtos: {}", dtos);
+                  LOG.warn("More than 1 duplicates found for dtos with params: {}", params);
                 }
                 duplicates.get(groupsFound.get(0)).addAll(duplicatesGroup);
               }
@@ -119,5 +137,14 @@ public class DuplicatesService {
     result.setGenerationDate(dtos.get(0).getGeneratedDate());
 
     return result;
+  }
+
+  private boolean assumeTransitiveClusters(DuplicatesSearchParams params) {
+    if (Boolean.TRUE.equals(params.getSameCode()) || Boolean.TRUE.equals(params.getSameName())) {
+      return true;
+    } else {
+      // if uses the fuzzy name it's not transitive
+      return !Boolean.TRUE.equals(params.getSameFuzzyName());
+    }
   }
 }
