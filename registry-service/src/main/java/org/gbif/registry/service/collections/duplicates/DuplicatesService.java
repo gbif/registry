@@ -4,17 +4,10 @@ import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.registry.persistence.mapper.collections.DuplicatesMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
+import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,15 +29,23 @@ public class DuplicatesService {
   }
 
   public DuplicatesResult findPossibleDuplicateInstitutions(DuplicatesSearchParams params) {
-    return processDBResults(duplicatesMapper::getInstitutionDuplicates, params);
+    return processDBResults(
+        duplicatesMapper::getInstitutionDuplicates,
+        duplicatesMapper::getInstitutionsMetadata,
+        params);
   }
 
   public DuplicatesResult findPossibleDuplicateCollections(DuplicatesSearchParams params) {
-    return processDBResults(duplicatesMapper::getCollectionDuplicates, params);
+    return processDBResults(
+        duplicatesMapper::getCollectionDuplicates,
+        duplicatesMapper::getCollectionsMetadata,
+        params);
   }
 
   private DuplicatesResult processDBResults(
-      Function<DuplicatesSearchParams, List<DuplicateDto>> dtosFn, DuplicatesSearchParams params) {
+      Function<DuplicatesSearchParams, List<DuplicateDto>> dtosFn,
+      Function<Set<UUID>, List<DuplicateMetadataDto>> metadataFn,
+      DuplicatesSearchParams params) {
     List<DuplicateDto> dtos = dtosFn.apply(params);
 
     if (dtos.isEmpty()) {
@@ -136,7 +137,35 @@ public class DuplicatesService {
     // all the dtos are supposed to have the same generated date
     result.setGenerationDate(dtos.get(0).getGeneratedDate());
 
+    // decorate the result
+    Set<UUID> allKeys =
+        duplicates.keySet().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+    decorateResult(allKeys, result, metadataFn);
+
     return result;
+  }
+
+  private void decorateResult(
+      Set<UUID> keys,
+      DuplicatesResult result,
+      Function<Set<UUID>, List<DuplicateMetadataDto>> metadataFn) {
+    Map<UUID, DuplicateMetadataDto> metadataDtos =
+        metadataFn.apply(keys).stream()
+            .collect(Collectors.toMap(DuplicateMetadataDto::getKey, v -> v));
+
+    result
+        .getDuplicates()
+        .forEach(
+            group ->
+                group.forEach(
+                    duplicate -> {
+                      DuplicateMetadataDto metadata = metadataDtos.get(duplicate.getKey());
+                      if (metadata != null) {
+                        duplicate.setActive(metadata.isActive());
+                        duplicate.setIh(metadata.isIh());
+                        duplicate.setIdigbio(metadata.isIdigbio());
+                      }
+                    }));
   }
 
   private boolean assumeTransitiveClusters(DuplicatesSearchParams params) {

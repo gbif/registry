@@ -142,4 +142,32 @@
     </if>
   </sql>
 
+  <select id="getInstitutionsMetadata" resultType="DuplicateMetadataDto">
+    SELECT DISTINCT ON (i.key) i.key, i.active, idt IS NOT NULL AS is_ih, mt IS NOT NULL AS is_idigbio
+    FROM institution i
+    LEFT JOIN institution_identifier ii ON ii.institution_key = i.key
+    LEFT JOIN identifier idt ON idt.key = ii.identifier_key AND idt.type = 'IH_IRN'
+    LEFT JOIN institution_machine_tag imt ON imt.institution_key = i.key
+    LEFT JOIN machine_tag mt ON mt.key = imt.machine_tag_key AND mt.namespace = 'iDigBio.org'
+    WHERE i.key IN
+    <foreach item="item" collection="institutionKeys" open="(" separator="," close=")">
+      #{item}
+    </foreach>
+    ORDER BY i.key, idt.key, mt.key NULLS LAST
+  </select>
+
+  <select id="getCollectionsMetadata" resultType="DuplicateMetadataDto">
+    SELECT DISTINCT ON (c.key) c.key, c.active, idt IS NOT NULL AS is_ih, mt IS NOT NULL AS is_idigbio
+    FROM collection c
+    LEFT JOIN collection_identifier ci ON ci.collection_key = c.key
+    LEFT JOIN identifier idt ON idt.key = ci.identifier_key AND idt.type = 'IH_IRN'
+    LEFT JOIN collection_machine_tag cmt ON cmt.collection_key = c.key
+    LEFT JOIN machine_tag mt ON mt.key = cmt.machine_tag_key AND mt.namespace = 'iDigBio.org'
+    WHERE c.key IN
+    <foreach item="item" collection="collectionKeys" open="(" separator="," close=")">
+      #{item}
+    </foreach>
+    ORDER BY c.key, idt.key, mt.key NULLS LAST
+  </select>
+
 </mapper>
