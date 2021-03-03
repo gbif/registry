@@ -63,6 +63,7 @@ import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHand
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
+import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
@@ -145,6 +146,9 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DuplicateMetadataDto", DuplicateMetadataDto.class);
       configuration.getTypeAliasRegistry().registerAlias("SearchDto", SearchDto.class);
       configuration
           .getTypeAliasRegistry()

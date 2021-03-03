@@ -16,9 +16,12 @@
 package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
+import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +32,10 @@ public interface DuplicatesMapper {
   List<DuplicateDto> getInstitutionDuplicates(@Param("params") DuplicatesSearchParams params);
 
   List<DuplicateDto> getCollectionDuplicates(@Param("params") DuplicatesSearchParams params);
+
+  List<DuplicateMetadataDto> getInstitutionsMetadata(
+      @Param("institutionKeys") Set<UUID> institutionKeys);
+
+  List<DuplicateMetadataDto> getCollectionsMetadata(
+      @Param("collectionKeys") Set<UUID> collectionKeys);
 }
