@@ -1,10 +1,10 @@
-# GRSciColl Catalog priority roadmap 2021
+# GRSciColl Catalogue priority roadmap 2021
 
-This roadmap builds on the previous work of GRSciColl Catalog that connected Index Herbariorum, imported the iDigBio content and linked GBIF occurrence records to the entities in GRSciColl. The roadmap identifies six key priorities to progress.
+This roadmap builds on the previous work of GRSciColl Catalogue that connected Index Herbariorum, imported the iDigBio content and linked GBIF occurrence records to the entities in GRSciColl. The roadmap identifies six key priorities to progress.
 
 ## Reduce the amount of duplicate records
 
-The connection with Index Herbariorum and import of iDigBio enriched the catalog, but also increased the number of duplicate entities that can’t be automatically handled. This will be addressed by:
+The connection with Index Herbariorum and import of iDigBio enriched the catalogue, but also increased the number of duplicate entities that can’t be automatically handled. This will be addressed by:
 
 *   Documenting guidelines on how a data manager can resolve duplicate issues [[REG-316](https://github.com/gbif/registry/issues/316)]. The guidelines will provide example scenarios, explain the recommended approach to defining codes and explain the implications on external systems (see master data management below).
 *   Develop tools that help identify potential duplicates alerting them to managers [[REG-191](https://github.com/gbif/registry/issues/191)] 
@@ -29,14 +29,14 @@ The current processes are weak, and don’t capture the proposed change in a str
 
 ## Define and implement the master data management solution
 
-There are potentially multiple sources of truth for the metadata in the catalog which needs to be resolved; a problem known as [master data management](https://en.wikipedia.org/wiki/Master_data_management). For example we have information available in a dataset metadata description, an existing GRSciColl entry and an Index Herbariorum record.
+There are potentially multiple sources of truth for the metadata in the catalogue which needs to be resolved; a problem known as [master data management](https://en.wikipedia.org/wiki/Master_data_management). For example we have information available in a dataset metadata description, an existing GRSciColl entry and an Index Herbariorum record.
 
-*   Define, implement and document the approach taken by the catalog for handling differing views of metadata [[REG-319](https://github.com/gbif/registry/issues/319)] 
+*   Define, implement and document the approach taken by the catalogue for handling differing views of metadata [[REG-319](https://github.com/gbif/registry/issues/319)] 
     *   An approach <span style="text-decoration:underline;">could</span> be as follows: 
-        *   For each institution and collection entry in the catalog, a single source of truth is identified for the key metadata (title, description etc). This may be one of: 
+        *   For each institution and collection entry in the catalogue, a single source of truth is identified for the key metadata (title, description etc). This may be one of: 
             *   An entry from Index Herbariorum, or other system that is automatically integrated through harvesting
             *   Metadata for a dataset registered in GBIF (i.e. an EML file) [[REG-305](https://github.com/gbif/registry/issues/305)] 
-            *   An entry made directly into the catalog through the user interface, or pushed through the API by an application (e.g. a collection management system) 
+            *   An entry made directly into the catalogue through the user interface, or pushed through the API by an application (e.g. a collection management system) 
         *   The core metadata is never changed in GRSciColl for externally sourced entities, and edits must be applied in the system providing the master record.
             *   The entries in GRSciColl may be enriched with the following fields:
                 *   Additional identifiers to link to alternative views or aid discovery 
