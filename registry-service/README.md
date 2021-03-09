@@ -19,7 +19,7 @@ The overall matching process for each entity is as follows:
 
 If the code is not provided and the identifier matches it's considered a exact match.
 
-The identifier match also includes the matches by key (UUID).
+The identifier match also includes the matches by key (UUID) - e.g.: `institutionId=1a69e6fc-4a8d-44d5-90a6-a7dc7a1aa7c7`.
 
 Also, there are some specific conditions based on the entity type:
 - Institutions: if the `ownerInstitutionCode` is different than the institutions matched we discard them and
@@ -27,9 +27,18 @@ flag them as `AMBIGUOUS_OWNER`
 
 **[2]**
 
-When the `datasetKey` param is provided and there is no exact matches we check the [occurrence mappings](https://github.com/gbif/gbif-api/blob/master/src/main/java/org/gbif/api/model/collections/OccurrenceMapping.java).
-Both the `code` and the `identifier` are optional in the `OccurrenceMapping`. They can be used to refine the mappings
-when there are more than 1 possible combination within a dataset.
+One of the parameters that the lookup service can receive is the `datasetKey`. This parameter has to be used when we want to link institutions/collections
+within the context of a dataset.
+
+**When the `datasetKey` param is provided and there hasn't been exact matches** we check the [occurrence mappings](https://github.com/gbif/gbif-api/blob/master/src/main/java/org/gbif/api/model/collections/OccurrenceMapping.java).
+The occurrence mappings are a way to manually map occurrences to a specific institution/collection.
+An `OccurrenceMapping` contains a `datasetKey` and optionally a `code` and/or a `identifier` that can be used to refine the mappings
+when there are more than 1 possible combination within a dataset. This allows us to do things like:
+- All the occurrences from the dataset X have to be mapped to the institution I
+- All the occurrences from the dataset X and code Y have to be mapped to the institution I
+- All the occurrences from the dataset X, code Y and identifier Z have to be mapped to the institution I
+
+There can be as many combinations as needed.
 
 **[3]**
 
@@ -37,8 +46,8 @@ A fuzzy match happens when some fields match but not the `code` and the `identif
 - Only the `code` matches
 - Only the `identifier` matches
 - An `alternativeCode` matches
-- The `code` param matches with the `name` of an entity
-- The `identifier` param matches with the `name` of an entity
+- The `code` param matches with the `name` of an entity. E.g: `institutionCode=University of Copenhagen`
+- The `identifier` param matches with the `name` of an entity. E.g.: `institutionId=University of Copenhagen`
 
 Additionally, if there is more than 1 fuzzy match we try to check if one of the matches is better than the others
 and we can set it as the accepted one. This works as follows:
