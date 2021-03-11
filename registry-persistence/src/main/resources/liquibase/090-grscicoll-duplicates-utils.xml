@@ -1,0 +1,28 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="90" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE OR REPLACE FUNCTION similar_name(input1 text, input2 text)
+          RETURNS boolean AS
+          $$
+          BEGIN
+              RETURN similarity(input1, input2) >= 0.65;
+          END;
+          $$
+        LANGUAGE plpgsql
+        IMMUTABLE
+        RETURNS NULL ON NULL INPUT;
+
+        CREATE INDEX institution_address_key_idx ON institution(address_key);
+        CREATE INDEX institution_mailing_address_key_idx ON institution(mailing_address_key);
+
+        CREATE INDEX collection_address_key_idx ON collection(address_key);
+        CREATE INDEX collection_mailing_address_key_idx ON collection(mailing_address_key);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

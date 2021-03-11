@@ -59,8 +59,8 @@ public abstract class BaseCollectionEntityIT<
         T extends CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable>
     extends BaseItTest {
 
-  private final CrudService<T> resource;
-  private final CrudService<T> client;
+  protected final CrudService<T> resource;
+  protected final CrudService<T> client;
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 

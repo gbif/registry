@@ -95,4 +95,6 @@
   <include file="liquibase/087-dataset-gridded.xml" />
   <include file="liquibase/088-add-coldp-endpoint-type.xml" />
   <include file="liquibase/089-add-pg_trgm-extension.xml" />
+  <include file="liquibase/090-grscicoll-duplicates-utils.xml" />
+  <include file="liquibase/091-grscicoll-duplicates-materialized-views.xml" />
 </databaseChangeLog>

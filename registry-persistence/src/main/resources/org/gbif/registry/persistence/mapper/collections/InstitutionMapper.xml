@@ -221,7 +221,7 @@
            normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
     </if>
     <if test="params.fuzzyName != null" >
-      AND similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
+      AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
     </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
@@ -289,7 +289,7 @@
            normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
     </if>
     <if test="params.fuzzyName != null" >
-      AND similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) >= 0.65
+      AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
     </if>
   </select>
 
@@ -597,5 +597,4 @@
     WHERE key = #{institutionKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
-
 </mapper>
