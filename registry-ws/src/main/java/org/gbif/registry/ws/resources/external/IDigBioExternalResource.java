@@ -96,9 +96,9 @@ public class IDigBioExternalResource {
                 Collectors.groupingBy(
                     IdentifierDto::getEntityKey, HashMap::new, Collectors.toSet()));
 
-    List<IDigBioCollectionDto> IDigBioCollectionDtos = collectionsDtoFuture.join();
+    List<IDigBioCollectionDto> iDigBioCollectionDtos = collectionsDtoFuture.join();
     Map<UUID, IDigBioCollectionDto> collectionsByKey =
-        IDigBioCollectionDtos.stream()
+        iDigBioCollectionDtos.stream()
             .collect(Collectors.toMap(IDigBioCollectionDto::getCollectionKey, c -> c));
 
     List<IDigBioCollection> result = new ArrayList<>();

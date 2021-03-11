@@ -19,6 +19,8 @@ import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
@@ -28,6 +30,7 @@ import org.gbif.api.service.collections.OccurrenceMappingService;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -81,4 +84,11 @@ public interface ExtendedBaseCollectionEntityClient<
   @ResponseBody
   @Override
   List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "possibleDuplicates",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  DuplicatesResult findPossibleDuplicates(@SpringQueryMap DuplicatesRequest request);
 }

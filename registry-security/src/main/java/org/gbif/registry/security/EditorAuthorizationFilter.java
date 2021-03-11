@@ -85,6 +85,7 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   // filtered POST methods
   public static final List<Pattern> POST_RESOURCES_TO_FILTER =
       Arrays.asList(
+          Pattern.compile("^POST /(dataset)/([a-f0-9-]+)/crawl$", Pattern.CASE_INSENSITIVE),
           Pattern.compile("^POST /(pipelines)/history/run/([a-f0-9-]+)$", Pattern.CASE_INSENSITIVE),
           Pattern.compile(
               "^POST /(pipelines)/history/run/([a-f0-9-]+)/[0-9]+$", Pattern.CASE_INSENSITIVE),
