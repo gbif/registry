@@ -16,8 +16,6 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
-import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
