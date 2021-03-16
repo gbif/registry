@@ -38,8 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Strings;
 
-import static org.gbif.registry.domain.collections.Constants.*;
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.domain.collections.Constants.*;
 
 public abstract class BaseMergeService<
         T extends
@@ -172,7 +172,8 @@ public abstract class BaseMergeService<
   }
 
   protected boolean isIDigBioRecord(T entity) {
-    return entity.getMachineTags().stream().anyMatch(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE));
+    return entity.getMachineTags().stream()
+        .anyMatch(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE));
   }
 
   protected void setNullFields(T target, T source) {

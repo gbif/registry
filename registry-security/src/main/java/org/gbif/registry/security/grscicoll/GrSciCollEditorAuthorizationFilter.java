@@ -143,9 +143,10 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
         // editors cannot delete iDigBio entities
         if (isDelete && authService.isIDigBioEntity(entityType, entityKey)) {
           throw new WebApplicationException(
-            MessageFormat.format(
-              "User {0} is not allowed to delete an IDigBio institution {1}", username, entityKey),
-            HttpStatus.FORBIDDEN);
+              MessageFormat.format(
+                  "User {0} is not allowed to delete an IDigBio institution {1}",
+                  username, entityKey),
+              HttpStatus.FORBIDDEN);
         }
 
         if (!authService.allowedToModifyEntity(username, entityKey)) {
@@ -165,9 +166,10 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
         // editors cannot delete iDigBio entities
         if (isDelete && authService.isIDigBioEntity(entityType, entityKey)) {
           throw new WebApplicationException(
-            MessageFormat.format(
-              "User {0} is not allowed to delete an IDigBio collection {1}", username, entityKey),
-            HttpStatus.FORBIDDEN);
+              MessageFormat.format(
+                  "User {0} is not allowed to delete an IDigBio collection {1}",
+                  username, entityKey),
+              HttpStatus.FORBIDDEN);
         }
 
         Collection collectionInMessageBody = null;
