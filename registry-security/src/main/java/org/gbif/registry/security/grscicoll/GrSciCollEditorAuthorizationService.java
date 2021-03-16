@@ -17,7 +17,9 @@ package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
@@ -70,6 +72,20 @@ public class GrSciCollEditorAuthorizationService {
 
     return entityIdentifiers.stream()
         .anyMatch(i -> i.getKey().equals(identifierKey) && isIrnIdentifier(i));
+  }
+
+  public boolean isIDigBioEntity(String entityType, UUID entityKey) {
+    List<MachineTag> machineTags;
+    if ("collection".equalsIgnoreCase(entityType)) {
+      machineTags = collectionMapper.listMachineTags(entityKey);
+    } else if ("institution".equalsIgnoreCase(entityType)) {
+      machineTags = institutionMapper.listMachineTags(entityKey);
+    } else {
+      return false;
+    }
+
+    return machineTags.stream()
+        .anyMatch(mt -> Constants.IDIGBIO_NAMESPACE.equals(mt.getNamespace()));
   }
 
   public boolean allowedToModifyEntity(String username, UUID key) {

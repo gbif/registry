@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
+import static org.gbif.registry.domain.collections.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -138,7 +139,7 @@ public abstract class BaseMergeServiceIT<
     contactService.addContact(toReplace.getKey(), p2.getKey());
 
     // machine tags
-    MachineTag mt1 = new MachineTag("iDigBio.org", "test", "test");
+    MachineTag mt1 = new MachineTag(IDIGBIO_NAMESPACE, "test", "test");
     machineTagService.addMachineTag(toReplace.getKey(), mt1);
     MachineTag mt2 = new MachineTag("foo", "test", "test");
     machineTagService.addMachineTag(toReplace.getKey(), mt2);
@@ -207,8 +208,8 @@ public abstract class BaseMergeServiceIT<
     identifierService.deleteIdentifier(e1.getKey(), id1.getKey());
     identifierService.deleteIdentifier(e2.getKey(), id2.getKey());
 
-    machineTagService.addMachineTag(e1.getKey(), new MachineTag("iDigBio.org", "foo", "bar"));
-    machineTagService.addMachineTag(e2.getKey(), new MachineTag("iDigBio.org", "foo2", "bar2"));
+    machineTagService.addMachineTag(e1.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar"));
+    machineTagService.addMachineTag(e2.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2"));
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
 

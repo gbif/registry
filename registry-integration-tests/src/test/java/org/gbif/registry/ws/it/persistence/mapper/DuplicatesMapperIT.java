@@ -39,6 +39,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,7 +80,7 @@ public class DuplicatesMapperIT extends BaseItTest {
     inst1.setModifiedBy("test");
     institutionMapper.create(inst1);
 
-    MachineTag mt = new MachineTag("iDigBio.org", "test", "foo");
+    MachineTag mt = new MachineTag(IDIGBIO_NAMESPACE, "test", "foo");
     mt.setCreatedBy("test");
     machineTagMapper.createMachineTag(mt);
     institutionMapper.addMachineTag(inst1.getKey(), mt.getKey());
@@ -127,7 +128,7 @@ public class DuplicatesMapperIT extends BaseItTest {
     c1.setModifiedBy("test");
     collectionMapper.create(c1);
 
-    MachineTag mt = new MachineTag("iDigBio.org", "test", "foo");
+    MachineTag mt = new MachineTag(IDIGBIO_NAMESPACE, "test", "foo");
     mt.setCreatedBy("test");
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(c1.getKey(), mt.getKey());

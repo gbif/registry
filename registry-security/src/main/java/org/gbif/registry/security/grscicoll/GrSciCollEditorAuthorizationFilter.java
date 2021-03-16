@@ -132,11 +132,22 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
   private void checkInstitutionAndCollectionUpdatePermissions(
       HttpServletRequest request, String path, String username) {
+    boolean isDelete = "DELETE".equals(request.getMethod());
     if (path.startsWith("/grscicoll/institution")) {
       // we check user rights of the institution
       Matcher matcher = ENTITY_PATTERN.matcher(path);
       if (matcher.find()) {
         UUID entityKey = UUID.fromString(matcher.group(2));
+        String entityType = matcher.group(1);
+
+        // editors cannot delete iDigBio entities
+        if (isDelete && authService.isIDigBioEntity(entityType, entityKey)) {
+          throw new WebApplicationException(
+            MessageFormat.format(
+              "User {0} is not allowed to delete an IDigBio institution {1}", username, entityKey),
+            HttpStatus.FORBIDDEN);
+        }
+
         if (!authService.allowedToModifyEntity(username, entityKey)) {
           throw new WebApplicationException(
               MessageFormat.format(
@@ -149,6 +160,16 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Matcher matcher = ENTITY_PATTERN.matcher(path);
       if (matcher.find()) {
         UUID entityKey = UUID.fromString(matcher.group(2));
+        String entityType = matcher.group(1);
+
+        // editors cannot delete iDigBio entities
+        if (isDelete && authService.isIDigBioEntity(entityType, entityKey)) {
+          throw new WebApplicationException(
+            MessageFormat.format(
+              "User {0} is not allowed to delete an IDigBio collection {1}", username, entityKey),
+            HttpStatus.FORBIDDEN);
+        }
+
         Collection collectionInMessageBody = null;
         if (FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches()) {
           collectionInMessageBody = readEntity(request, Collection.class);
