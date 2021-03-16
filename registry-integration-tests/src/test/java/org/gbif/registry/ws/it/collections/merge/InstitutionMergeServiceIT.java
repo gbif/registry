@@ -36,6 +36,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.gbif.registry.domain.collections.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -203,7 +204,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     institutionService.create(toConvert);
 
     institutionService.addMachineTag(
-        toConvert.getKey(), new MachineTag("iDigBio.org", "foo", "bar"));
+        toConvert.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar"));
 
     assertThrows(
         IllegalArgumentException.class,

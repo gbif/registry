@@ -16,7 +16,9 @@
 package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
@@ -26,6 +28,7 @@ import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -390,6 +393,25 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
+  public void idigbioInstitutionDeletionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    List<MachineTag> machineTags = new ArrayList<>();
+    machineTags.add(new MachineTag(Constants.IDIGBIO_NAMESPACE, "foo", "bar"));
+    doReturn(machineTags).when(mockInstitutionMapper).listMachineTags(INST_KEY);
+
+    // WHEN, THEN
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
   public void updateCollectionAsEditorWithCollectionRightsTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
@@ -446,6 +468,25 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // THEN
     assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void idigbioCollectionDeletionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    List<MachineTag> machineTags = new ArrayList<>();
+    machineTags.add(new MachineTag(Constants.IDIGBIO_NAMESPACE, "foo", "bar"));
+    doReturn(machineTags).when(mockCollectionMapper).listMachineTags(COLL_KEY);
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test

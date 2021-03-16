@@ -47,6 +47,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -112,7 +113,7 @@ public class IDigBioMapperIT extends BaseItTest {
 
     collectionMapper.create(col1);
 
-    MachineTag mt = new MachineTag("iDigBio.org", "test", "foo");
+    MachineTag mt = new MachineTag(IDIGBIO_NAMESPACE, "test", "foo");
     mt.setCreatedBy("test");
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(col1.getKey(), mt.getKey());
@@ -149,7 +150,7 @@ public class IDigBioMapperIT extends BaseItTest {
     i1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("II", "test")));
     institutionMapper.create(i1);
 
-    MachineTag uniqueNameUUIDMt = new MachineTag("iDigBio.org", "UniqueNameUUID", "foo");
+    MachineTag uniqueNameUUIDMt = new MachineTag(IDIGBIO_NAMESPACE, "UniqueNameUUID", "foo");
     uniqueNameUUIDMt.setCreatedBy("test");
     machineTagMapper.createMachineTag(uniqueNameUUIDMt);
     institutionMapper.addMachineTag(i1.getKey(), uniqueNameUUIDMt.getKey());
@@ -207,7 +208,7 @@ public class IDigBioMapperIT extends BaseItTest {
 
     collectionMapper.create(col1);
 
-    MachineTag mt = new MachineTag("iDigBio.org", "CollectionUUID", "urn:uuid:abcd");
+    MachineTag mt = new MachineTag(IDIGBIO_NAMESPACE, "CollectionUUID", "urn:uuid:abcd");
     mt.setCreatedBy("test");
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(col1.getKey(), mt.getKey());

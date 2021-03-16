@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.base.Strings;
 
+import static org.gbif.registry.domain.collections.Constants.*;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class BaseMergeService<
@@ -135,7 +136,7 @@ public abstract class BaseMergeService<
 
     // copy iDigBio machine tags
     entityToReplace.getMachineTags().stream()
-        .filter(mt -> mt.getNamespace().equals("iDigBio.org"))
+        .filter(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE))
         .forEach(
             mt -> {
               machineTagMapper.createMachineTag(mt);
@@ -171,7 +172,7 @@ public abstract class BaseMergeService<
   }
 
   protected boolean isIDigBioRecord(T entity) {
-    return entity.getMachineTags().stream().anyMatch(mt -> mt.getNamespace().equals("iDigBio.org"));
+    return entity.getMachineTags().stream().anyMatch(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE));
   }
 
   protected void setNullFields(T target, T source) {
