@@ -485,8 +485,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
