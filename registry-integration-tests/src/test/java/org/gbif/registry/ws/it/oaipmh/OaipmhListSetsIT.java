@@ -51,7 +51,7 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
   // OaipmhSetRepository.SetType represents the root of the set hierarchy to the respective node,
   // DatasetType.values() represents the static subsets of OaipmhSetRepository.SetType.DATASET_TYPE
   private static final int NUMBER_OF_STATIC_SETS =
-      SetType.values().length + (DatasetType.values().length);
+      SetType.values().length + DatasetType.values().length;
 
   @Autowired
   public OaipmhListSetsIT(

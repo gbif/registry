@@ -60,6 +60,7 @@ elasticsearch:
   registry:
     enabled: false
     hosts: none
+    alias: dataset
     index: dataset
     connectionTimeOut: 0
     socketTimeOut: 0

@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.search.test;
 
+import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -25,12 +27,14 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -50,22 +54,19 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   private final String indexName;
 
-  private final String typeName;
-
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
   public EsManageServer(
-      Resource mappingFile, Resource settingsFile, String indexName, String typeName) {
+      Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
-    this.typeName = typeName;
   }
 
   @Override
   public void destroy() throws Exception {
-    if (embeddedElastic != null) {
+    if (embeddedElastic != null && !embeddedElastic.isShouldBeReused()) {
       embeddedElastic.stop();
     }
   }
@@ -94,7 +95,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     embeddedElastic =
         new ElasticsearchContainer(
             "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-
+    embeddedElastic.withReuse(true);
     embeddedElastic.start();
     restClient = buildRestClient();
 
@@ -109,14 +110,20 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     }
   }
 
-  private void createIndex() throws IOException {
-    CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
-    createIndexRequest.settings(asString(settingsFile), XContentType.JSON);
-    createIndexRequest.mapping(typeName, asString(mappingFile), XContentType.JSON);
-    restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+  public boolean indexExists() throws IOException {
+    return restClient.indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
   }
 
-  private void deleteIndex() throws IOException {
+  public void createIndex() throws IOException {
+    if (!indexExists()) {
+      CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
+      createIndexRequest.settings(asString(settingsFile), XContentType.JSON);
+      createIndexRequest.mapping(asString(mappingFile), XContentType.JSON);
+      restClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+    }
+  }
+
+  public void deleteIndex() throws IOException {
     DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest();
     deleteIndexRequest.indices(indexName);
     restClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
