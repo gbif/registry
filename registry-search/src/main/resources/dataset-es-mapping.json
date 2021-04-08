@@ -1,181 +1,179 @@
 {
-  "dataset" : {
-    "_source": {
-      "excludes": [
-        "taxonKey",
-        "metadata"
-      ]
-    },
-    "dynamic_templates": [
-      {
-        "nested_identifier": {
-          "match": "identifier",
-          "mapping": {
-            "type": "keyword",
-            "copy_to": "all"
-          }
-        }
-      },
-      {
-        "nested_created": {
-          "match": "created",
-          "mapping": {
-            "type": "date"
-          }
-        }
-      },
-      {
-        "nested_modified": {
-          "match": "modified",
-          "mapping": {
-            "type": "date"
-          }
-        }
-      },
-      {
-        "nested_created_by": {
-          "match": "createdBy",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "nested_modified_by": {
-          "match": "modifiedBy",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "nested_type": {
-          "match": "type",
-          "mapping": {
-            "type": "keyword",
-            "copy_to": "all"
-          }
-        }
-      },
-      {
-        "url_modified": {
-          "match": "url",
-          "mapping": {
-            "type": "keyword",
-            "copy_to": "all"
-          }
-        }
-      },
-      {
-        "dataDescriptions": {
-          "path_match": "dataDescriptions.*",
-          "match_mapping_type": "string",
-          "mapping": {
-            "type": "keyword",
-            "copy_to": "all"
-          }
-        }
-      },
-      {
-        "machineTags": {
-          "path_match": "machineTags.*",
-          "match_mapping_type": "string",
-          "mapping": {
-            "type": "keyword"
-          }
-        }
-      },
-      {
-        "keywordCollections": {
-          "path_match": "keywordCollections.*",
-          "match_mapping_type": "string",
-          "mapping": {
-            "type": "keyword",
-            "copy_to": "all"
-          }
-        }
-      },
-      {
-        "tags": {
-          "path_match": "tags.*",
-          "match_mapping_type": "string",
-          "mapping": {
-            "type": "keyword"
-          }
+  "_source": {
+    "excludes": [
+      "taxonKey",
+      "metadata"
+    ]
+  },
+  "dynamic_templates": [
+    {
+      "nested_identifier": {
+        "match": "identifier",
+        "mapping": {
+          "type": "keyword",
+          "copy_to": "all"
         }
       }
-    ],
-    "properties": {
-
-      "all": {"type": "text", "index" :  true, "store" :  false},
-
-      "key": {"type": "keyword"},
-      "duplicateOfDatasetKey": {"type": "keyword"},
-      "parentDatasetKey": {"type": "keyword"},
-      "title": {"type": "text", "copy_to": "all"},
-      "titleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-      "type": {"type": "keyword", "copy_to": "all"},
-      "subtype": {"type": "keyword", "copy_to": "all"},
-      "abbreviation": {"type": "keyword", "copy_to": "all"},
-      "language": {"type": "keyword", "copy_to": "all"},
-      "dataLanguage": {"type": "keyword", "copy_to": "all"},
-      "homepage": {"type": "keyword", "copy_to": "all"},
-      "logoUrl": {"type": "keyword", "copy_to": "all"},
-      "createdBy": {"type": "keyword", "copy_to": "all"},
-      "modifiedBy": {"type": "keyword", "copy_to": "all"},
-      "projectId": {"type": "keyword", "copy_to": "all"},
-      "license": {"type": "keyword", "copy_to": "all"},
-      "country": {"type": "keyword", "copy_to": "all"},
-      "continent": {"type": "keyword", "copy_to": "all"},
-      "countryCoverage": {"type": "keyword", "copy_to": "all"},
-      "city": {"type": "keyword", "copy_to": "all"},
-      "description": {"type": "text", "copy_to": "all"},
-      "maintenanceDescription": {"type": "text", "copy_to": "all"},
-      "maintenanceUpdateFrequency": {"type": "text", "copy_to": "all"},
-      "metadata": {"type": "text", "copy_to": "all"},
-      "province": {"type": "keyword", "copy_to": "all"},
-      "postalCode": {"type": "keyword", "copy_to": "all"},
-      "programmeAcronym": {"type": "keyword", "copy_to": "all"},
-      "keyword": {"type": "keyword", "copy_to": "all"},
-      "doi": {"type": "keyword", "copy_to": "all"},
-      "institutionKey": {"type": "keyword"},
-      "collectionKey": {"type": "keyword"},
-      "installationKey": {"type": "keyword"},
-      "publishingOrganizationKey": {"type": "keyword"},
-      "publishingOrganizationTitle": {"type": "text", "copy_to": "all"},
-      "publishingOrganizationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-      "publishingCountry": {"type": "keyword"},
-      "hostingOrganizationKey": {"type": "keyword"},
-      "hostingOrganizationTitle": {"type": "text", "copy_to": "all"},
-      "hostingOrganizationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-      "installationTitle": {"type": "text", "copy_to": "all"},
-      "installationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
-      "created": {"type": "date"},
-      "modified": {"type": "date"},
-      "deleted": {"type": "date"},
-      "pubDate": {"type": "date"},
-      "taxonKey": {"type": "keyword"},
-      "year": {"type": "integer"},
-      "occurrencePercentage": {"type": "float"},
-      "nameUsagesPercentage": {"type": "float"},
-      "dataScore": {"type": "float"},
-      "gridDerivedMetadata": {
-        "type": "object",
-        "properties": {
-          "percentNN":  { "type": "float"},
-          "countNN": { "type": "integer" },
-          "distanceNN": { "type": "float" }
+    },
+    {
+      "nested_created": {
+        "match": "created",
+        "mapping": {
+          "type": "date"
         }
-      },
-      "temporalCoverages": {
-        "type": "object",
-        "properties": {
-          "@type":  { "type": "keyword"},
-          "start": { "type": "date" },
-          "end": { "type": "date" },
-          "date": { "type": "date" }
+      }
+    },
+    {
+      "nested_modified": {
+        "match": "modified",
+        "mapping": {
+          "type": "date"
+        }
+      }
+    },
+    {
+      "nested_created_by": {
+        "match": "createdBy",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "nested_modified_by": {
+        "match": "modifiedBy",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "nested_type": {
+        "match": "type",
+        "mapping": {
+          "type": "keyword",
+          "copy_to": "all"
+        }
+      }
+    },
+    {
+      "url_modified": {
+        "match": "url",
+        "mapping": {
+          "type": "keyword",
+          "copy_to": "all"
+        }
+      }
+    },
+    {
+      "dataDescriptions": {
+        "path_match": "dataDescriptions.*",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "keyword",
+          "copy_to": "all"
+        }
+      }
+    },
+    {
+      "machineTags": {
+        "path_match": "machineTags.*",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "keywordCollections": {
+        "path_match": "keywordCollections.*",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "keyword",
+          "copy_to": "all"
+        }
+      }
+    },
+    {
+      "tags": {
+        "path_match": "tags.*",
+        "match_mapping_type": "string",
+        "mapping": {
+          "type": "keyword"
         }
       }
     }
-}
+  ],
+  "properties": {
+
+    "all": {"type": "text", "index" :  true, "store" :  false},
+
+    "key": {"type": "keyword"},
+    "duplicateOfDatasetKey": {"type": "keyword"},
+    "parentDatasetKey": {"type": "keyword"},
+    "title": {"type": "text", "copy_to": "all"},
+    "titleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+    "type": {"type": "keyword", "copy_to": "all"},
+    "subtype": {"type": "keyword", "copy_to": "all"},
+    "abbreviation": {"type": "keyword", "copy_to": "all"},
+    "language": {"type": "keyword", "copy_to": "all"},
+    "dataLanguage": {"type": "keyword", "copy_to": "all"},
+    "homepage": {"type": "keyword", "copy_to": "all"},
+    "logoUrl": {"type": "keyword", "copy_to": "all"},
+    "createdBy": {"type": "keyword", "copy_to": "all"},
+    "modifiedBy": {"type": "keyword", "copy_to": "all"},
+    "projectId": {"type": "keyword", "copy_to": "all"},
+    "license": {"type": "keyword", "copy_to": "all"},
+    "country": {"type": "keyword", "copy_to": "all"},
+    "continent": {"type": "keyword", "copy_to": "all"},
+    "countryCoverage": {"type": "keyword", "copy_to": "all"},
+    "city": {"type": "keyword", "copy_to": "all"},
+    "description": {"type": "text", "copy_to": "all"},
+    "maintenanceDescription": {"type": "text", "copy_to": "all"},
+    "maintenanceUpdateFrequency": {"type": "text", "copy_to": "all"},
+    "metadata": {"type": "text", "copy_to": "all"},
+    "province": {"type": "keyword", "copy_to": "all"},
+    "postalCode": {"type": "keyword", "copy_to": "all"},
+    "programmeAcronym": {"type": "keyword", "copy_to": "all"},
+    "keyword": {"type": "keyword", "copy_to": "all"},
+    "doi": {"type": "keyword", "copy_to": "all"},
+    "institutionKey": {"type": "keyword"},
+    "collectionKey": {"type": "keyword"},
+    "installationKey": {"type": "keyword"},
+    "publishingOrganizationKey": {"type": "keyword"},
+    "publishingOrganizationTitle": {"type": "text", "copy_to": "all"},
+    "publishingOrganizationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+    "publishingCountry": {"type": "keyword"},
+    "hostingOrganizationKey": {"type": "keyword"},
+    "hostingOrganizationTitle": {"type": "text", "copy_to": "all"},
+    "hostingOrganizationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+    "installationTitle": {"type": "text", "copy_to": "all"},
+    "installationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+    "created": {"type": "date"},
+    "modified": {"type": "date"},
+    "deleted": {"type": "date"},
+    "pubDate": {"type": "date"},
+    "taxonKey": {"type": "keyword"},
+    "year": {"type": "integer"},
+    "occurrencePercentage": {"type": "float"},
+    "nameUsagesPercentage": {"type": "float"},
+    "dataScore": {"type": "float"},
+    "gridDerivedMetadata": {
+      "type": "object",
+      "properties": {
+        "percentNN":  { "type": "float"},
+        "countNN": { "type": "integer" },
+        "distanceNN": { "type": "float" }
+      }
+    },
+    "temporalCoverages": {
+      "type": "object",
+      "properties": {
+        "@type":  { "type": "keyword"},
+        "start": { "type": "date" },
+        "end": { "type": "date" },
+        "date": { "type": "date" }
+      }
+    }
+  }
 }

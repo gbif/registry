@@ -18,6 +18,7 @@ package org.gbif.registry.search.test;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,13 +30,12 @@ public class DatasetElasticsearchConfiguration {
   @Autowired private ResourceLoader resourceLoader;
 
   @Bean("datasetElasticCluster")
-  public EsManageServer esManageServer() {
+  public EsManageServer esManageServer(@Value("${elasticsearch.registry.index}") String indexName) {
     try {
       return new EsManageServer(
           resourceLoader.getResource("classpath:dataset-es-mapping.json"),
           resourceLoader.getResource("classpath:dataset-es-settings.json"),
-          "dataset",
-          "dataset");
+          indexName);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }

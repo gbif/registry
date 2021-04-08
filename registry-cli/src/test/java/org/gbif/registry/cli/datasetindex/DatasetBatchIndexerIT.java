@@ -72,6 +72,7 @@ public class DatasetBatchIndexerIT {
     embeddedElastic =
         new ElasticsearchContainer(
             "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+    embeddedElastic.withReuse(true);
     embeddedElastic.start();
   }
 
@@ -142,7 +143,7 @@ public class DatasetBatchIndexerIT {
 
   @AfterAll
   public static void finish() throws Exception {
-    if (embeddedElastic != null) {
+    if (embeddedElastic != null && !embeddedElastic.isShouldBeReused()) {
       embeddedElastic.stop();
     }
   }

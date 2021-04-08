@@ -36,6 +36,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
@@ -52,22 +53,25 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
 
   private final AtomicInteger pendingUpdates;
 
+  private final String index;
+
   @Autowired
   public EsDatasetRealtimeIndexer(
-      RestHighLevelClient restHighLevelClient,
-      DatasetJsonConverter datasetJsonConverter,
-      GbifWsClient gbifWsClient) {
+    RestHighLevelClient restHighLevelClient,
+    DatasetJsonConverter datasetJsonConverter,
+    GbifWsClient gbifWsClient,
+    @Value ("${elasticsearch.registry.index}") String index) {
     this.restHighLevelClient = restHighLevelClient;
     this.datasetJsonConverter = datasetJsonConverter;
     this.gbifWsClient = gbifWsClient;
+    this.index = index;
     pendingUpdates = new AtomicInteger();
   }
 
   private IndexRequest toIndexRequest(Dataset dataset) {
     return new IndexRequest()
         .id(dataset.getKey().toString())
-        .index(IndexingConstants.ALIAS)
-        .type(IndexingConstants.DATASET_RECORD_TYPE)
+        .index(index)
         .opType(DocWriteRequest.OpType.INDEX)
         .source(datasetJsonConverter.convertAsJsonString(dataset), XContentType.JSON);
   }
@@ -204,8 +208,7 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
     DeleteRequest deleteRequest =
         new DeleteRequest()
             .id(dataset.getKey().toString())
-            .index(IndexingConstants.ALIAS)
-            .type(IndexingConstants.DATASET_RECORD_TYPE);
+            .index(IndexingConstants.ALIAS);
     try {
       restHighLevelClient.deleteAsync(
           deleteRequest,
