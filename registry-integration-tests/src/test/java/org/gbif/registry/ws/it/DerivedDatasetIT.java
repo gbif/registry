@@ -24,6 +24,7 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.resources.DerivedDatasetResource;
@@ -31,6 +32,7 @@ import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -53,6 +55,7 @@ public class DerivedDatasetIT extends BaseItTest {
   private static final PagingRequest REGULAR_PAGE = new PagingRequest();
 
   private final DerivedDatasetResource derivedDatasetResource;
+  private final DerivedDatasetMapper derivedDatasetMapper;
   private final TestDataFactory testDataFactory;
   private final OccurrenceDownloadResource occurrenceDownloadService;
 
@@ -61,10 +64,12 @@ public class DerivedDatasetIT extends BaseItTest {
       DerivedDatasetResource derivedDatasetResource,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
+      DerivedDatasetMapper derivedDatasetMapper,
       TestDataFactory testDataFactory,
       OccurrenceDownloadResource occurrenceDownloadService) {
     super(simplePrincipalProvider, esServer);
     this.derivedDatasetResource = derivedDatasetResource;
+    this.derivedDatasetMapper = derivedDatasetMapper;
     this.testDataFactory = testDataFactory;
     this.occurrenceDownloadService = occurrenceDownloadService;
   }
@@ -185,6 +190,46 @@ public class DerivedDatasetIT extends BaseItTest {
         derivedDatasetResource.getDerivedDatasets(thirdDataset.getKey(), REGULAR_PAGE);
     assertNotNull(datasetCitationPage2);
     assertEquals(1, datasetCitationPage2.getCount());
+  }
+
+  @Test
+  public void testDerivedDatasetListByUser() {
+    // prepare derived datasets
+    prepareDerivedDataset("10.21373/dd.abcd1", "john");
+    prepareDerivedDataset("10.21373/dd.abcd2", "james");
+    prepareDerivedDataset("10.21373/dd.abcd3", "james");
+    prepareDerivedDataset("10.21373/dd.abcd4", "james");
+
+    // get derived datasets
+    PagingResponse<DerivedDataset> johnDerivedDatasets
+        = derivedDatasetResource.listByUser("john", REGULAR_PAGE);
+    PagingResponse<DerivedDataset> jamesDerivedDatasets
+        = derivedDatasetResource.listByUser("james", REGULAR_PAGE);
+    PagingResponse<DerivedDataset> randomUserDerivedDatasets
+        = derivedDatasetResource.listByUser("random", REGULAR_PAGE);
+
+    assertNotNull(johnDerivedDatasets);
+    assertEquals(1, johnDerivedDatasets.getCount());
+    assertNotNull(jamesDerivedDatasets);
+    assertEquals(3, jamesDerivedDatasets.getCount());
+    assertNotNull(randomUserDerivedDatasets);
+    assertEquals(0, randomUserDerivedDatasets.getCount());
+  }
+
+  public void prepareDerivedDataset(String doi, String creator) {
+    DerivedDataset derivedDataset = new DerivedDataset();
+    derivedDataset.setOriginalDownloadDOI(new DOI("10.21373/dl.abcdef"));
+    derivedDataset.setCitation("Derived dataset GBIF.org");
+    derivedDataset.setCreated(new Date());
+    derivedDataset.setCreatedBy(creator);
+    derivedDataset.setModified(new Date());
+    derivedDataset.setModifiedBy(creator);
+    derivedDataset.setDoi(new DOI(doi));
+    derivedDataset.setRegistrationDate(new Date());
+    derivedDataset.setSourceUrl(URI.create("gbif.org"));
+    derivedDataset.setTitle("Derived dataset title");
+
+    derivedDatasetMapper.create(derivedDataset);
   }
 
   private DerivedDatasetCreationRequest newDerivedDatasetCreationRequest(

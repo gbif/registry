@@ -39,4 +39,6 @@ public interface RegistryDerivedDatasetService {
   PagingResponse<DerivedDatasetUsage> getRelatedDatasets(DOI derivedDatasetDoi, Pageable pageable);
 
   List<DerivedDatasetUsage> listRelatedDatasets(DOI derivedDatasetDoi);
+
+  PagingResponse<DerivedDataset> listByUser(String user, Pageable page);
 }

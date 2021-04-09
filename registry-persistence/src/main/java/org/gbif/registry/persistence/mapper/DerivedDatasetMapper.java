@@ -53,4 +53,9 @@ public interface DerivedDatasetMapper {
   long countDerivedDatasetUsages(@Param("derivedDatasetDoi") DOI derivedDatasetDoi);
 
   List<DerivedDataset> listByRegistrationDate(@Param("registrationDate") Date registrationDate);
+
+  List<DerivedDataset> listByUser(
+      @Param("creator") String creator, @Nullable @Param("page") Pageable page);
+
+  long countByUser(@Param("creator") String creator);
 }
