@@ -210,6 +210,11 @@ public class DerivedDatasetResource {
     return getDerivedDatasets(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
   }
 
+  @GetMapping("user/{user}")
+  public PagingResponse<DerivedDataset> listByUser(@PathVariable("user") String user, Pageable page) {
+    return derivedDatasetService.listByUser(user, page);
+  }
+
   public PagingResponse<DerivedDataset> getDerivedDatasets(String datasetKeyOrDoi, Pageable page) {
     return derivedDatasetService.getDerivedDataset(datasetKeyOrDoi, page);
   }

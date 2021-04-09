@@ -106,6 +106,22 @@
     WHERE ddd.dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
 
+  <select id="listByUser" resultMap="DERIVED_DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="DERIVED_DATASET_FIELDS"/>
+    FROM derived_dataset
+    WHERE created_by = #{creator,jdbcType=VARCHAR}
+    ORDER BY created DESC
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByUser" resultType="Long">
+    SELECT COUNT(*)
+    FROM derived_dataset
+    WHERE created_by = #{creator,jdbcType=VARCHAR}
+  </select>
+
   <select id="listDerivedDatasetUsages" resultMap="DERIVED_DATASET_USAGE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DERIVED_DATASET_USAGE_FIELDS"/>
     FROM dataset_derived_dataset ddd

@@ -182,6 +182,14 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
     return derivedDatasetMapper.listDerivedDatasetUsages(derivedDatasetDoi, null);
   }
 
+  @Override
+  public PagingResponse<DerivedDataset> listByUser(String user, Pageable page) {
+    return new PagingResponse<>(
+        page,
+        derivedDatasetMapper.countByUser(user),
+        derivedDatasetMapper.listByUser(user, page));
+  }
+
   @Scheduled(cron = "${derivedDataset.cronPattern}")
   public void registerPostponedCitations() {
     LOG.info("Start registering delayed citations");
