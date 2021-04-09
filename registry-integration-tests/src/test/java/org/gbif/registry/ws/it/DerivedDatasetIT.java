@@ -27,6 +27,7 @@ import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.resources.DerivedDatasetResource;
 import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -42,6 +43,7 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.multipart.MultipartFile;
 
 import static java.util.stream.Collectors.toMap;
@@ -49,11 +51,13 @@ import static org.gbif.registry.ws.it.OccurrenceDownloadIT.getTestInstancePredic
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class DerivedDatasetIT extends BaseItTest {
 
   private static final PagingRequest REGULAR_PAGE = new PagingRequest();
 
+  private final RequestTestFixture requestTestFixture;
   private final DerivedDatasetResource derivedDatasetResource;
   private final DerivedDatasetMapper derivedDatasetMapper;
   private final TestDataFactory testDataFactory;
@@ -64,11 +68,13 @@ public class DerivedDatasetIT extends BaseItTest {
       DerivedDatasetResource derivedDatasetResource,
       @Nullable SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
+      RequestTestFixture requestTestFixture,
       DerivedDatasetMapper derivedDatasetMapper,
       TestDataFactory testDataFactory,
       OccurrenceDownloadResource occurrenceDownloadService) {
     super(simplePrincipalProvider, esServer);
     this.derivedDatasetResource = derivedDatasetResource;
+    this.requestTestFixture = requestTestFixture;
     this.derivedDatasetMapper = derivedDatasetMapper;
     this.testDataFactory = testDataFactory;
     this.occurrenceDownloadService = occurrenceDownloadService;
@@ -214,6 +220,36 @@ public class DerivedDatasetIT extends BaseItTest {
     assertEquals(3, jamesDerivedDatasets.getCount());
     assertNotNull(randomUserDerivedDatasets);
     assertEquals(0, randomUserDerivedDatasets.getCount());
+  }
+
+  @Test
+  public void testGetCitationTextDoiUrlEncoded() throws Exception {
+    prepareDerivedDataset("10.21373/dd.abcd1", "test");
+
+    ResultActions actions =
+        requestTestFixture
+            .getRequest(new URI("/derivedDataset/10.21373%2Fdd.abcd1/citation"))
+            .andExpect(status().isOk());
+
+    String response =
+        requestTestFixture.extractResponse(actions);
+
+    assertEquals("Derived dataset GBIF.org", response);
+  }
+
+  @Test
+  public void testGetDerivedDatasetDoiUrlEncoded() throws Exception {
+    prepareDerivedDataset("10.21373/dd.abcd1", "test");
+
+    ResultActions actions =
+        requestTestFixture
+            .getRequest(new URI("/derivedDataset/10.21373%2Fdd.abcd1"))
+            .andExpect(status().isOk());
+
+    DerivedDataset response =
+        requestTestFixture.extractJsonResponse(actions, DerivedDataset.class);
+
+    assertEquals(new DOI("10.21373/dd.abcd1"), response.getDoi());
   }
 
   public void prepareDerivedDataset(String doi, String creator) {

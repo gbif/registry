@@ -20,6 +20,7 @@ import org.gbif.ws.security.RequestDataToSign;
 import org.gbif.ws.security.SigningService;
 
 import java.io.ByteArrayInputStream;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +94,10 @@ public class RequestTestFixture {
   }
 
   public ResultActions getRequest(String path) throws Exception {
+    return mvc.perform(get(path));
+  }
+
+  public ResultActions getRequest(URI path) throws Exception {
     return mvc.perform(get(path));
   }
 
