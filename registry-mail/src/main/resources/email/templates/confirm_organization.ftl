@@ -5,7 +5,7 @@
 
 <#if !hasReachableNodeManager()>
     <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-        <i>Warning: <b>${endorsingNode.title}</b> doesn't have a Node Manager with email address. Therefore, the email was only sent to Helpdesk.</i>
+        <i>Warning: <b>${endorsingNode.title}</b> doesn't have a registered GBIF Node Manager with email address. Therefore, the email was only sent to Helpdesk.</i>
     </p>
 </#if>
 
