@@ -30,6 +30,9 @@
         <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
+        <case value="SIMPLE_PARQUET" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
         <case value="SIMPLE_WITH_VERBATIM_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
         </case>
