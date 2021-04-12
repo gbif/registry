@@ -97,4 +97,5 @@
   <include file="liquibase/089-add-pg_trgm-extension.xml" />
   <include file="liquibase/090-grscicoll-duplicates-utils.xml" />
   <include file="liquibase/091-grscicoll-duplicates-materialized-views.xml" />
+  <include file="liquibase/092-add-simple-parquet-download-format.xml" />
 </databaseChangeLog>
