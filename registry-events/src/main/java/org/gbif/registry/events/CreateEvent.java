@@ -15,17 +15,15 @@
  */
 package org.gbif.registry.events;
 
-import org.gbif.api.model.registry.NetworkEntity;
-
 import com.google.common.base.Preconditions;
 
 /** This event is fired after a new network entity has been successfully created. */
-public class CreateEvent<T extends NetworkEntity> {
+public class CreateEvent<T> {
 
   private final T newObject;
   private final Class<T> objectClass;
 
-  public static <T extends NetworkEntity> CreateEvent<T> newInstance(
+  public static <T> CreateEvent<T> newInstance(
       T newObject, Class<T> objectClass) {
     return new CreateEvent<>(newObject, objectClass);
   }

@@ -23,6 +23,9 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.events.CreateEvent;
+import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
@@ -73,14 +76,17 @@ public class DerivedDatasetResource {
   private final RegistryDerivedDatasetService derivedDatasetService;
   private final RegistryDatasetService datasetService;
   private final RegistryOccurrenceDownloadService occurrenceDownloadService;
+  private final EventManager eventManager;
 
   public DerivedDatasetResource(
       RegistryDerivedDatasetService derivedDatasetService,
       RegistryDatasetService datasetService,
-      RegistryOccurrenceDownloadService occurrenceDownloadService) {
+      RegistryOccurrenceDownloadService occurrenceDownloadService,
+      EventManager eventManager) {
     this.derivedDatasetService = derivedDatasetService;
     this.datasetService = datasetService;
     this.occurrenceDownloadService = occurrenceDownloadService;
+    this.eventManager = eventManager;
   }
 
   @Secured({ADMIN_ROLE, USER_ROLE})
@@ -138,8 +144,10 @@ public class DerivedDatasetResource {
           "Invalid related datasets identifiers: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    return derivedDatasetService.create(
+    DerivedDataset derivedDataset = derivedDatasetService.create(
         toDerivedDataset(request, nameFromContext), derivedDatasetUsages);
+    eventManager.post(CreateEvent.newInstance(derivedDataset, DerivedDataset.class));
+    return derivedDataset;
   }
 
   public DerivedDataset getDerivedDataset(DOI doi) {
@@ -183,6 +191,7 @@ public class DerivedDatasetResource {
       Optional.ofNullable(request.getTitle()).ifPresent(derivedDataset::setTitle);
       derivedDataset.setModifiedBy(nameFromContext);
       derivedDatasetService.update(derivedDataset);
+      eventManager.post(UpdateEvent.newInstance(derivedDataset, derivedDataset, DerivedDataset.class));
     } catch (IllegalStateException e) {
       LOG.error(e.getMessage());
       throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
