@@ -31,6 +31,7 @@ import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
@@ -103,6 +104,13 @@ import com.google.common.eventbus.Subscribe;
  *       <li>/node/{d.publishingOrganization.endorsingNodeKey}/dataset BAN
  *       <li>/network/{any UUID}/constituents BAN
  *     </ul>
+ *     <h4>DerivedDataset</h4>
+ *     <ul>
+ *       <li>derivedDataset/{doiPrefix}/{doiSuffix}/* BAN
+ *       <li>derivedDataset/dataset/{datasetKey} BAN
+ *       <li>derivedDataset/dataset/{doiPrefix}/{doiSuffix} BAN
+ *       <li>derivedDataset/user/{user} BAN
+ *     </ul>
  */
 public class VarnishPurgeListener {
 
@@ -147,7 +155,10 @@ public class VarnishPurgeListener {
       cascadeDatasetChange((Dataset) event.getNewObject());
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange((Installation) event.getNewObject());
+    } else if (event.getObjectClass().equals(DerivedDataset.class)) {
+      cascadeDerivedDatasetChange((DerivedDataset)event.getNewObject());
     }
+
   }
 
   @Subscribe
@@ -162,6 +173,8 @@ public class VarnishPurgeListener {
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange(
           (Installation) event.getOldObject(), (Installation) event.getNewObject());
+    } else if (event.getObjectClass().equals(DerivedDataset.class)) {
+      cascadeDerivedDatasetChange((DerivedDataset)event.getNewObject());
     }
   }
 
@@ -175,6 +188,8 @@ public class VarnishPurgeListener {
       cascadeDatasetChange((Dataset) event.getOldObject());
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange((Installation) event.getOldObject());
+    } else if (event.getObjectClass().equals(DerivedDataset.class)) {
+      cascadeDerivedDatasetChange((DerivedDataset)event.getOldObject());
     }
   }
 
@@ -322,6 +337,12 @@ public class VarnishPurgeListener {
     purger.ban(String.format("grscicoll/collection/%s/contact", purger.anyKey(collectionKeys)));
     // /institution/{institutionKey}/contact BAN
     purger.ban(String.format("grscicoll/institution/%s/contact", purger.anyKey(institutionKeys)));
+  }
+
+  private void cascadeDerivedDatasetChange(DerivedDataset derivedDataset) {
+    purger.ban(String.format("derivedDataset/%s/%s/*", derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix()));
+    purger.ban(String.format("derivedDataset/user/%s", derivedDataset.getCreatedBy()));
+    purger.ban("derivedDataset/dataset/*");
   }
 
   /**
