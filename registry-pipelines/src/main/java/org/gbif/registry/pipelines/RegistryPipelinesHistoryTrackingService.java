@@ -17,19 +17,14 @@ package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 /** Service to provide the history and re-execute previous attempts of Pipelines. */
 public interface RegistryPipelinesHistoryTrackingService {
@@ -44,8 +39,10 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param prefix if triggered for all datasets
    * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
    *     latest.
-   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
-   *      during processing a dataset
+   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted during
+   *     processing a dataset
+   * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
+   *     etc
    * @return a response containing the request result
    */
   RunPipelineResponse runLastAttempt(
@@ -55,7 +52,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String user,
       String prefix,
       boolean useLastSuccessful,
-      boolean markPreviousAttemptAsFailed);
+      boolean markPreviousAttemptAsFailed,
+      Set<String> interpretTypes);
 
   /**
    * Executes the last crawl attempt for all datasets.
@@ -67,8 +65,10 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param datasetsToInclude included dataset keys
    * @param useLastSuccessful if true it uses the latest successful attempt. Otherwise, it uses the
    *     latest.
-   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
-   *      during processing a dataset
+   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted during
+   *     processing a dataset
+   * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
+   *     etc
    * @return the response of the execution request
    */
   RunPipelineResponse runLastAttempt(
@@ -78,7 +78,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       List<UUID> datasetsToExclude,
       List<UUID> datasetsToInclude,
       boolean useLastSuccessful,
-      boolean markPreviousAttemptAsFailed);
+      boolean markPreviousAttemptAsFailed,
+      Set<String> interpretTypes);
 
   /**
    * Executes a previously run attempt.
@@ -89,8 +90,10 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param reason textual justification of why it has to be re-executed
    * @param user the user who is running the attempt
    * @param prefix if triggered for all datasets
-   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted
-   *      during processing a dataset
+   * @param markPreviousAttemptAsFailed previous status can't be wrong, when CLI restarted during
+   *     processing a dataset
+   * @param interpretTypes is used for partial interpretation such as only TAXONOMY, METADATA and
+   *     etc.
    * @return the response of the execution request
    */
   RunPipelineResponse runPipelineAttempt(
@@ -100,7 +103,8 @@ public interface RegistryPipelinesHistoryTrackingService {
       String reason,
       String user,
       String prefix,
-      boolean markPreviousAttemptAsFailed);
+      boolean markPreviousAttemptAsFailed,
+      Set<String> interpretTypes);
 
   /**
    * Lists the history of all {@link PipelineProcess}, sorted descending from the most recent one.
