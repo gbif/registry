@@ -342,7 +342,7 @@
 
   <!-- LOOKUP -->
   <sql id="LOOKUP_MATCH_FIELDS">
-    c.key, c.name, c.code, c.institution_key, c.address_key, c.mailing_address_key
+    c.key, c.name, c.code, c.institution_key, c.address_key, c.mailing_address_key, c.active
   </sql>
 
   <select id="lookup" resultMap="COLLECTION_MATCHED_DTO_MAP">

@@ -33,6 +33,7 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
   private boolean nameMatchWithCode;
   private boolean nameMatchWithIdentifier;
   private boolean explicitMapping;
+  private boolean active;
 
   @Override
   public UUID getKey() {
@@ -77,6 +78,15 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
 
   public void setMailingAddressCountry(Country mailingAddressCountry) {
     this.mailingAddressCountry = mailingAddressCountry;
+  }
+
+  @Override
+  public boolean isActive() {
+    return active;
+  }
+
+  public void setActive(boolean active) {
+    this.active = active;
   }
 
   @Override

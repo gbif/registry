@@ -311,7 +311,7 @@
 
   <!-- LOOKUP -->
   <sql id="LOOKUP_MATCH_FIELDS">
-    i.key, i.name, i.code, i.address_key, i.mailing_address_key, akeys(i.alternative_codes) AS alternative_codes
+    i.key, i.name, i.code, i.address_key, i.mailing_address_key, akeys(i.alternative_codes) AS alternative_codes, i.active
   </sql>
 
   <select id="lookup" resultMap="INSTITUTION_MATCHED_DTO_MAP">
