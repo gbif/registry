@@ -31,6 +31,8 @@ public interface EntityMatchedDto {
 
   Country getMailingAddressCountry();
 
+  boolean isActive();
+
   boolean isKeyMatch();
 
   boolean isCodeMatch();

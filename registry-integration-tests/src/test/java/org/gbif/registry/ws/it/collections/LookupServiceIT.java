@@ -15,8 +15,8 @@
  */
 package org.gbif.registry.ws.it.collections;
 
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.lookup.*;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionService;
@@ -32,6 +32,7 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,8 +48,12 @@ public class LookupServiceIT extends BaseItTest {
 
   private final Institution i1 = new Institution();
   private final Institution i2 = new Institution();
+  private final Institution i3 = new Institution();
+  private final Institution i4 = new Institution();
   private final Collection c1 = new Collection();
   private final Collection c2 = new Collection();
+  private final Collection c3 = new Collection();
+  private final Collection c4 = new Collection();
 
   private final LookupService lookupService;
   private final InstitutionService institutionService;
@@ -95,6 +100,15 @@ public class LookupServiceIT extends BaseItTest {
     i2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-inst"));
     institutionService.create(i2);
 
+    i3.setCode("ACT");
+    i3.setName("Institution 3");
+    i3.setActive(true);
+    institutionService.create(i3);
+
+    i4.setCode("ACT");
+    i4.setName("Institution 4");
+    institutionService.create(i4);
+
     c1.setCode("C1");
     c1.setName("Collection 1");
     c1.setInstitutionKey(i1.getKey());
@@ -107,6 +121,15 @@ public class LookupServiceIT extends BaseItTest {
     c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC2", "test")));
     c2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-coll"));
     collectionService.create(c2);
+
+    c3.setCode("ACT");
+    c3.setName("Collection 3");
+    c3.setActive(true);
+    collectionService.create(c3);
+
+    c4.setCode("ACT");
+    c4.setName("Collection 4");
+    collectionService.create(c4);
   }
 
   @Test
@@ -561,7 +584,7 @@ public class LookupServiceIT extends BaseItTest {
   }
 
   @Test
-  public void ignoreIdentifiersTest() {
+  public void ignoreGrscicollIDIdentifiersTest() {
     // State
     LookupParams params = new LookupParams();
     params.setInstitutionId(i1.getIdentifiers().get(0).getIdentifier());
@@ -578,6 +601,47 @@ public class LookupServiceIT extends BaseItTest {
     assertNotNull(result.getCollectionMatch());
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.NONE, collectionMatch.getMatchType());
+  }
+
+  @Test
+  public void activeDisambiguationTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i3.getCode());
+    params.setCollectionCode(c3.getCode());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i3.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertTrue(institutionMatch.getEntityMatched().isActive());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+
+    List<Match<InstitutionMatched>> altInstitutions =
+        result.getAlternativeMatches().getInstitutionMatches();
+    assertEquals(1, altInstitutions.size());
+    assertEquals(i4.getKey(), altInstitutions.get(0).getEntityMatched().getKey());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(c3.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertTrue(collectionMatch.getEntityMatched().isActive());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
+
+    List<Match<CollectionMatched>> altCollections =
+        result.getAlternativeMatches().getCollectionMatches();
+    assertEquals(1, altCollections.size());
+    assertEquals(c4.getKey(), altCollections.get(0).getEntityMatched().getKey());
   }
 
   private Dataset createDataset() {
