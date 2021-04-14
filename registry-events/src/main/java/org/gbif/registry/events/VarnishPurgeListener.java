@@ -146,8 +146,10 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void created(CreateEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getNewObject().getKey());
+  public final <T> void created(CreateEvent<T> event) {
+    if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
+      purgeEntityAndBanLists(event.getObjectClass(), ((NetworkEntity)event.getNewObject()).getKey());
+    }
 
     if (event.getObjectClass().equals(Organization.class)) {
       cascadeOrganizationChange((Organization) event.getNewObject());
@@ -162,8 +164,10 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+  public final <T> void updated(UpdateEvent<T> event) {
+    if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
+      purgeEntityAndBanLists(event.getObjectClass(), ((NetworkEntity)event.getOldObject()).getKey());
+    }
 
     if (event.getObjectClass().equals(Organization.class)) {
       cascadeOrganizationChange(
@@ -179,8 +183,10 @@ public class VarnishPurgeListener {
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void deleted(DeleteEvent<T> event) {
-    purgeEntityAndBanLists(event.getObjectClass(), event.getOldObject().getKey());
+  public final <T> void deleted(DeleteEvent<T> event) {
+    if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
+      purgeEntityAndBanLists(event.getObjectClass(), ((NetworkEntity)event.getOldObject()).getKey());
+    }
 
     if (event.getObjectClass().equals(Organization.class)) {
       cascadeOrganizationChange((Organization) event.getOldObject());

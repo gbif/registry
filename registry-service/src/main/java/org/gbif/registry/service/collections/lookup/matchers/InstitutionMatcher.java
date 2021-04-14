@@ -172,6 +172,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
     institutionMatched.setName(dto.getName());
     institutionMatched.setSelfLink(
         URI.create(apiBaseUrl + "grscicoll/institution/" + dto.getKey()));
+    institutionMatched.setActive(dto.isActive());
     return institutionMatched;
   }
 }
