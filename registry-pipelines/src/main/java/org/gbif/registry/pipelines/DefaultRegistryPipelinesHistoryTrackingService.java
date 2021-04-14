@@ -475,7 +475,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                 StepType.VERBATIM_TO_INTERPRETED.name(),
                 StepType.INTERPRETED_TO_INDEX.name(),
                 StepType.HDFS_VIEW.name())));
-    message.setInterpretTypes(interpretTypes);
+    if (interpretTypes != null && !interpretTypes.isEmpty()) {
+      message.setInterpretTypes(interpretTypes);
+    }
 
     return message;
   }
