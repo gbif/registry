@@ -26,6 +26,7 @@ import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
 
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
@@ -120,7 +121,8 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
           boolean markPreviousAttemptAsFailed,
-      @RequestBody(required = false) RunAllParams runAllParams);
+      @RequestBody(required = false) RunAllParams runAllParams,
+      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
 
   @RequestMapping(method = RequestMethod.POST, value = "run/{datasetKey}")
   @ResponseBody
@@ -131,7 +133,8 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "reason", required = false) String reason,
       @RequestParam(value = "useLastSuccessful", defaultValue = "false") boolean useLastSuccessful,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-          boolean markPreviousAttemptAsFailed);
+          boolean markPreviousAttemptAsFailed,
+      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
 
   @RequestMapping(method = RequestMethod.POST, value = "run/{datasetKey}/{attempt}")
   @ResponseBody
@@ -142,5 +145,6 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "steps", required = false) String steps,
       @RequestParam(value = "reason", required = false) String reason,
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
-          boolean markPreviousAttemptAsFailed);
+          boolean markPreviousAttemptAsFailed,
+      @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
 }

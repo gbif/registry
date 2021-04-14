@@ -308,7 +308,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     // run the process
     final String rerunReason = "test reason";
     service.runPipelineAttempt(
-        datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason, false);
+        datasetKey1, attempt, StepType.DWCA_TO_VERBATIM.name(), rerunReason, false, null);
 
     // check that the DB was updated
     PipelineProcess process = service.getPipelineProcess(datasetKey1, attempt);
@@ -317,7 +317,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     // run the process without attempt now
     final String rerunReason2 = "test reason 2";
     service.runPipelineAttempt(
-        datasetKey1, StepType.DWCA_TO_VERBATIM.name(), rerunReason2, false, false);
+        datasetKey1, StepType.DWCA_TO_VERBATIM.name(), rerunReason2, false, false, null);
 
     // check that the DB was updated again
     process = service.getPipelineProcess(datasetKey1, attempt);
@@ -360,14 +360,14 @@ public class PipelinesHistoryIT extends BaseItTest {
         IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
-                datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test", false));
+                datasetKey1, attempt, StepType.ABCD_TO_VERBATIM.name(), "test", false, null));
 
     // run process without attempt and expect a bad request since the step is in running state
     assertThrows(
         IllegalArgumentException.class,
         () ->
             service.runPipelineAttempt(
-                datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false));
+                datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false, null));
   }
 
   @ParameterizedTest
@@ -407,7 +407,8 @@ public class PipelinesHistoryIT extends BaseItTest {
                 .setType(StepType.ABCD_TO_VERBATIM)
                 .setState(PipelineStep.Status.RUNNING));
 
-    service.runPipelineAttempt(datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, true);
+    service.runPipelineAttempt(
+        datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, true, null);
 
     PipelineStep stepCreated = service.getPipelineStep(processKey, executionKey, stepKey);
     assertEquals(PipelineStep.Status.FAILED, stepCreated.getState());
