@@ -128,6 +128,7 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
     collectionMatched.setInstitutionName(dto.getInstitutionName());
     collectionMatched.setInstitutionLink(
         URI.create(apiBaseUrl + "grscicoll/institution/" + dto.getInstitutionKey()));
+    collectionMatched.setActive(dto.isActive());
     return collectionMatched;
   }
 }

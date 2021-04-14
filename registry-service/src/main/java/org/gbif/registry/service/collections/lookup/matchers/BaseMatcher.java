@@ -70,7 +70,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
 
       // if there is no unique match we try with the country if provided
       Optional<Match<R>> uniqueMatch =
-          findUniqueMatch(filteredMatched, Collections.singletonList(isCountryMatch()));
+          findUniqueMatch(filteredMatched, Arrays.asList(isCountryMatch(), isActiveMatch()));
       if (uniqueMatch.isPresent()) {
         Match<R> acceptedMatch = uniqueMatch.get();
         acceptedMatch.setStatus(Match.Status.ACCEPTED);
@@ -94,7 +94,8 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       Optional<Match<R>> uniqueMatch =
           findUniqueMatch(
               filteredMatched,
-              Arrays.asList(isIdentifierMatch(), isMultipleFieldsMatch(), isCountryMatch()));
+              Arrays.asList(
+                  isIdentifierMatch(), isMultipleFieldsMatch(), isCountryMatch(), isActiveMatch()));
       if (uniqueMatch.isPresent()) {
         Match<R> acceptedMatch = uniqueMatch.get();
         acceptedMatch.setStatus(Match.Status.DOUBTFUL);
@@ -125,6 +126,10 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
   private Predicate<Match<R>> isIdentifierMatch() {
     return match ->
         match.getReasons().contains(IDENTIFIER_MATCH) || match.getReasons().contains(KEY_MATCH);
+  }
+
+  private Predicate<Match<R>> isActiveMatch() {
+    return match -> match.getEntityMatched().isActive();
   }
 
   /**
