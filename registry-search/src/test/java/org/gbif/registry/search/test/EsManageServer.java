@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.search.test;
 
-import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -27,7 +25,6 @@ import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.client.RequestOptions;

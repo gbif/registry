@@ -21,6 +21,7 @@ import org.gbif.registry.events.config.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
 import org.gbif.registry.mail.config.OrganizationSuretyMailConfigurationProperties;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
+import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
@@ -36,6 +37,7 @@ import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
@@ -64,7 +66,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import com.zaxxer.hikari.HikariDataSource;
 
 @TestConfiguration
-@SpringBootApplication(exclude = RabbitAutoConfiguration.class)
+@SpringBootApplication(exclude = {RabbitAutoConfiguration.class,
+  ElasticSearchRestHealthContributorAutoConfiguration.class})
 @MapperScan("org.gbif.registry.persistence.mapper")
 @ComponentScan(
     basePackages = {
@@ -107,6 +110,7 @@ import com.zaxxer.hikari.HikariDataSource;
             TitleLookupConfiguration.class,
             OrganizationSuretyMailConfigurationProperties.class,
             ChecklistbankPersistenceServiceImpl.class,
+            EsConfiguration.class,
             DataSourcesConfiguration.class,
             OrganizationEmailTemplateManagerIT.OrganizationEmailTemplateManagerTestConfiguration
                 .class

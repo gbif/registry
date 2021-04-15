@@ -63,6 +63,16 @@ public class BaseItTest {
 
   public static final String DB_LOCK = "db_lock";
 
+  public static class EsContainerContextInitializer
+    implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of("elasticsearch.mock=false")
+        .applyTo(configurableApplicationContext.getEnvironment());
+    }
+  }
+
   /** Custom ContextInitializer to expose the registry DB data source and search flags. */
   public static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -72,6 +82,9 @@ public class BaseItTest {
       TestPropertyValues.of(
               Stream.of(dbTestPropertyPairs()).flatMap(Stream::of).toArray(String[]::new))
           .applyTo(configurableApplicationContext.getEnvironment());
+
+      TestPropertyValues.of("elasticsearch.mock=true")
+        .applyTo(configurableApplicationContext.getEnvironment());
     }
 
     protected String[] dbTestPropertyPairs() {

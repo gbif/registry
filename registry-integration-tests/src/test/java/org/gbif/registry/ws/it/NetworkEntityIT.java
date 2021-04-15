@@ -62,6 +62,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import org.springframework.test.context.ContextConfiguration;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,6 +75,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A generic test for all network entities that implement all interfaces required by the
  * BaseNetworkEntityResource.
  */
+@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class, BaseItTest.EsContainerContextInitializer.class})
 public abstract class NetworkEntityIT<
         T extends
             NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
