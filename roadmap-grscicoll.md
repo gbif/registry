@@ -14,7 +14,7 @@ The connection with Index Herbariorum and import of iDigBio enriched the catalog
 
 The current processes are weak, and don’t capture the proposed change in a structured manner.
 
-*   Develop an interface allowing anyone to propose a change to any/all fields and state whether they have authority to approve it. Changes are then to be reviewed and applied by the editorial team [[REG-CONSOLE-376]https://github.com/gbif/registry-console/issues/376)]. 
+*   Develop an interface allowing anyone to propose a change to any/all fields and state whether they have authority to approve it. Changes are then to be reviewed and applied by the editorial team [[REG-CONSOLE-376](https://github.com/gbif/registry-console/issues/376)]. 
 
 ## Improve documentation
 
