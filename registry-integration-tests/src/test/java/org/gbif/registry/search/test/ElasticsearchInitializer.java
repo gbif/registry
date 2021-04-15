@@ -18,6 +18,10 @@ package org.gbif.registry.search.test;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+/**
+ * Test callback to initialize ES index.
+ * This callback applies changes only to methods that has 'search' in its name.
+ */
 public class ElasticsearchInitializer implements BeforeEachCallback {
 
   private final EsManageServer esServer;
@@ -28,6 +32,9 @@ public class ElasticsearchInitializer implements BeforeEachCallback {
 
   @Override
   public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    esServer.reCreateIndex();
+    //Method name must contain search in it
+    if (extensionContext.getRequiredTestMethod().getName().toLowerCase().contains("search")) {
+      esServer.reCreateIndex();
+    }
   }
 }

@@ -286,7 +286,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void testMultiCountryFacet(ServiceType serviceType) {
+  public void testSearchMultiCountryFacet(ServiceType serviceType) {
     Dataset d = newEntity(Country.ALGERIA, serviceType);
     d.setType(DatasetType.CHECKLIST);
     create(d, serviceType, 1);
@@ -557,7 +557,7 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void testInstallationMove(ServiceType serviceType) {
+  public void testInstallationMoveAndSearch(ServiceType serviceType) {
     NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
     OrganizationService organizationService =
         getService(serviceType, organizationResource, organizationClient);
