@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -28,6 +29,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,6 +41,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /** Tests the {@link org.gbif.registry.ws.resources.collections.IdentifierResolverResource}. */
 public class IdentifierResolverIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private static final String BASE_URL = "/" + GRSCICOLL_PATH + "/resolve";
   private static final String IDENTIFIER_PARAM = "identifier";

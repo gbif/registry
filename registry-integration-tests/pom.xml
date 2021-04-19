@@ -72,6 +72,11 @@
 
     <!-- Third party dependencies -->
     <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>com.squareup.retrofit2</groupId>
       <artifactId>retrofit-mock</artifactId>
       <scope>test</scope>

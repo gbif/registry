@@ -133,7 +133,6 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   public String getServerAddress() {
     return "http://localhost:" + embeddedElastic.getMappedPort(9200);
   }
-
   public void refresh() {
     try {
       RefreshRequest refreshRequest = new RefreshRequest();

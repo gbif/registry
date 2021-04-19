@@ -17,6 +17,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.EmailChangeRequest;
 import org.gbif.registry.domain.ws.UserAdminView;
@@ -29,10 +30,12 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -56,6 +59,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * in the Java ws client, the tests use a direct HTTP client.
  */
 public class UserManagementIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .tables(Collections.singletonList("public.user"))
+    .build();
 
   private static final String CHANGED_PASSWORD = "123456";
 

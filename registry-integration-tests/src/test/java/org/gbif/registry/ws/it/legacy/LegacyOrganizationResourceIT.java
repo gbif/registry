@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
@@ -31,6 +32,7 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -41,6 +43,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LegacyOrganizationResourceIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final OrganizationService organizationService;
   private final NodeService nodeService;

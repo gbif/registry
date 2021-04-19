@@ -24,6 +24,7 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchResponse;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
 import org.gbif.registry.search.test.EsManageServer;
@@ -35,6 +36,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +44,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 /** Tests the {@link CollectionsSearchService} * */
 public class CollectionsSearchIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final CollectionsSearchService searchService;
   private final InstitutionService institutionService;

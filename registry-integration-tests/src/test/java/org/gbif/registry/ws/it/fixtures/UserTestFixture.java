@@ -62,11 +62,14 @@ public class UserTestFixture {
 
   /** Prepare a pre-defined admin user {@link TestConstants#TEST_ADMIN} */
   public GbifUser prepareAdminUser() {
-    UserCreation adminUserCreation = UserTestFixture.generateUser(TEST_ADMIN);
-    GbifUser adminUser = prepareUser(adminUserCreation);
-    adminUser.addRole(UserRole.REGISTRY_ADMIN);
-    userMapper.update(adminUser);
+    GbifUser adminUser = userMapper.get(TEST_ADMIN);
+    if (adminUser == null) {
+      UserCreation adminUserCreation = UserTestFixture.generateUser(TEST_ADMIN);
 
+      adminUser = prepareUser(adminUserCreation);
+      adminUser.addRole(UserRole.REGISTRY_ADMIN);
+      userMapper.update(adminUser);
+    }
     return adminUser;
   }
 

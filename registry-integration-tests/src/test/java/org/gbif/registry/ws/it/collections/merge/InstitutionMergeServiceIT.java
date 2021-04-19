@@ -49,7 +49,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
   private final InstitutionMergeService institutionMergeService;
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
-  private final PersonService personService;
 
   @Autowired
   public InstitutionMergeServiceIT(
@@ -72,7 +71,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     this.institutionMergeService = institutionMergeService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
-    this.personService = personService;
   }
 
   @Test

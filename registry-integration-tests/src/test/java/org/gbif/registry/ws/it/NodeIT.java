@@ -81,7 +81,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
   private int count;
   private final TestDataFactory testDataFactory;
 
-  private static final Map<Country, Integer> TEST_COUNTRIES =
+  private static final ImmutableMap<Country, Integer> TEST_COUNTRIES =
       ImmutableMap.<Country, Integer>builder()
           .put(Country.AFGHANISTAN, 6)
           .put(Country.ARGENTINA, 16)

@@ -20,6 +20,7 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.LegacyEndpointResponse;
 import org.gbif.registry.domain.ws.LegacyEndpointResponseListWrapper;
@@ -32,6 +33,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
@@ -47,6 +49,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LegacyEndpointResourceIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   public static final String ENDPOINT_DESCRIPTION = "Description of Test Endpoint";
   public static final String ENDPOINT_TYPE = "EML";

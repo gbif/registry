@@ -26,6 +26,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -36,6 +37,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.assertNull;
@@ -45,6 +47,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link LookupService}. */
 public class LookupServiceIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final Institution i1 = new Institution();
   private final Institution i2 = new Institution();

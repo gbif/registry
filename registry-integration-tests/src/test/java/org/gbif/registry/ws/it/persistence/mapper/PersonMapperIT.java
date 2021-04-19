@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it.persistence.mapper;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.search.test.EsManageServer;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
@@ -37,6 +39,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PersonMapperIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private PersonMapper personMapper;
   private AddressMapper addressMapper;
