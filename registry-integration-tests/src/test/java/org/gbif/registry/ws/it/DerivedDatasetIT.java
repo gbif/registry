@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
@@ -33,6 +34,7 @@ import org.gbif.registry.ws.resources.OccurrenceDownloadResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +43,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.ResultActions;
@@ -54,6 +57,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class DerivedDatasetIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private static final PagingRequest REGULAR_PAGE = new PagingRequest();
 
@@ -153,7 +161,7 @@ public class DerivedDatasetIT extends BaseItTest {
     DerivedDatasetCreationRequest requestData1 =
         newDerivedDatasetCreationRequest(occurrenceDownload.getDoi(), new HashMap<>());
     String str = secondDataset.getKey() + ",1\n" + firstDataset.getDoi() + ",2";
-    MultipartFile relatedDatasetsFile = new MockMultipartFile("file.csv", str.getBytes());
+    MultipartFile relatedDatasetsFile = new MockMultipartFile("file.csv", str.getBytes(StandardCharsets.UTF_8));
 
     DerivedDatasetCreationRequest requestData2 =
         newDerivedDatasetCreationRequest(

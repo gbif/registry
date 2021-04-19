@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
@@ -49,6 +51,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class InstitutionMapperIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private InstitutionMapper institutionMapper;
   private AddressMapper addressMapper;

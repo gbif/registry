@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it.persistence.mapper;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
@@ -35,12 +36,18 @@ import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class DerivedDatasetMapperIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final DerivedDatasetMapper mapper;
   private final TestDataFactory testDataFactory;

@@ -27,6 +27,7 @@ import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.Datasets;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
@@ -71,6 +73,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class IptResourceIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final InstallationService installationService;
   private final DatasetService datasetService;

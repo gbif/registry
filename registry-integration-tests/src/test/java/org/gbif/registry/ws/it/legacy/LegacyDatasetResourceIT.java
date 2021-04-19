@@ -26,6 +26,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
@@ -43,6 +44,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.LinkedMultiValueMap;
@@ -72,6 +74,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class LegacyDatasetResourceIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final DatasetService datasetService;
   private final TestDataFactory testDataFactory;

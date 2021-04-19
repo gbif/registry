@@ -30,6 +30,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.EndpointType;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetProcessStatusClient;
@@ -40,6 +41,7 @@ import java.net.URI;
 import java.util.Date;
 import java.util.UUID;
 
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +62,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * </ol>
  */
 public class DatasetProcessStatusIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final TestDataFactory testDataFactory;
 

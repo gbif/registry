@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * tests.
  */
 public class OrganizationCreationIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final OrganizationResource organizationResource;
   private final OrganizationService organizationClient;

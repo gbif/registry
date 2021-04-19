@@ -25,6 +25,7 @@ import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.License;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -40,6 +41,7 @@ import java.util.UUID;
 
 import javax.validation.ValidationException;
 
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +64,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </ol>
  */
 public class OccurrenceDownloadIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final OccurrenceDownloadService occurrenceDownloadResource;
   private final OccurrenceDownloadClient occurrenceDownloadClient;

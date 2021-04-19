@@ -32,6 +32,7 @@ import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -65,6 +66,11 @@ public abstract class BaseCollectionEntityIT<
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   @RegisterExtension public CollectionsDatabaseInitializer collectionsDatabaseInitializer;
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   public BaseCollectionEntityIT(
       CrudService<T> resource,

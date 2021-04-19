@@ -16,7 +16,7 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.DatabaseInitializer;
+import org.gbif.registry.database.TestsDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -60,8 +61,6 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 @AutoConfigureMockMvc
 @DirtiesContext
 public class BaseItTest {
-
-  public static final String DB_LOCK = "db_lock";
 
   public static class EsContainerContextInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -99,14 +98,17 @@ public class BaseItTest {
     }
   }
 
+  @Order(0)
   @RegisterExtension
-  public static PreparedDbExtension database =
+  protected static PreparedDbExtension database =
       EmbeddedPostgresExtension.preparedDatabase(
           LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
 
+  @Order(1)
   @RegisterExtension
-  public final DatabaseInitializer databaseRule =
-      new DatabaseInitializer(database.getTestDatabase());
+  protected static TestsDatabaseInitializer usersDatabaseRule = TestsDatabaseInitializer.builder()
+                                                      .dbExtension(database)
+                                                      .build();
 
   private final SimplePrincipalProvider simplePrincipalProvider;
   protected static EsManageServer esServer;

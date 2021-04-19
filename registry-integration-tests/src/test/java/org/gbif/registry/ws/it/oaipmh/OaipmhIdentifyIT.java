@@ -31,7 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 
 /** Test the Identify verb of the OAI-PMH endpoint. */
 public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
@@ -64,15 +66,14 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
   @Test
   public void identify() {
     Identify response = serviceProvider.identify();
-
     assertThat(
         "Identity verb send a RepositoryName",
         response.getRepositoryName(),
-        Matchers.not(Matchers.isEmptyOrNullString()));
+        Matchers.not(is(emptyOrNullString())));
     assertThat(
         "Identity verb send a baseUrl",
         response.getBaseURL(),
-        Matchers.not(Matchers.isEmptyOrNullString()));
+        Matchers.not(is(emptyOrNullString())));
     assertEquals(DeletedRecord.PERSISTENT, response.getDeletedRecord());
   }
 }

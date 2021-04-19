@@ -30,6 +30,7 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -52,6 +53,7 @@ import javax.validation.ValidationException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -86,6 +88,11 @@ public abstract class NetworkEntityIT<
   private final NetworkEntityService<T> client; // under test
 
   private final TestDataFactory testDataFactory;
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+                                                .dataSource(database.getTestDatabase())
+                                                .build();
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,
@@ -510,7 +517,7 @@ public abstract class NetworkEntityIT<
 
       // test forbidden deletion
       getSimplePrincipalProvider().setPrincipal("editor");
-      setSecurityPrincipal(getSimplePrincipalProvider(), UserRole.EDITOR);
+      setSecurityPrincipal(getSimplePrincipalProvider(), UserRole.REGISTRY_EDITOR);
       assertThrows(
           AccessControlException.class,
           () -> service.deleteMachineTag(entity.getKey(), machineTags.get(0).getKey()));

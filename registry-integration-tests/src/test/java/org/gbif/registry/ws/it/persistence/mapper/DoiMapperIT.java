@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it.persistence.mapper;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.search.test.EsManageServer;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +38,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DoiMapperIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private DoiMapper mapper;
 

@@ -40,6 +40,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -53,6 +54,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +69,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link PipelinesHistoryResource} and {@link PipelinesHistoryClient}. */
 public class PipelinesHistoryIT extends BaseItTest {
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
+    .dataSource(database.getTestDatabase())
+    .build();
 
   private final DatasetService datasetService;
   private final OrganizationService organizationService;
@@ -148,7 +155,7 @@ public class PipelinesHistoryIT extends BaseItTest {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void historyTest(ServiceType serviceType) {
+  public void historyTestAndSearchUpdate(ServiceType serviceType) {
     PipelinesHistoryService service =
         getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey1 = createDataset();
@@ -172,7 +179,7 @@ public class PipelinesHistoryIT extends BaseItTest {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void addPipelineStepTest(ServiceType serviceType) {
+  public void addPipelineStepTestAndSearchUpdate(ServiceType serviceType) {
     PipelinesHistoryService service =
         getService(serviceType, pipelinesHistoryResource, pipelinesHistoryClient);
     final UUID datasetKey1 = createDataset();
