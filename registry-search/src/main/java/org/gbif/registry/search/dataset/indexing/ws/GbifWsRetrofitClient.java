@@ -27,6 +27,7 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
@@ -34,6 +35,7 @@ import org.gbif.api.service.registry.OrganizationService;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -117,6 +119,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
     return datasetService.list(pagingRequest);
   }
 
+
   @Override
   public Installation getInstallation(String installationKey) {
     return installationCache.get(installationKey);
@@ -187,6 +190,11 @@ public class GbifWsRetrofitClient implements GbifWsClient {
     return syncCallWithResponse(
             gbifApiService.occurrenceSearch(getParameterFromFacetedRequest(searchRequest)))
         .body();
+  }
+
+  @Override
+  public List<Network> getNetworks(UUID datasetKey) {
+    return datasetService.listNetworks(datasetKey);
   }
 
   /**

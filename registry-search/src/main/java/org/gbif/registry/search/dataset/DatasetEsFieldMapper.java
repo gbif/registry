@@ -63,6 +63,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.TYPE, "type")
           .put(DatasetSearchParameter.DATASET_TITLE, "title")
           .put(DatasetSearchParameter.DOI, "doi")
+          .put(DatasetSearchParameter.NETWORK_KEY, "networkKey")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =
@@ -157,7 +158,9 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "keyword",
       "decade",
       "countryCoverage",
-      "doi"
+      "doi",
+      "networkKey",
+      "networkTitle"
     };
   }
 
@@ -172,6 +175,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
                 .field("description", 8.0f)
                 .field("publishingOrganizationTitle", 5.0f)
                 .field("hostingOrganizationTitle", 5.0f)
+                .field("networkTitle", 4.0f)
                 .field("metadata", 3.0f)
                 .field("projectId", 2.0f)
                 .field("all", 1.0f)

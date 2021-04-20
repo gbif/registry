@@ -149,6 +149,8 @@
     "hostingOrganizationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
     "installationTitle": {"type": "text", "copy_to": "all"},
     "installationTitleAutocomplete": {"type": "text", "analyzer": "autocomplete", "search_analyzer": "autocomplete_search"},
+    "networkKey": {"type": "keyword"},
+    "networkTitle": {"type": "text", "copy_to": "all"},
     "created": {"type": "date"},
     "modified": {"type": "date"},
     "deleted": {"type": "date"},

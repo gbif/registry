@@ -24,6 +24,7 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.eml.KeywordCollection;
@@ -169,12 +170,29 @@ public class DatasetJsonConverter {
     addDecades(dataset, datasetAsJson);
     addKeyword(dataset, datasetAsJson);
     addCountryCoverage(dataset, datasetAsJson);
+    addNetworks(dataset, datasetAsJson);
     if (checklistbankPersistenceService != null) {
       addTaxonKeys(dataset, datasetAsJson);
     }
     addMachineTags(dataset, datasetAsJson);
     // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
+  }
+
+  public void addNetworks(Dataset dataset, ObjectNode datasetJsonNode) {
+    List<Network> networks = gbifWsClient.getNetworks(dataset.getKey());
+    if (networks != null) {
+      ArrayNode networkKeys = mapper.createArrayNode();
+      ArrayNode networkTitles = mapper.createArrayNode();
+      networks.forEach(network -> {
+                  networkKeys.add(new TextNode(network.getKey().toString()));
+                  networkTitles.add(new TextNode(network.getTitle()));
+                });
+      datasetJsonNode
+        .putArray("networkKey").addAll(networkKeys);
+      datasetJsonNode
+        .putArray("networkTitle").addAll(networkTitles);
+    }
   }
 
   @SneakyThrows

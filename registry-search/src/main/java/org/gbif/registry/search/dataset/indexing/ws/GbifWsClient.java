@@ -27,9 +27,11 @@ import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.UUID;
 
 public interface GbifWsClient {
@@ -66,4 +68,6 @@ public interface GbifWsClient {
 
   SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
       OccurrenceSearchRequest searchRequest);
+
+  List<Network> getNetworks(UUID datasetKey);
 }
