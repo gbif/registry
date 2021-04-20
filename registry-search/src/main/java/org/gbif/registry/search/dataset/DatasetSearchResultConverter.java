@@ -87,9 +87,7 @@ public class DatasetSearchResultConverter
     getCountryListValue(fields, "countryCoverage").ifPresent(d::setCountryCoverage);
     getStringValue(fields, "doi").map(DOI::new).ifPresent(d::setDoi);
 
-    getUuidValue(fields, "networkKey").ifPresent(d::setNetworkKey);
-    getHighlightOrStringValue(fields, hit.getHighlightFields(), "networkTitle")
-      .ifPresent(d::setNetworkTitle);
+    getUUIDListValue(fields, "networkKey").ifPresent(d::setNetworkKeys);
 
     return d;
   }
@@ -138,6 +136,13 @@ public class DatasetSearchResultConverter
 
   private static Optional<UUID> getUuidValue(Map<String, Object> fields, String esField) {
     return getValue(fields, esField, UUID::fromString);
+  }
+
+  private static Optional<List<UUID>> getUUIDListValue(Map<String, Object> fields, String esField) {
+    return Optional.ofNullable(fields.get(esField))
+      .map(v -> (List<String>) v)
+      .filter(v -> !v.isEmpty())
+      .map(v -> v.stream().map(UUID::fromString).collect(Collectors.toList()));
   }
 
   private static Optional<String> getStringValue(Map<String, Object> fields, String esField) {
