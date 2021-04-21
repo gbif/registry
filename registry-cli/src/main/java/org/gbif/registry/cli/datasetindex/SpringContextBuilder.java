@@ -17,6 +17,7 @@ package org.gbif.registry.cli.datasetindex;
 
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
@@ -27,6 +28,7 @@ import org.gbif.registry.search.dataset.indexing.ws.GbifWsRetrofitClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
+import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientBuilder;
 
@@ -195,6 +197,11 @@ public class SpringContextBuilder {
     @Bean
     public DatasetService datasetService(ClientBuilder clientBuilder) {
       return clientBuilder.build(DatasetClient.class);
+    }
+
+    @Bean
+    public NetworkService networkService(ClientBuilder clientBuilder) {
+      return clientBuilder.build(NetworkClient.class);
     }
   }
 }
