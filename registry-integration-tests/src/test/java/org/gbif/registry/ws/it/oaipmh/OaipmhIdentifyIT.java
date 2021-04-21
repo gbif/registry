@@ -23,6 +23,8 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import javax.sql.DataSource;
+
 import org.dspace.xoai.model.oaipmh.DeletedRecord;
 import org.dspace.xoai.model.oaipmh.Identify;
 import org.hamcrest.Matchers;
@@ -40,14 +42,16 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhIdentifyIT(
-      SimplePrincipalProvider principalProvider,
-      Environment environment,
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
-      TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+    SimplePrincipalProvider principalProvider,
+    Environment environment,
+    NodeService nodeService,
+    OrganizationService organizationService,
+    InstallationService installationService,
+    DatasetService datasetService,
+    TestDataFactory testDataFactory,
+    EsManageServer esServer,
+    DataSource dataSource
+    ) {
     super(
         principalProvider,
         environment,
@@ -56,7 +60,8 @@ public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer);
+        esServer,
+        dataSource);
   }
 
   /**

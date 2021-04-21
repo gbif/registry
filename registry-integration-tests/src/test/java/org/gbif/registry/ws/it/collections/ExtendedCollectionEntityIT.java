@@ -55,7 +55,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,11 +62,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.BeforeAll;
+import javax.sql.DataSource;
+
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -110,14 +114,19 @@ public abstract class ExtendedCollectionEntityIT<
     this.installationService = installationService;
   }
 
-  @BeforeAll
-  public static void createMaterializedViews() throws SQLException {
-    Connection connection = database.getTestDatabase().getConnection();
-    // create materialized view for testing
-    ScriptUtils.executeSqlScript(
+  public static class MaterializedViewInitializer implements BeforeAllCallback {
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+      Connection connection = SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class).getConnection();
+      // create materialized view for testing
+      ScriptUtils.executeSqlScript(
         connection, new ClassPathResource("/scripts/create_duplicates_views.sql"));
-    connection.close();
+      connection.close();
+    }
   }
+
+  @RegisterExtension static MaterializedViewInitializer materializedViewInitializer = new MaterializedViewInitializer();
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)

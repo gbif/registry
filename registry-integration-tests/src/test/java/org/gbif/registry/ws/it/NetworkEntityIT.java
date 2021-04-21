@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.sql.DataSource;
 import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -89,10 +91,11 @@ public abstract class NetworkEntityIT<
 
   private final TestDataFactory testDataFactory;
 
+  @Autowired
+  private DataSource dataSource;
+
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-                                                .dataSource(database.getTestDatabase())
-                                                .build();
+  public TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,
@@ -159,7 +162,7 @@ public abstract class NetworkEntityIT<
     anotherEntity.setCreated(null);
     anotherEntity.setKey(null);
 
-    try (Connection c = database.getTestDatabase().getConnection();
+    try (Connection c = dataSource.getConnection();
         PreparedStatement ps = c.prepareStatement("INSERT INTO editor_rights VALUES(?, ?)")) {
       ps.setString(1, TestConstants.TEST_EDITOR);
       ps.setObject(2, keyForCreateAsEditorTest(entity));

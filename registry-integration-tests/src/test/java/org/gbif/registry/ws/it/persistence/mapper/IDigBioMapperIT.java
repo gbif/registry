@@ -40,6 +40,7 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -56,9 +57,11 @@ import static org.junit.Assert.assertNotNull;
 public class IDigBioMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("collection_person",
+                                                                                       "collection",
+                                                                                       "institution",
+                                                                                       "address",
+                                                                                       "identifier");
 
   private IDigBioMapper iDigBioMapper;
   private CollectionMapper collectionMapper;

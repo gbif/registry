@@ -36,6 +36,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -53,9 +54,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class InstitutionMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("institution_collection_person",
+                                                                                       "institution_identifier",
+                                                                                       "institution_tag",
+                                                                                       "institution_occurrence_mapping",
+                                                                                       "institution");
 
   private InstitutionMapper institutionMapper;
   private AddressMapper addressMapper;

@@ -76,9 +76,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LegacyDatasetResourceIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final DatasetService datasetService;
   private final TestDataFactory testDataFactory;

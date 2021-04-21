@@ -13,6 +13,7 @@
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
     <collection property="comments" column="key" select="listComments"/>
+    <collection property="networkKeys" column="key" select="listNetworks"/>
   </resultMap>
 
   <!-- maps a citation object  -->
@@ -439,6 +440,12 @@
     FROM comment INNER JOIN dataset_comment ON comment_key = key
     WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
+  </select>
+
+  <select id="listNetworks" resultType="String">
+    SELECT network_key
+    FROM dataset_network
+    WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
   </select>
 
   <!-- Joined delete of comment to trigger cascade delete of the join table -->

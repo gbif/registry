@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -45,9 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class DerivedDatasetMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("derived_dataset", "dataset");
 
   private final DerivedDatasetMapper mapper;
   private final TestDataFactory testDataFactory;
@@ -118,7 +117,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
   public void testListByRegistrationDate() {
     // create derivedDatasets
     DerivedDataset derivedDataset1 = prepareDerivedDataset();
-    derivedDataset1.setDoi(new DOI("10.21373/dd.doi1"));
+    derivedDataset1.setDoi(new DOI("10.21373/dd.doi3"));
     // day before date
     derivedDataset1.setRegistrationDate(
         Date.from(
@@ -128,7 +127,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
     mapper.create(derivedDataset1);
 
     DerivedDataset derivedDataset2 = prepareDerivedDataset();
-    derivedDataset2.setDoi(new DOI("10.21373/dd.doi2"));
+    derivedDataset2.setDoi(new DOI("10.21373/dd.doi4"));
     // the same date but an hour later
     derivedDataset2.setRegistrationDate(
         Date.from(
@@ -138,7 +137,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
     mapper.create(derivedDataset2);
 
     DerivedDataset derivedDataset3 = prepareDerivedDataset();
-    derivedDataset3.setDoi(new DOI("10.21373/dd.doi3"));
+    derivedDataset3.setDoi(new DOI("10.21373/dd.doi5"));
     // day after date
     derivedDataset3.setRegistrationDate(
         Date.from(

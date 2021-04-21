@@ -68,9 +68,7 @@ public abstract class BaseCollectionEntityIT<
   @RegisterExtension public CollectionsDatabaseInitializer collectionsDatabaseInitializer;
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   public BaseCollectionEntityIT(
       CrudService<T> resource,
