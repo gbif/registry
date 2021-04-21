@@ -17,7 +17,7 @@ package org.gbif.registry.search;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.DatasetService;
@@ -57,14 +57,14 @@ public class DatasetIndexUpdateListener {
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void created(CreateEvent<T> event) {
+  public final <T> void created(CreateEvent<T> event) {
     if (event.getObjectClass().equals(Dataset.class)) {
       indexService.index((Dataset) event.getNewObject());
     }
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void updated(UpdateEvent<T> event) {
+  public final <T> void updated(UpdateEvent<T> event) {
     if (event.getObjectClass().equals(Dataset.class)) {
       indexService.index((Dataset) event.getNewObject());
 
@@ -83,11 +83,18 @@ public class DatasetIndexUpdateListener {
       if (!i1.getOrganizationKey().equals(i2.getOrganizationKey())) {
         indexService.index(i2);
       }
+    } else if (event.getObjectClass().equals(Network.class)) {
+      // we only care about title changes
+      Network network1 = (Network)event.getOldObject();
+      Network network2 = (Network)event.getNewObject();
+      if (!network1.getTitle().equals(network2.getTitle())) {
+        indexService.index(network2);
+      }
     }
   }
 
   @Subscribe
-  public final <T extends NetworkEntity> void deleted(DeleteEvent<T> event) {
+  public final <T> void deleted(DeleteEvent<T> event) {
     if (event.getObjectClass().equals(Dataset.class)) {
       indexService.delete((Dataset) event.getOldObject());
     }

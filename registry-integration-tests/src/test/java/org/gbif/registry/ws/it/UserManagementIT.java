@@ -30,7 +30,6 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,10 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserManagementIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .tables(Collections.singletonList("public.user"))
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("public.user");
 
   private static final String CHANGED_PASSWORD = "123456";
 

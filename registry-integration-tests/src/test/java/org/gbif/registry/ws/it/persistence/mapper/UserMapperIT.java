@@ -17,7 +17,6 @@ package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -30,7 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,11 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class UserMapperIT extends BaseItTest {
-
-  @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
 
   private final UserMapper mapper;
 

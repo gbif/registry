@@ -23,6 +23,7 @@ import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifApiService;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
@@ -43,11 +44,13 @@ public class SearchTestConfiguration {
   @Bean
   @Primary
   public GbifWsClient gbifWsClient(
-      InstallationService installationService,
-      OrganizationService organizationService,
-      DatasetService datasetService) {
+    InstallationService installationService,
+    OrganizationService organizationService,
+    DatasetService datasetService,
+    NetworkService networkService
+    ) {
     return new GbifWsRetrofitClient(
-        gbifApiService(), installationService, organizationService, datasetService);
+        gbifApiService(), installationService, organizationService, datasetService, networkService);
   }
 
   public GbifApiService gbifApiService() {

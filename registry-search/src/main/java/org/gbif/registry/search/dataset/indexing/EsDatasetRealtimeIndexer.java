@@ -17,6 +17,7 @@ package org.gbif.registry.search.dataset.indexing;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
@@ -229,6 +230,23 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
     } catch (Exception ex) {
       log.error("Error deleting dataset {}", dataset, ex);
       pendingUpdates.decrementAndGet();
+    }
+  }
+
+  @Override
+  public void index(Network network) {
+    // Update hosted datasets for the organization
+    try {
+      log.debug("Updating hosted datasets for installation {}", network.getKey());
+      Iterable<Dataset> datasets =
+        Iterables.datasetsIterable(
+          page -> gbifWsClient.getNetworkDatasets(network.getKey().toString(), page));
+      index(datasets);
+    } catch (Exception e) {
+      log.error(
+        "Unable to update hosted datasets for network {} - index is now out of sync",
+        network.getKey(),
+        e);
     }
   }
 

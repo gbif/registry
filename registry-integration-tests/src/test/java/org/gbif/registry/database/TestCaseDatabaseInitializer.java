@@ -20,11 +20,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
-import lombok.Builder;
 import lombok.Data;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -32,25 +30,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * A Rule that will truncate the tables ready for a new test. It is expected to do this before each
  * test by using the following:
  *
  * <pre>
- * @RegisterExtension
- * public TestCaseDatabaseInitializer = TestCaseDatabaseInitializer.builder()
- *     .dataSource(database.getTestDatabase()) // developer required to provide datasource
- *     .build();
+ * @RegisterExtension TestCaseDatabaseInitializer = TestCaseDatabaseInitializer(tables);
  * </pre>
  */
 @Data
-@Builder
 public class TestCaseDatabaseInitializer implements BeforeEachCallback {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestCaseDatabaseInitializer.class);
 
-  @Builder.Default
   private List<String> tables = Arrays.asList("contact", "endpoint", "tag", "identifier", "comment", "node_identifier",
     "node_identifier", "node_identifier", "node_machine_tag", "node_tag", "node_comment",
     "occurrence_download", "organization_contact", "organization_endpoint", "organization_machine_tag",
@@ -60,15 +54,19 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
     "dataset_identifier", "dataset_comment", "dataset_network", "network_contact",
     "network_endpoint", "network_machine_tag", "network_tag", "network_comment",
     "machine_tag, metadata", "editor_rights", "network", "dataset", "installation",
-    "organization, node", "collection_collection_person", "collection_identifier",
+    "organization, node", "collection_person", "collection_collection_person", "collection_identifier",
     "collection_tag", "institution_collection_person", "institution_identifier",
     "institution_tag", "institution_occurrence_mapping", "collection_occurrence_mapping",
     "collection_person", "collection", "institution", "address", "gbif_doi", "pipeline_step",
     "pipeline_process", "pipeline_execution", "derived_dataset");
 
-  private final DataSource dataSource;
+  public TestCaseDatabaseInitializer() {
+  }
 
-  private void truncateTables() throws Exception {
+  public TestCaseDatabaseInitializer(String...tables) {
+    this.tables = Arrays.asList(tables);
+  }
+  private void truncateTables(DataSource dataSource) throws Exception {
     LOG.info("Truncating registry tables");
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
@@ -108,6 +106,6 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
 
   @Override
   public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    truncateTables();
+    truncateTables(SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class));
   }
 }

@@ -189,9 +189,9 @@ public class DatasetJsonConverter {
                   networkTitles.add(new TextNode(network.getTitle()));
                 });
       datasetJsonNode
-        .putArray("networkKey").addAll(networkKeys);
+        .putArray("networkKeys").addAll(networkKeys);
       datasetJsonNode
-        .putArray("networkTitle").addAll(networkTitles);
+        .putArray("networkTitles").addAll(networkTitles);
     }
   }
 

@@ -17,6 +17,7 @@ package org.gbif.registry.search.dataset.indexing;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 
 public interface DatasetRealtimeIndexer {
@@ -28,6 +29,8 @@ public interface DatasetRealtimeIndexer {
   void index(Organization organization);
 
   void index(Installation installation);
+
+  void index(Network network);
 
   void delete(Dataset dataset);
 

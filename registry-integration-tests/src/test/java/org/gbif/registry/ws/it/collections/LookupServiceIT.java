@@ -49,9 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class LookupServiceIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final Institution i1 = new Institution();
   private final Institution i2 = new Institution();

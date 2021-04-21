@@ -25,7 +25,6 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Collections;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -53,10 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .tables(Collections.singletonList("public.user"))
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("public.user");
 
   private final UserTestFixture userTestFixture;
   private final RequestTestFixture requestTestFixture;

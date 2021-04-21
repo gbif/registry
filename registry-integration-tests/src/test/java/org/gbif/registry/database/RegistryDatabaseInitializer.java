@@ -18,12 +18,10 @@ package org.gbif.registry.database;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 import com.google.common.base.Throwables;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
-import lombok.Builder;
-import lombok.Data;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import lombok.experimental.UtilityClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,25 +29,18 @@ import org.slf4j.LoggerFactory;
  * A Rule that initializes a database for All test cases in a Test class or in test suite.
  *
  * <pre>
- * @RegisterExtension
- * public TestsDatabaseInitializer = TestsDatabaseInitializer
- *   .builder()
- *   .dbExtension(dbExtension) // developer required to provide DB Extension
- *   .build();
+ *  RegistryDatabaseInitializer().init();
  * </pre>
  */
-@Data
-@Builder
-public class TestsDatabaseInitializer implements BeforeAllCallback {
+@UtilityClass
+public class RegistryDatabaseInitializer {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TestsDatabaseInitializer.class);
-  private final PreparedDbExtension dbExtension;
+  private static final Logger LOG = LoggerFactory.getLogger(RegistryDatabaseInitializer.class);
 
-  private void createTestUsers() throws Exception {
+  public static void init(DataSource dataSource) {
       LOG.info("Create test users");
-      try (Connection connection = dbExtension.getTestDatabase().getConnection()) {
+      try (Connection connection = dataSource.getConnection()) {
         connection.setAutoCommit(false);
-        connection.prepareStatement("TRUNCATE public.user CASCADE").execute();
 
         connection.prepareStatement(
           "INSERT INTO public.\"user\" (key, username, email, password, first_name, last_name, roles, settings, system_settings, created, last_login, deleted, challenge_code_key) "
@@ -63,11 +54,7 @@ public class TestsDatabaseInitializer implements BeforeAllCallback {
       } catch (SQLException e) {
         Throwables.propagate(e);
       }
-      LOG.info("Registry tables truncated");
+      LOG.info("Initial test data loaded");
   }
 
-  @Override
-  public void beforeAll(ExtensionContext extensionContext) throws Exception {
-    createTestUsers();
-  }
 }
