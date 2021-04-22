@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /** Tests the {@link InstitutionChangeSuggestionService}. */
 public class InstitutionChangeSuggestionServiceIT
-    extends BaseChangeSuggestionServiceIT<Institution> {
+    extends BaseChangeSuggestionServiceIT<Institution, InstitutionChangeSuggestion> {
 
   private final InstitutionChangeSuggestionService institutionChangeSuggestionService;
   private final InstitutionService institutionService;

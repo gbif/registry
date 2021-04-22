@@ -20,6 +20,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -65,7 +66,8 @@ import com.google.common.base.Strings;
 @Validated
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
-public class CollectionResource extends ExtendedCollectionEntityResource<Collection>
+public class CollectionResource
+    extends ExtendedCollectionEntityResource<Collection, CollectionChangeSuggestion>
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;

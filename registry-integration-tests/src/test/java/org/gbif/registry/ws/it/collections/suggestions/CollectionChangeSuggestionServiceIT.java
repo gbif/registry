@@ -32,7 +32,8 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /** Tests the {@link CollectionChangeSuggestionService}. */
-public class CollectionChangeSuggestionServiceIT extends BaseChangeSuggestionServiceIT<Collection> {
+public class CollectionChangeSuggestionServiceIT
+    extends BaseChangeSuggestionServiceIT<Collection, CollectionChangeSuggestion> {
 
   @Autowired
   public CollectionChangeSuggestionServiceIT(

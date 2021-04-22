@@ -90,6 +90,7 @@ public class ExtendedCollectionService<
     return entity.getKey();
   }
 
+  @Override
   public void update(T entity) {
     preUpdate(entity);
     T entityOld = get(entity.getKey());

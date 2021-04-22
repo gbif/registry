@@ -92,7 +92,8 @@ import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE
 public abstract class ExtendedCollectionEntityResource<
         T extends
             CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable & Commentable
-                & OccurrenceMappeable>
+                & OccurrenceMappeable,
+        R extends ChangeSuggestion<T>>
     extends BaseCollectionEntityResource<T> implements ContactService, OccurrenceMappingService {
 
   private final ContactableMapper contactableMapper;
@@ -100,7 +101,7 @@ public abstract class ExtendedCollectionEntityResource<
   private final OccurrenceMappeableMapper occurrenceMappeableMapper;
   private final MergeService<T> mergeService;
   private final ExtendedCollectionService<T> extendedCollectionService;
-  private final ChangeSuggestionService<T> changeSuggestionService;
+  private final ChangeSuggestionService<T, R> changeSuggestionService;
   private final EventManager eventManager;
   private final Class<T> objectClass;
 
@@ -115,7 +116,7 @@ public abstract class ExtendedCollectionEntityResource<
       OccurrenceMappeableMapper occurrenceMappeableMapper,
       MergeService<T> mergeService,
       ExtendedCollectionService<T> extendedCollectionService,
-      ChangeSuggestionService<T> changeSuggestionService,
+      ChangeSuggestionService<T, R> changeSuggestionService,
       EventManager eventManager,
       Class<T> objectClass,
       WithMyBatis withMyBatis) {
@@ -254,23 +255,26 @@ public abstract class ExtendedCollectionEntityResource<
   }
 
   @PostMapping(value = "changeSuggestion")
-  public int createChangeSuggestion(@RequestBody ChangeSuggestion<T> createSuggestion) {
+  public int createChangeSuggestion(@RequestBody R createSuggestion) {
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
   }
 
+  // TODO: suggestions roles
+
   @PutMapping(value = "changeSuggestion/{key}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void updateChangeSuggestion(@RequestBody ChangeSuggestion<T> createSuggestion) {
-    changeSuggestionService.updateChangeSuggestion(createSuggestion);
+  @Secured({GRSCICOLL_ADMIN_ROLE})
+  public void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody R suggestion) {
+    checkArgument(key == suggestion.getKey());
+    changeSuggestionService.updateChangeSuggestion(suggestion);
   }
 
   @GetMapping(value = "changeSuggestion/{key}")
-  public ChangeSuggestion<T> getChangeSuggestion(@PathVariable("key") int key) {
+  public R getChangeSuggestion(@PathVariable("key") int key) {
     return changeSuggestionService.getChangeSuggestion(key);
   }
 
   @GetMapping(value = "changeSuggestion")
-  public PagingResponse<ChangeSuggestion<T>> listChangeSuggestion(
+  public PagingResponse<R> listChangeSuggestion(
       @Nullable @RequestParam(value = "status", required = false) Status status,
       @Nullable @RequestParam(value = "type", required = false) Type type,
       @Nullable Country country,
@@ -281,14 +285,29 @@ public abstract class ExtendedCollectionEntityResource<
   }
 
   @PutMapping(value = "changeSuggestion/{key}/discard")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE})
   public void discardChangeSuggestion(@PathVariable("key") int key) {
     changeSuggestionService.discardChangeSuggestion(key);
   }
 
   @PutMapping(value = "changeSuggestion/{key}/apply")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void applyChangeSuggestion(@PathVariable("key") int key) {
-    changeSuggestionService.applyChangeSuggestion(key);
+  @Secured({GRSCICOLL_ADMIN_ROLE})
+  public ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key) {
+    UUID entityCreatedKey = changeSuggestionService.applyChangeSuggestion(key);
+    ApplySuggestionResult result = new ApplySuggestionResult();
+    result.setEntityCreatedKey(entityCreatedKey);
+    return result;
+  }
+
+  public static class ApplySuggestionResult {
+    private UUID entityCreatedKey;
+
+    public UUID getEntityCreatedKey() {
+      return entityCreatedKey;
+    }
+
+    public void setEntityCreatedKey(UUID entityCreatedKey) {
+      this.entityCreatedKey = entityCreatedKey;
+    }
   }
 }

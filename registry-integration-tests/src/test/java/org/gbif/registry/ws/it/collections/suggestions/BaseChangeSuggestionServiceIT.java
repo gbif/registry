@@ -32,7 +32,6 @@ import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -47,25 +46,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Tests the {@link InstitutionChangeSuggestionService}. */
+/** Tests the {@link ChangeSuggestionService}. */
 public abstract class BaseChangeSuggestionServiceIT<
-        T extends CollectionEntity & Contactable & LenientEquals<T>>
+        T extends CollectionEntity & Contactable & LenientEquals<T>, R extends ChangeSuggestion<T>>
     extends BaseItTest {
 
   protected static final String PROPOSER = "proposer";
   protected static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule =
-      TestCaseDatabaseInitializer.builder().dataSource(database.getTestDatabase()).build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
-  private final ChangeSuggestionService<T> changeSuggestionService;
+  private final ChangeSuggestionService<T, R> changeSuggestionService;
   private final CrudService<T> crudService;
 
   protected BaseChangeSuggestionServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
-      ChangeSuggestionService<T> changeSuggestionService,
+      ChangeSuggestionService<T, R> changeSuggestionService,
       CrudService<T> crudService) {
     super(simplePrincipalProvider, esServer);
     this.changeSuggestionService = changeSuggestionService;
@@ -81,7 +79,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     address.setCountry(Country.DENMARK);
     entity.setAddress(address);
 
-    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
     suggestion.setProposedBy(PROPOSER);
@@ -141,7 +139,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     int numberChanges = updateEntity(entity);
     address.setCity("city");
 
-    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.UPDATE);
     suggestion.setEntityKey(entityKey);
@@ -191,7 +189,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     T entity = createEntity();
     UUID entityKey = crudService.create(entity);
 
-    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.DELETE);
     suggestion.setEntityKey(entityKey);
@@ -227,7 +225,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     T entity2 = createEntity();
     UUID entity2Key = crudService.create(entity2);
 
-    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.MERGE);
     suggestion.setEntityKey(entityKey);
@@ -262,7 +260,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     // State
     T entity = createEntity();
 
-    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
     suggestion.setProposedBy(PROPOSER);
@@ -290,7 +288,7 @@ public abstract class BaseChangeSuggestionServiceIT<
   public void listTest() {
     // State
     T entity = createEntity();
-    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
     suggestion.setProposedBy(PROPOSER);
@@ -300,7 +298,7 @@ public abstract class BaseChangeSuggestionServiceIT<
 
     T entity2 = createEntity();
     UUID entity2Key = crudService.create(entity2);
-    ChangeSuggestion<T> suggestion2 = createEmptyChangeSuggestion();
+    R suggestion2 = createEmptyChangeSuggestion();
     suggestion2.setSuggestedEntity(entity2);
     suggestion2.setEntityKey(entity2Key);
     suggestion2.setType(Type.UPDATE);
@@ -310,7 +308,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     int suggKey2 = changeSuggestionService.createChangeSuggestion(suggestion2);
 
     // When
-    PagingResponse<ChangeSuggestion<T>> results =
+    PagingResponse<R> results =
         changeSuggestionService.list(Status.APPLIED, null, null, null, null, DEFAULT_PAGE);
     // Then
     assertEquals(0, results.getResults().size());
@@ -337,7 +335,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(0, results.getCount());
   }
 
-  protected void assertCreatedSuggestion(ChangeSuggestion<T> created) {
+  protected void assertCreatedSuggestion(R created) {
     assertEquals(Status.PENDING, created.getStatus());
     assertNull(created.getApplied());
     assertNull(created.getDiscarded());
@@ -362,5 +360,5 @@ public abstract class BaseChangeSuggestionServiceIT<
 
   abstract int reviewEntity(T entity);
 
-  abstract ChangeSuggestion<T> createEmptyChangeSuggestion();
+  abstract R createEmptyChangeSuggestion();
 }

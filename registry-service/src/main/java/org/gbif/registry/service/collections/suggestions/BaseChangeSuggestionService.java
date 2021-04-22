@@ -53,8 +53,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 public abstract class BaseChangeSuggestionService<
         T extends
             CollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable & Contactable
-                & OccurrenceMappeable>
-    implements ChangeSuggestionService<T> {
+                & OccurrenceMappeable,
+        R extends ChangeSuggestion<T>>
+    implements ChangeSuggestionService<T, R> {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseChangeSuggestionService.class);
 
@@ -105,7 +106,7 @@ public abstract class BaseChangeSuggestionService<
   }
 
   @Override
-  public int createChangeSuggestion(ChangeSuggestion<T> changeSuggestion) {
+  public int createChangeSuggestion(R changeSuggestion) {
     checkArgument(!changeSuggestion.getComments().isEmpty(), "A comment is required");
 
     if (changeSuggestion.getType() == Type.CREATE) {
@@ -127,7 +128,7 @@ public abstract class BaseChangeSuggestionService<
     throw new IllegalArgumentException("Invalid suggestion type: " + changeSuggestion.getType());
   }
 
-  protected int createUpdateSuggestion(ChangeSuggestion<T> changeSuggestion) {
+  protected int createUpdateSuggestion(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
     checkArgument(changeSuggestion.getSuggestedEntity() != null);
 
@@ -143,7 +144,7 @@ public abstract class BaseChangeSuggestionService<
     return dto.getKey();
   }
 
-  protected int createNewEntitySuggestion(ChangeSuggestion<T> changeSuggestion) {
+  protected int createNewEntitySuggestion(R changeSuggestion) {
     checkArgument(changeSuggestion.getSuggestedEntity() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
@@ -154,7 +155,7 @@ public abstract class BaseChangeSuggestionService<
     return dto.getKey();
   }
 
-  protected int createDeleteSuggestion(ChangeSuggestion<T> changeSuggestion) {
+  protected int createDeleteSuggestion(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
@@ -166,7 +167,7 @@ public abstract class BaseChangeSuggestionService<
     return dto.getKey();
   }
 
-  protected int createMergeSuggestion(ChangeSuggestion<T> changeSuggestion) {
+  protected int createMergeSuggestion(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
     checkArgument(changeSuggestion.getMergeTargetKey() != null);
 
@@ -181,7 +182,7 @@ public abstract class BaseChangeSuggestionService<
   }
 
   @Override
-  public void updateChangeSuggestion(ChangeSuggestion<T> updatedChangeSuggestion) {
+  public void updateChangeSuggestion(R updatedChangeSuggestion) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
 
     checkArgument(
@@ -191,7 +192,7 @@ public abstract class BaseChangeSuggestionService<
     if (dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) {
       // we do this to update the suggested entity with the current state and minimize the risk of
       // having race conditions
-      ChangeSuggestion<T> changeSuggestion = dtoToChangeSuggestion(dto);
+      R changeSuggestion = dtoToChangeSuggestion(dto);
 
       Set<ChangeDto> newChanges =
           extractChanges(
@@ -215,11 +216,13 @@ public abstract class BaseChangeSuggestionService<
     changeSuggestionMapper.update(dto);
   }
 
-  public void applyChangeSuggestion(int suggestionKey) {
+  @Override
+  public UUID applyChangeSuggestion(int suggestionKey) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
-    ChangeSuggestion<T> changeSuggestion = dtoToChangeSuggestion(dto);
+    R changeSuggestion = dtoToChangeSuggestion(dto);
+    UUID createdEntity = null;
     if (dto.getType() == Type.CREATE) {
-      UUID createdEntity = extendedCollectionService.create(changeSuggestion.getSuggestedEntity());
+      createdEntity = extendedCollectionService.create(changeSuggestion.getSuggestedEntity());
       dto.setEntityKey(createdEntity);
     } else if (dto.getType() == Type.UPDATE) {
       extendedCollectionService.update(changeSuggestion.getSuggestedEntity());
@@ -228,7 +231,7 @@ public abstract class BaseChangeSuggestionService<
     } else if (dto.getType() == Type.MERGE) {
       mergeService.merge(changeSuggestion.getEntityKey(), changeSuggestion.getMergeTargetKey());
     } else if (dto.getType() == Type.CONVERSION_TO_COLLECTION) {
-      applyConversionToCollection(dto);
+      createdEntity = applyConversionToCollection(dto);
     }
 
     dto.setStatus(Status.APPLIED);
@@ -236,10 +239,12 @@ public abstract class BaseChangeSuggestionService<
     dto.setApplied(new Date());
     dto.setAppliedBy(getUsername());
     changeSuggestionMapper.update(dto);
+
+    return createdEntity;
   }
 
   @Override
-  public PagingResponse<ChangeSuggestion<T>> list(
+  public PagingResponse<R> list(
       @Nullable Status status,
       @Nullable Type type,
       @Nullable Country country,
@@ -267,7 +272,7 @@ public abstract class BaseChangeSuggestionService<
             newEmptyChangeSuggestion().getProposedBy(),
             entityKey);
 
-    List<ChangeSuggestion<T>> changeSuggestions =
+    List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());
 
     return new PagingResponse<>(page, count, changeSuggestions);
@@ -321,8 +326,7 @@ public abstract class BaseChangeSuggestionService<
     return changes;
   }
 
-  protected ChangeSuggestionDto createBaseChangeSuggestionDto(
-      ChangeSuggestion<T> changeSuggestion) {
+  protected ChangeSuggestionDto createBaseChangeSuggestionDto(R changeSuggestion) {
     ChangeSuggestionDto dto = new ChangeSuggestionDto();
     dto.setEntityKey(changeSuggestion.getEntityKey());
     dto.setStatus(Status.PENDING);
@@ -356,8 +360,8 @@ public abstract class BaseChangeSuggestionService<
     }
   }
 
-  protected ChangeSuggestion<T> dtoToChangeSuggestion(ChangeSuggestionDto dto) {
-    ChangeSuggestion<T> suggestion = newEmptyChangeSuggestion();
+  protected R dtoToChangeSuggestion(ChangeSuggestionDto dto) {
+    R suggestion = newEmptyChangeSuggestion();
     suggestion.setKey(dto.getKey());
     suggestion.setStatus(dto.getStatus());
     suggestion.setType(dto.getType());
@@ -435,9 +439,9 @@ public abstract class BaseChangeSuggestionService<
     }
   }
 
-  protected abstract ChangeSuggestion<T> newEmptyChangeSuggestion();
+  protected abstract R newEmptyChangeSuggestion();
 
-  protected abstract int createConvertToCollectionSuggestion(ChangeSuggestion<T> changeSuggestion);
+  protected abstract int createConvertToCollectionSuggestion(R changeSuggestion);
 
-  protected abstract void applyConversionToCollection(ChangeSuggestionDto dto);
+  protected abstract UUID applyConversionToCollection(ChangeSuggestionDto dto);
 }

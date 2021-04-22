@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -69,7 +70,8 @@ import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE
 @Validated
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
-public class InstitutionResource extends ExtendedCollectionEntityResource<Institution>
+public class InstitutionResource
+    extends ExtendedCollectionEntityResource<Institution, InstitutionChangeSuggestion>
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;

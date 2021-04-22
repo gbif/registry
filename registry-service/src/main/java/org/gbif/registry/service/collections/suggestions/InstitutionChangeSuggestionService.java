@@ -1,7 +1,6 @@
 package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
@@ -9,6 +8,8 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.service.collections.DefaultInstitutionService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
+
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Service
-public class InstitutionChangeSuggestionService extends BaseChangeSuggestionService<Institution> {
+public class InstitutionChangeSuggestionService
+    extends BaseChangeSuggestionService<Institution, InstitutionChangeSuggestion> {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(InstitutionChangeSuggestionService.class);
@@ -48,21 +50,19 @@ public class InstitutionChangeSuggestionService extends BaseChangeSuggestionServ
     this.institutionMergeService = institutionMergeService;
   }
 
+  @Override
   protected int createConvertToCollectionSuggestion(
-      ChangeSuggestion<Institution> changeSuggestion) {
-    checkArgument(changeSuggestion.getEntityKey() != null);
+      InstitutionChangeSuggestion institutionChangeSuggestion) {
+    checkArgument(institutionChangeSuggestion.getEntityKey() != null);
 
-    InstitutionChangeSuggestion institutionChangeSuggestion =
-        (InstitutionChangeSuggestion) changeSuggestion;
-
-    ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
+    ChangeSuggestionDto dto = createBaseChangeSuggestionDto(institutionChangeSuggestion);
     dto.setType(Type.CONVERSION_TO_COLLECTION);
     dto.setInstitutionConvertedCollection(
         institutionChangeSuggestion.getInstitutionForConvertedCollection());
     dto.setNameNewInstitutionConvertedCollection(
         institutionChangeSuggestion.getNameForNewInstitutionForConvertedCollection());
 
-    Institution currentEntity = institutionMapper.get(changeSuggestion.getEntityKey());
+    Institution currentEntity = institutionMapper.get(institutionChangeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
     changeSuggestionMapper.create(dto);
@@ -73,8 +73,7 @@ public class InstitutionChangeSuggestionService extends BaseChangeSuggestionServ
   public InstitutionChangeSuggestion getChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
 
-    InstitutionChangeSuggestion suggestion =
-        (InstitutionChangeSuggestion) dtoToChangeSuggestion(dto);
+    InstitutionChangeSuggestion suggestion = dtoToChangeSuggestion(dto);
     suggestion.setInstitutionForConvertedCollection(dto.getInstitutionConvertedCollection());
     suggestion.setNameForNewInstitutionForConvertedCollection(
         dto.getNameNewInstitutionConvertedCollection());
@@ -82,8 +81,9 @@ public class InstitutionChangeSuggestionService extends BaseChangeSuggestionServ
     return suggestion;
   }
 
-  protected void applyConversionToCollection(ChangeSuggestionDto dto) {
-    institutionMergeService.convertToCollection(
+  @Override
+  protected UUID applyConversionToCollection(ChangeSuggestionDto dto) {
+    return institutionMergeService.convertToCollection(
         dto.getEntityKey(),
         dto.getInstitutionConvertedCollection(),
         dto.getNameNewInstitutionConvertedCollection());

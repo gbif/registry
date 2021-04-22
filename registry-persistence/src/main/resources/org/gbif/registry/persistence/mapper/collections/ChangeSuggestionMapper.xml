@@ -41,6 +41,7 @@
 
   <sql id="SUGGESTION_PARAMS_UPDATE">
     suggested_entity = #{suggestedEntity,jdbcType=OTHER}::jsonb,
+    status = #{status,jdbcType=OTHER},
     comments = #{comments,jdbcType=OTHER,typeHandler=StringArrayTypeHandler},
     changes = #{changes,jdbcType=OTHER,typeHandler=SuggestedChangesTypeHandler}::jsonb,
     modified = now(),
