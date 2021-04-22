@@ -281,7 +281,7 @@ public abstract class BaseChangeSuggestionService<
   private Set<ChangeDto> extractChanges(T suggestedEntity, T currentEntity) {
     Set<ChangeDto> changes = new HashSet<>();
     for (Field field : clazz.getDeclaredFields()) {
-      if (FIELDS_TO_IGNORE.contains(field.getName())) {
+      if (FIELDS_TO_IGNORE.contains(field.getName()) || field.isSynthetic()) {
         continue;
       }
       try {
