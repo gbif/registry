@@ -31,6 +31,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,8 @@ public class DatasetBatchIndexerIT {
   private static final String API_URL = "http://api.gbif-dev.org/v1/";
 
   private static final String INDEX_NAME = IndexingConstants.ALIAS + '_' + new Date().getTime();
+
+  private static final String INDEX_ALIAS = INDEX_NAME + "_a" ;
 
   @RegisterExtension
   public static SingleInstancePostgresExtension database =
@@ -85,7 +88,7 @@ public class DatasetBatchIndexerIT {
 
     ElasticsearchConfig elasticsearchConfigDataset = new ElasticsearchConfig();
     elasticsearchConfigDataset.setHosts("http://" + embeddedElastic.getHttpHostAddress());
-    elasticsearchConfigDataset.setAlias(INDEX_NAME + "_alias");
+    elasticsearchConfigDataset.setAlias(INDEX_ALIAS);
     elasticsearchConfigDataset.setIndex(INDEX_NAME);
     configuration.setDatasetEs(elasticsearchConfigDataset);
 
@@ -124,7 +127,7 @@ public class DatasetBatchIndexerIT {
       restHighLevelClient
             .search(
                 new SearchRequest()
-                    .indices(INDEX_NAME)
+                    .indices(INDEX_ALIAS)
                     .source(new SearchSourceBuilder().size(0)),
                 RequestOptions.DEFAULT);
 
@@ -132,8 +135,11 @@ public class DatasetBatchIndexerIT {
         DATASETS_TO_INDEX,
         searchResponse.getHits().getTotalHits().value,
         "Wrong amount of indexed dataset");
+  }
 
-    restHighLevelClient.indices().delete(new DeleteIndexRequest(INDEX_NAME), RequestOptions.DEFAULT);
+  @AfterEach
+  public void deleteIndex() throws IOException {
+    buildRestClient().indices().delete(new DeleteIndexRequest(INDEX_NAME), RequestOptions.DEFAULT);
   }
 
   @AfterAll
