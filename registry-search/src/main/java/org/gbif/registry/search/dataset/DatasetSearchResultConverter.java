@@ -87,7 +87,7 @@ public class DatasetSearchResultConverter
     getCountryListValue(fields, "countryCoverage").ifPresent(d::setCountryCoverage);
     getStringValue(fields, "doi").map(DOI::new).ifPresent(d::setDoi);
 
-    getUUIDListValue(fields, "networkKey").ifPresent(d::setNetworkKeys);
+    getUUIDListValue(fields, "networkKeys").ifPresent(d::setNetworkKeys);
 
     return d;
   }
