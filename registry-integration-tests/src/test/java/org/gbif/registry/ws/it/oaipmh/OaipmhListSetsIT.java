@@ -33,6 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.sql.DataSource;
+
 import org.dspace.xoai.model.oaipmh.Set;
 import org.dspace.xoai.serviceprovider.exceptions.NoSetHierarchyException;
 import org.junit.jupiter.api.Test;
@@ -55,14 +57,16 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhListSetsIT(
-      SimplePrincipalProvider principalProvider,
-      Environment environment,
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
-      TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+    SimplePrincipalProvider principalProvider,
+    Environment environment,
+    NodeService nodeService,
+    OrganizationService organizationService,
+    InstallationService installationService,
+    DatasetService datasetService,
+    TestDataFactory testDataFactory,
+    EsManageServer esServer,
+    DataSource dataSource
+    ) {
     super(
         principalProvider,
         environment,
@@ -71,7 +75,8 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer);
+        esServer,
+        dataSource);
   }
 
   @Test

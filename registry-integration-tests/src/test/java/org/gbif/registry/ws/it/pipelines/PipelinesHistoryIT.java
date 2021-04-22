@@ -71,9 +71,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PipelinesHistoryIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final DatasetService datasetService;
   private final OrganizationService organizationService;

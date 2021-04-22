@@ -25,6 +25,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,9 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PersonMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("collection_person",
+                                                                                       "address");
 
   private PersonMapper personMapper;
   private AddressMapper addressMapper;

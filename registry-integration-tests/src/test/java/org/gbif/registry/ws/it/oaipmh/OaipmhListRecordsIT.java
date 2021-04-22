@@ -38,6 +38,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.io.IOUtils;
 import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.parameters.GetRecordParameters;
@@ -58,14 +60,16 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhListRecordsIT(
-      SimplePrincipalProvider principalProvider,
-      Environment environment,
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
-      TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+    SimplePrincipalProvider principalProvider,
+    Environment environment,
+    NodeService nodeService,
+    OrganizationService organizationService,
+    InstallationService installationService,
+    DatasetService datasetService,
+    TestDataFactory testDataFactory,
+    EsManageServer esServer,
+    DataSource dataSource
+    ) {
     super(
         principalProvider,
         environment,
@@ -74,7 +78,8 @@ public class OaipmhListRecordsIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer);
+        esServer,
+        dataSource);
   }
 
   @Test

@@ -31,6 +31,8 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Date;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.serviceprovider.parameters.ListMetadataParameters;
@@ -52,14 +54,16 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhListMetadataFormatsIT(
-      SimplePrincipalProvider principalProvider,
-      Environment environment,
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
-      TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+    SimplePrincipalProvider principalProvider,
+    Environment environment,
+    NodeService nodeService,
+    OrganizationService organizationService,
+    InstallationService installationService,
+    DatasetService datasetService,
+    TestDataFactory testDataFactory,
+    EsManageServer esServer,
+    DataSource dataSource
+    ) {
     super(
         principalProvider,
         environment,
@@ -68,7 +72,8 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer);
+        esServer,
+        dataSource);
   }
 
   @Test

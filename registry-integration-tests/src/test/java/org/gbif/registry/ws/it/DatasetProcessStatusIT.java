@@ -64,9 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class DatasetProcessStatusIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final TestDataFactory testDataFactory;
 

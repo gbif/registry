@@ -46,9 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class CollectionsSearchIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final CollectionsSearchService searchService;
   private final InstitutionService institutionService;

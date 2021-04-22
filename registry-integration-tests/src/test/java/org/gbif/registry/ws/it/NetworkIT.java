@@ -43,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -120,6 +121,11 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     Network updatedNetwork = networkResource.get(network.getKey());
     int numConstituentsAfter = updatedNetwork.getNumConstituents();
     assertEquals(1, numConstituentsAfter);
+
+    Dataset datasetFromDb = datasetResource.get(dataset.getKey());
+
+    assertTrue(datasetFromDb.getNetworkKeys().contains(network.getKey()),
+               "Network key not present in dataset networkKeys");
 
     // delete constituent
     requestTestFixture

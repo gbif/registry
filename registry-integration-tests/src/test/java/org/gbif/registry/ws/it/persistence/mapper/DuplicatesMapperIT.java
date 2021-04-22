@@ -49,9 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class DuplicatesMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("collection",
+                                                                                       "institution");
 
   private DuplicatesMapper duplicatesMapper;
   private InstitutionMapper institutionMapper;

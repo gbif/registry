@@ -33,6 +33,8 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.io.IOUtils;
 import org.dspace.xoai.model.oaipmh.Record;
 import org.dspace.xoai.serviceprovider.exceptions.CannotDisseminateFormatException;
@@ -56,14 +58,16 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhGetRecordIT(
-      SimplePrincipalProvider principalProvider,
-      Environment environment,
-      NodeService nodeService,
-      OrganizationService organizationService,
-      InstallationService installationService,
-      DatasetService datasetService,
-      TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+    SimplePrincipalProvider principalProvider,
+    Environment environment,
+    NodeService nodeService,
+    OrganizationService organizationService,
+    InstallationService installationService,
+    DatasetService datasetService,
+    TestDataFactory testDataFactory,
+    EsManageServer esServer,
+    DataSource dataSource
+    ) {
     super(
         principalProvider,
         environment,
@@ -72,7 +76,8 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer);
+        esServer,
+        dataSource);
   }
 
   @Test

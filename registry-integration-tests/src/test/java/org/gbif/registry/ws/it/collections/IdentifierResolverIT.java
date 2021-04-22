@@ -43,9 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class IdentifierResolverIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private static final String BASE_URL = "/" + GRSCICOLL_PATH + "/resolve";
   private static final String IDENTIFIER_PARAM = "identifier";

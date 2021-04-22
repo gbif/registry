@@ -36,6 +36,8 @@ import java.sql.PreparedStatement;
 import java.util.Date;
 import java.util.UUID;
 
+import javax.sql.DataSource;
+
 import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.ServiceProvider;
 import org.dspace.xoai.serviceprovider.client.HttpOAIClient;
@@ -49,9 +51,7 @@ import org.springframework.core.env.Environment;
 public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = TestCaseDatabaseInitializer.builder()
-    .dataSource(database.getTestDatabase())
-    .build();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final TestDataFactory testDataFactory;
 
@@ -71,6 +71,7 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
   private final OrganizationService organizationService;
   private final InstallationService installationService;
   private final DatasetService datasetService;
+  private final DataSource dataSource;
 
   protected final String baseUrl;
   protected final ServiceProvider serviceProvider;
@@ -84,13 +85,15 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      DataSource dataSource) {
     super(principalProvider, esServer);
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
     this.testDataFactory = testDataFactory;
+    this.dataSource = dataSource;
 
     String port = environment.getProperty("local.server.port");
     baseUrl = String.format("http://localhost:%s/oai-pmh/registry", port);
@@ -160,7 +163,7 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   /** This method is used to change the modified date of a dataset in order to test date queries. */
   protected void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
-    try (Connection connection = database.getTestDatabase().getConnection()) {
+    try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
 
       PreparedStatement p =

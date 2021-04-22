@@ -31,6 +31,7 @@ import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 
 import java.io.InputStream;
@@ -79,6 +80,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   private final InstallationService installationService;
   private final OrganizationService organizationService;
   private final DatasetService datasetService;
+  private final NetworkService networkService;
 
   /**
    * Factory method, only need the api base url.
@@ -90,11 +92,13 @@ public class GbifWsRetrofitClient implements GbifWsClient {
       GbifApiService gbifApiService,
       InstallationService installationService,
       OrganizationService organizationService,
-      DatasetService datasetService) {
+      DatasetService datasetService,
+      NetworkService networkService) {
     this.gbifApiService = gbifApiService;
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
+    this.networkService = networkService;
   }
 
   private Map<String, String> toQueryMap(PagingRequest pagingRequest) {
@@ -154,6 +158,12 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   public PagingResponse<Dataset> getOrganizationPublishedDataset(
       String organizationKey, PagingRequest pagingRequest) {
     return organizationService.publishedDatasets(UUID.fromString(organizationKey), pagingRequest);
+  }
+
+  @Override
+  public PagingResponse<Dataset> getNetworkDatasets(
+    String networkKey, PagingRequest pagingRequest) {
+    return networkService.listConstituents(UUID.fromString(networkKey), pagingRequest);
   }
 
   @Override

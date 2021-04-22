@@ -19,10 +19,11 @@ import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Properties;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -30,6 +31,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,10 @@ public class DatasetBatchIndexerIT {
   private static final String OCCURRENCE_INDEX_NAME = "occurrence";
 
   private static final String API_URL = "http://api.gbif-dev.org/v1/";
+
+  private static final String INDEX_NAME = IndexingConstants.ALIAS + '_' + new Date().getTime();
+
+  private static final String INDEX_ALIAS = INDEX_NAME + "_a" ;
 
   @RegisterExtension
   public static SingleInstancePostgresExtension database =
@@ -82,7 +88,8 @@ public class DatasetBatchIndexerIT {
 
     ElasticsearchConfig elasticsearchConfigDataset = new ElasticsearchConfig();
     elasticsearchConfigDataset.setHosts("http://" + embeddedElastic.getHttpHostAddress());
-    elasticsearchConfigDataset.setAlias(IndexingConstants.ALIAS);
+    elasticsearchConfigDataset.setAlias(INDEX_ALIAS);
+    elasticsearchConfigDataset.setIndex(INDEX_NAME);
     configuration.setDatasetEs(elasticsearchConfigDataset);
 
     ElasticsearchConfig elasticsearchConfigOccurrence = new ElasticsearchConfig();
@@ -107,16 +114,6 @@ public class DatasetBatchIndexerIT {
     return configuration;
   }
 
-  public void refresh(RestHighLevelClient restHighLevelClient) {
-    try {
-      RefreshRequest refreshRequest = new RefreshRequest();
-      refreshRequest.indices("*");
-      restHighLevelClient.indices().refresh(refreshRequest, RequestOptions.DEFAULT);
-    } catch (IOException ex) {
-      throw new IllegalStateException(ex);
-    }
-  }
-
   @Test
   public void indexTests() throws IOException {
 
@@ -125,13 +122,12 @@ public class DatasetBatchIndexerIT {
     datasetBatchIndexerCommand.doRun();
 
     RestHighLevelClient restHighLevelClient = buildRestClient();
-    refresh(restHighLevelClient);
 
     SearchResponse searchResponse =
-        buildRestClient()
+      restHighLevelClient
             .search(
                 new SearchRequest()
-                    .indices(IndexingConstants.ALIAS)
+                    .indices(INDEX_ALIAS)
                     .source(new SearchSourceBuilder().size(0)),
                 RequestOptions.DEFAULT);
 
@@ -139,6 +135,11 @@ public class DatasetBatchIndexerIT {
         DATASETS_TO_INDEX,
         searchResponse.getHits().getTotalHits().value,
         "Wrong amount of indexed dataset");
+  }
+
+  @AfterEach
+  public void deleteIndex() throws IOException {
+    buildRestClient().indices().delete(new DeleteIndexRequest(INDEX_NAME), RequestOptions.DEFAULT);
   }
 
   @AfterAll
