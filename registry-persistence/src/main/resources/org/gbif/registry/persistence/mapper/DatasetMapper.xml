@@ -442,7 +442,7 @@
     ORDER BY created DESC
   </select>
 
-  <select id="listNetworks" resultType="String">
+  <select id="listNetworks" resultType="java.util.UUID">
     SELECT network_key
     FROM dataset_network
     WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
