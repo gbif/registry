@@ -64,7 +64,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
     "collection_tag", "institution_collection_person", "institution_identifier",
     "institution_tag", "institution_occurrence_mapping", "collection_occurrence_mapping",
     "collection_person", "collection", "institution", "address", "gbif_doi", "pipeline_step",
-    "pipeline_process", "pipeline_execution", "derived_dataset");
+    "pipeline_process", "pipeline_execution", "derived_dataset", "change_suggestion");
 
   private final DataSource dataSource;
 

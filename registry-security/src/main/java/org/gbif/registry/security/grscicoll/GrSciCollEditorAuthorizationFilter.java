@@ -101,7 +101,9 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
 
     // skip GET and OPTIONS requests and only check requests to grscicoll
-    if (isNotGetOrOptionsRequest(request) && path.contains(GRSCICOLL_PATH)) {
+    if (isNotGetOrOptionsRequest(request)
+        && path.contains(GRSCICOLL_PATH)
+        && !isChangeSuggestionCreation(request, path)) {
       // user must NOT be null if the resource requires editor rights restrictions
       ensureUserSetInSecurityContext(authentication, HttpStatus.FORBIDDEN);
       final String username = authentication.getName();
@@ -128,6 +130,11 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       }
     }
     filterChain.doFilter(request, response);
+  }
+
+  // it's a POST but can be done by anyone
+  private boolean isChangeSuggestionCreation(HttpServletRequest request, String path) {
+    return "POST".equals(request.getMethod()) && path.endsWith("/changeSuggestion");
   }
 
   private void checkInstitutionAndCollectionUpdatePermissions(

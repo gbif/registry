@@ -1,0 +1,366 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.gbif.registry.ws.it.collections.suggestions;
+
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
+import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.Collections;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/** Tests the {@link InstitutionChangeSuggestionService}. */
+public abstract class BaseChangeSuggestionServiceIT<
+        T extends CollectionEntity & Contactable & LenientEquals<T>>
+    extends BaseItTest {
+
+  protected static final String PROPOSER = "proposer";
+  protected static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
+
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule =
+      TestCaseDatabaseInitializer.builder().dataSource(database.getTestDatabase()).build();
+
+  private final ChangeSuggestionService<T> changeSuggestionService;
+  private final CrudService<T> crudService;
+
+  protected BaseChangeSuggestionServiceIT(
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer,
+      ChangeSuggestionService<T> changeSuggestionService,
+      CrudService<T> crudService) {
+    super(simplePrincipalProvider, esServer);
+    this.changeSuggestionService = changeSuggestionService;
+    this.crudService = crudService;
+  }
+
+  @Test
+  public void newEntitySuggestionTest() {
+    // State
+    T entity = createEntity();
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
+
+    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.CREATE);
+    suggestion.setProposedBy(PROPOSER);
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertCreatedSuggestion(suggestion);
+    assertEquals(Type.CREATE, suggestion.getType());
+    assertEquals(Country.DENMARK, suggestion.getCountry());
+    assertTrue(suggestion.getChanges().isEmpty());
+
+    // When - update the suggestion (e.g.: the reviewer does some changes)
+    int numberChanges = reviewEntity(entity);
+    suggestion.setSuggestedEntity(entity);
+    suggestion.getComments().add("Review");
+    changeSuggestionService.updateChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
+    assertEquals(numberChanges, suggestion.getChanges().size());
+    assertEquals(2, suggestion.getComments().size());
+
+    // When
+    changeSuggestionService.applyChangeSuggestion(suggKey);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertEquals(Status.APPLIED, suggestion.getStatus());
+    assertNotNull(suggestion.getEntityKey());
+    assertNotNull(suggestion.getApplied());
+    assertNotNull(suggestion.getAppliedBy());
+
+    T appliedEntity = crudService.get(suggestion.getEntityKey());
+    T expected = suggestion.getSuggestedEntity();
+    expected.setKey(suggestion.getEntityKey());
+    expected.getAddress().setKey(appliedEntity.getAddress().getKey());
+    assertTrue(appliedEntity.lenientEquals(expected));
+  }
+
+  @Test
+  public void changeInstitutionSuggestionTest() {
+    // State
+    T entity = createEntity();
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
+
+    UUID entityKey = crudService.create(entity);
+
+    // suggested changes
+    int numberChanges = updateEntity(entity);
+    address.setCity("city");
+
+    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.UPDATE);
+    suggestion.setEntityKey(entityKey);
+    suggestion.setProposedBy(PROPOSER);
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertCreatedSuggestion(suggestion);
+    assertEquals(Type.UPDATE, suggestion.getType());
+    assertEquals(Country.DENMARK, suggestion.getCountry());
+    assertEquals(address.getCity(), suggestion.getSuggestedEntity().getAddress().getCity());
+    assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
+    assertEquals(numberChanges, suggestion.getChanges().size());
+
+    // When - update the suggestion (e.g.: the reviewer does some changes)
+    numberChanges += reviewEntity(entity);
+    suggestion.setSuggestedEntity(entity);
+    suggestion.getComments().add("Review");
+    changeSuggestionService.updateChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
+    assertEquals(numberChanges, suggestion.getChanges().size());
+    assertEquals(2, suggestion.getComments().size());
+
+    // When
+    changeSuggestionService.applyChangeSuggestion(suggKey);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertEquals(Status.APPLIED, suggestion.getStatus());
+    assertNotNull(suggestion.getApplied());
+    assertNotNull(suggestion.getAppliedBy());
+
+    T appliedEntity = crudService.get(entityKey);
+    assertTrue(appliedEntity.lenientEquals(suggestion.getSuggestedEntity()));
+  }
+
+  @Test
+  public void deleteInstitutionSuggestionTest() {
+    // State
+    T entity = createEntity();
+    UUID entityKey = crudService.create(entity);
+
+    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.DELETE);
+    suggestion.setEntityKey(entityKey);
+    suggestion.setProposedBy(PROPOSER);
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertCreatedSuggestion(suggestion);
+    assertEquals(Type.DELETE, suggestion.getType());
+
+    // When
+    changeSuggestionService.applyChangeSuggestion(suggKey);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertEquals(Status.APPLIED, suggestion.getStatus());
+    assertNotNull(suggestion.getApplied());
+    assertNotNull(suggestion.getAppliedBy());
+    T appliedEntity = crudService.get(entityKey);
+    assertNotNull(appliedEntity.getDeleted());
+  }
+
+  @Test
+  public void mergeInstitutionSuggestionTest() {
+    // State
+    T entity = createEntity();
+    UUID entityKey = crudService.create(entity);
+
+    T entity2 = createEntity();
+    UUID entity2Key = crudService.create(entity2);
+
+    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.MERGE);
+    suggestion.setEntityKey(entityKey);
+    suggestion.setProposedBy(PROPOSER);
+    suggestion.setMergeTargetKey(entity2Key);
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertCreatedSuggestion(suggestion);
+    assertEquals(Type.MERGE, suggestion.getType());
+
+    // When
+    changeSuggestionService.applyChangeSuggestion(suggKey);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertEquals(Status.APPLIED, suggestion.getStatus());
+    assertNotNull(suggestion.getApplied());
+    assertNotNull(suggestion.getAppliedBy());
+
+    T appliedEntity = crudService.get(entityKey);
+    assertEquals(entity2Key, getReplacedByValue(appliedEntity));
+    assertNotNull(appliedEntity.getDeleted());
+  }
+
+  @Test
+  public void discardSuggestionTest() {
+    // State
+    T entity = createEntity();
+
+    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.CREATE);
+    suggestion.setProposedBy(PROPOSER);
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertCreatedSuggestion(suggestion);
+    assertEquals(Type.CREATE, suggestion.getType());
+
+    // When
+    changeSuggestionService.discardChangeSuggestion(suggKey);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertEquals(Status.DISCARDED, suggestion.getStatus());
+    assertNotNull(suggestion.getDiscarded());
+    assertNotNull(suggestion.getDiscardedBy());
+  }
+
+  @Test
+  public void listTest() {
+    // State
+    T entity = createEntity();
+    ChangeSuggestion<T> suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.CREATE);
+    suggestion.setProposedBy(PROPOSER);
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    int suggKey1 = changeSuggestionService.createChangeSuggestion(suggestion);
+
+    T entity2 = createEntity();
+    UUID entity2Key = crudService.create(entity2);
+    ChangeSuggestion<T> suggestion2 = createEmptyChangeSuggestion();
+    suggestion2.setSuggestedEntity(entity2);
+    suggestion2.setEntityKey(entity2Key);
+    suggestion2.setType(Type.UPDATE);
+    suggestion2.setProposedBy(PROPOSER);
+    suggestion2.setComments(Collections.singletonList("comment"));
+
+    int suggKey2 = changeSuggestionService.createChangeSuggestion(suggestion2);
+
+    // When
+    PagingResponse<ChangeSuggestion<T>> results =
+        changeSuggestionService.list(Status.APPLIED, null, null, null, null, DEFAULT_PAGE);
+    // Then
+    assertEquals(0, results.getResults().size());
+    assertEquals(0, results.getCount());
+
+    // When
+    results = changeSuggestionService.list(null, Type.CREATE, null, null, null, DEFAULT_PAGE);
+    // Then
+    assertEquals(1, results.getResults().size());
+    assertEquals(1, results.getCount());
+
+    // When
+    results = changeSuggestionService.list(null, null, null, null, entity2Key, DEFAULT_PAGE);
+    // Then
+    assertEquals(1, results.getResults().size());
+    assertEquals(1, results.getCount());
+
+    // When
+    results =
+        changeSuggestionService.list(
+            null, null, Country.AFGHANISTAN, null, entity2Key, DEFAULT_PAGE);
+    // Then
+    assertEquals(0, results.getResults().size());
+    assertEquals(0, results.getCount());
+  }
+
+  protected void assertCreatedSuggestion(ChangeSuggestion<T> created) {
+    assertEquals(Status.PENDING, created.getStatus());
+    assertNull(created.getApplied());
+    assertNull(created.getDiscarded());
+    assertEquals(getSimplePrincipalProvider().get().getName(), created.getModifiedBy());
+    assertEquals(PROPOSER, created.getProposedBy());
+    assertEquals(1, created.getComments().size());
+  }
+
+  protected UUID getReplacedByValue(T entity) {
+    if (entity instanceof Institution) {
+      return ((Institution) entity).getReplacedBy();
+    } else if (entity instanceof Collection) {
+      return ((Collection) entity).getReplacedBy();
+    } else {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  abstract T createEntity();
+
+  abstract int updateEntity(T entity);
+
+  abstract int reviewEntity(T entity);
+
+  abstract ChangeSuggestion<T> createEmptyChangeSuggestion();
+}

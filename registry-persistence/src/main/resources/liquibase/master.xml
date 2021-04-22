@@ -99,4 +99,5 @@
   <include file="liquibase/091-grscicoll-duplicates-materialized-views.xml" />
   <include file="liquibase/092-add-simple-parquet-download-format.xml" />
   <include file="liquibase/093-grscicoll-institution-trigger-additional-names.xml" />
+  <include file="liquibase/094-grscicoll-change-suggestions.xml" />
 </databaseChangeLog>

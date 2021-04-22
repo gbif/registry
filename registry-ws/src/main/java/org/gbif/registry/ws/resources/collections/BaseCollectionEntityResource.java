@@ -45,6 +45,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
+import org.gbif.registry.service.collections.BaseCollectionsService;
 
 import java.util.List;
 import java.util.UUID;
@@ -89,6 +90,7 @@ public abstract class BaseCollectionEntityResource<
   private final CommentMapper commentMapper;
   private final EventManager eventManager;
   private final WithMyBatis withMyBatis;
+  private final BaseCollectionsService<T> baseCollectionsService;
 
   protected BaseCollectionEntityResource(
       BaseMapper<T> baseMapper,
@@ -98,7 +100,8 @@ public abstract class BaseCollectionEntityResource<
       CommentMapper commentMapper,
       EventManager eventManager,
       Class<T> objectClass,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      BaseCollectionsService<T> baseCollectionsService) {
     this.baseMapper = baseMapper;
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
@@ -107,6 +110,7 @@ public abstract class BaseCollectionEntityResource<
     this.eventManager = eventManager;
     this.objectClass = objectClass;
     this.withMyBatis = withMyBatis;
+    this.baseCollectionsService = baseCollectionsService;
   }
 
   public void preCreate(T entity) {
@@ -121,22 +125,16 @@ public abstract class BaseCollectionEntityResource<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void delete(@PathVariable UUID key) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    baseCollectionsService.delete(key);
 
-    T entityToDelete = get(key);
-    checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
-
-    entityToDelete.setModifiedBy(authentication.getName());
-    update(entityToDelete);
-
-    baseMapper.delete(key);
-    eventManager.post(DeleteCollectionEntityEvent.newInstance(entityToDelete, objectClass));
+    // TODO: move this to the service??
+    eventManager.post(DeleteCollectionEntityEvent.newInstance(baseCollectionsService.get(key), objectClass));
   }
 
   @Nullable
   @Override
   public T get(@PathVariable UUID key) {
-    return baseMapper.get(key);
+    return baseCollectionsService.get(key);
   }
 
   public void preUpdate(T entity) {

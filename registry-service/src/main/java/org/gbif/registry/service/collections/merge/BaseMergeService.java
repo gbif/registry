@@ -45,7 +45,7 @@ public abstract class BaseMergeService<
         T extends
             CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
                 & Taggable & Commentable>
-    implements MergeService {
+    implements MergeService<T> {
 
   protected final BaseMapper<T> baseMapper;
   protected final MergeableMapper mergeableMapper;
@@ -116,8 +116,9 @@ public abstract class BaseMergeService<
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
-    entityToReplace.setModifiedBy(authentication.getName());
-    baseMapper.update(entityToReplace);
+    // TODO: test that this can be deleted
+//    entityToReplace.setModifiedBy(authentication.getName());
+//    baseMapper.update(entityToReplace);
     mergeableMapper.replace(entityToReplaceKey, replacementKey);
 
     // merge entity fields

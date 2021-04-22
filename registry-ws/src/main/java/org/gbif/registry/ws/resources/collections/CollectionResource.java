@@ -32,14 +32,15 @@ import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.service.collections.DefaultCollectionService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
+import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 
 import java.util.List;
 import java.util.UUID;
@@ -69,10 +70,10 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
 
   private final CollectionMapper collectionMapper;
   private final DuplicatesService duplicatesService;
+  public final DefaultCollectionService collectionService;
 
   public CollectionResource(
       CollectionMapper collectionMapper,
-      AddressMapper addressMapper,
       IdentifierMapper identifierMapper,
       TagMapper tagMapper,
       MachineTagMapper machineTagMapper,
@@ -80,11 +81,12 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
       OccurrenceMappingMapper occurrenceMappingMapper,
       EventManager eventManager,
       CollectionMergeService collectionMergeService,
+      DefaultCollectionService collectionService,
+      CollectionChangeSuggestionService collectionChangeSuggestionService,
       DuplicatesService duplicatesService,
       WithMyBatis withMyBatis) {
     super(
         collectionMapper,
-        addressMapper,
         tagMapper,
         identifierMapper,
         collectionMapper,
@@ -93,11 +95,14 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
         occurrenceMappingMapper,
         collectionMapper,
         collectionMergeService,
+        collectionService,
+        collectionChangeSuggestionService,
         eventManager,
         Collection.class,
         withMyBatis);
     this.collectionMapper = collectionMapper;
     this.duplicatesService = duplicatesService;
+    this.collectionService = collectionService;
   }
 
   @GetMapping("{key}")

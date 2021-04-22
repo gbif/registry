@@ -1,0 +1,96 @@
+package org.gbif.registry.service.collections.suggestions;
+
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
+import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
+import org.gbif.registry.service.collections.DefaultInstitutionService;
+import org.gbif.registry.service.collections.merge.InstitutionMergeService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Service
+public class InstitutionChangeSuggestionService extends BaseChangeSuggestionService<Institution> {
+
+  private static final Logger LOG =
+      LoggerFactory.getLogger(InstitutionChangeSuggestionService.class);
+
+  private final ChangeSuggestionMapper changeSuggestionMapper;
+  private final InstitutionMapper institutionMapper;
+  private final InstitutionMergeService institutionMergeService;
+
+  @Autowired
+  public InstitutionChangeSuggestionService(
+      ChangeSuggestionMapper changeSuggestionMapper,
+      InstitutionMapper institutionMapper,
+      DefaultInstitutionService institutionService, // TODO: interfaces
+      InstitutionMergeService institutionMergeService,
+      ObjectMapper objectMapper) {
+    super(
+        changeSuggestionMapper,
+        institutionMapper,
+        institutionMergeService,
+        institutionService,
+        Institution.class,
+        objectMapper);
+    this.changeSuggestionMapper = changeSuggestionMapper;
+    this.institutionMapper = institutionMapper;
+    this.institutionMergeService = institutionMergeService;
+  }
+
+  protected int createConvertToCollectionSuggestion(
+      ChangeSuggestion<Institution> changeSuggestion) {
+    checkArgument(changeSuggestion.getEntityKey() != null);
+
+    InstitutionChangeSuggestion institutionChangeSuggestion =
+        (InstitutionChangeSuggestion) changeSuggestion;
+
+    ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
+    dto.setType(Type.CONVERSION_TO_COLLECTION);
+    dto.setInstitutionConvertedCollection(
+        institutionChangeSuggestion.getInstitutionForConvertedCollection());
+    dto.setNameNewInstitutionConvertedCollection(
+        institutionChangeSuggestion.getNameForNewInstitutionForConvertedCollection());
+
+    Institution currentEntity = institutionMapper.get(changeSuggestion.getEntityKey());
+    dto.setCountry(getCountry(currentEntity));
+
+    changeSuggestionMapper.create(dto);
+    return dto.getKey();
+  }
+
+  @Override
+  public InstitutionChangeSuggestion getChangeSuggestion(int key) {
+    ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
+
+    InstitutionChangeSuggestion suggestion =
+        (InstitutionChangeSuggestion) dtoToChangeSuggestion(dto);
+    suggestion.setInstitutionForConvertedCollection(dto.getInstitutionConvertedCollection());
+    suggestion.setNameForNewInstitutionForConvertedCollection(
+        dto.getNameNewInstitutionConvertedCollection());
+
+    return suggestion;
+  }
+
+  protected void applyConversionToCollection(ChangeSuggestionDto dto) {
+    institutionMergeService.convertToCollection(
+        dto.getEntityKey(),
+        dto.getInstitutionConvertedCollection(),
+        dto.getNameNewInstitutionConvertedCollection());
+  }
+
+  @Override
+  protected InstitutionChangeSuggestion newEmptyChangeSuggestion() {
+    return new InstitutionChangeSuggestion();
+  }
+}

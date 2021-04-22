@@ -1,0 +1,43 @@
+package org.gbif.registry.persistence.mapper.collections;
+
+import org.gbif.api.model.collections.EntityType;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ChangeSuggestionMapper {
+
+  void create(ChangeSuggestionDto suggestion);
+
+  ChangeSuggestionDto get(@Param("key") int key);
+
+  List<ChangeSuggestionDto> list(
+      @Param("status") Status status,
+      @Param("type") Type type,
+      @Param("entityType") EntityType entityType,
+      @Param("country") Country country,
+      @Param("proposer") String proposer,
+      @Param("entityKey") UUID entityKey,
+      @Nullable @Param("page") Pageable page);
+
+  long count(
+      @Param("status") Status status,
+      @Param("type") Type type,
+      @Param("entityType") EntityType entityType,
+      @Param("country") Country country,
+      @Param("proposer") String proposer,
+      @Param("entityKey") UUID entityKey);
+
+  void update(ChangeSuggestionDto suggestion);
+}

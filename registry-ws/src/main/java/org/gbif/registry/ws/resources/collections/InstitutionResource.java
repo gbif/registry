@@ -19,6 +19,7 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -31,13 +32,14 @@ import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
+import org.gbif.registry.service.collections.DefaultInstitutionService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
+import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 
 import java.util.List;
 import java.util.UUID;
@@ -76,7 +78,6 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
 
   public InstitutionResource(
       InstitutionMapper institutionMapper,
-      AddressMapper addressMapper,
       IdentifierMapper identifierMapper,
       TagMapper tagMapper,
       MachineTagMapper machineTagMapper,
@@ -84,11 +85,12 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
       OccurrenceMappingMapper occurrenceMappingMapper,
       InstitutionMergeService institutionMergeService,
       DuplicatesService duplicatesService,
+      DefaultInstitutionService institutionService, // TODO: interfaces
+      InstitutionChangeSuggestionService institutionChangeSuggestionService,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
         institutionMapper,
-        addressMapper,
         tagMapper,
         identifierMapper,
         institutionMapper,
@@ -97,6 +99,8 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
         occurrenceMappingMapper,
         institutionMapper,
         institutionMergeService,
+        institutionService,
+        institutionChangeSuggestionService,
         eventManager,
         Institution.class,
         withMyBatis);
@@ -162,7 +166,7 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
   public UUID convertToCollection(
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
     return institutionMergeService.convertToCollection(
-        entityKey, params.institutionForNewCollectionKey, params.nameForNewInstitution);
+        entityKey, params.getInstitutionForNewCollectionKey(), params.getNameForNewInstitution());
   }
 
   @GetMapping("possibleDuplicates")
@@ -181,26 +185,5 @@ public class InstitutionResource extends ExtendedCollectionEntityResource<Instit
             .notInCountries(request.getNotInCountries())
             .excludeKeys(request.getExcludeKeys())
             .build());
-  }
-
-  private static final class ConvertToCollectionParams {
-    UUID institutionForNewCollectionKey;
-    String nameForNewInstitution;
-
-    public UUID getInstitutionForNewCollectionKey() {
-      return institutionForNewCollectionKey;
-    }
-
-    public void setInstitutionForNewCollectionKey(UUID institutionForNewCollectionKey) {
-      this.institutionForNewCollectionKey = institutionForNewCollectionKey;
-    }
-
-    public String getNameForNewInstitution() {
-      return nameForNewInstitution;
-    }
-
-    public void setNameForNewInstitution(String nameForNewInstitution) {
-      this.nameForNewInstitution = nameForNewInstitution;
-    }
   }
 }

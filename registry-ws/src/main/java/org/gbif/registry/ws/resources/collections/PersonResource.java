@@ -37,6 +37,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.service.collections.DefaultPersonService;
 
 import java.util.List;
 import java.util.UUID;
@@ -75,6 +76,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   private final TagMapper tagMapper;
   private final MachineTagMapper machineTagMapper;
   private final EventManager eventManager;
+  private final DefaultPersonService personService;
 
   public PersonResource(
       PersonMapper personMapper,
@@ -84,7 +86,8 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
       MachineTagMapper machineTagMapper,
       CommentMapper commentMapper,
       EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      DefaultPersonService personService) {
     super(
         personMapper,
         tagMapper,
@@ -93,13 +96,15 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
         commentMapper,
         eventManager,
         Person.class,
-        withMyBatis);
+        withMyBatis,
+        personService);
     this.personMapper = personMapper;
     this.addressMapper = addressMapper;
     this.identifierMapper = identifierMapper;
     this.tagMapper = tagMapper;
     this.machineTagMapper = machineTagMapper;
     this.eventManager = eventManager;
+    this.personService = personService;
   }
 
   @GetMapping("{key}")
