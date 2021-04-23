@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.domain.ws.NetworkRequestSearchParams;
+import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -124,6 +125,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Override
   public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
+    ChangedComponentEvent.newInstance(datasetKey, Dataset.class, Network.class);
   }
 
   @DeleteMapping("{key}/constituents/{datasetKey}")
@@ -132,6 +134,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
+    ChangedComponentEvent.newInstance(datasetKey, Dataset.class, Network.class);
   }
 
   @GetMapping("suggest")

@@ -15,7 +15,6 @@
  */
 package org.gbif.registry.events;
 
-import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.RegistryChangeMessage;
@@ -63,7 +62,7 @@ public class MessageSendingEventListener {
   }
 
   @Subscribe
-  public <T extends NetworkEntity> void sendCreatedEvent(final CreateEvent<T> event) {
+  public <T> void sendCreatedEvent(final CreateEvent<T> event) {
     final Message message =
         new RegistryChangeMessage(
             RegistryChangeMessage.ChangeType.CREATED,
@@ -93,7 +92,7 @@ public class MessageSendingEventListener {
   }
 
   @Subscribe
-  public <T extends NetworkEntity> void sendUpdatedEvent(final UpdateEvent<T> event) {
+  public <T> void sendUpdatedEvent(final UpdateEvent<T> event) {
     final Message message =
         new RegistryChangeMessage(
             RegistryChangeMessage.ChangeType.UPDATED,
@@ -124,7 +123,7 @@ public class MessageSendingEventListener {
   }
 
   @Subscribe
-  public <T extends NetworkEntity> void sendDeletedEvent(final DeleteEvent<T> event) {
+  public <T> void sendDeletedEvent(final DeleteEvent<T> event) {
     final Message message =
         new RegistryChangeMessage(
             RegistryChangeMessage.ChangeType.DELETED,
@@ -152,5 +151,36 @@ public class MessageSendingEventListener {
         },
         embargoSeconds,
         TimeUnit.SECONDS);
+  }
+
+  @Subscribe
+  public final void updatedComponent(ChangedComponentEvent event) {
+    final Message message =
+      new RegistryChangeMessage(
+        RegistryChangeMessage.ChangeType.UPDATED,
+        event.getTargetClass(),
+        event.getTargetEntityKey(),
+        null);
+    LOG.debug(
+      "Scheduling notification of UpdateEvent [{}] with an embargo durations of {} seconds",
+      event.getTargetClass().getSimpleName(),
+      embargoSeconds);
+
+    scheduler.schedule(
+      () -> {
+        try {
+          LOG.debug(
+            "Broadcasting to postal service UpdateEvent [{}]",
+            event.getTargetClass().getSimpleName());
+          messagePublisher.send(message);
+        } catch (IOException e) {
+          LOG.warn(
+            "Failed sending RegistryChangeMessage for UpdateEvent [{}]",
+            event.getTargetClass().getSimpleName(),
+            e);
+        }
+      },
+      embargoSeconds,
+      TimeUnit.SECONDS);
   }
 }
