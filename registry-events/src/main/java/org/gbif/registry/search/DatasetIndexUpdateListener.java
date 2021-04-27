@@ -102,7 +102,7 @@ public class DatasetIndexUpdateListener {
 
   @Subscribe
   public final void updatedComponent(ChangedComponentEvent event) {
-    // only fire in case of tagged datasets which become keywords in solr
+    // only fire in case of tagged datasets
     if (event.getTargetClass().equals(Dataset.class)
         && event.getComponentClass().equals(Tag.class)) {
       // we only put tagged datasets onto the queue for this event type!
