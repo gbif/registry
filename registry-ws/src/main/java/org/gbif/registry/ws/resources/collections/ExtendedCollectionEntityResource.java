@@ -175,8 +175,13 @@ public abstract class ExtendedCollectionEntityResource<
   @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
+    checkArgument(key.equals(entity.getKey()));
+    update(entity);
+  }
+
   @Override
-  public void update(@RequestBody @Trim T entity) {
+  public void update(T entity) {
     preUpdate(entity);
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");

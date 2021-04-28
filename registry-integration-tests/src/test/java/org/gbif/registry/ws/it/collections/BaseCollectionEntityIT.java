@@ -186,7 +186,7 @@ public abstract class BaseCollectionEntityIT<
 
     T newEntity = newInvalidEntity();
     newEntity.setKey(key);
-    assertThrows(ValidationException.class, () -> service.update(newEntity));
+    assertThrows(Exception.class, () -> service.update(newEntity));
   }
 
   @ParameterizedTest
