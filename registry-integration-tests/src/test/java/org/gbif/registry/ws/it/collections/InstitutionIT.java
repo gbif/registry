@@ -407,10 +407,11 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   public void updateInstitutionWithoutCodeTest(ServiceType serviceType) {
     InstitutionService service = (InstitutionService) getService(serviceType);
     Institution i = newEntity();
-    service.create(i);
+    UUID key = service.create(i);
 
-    i.setCode(null);
-    assertThrows(IllegalArgumentException.class, () -> service.update(i));
+    Institution created = service.get(key);
+    created.setCode(null);
+    assertThrows(IllegalArgumentException.class, () -> service.update(created));
   }
 
   @ParameterizedTest
@@ -418,14 +419,15 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   public void updateAndReplaceTest(ServiceType serviceType) {
     InstitutionService service = (InstitutionService) getService(serviceType);
     Institution i = newEntity();
-    service.create(i);
+    UUID key = service.create(i);
 
-    i.setReplacedBy(UUID.randomUUID());
-    assertThrows(IllegalArgumentException.class, () -> service.update(i));
+    Institution created = service.get(key);
+    created.setReplacedBy(UUID.randomUUID());
+    assertThrows(IllegalArgumentException.class, () -> service.update(created));
 
-    i.setReplacedBy(null);
-    i.setConvertedToCollection(UUID.randomUUID());
-    assertThrows(IllegalArgumentException.class, () -> service.update(i));
+    created.setReplacedBy(null);
+    created.setConvertedToCollection(UUID.randomUUID());
+    assertThrows(IllegalArgumentException.class, () -> service.update(created));
   }
 
   @Test

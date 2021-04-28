@@ -21,11 +21,7 @@ import org.gbif.api.service.collections.CrudService;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
 
@@ -45,7 +41,14 @@ public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
   @Override
   T get(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  void update(@RequestBody T entity);
+  default void update(@RequestBody T entity) {
+    updateEntity(entity.getKey(), entity);
+  }
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "{key}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateEntity(@PathVariable("key") UUID key, @RequestBody T entity);
 }

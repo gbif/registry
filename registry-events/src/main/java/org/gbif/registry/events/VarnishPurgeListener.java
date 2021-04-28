@@ -112,6 +112,7 @@ import com.google.common.eventbus.Subscribe;
  *       <li>derivedDataset/user/{user} BAN
  *     </ul>
  */
+// TODO: documentation grscicoll
 public class VarnishPurgeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(VarnishPurgeListener.class);

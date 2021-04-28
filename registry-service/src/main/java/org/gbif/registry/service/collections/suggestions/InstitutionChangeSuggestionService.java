@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.transaction.event.TransactionalEventListener;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Service
@@ -93,4 +95,5 @@ public class InstitutionChangeSuggestionService
   protected InstitutionChangeSuggestion newEmptyChangeSuggestion() {
     return new InstitutionChangeSuggestion();
   }
+
 }

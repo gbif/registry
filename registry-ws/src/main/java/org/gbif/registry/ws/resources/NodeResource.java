@@ -30,7 +30,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.domain.ws.NodeRequestSearchParams;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;

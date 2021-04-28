@@ -24,7 +24,7 @@ import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.service.collections.ExtendedCollectionService;
+import org.gbif.registry.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
@@ -79,7 +79,7 @@ public abstract class BaseChangeSuggestionService<
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final BaseMapper<T> baseMapper;
   private final MergeService<T> mergeService;
-  private final ExtendedCollectionService<T> extendedCollectionService;
+  private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
   private final Class<T> clazz;
   private final ObjectMapper objectMapper;
   private EntityType entityType;
@@ -88,13 +88,13 @@ public abstract class BaseChangeSuggestionService<
       ChangeSuggestionMapper changeSuggestionMapper,
       BaseMapper<T> baseMapper,
       MergeService<T> mergeService,
-      ExtendedCollectionService<T> extendedCollectionService,
+      PrimaryCollectionEntityService<T> primaryCollectionEntityService,
       Class<T> clazz,
       ObjectMapper objectMapper) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.baseMapper = baseMapper;
     this.mergeService = mergeService;
-    this.extendedCollectionService = extendedCollectionService;
+    this.primaryCollectionEntityService = primaryCollectionEntityService;
     this.clazz = clazz;
     this.objectMapper = objectMapper;
 
@@ -222,12 +222,12 @@ public abstract class BaseChangeSuggestionService<
     R changeSuggestion = dtoToChangeSuggestion(dto);
     UUID createdEntity = null;
     if (dto.getType() == Type.CREATE) {
-      createdEntity = extendedCollectionService.create(changeSuggestion.getSuggestedEntity());
+      createdEntity = primaryCollectionEntityService.create(changeSuggestion.getSuggestedEntity());
       dto.setEntityKey(createdEntity);
     } else if (dto.getType() == Type.UPDATE) {
-      extendedCollectionService.update(changeSuggestion.getSuggestedEntity());
+      primaryCollectionEntityService.update(changeSuggestion.getSuggestedEntity());
     } else if (dto.getType() == Type.DELETE) {
-      extendedCollectionService.delete(changeSuggestion.getEntityKey());
+      primaryCollectionEntityService.delete(changeSuggestion.getEntityKey());
     } else if (dto.getType() == Type.MERGE) {
       mergeService.merge(changeSuggestion.getEntityKey(), changeSuggestion.getMergeTargetKey());
     } else if (dto.getType() == Type.CONVERSION_TO_COLLECTION) {

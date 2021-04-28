@@ -23,20 +23,9 @@ import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.registry.events.EventManager;
-import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
-import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.DefaultCollectionService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -45,7 +34,6 @@ import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggest
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -55,9 +43,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -67,113 +53,44 @@ import com.google.common.base.Strings;
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionResource
-    extends ExtendedCollectionEntityResource<Collection, CollectionChangeSuggestion>
-    implements CollectionService {
+    extends PrimaryCollectionEntityResource<Collection, CollectionChangeSuggestion> {
 
-  private final CollectionMapper collectionMapper;
   private final DuplicatesService duplicatesService;
   public final DefaultCollectionService collectionService;
 
   public CollectionResource(
-      CollectionMapper collectionMapper,
-      IdentifierMapper identifierMapper,
-      TagMapper tagMapper,
-      MachineTagMapper machineTagMapper,
-      CommentMapper commentMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper,
-      EventManager eventManager,
       CollectionMergeService collectionMergeService,
-      DefaultCollectionService collectionService,
-      CollectionChangeSuggestionService collectionChangeSuggestionService,
       DuplicatesService duplicatesService,
-      WithMyBatis withMyBatis) {
+      DefaultCollectionService collectionService,
+      CollectionChangeSuggestionService collectionChangeSuggestionService) {
     super(
-        collectionMapper,
-        tagMapper,
-        identifierMapper,
-        collectionMapper,
-        machineTagMapper,
-        commentMapper,
-        occurrenceMappingMapper,
-        collectionMapper,
         collectionMergeService,
         collectionService,
         collectionChangeSuggestionService,
-        eventManager,
-        Collection.class,
-        withMyBatis);
-    this.collectionMapper = collectionMapper;
+        Collection.class);
     this.duplicatesService = duplicatesService;
     this.collectionService = collectionService;
   }
 
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
-  @Override
   public CollectionView getCollectionView(@PathVariable UUID key) {
-    CollectionDto collectionDto = collectionMapper.getCollectionDto(key);
-
-    if (collectionDto == null) {
-      return null;
-    }
-
-    return convertToCollectionView(collectionDto);
+    return collectionService.getCollectionView(key);
   }
 
   @GetMapping
-  @Override
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
-    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
-
-    String query =
-        searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
-            : searchRequest.getQ();
-
-    CollectionSearchParams params =
-        CollectionSearchParams.builder()
-            .institutionKey(searchRequest.getInstitution())
-            .contactKey(searchRequest.getContact())
-            .query(query)
-            .code(searchRequest.getCode())
-            .name(searchRequest.getName())
-            .alternativeCode(searchRequest.getAlternativeCode())
-            .machineTagNamespace(searchRequest.getMachineTagNamespace())
-            .machineTagName(searchRequest.getMachineTagName())
-            .machineTagValue(searchRequest.getMachineTagValue())
-            .identifierType(searchRequest.getIdentifierType())
-            .identifier(searchRequest.getIdentifier())
-            .country(searchRequest.getCountry())
-            .city(searchRequest.getCity())
-            .fuzzyName(searchRequest.getFuzzyName())
-            .build();
-
-    long total = collectionMapper.count(params);
-    List<CollectionDto> collectionDtos = collectionMapper.list(params, page);
-
-    List<CollectionView> views =
-        collectionDtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
-
-    return new PagingResponse<>(page, total, views);
+    return collectionService.list(searchRequest);
   }
 
   @GetMapping("deleted")
-  @Override
   public PagingResponse<CollectionView> listDeleted(Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-
-    long total = collectionMapper.countDeleted();
-    List<CollectionDto> dtos = collectionMapper.deleted(page);
-    List<CollectionView> views =
-        dtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
-
-    return new PagingResponse<>(page, total, views);
+    return collectionService.listDeleted(page);
   }
 
   @GetMapping("suggest")
-  @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
-    return collectionMapper.suggest(q);
+    return collectionService.suggest(q);
   }
 
   @GetMapping("possibleDuplicates")
@@ -195,12 +112,5 @@ public class CollectionResource
             .inInstitutions(request.getInInstitutions())
             .notInInstitutions(request.getNotInInstitutions())
             .build());
-  }
-
-  private CollectionView convertToCollectionView(CollectionDto dto) {
-    CollectionView collectionView = new CollectionView(dto.getCollection());
-    collectionView.setInstitutionCode(dto.getInstitutionCode());
-    collectionView.setInstitutionName(dto.getInstitutionName());
-    return collectionView;
   }
 }

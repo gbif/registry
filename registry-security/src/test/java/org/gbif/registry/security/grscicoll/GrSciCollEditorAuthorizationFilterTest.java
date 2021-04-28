@@ -98,8 +98,9 @@ public class GrSciCollEditorAuthorizationFilterTest {
       new GrSciCollEditorAuthorizationService(
           mockUserRightsMapper, mockCollectionMapper, mockInstitutionMapper, mockPersonMapper);
 
+  // TODO
   private final GrSciCollEditorAuthorizationFilter filter =
-      new GrSciCollEditorAuthorizationFilter(authService, mockAuthenticationFacade, objectMapper);
+      new GrSciCollEditorAuthorizationFilter(authService, mockAuthenticationFacade, objectMapper, null);
 
   @Test
   public void ignoreGetRequestsTest() {

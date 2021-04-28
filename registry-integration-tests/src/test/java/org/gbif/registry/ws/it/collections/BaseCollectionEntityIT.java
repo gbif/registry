@@ -130,7 +130,6 @@ public abstract class BaseCollectionEntityIT<
   @EnumSource(ServiceType.class)
   public void createInvalidEntityTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
-
     assertThrows(ValidationException.class, () -> service.create(newInvalidEntity()));
   }
 
@@ -138,7 +137,6 @@ public abstract class BaseCollectionEntityIT<
   @EnumSource(ServiceType.class)
   public void deleteMissingEntityTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
-
     assertThrows(IllegalArgumentException.class, () -> service.delete(UUID.randomUUID()));
   }
 

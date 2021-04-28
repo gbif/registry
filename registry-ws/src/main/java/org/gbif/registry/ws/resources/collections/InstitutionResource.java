@@ -23,20 +23,10 @@ import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.registry.events.EventManager;
-import org.gbif.registry.persistence.WithMyBatis;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.collections.DefaultInstitutionService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
@@ -56,9 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
@@ -67,100 +55,49 @@ import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
  * implementation of {@link InstitutionService}.
  */
-@Validated
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
-    extends ExtendedCollectionEntityResource<Institution, InstitutionChangeSuggestion>
-    implements InstitutionService {
+    extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
-  private final InstitutionMapper institutionMapper;
+  private final DefaultInstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
   private final DuplicatesService duplicatesService;
 
   public InstitutionResource(
-      InstitutionMapper institutionMapper,
-      IdentifierMapper identifierMapper,
-      TagMapper tagMapper,
-      MachineTagMapper machineTagMapper,
-      CommentMapper commentMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper,
       InstitutionMergeService institutionMergeService,
       DuplicatesService duplicatesService,
-      DefaultInstitutionService institutionService, // TODO: interfaces
-      InstitutionChangeSuggestionService institutionChangeSuggestionService,
-      EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      DefaultInstitutionService institutionService,
+      InstitutionChangeSuggestionService institutionChangeSuggestionService) {
     super(
-        institutionMapper,
-        tagMapper,
-        identifierMapper,
-        institutionMapper,
-        machineTagMapper,
-        commentMapper,
-        occurrenceMappingMapper,
-        institutionMapper,
         institutionMergeService,
         institutionService,
         institutionChangeSuggestionService,
-        eventManager,
-        Institution.class,
-        withMyBatis);
-    this.institutionMapper = institutionMapper;
+        Institution.class);
+    this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
     this.duplicatesService = duplicatesService;
   }
 
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
-  @Override
   public Institution get(@PathVariable UUID key) {
-    return super.get(key);
+    return institutionService.get(key);
   }
 
   @GetMapping
-  @Override
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
-    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
-
-    String query =
-        searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
-            : searchRequest.getQ();
-
-    InstitutionSearchParams params =
-        InstitutionSearchParams.builder()
-            .query(query)
-            .contactKey(searchRequest.getContact())
-            .code(searchRequest.getCode())
-            .name(searchRequest.getName())
-            .alternativeCode(searchRequest.getAlternativeCode())
-            .machineTagNamespace(searchRequest.getMachineTagNamespace())
-            .machineTagName(searchRequest.getMachineTagName())
-            .machineTagValue(searchRequest.getMachineTagValue())
-            .identifierType(searchRequest.getIdentifierType())
-            .identifier(searchRequest.getIdentifier())
-            .country(searchRequest.getCountry())
-            .city(searchRequest.getCity())
-            .fuzzyName(searchRequest.getFuzzyName())
-            .build();
-
-    long total = institutionMapper.count(params);
-    return new PagingResponse<>(page, total, institutionMapper.list(params, page));
+    return institutionService.list(searchRequest);
   }
 
   @GetMapping("deleted")
-  @Override
   public PagingResponse<Institution> listDeleted(Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(
-        page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
+    return institutionService.listDeleted(page);
   }
 
   @GetMapping("suggest")
-  @Override
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
-    return institutionMapper.suggest(q);
+    return institutionService.suggest(q);
   }
 
   @PostMapping("{key}/convertToCollection")
