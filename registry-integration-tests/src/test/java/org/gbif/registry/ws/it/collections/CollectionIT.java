@@ -561,10 +561,11 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   public void updateCollectionWithoutCodeTest(ServiceType serviceType) {
     CollectionService service = (CollectionService) getService(serviceType);
     Collection c = newEntity();
-    service.create(c);
+    UUID key = service.create(c);
 
-    c.setCode(null);
-    assertThrows(IllegalArgumentException.class, () -> service.update(c));
+    Collection created = service.get(key);
+    created.setCode(null);
+    assertThrows(IllegalArgumentException.class, () -> service.update(created));
   }
 
   @ParameterizedTest
@@ -572,10 +573,11 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   public void updateAndReplaceTest(ServiceType serviceType) {
     CollectionService service = (CollectionService) getService(serviceType);
     Collection c = newEntity();
-    service.create(c);
+    UUID key = service.create(c);
 
-    c.setReplacedBy(UUID.randomUUID());
-    assertThrows(IllegalArgumentException.class, () -> service.update(c));
+    Collection created = service.get(key);
+    created.setReplacedBy(UUID.randomUUID());
+    assertThrows(IllegalArgumentException.class, () -> service.update(created));
   }
 
   @Test
