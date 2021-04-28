@@ -154,9 +154,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     return person.getKey();
   }
 
-  @PutMapping(
-      value = {"", "{key}"},
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
