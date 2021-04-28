@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Validated
 @RestController
@@ -69,7 +70,8 @@ public class PersonResource extends BaseCollectionEntityResource<Person> {
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@RequestBody @Trim Person person) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Person person) {
+    checkArgument(key.equals(person.getKey()));
     personService.update(person);
   }
 
