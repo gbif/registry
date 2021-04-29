@@ -174,14 +174,15 @@ public abstract class ExtendedCollectionEntityResource<
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
-  @Transactional
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Transactional
   public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim T entity) {
     checkArgument(key.equals(entity.getKey()));
     update(entity);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Transactional
   @Override
   public void update(T entity) {
     preUpdate(entity);
