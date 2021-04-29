@@ -142,9 +142,7 @@ public class OrganizationCreationIT extends BaseItTest {
     }
   }
 
-  /**
-   * It is not in the scope of this test to test the email bits.
-   */
+  /** It is not in the scope of this test to test the email bits. */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testEndorsements(ServiceType serviceType) {
@@ -345,14 +343,28 @@ public class OrganizationCreationIT extends BaseItTest {
 
     // reset principal - use USER role
     setupPrincipal(TEST_USER, USER);
+
     OrganizationService userService =
         getService(serviceType, organizationResource, userOrganizationClient);
 
     Organization createdOrganization = userService.get(organization.getKey());
     createdOrganization.setEndorsementApproved(true);
 
-    // make sure an app can not change the endorsementApproved directly
-    assertThrows(AccessDeniedException.class, () -> userService.update(createdOrganization));
+    if (serviceType == ServiceType.RESOURCE) {
+      // we use the resource class directly to use the update method of the API, which is the one that is secured
+      OrganizationResource userServiceResource =
+          (OrganizationResource)
+              getService(serviceType, organizationResource, userOrganizationClient);
+
+      // make sure an app can not change the endorsementApproved directly
+      assertThrows(
+          AccessDeniedException.class,
+          () -> userServiceResource.update(createdOrganization.getKey(), createdOrganization));
+    } else if (serviceType == ServiceType.CLIENT) {
+      // the client always uses the secured method
+      // make sure an app can not change the endorsementApproved directly
+      assertThrows(AccessDeniedException.class, () -> userService.update(createdOrganization));
+    }
   }
 
   @Test
