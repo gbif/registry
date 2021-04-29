@@ -29,6 +29,7 @@ import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.ws.NotFoundException;
 
+import java.util.Objects;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -72,7 +73,8 @@ public class DatasetIndexUpdateListener {
       // we only care about title & country changes
       Organization org1 = (Organization) event.getOldObject();
       Organization org2 = (Organization) event.getNewObject();
-      if (!org1.getTitle().equals(org2.getTitle()) || org1.getCountry() != org2.getCountry()) {
+      if (!Objects.equals(org1.getTitle(), org2.getTitle()) ||
+          !Objects.equals(org1.getCountry(), org2.getCountry())) {
         indexService.index(org2);
       }
 
@@ -80,14 +82,15 @@ public class DatasetIndexUpdateListener {
       // we only care about the hosting organization
       Installation i1 = (Installation) event.getOldObject();
       Installation i2 = (Installation) event.getNewObject();
-      if (!i1.getOrganizationKey().equals(i2.getOrganizationKey())) {
+      if (!Objects.equals(i1.getOrganizationKey(), (i2.getOrganizationKey())) ||
+          !Objects.equals(i1.getTitle(), i2.getTitle())) {
         indexService.index(i2);
       }
     } else if (event.getObjectClass().equals(Network.class)) {
       // we only care about title changes
       Network network1 = (Network)event.getOldObject();
       Network network2 = (Network)event.getNewObject();
-      if (!network1.getTitle().equals(network2.getTitle())) {
+      if (!Objects.equals(network1.getTitle(), network2.getTitle())) {
         indexService.index(network2);
       }
     }

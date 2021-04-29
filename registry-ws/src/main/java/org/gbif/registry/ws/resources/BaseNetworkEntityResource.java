@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.Valid;
 import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
@@ -76,6 +77,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
@@ -229,15 +231,18 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param entity entity that extends NetworkEntity
    */
-  @PutMapping(
-      value = {"", "{key}"},
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
+  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim T entity) {
+    checkArgument(key.equals(entity.getKey()));
+    update(entity);
+  }
+
   @Override
-  public void update(@RequestBody @Trim T entity) {
+  public void update(T entity) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication != null) {
       entity.setModifiedBy(authentication.getName());

@@ -20,11 +20,15 @@ import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.registry.service.collections.DefaultPersonService;
 
 import java.util.List;
 import java.util.UUID;
+
+import javax.validation.Valid;
+import javax.validation.groups.Default;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -68,9 +72,10 @@ public class PersonResource extends BaseCollectionEntityResource<Person> {
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Trim
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Person person) {
+  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Person person) {
     checkArgument(key.equals(person.getKey()));
     personService.update(person);
   }
