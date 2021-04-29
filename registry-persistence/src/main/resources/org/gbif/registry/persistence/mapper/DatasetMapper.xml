@@ -443,9 +443,10 @@
   </select>
 
   <select id="listNetworks" resultType="java.util.UUID">
-    SELECT network_key
-    FROM dataset_network
-    WHERE dataset_key = #{targetEntityKey,jdbcType=OTHER}
+    SELECT nk.network_key
+    FROM dataset_network AS nk
+    JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
+    WHERE nk.dataset_key = #{targetEntityKey,jdbcType=OTHER}
   </select>
 
   <!-- Joined delete of comment to trigger cascade delete of the join table -->
