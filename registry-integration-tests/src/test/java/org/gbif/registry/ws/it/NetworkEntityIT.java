@@ -33,6 +33,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.ws.client.NetworkEntityClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
@@ -62,11 +63,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import org.springframework.test.context.ContextConfiguration;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -79,7 +80,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A generic test for all network entities that implement all interfaces required by the
  * BaseNetworkEntityResource.
  */
-@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class, BaseItTest.EsContainerContextInitializer.class})
+@ContextConfiguration(
+    initializers = {
+      BaseItTest.ContextInitializer.class,
+      BaseItTest.EsContainerContextInitializer.class
+    })
 public abstract class NetworkEntityIT<
         T extends
             NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
@@ -91,8 +96,7 @@ public abstract class NetworkEntityIT<
 
   private final TestDataFactory testDataFactory;
 
-  @Autowired
-  private DataSource dataSource;
+  @Autowired private DataSource dataSource;
 
   @RegisterExtension
   public TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
@@ -671,6 +675,16 @@ public abstract class NetworkEntityIT<
     res = service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest(2, 1));
     assertEquals(Long.valueOf(2), res.getCount());
     assertEquals(0, res.getResults().size());
+  }
+
+  @Test
+  public void updateEntityKeyMismatchTest() {
+    ServiceType serviceType = ServiceType.CLIENT;
+    NetworkEntityClient<T> crudClient = (NetworkEntityClient<T>) client;
+    T entity = create(newEntity(serviceType), serviceType, 1);
+
+    assertThrows(
+        IllegalArgumentException.class, () -> crudClient.updateResource(UUID.randomUUID(), entity));
   }
 
   /** @return a new example instance */

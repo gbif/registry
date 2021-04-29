@@ -232,15 +232,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param entity entity that extends NetworkEntity
    */
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim T entity) {
     checkArgument(key.equals(entity.getKey()));
     update(entity);
   }
 
+  @Transactional
   @Override
   public void update(T entity) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

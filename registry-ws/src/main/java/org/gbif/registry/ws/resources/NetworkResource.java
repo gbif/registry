@@ -63,6 +63,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   private final DatasetMapper datasetMapper;
   private final NetworkMapper networkMapper;
   private final OrganizationMapper organizationMapper;
+  private final EventManager eventManager;
 
   public NetworkResource(
       MapperServiceLocator mapperServiceLocator,
@@ -74,6 +75,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
         Network.class,
         eventManager,
         withMyBatis);
+    this.eventManager = eventManager;
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
@@ -125,7 +127,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Override
   public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
-    ChangedComponentEvent.newInstance(datasetKey, Dataset.class, Network.class);
+    eventManager.post(ChangedComponentEvent.newInstance(datasetKey, Dataset.class, Network.class));
   }
 
   @DeleteMapping("{key}/constituents/{datasetKey}")
@@ -134,7 +136,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
-    ChangedComponentEvent.newInstance(datasetKey, Dataset.class, Network.class);
+    eventManager.post(ChangedComponentEvent.newInstance(datasetKey, Dataset.class, Network.class));
   }
 
   @GetMapping("suggest")
