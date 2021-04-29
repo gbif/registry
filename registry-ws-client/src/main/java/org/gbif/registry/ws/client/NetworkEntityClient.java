@@ -58,9 +58,16 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   PagingResponse<T> list(@SpringQueryMap Pageable page);
 
-  @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  void update(@RequestBody T entity);
+  default void update(@RequestBody T entity) {
+    updateResource(entity.getKey(), entity);
+  }
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "{key}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateResource(@PathVariable("key") UUID key, @RequestBody T entity);
 
   @RequestMapping(
       method = RequestMethod.GET,
