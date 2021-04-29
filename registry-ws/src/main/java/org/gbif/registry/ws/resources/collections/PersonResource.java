@@ -154,14 +154,17 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     return person.getKey();
   }
 
-  @PutMapping(
-      value = {"", "{key}"},
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Person entity) {
+    checkArgument(key.equals(entity.getKey()));
+    update(entity);
+  }
+
   @Override
-  public void update(@RequestBody @Trim Person person) {
+  public void update(Person person) {
     preUpdate(person);
     Person oldPerson = get(person.getKey());
     checkArgument(oldPerson != null, "Entity doesn't exist");
