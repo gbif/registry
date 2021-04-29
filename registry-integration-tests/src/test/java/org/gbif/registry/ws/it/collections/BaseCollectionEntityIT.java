@@ -35,6 +35,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.ws.client.collections.CrudClient;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -46,6 +47,7 @@ import java.util.UUID;
 
 import javax.validation.ValidationException;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -186,7 +188,20 @@ public abstract class BaseCollectionEntityIT<
 
     T newEntity = newInvalidEntity();
     newEntity.setKey(key);
-    assertThrows(Exception.class, () -> service.update(newEntity));
+    assertThrows(ValidationException.class, () -> service.update(newEntity));
+  }
+
+  @Test
+  public void updateEntityKeyMismatchTest() {
+    CrudClient<T> crudClient = (CrudClient<T>) client;
+
+    T entity = newEntity();
+    UUID key = crudClient.create(entity);
+    T entityCreated = crudClient.get(key);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> crudClient.updateResource(UUID.randomUUID(), entityCreated));
   }
 
   @ParameterizedTest

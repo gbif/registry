@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -172,14 +173,16 @@ public abstract class ExtendedCollectionEntityResource<
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
+  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim T entity) {
     checkArgument(key.equals(entity.getKey()));
     update(entity);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Transactional
   @Override
   public void update(T entity) {
     preUpdate(entity);

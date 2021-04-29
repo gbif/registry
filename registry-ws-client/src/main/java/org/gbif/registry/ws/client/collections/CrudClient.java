@@ -47,12 +47,12 @@ public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
 
   @Override
   default void update(@RequestBody T entity) {
-    updateEntity(entity.getKey(), entity);
+    updateResource(entity.getKey(), entity);
   }
 
   @RequestMapping(
     method = RequestMethod.PUT,
     value = "{key}",
     consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateEntity(@PathVariable("key") UUID key, @RequestBody T entity);
+  void updateResource(@PathVariable("key") UUID key, @RequestBody T entity);
 }
