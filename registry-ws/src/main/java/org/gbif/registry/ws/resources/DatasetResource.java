@@ -31,7 +31,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
@@ -551,14 +550,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return key;
   }
 
-  @PutMapping(
-      value = {"", "{key}"},
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
-  @Trim
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void update(@RequestBody @Trim Dataset dataset) {
+  public void update(Dataset dataset) {
     Dataset old = super.get(dataset.getKey());
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
