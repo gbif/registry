@@ -160,12 +160,13 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Person entity) {
     checkArgument(key.equals(entity.getKey()));
     update(entity);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Transactional
   @Override
   public void update(Person person) {
     preUpdate(person);

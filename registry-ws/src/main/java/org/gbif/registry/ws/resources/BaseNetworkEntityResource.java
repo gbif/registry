@@ -235,12 +235,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim T entity) {
     checkArgument(key.equals(entity.getKey()));
     update(entity);
   }
 
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
+  @Transactional
   @Override
   public void update(T entity) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
