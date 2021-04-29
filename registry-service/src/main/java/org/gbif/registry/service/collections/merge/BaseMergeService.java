@@ -32,6 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +41,8 @@ import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.domain.collections.Constants.*;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 public abstract class BaseMergeService<
         T extends
@@ -75,6 +78,7 @@ public abstract class BaseMergeService<
     this.occurrenceMappingMapper = occurrenceMappingMapper;
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
   @Override
   @Transactional
   public void merge(UUID entityToReplaceKey, UUID replacementKey) {

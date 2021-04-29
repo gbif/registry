@@ -35,7 +35,6 @@ import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,9 +43,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 /** Base class to implement the CRUD methods of a {@link CollectionEntity}. */
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -65,21 +61,18 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @DeleteMapping("{key}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void delete(@PathVariable UUID key) {
     baseCollectionEntityService.delete(key);
   }
 
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addIdentifier(
       @PathVariable("key") UUID entityKey, @RequestBody @Trim Identifier identifier) {
     return baseCollectionEntityService.addIdentifier(entityKey, identifier);
   }
 
   @DeleteMapping("{key}/identifier/{identifierKey}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   public void deleteIdentifier(
       @PathVariable("key") UUID entityKey, @PathVariable int identifierKey) {
@@ -94,13 +87,11 @@ public abstract class BaseCollectionEntityResource<
 
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addTag(@PathVariable("key") UUID entityKey, @RequestBody @Trim Tag tag) {
     return baseCollectionEntityService.addTag(entityKey, tag);
   }
 
   @DeleteMapping("{key}/tag/{tagKey}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable int tagKey) {
     baseCollectionEntityService.deleteTag(entityKey, tagKey);
@@ -115,7 +106,6 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured(GRSCICOLL_ADMIN_ROLE)
   @Trim
   public int addMachineTag(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim MachineTag machineTag) {
@@ -123,21 +113,18 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
-  @Secured(GRSCICOLL_ADMIN_ROLE)
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
     baseCollectionEntityService.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
-  @Secured(GRSCICOLL_ADMIN_ROLE)
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
     baseCollectionEntityService.deleteMachineTags(targetEntityKey, namespace);
   }
 
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
-  @Secured(GRSCICOLL_ADMIN_ROLE)
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable("namespace") String namespace,
@@ -152,14 +139,12 @@ public abstract class BaseCollectionEntityResource<
 
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addComment(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Comment comment) {
     return baseCollectionEntityService.addComment(targetEntityKey, comment);
   }
 
   @DeleteMapping("{key}/comment/{commentKey}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void deleteComment(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
     baseCollectionEntityService.deleteComment(targetEntityKey, commentKey);

@@ -62,7 +62,7 @@ public abstract class BaseCollectionEntityIT<
         T extends CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable>
     extends BaseItTest {
 
-  protected final CrudService<T> resource;
+  protected final CrudService<T> entityService;
   protected final CrudService<T> client;
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
@@ -73,7 +73,7 @@ public abstract class BaseCollectionEntityIT<
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   public BaseCollectionEntityIT(
-      CrudService<T> resource,
+      CrudService<T> entityService,
       Class<? extends CrudService<T>> cls,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
@@ -81,7 +81,7 @@ public abstract class BaseCollectionEntityIT<
       int localServerPort,
       KeyStore keyStore) {
     super(principalProvider, esServer);
-    this.resource = resource;
+    this.entityService = entityService;
     this.client = prepareClient(localServerPort, keyStore, cls);
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
   }
@@ -99,7 +99,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void crudTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
 
     // create
     T entity = newEntity();
@@ -131,21 +131,21 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createInvalidEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
     assertThrows(ValidationException.class, () -> service.create(newInvalidEntity()));
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void deleteMissingEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
     assertThrows(IllegalArgumentException.class, () -> service.delete(UUID.randomUUID()));
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void updateDeletedEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
 
     T entity = newEntity();
     UUID key = service.create(entity);
@@ -160,7 +160,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void restoreDeletedEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
 
     T entity = newEntity();
     UUID key = service.create(entity);
@@ -179,7 +179,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void updateInvalidEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
 
     T entity = newEntity();
     UUID key = service.create(entity);
@@ -205,7 +205,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void getMissingEntity(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
 
     try {
       T entity = service.get(UUID.randomUUID());
@@ -218,7 +218,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createFullEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
 
     T entity = newEntity();
 
@@ -249,7 +249,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void tagsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
     TagService tagService = (TagService) service;
 
     UUID key = service.create(newEntity());
@@ -270,7 +270,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void machineTagsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
     MachineTagService machineTagService = (MachineTagService) service;
 
     T entity = newEntity();
@@ -291,7 +291,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void identifiersTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
     IdentifierService identifierService = (IdentifierService) service;
 
     T entity = newEntity();
@@ -316,7 +316,7 @@ public abstract class BaseCollectionEntityIT<
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void commentsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
+    CrudService<T> service = getService(serviceType, entityService, client);
     CommentService commentService = (CommentService) service;
 
     T entity = newEntity();
@@ -341,7 +341,7 @@ public abstract class BaseCollectionEntityIT<
       case CLIENT:
         return client;
       case RESOURCE:
-        return resource;
+        return entityService;
       default:
         throw new IllegalStateException("Must be resource or client");
     }

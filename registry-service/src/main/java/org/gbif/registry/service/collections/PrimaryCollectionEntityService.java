@@ -13,6 +13,7 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
@@ -41,6 +42,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +50,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 @Validated
 public abstract class PrimaryCollectionEntityService<
@@ -89,6 +93,7 @@ public abstract class PrimaryCollectionEntityService<
     this.occurrenceMappeableMapper = occurrenceMappeableMapper;
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -136,6 +141,8 @@ public abstract class PrimaryCollectionEntityService<
     return entity.getKey();
   }
 
+  @Validated({PostPersist.class, Default.class})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void update(T entity) {
@@ -191,6 +198,7 @@ public abstract class PrimaryCollectionEntityService<
     }
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void addContact(@NotNull UUID entityKey, @NotNull UUID personKey) {
@@ -206,6 +214,7 @@ public abstract class PrimaryCollectionEntityService<
         ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void removeContact(@NotNull UUID entityKey, @NotNull UUID personKey) {
@@ -219,6 +228,7 @@ public abstract class PrimaryCollectionEntityService<
     return contactableMapper.listContacts(key);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   public int addOccurrenceMapping(UUID entityKey, OccurrenceMapping occurrenceMapping) {
@@ -241,6 +251,7 @@ public abstract class PrimaryCollectionEntityService<
     return occurrenceMappeableMapper.listOccurrenceMappings(uuid);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void deleteOccurrenceMapping(UUID entityKey, int occurrenceMappingKey) {

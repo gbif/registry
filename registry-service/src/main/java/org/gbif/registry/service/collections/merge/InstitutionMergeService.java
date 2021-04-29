@@ -36,6 +36,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 /** Service to merge duplicated {@link Institution}. */
 @Service
@@ -77,6 +80,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     this.occurrenceMappingMapper = occurrenceMappingMapper;
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
   public UUID convertToCollection(
       UUID institutionKey,
       @Nullable UUID institutionKeyForNewCollection,

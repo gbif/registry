@@ -36,8 +36,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,9 +45,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Preconditions;
-
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
@@ -101,7 +96,6 @@ public class InstitutionResource
   }
 
   @PostMapping("{key}/convertToCollection")
-  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
   public UUID convertToCollection(
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
     return institutionMergeService.convertToCollection(

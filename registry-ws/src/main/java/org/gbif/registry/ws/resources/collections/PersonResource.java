@@ -20,7 +20,6 @@ import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.registry.service.collections.DefaultPersonService;
 
@@ -28,7 +27,6 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.validation.Valid;
-import javax.validation.groups.Default;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -42,11 +40,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static com.google.common.base.Preconditions.checkArgument;
 
-@Validated
 @RestController
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> {
@@ -72,7 +69,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> {
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Validated({PostPersist.class, Default.class})
   @Trim
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Person person) {

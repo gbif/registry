@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -181,6 +183,8 @@ public abstract class BaseChangeSuggestionService<
     return dto.getKey();
   }
 
+  // TODO: suggestions roles
+  @Secured({GRSCICOLL_ADMIN_ROLE})
   @Override
   public void updateChangeSuggestion(R updatedChangeSuggestion) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
@@ -206,6 +210,8 @@ public abstract class BaseChangeSuggestionService<
     changeSuggestionMapper.update(dto);
   }
 
+  // TODO: suggestions roles
+  @Secured({GRSCICOLL_ADMIN_ROLE})
   @Override
   public void discardChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
@@ -216,6 +222,8 @@ public abstract class BaseChangeSuggestionService<
     changeSuggestionMapper.update(dto);
   }
 
+  // TODO: suggestions roles
+  @Secured({GRSCICOLL_ADMIN_ROLE})
   @Override
   public UUID applyChangeSuggestion(int suggestionKey) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);

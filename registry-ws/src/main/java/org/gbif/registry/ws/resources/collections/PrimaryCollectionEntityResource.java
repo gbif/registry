@@ -42,7 +42,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,9 +52,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 /**
  * Base class to implement the main methods of {@link CollectionEntity} that are also @link
@@ -88,28 +84,25 @@ public abstract class PrimaryCollectionEntityResource<
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public UUID create(@RequestBody @Trim T entity) {
     return primaryCollectionEntityService.create(entity);
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@RequestBody @Trim T entity) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
+    checkArgument(key.equals(entity.getKey()));
     primaryCollectionEntityService.update(entity);
   }
 
   @PostMapping(
       value = "{key}/contact",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void addContact(@PathVariable("key") UUID entityKey, @RequestBody UUID personKey) {
     primaryCollectionEntityService.addContact(entityKey, personKey);
   }
 
   @DeleteMapping("{key}/contact/{personKey}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void removeContact(@PathVariable("key") UUID entityKey, @PathVariable UUID personKey) {
     primaryCollectionEntityService.removeContact(entityKey, personKey);
   }
@@ -122,7 +115,6 @@ public abstract class PrimaryCollectionEntityResource<
 
   @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int addOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @RequestBody @Trim OccurrenceMapping occurrenceMapping) {
     return primaryCollectionEntityService.addOccurrenceMapping(entityKey, occurrenceMapping);
@@ -135,14 +127,12 @@ public abstract class PrimaryCollectionEntityResource<
   }
 
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public void deleteOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
     primaryCollectionEntityService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
   }
 
   @PostMapping(value = "{key}/merge")
-  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
   public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     mergeService.merge(entityKey, params.getReplacementEntityKey());
   }
@@ -152,10 +142,7 @@ public abstract class PrimaryCollectionEntityResource<
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
   }
 
-  // TODO: suggestions roles
-
   @PutMapping(value = "changeSuggestion/{key}")
-  @Secured({GRSCICOLL_ADMIN_ROLE})
   public void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody R suggestion) {
     checkArgument(key == suggestion.getKey());
     changeSuggestionService.updateChangeSuggestion(suggestion);
@@ -178,13 +165,11 @@ public abstract class PrimaryCollectionEntityResource<
   }
 
   @PutMapping(value = "changeSuggestion/{key}/discard")
-  @Secured({GRSCICOLL_ADMIN_ROLE})
   public void discardChangeSuggestion(@PathVariable("key") int key) {
     changeSuggestionService.discardChangeSuggestion(key);
   }
 
   @PutMapping(value = "changeSuggestion/{key}/apply")
-  @Secured({GRSCICOLL_ADMIN_ROLE})
   public ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key) {
     UUID entityCreatedKey = changeSuggestionService.applyChangeSuggestion(key);
     ApplySuggestionResult result = new ApplySuggestionResult();
