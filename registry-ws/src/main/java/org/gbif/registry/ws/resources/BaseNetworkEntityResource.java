@@ -232,6 +232,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param entity entity that extends NetworkEntity
    */
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Validated({PostPersist.class, Default.class})
   @Trim
   @Transactional
@@ -240,7 +241,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     update(entity);
   }
 
-  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
   @Override
   public void update(T entity) {
