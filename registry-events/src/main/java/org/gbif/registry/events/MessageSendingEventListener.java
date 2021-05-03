@@ -157,8 +157,8 @@ public class MessageSendingEventListener {
   public final void updatedComponent(ChangedComponentEvent event) {
     final Message message =
       new RegistryChangeMessage(
-        RegistryChangeMessage.ChangeType.UPDATED,
-        event.getTargetClass(),
+        RegistryChangeMessage.ChangeType.UPDATE_COMPONENT,
+        event.getComponentClass(),
         event.getTargetEntityKey(),
         null);
     LOG.debug(
