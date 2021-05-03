@@ -20,11 +20,12 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 /** Service to provide the history and re-execute previous attempts of Pipelines. */
 public interface RegistryPipelinesHistoryTrackingService {

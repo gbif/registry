@@ -32,7 +32,6 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -46,7 +45,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class DerivedDatasetMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("derived_dataset", "dataset");
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer("derived_dataset", "dataset");
 
   private final DerivedDatasetMapper mapper;
   private final TestDataFactory testDataFactory;

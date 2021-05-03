@@ -34,24 +34,23 @@ import org.springframework.core.env.Environment;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Test the Identify verb of the OAI-PMH endpoint. */
 public class OaipmhIdentifyIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhIdentifyIT(
-    SimplePrincipalProvider principalProvider,
-    Environment environment,
-    NodeService nodeService,
-    OrganizationService organizationService,
-    InstallationService installationService,
-    DatasetService datasetService,
-    TestDataFactory testDataFactory,
-    EsManageServer esServer,
-    DataSource dataSource
-    ) {
+      SimplePrincipalProvider principalProvider,
+      Environment environment,
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory,
+      EsManageServer esServer,
+      DataSource dataSource) {
     super(
         principalProvider,
         environment,

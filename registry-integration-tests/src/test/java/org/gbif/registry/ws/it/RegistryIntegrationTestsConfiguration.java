@@ -66,8 +66,11 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import com.zaxxer.hikari.HikariDataSource;
 
 @TestConfiguration
-@SpringBootApplication(exclude = {RabbitAutoConfiguration.class,
-  ElasticSearchRestHealthContributorAutoConfiguration.class})
+@SpringBootApplication(
+    exclude = {
+      RabbitAutoConfiguration.class,
+      ElasticSearchRestHealthContributorAutoConfiguration.class
+    })
 @MapperScan("org.gbif.registry.persistence.mapper")
 @ComponentScan(
     basePackages = {

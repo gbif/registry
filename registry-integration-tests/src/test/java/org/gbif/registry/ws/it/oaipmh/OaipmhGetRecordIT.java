@@ -58,16 +58,15 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
 
   @Autowired
   public OaipmhGetRecordIT(
-    SimplePrincipalProvider principalProvider,
-    Environment environment,
-    NodeService nodeService,
-    OrganizationService organizationService,
-    InstallationService installationService,
-    DatasetService datasetService,
-    TestDataFactory testDataFactory,
-    EsManageServer esServer,
-    DataSource dataSource
-    ) {
+      SimplePrincipalProvider principalProvider,
+      Environment environment,
+      NodeService nodeService,
+      OrganizationService organizationService,
+      InstallationService installationService,
+      DatasetService datasetService,
+      TestDataFactory testDataFactory,
+      EsManageServer esServer,
+      DataSource dataSource) {
     super(
         principalProvider,
         environment,

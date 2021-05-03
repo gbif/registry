@@ -351,7 +351,8 @@ public class OrganizationCreationIT extends BaseItTest {
     createdOrganization.setEndorsementApproved(true);
 
     if (serviceType == ServiceType.RESOURCE) {
-      // we use the resource class directly to use the update method of the API, which is the one that is secured
+      // we use the resource class directly to use the update method of the API, which is the one
+      // that is secured
       OrganizationResource userServiceResource =
           (OrganizationResource)
               getService(serviceType, organizationResource, userOrganizationClient);

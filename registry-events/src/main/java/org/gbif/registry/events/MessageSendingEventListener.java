@@ -156,31 +156,31 @@ public class MessageSendingEventListener {
   @Subscribe
   public final void updatedComponent(ChangedComponentEvent event) {
     final Message message =
-      new RegistryChangeMessage(
-        RegistryChangeMessage.ChangeType.UPDATE_COMPONENT,
-        event.getComponentClass(),
-        event.getTargetEntityKey(),
-        null);
+        new RegistryChangeMessage(
+            RegistryChangeMessage.ChangeType.UPDATE_COMPONENT,
+            event.getComponentClass(),
+            event.getTargetEntityKey(),
+            null);
     LOG.debug(
-      "Scheduling notification of UpdateEvent [{}] with an embargo durations of {} seconds",
-      event.getTargetClass().getSimpleName(),
-      embargoSeconds);
+        "Scheduling notification of UpdateEvent [{}] with an embargo durations of {} seconds",
+        event.getTargetClass().getSimpleName(),
+        embargoSeconds);
 
     scheduler.schedule(
-      () -> {
-        try {
-          LOG.debug(
-            "Broadcasting to postal service UpdateEvent [{}]",
-            event.getTargetClass().getSimpleName());
-          messagePublisher.send(message);
-        } catch (IOException e) {
-          LOG.warn(
-            "Failed sending RegistryChangeMessage for UpdateEvent [{}]",
-            event.getTargetClass().getSimpleName(),
-            e);
-        }
-      },
-      embargoSeconds,
-      TimeUnit.SECONDS);
+        () -> {
+          try {
+            LOG.debug(
+                "Broadcasting to postal service UpdateEvent [{}]",
+                event.getTargetClass().getSimpleName());
+            messagePublisher.send(message);
+          } catch (IOException e) {
+            LOG.warn(
+                "Failed sending RegistryChangeMessage for UpdateEvent [{}]",
+                event.getTargetClass().getSimpleName(),
+                e);
+          }
+        },
+        embargoSeconds,
+        TimeUnit.SECONDS);
   }
 }

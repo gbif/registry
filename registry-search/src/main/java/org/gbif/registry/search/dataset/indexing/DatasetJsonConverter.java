@@ -184,14 +184,13 @@ public class DatasetJsonConverter {
     if (networks != null) {
       ArrayNode networkKeys = mapper.createArrayNode();
       ArrayNode networkTitles = mapper.createArrayNode();
-      networks.forEach(network -> {
-                  networkKeys.add(new TextNode(network.getKey().toString()));
-                  networkTitles.add(new TextNode(network.getTitle()));
-                });
-      datasetJsonNode
-        .putArray("networkKeys").addAll(networkKeys);
-      datasetJsonNode
-        .putArray("networkTitles").addAll(networkTitles);
+      networks.forEach(
+          network -> {
+            networkKeys.add(new TextNode(network.getKey().toString()));
+            networkTitles.add(new TextNode(network.getTitle()));
+          });
+      datasetJsonNode.putArray("networkKeys").addAll(networkKeys);
+      datasetJsonNode.putArray("networkTitles").addAll(networkTitles);
     }
   }
 

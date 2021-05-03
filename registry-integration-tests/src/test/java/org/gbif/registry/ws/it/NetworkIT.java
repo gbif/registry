@@ -124,8 +124,9 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
     Dataset datasetFromDb = datasetResource.get(dataset.getKey());
 
-    assertTrue(datasetFromDb.getNetworkKeys().contains(network.getKey()),
-               "Network key not present in dataset networkKeys");
+    assertTrue(
+        datasetFromDb.getNetworkKeys().contains(network.getKey()),
+        "Network key not present in dataset networkKeys");
 
     // delete constituent
     requestTestFixture

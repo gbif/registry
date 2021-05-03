@@ -54,8 +54,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   // needed to assert results against ES server directly
   private RestHighLevelClient restClient;
 
-  public EsManageServer(
-      Resource mappingFile, Resource settingsFile, String indexName) {
+  public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
     this.settingsFile = settingsFile;
     this.indexName = indexName;
@@ -133,6 +132,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   public String getServerAddress() {
     return "http://localhost:" + embeddedElastic.getMappedPort(9200);
   }
+
   public void refresh() {
     try {
       RefreshRequest refreshRequest = new RefreshRequest();
