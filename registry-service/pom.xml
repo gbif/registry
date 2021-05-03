@@ -43,6 +43,12 @@
       <artifactId>gbif-api</artifactId>
     </dependency>
 
+    <!-- Third-party dependencies -->
+    <dependency>
+      <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+      <artifactId>owasp-java-html-sanitizer</artifactId>
+    </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
