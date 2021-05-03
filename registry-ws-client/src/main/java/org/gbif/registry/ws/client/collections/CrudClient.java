@@ -51,8 +51,8 @@ public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
   }
 
   @RequestMapping(
-    method = RequestMethod.PUT,
-    value = "{key}",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.PUT,
+      value = "{key}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
   void updateResource(@PathVariable("key") UUID key, @RequestBody T entity);
 }

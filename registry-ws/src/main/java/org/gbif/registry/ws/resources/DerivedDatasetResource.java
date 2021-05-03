@@ -144,8 +144,9 @@ public class DerivedDatasetResource {
           "Invalid related datasets identifiers: " + e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    DerivedDataset derivedDataset = derivedDatasetService.create(
-        toDerivedDataset(request, nameFromContext), derivedDatasetUsages);
+    DerivedDataset derivedDataset =
+        derivedDatasetService.create(
+            toDerivedDataset(request, nameFromContext), derivedDatasetUsages);
     eventManager.post(CreateEvent.newInstance(derivedDataset, DerivedDataset.class));
     return derivedDataset;
   }
@@ -191,7 +192,8 @@ public class DerivedDatasetResource {
       Optional.ofNullable(request.getTitle()).ifPresent(derivedDataset::setTitle);
       derivedDataset.setModifiedBy(nameFromContext);
       derivedDatasetService.update(derivedDataset);
-      eventManager.post(UpdateEvent.newInstance(derivedDataset, derivedDataset, DerivedDataset.class));
+      eventManager.post(
+          UpdateEvent.newInstance(derivedDataset, derivedDataset, DerivedDataset.class));
     } catch (IllegalStateException e) {
       LOG.error(e.getMessage());
       throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -220,7 +222,8 @@ public class DerivedDatasetResource {
   }
 
   @GetMapping("user/{user}")
-  public PagingResponse<DerivedDataset> listByUser(@PathVariable("user") String user, Pageable page) {
+  public PagingResponse<DerivedDataset> listByUser(
+      @PathVariable("user") String user, Pageable page) {
     return derivedDatasetService.listByUser(user, page);
   }
 

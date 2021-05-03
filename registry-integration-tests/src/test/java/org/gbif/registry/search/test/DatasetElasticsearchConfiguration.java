@@ -33,13 +33,16 @@ public class DatasetElasticsearchConfiguration {
   @Autowired private ResourceLoader resourceLoader;
 
   @Bean("datasetElasticCluster")
-  public EsManageServer esManageServer(@Value("${elasticsearch.registry.index}") String indexName,
-                                       @Value("${elasticsearch.mock}") boolean mockEs) {
+  public EsManageServer esManageServer(
+      @Value("${elasticsearch.registry.index}") String indexName,
+      @Value("${elasticsearch.mock}") boolean mockEs) {
     try {
-      return mockEs? Mockito.mock(EsManageServer.class):
-        new EsManageServer(resourceLoader.getResource("classpath:dataset-es-mapping.json"),
-                           resourceLoader.getResource("classpath:dataset-es-settings.json"),
-                           indexName);
+      return mockEs
+          ? Mockito.mock(EsManageServer.class)
+          : new EsManageServer(
+              resourceLoader.getResource("classpath:dataset-es-mapping.json"),
+              resourceLoader.getResource("classpath:dataset-es-settings.json"),
+              indexName);
     } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
@@ -65,17 +68,19 @@ public class DatasetElasticsearchConfiguration {
   @Bean
   @Primary
   public RestHighLevelClient restHighLevelClient(
-    @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
-    @Value("${elasticsearch.mock}") boolean mockEs) {
-    return mockEs ? Mockito.mock(RestHighLevelClient.class) :
-      EsClient.provideEsClient(esClientConfiguration);
+      @Qualifier("registryEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
+      @Value("${elasticsearch.mock}") boolean mockEs) {
+    return mockEs
+        ? Mockito.mock(RestHighLevelClient.class)
+        : EsClient.provideEsClient(esClientConfiguration);
   }
 
   @Bean(name = "occurrenceEsClient")
   public RestHighLevelClient occurrenceRestHighLevelClient(
-    @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
-    @Value("${elasticsearch.mock}") boolean mockEs) {
-    return mockEs ? Mockito.mock(RestHighLevelClient.class) :
-      EsClient.provideEsClient(esClientConfiguration);
+      @Qualifier("esOccurrenceClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
+      @Value("${elasticsearch.mock}") boolean mockEs) {
+    return mockEs
+        ? Mockito.mock(RestHighLevelClient.class)
+        : EsClient.provideEsClient(esClientConfiguration);
   }
 }

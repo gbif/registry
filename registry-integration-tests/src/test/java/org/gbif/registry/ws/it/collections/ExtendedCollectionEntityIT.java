@@ -118,15 +118,20 @@ public abstract class ExtendedCollectionEntityIT<
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
-      Connection connection = SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class).getConnection();
+      Connection connection =
+          SpringExtension.getApplicationContext(extensionContext)
+              .getBean(DataSource.class)
+              .getConnection();
       // create materialized view for testing
       ScriptUtils.executeSqlScript(
-        connection, new ClassPathResource("/scripts/create_duplicates_views.sql"));
+          connection, new ClassPathResource("/scripts/create_duplicates_views.sql"));
       connection.close();
     }
   }
 
-  @RegisterExtension static MaterializedViewInitializer materializedViewInitializer = new MaterializedViewInitializer();
+  @RegisterExtension
+  static MaterializedViewInitializer materializedViewInitializer =
+      new MaterializedViewInitializer();
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)

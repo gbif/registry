@@ -73,8 +73,8 @@ public class DatasetIndexUpdateListener {
       // we only care about title & country changes
       Organization org1 = (Organization) event.getOldObject();
       Organization org2 = (Organization) event.getNewObject();
-      if (!Objects.equals(org1.getTitle(), org2.getTitle()) ||
-          !Objects.equals(org1.getCountry(), org2.getCountry())) {
+      if (!Objects.equals(org1.getTitle(), org2.getTitle())
+          || !Objects.equals(org1.getCountry(), org2.getCountry())) {
         indexService.index(org2);
       }
 
@@ -82,14 +82,14 @@ public class DatasetIndexUpdateListener {
       // we only care about the hosting organization
       Installation i1 = (Installation) event.getOldObject();
       Installation i2 = (Installation) event.getNewObject();
-      if (!Objects.equals(i1.getOrganizationKey(), (i2.getOrganizationKey())) ||
-          !Objects.equals(i1.getTitle(), i2.getTitle())) {
+      if (!Objects.equals(i1.getOrganizationKey(), (i2.getOrganizationKey()))
+          || !Objects.equals(i1.getTitle(), i2.getTitle())) {
         indexService.index(i2);
       }
     } else if (event.getObjectClass().equals(Network.class)) {
       // we only care about title changes
-      Network network1 = (Network)event.getOldObject();
-      Network network2 = (Network)event.getNewObject();
+      Network network1 = (Network) event.getOldObject();
+      Network network2 = (Network) event.getNewObject();
       if (!Objects.equals(network1.getTitle(), network2.getTitle())) {
         indexService.index(network2);
       }
@@ -110,8 +110,10 @@ public class DatasetIndexUpdateListener {
   @Subscribe
   public final void updatedComponent(ChangedComponentEvent event) {
     // only fire in case of tagged datasets
-    if ((event.getTargetClass().equals(Dataset.class) && event.getComponentClass().equals(Tag.class)) ||
-        (event.getTargetClass().equals(Network.class) && event.getComponentClass().equals(Dataset.class))) {
+    if ((event.getTargetClass().equals(Dataset.class)
+            && event.getComponentClass().equals(Tag.class))
+        || (event.getTargetClass().equals(Network.class)
+            && event.getComponentClass().equals(Dataset.class))) {
       // we only put tagged datasets onto the queue for this event type!
       UUID key = event.getTargetEntityKey();
       try {

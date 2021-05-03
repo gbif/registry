@@ -44,11 +44,10 @@ public class SearchTestConfiguration {
   @Bean
   @Primary
   public GbifWsClient gbifWsClient(
-    InstallationService installationService,
-    OrganizationService organizationService,
-    DatasetService datasetService,
-    NetworkService networkService
-    ) {
+      InstallationService installationService,
+      OrganizationService organizationService,
+      DatasetService datasetService,
+      NetworkService networkService) {
     return new GbifWsRetrofitClient(
         gbifApiService(), installationService, organizationService, datasetService, networkService);
   }

@@ -55,8 +55,7 @@ public interface GbifWsClient {
   PagingResponse<Dataset> getOrganizationPublishedDataset(
       String organizationKey, PagingRequest pagingRequest);
 
-  PagingResponse<Dataset> getNetworkDatasets(
-    String networkKey, PagingRequest pagingRequest);
+  PagingResponse<Dataset> getNetworkDatasets(String networkKey, PagingRequest pagingRequest);
 
   InputStream getMetadataDocument(UUID datasetKey);
 

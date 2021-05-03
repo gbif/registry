@@ -42,7 +42,6 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -61,11 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PipelineProcessMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("pipeline_process",
-                                                                                       "dataset",
-                                                                                       "installation",
-                                                                                       "organization",
-                                                                                       "node");
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer(
+          "pipeline_process", "dataset", "installation", "organization", "node");
 
   private static final String TEST_USER = "test";
   private static final String UPDATER_USER = "updater";

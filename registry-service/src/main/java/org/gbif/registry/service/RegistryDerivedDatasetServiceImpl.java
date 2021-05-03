@@ -185,9 +185,7 @@ public class RegistryDerivedDatasetServiceImpl implements RegistryDerivedDataset
   @Override
   public PagingResponse<DerivedDataset> listByUser(String user, Pageable page) {
     return new PagingResponse<>(
-        page,
-        derivedDatasetMapper.countByUser(user),
-        derivedDatasetMapper.listByUser(user, page));
+        page, derivedDatasetMapper.countByUser(user), derivedDatasetMapper.listByUser(user, page));
   }
 
   @Scheduled(cron = "${derivedDataset.cronPattern}")

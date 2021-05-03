@@ -15,15 +15,13 @@
  */
 package org.gbif.registry.events;
 
-
 /** This event is fired after a new network entity has been successfully deleted. */
 public class DeleteEvent<T> {
 
   private final T oldObject;
   private final Class<T> objectClass;
 
-  public static <T> DeleteEvent<T> newInstance(
-      T oldObject, Class<T> objectClass) {
+  public static <T> DeleteEvent<T> newInstance(T oldObject, Class<T> objectClass) {
     return new DeleteEvent<>(oldObject, objectClass);
   }
 
