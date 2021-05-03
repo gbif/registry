@@ -94,7 +94,7 @@
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metrics.version>1.0</gbif-metrics.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
-    <gbif-postal-service.version>0.45</gbif-postal-service.version>
+    <gbif-postal-service.version>1.1-SNAPSHOT</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
 
     <!-- Third party -->
