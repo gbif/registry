@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/institution")
 public interface InstitutionClient
-    extends ExtendedBaseCollectionEntityClient<Institution>, InstitutionService {
+    extends PrimaryCollectionEntityClient<Institution>, InstitutionService {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody

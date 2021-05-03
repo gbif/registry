@@ -27,8 +27,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.service.collections.DefaultCollectionService;
-import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 
@@ -53,16 +52,22 @@ import com.google.common.base.Preconditions;
 public class CollectionResource
     extends PrimaryCollectionEntityResource<Collection, CollectionChangeSuggestion> {
 
-  private final DuplicatesService duplicatesService;
-  public final DefaultCollectionService collectionService;
+  private final CollectionDuplicatesService duplicatesService;
+  public final CollectionService collectionService;
 
   public CollectionResource(
       CollectionMergeService collectionMergeService,
-      DuplicatesService duplicatesService,
-      DefaultCollectionService collectionService,
+      CollectionDuplicatesService duplicatesService,
+      CollectionService collectionService,
       CollectionChangeSuggestionService collectionChangeSuggestionService) {
     super(
         collectionMergeService,
+        collectionService,
+        collectionService,
+        collectionService,
+        collectionService,
+        collectionService,
+        collectionService,
         collectionService,
         collectionChangeSuggestionService,
         Collection.class);
@@ -96,7 +101,7 @@ public class CollectionResource
     Preconditions.checkArgument(
         !request.isEmpty(), "At least one param to check the same field is required");
 
-    return duplicatesService.findPossibleDuplicateCollections(
+    return duplicatesService.findPossibleDuplicates(
         DuplicatesSearchParams.builder()
             .sameFuzzyName(request.getSameFuzzyName())
             .sameName(request.getSameName())

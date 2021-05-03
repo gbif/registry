@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-public interface ExtendedBaseCollectionEntityClient<
+public interface PrimaryCollectionEntityClient<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
     extends BaseCollectionEntityClient<T>, ContactService, OccurrenceMappingService {
 

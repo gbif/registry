@@ -22,7 +22,6 @@ import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.duplicates.Duplicate;
-import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
@@ -48,11 +47,10 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.collections.ExtendedBaseCollectionEntityClient;
-import org.gbif.registry.ws.client.collections.PersonClient;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.KeyStore;
 
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -64,11 +62,10 @@ import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -79,23 +76,24 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class ExtendedCollectionEntityIT<
+public abstract class PrimaryCollectionEntityServiceIT<
         T extends
             CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable & Commentable
                 & OccurrenceMappeable>
-    extends BaseCollectionEntityIT<T> {
+    extends BaseCollectionEntityServiceIT<T> {
 
-  protected final PersonService personResource;
-  protected final PersonService personClient;
+  protected final PersonService personService;
   protected final DatasetService datasetService;
   private final NodeService nodeService;
   private final OrganizationService organizationService;
   private final InstallationService installationService;
+  private final ContactService contactService;
+  private final OccurrenceMappingService occurrenceMappingService;
+  private final DuplicatesService duplicatesService;
 
-  public ExtendedCollectionEntityIT(
-      CrudService<T> resource,
-      Class<? extends CrudService<T>> cls,
-      PersonService personResource,
+  public PrimaryCollectionEntityServiceIT(
+      CrudService<T> crudService,
+      PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -103,42 +101,45 @@ public abstract class ExtendedCollectionEntityIT<
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      int localServerPort,
-      KeyStore keyStore) {
-    super(resource, cls, principalProvider, esServer, identityService, localServerPort, keyStore);
-    this.personResource = personResource;
-    this.personClient = prepareClient(localServerPort, keyStore, PersonClient.class);
+      ContactService contactService,
+      OccurrenceMappingService occurrenceMappingService,
+      DuplicatesService duplicatesService) {
+    super(crudService, principalProvider, esServer, identityService);
+    this.personService = personService;
     this.datasetService = datasetService;
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
+    this.contactService = contactService;
+    this.occurrenceMappingService = occurrenceMappingService;
+    this.duplicatesService = duplicatesService;
   }
 
   public static class MaterializedViewInitializer implements BeforeAllCallback {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) throws Exception {
-      Connection connection = SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class).getConnection();
+      Connection connection =
+          SpringExtension.getApplicationContext(extensionContext)
+              .getBean(DataSource.class)
+              .getConnection();
       // create materialized view for testing
       ScriptUtils.executeSqlScript(
-        connection, new ClassPathResource("/scripts/create_duplicates_views.sql"));
+          connection, new ClassPathResource("/scripts/create_duplicates_views.sql"));
       connection.close();
     }
   }
 
-  @RegisterExtension static MaterializedViewInitializer materializedViewInitializer = new MaterializedViewInitializer();
+  @RegisterExtension
+  static MaterializedViewInitializer materializedViewInitializer =
+      new MaterializedViewInitializer();
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void contactsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType);
-    ContactService contactService = (ContactService) service;
-    PersonService personService = getService(serviceType, personResource, personClient);
-
+  @Test
+  public void contactsTest() {
     // entities
-    UUID entityKey1 = service.create(newEntity());
-    UUID entityKey2 = service.create(newEntity());
-    UUID entityKey3 = service.create(newEntity());
+    UUID entityKey1 = crudService.create(newEntity());
+    UUID entityKey2 = crudService.create(newEntity());
+    UUID entityKey3 = crudService.create(newEntity());
 
     // contacts
     Person person1 = new Person();
@@ -174,15 +175,10 @@ public abstract class ExtendedCollectionEntityIT<
     assertEquals(0, contactService.listContacts(entityKey2).size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void duplicateContactTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType);
-    ContactService contactService = (ContactService) service;
-    PersonService personService = getService(serviceType, personResource, personClient);
-
+  @Test
+  public void duplicateContactTest() {
     // entities
-    UUID entityKey1 = service.create(newEntity());
+    UUID entityKey1 = crudService.create(newEntity());
 
     // contacts
     Person person1 = new Person();
@@ -194,16 +190,13 @@ public abstract class ExtendedCollectionEntityIT<
     assertThrows(RuntimeException.class, () -> contactService.addContact(entityKey1, personKey1));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateAddressesTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType);
-
+  @Test
+  public void updateAddressesTest() {
     // entities
     T entity = newEntity();
-    UUID entityKey = service.create(entity);
+    UUID entityKey = crudService.create(entity);
     assertNewEntity(entity);
-    entity = service.get(entityKey);
+    entity = crudService.get(entityKey);
 
     // update adding address
     Address address = new Address();
@@ -218,8 +211,8 @@ public abstract class ExtendedCollectionEntityIT<
     mailingAddress.setCity("city mailing");
     entity.setMailingAddress(mailingAddress);
 
-    service.update(entity);
-    entity = service.get(entityKey);
+    crudService.update(entity);
+    entity = crudService.get(entityKey);
     address = entity.getAddress();
     mailingAddress = entity.getMailingAddress();
 
@@ -240,8 +233,8 @@ public abstract class ExtendedCollectionEntityIT<
     address.setAddress("address2");
     mailingAddress.setAddress("mailing address2");
 
-    service.update(entity);
-    entity = service.get(entityKey);
+    crudService.update(entity);
+    entity = crudService.get(entityKey);
     assertNotNull(entity.getAddress());
     assertEquals("address2", entity.getAddress().getAddress());
     assertNotNull(entity.getMailingAddress());
@@ -250,20 +243,16 @@ public abstract class ExtendedCollectionEntityIT<
     // delete address
     entity.setAddress(null);
     entity.setMailingAddress(null);
-    service.update(entity);
-    entity = service.get(entityKey);
+    crudService.update(entity);
+    entity = crudService.get(entityKey);
     assertNull(entity.getAddress());
     assertNull(entity.getMailingAddress());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void occurrenceMappingsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType);
-    OccurrenceMappingService occurrenceMappingService = (OccurrenceMappingService) service;
-
+  @Test
+  public void occurrenceMappingsTest() {
     T entity = newEntity();
-    UUID entityKey = service.create(entity);
+    UUID entityKey = crudService.create(entity);
 
     Dataset dataset = createDataset();
     OccurrenceMapping occurrenceMapping = new OccurrenceMapping();
@@ -313,31 +302,29 @@ public abstract class ExtendedCollectionEntityIT<
   }
 
   protected void testDuplicatesCommonCases() {
-    ExtendedBaseCollectionEntityClient<T> wsClient = (ExtendedBaseCollectionEntityClient<T>) client;
-
     // same code
-    DuplicatesRequest request = new DuplicatesRequest();
-    request.setSameCode(true);
+    DuplicatesSearchParams params = new DuplicatesSearchParams();
+    params.setSameCode(true);
 
-    DuplicatesResult result = wsClient.findPossibleDuplicates(request);
+    DuplicatesResult result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(4, result.getDuplicates().get(0).size());
 
     // same fuzzy name
-    request = new DuplicatesRequest();
-    request.setSameFuzzyName(true);
+    params = new DuplicatesSearchParams();
+    params.setSameFuzzyName(true);
 
-    result = wsClient.findPossibleDuplicates(request);
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(2, result.getDuplicates().size());
     assertEquals(3, result.getDuplicates().get(0).size());
     assertEquals(2, result.getDuplicates().get(1).size());
 
     // same fuzzy name and city
-    request = new DuplicatesRequest();
-    request.setSameFuzzyName(true);
-    request.setSameCity(true);
+    params = new DuplicatesSearchParams();
+    params.setSameFuzzyName(true);
+    params.setSameCity(true);
 
-    result = wsClient.findPossibleDuplicates(request);
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(2, result.getDuplicates().get(0).size());
     Set<UUID> keysFound =
@@ -345,45 +332,45 @@ public abstract class ExtendedCollectionEntityIT<
     assertEquals(2, keysFound.size());
 
     // exclude keys
-    request.setExcludeKeys(new ArrayList<>(keysFound));
-    result = wsClient.findPossibleDuplicates(request);
+    params.setExcludeKeys(new ArrayList<>(keysFound));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertTrue(result.getDuplicates().isEmpty());
 
     // same name and city
-    request = new DuplicatesRequest();
-    request.setSameName(true);
-    request.setSameCity(true);
-    result = wsClient.findPossibleDuplicates(request);
+    params = new DuplicatesSearchParams();
+    params.setSameName(true);
+    params.setSameCity(true);
+    result = duplicatesService.findPossibleDuplicates(params);
     assertTrue(result.getDuplicates().isEmpty());
 
     // same name and not same city
-    request.setSameCity(false);
-    result = wsClient.findPossibleDuplicates(request);
+    params.setSameCity(false);
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(2, result.getDuplicates().get(0).size());
     assertEquals(
         2, result.getDuplicates().get(0).stream().map(Duplicate::getKey).distinct().count());
 
     // filtering by country
-    request.setInCountries(Collections.singletonList(Country.DENMARK.getIso2LetterCode()));
-    result = wsClient.findPossibleDuplicates(request);
+    params.setInCountries(Collections.singletonList(Country.DENMARK));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(2, result.getDuplicates().get(0).size());
     assertEquals(
         2, result.getDuplicates().get(0).stream().map(Duplicate::getKey).distinct().count());
 
-    request.setInCountries(Collections.singletonList(Country.SPAIN.getIso2LetterCode()));
-    result = wsClient.findPossibleDuplicates(request);
+    params.setInCountries(Collections.singletonList(Country.SPAIN));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertTrue(result.getDuplicates().isEmpty());
 
     // excluding country
-    request.setInCountries(null);
-    request.setNotInCountries(Collections.singletonList(Country.DENMARK.getIso2LetterCode()));
-    result = wsClient.findPossibleDuplicates(request);
+    params.setInCountries(null);
+    params.setNotInCountries(Collections.singletonList(Country.DENMARK));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertTrue(result.getDuplicates().isEmpty());
 
-    request.setNotInCountries(Collections.singletonList(Country.SPAIN.getIso2LetterCode()));
-    result = wsClient.findPossibleDuplicates(request);
+    params.setNotInCountries(Collections.singletonList(Country.SPAIN));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(2, result.getDuplicates().get(0).size());
   }

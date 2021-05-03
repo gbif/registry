@@ -2,10 +2,10 @@ package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.service.collections.DefaultCollectionService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 
 import java.util.UUID;
@@ -25,7 +25,7 @@ public class CollectionChangeSuggestionService
   public CollectionChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
       CollectionMapper collectionMapper,
-      DefaultCollectionService collectionService, // TODO: interfaces
+      CollectionService collectionService,
       CollectionMergeService collectionMergeService,
       ObjectMapper objectMapper) {
     super(

@@ -32,8 +32,14 @@ import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.ContactService;
+import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.OccurrenceMappingService;
+import org.gbif.api.service.registry.CommentService;
+import org.gbif.api.service.registry.IdentifierService;
+import org.gbif.api.service.registry.MachineTagService;
+import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.util.List;
@@ -68,68 +74,79 @@ public abstract class PrimaryCollectionEntityResource<
     extends BaseCollectionEntityResource<T> {
 
   private final MergeService<T> mergeService;
-  private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
+  private final CrudService<T> crudService;
+  private final ContactService contactService;
+  private final OccurrenceMappingService occurrenceMappingService;
   private final ChangeSuggestionService<T, R> changeSuggestionService;
 
   protected PrimaryCollectionEntityResource(
       MergeService<T> mergeService,
-      PrimaryCollectionEntityService<T> primaryCollectionEntityService,
+      CrudService<T> crudService,
+      ContactService contactService,
+      IdentifierService identifierService,
+      TagService tagService,
+      MachineTagService machineTagService,
+      CommentService commentService,
+      OccurrenceMappingService occurrenceMappingService,
       ChangeSuggestionService<T, R> changeSuggestionService,
       Class<T> objectClass) {
-    super(objectClass, primaryCollectionEntityService);
+    super(
+        objectClass, crudService, identifierService, tagService, machineTagService, commentService);
     this.mergeService = mergeService;
     this.changeSuggestionService = changeSuggestionService;
-    this.primaryCollectionEntityService = primaryCollectionEntityService;
+    this.crudService = crudService;
+    this.contactService = contactService;
+    this.occurrenceMappingService = occurrenceMappingService;
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID create(@RequestBody @Trim T entity) {
-    return primaryCollectionEntityService.create(entity);
+    return crudService.create(entity);
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
     checkArgument(key.equals(entity.getKey()));
-    primaryCollectionEntityService.update(entity);
+    crudService.update(entity);
   }
 
   @PostMapping(
       value = "{key}/contact",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   public void addContact(@PathVariable("key") UUID entityKey, @RequestBody UUID personKey) {
-    primaryCollectionEntityService.addContact(entityKey, personKey);
+    contactService.addContact(entityKey, personKey);
   }
 
   @DeleteMapping("{key}/contact/{personKey}")
   public void removeContact(@PathVariable("key") UUID entityKey, @PathVariable UUID personKey) {
-    primaryCollectionEntityService.removeContact(entityKey, personKey);
+    contactService.removeContact(entityKey, personKey);
   }
 
   @GetMapping("{key}/contact")
   @Nullable
   public List<Person> listContacts(@PathVariable UUID key) {
-    return primaryCollectionEntityService.listContacts(key);
+    return contactService.listContacts(key);
   }
 
   @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @RequestBody @Trim OccurrenceMapping occurrenceMapping) {
-    return primaryCollectionEntityService.addOccurrenceMapping(entityKey, occurrenceMapping);
+    return occurrenceMappingService.addOccurrenceMapping(entityKey, occurrenceMapping);
   }
 
   @GetMapping("{key}/occurrenceMapping")
   @Nullable
   public List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID uuid) {
-    return primaryCollectionEntityService.listOccurrenceMappings(uuid);
+    return occurrenceMappingService.listOccurrenceMappings(uuid);
   }
 
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
   public void deleteOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
-    primaryCollectionEntityService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    occurrenceMappingService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
   }
 
   @PostMapping(value = "{key}/merge")

@@ -27,8 +27,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.service.collections.DefaultInstitutionService;
-import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 
@@ -55,17 +54,23 @@ import com.google.common.base.Preconditions;
 public class InstitutionResource
     extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
-  private final DefaultInstitutionService institutionService;
+  private final InstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
-  private final DuplicatesService duplicatesService;
+  private final InstitutionDuplicatesService duplicatesService;
 
   public InstitutionResource(
       InstitutionMergeService institutionMergeService,
-      DuplicatesService duplicatesService,
-      DefaultInstitutionService institutionService,
+      InstitutionDuplicatesService duplicatesService,
+      InstitutionService institutionService,
       InstitutionChangeSuggestionService institutionChangeSuggestionService) {
     super(
         institutionMergeService,
+        institutionService,
+        institutionService,
+        institutionService,
+        institutionService,
+        institutionService,
+        institutionService,
         institutionService,
         institutionChangeSuggestionService,
         Institution.class);
@@ -107,7 +112,7 @@ public class InstitutionResource
     Preconditions.checkArgument(
         !request.isEmpty(), "At least one param to check the same field is required");
 
-    return duplicatesService.findPossibleDuplicateInstitutions(
+    return duplicatesService.findPossibleDuplicates(
         DuplicatesSearchParams.builder()
             .sameFuzzyName(request.getSameFuzzyName())
             .sameName(request.getSameName())

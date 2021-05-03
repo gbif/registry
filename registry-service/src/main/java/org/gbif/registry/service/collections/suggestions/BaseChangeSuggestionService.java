@@ -19,12 +19,12 @@ import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
@@ -81,7 +81,7 @@ public abstract class BaseChangeSuggestionService<
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final BaseMapper<T> baseMapper;
   private final MergeService<T> mergeService;
-  private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
+  private final CrudService<T> crudService;
   private final Class<T> clazz;
   private final ObjectMapper objectMapper;
   private EntityType entityType;
@@ -90,13 +90,13 @@ public abstract class BaseChangeSuggestionService<
       ChangeSuggestionMapper changeSuggestionMapper,
       BaseMapper<T> baseMapper,
       MergeService<T> mergeService,
-      PrimaryCollectionEntityService<T> primaryCollectionEntityService,
+      CrudService<T> crudService,
       Class<T> clazz,
       ObjectMapper objectMapper) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.baseMapper = baseMapper;
     this.mergeService = mergeService;
-    this.primaryCollectionEntityService = primaryCollectionEntityService;
+    this.crudService = crudService;
     this.clazz = clazz;
     this.objectMapper = objectMapper;
 
@@ -230,12 +230,12 @@ public abstract class BaseChangeSuggestionService<
     R changeSuggestion = dtoToChangeSuggestion(dto);
     UUID createdEntity = null;
     if (dto.getType() == Type.CREATE) {
-      createdEntity = primaryCollectionEntityService.create(changeSuggestion.getSuggestedEntity());
+      createdEntity = crudService.create(changeSuggestion.getSuggestedEntity());
       dto.setEntityKey(createdEntity);
     } else if (dto.getType() == Type.UPDATE) {
-      primaryCollectionEntityService.update(changeSuggestion.getSuggestedEntity());
+      crudService.update(changeSuggestion.getSuggestedEntity());
     } else if (dto.getType() == Type.DELETE) {
-      primaryCollectionEntityService.delete(changeSuggestion.getEntityKey());
+      crudService.delete(changeSuggestion.getEntityKey());
     } else if (dto.getType() == Type.MERGE) {
       mergeService.merge(changeSuggestion.getEntityKey(), changeSuggestion.getMergeTargetKey());
     } else if (dto.getType() == Type.CONVERSION_TO_COLLECTION) {

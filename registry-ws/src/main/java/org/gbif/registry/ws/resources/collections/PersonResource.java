@@ -21,7 +21,7 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
-import org.gbif.registry.service.collections.DefaultPersonService;
+import org.gbif.api.service.collections.PersonService;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +30,6 @@ import javax.validation.Valid;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,10 +47,10 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> {
 
-  private final DefaultPersonService personService;
+  private final PersonService personService;
 
-  public PersonResource(DefaultPersonService personService) {
-    super(Person.class, personService);
+  public PersonResource(PersonService personService) {
+    super(Person.class, personService, personService, personService, personService, personService);
     this.personService = personService;
   }
 

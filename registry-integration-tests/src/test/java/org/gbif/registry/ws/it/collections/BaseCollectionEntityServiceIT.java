@@ -35,11 +35,8 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.collections.CrudClient;
-import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,8 +46,6 @@ import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -58,12 +53,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Base class to test the CRUD operations of {@link CollectionEntity}. */
-public abstract class BaseCollectionEntityIT<
+public abstract class BaseCollectionEntityServiceIT<
         T extends CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable>
-    extends BaseItTest {
+    extends BaseServiceTest {
 
-  protected final CrudService<T> entityService;
-  protected final CrudService<T> client;
+  protected final CrudService<T> crudService;
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
@@ -72,17 +66,13 @@ public abstract class BaseCollectionEntityIT<
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
-  public BaseCollectionEntityIT(
-      CrudService<T> entityService,
-      Class<? extends CrudService<T>> cls,
+  public BaseCollectionEntityServiceIT(
+      CrudService<T> crudService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
-      IdentityService identityService,
-      int localServerPort,
-      KeyStore keyStore) {
+      IdentityService identityService) {
     super(principalProvider, esServer);
-    this.entityService = entityService;
-    this.client = prepareClient(localServerPort, keyStore, cls);
+    this.crudService = crudService;
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
   }
 
@@ -96,18 +86,15 @@ public abstract class BaseCollectionEntityIT<
 
   protected abstract T newInvalidEntity();
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void crudTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-
+  @Test
+  public void crudTest() {
     // create
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
 
     assertNotNull(key);
 
-    T entitySaved = service.get(key);
+    T entitySaved = crudService.get(key);
     assertEquals(key, entitySaved.getKey());
     assertNewEntity(entitySaved);
     assertNotNull(entitySaved.getCreatedBy());
@@ -117,109 +104,77 @@ public abstract class BaseCollectionEntityIT<
 
     // update
     entity = updateEntity(entitySaved);
-    service.update(entity);
+    crudService.update(entity);
 
-    entitySaved = service.get(key);
+    entitySaved = crudService.get(key);
     assertUpdatedEntity(entitySaved);
 
     // delete
-    service.delete(key);
-    entitySaved = service.get(key);
+    crudService.delete(key);
+    entitySaved = crudService.get(key);
     assertNotNull(entitySaved.getDeleted());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void createInvalidEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-    assertThrows(ValidationException.class, () -> service.create(newInvalidEntity()));
+  @Test
+  public void createInvalidEntityTest() {
+    assertThrows(ValidationException.class, () -> crudService.create(newInvalidEntity()));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void deleteMissingEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-    assertThrows(IllegalArgumentException.class, () -> service.delete(UUID.randomUUID()));
+  @Test
+  public void deleteMissingEntityTest() {
+    assertThrows(IllegalArgumentException.class, () -> crudService.delete(UUID.randomUUID()));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateDeletedEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-
+  @Test
+  public void updateDeletedEntityTest() {
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
     entity.setKey(key);
-    service.delete(key);
+    crudService.delete(key);
 
-    T entity2 = service.get(key);
+    T entity2 = crudService.get(key);
     assertNotNull(entity2.getDeleted());
-    assertThrows(IllegalArgumentException.class, () -> service.update(entity2));
+    assertThrows(IllegalArgumentException.class, () -> crudService.update(entity2));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void restoreDeletedEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-
+  @Test
+  public void restoreDeletedEntityTest() {
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
     entity.setKey(key);
-    service.delete(key);
-    entity = service.get(key);
+    crudService.delete(key);
+    entity = crudService.get(key);
     assertNotNull(entity.getDeleted());
 
     // restore it
     entity.setDeleted(null);
-    service.update(entity);
-    entity = service.get(key);
+    crudService.update(entity);
+    entity = crudService.get(key);
     assertNull(entity.getDeleted());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateInvalidEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-
+  @Test
+  public void updateInvalidEntityTest() {
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
 
     T newEntity = newInvalidEntity();
     newEntity.setKey(key);
-    assertThrows(ValidationException.class, () -> service.update(newEntity));
+    assertThrows(ValidationException.class, () -> crudService.update(newEntity));
   }
 
   @Test
-  public void updateEntityKeyMismatchTest() {
-    CrudClient<T> crudClient = (CrudClient<T>) client;
-
-    T entity = newEntity();
-    UUID key = crudClient.create(entity);
-    T entityCreated = crudClient.get(key);
-
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> crudClient.updateResource(UUID.randomUUID(), entityCreated));
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void getMissingEntity(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-
+  public void getMissingEntity() {
     try {
-      T entity = service.get(UUID.randomUUID());
+      T entity = crudService.get(UUID.randomUUID());
       assertNull(entity);
     } catch (Exception ex) {
       assertEquals(NotFoundException.class, ex.getClass());
     }
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void createFullEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-
+  @Test
+  public void createFullEntityTest() {
     T entity = newEntity();
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
@@ -234,8 +189,8 @@ public abstract class BaseCollectionEntityIT<
     identifier.setType(IdentifierType.LSID);
     entity.setIdentifiers(Collections.singletonList(identifier));
 
-    UUID key = service.create(entity);
-    T entitySaved = service.get(key);
+    UUID key = crudService.create(entity);
+    T entitySaved = crudService.get(key);
 
     assertEquals(1, entitySaved.getMachineTags().size());
     assertEquals("value", entitySaved.getMachineTags().get(0).getValue());
@@ -246,13 +201,11 @@ public abstract class BaseCollectionEntityIT<
     assertEquals(IdentifierType.LSID, entitySaved.getIdentifiers().get(0).getType());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void tagsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-    TagService tagService = (TagService) service;
+  @Test
+  public void tagsTest() {
+    TagService tagService = (TagService) crudService;
 
-    UUID key = service.create(newEntity());
+    UUID key = crudService.create(newEntity());
 
     Tag tag = new Tag();
     tag.setValue("value");
@@ -267,14 +220,12 @@ public abstract class BaseCollectionEntityIT<
     assertEquals(0, tagService.listTags(key, null).size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void machineTagsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-    MachineTagService machineTagService = (MachineTagService) service;
+  @Test
+  public void machineTagsTest() {
+    MachineTagService machineTagService = (MachineTagService) crudService;
 
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
     int machineTagKey = machineTagService.addMachineTag(key, machineTag);
@@ -288,14 +239,12 @@ public abstract class BaseCollectionEntityIT<
     assertEquals(0, machineTagService.listMachineTags(key).size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void identifiersTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-    IdentifierService identifierService = (IdentifierService) service;
+  @Test
+  public void identifiersTest() {
+    IdentifierService identifierService = (IdentifierService) crudService;
 
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
 
     Identifier identifier = new Identifier();
     identifier.setIdentifier("identifier");
@@ -313,14 +262,12 @@ public abstract class BaseCollectionEntityIT<
     assertEquals(0, identifierService.listIdentifiers(key).size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void commentsTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, entityService, client);
-    CommentService commentService = (CommentService) service;
+  @Test
+  public void commentsTest() {
+    CommentService commentService = (CommentService) crudService;
 
     T entity = newEntity();
-    UUID key = service.create(entity);
+    UUID key = crudService.create(entity);
 
     Comment comment = new Comment();
     comment.setContent("test comment");
@@ -334,16 +281,5 @@ public abstract class BaseCollectionEntityIT<
 
     commentService.deleteComment(key, commentKey);
     assertEquals(0, commentService.listComments(key).size());
-  }
-
-  protected CrudService<T> getService(ServiceType param) {
-    switch (param) {
-      case CLIENT:
-        return client;
-      case RESOURCE:
-        return entityService;
-      default:
-        throw new IllegalStateException("Must be resource or client");
-    }
   }
 }

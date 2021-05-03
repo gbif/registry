@@ -21,7 +21,6 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.duplicates.Duplicate;
-import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -37,12 +36,11 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.collections.CollectionClient;
-import org.gbif.registry.ws.client.collections.InstitutionClient;
+import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.KeyStore;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,10 +52,7 @@ import java.util.stream.Collectors;
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -66,10 +61,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionResource}. */
-public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
+public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collection> {
 
-  private final InstitutionService institutionResource;
-  private final InstitutionService institutionClient;
+  private final CollectionService collectionService;
+  private final CollectionDuplicatesService duplicatesService;
+  private final InstitutionService institutionService;
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -80,9 +76,9 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
   private static final AccessionStatus ACCESSION_STATUS_UPDATED = AccessionStatus.PROJECT;
 
   @Autowired
-  public CollectionIT(
-      InstitutionService institutionResource,
-      CollectionService collectionResource,
+  public CollectionServiceIT(
+      InstitutionService institutionService,
+      CollectionService collectionService,
       PersonService personResource,
       DatasetService datasetService,
       NodeService nodeService,
@@ -91,11 +87,9 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      @LocalServerPort int localServerPort,
-      KeyStore keyStore) {
+      CollectionDuplicatesService duplicatesService) {
     super(
-        collectionResource,
-        CollectionClient.class,
+        collectionService,
         personResource,
         datasetService,
         nodeService,
@@ -104,17 +98,16 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         principalProvider,
         esServer,
         identityService,
-        localServerPort,
-        keyStore);
-    this.institutionResource = institutionResource;
-    this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
+        collectionService,
+        collectionService,
+        duplicatesService);
+    this.collectionService = collectionService;
+    this.duplicatesService = duplicatesService;
+    this.institutionService = institutionService;
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listTest(ServiceType serviceType) {
-    CollectionService service = ((CollectionService) getService(serviceType));
-
+  @Test
+  public void listTest() {
     Collection collection1 = newEntity();
     collection1.setCode("c1");
     collection1.setName("n1");
@@ -124,7 +117,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     address.setCountry(Country.DENMARK);
     collection1.setAddress(address);
     collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
-    UUID key1 = service.create(collection1);
+    UUID key1 = collectionService.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("c2");
@@ -134,60 +127,65 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     address2.setCity("city2");
     address2.setCountry(Country.SPAIN);
     collection2.setAddress(address2);
-    UUID key2 = service.create(collection2);
+    UUID key2 = collectionService.create(collection2);
 
     // query param
     PagingResponse<CollectionView> response =
-        service.list(CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
+        collectionService.list(
+            CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response = service.list(CollectionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(CollectionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
+        collectionService.list(
+            CollectionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getCollection().getKey());
 
     response =
-        service.list(CollectionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
+        collectionService.list(
+            CollectionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getCollection().getKey());
 
     assertEquals(
         2,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
@@ -195,26 +193,26 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     // code and name params
     assertEquals(
         1,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().code("c1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().name("n2").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder().code("c1").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
@@ -223,14 +221,14 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     // alternative code
     assertEquals(
         1,
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder().alternativeCode("alt").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build())
             .getResults()
@@ -238,7 +236,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     // country
     List<CollectionView> results =
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder().country(Country.SPAIN).page(DEFAULT_PAGE).build())
             .getResults();
@@ -246,7 +244,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(key2, results.get(0).getCollection().getKey());
     assertEquals(
         0,
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder()
                     .country(Country.AFGHANISTAN)
@@ -257,46 +255,41 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     // city
     results =
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build())
             .getResults();
     assertEquals(1, results.size());
     assertEquals(key2, results.get(0).getCollection().getKey());
     assertEquals(
         0,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().city("foo").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
     // update address
-    collection2 = service.get(key2);
+    collection2 = collectionService.get(key2);
     assertNotNull(collection2.getAddress());
     collection2.getAddress().setCity("city3");
-    service.update(collection2);
+    collectionService.update(collection2);
     assertEquals(
         1,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
-    service.delete(key2);
+    collectionService.delete(key2);
     assertEquals(
         0,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listByInstitutionTest(ServiceType serviceType) {
-    CollectionService service = ((CollectionService) getService(serviceType));
-    InstitutionService institutionService =
-        getService(serviceType, institutionResource, institutionClient);
-
+  @Test
+  public void listByInstitutionTest() {
     // institutions
     Institution institution1 = new Institution();
     institution1.setCode("code1");
@@ -310,18 +303,18 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     Collection collection1 = newEntity();
     collection1.setInstitutionKey(institutionKey1);
-    service.create(collection1);
+    collectionService.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setInstitutionKey(institutionKey1);
-    service.create(collection2);
+    collectionService.create(collection2);
 
     Collection collection3 = newEntity();
     collection3.setInstitutionKey(institutionKey2);
-    service.create(collection3);
+    collectionService.create(collection3);
 
     PagingResponse<CollectionView> response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .institution(institutionKey1)
                 .page(DEFAULT_PAGE)
@@ -329,7 +322,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .institution(institutionKey2)
                 .page(DEFAULT_PAGE)
@@ -337,7 +330,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .institution(UUID.randomUUID())
                 .page(DEFAULT_PAGE)
@@ -345,13 +338,8 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listMultipleParamsTest(ServiceType serviceType) {
-    CollectionService service = ((CollectionService) getService(serviceType));
-    InstitutionService institutionService =
-        getService(serviceType, institutionResource, institutionClient);
-
+  @Test
+  public void listMultipleParamsTest() {
     // institutions
     Institution institution1 = new Institution();
     institution1.setCode("code1");
@@ -366,19 +354,19 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     Collection collection1 = newEntity();
     collection1.setCode("code1");
     collection1.setInstitutionKey(institutionKey1);
-    service.create(collection1);
+    collectionService.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("code2");
     collection2.setInstitutionKey(institutionKey1);
-    service.create(collection2);
+    collectionService.create(collection2);
 
     Collection collection3 = newEntity();
     collection3.setInstitutionKey(institutionKey2);
-    service.create(collection3);
+    collectionService.create(collection3);
 
     PagingResponse<CollectionView> response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .query("code1")
                 .institution(institutionKey1)
@@ -387,7 +375,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .query("foo")
                 .institution(institutionKey1)
@@ -396,7 +384,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(0, response.getResults().size());
 
     response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .query("code2")
                 .institution(institutionKey2)
@@ -405,7 +393,7 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(0, response.getResults().size());
 
     response =
-        service.list(
+        collectionService.list(
             CollectionSearchRequest.builder()
                 .query("code2")
                 .institution(institutionKey1)
@@ -414,86 +402,75 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
     assertEquals(1, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSuggest(ServiceType serviceType) {
-    CollectionService service = ((CollectionService) getService(serviceType));
-
+  @Test
+  public void testSuggest() {
     Collection collection1 = newEntity();
     collection1.setCode("CC");
     collection1.setName("Collection name");
-    service.create(collection1);
+    collectionService.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("CC2");
     collection2.setName("Collection name2");
-    service.create(collection2);
+    collectionService.create(collection2);
 
-    assertEquals(2, service.suggest("collection").size());
-    assertEquals(2, service.suggest("CC").size());
-    assertEquals(1, service.suggest("CC2").size());
-    assertEquals(1, service.suggest("name2").size());
+    assertEquals(2, collectionService.suggest("collection").size());
+    assertEquals(2, collectionService.suggest("CC").size());
+    assertEquals(1, collectionService.suggest("CC2").size());
+    assertEquals(1, collectionService.suggest("name2").size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listDeletedTest(ServiceType serviceType) {
-    CollectionService service = ((CollectionService) getService(serviceType));
-
+  @Test
+  public void listDeletedTest() {
     Collection collection1 = newEntity();
     collection1.setCode("code1");
     collection1.setName("Collection name");
-    UUID key1 = service.create(collection1);
+    UUID key1 = collectionService.create(collection1);
 
     Collection collection2 = newEntity();
     collection2.setCode("code2");
     collection2.setName("Collection name2");
-    UUID key2 = service.create(collection2);
+    UUID key2 = collectionService.create(collection2);
 
-    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(0, collectionService.listDeleted(DEFAULT_PAGE).getResults().size());
 
-    service.delete(key1);
-    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    collectionService.delete(key1);
+    assertEquals(1, collectionService.listDeleted(DEFAULT_PAGE).getResults().size());
 
-    service.delete(key2);
-    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    collectionService.delete(key2);
+    assertEquals(2, collectionService.listDeleted(DEFAULT_PAGE).getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listWithoutParametersTest(ServiceType serviceType) {
-    CollectionService service = (CollectionService) getService(serviceType);
-
-    service.create(newEntity());
-    service.create(newEntity());
+  @Test
+  public void listWithoutParametersTest() {
+    collectionService.create(newEntity());
+    collectionService.create(newEntity());
 
     Collection collection3 = newEntity();
-    UUID key3 = service.create(collection3);
+    UUID key3 = collectionService.create(collection3);
 
     PagingResponse<CollectionView> response =
-        service.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
+        collectionService.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(3, response.getResults().size());
 
-    service.delete(key3);
+    collectionService.delete(key3);
 
-    response = service.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
+    response = collectionService.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(CollectionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
+        collectionService.list(
+            CollectionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(CollectionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
+        collectionService.list(
+            CollectionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listByContactTest(ServiceType serviceType) {
-    CollectionService service = (CollectionService) getService(serviceType);
-    PersonService personService = getService(serviceType, personResource, personClient);
-
+  @Test
+  public void listByContactTest() {
     // persons
     Person person1 = new Person();
     person1.setFirstName("first name");
@@ -505,31 +482,31 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
 
     // collections
     Collection collection1 = newEntity();
-    UUID collectionKey1 = service.create(collection1);
+    UUID collectionKey1 = collectionService.create(collection1);
 
     Collection collection2 = newEntity();
-    UUID collectionKey2 = service.create(collection2);
+    UUID collectionKey2 = collectionService.create(collection2);
 
     // add contacts
-    service.addContact(collectionKey1, personKey1);
-    service.addContact(collectionKey1, personKey2);
-    service.addContact(collectionKey2, personKey2);
+    collectionService.addContact(collectionKey1, personKey1);
+    collectionService.addContact(collectionKey1, personKey2);
+    collectionService.addContact(collectionKey2, personKey2);
 
     assertEquals(
         1,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        collectionService
             .list(
                 CollectionSearchRequest.builder()
                     .contact(UUID.randomUUID())
@@ -538,59 +515,51 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
             .getResults()
             .size());
 
-    service.removeContact(collectionKey1, personKey2);
+    collectionService.removeContact(collectionKey1, personKey2);
     assertEquals(
         1,
-        service
+        collectionService
             .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void createCollectionWithoutCodeTest(ServiceType serviceType) {
-    CollectionService service = (CollectionService) getService(serviceType);
+  @Test
+  public void createCollectionWithoutCodeTest() {
     Collection c = newEntity();
     c.setCode(null);
-    assertThrows(ValidationException.class, () -> service.create(c));
+    assertThrows(ValidationException.class, () -> collectionService.create(c));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateCollectionWithoutCodeTest(ServiceType serviceType) {
-    CollectionService service = (CollectionService) getService(serviceType);
+  @Test
+  public void updateCollectionWithoutCodeTest() {
     Collection c = newEntity();
-    UUID key = service.create(c);
+    UUID key = collectionService.create(c);
 
-    Collection created = service.get(key);
+    Collection created = collectionService.get(key);
     created.setCode(null);
-    assertThrows(IllegalArgumentException.class, () -> service.update(created));
+    assertThrows(IllegalArgumentException.class, () -> collectionService.update(created));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateAndReplaceTest(ServiceType serviceType) {
-    CollectionService service = (CollectionService) getService(serviceType);
+  @Test
+  public void updateAndReplaceTest() {
     Collection c = newEntity();
-    UUID key =  service.create(c);
+    UUID key = collectionService.create(c);
 
-    Collection created = service.get(key);
+    Collection created = collectionService.get(key);
     created.setReplacedBy(UUID.randomUUID());
-    assertThrows(IllegalArgumentException.class, () -> service.update(created));
+    assertThrows(IllegalArgumentException.class, () -> collectionService.update(created));
   }
 
   @Test
   public void possibleDuplicatesTest() {
     testDuplicatesCommonCases();
 
-    CollectionClient collClient = (CollectionClient) client;
+    DuplicatesSearchParams params = new DuplicatesSearchParams();
+    params.setSameInstitutionKey(true);
+    params.setSameCode(true);
 
-    DuplicatesRequest request = new DuplicatesRequest();
-    request.setSameInstitution(true);
-    request.setSameCode(true);
-
-    DuplicatesResult result = collClient.findPossibleDuplicates(request);
+    DuplicatesResult result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(2, result.getDuplicates().get(0).size());
 
@@ -598,14 +567,14 @@ public class CollectionIT extends ExtendedCollectionEntityIT<Collection> {
         result.getDuplicates().get(0).stream()
             .map(Duplicate::getInstitutionKey)
             .collect(Collectors.toSet());
-    request.setInInstitutions(new ArrayList<>(keysFound));
-    result = collClient.findPossibleDuplicates(request);
+    params.setInInstitutions(new ArrayList<>(keysFound));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(1, result.getDuplicates().size());
     assertEquals(2, result.getDuplicates().get(0).size());
 
-    request.setInInstitutions(null);
-    request.setNotInInstitutions(new ArrayList<>(keysFound));
-    result = collClient.findPossibleDuplicates(request);
+    params.setInInstitutions(null);
+    params.setNotInInstitutions(new ArrayList<>(keysFound));
+    result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(0, result.getDuplicates().size());
   }
 

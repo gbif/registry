@@ -3,10 +3,10 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.service.collections.DefaultInstitutionService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
 import java.util.UUID;
@@ -17,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -37,7 +35,7 @@ public class InstitutionChangeSuggestionService
   public InstitutionChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
       InstitutionMapper institutionMapper,
-      DefaultInstitutionService institutionService, // TODO: interfaces
+      InstitutionService institutionService,
       InstitutionMergeService institutionMergeService,
       ObjectMapper objectMapper) {
     super(
@@ -95,5 +93,4 @@ public class InstitutionChangeSuggestionService
   protected InstitutionChangeSuggestion newEmptyChangeSuggestion() {
     return new InstitutionChangeSuggestion();
   }
-
 }

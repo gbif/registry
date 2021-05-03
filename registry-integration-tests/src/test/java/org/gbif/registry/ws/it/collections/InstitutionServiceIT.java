@@ -31,10 +31,9 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.collections.InstitutionClient;
+import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.KeyStore;
 
 import java.net.URI;
 import java.util.Collections;
@@ -43,10 +42,7 @@ import java.util.UUID;
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -55,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionResource}. */
-public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
+public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Institution> {
 
   private static final String NAME = "name";
   private static final String DESCRIPTION = "dummy description";
@@ -65,10 +61,12 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
   private static final String DESCRIPTION_UPDATED = "dummy description updated";
   private static final String ADDITIONAL_NAME = "additional name";
 
+  private final InstitutionService institutionService;
+
   @Autowired
-  public InstitutionIT(
-      InstitutionService institutionResource,
-      PersonService personResource,
+  public InstitutionServiceIT(
+      InstitutionService institutionService,
+      PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -76,12 +74,10 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      @LocalServerPort int localServerPort,
-      KeyStore keyStore) {
+      InstitutionDuplicatesService duplicatesService) {
     super(
-        institutionResource,
-        InstitutionClient.class,
-        personResource,
+        institutionService,
+        personService,
         datasetService,
         nodeService,
         organizationService,
@@ -89,15 +85,14 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
         principalProvider,
         esServer,
         identityService,
-        localServerPort,
-        keyStore);
+        institutionService,
+        institutionService,
+        duplicatesService);
+    this.institutionService = institutionService;
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listTest(ServiceType serviceType) {
-    InstitutionService service = ((InstitutionService) getService(serviceType));
-
+  @Test
+  public void listTest() {
     Institution institution1 = newEntity();
     institution1.setCode("c1");
     institution1.setName("n1");
@@ -107,7 +102,7 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     address.setCountry(Country.DENMARK);
     institution1.setAddress(address);
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
-    UUID key1 = service.create(institution1);
+    UUID key1 = institutionService.create(institution1);
 
     Institution institution2 = newEntity();
     institution2.setCode("c2");
@@ -117,50 +112,54 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     address2.setCity("city2");
     address2.setCountry(Country.SPAIN);
     institution2.setAddress(address2);
-    UUID key2 = service.create(institution2);
+    UUID key2 = institutionService.create(institution2);
 
     PagingResponse<Institution> response =
-        service.list(InstitutionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
     response =
-        service.list(InstitutionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(InstitutionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
     response =
-        service.list(InstitutionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
     // code and name params
     assertEquals(
         1,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().code("c1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().name("n2").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         1,
-        service
+        institutionService
             .list(
                 InstitutionSearchRequest.builder().code("c1").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        institutionService
             .list(
                 InstitutionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
             .getResults()
@@ -169,59 +168,59 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     // query param
     assertEquals(
         2,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
     // alternative code
     response =
-        service.list(
+        institutionService.list(
             InstitutionSearchRequest.builder().alternativeCode("alt").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(
+        institutionService.list(
             InstitutionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build());
     assertEquals(0, response.getResults().size());
 
     response =
-        service.list(
+        institutionService.list(
             InstitutionSearchRequest.builder().country(Country.SPAIN).page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
     response =
-        service.list(
+        institutionService.list(
             InstitutionSearchRequest.builder()
                 .country(Country.AFGHANISTAN)
                 .page(DEFAULT_PAGE)
@@ -229,117 +228,109 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
     assertEquals(0, response.getResults().size());
 
     response =
-        service.list(InstitutionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
     response =
-        service.list(InstitutionSearchRequest.builder().city("foo").page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().city("foo").page(DEFAULT_PAGE).build());
     assertEquals(0, response.getResults().size());
 
     // update address
-    institution2 = service.get(key2);
+    institution2 = institutionService.get(key2);
     assertNotNull(institution2.getAddress());
     institution2.getAddress().setCity("city3");
-    service.update(institution2);
+    institutionService.update(institution2);
     assertEquals(
         1,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
 
-    service.delete(key2);
+    institutionService.delete(key2);
     assertEquals(
         0,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSuggest(ServiceType serviceType) {
-    InstitutionService service = ((InstitutionService) getService(serviceType));
-
+  @Test
+  public void testSuggest() {
     Institution institution1 = newEntity();
     institution1.setCode("II");
     institution1.setName("Institution name");
-    service.create(institution1);
+    institutionService.create(institution1);
 
     Institution institution2 = newEntity();
     institution2.setCode("II2");
     institution2.setName("Institution name2");
-    service.create(institution2);
+    institutionService.create(institution2);
 
-    assertEquals(2, service.suggest("institution").size());
-    assertEquals(2, service.suggest("II").size());
-    assertEquals(1, service.suggest("II2").size());
-    assertEquals(1, service.suggest("name2").size());
+    assertEquals(2, institutionService.suggest("institution").size());
+    assertEquals(2, institutionService.suggest("II").size());
+    assertEquals(1, institutionService.suggest("II2").size());
+    assertEquals(1, institutionService.suggest("name2").size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listDeletedTest(ServiceType serviceType) {
-    InstitutionService service = ((InstitutionService) getService(serviceType));
-
+  @Test
+  public void listDeletedTest() {
     Institution institution1 = newEntity();
     institution1.setCode("code1");
     institution1.setName("Institution name");
-    UUID key1 = service.create(institution1);
+    UUID key1 = institutionService.create(institution1);
 
     Institution institution2 = newEntity();
     institution2.setCode("code2");
     institution2.setName("Institution name2");
-    UUID key2 = service.create(institution2);
+    UUID key2 = institutionService.create(institution2);
 
-    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(0, institutionService.listDeleted(DEFAULT_PAGE).getResults().size());
 
-    service.delete(key1);
-    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    institutionService.delete(key1);
+    assertEquals(1, institutionService.listDeleted(DEFAULT_PAGE).getResults().size());
 
-    service.delete(key2);
-    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    institutionService.delete(key2);
+    assertEquals(2, institutionService.listDeleted(DEFAULT_PAGE).getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listWithoutParametersTest(ServiceType serviceType) {
-    InstitutionService service = (InstitutionService) getService(serviceType);
-
+  @Test
+  public void listWithoutParametersTest() {
     Institution institution1 = newEntity();
-    service.create(institution1);
+    institutionService.create(institution1);
 
     Institution institution2 = newEntity();
-    service.create(institution2);
+    institutionService.create(institution2);
 
     Institution institution3 = newEntity();
-    UUID key3 = service.create(institution3);
+    UUID key3 = institutionService.create(institution3);
 
     PagingResponse<Institution> response =
-        service.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
+        institutionService.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(3, response.getResults().size());
 
-    service.delete(key3);
+    institutionService.delete(key3);
 
-    response = service.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
+    response =
+        institutionService.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     response =
-        service.list(InstitutionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        service.list(InstitutionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listByContactTest(ServiceType serviceType) {
-    InstitutionService service = (InstitutionService) getService(serviceType);
-    PersonService personService = getService(serviceType, personResource, personClient);
-
+  @Test
+  public void listByContactTest() {
     // persons
     Person person1 = new Person();
     person1.setFirstName("first name");
@@ -351,31 +342,31 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
 
     // institutions
     Institution institution1 = newEntity();
-    UUID instutionKey1 = service.create(institution1);
+    UUID instutionKey1 = institutionService.create(institution1);
 
     Institution institution2 = newEntity();
-    UUID instutionKey2 = service.create(institution2);
+    UUID instutionKey2 = institutionService.create(institution2);
 
     // add contacts
-    service.addContact(instutionKey1, personKey1);
-    service.addContact(instutionKey1, personKey2);
-    service.addContact(instutionKey2, personKey2);
+    institutionService.addContact(instutionKey1, personKey1);
+    institutionService.addContact(instutionKey1, personKey2);
+    institutionService.addContact(instutionKey2, personKey2);
 
     assertEquals(
         1,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         2,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
         0,
-        service
+        institutionService
             .list(
                 InstitutionSearchRequest.builder()
                     .contact(UUID.randomUUID())
@@ -384,50 +375,44 @@ public class InstitutionIT extends ExtendedCollectionEntityIT<Institution> {
             .getResults()
             .size());
 
-    service.removeContact(instutionKey1, personKey2);
+    institutionService.removeContact(instutionKey1, personKey2);
     assertEquals(
         1,
-        service
+        institutionService
             .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void createInstitutionWithoutCodeTest(ServiceType serviceType) {
-    InstitutionService service = (InstitutionService) getService(serviceType);
+  @Test
+  public void createInstitutionWithoutCodeTest() {
     Institution i = newEntity();
     i.setCode(null);
-    assertThrows(ValidationException.class, () -> service.create(i));
+    assertThrows(ValidationException.class, () -> institutionService.create(i));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateInstitutionWithoutCodeTest(ServiceType serviceType) {
-    InstitutionService service = (InstitutionService) getService(serviceType);
+  @Test
+  public void updateInstitutionWithoutCodeTest() {
     Institution i = newEntity();
-    UUID key = service.create(i);
+    UUID key = institutionService.create(i);
 
-    Institution created = service.get(key);
+    Institution created = institutionService.get(key);
     created.setCode(null);
-    assertThrows(IllegalArgumentException.class, () -> service.update(created));
+    assertThrows(IllegalArgumentException.class, () -> institutionService.update(created));
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateAndReplaceTest(ServiceType serviceType) {
-    InstitutionService service = (InstitutionService) getService(serviceType);
+  @Test
+  public void updateAndReplaceTest() {
     Institution i = newEntity();
-    UUID key = service.create(i);
+    UUID key = institutionService.create(i);
 
-    Institution created = service.get(key);
+    Institution created = institutionService.get(key);
     created.setReplacedBy(UUID.randomUUID());
-    assertThrows(IllegalArgumentException.class, () -> service.update(created));
+    assertThrows(IllegalArgumentException.class, () -> institutionService.update(created));
 
     created.setReplacedBy(null);
     created.setConvertedToCollection(UUID.randomUUID());
-    assertThrows(IllegalArgumentException.class, () -> service.update(created));
+    assertThrows(IllegalArgumentException.class, () -> institutionService.update(created));
   }
 
   @Test

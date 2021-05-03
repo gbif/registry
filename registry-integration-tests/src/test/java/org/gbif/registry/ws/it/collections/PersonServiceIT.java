@@ -29,34 +29,27 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.collections.CollectionClient;
-import org.gbif.registry.ws.client.collections.InstitutionClient;
-import org.gbif.registry.ws.client.collections.PersonClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.KeyStore;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.WS_TEST;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class PersonIT extends BaseCollectionEntityIT<Person> {
+public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
-  private final InstitutionService institutionResource;
-  private final InstitutionService institutionClient;
-  private final CollectionService collectionResource;
-  private final CollectionService collectionClient;
+  private final PersonService personService;
+  private final InstitutionService institutionService;
+  private final CollectionService collectionService;
 
   private static final String FIRST_NAME = "first name";
   private static final String LAST_NAME = "last name";
@@ -69,33 +62,21 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
   private static final String PHONE_UPDATED = "134235433";
 
   @Autowired
-  public PersonIT(
-      PersonService personResource,
-      InstitutionService institutionResource,
-      CollectionService collectionResource,
+  public PersonServiceIT(
+      PersonService personService,
+      InstitutionService institutionService,
+      CollectionService collectionService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
-      IdentityService identityService,
-      @LocalServerPort int localServerPort,
-      KeyStore keyStore) {
-    super(
-        personResource,
-        PersonClient.class,
-        principalProvider,
-        esServer,
-        identityService,
-        localServerPort,
-        keyStore);
-    this.institutionResource = institutionResource;
-    this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
-    this.collectionResource = collectionResource;
-    this.collectionClient = prepareClient(localServerPort, keyStore, CollectionClient.class);
+      IdentityService identityService) {
+    super(personService, principalProvider, esServer, identityService);
+    this.personService = personService;
+    this.institutionService = institutionService;
+    this.collectionService = collectionService;
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void createWithAddressTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
+  @Test
+  public void createWithAddressTest() {
     Person person = newEntity();
 
     Address mailingAddress = new Address();
@@ -109,8 +90,8 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     identifier.setType(IdentifierType.IH_IRN);
     person.setIdentifiers(Collections.singletonList(identifier));
 
-    UUID key = service.create(person);
-    Person personSaved = service.get(key);
+    UUID key = personService.create(person);
+    Person personSaved = personService.get(key);
 
     assertNewEntity(personSaved);
     assertNotNull(personSaved.getMailingAddress());
@@ -122,95 +103,84 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     assertEquals(IdentifierType.IH_IRN, personSaved.getIdentifiers().get(0).getType());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listWithoutParamsTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-
+  @Test
+  public void listWithoutParamsTest() {
     Person person1 = newEntity();
-    service.create(person1);
+    personService.create(person1);
 
     Person person2 = newEntity();
-    service.create(person2);
+    personService.create(person2);
 
     Person person3 = newEntity();
-    UUID key3 = service.create(person3);
+    UUID key3 = personService.create(person3);
 
-    PagingResponse<Person> response = service.list(null, null, null, DEFAULT_PAGE);
+    PagingResponse<Person> response = personService.list(null, null, null, DEFAULT_PAGE);
     assertThat(3, greaterThanOrEqualTo(response.getResults().size()));
 
-    service.delete(key3);
+    personService.delete(key3);
 
-    response = service.list(null, null, null, DEFAULT_PAGE);
+    response = personService.list(null, null, null, DEFAULT_PAGE);
     assertThat(2, greaterThanOrEqualTo(response.getResults().size()));
 
-    response = service.list(null, null, null, new PagingRequest(0L, 1));
+    response = personService.list(null, null, null, new PagingRequest(0L, 1));
     assertEquals(1, response.getResults().size());
 
-    response = service.list(null, null, null, new PagingRequest(0L, 0));
+    response = personService.list(null, null, null, new PagingRequest(0L, 0));
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listQueryTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-
+  @Test
+  public void listQueryTest() {
     Person person1 = newEntity();
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
     person1.setMailingAddress(address);
-    UUID key1 = service.create(person1);
+    UUID key1 = personService.create(person1);
 
     Person person2 = newEntity();
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
     person2.setMailingAddress(address2);
-    UUID key2 = service.create(person2);
+    UUID key2 = personService.create(person2);
 
     // query params
-    PagingResponse<Person> response = service.list("dummy", null, null, DEFAULT_PAGE);
+    PagingResponse<Person> response = personService.list("dummy", null, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response = service.list("", null, null, DEFAULT_PAGE);
+    response = personService.list("", null, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list("city", null, null, DEFAULT_PAGE);
+    response = personService.list("city", null, null, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
-    response = service.list("city2", null, null, DEFAULT_PAGE);
+    response = personService.list("city2", null, null, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(2, service.list("c", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(2, service.list("dum add", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(0, service.list("<", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(0, service.list("\"<\"", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(2, service.list("  ", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(2, personService.list("c", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(2, personService.list("dum add", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(0, personService.list("<", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(0, personService.list("\"<\"", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(2, personService.list("  ", null, null, DEFAULT_PAGE).getResults().size());
 
     // update address
-    person2 = service.get(key2);
+    person2 = personService.get(key2);
     person2.getMailingAddress().setCity("city3");
-    service.update(person2);
-    response = service.list("city3", null, null, DEFAULT_PAGE);
+    personService.update(person2);
+    response = personService.list("city3", null, null, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
 
-    service.delete(key2);
-    response = service.list("city3", null, null, DEFAULT_PAGE);
+    personService.delete(key2);
+    response = personService.list("city3", null, null, DEFAULT_PAGE);
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listByInstitutionTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-    InstitutionService institutionService =
-        getService(serviceType, institutionResource, institutionClient);
-
+  @Test
+  public void listByInstitutionTest() {
     // institutions
     Institution institution1 = new Institution();
     institution1.setCode("code1");
@@ -225,33 +195,28 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     // person
     Person person1 = newEntity();
     person1.setPrimaryInstitutionKey(institutionKey1);
-    service.create(person1);
+    personService.create(person1);
 
     Person person2 = newEntity();
     person2.setPrimaryInstitutionKey(institutionKey1);
-    service.create(person2);
+    personService.create(person2);
 
     Person person3 = newEntity();
     person3.setPrimaryInstitutionKey(institutionKey2);
-    service.create(person3);
+    personService.create(person3);
 
-    PagingResponse<Person> response = service.list(null, institutionKey1, null, DEFAULT_PAGE);
+    PagingResponse<Person> response = personService.list(null, institutionKey1, null, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list(null, institutionKey2, null, new PagingRequest(0L, 2));
+    response = personService.list(null, institutionKey2, null, new PagingRequest(0L, 2));
     assertEquals(1, response.getResults().size());
 
-    response = service.list(null, UUID.randomUUID(), null, new PagingRequest(0L, 2));
+    response = personService.list(null, UUID.randomUUID(), null, new PagingRequest(0L, 2));
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listByCollectionTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-    CollectionService collectionService =
-        getService(serviceType, collectionResource, collectionClient);
-
+  @Test
+  public void listByCollectionTest() {
     // collections
     Collection collection1 = new Collection();
     collection1.setCode("code1");
@@ -266,35 +231,28 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     // person
     Person person1 = newEntity();
     person1.setPrimaryCollectionKey(collectionKey1);
-    service.create(person1);
+    personService.create(person1);
 
     Person person2 = newEntity();
     person2.setPrimaryCollectionKey(collectionKey1);
-    service.create(person2);
+    personService.create(person2);
 
     Person person3 = newEntity();
     person3.setPrimaryCollectionKey(collectionKey2);
-    service.create(person3);
+    personService.create(person3);
 
-    PagingResponse<Person> response = service.list(null, null, collectionKey1, DEFAULT_PAGE);
+    PagingResponse<Person> response = personService.list(null, null, collectionKey1, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list(null, null, collectionKey2, new PagingRequest(0L, 2));
+    response = personService.list(null, null, collectionKey2, new PagingRequest(0L, 2));
     assertEquals(1, response.getResults().size());
 
-    response = service.list(null, null, UUID.randomUUID(), new PagingRequest(0L, 2));
+    response = personService.list(null, null, UUID.randomUUID(), new PagingRequest(0L, 2));
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listMultipleParamsTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-    InstitutionService institutionService =
-        getService(serviceType, institutionResource, institutionClient);
-    CollectionService collectionService =
-        getService(serviceType, collectionResource, collectionClient);
-
+  @Test
+  public void listMultipleParamsTest() {
     // institution
     Institution institution1 = new Institution();
     institution1.setCode("code1");
@@ -311,40 +269,38 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     Person person1 = newEntity();
     person1.setFirstName("person1");
     person1.setPrimaryCollectionKey(collectionKey1);
-    service.create(person1);
+    personService.create(person1);
 
     Person person2 = newEntity();
     person2.setFirstName("person2");
     person2.setPrimaryCollectionKey(collectionKey1);
     person2.setPrimaryInstitutionKey(institutionKey1);
-    service.create(person2);
+    personService.create(person2);
 
-    PagingResponse<Person> response = service.list("person1", null, collectionKey1, DEFAULT_PAGE);
+    PagingResponse<Person> response =
+        personService.list("person1", null, collectionKey1, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
 
-    response = service.list(LAST_NAME, null, collectionKey1, DEFAULT_PAGE);
+    response = personService.list(LAST_NAME, null, collectionKey1, DEFAULT_PAGE);
     assertEquals(2, response.getResults().size());
 
-    response = service.list(LAST_NAME, institutionKey1, collectionKey1, DEFAULT_PAGE);
+    response = personService.list(LAST_NAME, institutionKey1, collectionKey1, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
 
-    response = service.list("person2", institutionKey1, collectionKey1, DEFAULT_PAGE);
+    response = personService.list("person2", institutionKey1, collectionKey1, DEFAULT_PAGE);
     assertEquals(1, response.getResults().size());
 
-    response = service.list("person unknown", institutionKey1, collectionKey1, DEFAULT_PAGE);
+    response = personService.list("person unknown", institutionKey1, collectionKey1, DEFAULT_PAGE);
     assertEquals(0, response.getResults().size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void updateAddressesTest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-
+  @Test
+  public void updateAddressesTest() {
     // entities
     Person person = newEntity();
-    UUID entityKey = service.create(person);
+    UUID entityKey = personService.create(person);
     assertNewEntity(person);
-    person = service.get(entityKey);
+    person = personService.get(entityKey);
 
     // update adding address
     Address address = new Address();
@@ -353,8 +309,8 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     address.setCity("city");
     person.setMailingAddress(address);
 
-    service.update(person);
-    person = service.get(entityKey);
+    personService.update(person);
+    person = personService.get(entityKey);
     address = person.getMailingAddress();
 
     assertNotNull(person.getMailingAddress().getKey());
@@ -365,61 +321,55 @@ public class PersonIT extends BaseCollectionEntityIT<Person> {
     // update address
     address.setAddress("address2");
 
-    service.update(person);
-    person = service.get(entityKey);
+    personService.update(person);
+    person = personService.get(entityKey);
     assertEquals("address2", person.getMailingAddress().getAddress());
 
     // delete address
     person.setMailingAddress(null);
-    service.update(person);
-    person = service.get(entityKey);
+    personService.update(person);
+    person = personService.get(entityKey);
     assertNull(person.getMailingAddress());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSuggest(ServiceType serviceType) {
-    PersonService service = ((PersonService) getService(serviceType));
-
+  @Test
+  public void testSuggest() {
     Person person1 = newEntity();
     person1.setFirstName("first");
     person1.setLastName("second");
-    service.create(person1);
+    personService.create(person1);
 
     Person person2 = newEntity();
     person2.setFirstName("first");
     person2.setLastName("second2");
-    service.create(person2);
+    personService.create(person2);
 
-    assertEquals(2, service.suggest("first").size());
-    assertEquals(2, service.suggest("sec").size());
-    assertEquals(1, service.suggest("second2").size());
-    assertEquals(2, service.suggest("first second").size());
-    assertEquals(1, service.suggest("first second2").size());
+    assertEquals(2, personService.suggest("first").size());
+    assertEquals(2, personService.suggest("sec").size());
+    assertEquals(1, personService.suggest("second2").size());
+    assertEquals(2, personService.suggest("first second").size());
+    assertEquals(1, personService.suggest("first second2").size());
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void listDeletedTest(ServiceType serviceType) {
-    PersonService service = (PersonService) getService(serviceType);
-
+  @Test
+  public void listDeletedTest() {
     Person person1 = newEntity();
     person1.setFirstName("first");
     person1.setLastName("second");
-    UUID key1 = service.create(person1);
+    UUID key1 = personService.create(person1);
 
     Person person2 = newEntity();
     person2.setFirstName("first2");
     person2.setLastName("second2");
-    UUID key2 = service.create(person2);
+    UUID key2 = personService.create(person2);
 
-    assertEquals(0, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(0, personService.listDeleted(DEFAULT_PAGE).getResults().size());
 
-    service.delete(key1);
-    assertEquals(1, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    personService.delete(key1);
+    assertEquals(1, personService.listDeleted(DEFAULT_PAGE).getResults().size());
 
-    service.delete(key2);
-    assertEquals(2, service.listDeleted(DEFAULT_PAGE).getResults().size());
+    personService.delete(key2);
+    assertEquals(2, personService.listDeleted(DEFAULT_PAGE).getResults().size());
   }
 
   @Override

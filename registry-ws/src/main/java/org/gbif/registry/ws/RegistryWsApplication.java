@@ -25,6 +25,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+// TODO: remove zipkin auto config
+
 @SpringBootApplication(exclude = {ElasticSearchRestHealthContributorAutoConfiguration.class})
 @MapperScan("org.gbif.registry.persistence.mapper")
 @EnableConfigurationProperties

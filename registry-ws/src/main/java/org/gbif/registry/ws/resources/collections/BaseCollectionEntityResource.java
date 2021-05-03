@@ -25,7 +25,11 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.registry.service.collections.BaseCollectionEntityService;
+import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.registry.CommentService;
+import org.gbif.api.service.registry.IdentifierService;
+import org.gbif.api.service.registry.MachineTagService;
+import org.gbif.api.service.registry.TagService;
 
 import java.util.List;
 import java.util.UUID;
@@ -52,49 +56,62 @@ public abstract class BaseCollectionEntityResource<
   private static final Logger LOG = LoggerFactory.getLogger(BaseCollectionEntityResource.class);
 
   protected final Class<T> objectClass;
-  protected final BaseCollectionEntityService<T> baseCollectionEntityService;
+  protected final CrudService<T> crudService;
+  protected final IdentifierService identifierService;
+  protected final TagService tagService;
+  protected final MachineTagService machineTagService;
+  protected final CommentService commentService;
 
   protected BaseCollectionEntityResource(
-      Class<T> objectClass, BaseCollectionEntityService<T> baseCollectionEntityService) {
+      Class<T> objectClass,
+      CrudService<T> crudService,
+      IdentifierService identifierService,
+      TagService tagService,
+      MachineTagService machineTagService,
+      CommentService commentService) {
     this.objectClass = objectClass;
-    this.baseCollectionEntityService = baseCollectionEntityService;
+    this.crudService = crudService;
+    this.identifierService = identifierService;
+    this.tagService = tagService;
+    this.machineTagService = machineTagService;
+    this.commentService = commentService;
   }
 
   @DeleteMapping("{key}")
   public void delete(@PathVariable UUID key) {
-    baseCollectionEntityService.delete(key);
+    crudService.delete(key);
   }
 
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addIdentifier(
       @PathVariable("key") UUID entityKey, @RequestBody @Trim Identifier identifier) {
-    return baseCollectionEntityService.addIdentifier(entityKey, identifier);
+    return identifierService.addIdentifier(entityKey, identifier);
   }
 
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Transactional
   public void deleteIdentifier(
       @PathVariable("key") UUID entityKey, @PathVariable int identifierKey) {
-    baseCollectionEntityService.deleteIdentifier(entityKey, identifierKey);
+    identifierService.deleteIdentifier(entityKey, identifierKey);
   }
 
   @GetMapping("{key}/identifier")
   @Nullable
   public List<Identifier> listIdentifiers(@PathVariable UUID key) {
-    return baseCollectionEntityService.listIdentifiers(key);
+    return identifierService.listIdentifiers(key);
   }
 
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addTag(@PathVariable("key") UUID entityKey, @RequestBody @Trim Tag tag) {
-    return baseCollectionEntityService.addTag(entityKey, tag);
+    return tagService.addTag(entityKey, tag);
   }
 
   @DeleteMapping("{key}/tag/{tagKey}")
   @Transactional
   public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable int tagKey) {
-    baseCollectionEntityService.deleteTag(entityKey, tagKey);
+    tagService.deleteTag(entityKey, tagKey);
   }
 
   @GetMapping("{key}/tag")
@@ -102,26 +119,26 @@ public abstract class BaseCollectionEntityResource<
   public List<Tag> listTags(
       @PathVariable("key") UUID key,
       @RequestParam(value = "owner", required = false) String owner) {
-    return baseCollectionEntityService.listTags(key, owner);
+    return tagService.listTags(key, owner);
   }
 
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addMachineTag(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim MachineTag machineTag) {
-    return baseCollectionEntityService.addMachineTag(targetEntityKey, machineTag);
+    return machineTagService.addMachineTag(targetEntityKey, machineTag);
   }
 
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
-    baseCollectionEntityService.deleteMachineTag(targetEntityKey, machineTagKey);
+    machineTagService.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
-    baseCollectionEntityService.deleteMachineTags(targetEntityKey, namespace);
+    machineTagService.deleteMachineTags(targetEntityKey, namespace);
   }
 
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
@@ -129,29 +146,29 @@ public abstract class BaseCollectionEntityResource<
       @PathVariable("key") UUID targetEntityKey,
       @PathVariable("namespace") String namespace,
       @PathVariable("name") String name) {
-    baseCollectionEntityService.deleteMachineTags(targetEntityKey, namespace, name);
+    machineTagService.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
   @GetMapping("{key}/machineTag")
   public List<MachineTag> listMachineTags(@PathVariable("key") UUID targetEntityKey) {
-    return baseCollectionEntityService.listMachineTags(targetEntityKey);
+    return machineTagService.listMachineTags(targetEntityKey);
   }
 
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addComment(
       @PathVariable("key") UUID targetEntityKey, @RequestBody @Trim Comment comment) {
-    return baseCollectionEntityService.addComment(targetEntityKey, comment);
+    return commentService.addComment(targetEntityKey, comment);
   }
 
   @DeleteMapping("{key}/comment/{commentKey}")
   public void deleteComment(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
-    baseCollectionEntityService.deleteComment(targetEntityKey, commentKey);
+    commentService.deleteComment(targetEntityKey, commentKey);
   }
 
   @GetMapping(value = "{key}/comment")
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
-    return baseCollectionEntityService.listComments(targetEntityKey);
+    return commentService.listComments(targetEntityKey);
   }
 }
