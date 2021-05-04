@@ -14,7 +14,10 @@ import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -35,6 +38,8 @@ import static org.mockito.Mockito.when;
 public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Institution> {
 
   @MockBean private InstitutionService institutionService;
+
+  @MockBean private InstitutionDuplicatesService institutionDuplicatesService;
 
   @Autowired
   public InstitutionResourceIT(
@@ -60,7 +65,12 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
             new PagingResponse<>(
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    PagingResponse<Institution> result = getClient().list(new InstitutionSearchRequest());
+    InstitutionSearchRequest req = new InstitutionSearchRequest();
+    req.setCity("city");
+    req.setContact(UUID.randomUUID());
+    req.setCountry(Country.DENMARK);
+
+    PagingResponse<Institution> result = getClient().list(req);
     assertEquals(institutions.size(), result.getResults().size());
   }
 
@@ -97,7 +107,7 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
     assertEquals(institutions.size(), result.getResults().size());
   }
 
-  // TODO: duplicates, merge, suggestions
+  // TODO: merge, suggestions
 
   @Override
   protected CrudService<Institution> getMockCrudService() {
@@ -132,6 +142,11 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
   @Override
   protected OccurrenceMappingService getMockOccurrenceMappingService() {
     return institutionService;
+  }
+
+  @Override
+  protected DuplicatesService getMockDuplicatesService() {
+    return institutionDuplicatesService;
   }
 
   protected InstitutionClient getClient() {

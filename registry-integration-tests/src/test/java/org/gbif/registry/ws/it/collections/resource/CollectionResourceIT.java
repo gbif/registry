@@ -15,7 +15,10 @@ import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -37,6 +40,8 @@ import static org.mockito.Mockito.when;
 public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Collection> {
 
   @MockBean private CollectionService collectionService;
+
+  @MockBean private CollectionDuplicatesService collectionDuplicatesService;
 
   @Autowired
   public CollectionResourceIT(
@@ -61,7 +66,11 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
     when(collectionService.list(any(CollectionSearchRequest.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    PagingResponse<CollectionView> result = getClient().list(new CollectionSearchRequest());
+    CollectionSearchRequest req = new CollectionSearchRequest();
+    req.setCity("city");
+    req.setInstitution(UUID.randomUUID());
+    req.setCountry(Country.DENMARK);
+    PagingResponse<CollectionView> result = getClient().list(req);
     assertEquals(views.size(), result.getResults().size());
   }
 
@@ -97,7 +106,7 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
     assertEquals(views.size(), result.getResults().size());
   }
 
-  // TODO: duplicates, merge, suggestions
+  // TODO: merge, suggestions
 
   @Override
   protected CrudService<Collection> getMockCrudService() {
@@ -132,6 +141,11 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
   @Override
   protected OccurrenceMappingService getMockOccurrenceMappingService() {
     return collectionService;
+  }
+
+  @Override
+  protected DuplicatesService getMockDuplicatesService() {
+    return collectionDuplicatesService;
   }
 
   protected CollectionClient getClient() {

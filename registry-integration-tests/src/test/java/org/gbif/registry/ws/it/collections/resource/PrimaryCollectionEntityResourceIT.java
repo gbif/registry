@@ -21,6 +21,9 @@ import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.duplicates.Duplicate;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.LenientEquals;
@@ -29,11 +32,14 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.PrimaryCollectionEntityClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -158,6 +164,29 @@ public abstract class PrimaryCollectionEntityResourceIT<
                 .deleteOccurrenceMapping(UUID.randomUUID(), occurrenceMappingKey));
   }
 
+  @Test
+  public void possibleDuplicatesTest() {
+    DuplicatesResult result = new DuplicatesResult();
+
+    Duplicate duplicate = new Duplicate();
+    duplicate.setActive(true);
+    duplicate.setInstitutionKey(UUID.randomUUID());
+    duplicate.setMailingCountry(Country.DENMARK);
+    result.setDuplicates(Collections.singletonList(Collections.singleton(duplicate)));
+    result.setGenerationDate(LocalDateTime.now());
+
+    when(getMockDuplicatesService().findPossibleDuplicates(any(DuplicatesSearchParams.class)))
+        .thenReturn(result);
+
+    DuplicatesRequest req = new DuplicatesRequest();
+    req.setInInstitutions(Collections.singletonList(UUID.randomUUID()));
+    req.setInCountries(
+        Arrays.asList(Country.DENMARK.getIso2LetterCode(), Country.SPAIN.getIso2LetterCode()));
+    req.setSameCode(true);
+    DuplicatesResult clientResult = getPrimaryCollectionEntityClient().findPossibleDuplicates(req);
+    assertEquals(result.getDuplicates().size(), clientResult.getDuplicates().size());
+  }
+
   protected PrimaryCollectionEntityClient<T> getPrimaryCollectionEntityClient() {
     return (PrimaryCollectionEntityClient<T>) baseClient;
   }
@@ -165,4 +194,6 @@ public abstract class PrimaryCollectionEntityResourceIT<
   protected abstract ContactService getMockContactService();
 
   protected abstract OccurrenceMappingService getMockOccurrenceMappingService();
+
+  protected abstract DuplicatesService getMockDuplicatesService();
 }

@@ -73,6 +73,7 @@ public class InstitutionResource
         institutionService,
         institutionService,
         institutionChangeSuggestionService,
+        duplicatesService,
         Institution.class);
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
@@ -105,23 +106,5 @@ public class InstitutionResource
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
     return institutionMergeService.convertToCollection(
         entityKey, params.getInstitutionForNewCollectionKey(), params.getNameForNewInstitution());
-  }
-
-  @GetMapping("possibleDuplicates")
-  public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
-    Preconditions.checkArgument(
-        !request.isEmpty(), "At least one param to check the same field is required");
-
-    return duplicatesService.findPossibleDuplicates(
-        DuplicatesSearchParams.builder()
-            .sameFuzzyName(request.getSameFuzzyName())
-            .sameName(request.getSameName())
-            .sameCode(request.getSameCode())
-            .sameCountry(request.getSameCountry())
-            .sameCity(request.getSameCity())
-            .inCountries(request.getInCountries())
-            .notInCountries(request.getNotInCountries())
-            .excludeKeys(request.getExcludeKeys())
-            .build());
   }
 }

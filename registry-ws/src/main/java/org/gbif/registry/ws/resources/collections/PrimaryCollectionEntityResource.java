@@ -21,6 +21,8 @@ import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
@@ -40,6 +42,8 @@ import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.util.List;
@@ -56,6 +60,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.google.common.base.Preconditions;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -78,6 +84,7 @@ public abstract class PrimaryCollectionEntityResource<
   private final ContactService contactService;
   private final OccurrenceMappingService occurrenceMappingService;
   private final ChangeSuggestionService<T, R> changeSuggestionService;
+  private final DuplicatesService duplicatesService;
 
   protected PrimaryCollectionEntityResource(
       MergeService<T> mergeService,
@@ -89,6 +96,7 @@ public abstract class PrimaryCollectionEntityResource<
       CommentService commentService,
       OccurrenceMappingService occurrenceMappingService,
       ChangeSuggestionService<T, R> changeSuggestionService,
+      DuplicatesService duplicatesService,
       Class<T> objectClass) {
     super(
         objectClass, crudService, identifierService, tagService, machineTagService, commentService);
@@ -97,6 +105,7 @@ public abstract class PrimaryCollectionEntityResource<
     this.crudService = crudService;
     this.contactService = contactService;
     this.occurrenceMappingService = occurrenceMappingService;
+    this.duplicatesService = duplicatesService;
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -152,6 +161,24 @@ public abstract class PrimaryCollectionEntityResource<
   @PostMapping(value = "{key}/merge")
   public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     mergeService.merge(entityKey, params.getReplacementEntityKey());
+  }
+
+  @GetMapping("possibleDuplicates")
+  public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
+    Preconditions.checkArgument(
+        !request.isEmpty(), "At least one param to check the same field is required");
+
+    return duplicatesService.findPossibleDuplicates(
+        DuplicatesSearchParams.builder()
+            .sameFuzzyName(request.getSameFuzzyName())
+            .sameName(request.getSameName())
+            .sameCode(request.getSameCode())
+            .sameCountry(request.getSameCountry())
+            .sameCity(request.getSameCity())
+            .inCountries(request.getInCountries())
+            .notInCountries(request.getNotInCountries())
+            .excludeKeys(request.getExcludeKeys())
+            .build());
   }
 
   @PostMapping(value = "changeSuggestion")

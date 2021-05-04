@@ -17,8 +17,6 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
-import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -26,7 +24,6 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
@@ -40,8 +37,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -70,6 +65,7 @@ public class CollectionResource
         collectionService,
         collectionService,
         collectionChangeSuggestionService,
+        duplicatesService,
         Collection.class);
     this.duplicatesService = duplicatesService;
     this.collectionService = collectionService;
@@ -94,26 +90,5 @@ public class CollectionResource
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
-  }
-
-  @GetMapping("possibleDuplicates")
-  public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
-    Preconditions.checkArgument(
-        !request.isEmpty(), "At least one param to check the same field is required");
-
-    return duplicatesService.findPossibleDuplicates(
-        DuplicatesSearchParams.builder()
-            .sameFuzzyName(request.getSameFuzzyName())
-            .sameName(request.getSameName())
-            .sameCode(request.getSameCode())
-            .sameCountry(request.getSameCountry())
-            .sameCity(request.getSameCity())
-            .inCountries(request.getInCountries())
-            .notInCountries(request.getNotInCountries())
-            .excludeKeys(request.getExcludeKeys())
-            .sameInstitutionKey(request.getSameInstitution())
-            .inInstitutions(request.getInInstitutions())
-            .notInInstitutions(request.getNotInInstitutions())
-            .build());
   }
 }
