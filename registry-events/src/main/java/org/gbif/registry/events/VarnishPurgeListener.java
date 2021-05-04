@@ -149,7 +149,8 @@ public class VarnishPurgeListener {
   @Subscribe
   public final <T> void created(CreateEvent<T> event) {
     if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
-      purgeEntityAndBanLists(event.getObjectClass(), ((NetworkEntity)event.getNewObject()).getKey());
+      purgeEntityAndBanLists(
+          event.getObjectClass(), ((NetworkEntity) event.getNewObject()).getKey());
     }
 
     if (event.getObjectClass().equals(Organization.class)) {
@@ -159,15 +160,15 @@ public class VarnishPurgeListener {
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange((Installation) event.getNewObject());
     } else if (event.getObjectClass().equals(DerivedDataset.class)) {
-      cascadeDerivedDatasetChange((DerivedDataset)event.getNewObject());
+      cascadeDerivedDatasetChange((DerivedDataset) event.getNewObject());
     }
-
   }
 
   @Subscribe
   public final <T> void updated(UpdateEvent<T> event) {
     if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
-      purgeEntityAndBanLists(event.getObjectClass(), ((NetworkEntity)event.getOldObject()).getKey());
+      purgeEntityAndBanLists(
+          event.getObjectClass(), ((NetworkEntity) event.getOldObject()).getKey());
     }
 
     if (event.getObjectClass().equals(Organization.class)) {
@@ -179,14 +180,15 @@ public class VarnishPurgeListener {
       cascadeInstallationChange(
           (Installation) event.getOldObject(), (Installation) event.getNewObject());
     } else if (event.getObjectClass().equals(DerivedDataset.class)) {
-      cascadeDerivedDatasetChange((DerivedDataset)event.getNewObject());
+      cascadeDerivedDatasetChange((DerivedDataset) event.getNewObject());
     }
   }
 
   @Subscribe
   public final <T> void deleted(DeleteEvent<T> event) {
     if (NetworkEntity.class.isAssignableFrom(event.getObjectClass())) {
-      purgeEntityAndBanLists(event.getObjectClass(), ((NetworkEntity)event.getOldObject()).getKey());
+      purgeEntityAndBanLists(
+          event.getObjectClass(), ((NetworkEntity) event.getOldObject()).getKey());
     }
 
     if (event.getObjectClass().equals(Organization.class)) {
@@ -196,7 +198,7 @@ public class VarnishPurgeListener {
     } else if (event.getObjectClass().equals(Installation.class)) {
       cascadeInstallationChange((Installation) event.getOldObject());
     } else if (event.getObjectClass().equals(DerivedDataset.class)) {
-      cascadeDerivedDatasetChange((DerivedDataset)event.getOldObject());
+      cascadeDerivedDatasetChange((DerivedDataset) event.getOldObject());
     }
   }
 
@@ -347,7 +349,10 @@ public class VarnishPurgeListener {
   }
 
   private void cascadeDerivedDatasetChange(DerivedDataset derivedDataset) {
-    purger.ban(String.format("derivedDataset/%s/%s/*", derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix()));
+    purger.ban(
+        String.format(
+            "derivedDataset/%s/%s/*",
+            derivedDataset.getDoi().getPrefix(), derivedDataset.getDoi().getSuffix()));
     purger.ban(String.format("derivedDataset/user/%s", derivedDataset.getCreatedBy()));
     purger.ban("derivedDataset/dataset/*");
   }

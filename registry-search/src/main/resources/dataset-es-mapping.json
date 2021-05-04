@@ -68,7 +68,6 @@
     {
       "dataDescriptions": {
         "path_match": "dataDescriptions.*",
-        "match_mapping_type": "string",
         "mapping": {
           "type": "keyword",
           "copy_to": "all"

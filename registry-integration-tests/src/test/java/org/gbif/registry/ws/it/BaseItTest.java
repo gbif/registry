@@ -33,10 +33,6 @@ import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
-import io.zonky.test.db.postgres.embedded.ConnectionInfo;
-import io.zonky.test.db.postgres.embedded.DatabasePreparer;
-import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
-import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -53,7 +49,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import io.zonky.test.db.postgres.embedded.ConnectionInfo;
+import io.zonky.test.db.postgres.embedded.DatabasePreparer;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
@@ -69,23 +69,24 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 public class BaseItTest {
 
   public static class EsContainerContextInitializer
-    implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of("elasticsearch.mock=false")
-        .applyTo(configurableApplicationContext.getEnvironment());
+          .applyTo(configurableApplicationContext.getEnvironment());
     }
   }
 
   /**
    * Prepares a Tests database using an embedded Postgres instance.
    */
-  public static class EmbeddedDataBaseInitializer  {
+  public static class EmbeddedDataBaseInitializer {
     private final DataSource dataSource;
     private final PreparedDbProvider provider;
     private final ConnectionInfo connectionInfo;
-    private final List<Consumer<EmbeddedPostgres.Builder>> builderCustomizers = new CopyOnWriteArrayList();
+    private final List<Consumer<EmbeddedPostgres.Builder>> builderCustomizers =
+        new CopyOnWriteArrayList();
 
     public EmbeddedDataBaseInitializer(DatabasePreparer preparer) {
       try {
@@ -113,8 +114,9 @@ public class BaseItTest {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
 
-      EmbeddedDataBaseInitializer database = new EmbeddedDataBaseInitializer(
-        LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
+      EmbeddedDataBaseInitializer database =
+          new EmbeddedDataBaseInitializer(
+              LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
 
       RegistryDatabaseInitializer.init(database.getDataSource());
 
@@ -123,7 +125,7 @@ public class BaseItTest {
           .applyTo(configurableApplicationContext.getEnvironment());
 
       TestPropertyValues.of("elasticsearch.mock=true")
-        .applyTo(configurableApplicationContext.getEnvironment());
+          .applyTo(configurableApplicationContext.getEnvironment());
     }
 
     /**

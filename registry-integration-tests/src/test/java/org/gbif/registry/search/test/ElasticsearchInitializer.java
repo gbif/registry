@@ -32,7 +32,7 @@ public class ElasticsearchInitializer implements BeforeEachCallback {
 
   @Override
   public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    //Method name must contain search in it
+    // Method name must contain search in it
     if (extensionContext.getRequiredTestMethod().getName().toLowerCase().contains("search")) {
       esServer.reCreateIndex();
     }

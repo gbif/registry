@@ -123,7 +123,6 @@ public class GbifWsRetrofitClient implements GbifWsClient {
     return datasetService.list(pagingRequest);
   }
 
-
   @Override
   public Installation getInstallation(String installationKey) {
     return installationCache.get(installationKey);
@@ -162,7 +161,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
 
   @Override
   public PagingResponse<Dataset> getNetworkDatasets(
-    String networkKey, PagingRequest pagingRequest) {
+      String networkKey, PagingRequest pagingRequest) {
     return networkService.listConstituents(UUID.fromString(networkKey), pagingRequest);
   }
 

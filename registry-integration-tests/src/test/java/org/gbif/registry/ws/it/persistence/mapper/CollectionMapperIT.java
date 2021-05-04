@@ -55,7 +55,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CollectionMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("collection");
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer("collection");
 
   private CollectionMapper collectionMapper;
   private AddressMapper addressMapper;

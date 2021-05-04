@@ -23,8 +23,7 @@ public class CreateEvent<T> {
   private final T newObject;
   private final Class<T> objectClass;
 
-  public static <T> CreateEvent<T> newInstance(
-      T newObject, Class<T> objectClass) {
+  public static <T> CreateEvent<T> newInstance(T newObject, Class<T> objectClass) {
     return new CreateEvent<>(newObject, objectClass);
   }
 

@@ -22,8 +22,7 @@ public class UpdateEvent<T> {
   private final T oldObject;
   private final Class<T> objectClass;
 
-  public static <T> UpdateEvent<T> newInstance(
-      T newObject, T oldObject, Class<T> objectClass) {
+  public static <T> UpdateEvent<T> newInstance(T newObject, T oldObject, Class<T> objectClass) {
     return new UpdateEvent<>(newObject, oldObject, objectClass);
   }
 

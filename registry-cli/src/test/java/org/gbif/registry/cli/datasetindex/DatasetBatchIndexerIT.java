@@ -53,7 +53,7 @@ public class DatasetBatchIndexerIT {
 
   private static final String INDEX_NAME = IndexingConstants.ALIAS + '_' + new Date().getTime();
 
-  private static final String INDEX_ALIAS = INDEX_NAME + "_a" ;
+  private static final String INDEX_ALIAS = INDEX_NAME + "_a";
 
   @RegisterExtension
   public static SingleInstancePostgresExtension database =
@@ -124,12 +124,9 @@ public class DatasetBatchIndexerIT {
     RestHighLevelClient restHighLevelClient = buildRestClient();
 
     SearchResponse searchResponse =
-      restHighLevelClient
-            .search(
-                new SearchRequest()
-                    .indices(INDEX_ALIAS)
-                    .source(new SearchSourceBuilder().size(0)),
-                RequestOptions.DEFAULT);
+        restHighLevelClient.search(
+            new SearchRequest().indices(INDEX_ALIAS).source(new SearchSourceBuilder().size(0)),
+            RequestOptions.DEFAULT);
 
     Assertions.assertEquals(
         DATASETS_TO_INDEX,

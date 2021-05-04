@@ -159,7 +159,8 @@ public class DerivedDatasetIT extends BaseItTest {
     DerivedDatasetCreationRequest requestData1 =
         newDerivedDatasetCreationRequest(occurrenceDownload.getDoi(), new HashMap<>());
     String str = secondDataset.getKey() + ",1\n" + firstDataset.getDoi() + ",2";
-    MultipartFile relatedDatasetsFile = new MockMultipartFile("file.csv", str.getBytes(StandardCharsets.UTF_8));
+    MultipartFile relatedDatasetsFile =
+        new MockMultipartFile("file.csv", str.getBytes(StandardCharsets.UTF_8));
 
     DerivedDatasetCreationRequest requestData2 =
         newDerivedDatasetCreationRequest(
@@ -213,12 +214,12 @@ public class DerivedDatasetIT extends BaseItTest {
     prepareDerivedDataset("10.21373/dd.abcd4", "james");
 
     // get derived datasets
-    PagingResponse<DerivedDataset> johnDerivedDatasets
-        = derivedDatasetResource.listByUser("john", REGULAR_PAGE);
-    PagingResponse<DerivedDataset> jamesDerivedDatasets
-        = derivedDatasetResource.listByUser("james", REGULAR_PAGE);
-    PagingResponse<DerivedDataset> randomUserDerivedDatasets
-        = derivedDatasetResource.listByUser("random", REGULAR_PAGE);
+    PagingResponse<DerivedDataset> johnDerivedDatasets =
+        derivedDatasetResource.listByUser("john", REGULAR_PAGE);
+    PagingResponse<DerivedDataset> jamesDerivedDatasets =
+        derivedDatasetResource.listByUser("james", REGULAR_PAGE);
+    PagingResponse<DerivedDataset> randomUserDerivedDatasets =
+        derivedDatasetResource.listByUser("random", REGULAR_PAGE);
 
     assertNotNull(johnDerivedDatasets);
     assertEquals(1, johnDerivedDatasets.getCount());
@@ -237,8 +238,7 @@ public class DerivedDatasetIT extends BaseItTest {
             .getRequest(new URI("/derivedDataset/10.21373%2Fdd.abcd1/citation"))
             .andExpect(status().isOk());
 
-    String response =
-        requestTestFixture.extractResponse(actions);
+    String response = requestTestFixture.extractResponse(actions);
 
     assertEquals("Derived dataset GBIF.org", response);
   }
@@ -252,8 +252,7 @@ public class DerivedDatasetIT extends BaseItTest {
             .getRequest(new URI("/derivedDataset/10.21373%2Fdd.abcd1"))
             .andExpect(status().isOk());
 
-    DerivedDataset response =
-        requestTestFixture.extractJsonResponse(actions, DerivedDataset.class);
+    DerivedDataset response = requestTestFixture.extractJsonResponse(actions, DerivedDataset.class);
 
     assertEquals(new DOI("10.21373/dd.abcd1"), response.getDoi());
   }

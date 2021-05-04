@@ -140,9 +140,9 @@ public class DatasetSearchResultConverter
 
   private static Optional<List<UUID>> getUUIDListValue(Map<String, Object> fields, String esField) {
     return Optional.ofNullable(fields.get(esField))
-      .map(v -> (List<String>) v)
-      .filter(v -> !v.isEmpty())
-      .map(v -> v.stream().map(UUID::fromString).collect(Collectors.toList()));
+        .map(v -> (List<String>) v)
+        .filter(v -> !v.isEmpty())
+        .map(v -> v.stream().map(UUID::fromString).collect(Collectors.toList()));
   }
 
   private static Optional<String> getStringValue(Map<String, Object> fields, String esField) {

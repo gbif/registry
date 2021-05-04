@@ -3,7 +3,7 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>3.56-SNAPSHOT</version>
+    <version>3.58-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -49,6 +49,12 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
+    </dependency>
+
+    <!-- Third-party dependencies -->
+    <dependency>
+      <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+      <artifactId>owasp-java-html-sanitizer</artifactId>
     </dependency>
 
     <!-- Test dependencies -->

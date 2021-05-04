@@ -15,8 +15,8 @@
  */
 package org.gbif.registry.ws.it.collections;
 
-import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.lookup.*;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionService;

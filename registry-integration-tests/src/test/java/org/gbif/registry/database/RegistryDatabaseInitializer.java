@@ -20,10 +20,12 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import com.google.common.base.Throwables;
-import lombok.experimental.UtilityClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
+
+import lombok.experimental.UtilityClass;
 
 /**
  * A Rule that initializes a database for All test cases in a Test class or in test suite.
@@ -38,23 +40,23 @@ public class RegistryDatabaseInitializer {
   private static final Logger LOG = LoggerFactory.getLogger(RegistryDatabaseInitializer.class);
 
   public static void init(DataSource dataSource) {
-      LOG.info("Create test users");
-      try (Connection connection = dataSource.getConnection()) {
-        connection.setAutoCommit(false);
+    LOG.info("Create test users");
+    try (Connection connection = dataSource.getConnection()) {
+      connection.setAutoCommit(false);
 
-        connection.prepareStatement(
-          "INSERT INTO public.\"user\" (key, username, email, password, first_name, last_name, roles, settings, system_settings, created, last_login, deleted, challenge_code_key) "
-          + "VALUES "
-          + "(-1, 'gbif.app.it2', 'gbif.app.it2@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', null, null, '{GRSCICOLL_ADMIN,REGISTRY_ADMIN}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null),"
-          + "(-2, 'editor', 'editor2@mailinator.com', '$S$DIU6YGMU7aKb0rISEEqtePk.PwJPU.z.f5G0Au426gIJVd5RS8xs', null, null, '{USER,REGISTRY_EDITOR}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null)")
+      connection
+          .prepareStatement(
+              "INSERT INTO public.\"user\" (key, username, email, password, first_name, last_name, roles, settings, system_settings, created, last_login, deleted, challenge_code_key) "
+                  + "VALUES "
+                  + "(-1, 'gbif.app.it2', 'gbif.app.it2@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', null, null, '{GRSCICOLL_ADMIN,REGISTRY_ADMIN}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null),"
+                  + "(-2, 'editor', 'editor2@mailinator.com', '$S$DIU6YGMU7aKb0rISEEqtePk.PwJPU.z.f5G0Au426gIJVd5RS8xs', null, null, '{USER,REGISTRY_EDITOR}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null)")
           .executeUpdate();
 
-        connection.commit();
+      connection.commit();
 
-      } catch (SQLException e) {
-        Throwables.propagate(e);
-      }
-      LOG.info("Initial test data loaded");
+    } catch (SQLException e) {
+      Throwables.propagate(e);
+    }
+    LOG.info("Initial test data loaded");
   }
-
 }

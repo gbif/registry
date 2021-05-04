@@ -52,7 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("public.user");
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer("public.user");
 
   private final UserTestFixture userTestFixture;
   private final RequestTestFixture requestTestFixture;

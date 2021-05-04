@@ -22,8 +22,6 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Collections;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MachineTagMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer("machine_tag");
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer("machine_tag");
 
   private final MachineTagMapper mapper;
 

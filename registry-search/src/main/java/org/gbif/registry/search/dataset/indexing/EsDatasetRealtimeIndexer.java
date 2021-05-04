@@ -58,10 +58,10 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
 
   @Autowired
   public EsDatasetRealtimeIndexer(
-    RestHighLevelClient restHighLevelClient,
-    DatasetJsonConverter datasetJsonConverter,
-    GbifWsClient gbifWsClient,
-    @Value ("${elasticsearch.registry.index}") String index) {
+      RestHighLevelClient restHighLevelClient,
+      DatasetJsonConverter datasetJsonConverter,
+      GbifWsClient gbifWsClient,
+      @Value("${elasticsearch.registry.index}") String index) {
     this.restHighLevelClient = restHighLevelClient;
     this.datasetJsonConverter = datasetJsonConverter;
     this.gbifWsClient = gbifWsClient;
@@ -207,9 +207,7 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
   public void delete(Dataset dataset) {
     pendingUpdates.incrementAndGet();
     DeleteRequest deleteRequest =
-        new DeleteRequest()
-            .id(dataset.getKey().toString())
-            .index(IndexingConstants.ALIAS);
+        new DeleteRequest().id(dataset.getKey().toString()).index(IndexingConstants.ALIAS);
     try {
       restHighLevelClient.deleteAsync(
           deleteRequest,
@@ -239,14 +237,14 @@ public class EsDatasetRealtimeIndexer implements DatasetRealtimeIndexer {
     try {
       log.debug("Updating hosted datasets for installation {}", network.getKey());
       Iterable<Dataset> datasets =
-        Iterables.datasetsIterable(
-          page -> gbifWsClient.getNetworkDatasets(network.getKey().toString(), page));
+          Iterables.datasetsIterable(
+              page -> gbifWsClient.getNetworkDatasets(network.getKey().toString(), page));
       index(datasets);
     } catch (Exception e) {
       log.error(
-        "Unable to update hosted datasets for network {} - index is now out of sync",
-        network.getKey(),
-        e);
+          "Unable to update hosted datasets for network {} - index is now out of sync",
+          network.getKey(),
+          e);
     }
   }
 
