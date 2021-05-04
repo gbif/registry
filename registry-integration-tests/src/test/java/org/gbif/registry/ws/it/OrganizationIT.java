@@ -17,16 +17,22 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.domain.ws.OrganizationRequestSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
+import org.gbif.registry.ws.resources.OrganizationResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -35,6 +41,7 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +62,9 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
 
   private final NodeService nodeResource;
   private final NodeService nodeClient;
+  private final NetworkService networkService;
+  private final OrganizationResource organizationResource;
+
 
   private final TestDataFactory testDataFactory;
 
@@ -62,6 +72,8 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   public OrganizationIT(
       OrganizationService service,
       NodeService nodeResource,
+      NetworkService networkService,
+      OrganizationResource organizationResource,
       @Nullable SimplePrincipalProvider principalProvider,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
@@ -78,6 +90,8 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     this.nodeResource = nodeResource;
     this.nodeClient = prepareClient(localServerPort, keyStore, NodeClient.class);
     this.testDataFactory = testDataFactory;
+    this.networkService = networkService;
+    this.organizationResource = organizationResource;
   }
 
   @ParameterizedTest
@@ -126,6 +140,24 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
         "Paging is not returning the correct count");
     assertResultsOfSize(service.listByCountry(Country.FRANCE, new PagingRequest()), 2);
     assertResultsOfSize(service.listByCountry(Country.GERMANY, new PagingRequest()), 0);
+  }
+
+  @Test
+  public void searchByNetworkTest() {
+    Installation installation = testDataFactory.newPersistedInstallation();
+    Dataset dataset = testDataFactory.newPersistedDataset(installation.getOrganizationKey(), installation.getKey());
+    Network network = testDataFactory.newPersistedNetwork();
+
+    OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
+    searchParams.setNetworkKey(network.getKey());
+    PagingResponse<Organization> response = organizationResource.list(null, searchParams, null);
+
+    assertResultsOfSize(response, 0);
+
+    networkService.addConstituent(network.getKey(), dataset.getKey());
+    response = organizationResource.list(null, searchParams, null);
+
+    assertResultsOfSize(response, 1);
   }
 
   @ParameterizedTest

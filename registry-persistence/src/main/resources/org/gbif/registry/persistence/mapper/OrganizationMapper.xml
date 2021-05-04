@@ -192,6 +192,14 @@
     <if test="isEndorsed != null" >
       AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
     </if>
+    <if test="networkKey != null" >
+      AND EXISTS (
+      SELECT d2.publishing_organization_key
+      FROM dataset d2
+      JOIN dataset_network nk ON nk.dataset_key = d2.key
+      JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
+      WHERE d2.publishing_organization_key = o.key AND n.key = #{networkKey,jdbcType=OTHER})
+    </if>
     ORDER BY <if test="query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -210,6 +218,14 @@
     </if>
     <if test="isEndorsed != null" >
       AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
+    </if>
+    <if test="networkKey != null" >
+      AND EXISTS (
+      SELECT d2.publishing_organization_key
+      FROM dataset d2
+      JOIN dataset_network nk ON nk.dataset_key = d2.key
+      JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
+      WHERE d2.publishing_organization_key = o.key AND n.key = #{networkKey,jdbcType=OTHER})
     </if>
   </select>
 

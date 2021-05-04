@@ -211,7 +211,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     // short circuited list all
     if (country == null
         && request.getIsEndorsed() == null
-        && Strings.isNullOrEmpty(request.getQ())) {
+        && Strings.isNullOrEmpty(request.getQ())
+        && request.getNetworkKey() == null) {
       return list(page);
     }
 
@@ -221,13 +222,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         request.getQ() != null
             ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
             : request.getQ();
-    long total = organizationMapper.count(query, country, request.getIsEndorsed());
+    long total = organizationMapper.count(query, country, request.getIsEndorsed(), request.getNetworkKey());
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(
         page.getOffset(),
         page.getLimit(),
         total,
-        organizationMapper.search(query, country, request.getIsEndorsed(), page));
+        organizationMapper.search(query, country, request.getIsEndorsed(), request.getNetworkKey(), page));
   }
 
   @GetMapping("{key}/hostedDataset")
