@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.it.collections;
+package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
@@ -57,11 +57,11 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {BaseServiceTest.ContextInitializer.class})
+@ContextConfiguration(initializers = {BaseServiceIT.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @DirtiesContext
-public class BaseServiceTest {
+public class BaseServiceIT {
 
   /** Prepares a Tests database using an embedded Postgres instance. */
   public static class EmbeddedDataBaseInitializer {
@@ -127,9 +127,9 @@ public class BaseServiceTest {
   private final SimplePrincipalProvider simplePrincipalProvider;
   protected static EsManageServer esServer;
 
-  public BaseServiceTest(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+  public BaseServiceIT(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
     this.simplePrincipalProvider = simplePrincipalProvider;
-    BaseServiceTest.esServer = esServer;
+    BaseServiceIT.esServer = esServer;
   }
 
   @BeforeEach

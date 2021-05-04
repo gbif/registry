@@ -16,21 +16,22 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.service.collections.CrudService;
 
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
+public interface CrudClient<T extends CollectionEntity> {
 
   @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
   UUID create(@RequestBody T entity);
 
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}")
-  @Override
   void delete(@PathVariable("key") UUID key);
 
   @RequestMapping(
@@ -38,10 +39,8 @@ public interface CrudClient<T extends CollectionEntity> extends CrudService<T> {
       value = "{key}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   T get(@PathVariable("key") UUID key);
 
-  @Override
   default void update(@RequestBody T entity) {
     updateResource(entity.getKey(), entity);
   }

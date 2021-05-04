@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.it.collections;
+package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.common.paging.Pageable;
@@ -62,7 +62,7 @@ public abstract class BaseCollectionEntityServiceIT<
         T extends
             CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable
                 & LenientEquals<T>>
-    extends BaseServiceTest {
+    extends BaseServiceIT {
 
   protected final CrudService<T> crudService;
   protected final Class<T> paramType;
@@ -70,7 +70,7 @@ public abstract class BaseCollectionEntityServiceIT<
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
-  @RegisterExtension public CollectionsDatabaseInitializer collectionsDatabaseInitializer;
+  @RegisterExtension protected CollectionsDatabaseInitializer collectionsDatabaseInitializer;
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();

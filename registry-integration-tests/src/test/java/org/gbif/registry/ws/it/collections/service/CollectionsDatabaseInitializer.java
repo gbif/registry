@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.it.collections;
+package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.service.IdentityService;
 
-import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.common.collect.Sets;
@@ -28,7 +28,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_GRSCICOLL_ADMI
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 
 /** DB initialization needed for collections tests. */
-public class CollectionsDatabaseInitializer implements BeforeEachCallback {
+public class CollectionsDatabaseInitializer implements BeforeAllCallback {
 
   private final IdentityService identityService;
 
@@ -37,7 +37,7 @@ public class CollectionsDatabaseInitializer implements BeforeEachCallback {
   }
 
   @Override
-  public void beforeEach(ExtensionContext extensionContext) {
+  public void beforeAll(ExtensionContext extensionContext) {
     GbifUser user = new GbifUser();
     user.setUserName(TEST_GRSCICOLL_ADMIN);
     user.setFirstName(TEST_GRSCICOLL_ADMIN);

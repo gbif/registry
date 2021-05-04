@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.it.collections;
+package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
@@ -28,7 +28,6 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchResponse;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -43,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /** Tests the {@link CollectionsSearchService} * */
-public class CollectionsSearchIT extends BaseItTest {
+public class CollectionsSearchIT extends BaseServiceIT {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();

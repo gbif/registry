@@ -13,23 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.it.collections;
+package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.lookup.*;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.lookup.CollectionMatched;
+import org.gbif.api.model.collections.lookup.InstitutionMatched;
+import org.gbif.api.model.collections.lookup.LookupParams;
+import org.gbif.api.model.collections.lookup.LookupResult;
+import org.gbif.api.model.collections.lookup.Match;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Node;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.NodeType;
+import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.lookup.LookupService;
-import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -46,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link LookupService}. */
-public class LookupServiceIT extends BaseItTest {
+public class LookupServiceIT extends BaseServiceIT {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();

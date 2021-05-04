@@ -20,7 +20,6 @@ import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.InstitutionService;
 
 import java.util.List;
 
@@ -32,12 +31,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/institution")
-public interface InstitutionClient
-    extends PrimaryCollectionEntityClient<Institution>, InstitutionService {
+public interface InstitutionClient extends PrimaryCollectionEntityClient<Institution> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<Institution> list(@SpringQueryMap InstitutionSearchRequest searchRequest);
 
   @RequestMapping(
@@ -45,7 +42,6 @@ public interface InstitutionClient
       value = "deleted",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<Institution> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
@@ -53,6 +49,5 @@ public interface InstitutionClient
       value = "suggest",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
 }
