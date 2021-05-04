@@ -52,6 +52,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
@@ -71,7 +72,7 @@ public abstract class BaseMergeServiceIT<
         T extends
             CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
                 & Taggable & Commentable>
-    extends BaseItTest {
+    extends BaseServiceIT {
 
   protected final MergeService mergeService;
   protected final CrudService<T> crudService;

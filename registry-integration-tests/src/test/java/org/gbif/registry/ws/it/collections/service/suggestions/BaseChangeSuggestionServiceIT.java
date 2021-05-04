@@ -32,7 +32,7 @@ import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Tests the {@link ChangeSuggestionService}. */
 public abstract class BaseChangeSuggestionServiceIT<
         T extends CollectionEntity & Contactable & LenientEquals<T>, R extends ChangeSuggestion<T>>
-    extends BaseItTest {
+    extends BaseServiceIT {
 
   protected static final String PROPOSER = "proposer";
   protected static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);

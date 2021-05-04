@@ -38,7 +38,6 @@ import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
-import org.gbif.registry.ws.resources.collections.CollectionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.ArrayList;
@@ -57,7 +56,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/** Tests the {@link CollectionResource}. */
+/** Tests the {@link CollectionService}. */
 public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collection> {
 
   private final CollectionService collectionService;

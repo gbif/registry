@@ -46,7 +46,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
-// TODO: Move @Secured ??
 @Validated
 public abstract class BaseCollectionEntityService<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable>

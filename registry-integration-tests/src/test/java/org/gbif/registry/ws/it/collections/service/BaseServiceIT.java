@@ -57,11 +57,25 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
-@ContextConfiguration(initializers = {BaseServiceIT.ContextInitializer.class})
+@ContextConfiguration(
+    initializers = {
+      BaseServiceIT.ContextInitializer.class,
+      BaseServiceIT.EsContainerContextInitializer.class
+    })
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @DirtiesContext
 public class BaseServiceIT {
+
+  public static class EsContainerContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      TestPropertyValues.of("elasticsearch.mock=true")
+          .applyTo(configurableApplicationContext.getEnvironment());
+    }
+  }
 
   /** Prepares a Tests database using an embedded Postgres instance. */
   public static class EmbeddedDataBaseInitializer {

@@ -62,8 +62,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
-// TODO: los scan meterlos en clases de config separados y luego q importe cada uno las q quiera
-
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -81,7 +79,6 @@ public class BaseResourceTest {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of("elasticsearch.mock=true")
-          //          .and("spring.main.allow-bean-definition-overriding=true")
           .applyTo(configurableApplicationContext.getEnvironment());
     }
   }

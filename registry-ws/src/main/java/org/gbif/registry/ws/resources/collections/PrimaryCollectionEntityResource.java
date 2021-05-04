@@ -194,7 +194,6 @@ public abstract class PrimaryCollectionEntityResource<
     return result;
   }
 
-  // TODO: move to gbif-api
   public static class ApplySuggestionResult {
     private UUID entityCreatedKey;
 

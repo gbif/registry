@@ -1,13 +1,12 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
@@ -56,8 +55,8 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 @Validated
 public abstract class PrimaryCollectionEntityService<
         T extends
-            CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable & Commentable
-                & OccurrenceMappeable>
+            PrimaryCollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable
+                & Commentable & OccurrenceMappeable>
     extends BaseCollectionEntityService<T> implements ContactService, OccurrenceMappingService {
 
   private final ContactableMapper contactableMapper;
@@ -261,27 +260,13 @@ public abstract class PrimaryCollectionEntityService<
             entityKey, objectClass, OccurrenceMapping.class));
   }
 
-  // TODO: hacer interface PrimaryCollectionEntity
-
   /**
    * Some iDigBio collections and institutions don't have code and we allow that in the DB but not
    * in the API.
    */
   protected void checkCodeUpdate(T newEntity, T oldEntity) {
-    if (newEntity instanceof Institution) {
-      Institution newInstitution = (Institution) newEntity;
-      Institution oldInstitution = (Institution) oldEntity;
-
-      if (newInstitution.getCode() == null && oldInstitution.getCode() != null) {
-        throw new IllegalArgumentException("Not allowed to delete the code of an institution");
-      }
-    } else if (newEntity instanceof Collection) {
-      Collection newCollection = (Collection) newEntity;
-      Collection oldCollection = (Collection) oldEntity;
-
-      if (newCollection.getCode() == null && oldCollection.getCode() != null) {
-        throw new IllegalArgumentException("Not allowed to delete the code of a collection");
-      }
+    if (newEntity.getCode() == null && oldEntity.getCode() != null) {
+      throw new IllegalArgumentException("Not allowed to delete the code of a primary entity");
     }
   }
 
@@ -290,27 +275,22 @@ public abstract class PrimaryCollectionEntityService<
    * converted in an update
    */
   protected void checkReplacedEntitiesUpdate(T newEntity, T oldEntity) {
+    if (oldEntity.getReplacedBy() != null) {
+      throw new IllegalArgumentException("Not allowed to update a replaced entity");
+    } else if (newEntity.getReplacedBy() != null) {
+      throw new IllegalArgumentException("Not allowed to replace an entity while updating");
+    }
+
     if (newEntity instanceof Institution) {
       Institution newInstitution = (Institution) newEntity;
       Institution oldInstitution = (Institution) oldEntity;
 
-      if (oldInstitution.getReplacedBy() != null
-          || oldInstitution.getConvertedToCollection() != null) {
+      if (oldInstitution.getConvertedToCollection() != null) {
         throw new IllegalArgumentException(
             "Not allowed to update a replaced or converted institution");
-      } else if (newInstitution.getReplacedBy() != null
-          || newInstitution.getConvertedToCollection() != null) {
+      } else if (newInstitution.getConvertedToCollection() != null) {
         throw new IllegalArgumentException(
             "Not allowed to replace or convert an institution while updating");
-      }
-    } else if (newEntity instanceof Collection) {
-      Collection newCollection = (Collection) newEntity;
-      Collection oldCollection = (Collection) oldEntity;
-
-      if (oldCollection.getReplacedBy() != null) {
-        throw new IllegalArgumentException("Not allowed to update a replaced collection");
-      } else if (newCollection.getReplacedBy() != null) {
-        throw new IllegalArgumentException("Not allowed to replace a collection while updating");
       }
     }
   }

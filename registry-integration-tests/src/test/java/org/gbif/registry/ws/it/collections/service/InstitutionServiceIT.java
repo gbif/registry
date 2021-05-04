@@ -32,7 +32,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
-import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -47,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/** Tests the {@link InstitutionResource}. */
+/** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Institution> {
 
   private final InstitutionService institutionService;

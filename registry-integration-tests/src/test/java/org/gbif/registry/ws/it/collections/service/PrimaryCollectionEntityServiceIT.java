@@ -16,11 +16,11 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.registry.Commentable;
@@ -79,8 +79,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class PrimaryCollectionEntityServiceIT<
         T extends
-            CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable & Commentable
-                & OccurrenceMappeable & LenientEquals<T>>
+            PrimaryCollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable
+                & Commentable & OccurrenceMappeable & LenientEquals<T>>
     extends BaseCollectionEntityServiceIT<T> {
 
   protected final PersonService personService;
