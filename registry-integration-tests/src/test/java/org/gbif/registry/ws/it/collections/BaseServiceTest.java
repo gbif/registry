@@ -63,16 +63,6 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 @DirtiesContext
 public class BaseServiceTest {
 
-  public static class EsContainerContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of("elasticsearch.mock=true")
-          .applyTo(configurableApplicationContext.getEnvironment());
-    }
-  }
-
   /** Prepares a Tests database using an embedded Postgres instance. */
   public static class EmbeddedDataBaseInitializer {
     private final DataSource dataSource;

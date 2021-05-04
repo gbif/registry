@@ -22,6 +22,7 @@ import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
@@ -35,6 +36,8 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.ws.it.collections.data.TestData;
+import org.gbif.registry.ws.it.collections.data.TestDataFactory;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -48,16 +51,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Base class to test the CRUD operations of {@link CollectionEntity}. */
 public abstract class BaseCollectionEntityServiceIT<
-        T extends CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable>
+        T extends
+            CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable
+                & LenientEquals<T>>
     extends BaseServiceTest {
 
   protected final CrudService<T> crudService;
+  protected final Class<T> paramType;
+  protected final TestData<T> testData;
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
@@ -70,44 +79,38 @@ public abstract class BaseCollectionEntityServiceIT<
       CrudService<T> crudService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
-      IdentityService identityService) {
+      IdentityService identityService,
+      Class<T> paramType) {
     super(principalProvider, esServer);
     this.crudService = crudService;
+    this.paramType = paramType;
+    this.testData = TestDataFactory.create(paramType);
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
   }
-
-  protected abstract T newEntity();
-
-  protected abstract void assertNewEntity(T entity);
-
-  protected abstract T updateEntity(T entity);
-
-  protected abstract void assertUpdatedEntity(T entity);
-
-  protected abstract T newInvalidEntity();
 
   @Test
   public void crudTest() {
     // create
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
 
     assertNotNull(key);
 
     T entitySaved = crudService.get(key);
     assertEquals(key, entitySaved.getKey());
-    assertNewEntity(entitySaved);
+    assertTrue(entity.lenientEquals(entitySaved));
     assertNotNull(entitySaved.getCreatedBy());
     assertNotNull(entitySaved.getCreated());
     assertNotNull(entitySaved.getModifiedBy());
     assertNotNull(entitySaved.getModified());
 
     // update
-    entity = updateEntity(entitySaved);
+    entity = testData.updateEntity(entitySaved);
     crudService.update(entity);
 
     entitySaved = crudService.get(key);
-    assertUpdatedEntity(entitySaved);
+    assertTrue(entity.lenientEquals(entitySaved));
+    assertNotEquals(entitySaved.getCreated(), entitySaved.getModified());
 
     // delete
     crudService.delete(key);
@@ -117,7 +120,7 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void createInvalidEntityTest() {
-    assertThrows(ValidationException.class, () -> crudService.create(newInvalidEntity()));
+    assertThrows(ValidationException.class, () -> crudService.create(testData.newInvalidEntity()));
   }
 
   @Test
@@ -127,7 +130,7 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void updateDeletedEntityTest() {
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
     entity.setKey(key);
     crudService.delete(key);
@@ -139,7 +142,7 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void restoreDeletedEntityTest() {
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
     entity.setKey(key);
     crudService.delete(key);
@@ -155,10 +158,10 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void updateInvalidEntityTest() {
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
 
-    T newEntity = newInvalidEntity();
+    T newEntity = testData.newInvalidEntity();
     newEntity.setKey(key);
     assertThrows(ValidationException.class, () -> crudService.update(newEntity));
   }
@@ -175,7 +178,7 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void createFullEntityTest() {
-    T entity = newEntity();
+    T entity = testData.newEntity();
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
     entity.setMachineTags(Collections.singletonList(machineTag));
@@ -205,7 +208,7 @@ public abstract class BaseCollectionEntityServiceIT<
   public void tagsTest() {
     TagService tagService = (TagService) crudService;
 
-    UUID key = crudService.create(newEntity());
+    UUID key = crudService.create(testData.newEntity());
 
     Tag tag = new Tag();
     tag.setValue("value");
@@ -224,7 +227,7 @@ public abstract class BaseCollectionEntityServiceIT<
   public void machineTagsTest() {
     MachineTagService machineTagService = (MachineTagService) crudService;
 
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
@@ -243,7 +246,7 @@ public abstract class BaseCollectionEntityServiceIT<
   public void identifiersTest() {
     IdentifierService identifierService = (IdentifierService) crudService;
 
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
 
     Identifier identifier = new Identifier();
@@ -266,7 +269,7 @@ public abstract class BaseCollectionEntityServiceIT<
   public void commentsTest() {
     CommentService commentService = (CommentService) crudService;
 
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID key = crudService.create(entity);
 
     Comment comment = new Comment();

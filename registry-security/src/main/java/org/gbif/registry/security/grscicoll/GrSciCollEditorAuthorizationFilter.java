@@ -110,6 +110,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     final Authentication authentication = authenticationFacade.getAuthentication();
     final String path = request.getRequestURI();
 
+    // TODO
     tracing.tracer().currentSpan().tag("country-code-2", "aaa");
 
     String baggageKey = "country-code";

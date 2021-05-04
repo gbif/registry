@@ -16,24 +16,40 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.identity.service.BaseIdentityAccessService;
+import org.gbif.registry.identity.service.IdentityServiceImpl;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.test.mocks.IdentityServiceMock;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.security.GbifAuthService;
+import org.gbif.ws.security.GbifAuthenticationManager;
+import org.gbif.ws.security.GbifAuthenticationManagerImpl;
 import org.gbif.ws.security.KeyStore;
 
 import java.util.Arrays;
 import java.util.Collections;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -42,19 +58,19 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import liquibase.pro.packaged.T;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+
+// TODO: los scan meterlos en clases de config separados y luego q importe cada uno las q quiera
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-    classes = RegistryIntegrationTestsConfiguration.class,
+    classes = {RegistryIntegrationTestsConfiguration.class, BaseResourceTest.MockConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = {BaseResourceTest.EsContainerContextInitializer.class})
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "mock"})
 @AutoConfigureMockMvc
 @DirtiesContext
 public class BaseResourceTest {
@@ -65,6 +81,7 @@ public class BaseResourceTest {
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
       TestPropertyValues.of("elasticsearch.mock=true")
+          //          .and("spring.main.allow-bean-definition-overriding=true")
           .applyTo(configurableApplicationContext.getEnvironment());
     }
   }
@@ -72,24 +89,11 @@ public class BaseResourceTest {
   private final SimplePrincipalProvider simplePrincipalProvider;
   protected static EsManageServer esServer;
 
-  public BaseResourceTest(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+  public BaseResourceTest(
+      SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
     this.simplePrincipalProvider = simplePrincipalProvider;
     BaseResourceTest.esServer = esServer;
   }
-
-  // TODO
-//  @Test
-//  public void updateEntityKeyMismatchTest() {
-//    CrudClient<T> crudClient = (CrudClient<T>) client;
-//
-//    T entity = newEntity();
-//    UUID key = crudClient.create(entity);
-//    T entityCreated = crudClient.get(key);
-//
-//    assertThrows(
-//      IllegalArgumentException.class,
-//      () -> crudClient.updateResource(UUID.randomUUID(), entityCreated));
-//  }
 
   @BeforeEach
   public void setup() {
@@ -139,5 +143,31 @@ public class BaseResourceTest {
         .withUrl("http://localhost:" + localServerPort)
         .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
         .build(cls);
+  }
+
+  protected <T> T prepareClient(String username, int localServerPort, Class<T> cls) {
+    ClientBuilder clientBuilder = new ClientBuilder();
+    return clientBuilder
+        .withUrl("http://localhost:" + localServerPort)
+        .withCredentials(username, username)
+        .build(cls);
+  }
+
+  @TestConfiguration
+  @Profile("mock")
+  public static class MockConfig {
+
+    @Qualifier("registryDataSource")
+    @MockBean
+    DataSource dataSource;
+
+    @MockBean PlatformTransactionManager platformTransactionManager;
+
+    @Primary
+    @Bean
+    GbifAuthenticationManager gbifAuthenticationManager() {
+      return new GbifAuthenticationManagerImpl(
+          new IdentityServiceMock(), Mockito.mock(GbifAuthService.class));
+    }
   }
 }

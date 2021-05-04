@@ -1,0 +1,168 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.gbif.registry.ws.it.collections.resource;
+
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.ContactService;
+import org.gbif.api.service.collections.OccurrenceMappingService;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
+import org.gbif.registry.ws.client.collections.PrimaryCollectionEntityClient;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
+public abstract class PrimaryCollectionEntityResourceIT<
+        T extends
+            CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable & Commentable
+                & OccurrenceMappeable & LenientEquals<T>>
+    extends BaseCollectionEntityResourceIT<T> {
+
+  public PrimaryCollectionEntityResourceIT(
+      Class<? extends BaseCollectionEntityClient<T>> cls,
+      SimplePrincipalProvider principalProvider,
+      EsManageServer esServer,
+      Class<T> paramType,
+      int localServerPort) {
+    super(cls, principalProvider, esServer, paramType, localServerPort);
+  }
+
+  @Test
+  public void contactsTest() {
+    // contacts
+    Person person1 = new Person();
+    person1.setFirstName("name1");
+    person1.setKey(UUID.randomUUID());
+
+    Person person2 = new Person();
+    person2.setFirstName("name2");
+    person2.setKey(UUID.randomUUID());
+
+    // add contact
+    doNothing().when(getMockContactService()).addContact(any(UUID.class), any(UUID.class));
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().addContact(UUID.randomUUID(), UUID.randomUUID()));
+
+    // list contacts
+    when(getMockContactService().listContacts(any(UUID.class)))
+        .thenReturn(Arrays.asList(person1, person2));
+    List<Person> contactsEntity1 =
+        getPrimaryCollectionEntityClient().listContacts(UUID.randomUUID());
+    assertEquals(2, contactsEntity1.size());
+
+    // remove contacts
+    doNothing().when(getMockContactService()).removeContact(any(UUID.class), any(UUID.class));
+    assertDoesNotThrow(
+        () ->
+            getPrimaryCollectionEntityClient().removeContact(UUID.randomUUID(), UUID.randomUUID()));
+  }
+
+  @Test
+  public void getWithAddressTest() {
+    // entities
+    T entity = testData.newEntity();
+    entity.setKey(UUID.randomUUID());
+
+    // update adding address
+    Address address = new Address();
+    address.setAddress("address");
+    address.setCountry(Country.AFGHANISTAN);
+    address.setCity("city");
+    entity.setAddress(address);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("mailing address");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    mailingAddress.setCity("city mailing");
+    entity.setMailingAddress(mailingAddress);
+
+    mockGetEntity(entity.getKey(), entity);
+    T entityReturned = getPrimaryCollectionEntityClient().get(entity.getKey());
+
+    assertNotNull(entityReturned.getAddress());
+    assertEquals("address", entityReturned.getAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entityReturned.getAddress().getCountry());
+    assertEquals("city", entityReturned.getAddress().getCity());
+    assertNotNull(entityReturned.getMailingAddress());
+    assertEquals("mailing address", entityReturned.getMailingAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entityReturned.getMailingAddress().getCountry());
+    assertEquals("city mailing", entityReturned.getMailingAddress().getCity());
+  }
+
+  @Test
+  public void occurrenceMappingsTest() {
+    OccurrenceMapping occurrenceMapping = new OccurrenceMapping();
+    occurrenceMapping.setCode("code");
+    occurrenceMapping.setDatasetKey(UUID.randomUUID());
+
+    int key = 1;
+    when(getMockOccurrenceMappingService()
+            .addOccurrenceMapping(any(UUID.class), eq(occurrenceMapping)))
+        .thenReturn(key);
+    int occurrenceMappingKey =
+        getPrimaryCollectionEntityClient()
+            .addOccurrenceMapping(UUID.randomUUID(), occurrenceMapping);
+    assertEquals(key, occurrenceMappingKey);
+    occurrenceMapping.setKey(occurrenceMappingKey);
+
+    when(getMockOccurrenceMappingService().listOccurrenceMappings(any(UUID.class)))
+        .thenReturn(Collections.singletonList(occurrenceMapping));
+
+    List<OccurrenceMapping> mappings =
+        getPrimaryCollectionEntityClient().listOccurrenceMappings(UUID.randomUUID());
+    assertEquals(1, mappings.size());
+
+    doNothing()
+        .when(getMockOccurrenceMappingService())
+        .deleteOccurrenceMapping(any(UUID.class), eq(occurrenceMappingKey));
+    assertDoesNotThrow(
+        () ->
+            getPrimaryCollectionEntityClient()
+                .deleteOccurrenceMapping(UUID.randomUUID(), occurrenceMappingKey));
+  }
+
+  protected PrimaryCollectionEntityClient<T> getPrimaryCollectionEntityClient() {
+    return (PrimaryCollectionEntityClient<T>) baseClient;
+  }
+
+  protected abstract ContactService getMockContactService();
+
+  protected abstract OccurrenceMappingService getMockOccurrenceMappingService();
+}

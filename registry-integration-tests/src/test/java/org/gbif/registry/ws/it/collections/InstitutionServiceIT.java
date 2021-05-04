@@ -35,7 +35,6 @@ import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesSer
 import org.gbif.registry.ws.resources.collections.InstitutionResource;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -45,21 +44,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionResource}. */
 public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Institution> {
-
-  private static final String NAME = "name";
-  private static final String DESCRIPTION = "dummy description";
-  private static final URI HOMEPAGE = URI.create("http://dummy");
-  private static final String CODE_UPDATED = "code2";
-  private static final String NAME_UPDATED = "name2";
-  private static final String DESCRIPTION_UPDATED = "dummy description updated";
-  private static final String ADDITIONAL_NAME = "additional name";
 
   private final InstitutionService institutionService;
 
@@ -87,13 +76,14 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         identityService,
         institutionService,
         institutionService,
-        duplicatesService);
+        duplicatesService,
+        Institution.class);
     this.institutionService = institutionService;
   }
 
   @Test
   public void listTest() {
-    Institution institution1 = newEntity();
+    Institution institution1 = testData.newEntity();
     institution1.setCode("c1");
     institution1.setName("n1");
     Address address = new Address();
@@ -104,7 +94,7 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = institutionService.create(institution1);
 
-    Institution institution2 = newEntity();
+    Institution institution2 = testData.newEntity();
     institution2.setCode("c2");
     institution2.setName("n2");
     Address address2 = new Address();
@@ -260,12 +250,12 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
 
   @Test
   public void testSuggest() {
-    Institution institution1 = newEntity();
+    Institution institution1 = testData.newEntity();
     institution1.setCode("II");
     institution1.setName("Institution name");
     institutionService.create(institution1);
 
-    Institution institution2 = newEntity();
+    Institution institution2 = testData.newEntity();
     institution2.setCode("II2");
     institution2.setName("Institution name2");
     institutionService.create(institution2);
@@ -278,12 +268,12 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
 
   @Test
   public void listDeletedTest() {
-    Institution institution1 = newEntity();
+    Institution institution1 = testData.newEntity();
     institution1.setCode("code1");
     institution1.setName("Institution name");
     UUID key1 = institutionService.create(institution1);
 
-    Institution institution2 = newEntity();
+    Institution institution2 = testData.newEntity();
     institution2.setCode("code2");
     institution2.setName("Institution name2");
     UUID key2 = institutionService.create(institution2);
@@ -299,13 +289,13 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
 
   @Test
   public void listWithoutParametersTest() {
-    Institution institution1 = newEntity();
+    Institution institution1 = testData.newEntity();
     institutionService.create(institution1);
 
-    Institution institution2 = newEntity();
+    Institution institution2 = testData.newEntity();
     institutionService.create(institution2);
 
-    Institution institution3 = newEntity();
+    Institution institution3 = testData.newEntity();
     UUID key3 = institutionService.create(institution3);
 
     PagingResponse<Institution> response =
@@ -341,10 +331,10 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     UUID personKey2 = personService.create(person2);
 
     // institutions
-    Institution institution1 = newEntity();
+    Institution institution1 = testData.newEntity();
     UUID instutionKey1 = institutionService.create(institution1);
 
-    Institution institution2 = newEntity();
+    Institution institution2 = testData.newEntity();
     UUID instutionKey2 = institutionService.create(institution2);
 
     // add contacts
@@ -386,14 +376,14 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
 
   @Test
   public void createInstitutionWithoutCodeTest() {
-    Institution i = newEntity();
+    Institution i = testData.newEntity();
     i.setCode(null);
     assertThrows(ValidationException.class, () -> institutionService.create(i));
   }
 
   @Test
   public void updateInstitutionWithoutCodeTest() {
-    Institution i = newEntity();
+    Institution i = testData.newEntity();
     UUID key = institutionService.create(i);
 
     Institution created = institutionService.get(key);
@@ -403,7 +393,7 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
 
   @Test
   public void updateAndReplaceTest() {
-    Institution i = newEntity();
+    Institution i = testData.newEntity();
     UUID key = institutionService.create(i);
 
     Institution created = institutionService.get(key);
@@ -418,47 +408,5 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
   @Test
   public void possibleDuplicatesTest() {
     testDuplicatesCommonCases();
-  }
-
-  @Override
-  protected Institution newEntity() {
-    Institution institution = new Institution();
-    institution.setCode(UUID.randomUUID().toString());
-    institution.setName(NAME);
-    institution.setDescription(DESCRIPTION);
-    institution.setHomepage(HOMEPAGE);
-    institution.setAdditionalNames(Collections.emptyList());
-    return institution;
-  }
-
-  @Override
-  protected void assertNewEntity(Institution institution) {
-    assertEquals(NAME, institution.getName());
-    assertEquals(DESCRIPTION, institution.getDescription());
-    assertEquals(HOMEPAGE, institution.getHomepage());
-    assertTrue(institution.getAdditionalNames().isEmpty());
-  }
-
-  @Override
-  protected Institution updateEntity(Institution institution) {
-    institution.setCode(CODE_UPDATED);
-    institution.setName(NAME_UPDATED);
-    institution.setDescription(DESCRIPTION_UPDATED);
-    institution.setAdditionalNames(Collections.singletonList(ADDITIONAL_NAME));
-    return institution;
-  }
-
-  @Override
-  protected void assertUpdatedEntity(Institution institution) {
-    assertEquals(CODE_UPDATED, institution.getCode());
-    assertEquals(NAME_UPDATED, institution.getName());
-    assertEquals(DESCRIPTION_UPDATED, institution.getDescription());
-    assertEquals(1, institution.getAdditionalNames().size());
-    assertNotEquals(institution.getCreated(), institution.getModified());
-  }
-
-  @Override
-  protected Institution newInvalidEntity() {
-    return new Institution();
   }
 }

@@ -1,0 +1,155 @@
+package org.gbif.registry.ws.it.collections.resource;
+
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
+import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.registry.CommentService;
+import org.gbif.api.service.registry.IdentifierService;
+import org.gbif.api.service.registry.MachineTagService;
+import org.gbif.api.service.registry.TagService;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.ws.client.collections.PersonClient;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.web.server.LocalServerPort;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+public class PersonResourceIT extends BaseCollectionEntityResourceIT<Person> {
+
+  @MockBean private PersonService personService;
+
+  @Autowired
+  public PersonResourceIT(
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer,
+      @LocalServerPort int localServerPort) {
+    super(PersonClient.class, simplePrincipalProvider, esServer, Person.class, localServerPort);
+  }
+
+  @Test
+  public void listTest() {
+    Person p1 = testData.newEntity();
+    Person p2 = testData.newEntity();
+    List<Person> persons = Arrays.asList(p1, p2);
+
+    when(personService.list(anyString(), any(UUID.class), any(UUID.class), any(Pageable.class)))
+        .thenReturn(
+            new PagingResponse<>(new PagingRequest(), Long.valueOf(persons.size()), persons));
+
+    PagingResponse<Person> result =
+        getClient().list("foo", UUID.randomUUID(), UUID.randomUUID(), new PagingRequest());
+    assertEquals(persons.size(), result.getResults().size());
+  }
+
+  @Test
+  public void testSuggest() {
+    PersonSuggestResult r1 = new PersonSuggestResult(UUID.randomUUID(), "n1", "ln1", "aa@aa.com");
+    PersonSuggestResult r2 = new PersonSuggestResult(UUID.randomUUID(), "n2", "ln2", "aa2@aa.com");
+    List<PersonSuggestResult> results = Arrays.asList(r1, r2);
+
+    when(personService.suggest(anyString())).thenReturn(results);
+    assertEquals(2, getClient().suggest("foo").size());
+  }
+
+  @Test
+  public void listDeletedTest() {
+    Person p1 = testData.newEntity();
+    p1.setKey(UUID.randomUUID());
+    p1.setFirstName("name");
+
+    Person p2 = testData.newEntity();
+    p2.setKey(UUID.randomUUID());
+    p2.setFirstName("name2");
+
+    List<Person> persons = Arrays.asList(p1, p2);
+
+    when(personService.listDeleted(any(Pageable.class)))
+        .thenReturn(
+            new PagingResponse<>(new PagingRequest(), Long.valueOf(persons.size()), persons));
+
+    PagingResponse<Person> result = getClient().listDeleted(new PagingRequest());
+    assertEquals(persons.size(), result.getResults().size());
+  }
+
+  @Test
+  public void getPersonWithAddressTest() {
+    Person person = testData.newEntity();
+    person.setKey(UUID.randomUUID());
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("mailing");
+    mailingAddress.setCity("city");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    person.setMailingAddress(mailingAddress);
+
+    Identifier identifier = new Identifier();
+    identifier.setIdentifier("id");
+    identifier.setType(IdentifierType.IH_IRN);
+    person.setIdentifiers(Collections.singletonList(identifier));
+
+    mockGetEntity(person.getKey(), person);
+    Person personSaved = getClient().get(person.getKey());
+
+    assertTrue(personSaved.lenientEquals(person));
+    assertNotNull(personSaved.getMailingAddress());
+    assertEquals("mailing", personSaved.getMailingAddress().getAddress());
+    assertEquals("city", personSaved.getMailingAddress().getCity());
+    assertEquals(Country.AFGHANISTAN, personSaved.getMailingAddress().getCountry());
+    assertThat(1, greaterThanOrEqualTo(personSaved.getIdentifiers().size()));
+    assertEquals("id", personSaved.getIdentifiers().get(0).getIdentifier());
+    assertEquals(IdentifierType.IH_IRN, personSaved.getIdentifiers().get(0).getType());
+  }
+
+  @Override
+  protected CrudService<Person> getMockCrudService() {
+    return personService;
+  }
+
+  @Override
+  protected TagService getMockTagService() {
+    return personService;
+  }
+
+  @Override
+  protected MachineTagService getMockMachineTagService() {
+    return personService;
+  }
+
+  @Override
+  protected IdentifierService getMockIdentifierService() {
+    return personService;
+  }
+
+  @Override
+  protected CommentService getMockCommentService() {
+    return personService;
+  }
+
+  protected PersonClient getClient() {
+    return (PersonClient) baseClient;
+  }
+}

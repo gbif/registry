@@ -29,7 +29,6 @@ import java.util.UUID;
 import javax.validation.Valid;
 
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,8 +39,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 @RestController
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -62,15 +59,13 @@ public class PersonResource extends BaseCollectionEntityResource<Person> {
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   public UUID create(@RequestBody @Trim Person person) {
     return personService.create(person);
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Person person) {
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Person person) {
     checkArgument(key.equals(person.getKey()));
     personService.update(person);
   }

@@ -34,7 +34,6 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
@@ -56,9 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionResource}. */
 public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collection> {
@@ -66,14 +63,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
   private final CollectionService collectionService;
   private final CollectionDuplicatesService duplicatesService;
   private final InstitutionService institutionService;
-
-  private static final String NAME = "name";
-  private static final String DESCRIPTION = "dummy description";
-  private static final AccessionStatus ACCESSION_STATUS = AccessionStatus.INSTITUTIONAL;
-  private static final String CODE_UPDATED = "code2";
-  private static final String NAME_UPDATED = "name2";
-  private static final String DESCRIPTION_UPDATED = "dummy description updated";
-  private static final AccessionStatus ACCESSION_STATUS_UPDATED = AccessionStatus.PROJECT;
 
   @Autowired
   public CollectionServiceIT(
@@ -100,7 +89,8 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         identityService,
         collectionService,
         collectionService,
-        duplicatesService);
+        duplicatesService,
+        Collection.class);
     this.collectionService = collectionService;
     this.duplicatesService = duplicatesService;
     this.institutionService = institutionService;
@@ -108,7 +98,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
   @Test
   public void listTest() {
-    Collection collection1 = newEntity();
+    Collection collection1 = testData.newEntity();
     collection1.setCode("c1");
     collection1.setName("n1");
     Address address = new Address();
@@ -119,7 +109,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = collectionService.create(collection1);
 
-    Collection collection2 = newEntity();
+    Collection collection2 = testData.newEntity();
     collection2.setCode("c2");
     collection2.setName("n2");
     Address address2 = new Address();
@@ -301,15 +291,15 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     institution2.setName("name2");
     UUID institutionKey2 = institutionService.create(institution2);
 
-    Collection collection1 = newEntity();
+    Collection collection1 = testData.newEntity();
     collection1.setInstitutionKey(institutionKey1);
     collectionService.create(collection1);
 
-    Collection collection2 = newEntity();
+    Collection collection2 = testData.newEntity();
     collection2.setInstitutionKey(institutionKey1);
     collectionService.create(collection2);
 
-    Collection collection3 = newEntity();
+    Collection collection3 = testData.newEntity();
     collection3.setInstitutionKey(institutionKey2);
     collectionService.create(collection3);
 
@@ -351,17 +341,17 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     institution2.setName("name2");
     UUID institutionKey2 = institutionService.create(institution2);
 
-    Collection collection1 = newEntity();
+    Collection collection1 = testData.newEntity();
     collection1.setCode("code1");
     collection1.setInstitutionKey(institutionKey1);
     collectionService.create(collection1);
 
-    Collection collection2 = newEntity();
+    Collection collection2 = testData.newEntity();
     collection2.setCode("code2");
     collection2.setInstitutionKey(institutionKey1);
     collectionService.create(collection2);
 
-    Collection collection3 = newEntity();
+    Collection collection3 = testData.newEntity();
     collection3.setInstitutionKey(institutionKey2);
     collectionService.create(collection3);
 
@@ -404,12 +394,12 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
   @Test
   public void testSuggest() {
-    Collection collection1 = newEntity();
+    Collection collection1 = testData.newEntity();
     collection1.setCode("CC");
     collection1.setName("Collection name");
     collectionService.create(collection1);
 
-    Collection collection2 = newEntity();
+    Collection collection2 = testData.newEntity();
     collection2.setCode("CC2");
     collection2.setName("Collection name2");
     collectionService.create(collection2);
@@ -422,12 +412,12 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
   @Test
   public void listDeletedTest() {
-    Collection collection1 = newEntity();
+    Collection collection1 = testData.newEntity();
     collection1.setCode("code1");
     collection1.setName("Collection name");
     UUID key1 = collectionService.create(collection1);
 
-    Collection collection2 = newEntity();
+    Collection collection2 = testData.newEntity();
     collection2.setCode("code2");
     collection2.setName("Collection name2");
     UUID key2 = collectionService.create(collection2);
@@ -443,10 +433,10 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
   @Test
   public void listWithoutParametersTest() {
-    collectionService.create(newEntity());
-    collectionService.create(newEntity());
+    collectionService.create(testData.newEntity());
+    collectionService.create(testData.newEntity());
 
-    Collection collection3 = newEntity();
+    Collection collection3 = testData.newEntity();
     UUID key3 = collectionService.create(collection3);
 
     PagingResponse<CollectionView> response =
@@ -481,10 +471,10 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     UUID personKey2 = personService.create(person2);
 
     // collections
-    Collection collection1 = newEntity();
+    Collection collection1 = testData.newEntity();
     UUID collectionKey1 = collectionService.create(collection1);
 
-    Collection collection2 = newEntity();
+    Collection collection2 = testData.newEntity();
     UUID collectionKey2 = collectionService.create(collection2);
 
     // add contacts
@@ -526,14 +516,14 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
   @Test
   public void createCollectionWithoutCodeTest() {
-    Collection c = newEntity();
+    Collection c = testData.newEntity();
     c.setCode(null);
     assertThrows(ValidationException.class, () -> collectionService.create(c));
   }
 
   @Test
   public void updateCollectionWithoutCodeTest() {
-    Collection c = newEntity();
+    Collection c = testData.newEntity();
     UUID key = collectionService.create(c);
 
     Collection created = collectionService.get(key);
@@ -543,7 +533,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
   @Test
   public void updateAndReplaceTest() {
-    Collection c = newEntity();
+    Collection c = testData.newEntity();
     UUID key = collectionService.create(c);
 
     Collection created = collectionService.get(key);
@@ -576,47 +566,5 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     params.setNotInInstitutions(new ArrayList<>(keysFound));
     result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(0, result.getDuplicates().size());
-  }
-
-  @Override
-  protected Collection newEntity() {
-    Collection collection = new Collection();
-    collection.setCode(UUID.randomUUID().toString());
-    collection.setName(NAME);
-    collection.setDescription(DESCRIPTION);
-    collection.setActive(true);
-    collection.setAccessionStatus(ACCESSION_STATUS);
-    return collection;
-  }
-
-  @Override
-  protected void assertNewEntity(Collection collection) {
-    assertEquals(NAME, collection.getName());
-    assertEquals(DESCRIPTION, collection.getDescription());
-    assertEquals(ACCESSION_STATUS, collection.getAccessionStatus());
-    assertTrue(collection.isActive());
-  }
-
-  @Override
-  protected Collection updateEntity(Collection collection) {
-    collection.setCode(CODE_UPDATED);
-    collection.setName(NAME_UPDATED);
-    collection.setDescription(DESCRIPTION_UPDATED);
-    collection.setAccessionStatus(ACCESSION_STATUS_UPDATED);
-    return collection;
-  }
-
-  @Override
-  protected void assertUpdatedEntity(Collection collection) {
-    assertEquals(CODE_UPDATED, collection.getCode());
-    assertEquals(NAME_UPDATED, collection.getName());
-    assertEquals(DESCRIPTION_UPDATED, collection.getDescription());
-    assertEquals(ACCESSION_STATUS_UPDATED, collection.getAccessionStatus());
-    assertNotEquals(collection.getCreated(), collection.getModified());
-  }
-
-  @Override
-  protected Collection newInvalidEntity() {
-    return new Collection();
   }
 }

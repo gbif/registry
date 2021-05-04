@@ -27,6 +27,7 @@ import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -79,7 +80,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class PrimaryCollectionEntityServiceIT<
         T extends
             CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable & Commentable
-                & OccurrenceMappeable>
+                & OccurrenceMappeable & LenientEquals<T>>
     extends BaseCollectionEntityServiceIT<T> {
 
   protected final PersonService personService;
@@ -103,8 +104,9 @@ public abstract class PrimaryCollectionEntityServiceIT<
       IdentityService identityService,
       ContactService contactService,
       OccurrenceMappingService occurrenceMappingService,
-      DuplicatesService duplicatesService) {
-    super(crudService, principalProvider, esServer, identityService);
+      DuplicatesService duplicatesService,
+      Class<T> paramType) {
+    super(crudService, principalProvider, esServer, identityService, paramType);
     this.personService = personService;
     this.datasetService = datasetService;
     this.nodeService = nodeService;
@@ -137,9 +139,9 @@ public abstract class PrimaryCollectionEntityServiceIT<
   @Test
   public void contactsTest() {
     // entities
-    UUID entityKey1 = crudService.create(newEntity());
-    UUID entityKey2 = crudService.create(newEntity());
-    UUID entityKey3 = crudService.create(newEntity());
+    UUID entityKey1 = crudService.create(testData.newEntity());
+    UUID entityKey2 = crudService.create(testData.newEntity());
+    UUID entityKey3 = crudService.create(testData.newEntity());
 
     // contacts
     Person person1 = new Person();
@@ -178,7 +180,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
   @Test
   public void duplicateContactTest() {
     // entities
-    UUID entityKey1 = crudService.create(newEntity());
+    UUID entityKey1 = crudService.create(testData.newEntity());
 
     // contacts
     Person person1 = new Person();
@@ -193,10 +195,11 @@ public abstract class PrimaryCollectionEntityServiceIT<
   @Test
   public void updateAddressesTest() {
     // entities
-    T entity = newEntity();
-    UUID entityKey = crudService.create(entity);
-    assertNewEntity(entity);
-    entity = crudService.get(entityKey);
+    T newEntity = testData.newEntity();
+    UUID entityKey = crudService.create(newEntity);
+    assertNotNull(entityKey);
+    T entity = crudService.get(entityKey);
+    assertTrue(newEntity.lenientEquals(entity));
 
     // update adding address
     Address address = new Address();
@@ -251,7 +254,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
 
   @Test
   public void occurrenceMappingsTest() {
-    T entity = newEntity();
+    T entity = testData.newEntity();
     UUID entityKey = crudService.create(entity);
 
     Dataset dataset = createDataset();

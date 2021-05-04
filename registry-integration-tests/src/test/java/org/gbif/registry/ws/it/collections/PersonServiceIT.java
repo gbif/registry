@@ -37,29 +37,19 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.WS_TEST;
+import static org.gbif.registry.ws.it.collections.data.TestDataFactory.PersonTestData.LAST_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
   private final PersonService personService;
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
-
-  private static final String FIRST_NAME = "first name";
-  private static final String LAST_NAME = "last name";
-  private static final String POSITION = "position";
-  private static final String PHONE = "134235435";
-  private static final String EMAIL = "dummy@dummy.com";
-
-  private static final String FIRST_NAME_UPDATED = "first name updated";
-  private static final String POSITION_UPDATED = "new position";
-  private static final String PHONE_UPDATED = "134235433";
 
   @Autowired
   public PersonServiceIT(
@@ -69,7 +59,7 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService) {
-    super(personService, principalProvider, esServer, identityService);
+    super(personService, principalProvider, esServer, identityService, Person.class);
     this.personService = personService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
@@ -77,7 +67,7 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
   @Test
   public void createWithAddressTest() {
-    Person person = newEntity();
+    Person person = testData.newEntity();
 
     Address mailingAddress = new Address();
     mailingAddress.setAddress("mailing");
@@ -93,7 +83,7 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     UUID key = personService.create(person);
     Person personSaved = personService.get(key);
 
-    assertNewEntity(personSaved);
+    assertTrue(personSaved.lenientEquals(person));
     assertNotNull(personSaved.getMailingAddress());
     assertEquals("mailing", personSaved.getMailingAddress().getAddress());
     assertEquals("city", personSaved.getMailingAddress().getCity());
@@ -105,13 +95,13 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
   @Test
   public void listWithoutParamsTest() {
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     personService.create(person2);
 
-    Person person3 = newEntity();
+    Person person3 = testData.newEntity();
     UUID key3 = personService.create(person3);
 
     PagingResponse<Person> response = personService.list(null, null, null, DEFAULT_PAGE);
@@ -131,14 +121,14 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
   @Test
   public void listQueryTest() {
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
     person1.setMailingAddress(address);
     UUID key1 = personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
@@ -193,15 +183,15 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     UUID institutionKey2 = institutionService.create(institution2);
 
     // person
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     person1.setPrimaryInstitutionKey(institutionKey1);
     personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     person2.setPrimaryInstitutionKey(institutionKey1);
     personService.create(person2);
 
-    Person person3 = newEntity();
+    Person person3 = testData.newEntity();
     person3.setPrimaryInstitutionKey(institutionKey2);
     personService.create(person3);
 
@@ -229,15 +219,15 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     UUID collectionKey2 = collectionService.create(collection2);
 
     // person
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     person1.setPrimaryCollectionKey(collectionKey1);
     personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     person2.setPrimaryCollectionKey(collectionKey1);
     personService.create(person2);
 
-    Person person3 = newEntity();
+    Person person3 = testData.newEntity();
     person3.setPrimaryCollectionKey(collectionKey2);
     personService.create(person3);
 
@@ -266,12 +256,12 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     UUID collectionKey1 = collectionService.create(collection1);
 
     // persons
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     person1.setFirstName("person1");
     person1.setPrimaryCollectionKey(collectionKey1);
     personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     person2.setFirstName("person2");
     person2.setPrimaryCollectionKey(collectionKey1);
     person2.setPrimaryInstitutionKey(institutionKey1);
@@ -297,10 +287,10 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
   @Test
   public void updateAddressesTest() {
     // entities
-    Person person = newEntity();
-    UUID entityKey = personService.create(person);
-    assertNewEntity(person);
-    person = personService.get(entityKey);
+    Person newPerson = testData.newEntity();
+    UUID entityKey = personService.create(newPerson);
+    Person person = personService.get(entityKey);
+    assertTrue(newPerson.lenientEquals(person));
 
     // update adding address
     Address address = new Address();
@@ -334,12 +324,12 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
   @Test
   public void testSuggest() {
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     person1.setFirstName("first");
     person1.setLastName("second");
     personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     person2.setFirstName("first");
     person2.setLastName("second2");
     personService.create(person2);
@@ -353,12 +343,12 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
   @Test
   public void listDeletedTest() {
-    Person person1 = newEntity();
+    Person person1 = testData.newEntity();
     person1.setFirstName("first");
     person1.setLastName("second");
     UUID key1 = personService.create(person1);
 
-    Person person2 = newEntity();
+    Person person2 = testData.newEntity();
     person2.setFirstName("first2");
     person2.setLastName("second2");
     UUID key2 = personService.create(person2);
@@ -370,50 +360,5 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
     personService.delete(key2);
     assertEquals(2, personService.listDeleted(DEFAULT_PAGE).getResults().size());
-  }
-
-  @Override
-  protected Person newEntity() {
-    Person person = new Person();
-    person.setFirstName(FIRST_NAME);
-    person.setLastName(LAST_NAME);
-    person.setPosition(POSITION);
-    person.setPhone(PHONE);
-    person.setEmail(EMAIL);
-    person.setCreatedBy(WS_TEST);
-    person.setModifiedBy(WS_TEST);
-    return person;
-  }
-
-  @Override
-  protected void assertNewEntity(Person person) {
-    assertEquals(FIRST_NAME, person.getFirstName());
-    assertEquals(LAST_NAME, person.getLastName());
-    assertEquals(POSITION, person.getPosition());
-    assertEquals(PHONE, person.getPhone());
-    assertEquals(EMAIL, person.getEmail());
-  }
-
-  @Override
-  protected Person updateEntity(Person person) {
-    person.setFirstName(FIRST_NAME_UPDATED);
-    person.setPosition(POSITION_UPDATED);
-    person.setPhone(PHONE_UPDATED);
-    return person;
-  }
-
-  @Override
-  protected void assertUpdatedEntity(Person person) {
-    assertEquals(FIRST_NAME_UPDATED, person.getFirstName());
-    assertEquals(LAST_NAME, person.getLastName());
-    assertEquals(POSITION_UPDATED, person.getPosition());
-    assertEquals(PHONE_UPDATED, person.getPhone());
-    assertEquals(EMAIL, person.getEmail());
-    assertNotEquals(person.getCreated(), person.getModified());
-  }
-
-  @Override
-  protected Person newInvalidEntity() {
-    return new Person();
   }
 }

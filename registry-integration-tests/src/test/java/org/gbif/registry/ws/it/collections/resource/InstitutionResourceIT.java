@@ -1,28 +1,26 @@
 package org.gbif.registry.ws.it.collections.resource;
 
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.TagService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.client.collections.CollectionClient;
+import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,35 +32,36 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Collection> {
+public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Institution> {
 
-  @MockBean private CollectionService collectionService;
+  @MockBean private InstitutionService institutionService;
 
   @Autowired
-  public CollectionResourceIT(
+  public InstitutionResourceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       @LocalServerPort int localServerPort) {
     super(
-        CollectionClient.class,
+        InstitutionClient.class,
         simplePrincipalProvider,
         esServer,
-        Collection.class,
+        Institution.class,
         localServerPort);
   }
 
   @Test
   public void listTest() {
-    Collection c1 = testData.newEntity();
-    Collection c2 = testData.newEntity();
-    List<CollectionView> views =
-        Arrays.asList(c1, c2).stream().map(CollectionView::new).collect(Collectors.toList());
+    Institution i1 = testData.newEntity();
+    Institution i2 = testData.newEntity();
+    List<Institution> institutions = Arrays.asList(i1, i2);
 
-    when(collectionService.list(any(CollectionSearchRequest.class)))
-        .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
+    when(institutionService.list(any(InstitutionSearchRequest.class)))
+        .thenReturn(
+            new PagingResponse<>(
+                new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    PagingResponse<CollectionView> result = getClient().list(new CollectionSearchRequest());
-    assertEquals(views.size(), result.getResults().size());
+    PagingResponse<Institution> result = getClient().list(new InstitutionSearchRequest());
+    assertEquals(institutions.size(), result.getResults().size());
   }
 
   @Test
@@ -71,75 +70,71 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
     KeyCodeNameResult r2 = new KeyCodeNameResult(UUID.randomUUID(), "c2", "n2");
     List<KeyCodeNameResult> results = Arrays.asList(r1, r2);
 
-    when(collectionService.suggest(anyString())).thenReturn(results);
+    when(institutionService.suggest(anyString())).thenReturn(results);
     assertEquals(2, getClient().suggest("foo").size());
   }
 
   @Test
   public void listDeletedTest() {
-    Collection c1 = testData.newEntity();
-    c1.setKey(UUID.randomUUID());
-    c1.setCode("code1");
-    c1.setName("Collection name");
+    Institution i1 = testData.newEntity();
+    i1.setKey(UUID.randomUUID());
+    i1.setCode("code1");
+    i1.setName("Institution name");
 
-    Collection c2 = testData.newEntity();
-    c2.setKey(UUID.randomUUID());
-    c2.setCode("code2");
-    c2.setName("Collection name2");
+    Institution i2 = testData.newEntity();
+    i2.setKey(UUID.randomUUID());
+    i2.setCode("code2");
+    i2.setName("Institution name2");
 
-    List<CollectionView> views =
-        Arrays.asList(c1, c2).stream().map(CollectionView::new).collect(Collectors.toList());
+    List<Institution> institutions = Arrays.asList(i1, i2);
 
-    when(collectionService.listDeleted(any(Pageable.class)))
-        .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
+    when(institutionService.listDeleted(any(Pageable.class)))
+        .thenReturn(
+            new PagingResponse<>(
+                new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    PagingResponse<CollectionView> result = getClient().listDeleted(new PagingRequest());
-    assertEquals(views.size(), result.getResults().size());
+    PagingResponse<Institution> result = getClient().listDeleted(new PagingRequest());
+    assertEquals(institutions.size(), result.getResults().size());
   }
 
   // TODO: duplicates, merge, suggestions
 
   @Override
-  protected CrudService<Collection> getMockCrudService() {
-    return collectionService;
+  protected CrudService<Institution> getMockCrudService() {
+    return institutionService;
   }
 
   @Override
   protected TagService getMockTagService() {
-    return collectionService;
+    return institutionService;
   }
 
   @Override
   protected MachineTagService getMockMachineTagService() {
-    return collectionService;
+    return institutionService;
   }
 
   @Override
   protected IdentifierService getMockIdentifierService() {
-    return collectionService;
+    return institutionService;
   }
 
   @Override
   protected CommentService getMockCommentService() {
-    return collectionService;
+    return institutionService;
   }
 
   @Override
   protected ContactService getMockContactService() {
-    return collectionService;
+    return institutionService;
   }
 
   @Override
   protected OccurrenceMappingService getMockOccurrenceMappingService() {
-    return collectionService;
+    return institutionService;
   }
 
-  protected CollectionClient getClient() {
-    return (CollectionClient) baseClient;
-  }
-
-  @Override
-  void mockGetEntity(UUID key, Collection entityToReturn) {
-    when(collectionService.getCollectionView(key)).thenReturn(new CollectionView(entityToReturn));
+  protected InstitutionClient getClient() {
+    return (InstitutionClient) baseClient;
   }
 }
