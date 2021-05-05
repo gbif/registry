@@ -80,7 +80,7 @@ public class CitationGeneratorTest {
                   + LocalDate.now(ZoneId.of("UTC")).toString()
                   + ".",
                   citation.getText());
-    assertEquals(citation.getAuthors().size(), 1);
+    assertEquals(citation.getContacts().size(), 1);
   }
 
   @Test
@@ -103,7 +103,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getAuthors().size(), 3);
+    assertEquals(citation.getContacts().size(), 3);
   }
 
   @Test
@@ -130,7 +130,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getAuthors().size(), 0);
+    assertEquals(citation.getContacts().size(), 0);
   }
 
   @Test
@@ -151,7 +151,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getAuthors().size(), 1);
+    assertEquals(citation.getContacts().size(), 1);
   }
 
   @Test
@@ -174,7 +174,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getAuthors().size(), 1);
+    assertEquals(citation.getContacts().size(), 1);
   }
 
   @Test
@@ -192,7 +192,7 @@ public class CitationGeneratorTest {
                   + LocalDate.now(ZoneId.of("UTC")).toString()
                   + ".",
                 citation.getText());
-    assertEquals(citation.getAuthors().size(), 0);
+    assertEquals(citation.getContacts().size(), 0);
   }
 
   @Test
@@ -212,7 +212,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getAuthors().size(), 0);
+    assertEquals(citation.getContacts().size(), 0);
   }
 
   @Test
@@ -253,7 +253,7 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(contact1);
     dataset.getContacts().add(contact2);
 
-    List<Citation.Author> authors = getAuthors(dataset.getContacts());
+    List<Citation.CitationContact> authors = getAuthors(dataset.getContacts());
 
     //Only one author added
     assertEquals(1, authors.size());
