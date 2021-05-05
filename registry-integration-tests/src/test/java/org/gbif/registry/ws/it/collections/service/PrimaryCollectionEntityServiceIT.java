@@ -32,10 +32,9 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
@@ -88,12 +87,11 @@ public abstract class PrimaryCollectionEntityServiceIT<
   private final NodeService nodeService;
   private final OrganizationService organizationService;
   private final InstallationService installationService;
-  private final ContactService contactService;
-  private final OccurrenceMappingService occurrenceMappingService;
+  private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
   private final DuplicatesService duplicatesService;
 
   public PrimaryCollectionEntityServiceIT(
-      CrudService<T> crudService,
+    PrimaryCollectionEntityService<T> primaryCollectionEntityService,
       PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,
@@ -102,18 +100,15 @@ public abstract class PrimaryCollectionEntityServiceIT<
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      ContactService contactService,
-      OccurrenceMappingService occurrenceMappingService,
       DuplicatesService duplicatesService,
       Class<T> paramType) {
-    super(crudService, principalProvider, esServer, identityService, paramType);
+    super(primaryCollectionEntityService, principalProvider, esServer, identityService, paramType);
     this.personService = personService;
     this.datasetService = datasetService;
     this.nodeService = nodeService;
     this.organizationService = organizationService;
     this.installationService = installationService;
-    this.contactService = contactService;
-    this.occurrenceMappingService = occurrenceMappingService;
+    this.primaryCollectionEntityService = primaryCollectionEntityService;
     this.duplicatesService = duplicatesService;
   }
 
@@ -139,9 +134,9 @@ public abstract class PrimaryCollectionEntityServiceIT<
   @Test
   public void contactsTest() {
     // entities
-    UUID entityKey1 = crudService.create(testData.newEntity());
-    UUID entityKey2 = crudService.create(testData.newEntity());
-    UUID entityKey3 = crudService.create(testData.newEntity());
+    UUID entityKey1 = primaryCollectionEntityService.create(testData.newEntity());
+    UUID entityKey2 = primaryCollectionEntityService.create(testData.newEntity());
+    UUID entityKey3 = primaryCollectionEntityService.create(testData.newEntity());
 
     // contacts
     Person person1 = new Person();
@@ -153,34 +148,34 @@ public abstract class PrimaryCollectionEntityServiceIT<
     UUID personKey2 = personService.create(person2);
 
     // add contacts
-    contactService.addContact(entityKey1, personKey1);
-    contactService.addContact(entityKey1, personKey2);
-    contactService.addContact(entityKey2, personKey2);
+    primaryCollectionEntityService.addContact(entityKey1, personKey1);
+    primaryCollectionEntityService.addContact(entityKey1, personKey2);
+    primaryCollectionEntityService.addContact(entityKey2, personKey2);
 
     // list contacts
-    List<Person> contactsEntity1 = contactService.listContacts(entityKey1);
+    List<Person> contactsEntity1 = primaryCollectionEntityService.listContacts(entityKey1);
     assertEquals(2, contactsEntity1.size());
 
-    List<Person> contactsEntity2 = contactService.listContacts(entityKey2);
+    List<Person> contactsEntity2 = primaryCollectionEntityService.listContacts(entityKey2);
     assertEquals(1, contactsEntity2.size());
     assertEquals("name2", contactsEntity2.get(0).getFirstName());
 
-    assertEquals(0, contactService.listContacts(entityKey3).size());
+    assertEquals(0, primaryCollectionEntityService.listContacts(entityKey3).size());
 
     // remove contacts
-    contactService.removeContact(entityKey1, personKey2);
-    contactsEntity1 = contactService.listContacts(entityKey1);
+    primaryCollectionEntityService.removeContact(entityKey1, personKey2);
+    contactsEntity1 = primaryCollectionEntityService.listContacts(entityKey1);
     assertEquals(1, contactsEntity1.size());
     assertEquals("name1", contactsEntity1.get(0).getFirstName());
 
-    contactService.removeContact(entityKey2, personKey2);
-    assertEquals(0, contactService.listContacts(entityKey2).size());
+    primaryCollectionEntityService.removeContact(entityKey2, personKey2);
+    assertEquals(0, primaryCollectionEntityService.listContacts(entityKey2).size());
   }
 
   @Test
   public void duplicateContactTest() {
     // entities
-    UUID entityKey1 = crudService.create(testData.newEntity());
+    UUID entityKey1 = primaryCollectionEntityService.create(testData.newEntity());
 
     // contacts
     Person person1 = new Person();
@@ -188,17 +183,19 @@ public abstract class PrimaryCollectionEntityServiceIT<
     UUID personKey1 = personService.create(person1);
 
     // add one contact
-    contactService.addContact(entityKey1, personKey1);
-    assertThrows(RuntimeException.class, () -> contactService.addContact(entityKey1, personKey1));
+    primaryCollectionEntityService.addContact(entityKey1, personKey1);
+    assertThrows(
+        RuntimeException.class,
+        () -> primaryCollectionEntityService.addContact(entityKey1, personKey1));
   }
 
   @Test
   public void updateAddressesTest() {
     // entities
     T newEntity = testData.newEntity();
-    UUID entityKey = crudService.create(newEntity);
+    UUID entityKey = primaryCollectionEntityService.create(newEntity);
     assertNotNull(entityKey);
-    T entity = crudService.get(entityKey);
+    T entity = primaryCollectionEntityService.get(entityKey);
     assertTrue(newEntity.lenientEquals(entity));
 
     // update adding address
@@ -214,8 +211,8 @@ public abstract class PrimaryCollectionEntityServiceIT<
     mailingAddress.setCity("city mailing");
     entity.setMailingAddress(mailingAddress);
 
-    crudService.update(entity);
-    entity = crudService.get(entityKey);
+    primaryCollectionEntityService.update(entity);
+    entity = primaryCollectionEntityService.get(entityKey);
     address = entity.getAddress();
     mailingAddress = entity.getMailingAddress();
 
@@ -236,8 +233,8 @@ public abstract class PrimaryCollectionEntityServiceIT<
     address.setAddress("address2");
     mailingAddress.setAddress("mailing address2");
 
-    crudService.update(entity);
-    entity = crudService.get(entityKey);
+    primaryCollectionEntityService.update(entity);
+    entity = primaryCollectionEntityService.get(entityKey);
     assertNotNull(entity.getAddress());
     assertEquals("address2", entity.getAddress().getAddress());
     assertNotNull(entity.getMailingAddress());
@@ -246,8 +243,8 @@ public abstract class PrimaryCollectionEntityServiceIT<
     // delete address
     entity.setAddress(null);
     entity.setMailingAddress(null);
-    crudService.update(entity);
-    entity = crudService.get(entityKey);
+    primaryCollectionEntityService.update(entity);
+    entity = primaryCollectionEntityService.get(entityKey);
     assertNull(entity.getAddress());
     assertNull(entity.getMailingAddress());
   }
@@ -255,20 +252,21 @@ public abstract class PrimaryCollectionEntityServiceIT<
   @Test
   public void occurrenceMappingsTest() {
     T entity = testData.newEntity();
-    UUID entityKey = crudService.create(entity);
+    UUID entityKey = primaryCollectionEntityService.create(entity);
 
     Dataset dataset = createDataset();
     OccurrenceMapping occurrenceMapping = new OccurrenceMapping();
     occurrenceMapping.setCode("code");
     occurrenceMapping.setDatasetKey(dataset.getKey());
     int occurrenceMappingKey =
-        occurrenceMappingService.addOccurrenceMapping(entityKey, occurrenceMapping);
+        primaryCollectionEntityService.addOccurrenceMapping(entityKey, occurrenceMapping);
 
-    List<OccurrenceMapping> mappings = occurrenceMappingService.listOccurrenceMappings(entityKey);
+    List<OccurrenceMapping> mappings =
+        primaryCollectionEntityService.listOccurrenceMappings(entityKey);
     assertEquals(1, mappings.size());
 
-    occurrenceMappingService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
-    mappings = occurrenceMappingService.listOccurrenceMappings(entityKey);
+    primaryCollectionEntityService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    mappings = primaryCollectionEntityService.listOccurrenceMappings(entityKey);
     assertTrue(mappings.isEmpty());
   }
 

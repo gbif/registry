@@ -27,6 +27,8 @@ public class TestDataFactory {
     throw new UnsupportedOperationException();
   }
 
+  // TODO: populate more fields
+
   public static class CollectionTestData implements TestData<Collection> {
 
     public static final String NAME = "name";

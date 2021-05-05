@@ -16,11 +16,11 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
@@ -29,8 +29,7 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.OccurrenceMappingService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
@@ -57,8 +56,8 @@ import static org.mockito.Mockito.when;
 
 public abstract class PrimaryCollectionEntityResourceIT<
         T extends
-            CollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable & Commentable
-                & OccurrenceMappeable & LenientEquals<T>>
+            PrimaryCollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable
+                & Commentable & OccurrenceMappeable & LenientEquals<T>>
     extends BaseCollectionEntityResourceIT<T> {
 
   public PrimaryCollectionEntityResourceIT(
@@ -82,19 +81,19 @@ public abstract class PrimaryCollectionEntityResourceIT<
     person2.setKey(UUID.randomUUID());
 
     // add contact
-    doNothing().when(getMockContactService()).addContact(any(UUID.class), any(UUID.class));
+    doNothing().when(getMockPrimaryEntityService()).addContact(any(UUID.class), any(UUID.class));
     assertDoesNotThrow(
         () -> getPrimaryCollectionEntityClient().addContact(UUID.randomUUID(), UUID.randomUUID()));
 
     // list contacts
-    when(getMockContactService().listContacts(any(UUID.class)))
+    when(getMockPrimaryEntityService().listContacts(any(UUID.class)))
         .thenReturn(Arrays.asList(person1, person2));
     List<Person> contactsEntity1 =
         getPrimaryCollectionEntityClient().listContacts(UUID.randomUUID());
     assertEquals(2, contactsEntity1.size());
 
     // remove contacts
-    doNothing().when(getMockContactService()).removeContact(any(UUID.class), any(UUID.class));
+    doNothing().when(getMockPrimaryEntityService()).removeContact(any(UUID.class), any(UUID.class));
     assertDoesNotThrow(
         () ->
             getPrimaryCollectionEntityClient().removeContact(UUID.randomUUID(), UUID.randomUUID()));
@@ -139,8 +138,7 @@ public abstract class PrimaryCollectionEntityResourceIT<
     occurrenceMapping.setDatasetKey(UUID.randomUUID());
 
     int key = 1;
-    when(getMockOccurrenceMappingService()
-            .addOccurrenceMapping(any(UUID.class), eq(occurrenceMapping)))
+    when(getMockPrimaryEntityService().addOccurrenceMapping(any(UUID.class), eq(occurrenceMapping)))
         .thenReturn(key);
     int occurrenceMappingKey =
         getPrimaryCollectionEntityClient()
@@ -148,7 +146,7 @@ public abstract class PrimaryCollectionEntityResourceIT<
     assertEquals(key, occurrenceMappingKey);
     occurrenceMapping.setKey(occurrenceMappingKey);
 
-    when(getMockOccurrenceMappingService().listOccurrenceMappings(any(UUID.class)))
+    when(getMockPrimaryEntityService().listOccurrenceMappings(any(UUID.class)))
         .thenReturn(Collections.singletonList(occurrenceMapping));
 
     List<OccurrenceMapping> mappings =
@@ -156,7 +154,7 @@ public abstract class PrimaryCollectionEntityResourceIT<
     assertEquals(1, mappings.size());
 
     doNothing()
-        .when(getMockOccurrenceMappingService())
+        .when(getMockPrimaryEntityService())
         .deleteOccurrenceMapping(any(UUID.class), eq(occurrenceMappingKey));
     assertDoesNotThrow(
         () ->
@@ -191,9 +189,7 @@ public abstract class PrimaryCollectionEntityResourceIT<
     return (PrimaryCollectionEntityClient<T>) baseClient;
   }
 
-  protected abstract ContactService getMockContactService();
-
-  protected abstract OccurrenceMappingService getMockOccurrenceMappingService();
+  protected abstract PrimaryCollectionEntityService<T> getMockPrimaryEntityService();
 
   protected abstract DuplicatesService getMockDuplicatesService();
 }

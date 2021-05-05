@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
@@ -53,18 +54,18 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 @Validated
-public abstract class PrimaryCollectionEntityService<
+public abstract class BasePrimaryCollectionEntityService<
         T extends
             PrimaryCollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable
                 & Commentable & OccurrenceMappeable>
-    extends BaseCollectionEntityService<T> implements ContactService, OccurrenceMappingService {
+    extends BaseCollectionEntityService<T> implements PrimaryCollectionEntityService<T> {
 
   private final ContactableMapper contactableMapper;
   private final OccurrenceMappingMapper occurrenceMappingMapper;
   private final OccurrenceMappeableMapper occurrenceMappeableMapper;
   private final AddressMapper addressMapper;
 
-  protected PrimaryCollectionEntityService(
+  protected BasePrimaryCollectionEntityService(
       Class<T> objectClass,
       BaseMapper<T> baseMapper,
       AddressMapper addressMapper,

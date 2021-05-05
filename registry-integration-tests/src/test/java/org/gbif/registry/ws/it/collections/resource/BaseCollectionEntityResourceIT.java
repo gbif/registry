@@ -10,11 +10,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
@@ -77,7 +73,7 @@ abstract class BaseCollectionEntityResourceIT<
     T entity = testData.newEntity();
     UUID entityKey = UUID.randomUUID();
 
-    when(getMockCrudService().create(entity)).thenReturn(entityKey);
+    when(getMockBaseService().create(entity)).thenReturn(entityKey);
     UUID key = baseClient.create(entity);
     assertEquals(entityKey, key);
 
@@ -88,7 +84,7 @@ abstract class BaseCollectionEntityResourceIT<
 
     // update
     entity = testData.updateEntity(entitySaved);
-    doNothing().when(getMockCrudService()).update(entity);
+    doNothing().when(getMockBaseService()).update(entity);
     baseClient.update(entity);
 
     mockGetEntity(entityKey, entity);
@@ -96,7 +92,7 @@ abstract class BaseCollectionEntityResourceIT<
     assertTrue(entity.lenientEquals(entitySaved));
 
     // delete
-    doNothing().when(getMockCrudService()).delete(key);
+    doNothing().when(getMockBaseService()).delete(key);
     baseClient.delete(key);
 
     entity.setDeleted(new Date());
@@ -176,19 +172,19 @@ abstract class BaseCollectionEntityResourceIT<
     tag.setValue("value");
 
     int tagKey = 1;
-    when(getMockTagService().addTag(key, tag)).thenReturn(tagKey);
+    when(getMockBaseService().addTag(key, tag)).thenReturn(tagKey);
     int returnedKey = baseClient.addTag(key, tag);
     assertEquals(tagKey, returnedKey);
     tag.setKey(returnedKey);
 
-    when(getMockTagService().listTags(key, null)).thenReturn(Collections.singletonList(tag));
+    when(getMockBaseService().listTags(key, null)).thenReturn(Collections.singletonList(tag));
 
     List<Tag> tagsReturned = baseClient.listTags(key, null);
     assertEquals(1, tagsReturned.size());
     assertEquals(tagKey, tagsReturned.get(0).getKey());
     assertEquals("value", tagsReturned.get(0).getValue());
 
-    doNothing().when(getMockTagService()).deleteTag(key, tagKey);
+    doNothing().when(getMockBaseService()).deleteTag(key, tagKey);
     assertDoesNotThrow(() -> baseClient.deleteTag(key, tagKey));
   }
 
@@ -197,20 +193,20 @@ abstract class BaseCollectionEntityResourceIT<
     UUID entityKey = UUID.randomUUID();
     MachineTag machineTag = new MachineTag("ns", "name", "value");
     int machineTagKey = 1;
-    when(getMockMachineTagService().addMachineTag(entityKey, machineTag)).thenReturn(machineTagKey);
+    when(getMockBaseService().addMachineTag(entityKey, machineTag)).thenReturn(machineTagKey);
 
     int machineTagKeyReturned = baseClient.addMachineTag(entityKey, machineTag);
     assertEquals(machineTagKey, machineTagKeyReturned);
     machineTag.setKey(machineTagKeyReturned);
 
-    when(getMockMachineTagService().listMachineTags(entityKey))
+    when(getMockBaseService().listMachineTags(entityKey))
         .thenReturn(Collections.singletonList(machineTag));
     List<MachineTag> machineTags = baseClient.listMachineTags(entityKey);
     assertEquals(1, machineTags.size());
     assertEquals(machineTagKey, machineTags.get(0).getKey());
     assertEquals("value", machineTags.get(0).getValue());
 
-    doNothing().when(getMockMachineTagService()).deleteMachineTag(entityKey, machineTagKey);
+    doNothing().when(getMockBaseService()).deleteMachineTag(entityKey, machineTagKey);
     assertDoesNotThrow(() -> baseClient.deleteMachineTag(entityKey, machineTagKey));
   }
 
@@ -223,12 +219,12 @@ abstract class BaseCollectionEntityResourceIT<
     identifier.setType(IdentifierType.LSID);
 
     int identifierKey = 1;
-    when(getMockIdentifierService().addIdentifier(entityKey, identifier)).thenReturn(identifierKey);
+    when(getMockBaseService().addIdentifier(entityKey, identifier)).thenReturn(identifierKey);
     int identifierKeyReturned = baseClient.addIdentifier(entityKey, identifier);
     assertEquals(identifierKey, identifierKeyReturned);
     identifier.setKey(identifierKeyReturned);
 
-    when(getMockIdentifierService().listIdentifiers(entityKey))
+    when(getMockBaseService().listIdentifiers(entityKey))
         .thenReturn(Collections.singletonList(identifier));
     List<Identifier> identifiers = baseClient.listIdentifiers(entityKey);
     assertEquals(1, identifiers.size());
@@ -236,7 +232,7 @@ abstract class BaseCollectionEntityResourceIT<
     assertEquals("identifier", identifiers.get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
 
-    doNothing().when(getMockIdentifierService()).deleteIdentifier(entityKey, identifierKey);
+    doNothing().when(getMockBaseService()).deleteIdentifier(entityKey, identifierKey);
     assertDoesNotThrow(() -> baseClient.deleteIdentifier(entityKey, identifierKey));
   }
 
@@ -247,33 +243,25 @@ abstract class BaseCollectionEntityResourceIT<
     Comment comment = new Comment();
     comment.setContent("test comment");
     int commentKey = 1;
-    when(getMockCommentService().addComment(entityKey, comment)).thenReturn(commentKey);
+    when(getMockBaseService().addComment(entityKey, comment)).thenReturn(commentKey);
     int commentKeyReturned = baseClient.addComment(entityKey, comment);
     assertEquals(commentKey, commentKeyReturned);
     comment.setKey(commentKey);
 
-    when(getMockCommentService().listComments(entityKey))
+    when(getMockBaseService().listComments(entityKey))
         .thenReturn(Collections.singletonList(comment));
     List<Comment> comments = baseClient.listComments(entityKey);
     assertEquals(1, comments.size());
     assertEquals(commentKey, comments.get(0).getKey());
     assertEquals(comment.getContent(), comments.get(0).getContent());
 
-    doNothing().when(getMockCommentService()).deleteComment(entityKey, commentKey);
+    doNothing().when(getMockBaseService()).deleteComment(entityKey, commentKey);
     assertDoesNotThrow(() -> baseClient.deleteComment(entityKey, commentKey));
   }
 
   void mockGetEntity(UUID key, T entityToReturn) {
-    when(getMockCrudService().get(key)).thenReturn(entityToReturn);
+    when(getMockBaseService().get(key)).thenReturn(entityToReturn);
   }
 
-  protected abstract CrudService<T> getMockCrudService();
-
-  protected abstract TagService getMockTagService();
-
-  protected abstract MachineTagService getMockMachineTagService();
-
-  protected abstract IdentifierService getMockIdentifierService();
-
-  protected abstract CommentService getMockCommentService();
+  protected abstract CollectionEntityService<T> getMockBaseService();
 }

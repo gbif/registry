@@ -73,8 +73,6 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         principalProvider,
         esServer,
         identityService,
-        institutionService,
-        institutionService,
         duplicatesService,
         Institution.class);
     this.institutionService = institutionService;

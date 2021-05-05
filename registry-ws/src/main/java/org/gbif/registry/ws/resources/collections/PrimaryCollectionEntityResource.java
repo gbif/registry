@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
@@ -34,13 +35,7 @@ import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.service.collections.OccurrenceMappingService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -74,88 +69,77 @@ import static com.google.common.base.Preconditions.checkArgument;
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 public abstract class PrimaryCollectionEntityResource<
         T extends
-            CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable & Commentable
-                & OccurrenceMappeable,
+            PrimaryCollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable
+                & Commentable & OccurrenceMappeable,
         R extends ChangeSuggestion<T>>
     extends BaseCollectionEntityResource<T> {
 
   private final MergeService<T> mergeService;
-  private final CrudService<T> crudService;
-  private final ContactService contactService;
-  private final OccurrenceMappingService occurrenceMappingService;
+  private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
   private final ChangeSuggestionService<T, R> changeSuggestionService;
   private final DuplicatesService duplicatesService;
 
   protected PrimaryCollectionEntityResource(
       MergeService<T> mergeService,
-      CrudService<T> crudService,
-      ContactService contactService,
-      IdentifierService identifierService,
-      TagService tagService,
-      MachineTagService machineTagService,
-      CommentService commentService,
-      OccurrenceMappingService occurrenceMappingService,
+      PrimaryCollectionEntityService<T> primaryCollectionEntityService,
       ChangeSuggestionService<T, R> changeSuggestionService,
       DuplicatesService duplicatesService,
       Class<T> objectClass) {
-    super(
-        objectClass, crudService, identifierService, tagService, machineTagService, commentService);
+    super(objectClass, primaryCollectionEntityService);
     this.mergeService = mergeService;
     this.changeSuggestionService = changeSuggestionService;
-    this.crudService = crudService;
-    this.contactService = contactService;
-    this.occurrenceMappingService = occurrenceMappingService;
+    this.primaryCollectionEntityService = primaryCollectionEntityService;
     this.duplicatesService = duplicatesService;
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID create(@RequestBody @Trim T entity) {
-    return crudService.create(entity);
+    return primaryCollectionEntityService.create(entity);
   }
 
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim T entity) {
     checkArgument(key.equals(entity.getKey()));
-    crudService.update(entity);
+    primaryCollectionEntityService.update(entity);
   }
 
   @PostMapping(
       value = "{key}/contact",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
   public void addContact(@PathVariable("key") UUID entityKey, @RequestBody UUID personKey) {
-    contactService.addContact(entityKey, personKey);
+    primaryCollectionEntityService.addContact(entityKey, personKey);
   }
 
   @DeleteMapping("{key}/contact/{personKey}")
   public void removeContact(@PathVariable("key") UUID entityKey, @PathVariable UUID personKey) {
-    contactService.removeContact(entityKey, personKey);
+    primaryCollectionEntityService.removeContact(entityKey, personKey);
   }
 
   @GetMapping("{key}/contact")
   @Nullable
   public List<Person> listContacts(@PathVariable UUID key) {
-    return contactService.listContacts(key);
+    return primaryCollectionEntityService.listContacts(key);
   }
 
   @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @RequestBody @Trim OccurrenceMapping occurrenceMapping) {
-    return occurrenceMappingService.addOccurrenceMapping(entityKey, occurrenceMapping);
+    return primaryCollectionEntityService.addOccurrenceMapping(entityKey, occurrenceMapping);
   }
 
   @GetMapping("{key}/occurrenceMapping")
   @Nullable
   public List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID uuid) {
-    return occurrenceMappingService.listOccurrenceMappings(uuid);
+    return primaryCollectionEntityService.listOccurrenceMappings(uuid);
   }
 
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
   public void deleteOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
-    occurrenceMappingService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    primaryCollectionEntityService.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
   }
 
   @PostMapping(value = "{key}/merge")

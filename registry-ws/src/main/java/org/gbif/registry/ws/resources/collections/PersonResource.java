@@ -26,8 +26,6 @@ import org.gbif.api.service.collections.PersonService;
 import java.util.List;
 import java.util.UUID;
 
-import javax.validation.Valid;
-
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,7 +45,7 @@ public class PersonResource extends BaseCollectionEntityResource<Person> {
   private final PersonService personService;
 
   public PersonResource(PersonService personService) {
-    super(Person.class, personService, personService, personService, personService, personService);
+    super(Person.class, personService);
     this.personService = personService;
   }
 

@@ -10,11 +10,7 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.EventManager;
@@ -49,7 +45,7 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 @Validated
 public abstract class BaseCollectionEntityService<
         T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable>
-    implements CrudService<T>, TagService, IdentifierService, MachineTagService, CommentService {
+    implements CollectionEntityService<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseCollectionEntityService.class);
 
@@ -321,9 +317,4 @@ public abstract class BaseCollectionEntityService<
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     entity.setModifiedBy(authentication.getName());
   }
-
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
-  @Transactional
-  @Override
-  public abstract void update(T entity);
 }

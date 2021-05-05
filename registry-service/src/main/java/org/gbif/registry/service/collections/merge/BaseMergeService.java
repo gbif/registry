@@ -19,17 +19,31 @@ import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.*;
+import org.gbif.registry.persistence.mapper.collections.BaseMapper;
+import org.gbif.registry.persistence.mapper.collections.MergeableMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
+import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserRoles;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import org.springframework.security.access.annotation.Secured;
@@ -40,7 +54,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.domain.collections.Constants.*;
+import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
@@ -50,7 +64,8 @@ public abstract class BaseMergeService<
                 & Taggable & Commentable>
     implements MergeService<T> {
 
-  // TODO: usar los servicios en lugar de los mappers
+  // TODO: usar los servicios en lugar de los mappers. Necesito nuevos servicios para el audit log
+  // tb (como por ejemplo uno para mover un identifer)
 
   protected final BaseMapper<T> baseMapper;
   protected final MergeableMapper mergeableMapper;

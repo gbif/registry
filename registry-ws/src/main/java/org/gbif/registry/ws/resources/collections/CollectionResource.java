@@ -47,7 +47,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class CollectionResource
     extends PrimaryCollectionEntityResource<Collection, CollectionChangeSuggestion> {
 
-  private final CollectionDuplicatesService duplicatesService;
   public final CollectionService collectionService;
 
   public CollectionResource(
@@ -58,16 +57,9 @@ public class CollectionResource
     super(
         collectionMergeService,
         collectionService,
-        collectionService,
-        collectionService,
-        collectionService,
-        collectionService,
-        collectionService,
-        collectionService,
         collectionChangeSuggestionService,
         duplicatesService,
         Collection.class);
-    this.duplicatesService = duplicatesService;
     this.collectionService = collectionService;
   }
 

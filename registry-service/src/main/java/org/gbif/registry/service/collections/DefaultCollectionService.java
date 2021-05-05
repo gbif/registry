@@ -34,7 +34,7 @@ import com.google.common.base.Strings;
 
 @Validated
 @Service
-public class DefaultCollectionService extends PrimaryCollectionEntityService<Collection>
+public class DefaultCollectionService extends BasePrimaryCollectionEntityService<Collection>
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;

@@ -7,14 +7,9 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.CrudService;
-import org.gbif.api.service.collections.OccurrenceMappingService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
@@ -109,37 +104,7 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
   // TODO: merge, suggestions
 
   @Override
-  protected CrudService<Collection> getMockCrudService() {
-    return collectionService;
-  }
-
-  @Override
-  protected TagService getMockTagService() {
-    return collectionService;
-  }
-
-  @Override
-  protected MachineTagService getMockMachineTagService() {
-    return collectionService;
-  }
-
-  @Override
-  protected IdentifierService getMockIdentifierService() {
-    return collectionService;
-  }
-
-  @Override
-  protected CommentService getMockCommentService() {
-    return collectionService;
-  }
-
-  @Override
-  protected ContactService getMockContactService() {
-    return collectionService;
-  }
-
-  @Override
-  protected OccurrenceMappingService getMockOccurrenceMappingService() {
+  protected PrimaryCollectionEntityService<Collection> getMockPrimaryEntityService() {
     return collectionService;
   }
 
@@ -155,5 +120,10 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
   @Override
   void mockGetEntity(UUID key, Collection entityToReturn) {
     when(collectionService.getCollectionView(key)).thenReturn(new CollectionView(entityToReturn));
+  }
+
+  @Override
+  protected CollectionEntityService<Collection> getMockBaseService() {
+    return collectionService;
   }
 }

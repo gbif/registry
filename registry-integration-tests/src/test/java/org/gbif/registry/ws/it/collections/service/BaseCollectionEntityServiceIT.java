@@ -27,7 +27,7 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.registry.CommentService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.MachineTagService;
@@ -64,7 +64,7 @@ public abstract class BaseCollectionEntityServiceIT<
                 & LenientEquals<T>>
     extends BaseServiceIT {
 
-  protected final CrudService<T> crudService;
+  protected final CollectionEntityService<T> collectionEntityService;
   protected final Class<T> paramType;
   protected final TestData<T> testData;
 
@@ -76,13 +76,13 @@ public abstract class BaseCollectionEntityServiceIT<
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   public BaseCollectionEntityServiceIT(
-      CrudService<T> crudService,
+      CollectionEntityService<T> collectionEntityService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
       Class<T> paramType) {
     super(principalProvider, esServer);
-    this.crudService = crudService;
+    this.collectionEntityService = collectionEntityService;
     this.paramType = paramType;
     this.testData = TestDataFactory.create(paramType);
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
@@ -92,11 +92,11 @@ public abstract class BaseCollectionEntityServiceIT<
   public void crudTest() {
     // create
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
 
     assertNotNull(key);
 
-    T entitySaved = crudService.get(key);
+    T entitySaved = collectionEntityService.get(key);
     assertEquals(key, entitySaved.getKey());
     assertTrue(entity.lenientEquals(entitySaved));
     assertNotNull(entitySaved.getCreatedBy());
@@ -106,70 +106,73 @@ public abstract class BaseCollectionEntityServiceIT<
 
     // update
     entity = testData.updateEntity(entitySaved);
-    crudService.update(entity);
+    collectionEntityService.update(entity);
 
-    entitySaved = crudService.get(key);
+    entitySaved = collectionEntityService.get(key);
     assertTrue(entity.lenientEquals(entitySaved));
     assertNotEquals(entitySaved.getCreated(), entitySaved.getModified());
 
     // delete
-    crudService.delete(key);
-    entitySaved = crudService.get(key);
+    collectionEntityService.delete(key);
+    entitySaved = collectionEntityService.get(key);
     assertNotNull(entitySaved.getDeleted());
   }
 
   @Test
   public void createInvalidEntityTest() {
-    assertThrows(ValidationException.class, () -> crudService.create(testData.newInvalidEntity()));
+    assertThrows(
+        ValidationException.class,
+        () -> collectionEntityService.create(testData.newInvalidEntity()));
   }
 
   @Test
   public void deleteMissingEntityTest() {
-    assertThrows(IllegalArgumentException.class, () -> crudService.delete(UUID.randomUUID()));
+    assertThrows(
+        IllegalArgumentException.class, () -> collectionEntityService.delete(UUID.randomUUID()));
   }
 
   @Test
   public void updateDeletedEntityTest() {
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
     entity.setKey(key);
-    crudService.delete(key);
+    collectionEntityService.delete(key);
 
-    T entity2 = crudService.get(key);
+    T entity2 = collectionEntityService.get(key);
     assertNotNull(entity2.getDeleted());
-    assertThrows(IllegalArgumentException.class, () -> crudService.update(entity2));
+    assertThrows(IllegalArgumentException.class, () -> collectionEntityService.update(entity2));
   }
 
   @Test
   public void restoreDeletedEntityTest() {
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
     entity.setKey(key);
-    crudService.delete(key);
-    entity = crudService.get(key);
+    collectionEntityService.delete(key);
+    entity = collectionEntityService.get(key);
     assertNotNull(entity.getDeleted());
 
     // restore it
     entity.setDeleted(null);
-    crudService.update(entity);
-    entity = crudService.get(key);
+    collectionEntityService.update(entity);
+    entity = collectionEntityService.get(key);
     assertNull(entity.getDeleted());
   }
 
   @Test
   public void updateInvalidEntityTest() {
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
 
     T newEntity = testData.newInvalidEntity();
     newEntity.setKey(key);
-    assertThrows(ValidationException.class, () -> crudService.update(newEntity));
+    assertThrows(ValidationException.class, () -> collectionEntityService.update(newEntity));
   }
 
   @Test
   public void getMissingEntity() {
     try {
-      T entity = crudService.get(UUID.randomUUID());
+      T entity = collectionEntityService.get(UUID.randomUUID());
       assertNull(entity);
     } catch (Exception ex) {
       assertEquals(NotFoundException.class, ex.getClass());
@@ -192,8 +195,8 @@ public abstract class BaseCollectionEntityServiceIT<
     identifier.setType(IdentifierType.LSID);
     entity.setIdentifiers(Collections.singletonList(identifier));
 
-    UUID key = crudService.create(entity);
-    T entitySaved = crudService.get(key);
+    UUID key = collectionEntityService.create(entity);
+    T entitySaved = collectionEntityService.get(key);
 
     assertEquals(1, entitySaved.getMachineTags().size());
     assertEquals("value", entitySaved.getMachineTags().get(0).getValue());
@@ -206,9 +209,9 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void tagsTest() {
-    TagService tagService = (TagService) crudService;
+    TagService tagService = (TagService) collectionEntityService;
 
-    UUID key = crudService.create(testData.newEntity());
+    UUID key = collectionEntityService.create(testData.newEntity());
 
     Tag tag = new Tag();
     tag.setValue("value");
@@ -225,10 +228,10 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void machineTagsTest() {
-    MachineTagService machineTagService = (MachineTagService) crudService;
+    MachineTagService machineTagService = (MachineTagService) collectionEntityService;
 
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
     int machineTagKey = machineTagService.addMachineTag(key, machineTag);
@@ -244,10 +247,10 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void identifiersTest() {
-    IdentifierService identifierService = (IdentifierService) crudService;
+    IdentifierService identifierService = (IdentifierService) collectionEntityService;
 
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
 
     Identifier identifier = new Identifier();
     identifier.setIdentifier("identifier");
@@ -267,10 +270,10 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void commentsTest() {
-    CommentService commentService = (CommentService) crudService;
+    CommentService commentService = (CommentService) collectionEntityService;
 
     T entity = testData.newEntity();
-    UUID key = crudService.create(entity);
+    UUID key = collectionEntityService.create(entity);
 
     Comment comment = new Comment();
     comment.setContent("test comment");

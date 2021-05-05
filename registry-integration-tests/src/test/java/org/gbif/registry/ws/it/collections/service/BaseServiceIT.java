@@ -54,13 +54,13 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class})
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
 @ContextConfiguration(
     initializers = {
       BaseServiceIT.ContextInitializer.class,
       BaseServiceIT.EsContainerContextInitializer.class
     })
-@ActiveProfiles({"test"})
+@ActiveProfiles("test")
 public class BaseServiceIT {
 
   public static class EsContainerContextInitializer
@@ -173,13 +173,4 @@ public class BaseServiceIT {
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
   }
-
-  //  @TestConfiguration
-  //  @Profile("mock")
-  //  public static class MockConfig {
-  //
-  //    // mocked because it needs the mockMvc bean and the tests that extend this class don't use
-  // it
-  //    @MockBean RequestTestFixture requestTestFixture;
-  //  }
 }

@@ -67,7 +67,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
   public CollectionServiceIT(
       InstitutionService institutionService,
       CollectionService collectionService,
-      PersonService personResource,
+      PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -78,7 +78,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
       CollectionDuplicatesService duplicatesService) {
     super(
         collectionService,
-        personResource,
+        personService,
         datasetService,
         nodeService,
         organizationService,
@@ -86,8 +86,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         principalProvider,
         esServer,
         identityService,
-        collectionService,
-        collectionService,
         duplicatesService,
         Collection.class);
     this.collectionService = collectionService;

@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @Validated
 @Service
-public class DefaultInstitutionService extends PrimaryCollectionEntityService<Institution>
+public class DefaultInstitutionService extends BasePrimaryCollectionEntityService<Institution>
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;

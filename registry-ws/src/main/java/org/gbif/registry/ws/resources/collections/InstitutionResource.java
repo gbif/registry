@@ -17,8 +17,6 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
-import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
@@ -26,7 +24,6 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
@@ -43,8 +40,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
  * implementation of {@link InstitutionService}.
@@ -56,7 +51,6 @@ public class InstitutionResource
 
   private final InstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
-  private final InstitutionDuplicatesService duplicatesService;
 
   public InstitutionResource(
       InstitutionMergeService institutionMergeService,
@@ -66,18 +60,11 @@ public class InstitutionResource
     super(
         institutionMergeService,
         institutionService,
-        institutionService,
-        institutionService,
-        institutionService,
-        institutionService,
-        institutionService,
-        institutionService,
         institutionChangeSuggestionService,
         duplicatesService,
         Institution.class);
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
-    this.duplicatesService = duplicatesService;
   }
 
   @GetMapping("{key}")

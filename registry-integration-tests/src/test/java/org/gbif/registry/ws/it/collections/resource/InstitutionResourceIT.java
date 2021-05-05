@@ -6,14 +6,9 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.OccurrenceMappingService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -110,37 +105,7 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
   // TODO: merge, suggestions
 
   @Override
-  protected CrudService<Institution> getMockCrudService() {
-    return institutionService;
-  }
-
-  @Override
-  protected TagService getMockTagService() {
-    return institutionService;
-  }
-
-  @Override
-  protected MachineTagService getMockMachineTagService() {
-    return institutionService;
-  }
-
-  @Override
-  protected IdentifierService getMockIdentifierService() {
-    return institutionService;
-  }
-
-  @Override
-  protected CommentService getMockCommentService() {
-    return institutionService;
-  }
-
-  @Override
-  protected ContactService getMockContactService() {
-    return institutionService;
-  }
-
-  @Override
-  protected OccurrenceMappingService getMockOccurrenceMappingService() {
+  protected PrimaryCollectionEntityService<Institution> getMockPrimaryEntityService() {
     return institutionService;
   }
 
@@ -151,5 +116,10 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
 
   protected InstitutionClient getClient() {
     return (InstitutionClient) baseClient;
+  }
+
+  @Override
+  protected CollectionEntityService<Institution> getMockBaseService() {
+    return institutionService;
   }
 }

@@ -7,12 +7,8 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
-import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.PersonService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.search.test.EsManageServer;
@@ -124,32 +120,12 @@ public class PersonResourceIT extends BaseCollectionEntityResourceIT<Person> {
     assertEquals(IdentifierType.IH_IRN, personSaved.getIdentifiers().get(0).getType());
   }
 
-  @Override
-  protected CrudService<Person> getMockCrudService() {
-    return personService;
-  }
-
-  @Override
-  protected TagService getMockTagService() {
-    return personService;
-  }
-
-  @Override
-  protected MachineTagService getMockMachineTagService() {
-    return personService;
-  }
-
-  @Override
-  protected IdentifierService getMockIdentifierService() {
-    return personService;
-  }
-
-  @Override
-  protected CommentService getMockCommentService() {
-    return personService;
-  }
-
   protected PersonClient getClient() {
     return (PersonClient) baseClient;
+  }
+
+  @Override
+  protected CollectionEntityService<Person> getMockBaseService() {
+    return personService;
   }
 }
