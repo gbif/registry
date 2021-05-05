@@ -258,10 +258,13 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         || Strings.isNullOrEmpty(originalCitation.getText())) {
       // if the citation already exists keep it and only change the text. That allows us to keep the
       // identifier if provided.
-      Citation citation = originalCitation == null ? new Citation() : originalCitation;
-      citation.setText(
+      Citation citation =
           CitationGenerator.generateCitation(
-              dataset, organizationCache.getUnchecked(dataset.getPublishingOrganizationKey())));
+              dataset, organizationCache.getUnchecked(dataset.getPublishingOrganizationKey()));
+      //Identifier is preserved from the original citation
+      if (originalCitation != null){
+        citation.setIdentifier(originalCitation.getIdentifier());
+      }
       dataset.setCitation(citation);
     } else {
       // Append DOI if necessary, and append "accessed via GBIF.org".

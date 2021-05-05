@@ -7,7 +7,8 @@
   "language":"DA",
   "citation": {
     "text":"This is a citation text",
-    "identifier":"ABC"
+    "identifier":"ABC",
+    "people": []
   },
   "rights":"The rights",
   "logoUrl":"http://www.example.org",

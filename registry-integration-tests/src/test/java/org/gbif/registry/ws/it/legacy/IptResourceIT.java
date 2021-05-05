@@ -798,7 +798,7 @@ public class IptResourceIT extends BaseItTest {
     // per https://github.com/gbif/registry/issues/4, Citation is now generated
     assertNotNull(dataset.getCitation());
     assertEquals(
-        Datasets.buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE),
+        Datasets.buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE).getText(),
         dataset.getCitation().getText());
     assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());
     assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());
