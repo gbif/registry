@@ -1,6 +1,7 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -13,6 +14,8 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
+import org.gbif.registry.service.collections.merge.InstitutionMergeService;
+import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -35,6 +38,8 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
   @MockBean private InstitutionService institutionService;
 
   @MockBean private InstitutionDuplicatesService institutionDuplicatesService;
+
+  @MockBean private InstitutionMergeService institutionMergeService;
 
   @Autowired
   public InstitutionResourceIT(
@@ -102,7 +107,21 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
     assertEquals(institutions.size(), result.getResults().size());
   }
 
-  // TODO: merge, suggestions
+  @Test
+  public void convertToCollectionTest() {
+    UUID convertedCollectionKey = UUID.randomUUID();
+    when(institutionMergeService.convertToCollection(any(UUID.class), any(UUID.class), anyString()))
+        .thenReturn(convertedCollectionKey);
+
+    ConvertToCollectionParams params = new ConvertToCollectionParams();
+    params.setInstitutionForNewCollectionKey(UUID.randomUUID());
+    params.setNameForNewInstitution("name");
+
+    assertEquals(
+        convertedCollectionKey, getClient().convertToCollection(UUID.randomUUID(), params));
+  }
+
+  // TODO: suggestions
 
   @Override
   protected PrimaryCollectionEntityService<Institution> getMockPrimaryEntityService() {
@@ -112,6 +131,11 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
   @Override
   protected DuplicatesService getMockDuplicatesService() {
     return institutionDuplicatesService;
+  }
+
+  @Override
+  protected MergeService<Institution> getMockMergeService() {
+    return institutionMergeService;
   }
 
   protected InstitutionClient getClient() {

@@ -16,15 +16,19 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,4 +54,13 @@ public interface InstitutionClient extends PrimaryCollectionEntityClient<Institu
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/convertToCollection",
+      produces = MediaType.APPLICATION_JSON_VALUE,
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  UUID convertToCollection(
+      @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params);
 }

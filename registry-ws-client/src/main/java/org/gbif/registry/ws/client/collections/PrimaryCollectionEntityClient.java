@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
@@ -83,4 +84,10 @@ public interface PrimaryCollectionEntityClient<
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   DuplicatesResult findPossibleDuplicates(@SpringQueryMap DuplicatesRequest request);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/merge",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params);
 }

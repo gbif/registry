@@ -24,6 +24,7 @@ import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.LenientEquals;
@@ -34,6 +35,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.PrimaryCollectionEntityClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -185,6 +187,16 @@ public abstract class PrimaryCollectionEntityResourceIT<
     assertEquals(result.getDuplicates().size(), clientResult.getDuplicates().size());
   }
 
+  @Test
+  public void mergeTest() {
+    doNothing().when(getMockMergeService()).merge(any(UUID.class), any(UUID.class));
+
+    MergeParams mergeParams = new MergeParams();
+    mergeParams.setReplacementEntityKey(UUID.randomUUID());
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().merge(UUID.randomUUID(), mergeParams));
+  }
+
   protected PrimaryCollectionEntityClient<T> getPrimaryCollectionEntityClient() {
     return (PrimaryCollectionEntityClient<T>) baseClient;
   }
@@ -192,4 +204,6 @@ public abstract class PrimaryCollectionEntityResourceIT<
   protected abstract PrimaryCollectionEntityService<T> getMockPrimaryEntityService();
 
   protected abstract DuplicatesService getMockDuplicatesService();
+
+  protected abstract MergeService<T> getMockMergeService();
 }

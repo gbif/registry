@@ -14,6 +14,8 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.merge.CollectionMergeService;
+import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -37,6 +39,8 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
   @MockBean private CollectionService collectionService;
 
   @MockBean private CollectionDuplicatesService collectionDuplicatesService;
+
+  @MockBean private CollectionMergeService collectionMergeService;
 
   @Autowired
   public CollectionResourceIT(
@@ -101,7 +105,7 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
     assertEquals(views.size(), result.getResults().size());
   }
 
-  // TODO: merge, suggestions
+  // TODO: suggestions
 
   @Override
   protected PrimaryCollectionEntityService<Collection> getMockPrimaryEntityService() {
@@ -111,6 +115,11 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
   @Override
   protected DuplicatesService getMockDuplicatesService() {
     return collectionDuplicatesService;
+  }
+
+  @Override
+  protected MergeService<Collection> getMockMergeService() {
+    return collectionMergeService;
   }
 
   protected CollectionClient getClient() {
