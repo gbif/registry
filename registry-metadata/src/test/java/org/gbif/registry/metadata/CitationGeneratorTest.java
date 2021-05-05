@@ -25,8 +25,11 @@ import org.gbif.api.vocabulary.DatasetType;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +80,7 @@ public class CitationGeneratorTest {
                   + LocalDate.now(ZoneId.of("UTC")).toString()
                   + ".",
                   citation.getText());
-    assertEquals(citation.getPeople().size(), 1);
+    assertEquals(citation.getAuthors().size(), 1);
   }
 
   @Test
@@ -100,7 +103,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getPeople().size(), 3);
+    assertEquals(citation.getAuthors().size(), 3);
   }
 
   @Test
@@ -127,7 +130,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getPeople().size(), 0);
+    assertEquals(citation.getAuthors().size(), 0);
   }
 
   @Test
@@ -148,7 +151,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getPeople().size(), 1);
+    assertEquals(citation.getAuthors().size(), 1);
   }
 
   @Test
@@ -171,7 +174,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getPeople().size(), 1);
+    assertEquals(citation.getAuthors().size(), 1);
   }
 
   @Test
@@ -189,7 +192,7 @@ public class CitationGeneratorTest {
                   + LocalDate.now(ZoneId.of("UTC")).toString()
                   + ".",
                 citation.getText());
-    assertEquals(citation.getPeople().size(), 0);
+    assertEquals(citation.getAuthors().size(), 0);
   }
 
   @Test
@@ -209,7 +212,7 @@ public class CitationGeneratorTest {
                   + ".",
                   citation.getText());
 
-    assertEquals(citation.getPeople().size(), 0);
+    assertEquals(citation.getAuthors().size(), 0);
   }
 
   @Test
@@ -232,6 +235,41 @@ public class CitationGeneratorTest {
     // but, we can only generate the name for one of them
     assertEquals(
         1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
+
+  }
+
+  @Test
+  public void testRepeatedAuthor() {
+    Organization org = new Organization();
+    org.setTitle("Cited Organization");
+
+    Dataset dataset = getTestDatasetObject();
+    Contact contact1 = createContact("John D.", "Doe", ContactType.ORIGINATOR);
+    contact1.setUserId(Collections.singletonList("user1"));
+
+    Contact contact2 = createContact("John D.", "Doe", ContactType.METADATA_AUTHOR);
+    contact2.setUserId(Arrays.asList("user1", "user2"));
+
+    dataset.getContacts().add(contact1);
+    dataset.getContacts().add(contact2);
+
+    List<Citation.Author> authors = getAuthors(dataset.getContacts());
+
+    //Only one author added
+    assertEquals(1, authors.size());
+
+    //The authors keeps the 2 roles
+    assertTrue(authors.get(0).getRoles().containsAll(EnumSet.of(ContactType.ORIGINATOR, ContactType.METADATA_AUTHOR)));
+
+    //The author has 2 users
+    assertTrue(authors.get(0).getUserId().containsAll(Arrays.asList("user1","user2")));
+
+    //Repeated user is not added twice
+    assertEquals(authors.get(0).getUserId().size(), 2);
+
+    //we can only generate the name for one of them
+    assertEquals(
+      1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
 
   }
 
