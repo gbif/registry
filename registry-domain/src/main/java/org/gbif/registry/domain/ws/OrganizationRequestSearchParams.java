@@ -15,11 +15,14 @@
  */
 package org.gbif.registry.domain.ws;
 
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 public class OrganizationRequestSearchParams extends RequestSearchParams {
 
   private Boolean isEndorsed;
+
+  private UUID networkKey;
 
   @Nullable
   public Boolean getIsEndorsed() {
@@ -28,5 +31,14 @@ public class OrganizationRequestSearchParams extends RequestSearchParams {
 
   public void setIsEndorsed(@Nullable Boolean isEndorsed) {
     this.isEndorsed = isEndorsed;
+  }
+
+  @Nullable
+  public UUID getNetworkKey() {
+    return networkKey;
+  }
+
+  public void setNetworkKey(UUID networkKey) {
+    this.networkKey = networkKey;
   }
 }
