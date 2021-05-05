@@ -25,7 +25,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 

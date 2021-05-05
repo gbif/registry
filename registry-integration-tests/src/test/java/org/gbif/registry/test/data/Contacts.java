@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.test;
+package org.gbif.registry.test.data;
 
-import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +25,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Identifiers extends JsonBackedData<Identifier> {
+public class Contacts extends JsonBackedData<Contact> {
 
   @Autowired
-  private Identifiers(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
+  private Contacts(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
     super(
-        "data/identifier.json",
-        new TypeReference<Identifier>() {},
+        "data/contact.json",
+        new TypeReference<Contact>() {},
         objectMapper,
         simplePrincipalProvider);
   }

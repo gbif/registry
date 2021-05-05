@@ -50,6 +50,8 @@ public abstract class BaseMergeService<
                 & Taggable & Commentable>
     implements MergeService<T> {
 
+  // TODO: usar los servicios en lugar de los mappers
+
   protected final BaseMapper<T> baseMapper;
   protected final MergeableMapper mergeableMapper;
   protected final ContactableMapper contactableMapper;
@@ -120,9 +122,6 @@ public abstract class BaseMergeService<
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
-    // TODO: test that this can be deleted
-//    entityToReplace.setModifiedBy(authentication.getName());
-//    baseMapper.update(entityToReplace);
     mergeableMapper.replace(entityToReplaceKey, replacementKey);
 
     // merge entity fields

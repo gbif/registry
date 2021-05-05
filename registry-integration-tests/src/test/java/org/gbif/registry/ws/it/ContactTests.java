@@ -20,7 +20,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.ContactService;
 import org.gbif.api.service.registry.NetworkEntityService;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 
 import java.util.List;
 

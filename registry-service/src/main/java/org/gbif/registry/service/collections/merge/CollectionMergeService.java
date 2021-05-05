@@ -66,6 +66,7 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
         replacement.getReplacedBy() == null, "Cannot do a merge with an entity that was replaced");
   }
 
+  // TODO: si uso primaryCollectionEntity lo puedo mover a la base
   @Override
   Collection mergeEntityFields(Collection entityToReplace, Collection replacement) {
     setNullFields(replacement, entityToReplace);

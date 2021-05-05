@@ -27,7 +27,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetOccurrenceDownloadUsageClient;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;

@@ -5,7 +5,6 @@ import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
@@ -28,25 +27,23 @@ public class InstitutionChangeSuggestionService
       LoggerFactory.getLogger(InstitutionChangeSuggestionService.class);
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
-  private final InstitutionMapper institutionMapper;
+  private final InstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
 
   @Autowired
   public InstitutionChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
-      InstitutionMapper institutionMapper,
       InstitutionService institutionService,
       InstitutionMergeService institutionMergeService,
       ObjectMapper objectMapper) {
     super(
         changeSuggestionMapper,
-        institutionMapper,
         institutionMergeService,
         institutionService,
         Institution.class,
         objectMapper);
     this.changeSuggestionMapper = changeSuggestionMapper;
-    this.institutionMapper = institutionMapper;
+    this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
   }
 
@@ -62,7 +59,7 @@ public class InstitutionChangeSuggestionService
     dto.setNameNewInstitutionConvertedCollection(
         institutionChangeSuggestion.getNameForNewInstitutionForConvertedCollection());
 
-    Institution currentEntity = institutionMapper.get(institutionChangeSuggestion.getEntityKey());
+    Institution currentEntity = institutionService.get(institutionChangeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
     changeSuggestionMapper.create(dto);

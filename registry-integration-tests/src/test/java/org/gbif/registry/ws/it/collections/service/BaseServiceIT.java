@@ -34,7 +34,6 @@ import javax.sql.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
@@ -43,7 +42,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -56,15 +54,13 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@SpringBootTest(classes = {RegistryIntegrationTestsConfiguration.class})
 @ContextConfiguration(
     initializers = {
       BaseServiceIT.ContextInitializer.class,
       BaseServiceIT.EsContainerContextInitializer.class
     })
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
-@DirtiesContext
+@ActiveProfiles({"test"})
 public class BaseServiceIT {
 
   public static class EsContainerContextInitializer
@@ -177,4 +173,13 @@ public class BaseServiceIT {
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
   }
+
+  //  @TestConfiguration
+  //  @Profile("mock")
+  //  public static class MockConfig {
+  //
+  //    // mocked because it needs the mockMvc bean and the tests that extend this class don't use
+  // it
+  //    @MockBean RequestTestFixture requestTestFixture;
+  //  }
 }

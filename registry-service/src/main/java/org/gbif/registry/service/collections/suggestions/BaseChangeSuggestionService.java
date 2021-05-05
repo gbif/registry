@@ -21,7 +21,6 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
@@ -79,7 +78,6 @@ public abstract class BaseChangeSuggestionService<
               "convertedToCollection"));
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
-  private final BaseMapper<T> baseMapper;
   private final MergeService<T> mergeService;
   private final CrudService<T> crudService;
   private final Class<T> clazz;
@@ -88,13 +86,11 @@ public abstract class BaseChangeSuggestionService<
 
   protected BaseChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
-      BaseMapper<T> baseMapper,
       MergeService<T> mergeService,
       CrudService<T> crudService,
       Class<T> clazz,
       ObjectMapper objectMapper) {
     this.changeSuggestionMapper = changeSuggestionMapper;
-    this.baseMapper = baseMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
     this.clazz = clazz;
@@ -138,7 +134,7 @@ public abstract class BaseChangeSuggestionService<
     dto.setCountry(getCountry(changeSuggestion.getSuggestedEntity()));
     dto.setSuggestedEntity(toJson(changeSuggestion.getSuggestedEntity()));
 
-    T currentEntity = baseMapper.get(changeSuggestion.getEntityKey());
+    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setChanges(extractChanges(changeSuggestion.getSuggestedEntity(), currentEntity));
 
     changeSuggestionMapper.create(dto);
@@ -162,7 +158,7 @@ public abstract class BaseChangeSuggestionService<
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
 
-    T currentEntity = baseMapper.get(changeSuggestion.getEntityKey());
+    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
     changeSuggestionMapper.create(dto);
@@ -176,7 +172,7 @@ public abstract class BaseChangeSuggestionService<
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
     dto.setMergeTargetKey(changeSuggestion.getMergeTargetKey());
 
-    T currentEntity = baseMapper.get(changeSuggestion.getEntityKey());
+    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
     changeSuggestionMapper.create(dto);
@@ -406,7 +402,7 @@ public abstract class BaseChangeSuggestionService<
       if (dto.getType() == Type.CREATE) {
         suggestion.setSuggestedEntity(objectMapper.readValue(dto.getSuggestedEntity(), clazz));
       } else if (dto.getType() == Type.UPDATE) {
-        T entity = baseMapper.get(dto.getEntityKey());
+        T entity = crudService.get(dto.getEntityKey());
 
         // we sort the changes because we can have multiple changes in the same field. We are only
         // interested in the last change so we want to apply them in order (older changes could be

@@ -4,7 +4,6 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 
@@ -24,13 +23,11 @@ public class CollectionChangeSuggestionService
   @Autowired
   public CollectionChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
-      CollectionMapper collectionMapper,
       CollectionService collectionService,
       CollectionMergeService collectionMergeService,
       ObjectMapper objectMapper) {
     super(
         changeSuggestionMapper,
-        collectionMapper,
         collectionMergeService,
         collectionService,
         Collection.class,

@@ -32,7 +32,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 import org.gbif.registry.ws.client.NetworkEntityClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;

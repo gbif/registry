@@ -20,7 +20,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;

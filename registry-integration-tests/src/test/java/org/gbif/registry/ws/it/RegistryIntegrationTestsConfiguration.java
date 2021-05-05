@@ -65,8 +65,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import com.zaxxer.hikari.HikariDataSource;
 
-// TODO: remove zipkin auto config
-
 @TestConfiguration
 @SpringBootApplication(
     exclude = {
@@ -91,7 +89,6 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.ws.config",
       "org.gbif.registry.ws.resources",
       "org.gbif.registry.ws.surety",
-      "org.gbif.registry.ws.it.fixtures",
       "org.gbif.registry.security",
       "org.gbif.registry.persistence",
       "org.gbif.registry.identity",
@@ -103,7 +100,7 @@ import com.zaxxer.hikari.HikariDataSource;
       "org.gbif.registry.events",
       "org.gbif.registry.oaipmh",
       "org.gbif.registry.service",
-      "org.gbif.registry.test"
+      "org.gbif.registry.test.mocks"
     },
     excludeFilters = {
       @ComponentScan.Filter(

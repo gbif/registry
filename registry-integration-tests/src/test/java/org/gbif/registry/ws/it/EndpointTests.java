@@ -18,7 +18,7 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.EndpointService;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 
 import java.util.List;
 

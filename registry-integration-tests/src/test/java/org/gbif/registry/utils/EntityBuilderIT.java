@@ -17,7 +17,7 @@ package org.gbif.registry.utils;
 
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.TestDataFactory;
+import org.gbif.registry.test.data.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;

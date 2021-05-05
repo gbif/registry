@@ -37,9 +37,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -60,10 +64,11 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-    classes = RegistryIntegrationTestsConfiguration.class,
+    classes = {RegistryIntegrationTestsConfiguration.class, BaseItTest.NetworkEntitiesConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(BaseItTest.NetworkEntitiesConfig.class)
 @ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "networkEntities"})
 @AutoConfigureMockMvc
 @DirtiesContext
 public class BaseItTest {
@@ -78,9 +83,7 @@ public class BaseItTest {
     }
   }
 
-  /**
-   * Prepares a Tests database using an embedded Postgres instance.
-   */
+  /** Prepares a Tests database using an embedded Postgres instance. */
   public static class EmbeddedDataBaseInitializer {
     private final DataSource dataSource;
     private final PreparedDbProvider provider;
@@ -128,9 +131,7 @@ public class BaseItTest {
           .applyTo(configurableApplicationContext.getEnvironment());
     }
 
-    /**
-     * Creates the registry datasource settings from the embedded database.
-     */
+    /** Creates the registry datasource settings from the embedded database. */
     String[] dbTestPropertyPairs(EmbeddedDataBaseInitializer database) {
       return new String[] {
         "registry.datasource.url=jdbc:postgresql://localhost:"
@@ -216,4 +217,9 @@ public class BaseItTest {
         throw new IllegalStateException("Must be resource or client");
     }
   }
+
+  @TestConfiguration
+  @Profile("networkEntities")
+  @ComponentScan(basePackages = {"org.gbif.registry.ws.it.fixtures", "org.gbif.registry.test.data"})
+  public static class NetworkEntitiesConfig {}
 }

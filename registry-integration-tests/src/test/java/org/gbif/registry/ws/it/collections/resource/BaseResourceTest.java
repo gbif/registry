@@ -16,8 +16,6 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.identity.service.BaseIdentityAccessService;
-import org.gbif.registry.identity.service.IdentityServiceImpl;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.mocks.IdentityServiceMock;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
@@ -46,8 +44,6 @@ import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
