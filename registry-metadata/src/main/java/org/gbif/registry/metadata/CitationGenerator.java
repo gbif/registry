@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metadata;
 
+import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -50,13 +52,15 @@ public class CitationGenerator {
       EnumSet.of(ContactType.ORIGINATOR, ContactType.METADATA_AUTHOR);
   private static final Predicate<Contact> IS_NAME_PROVIDED_FCT =
       ctc -> StringUtils.isNotBlank(ctc.getLastName());
+  private static final Predicate<Citation.Person> IS_PERSON_NAME_PROVIDED =
+    ctc -> StringUtils.isNotBlank(ctc.getLastName());
   private static final Predicate<Contact> IS_ELIGIBLE_CONTACT_TYPE =
-      ctc -> ctc.getType() != null && AUTHOR_CONTACT_TYPE.contains(ctc.getType());
+      ctc -> AUTHOR_CONTACT_TYPE.contains(ctc.getType());
 
   /** Utility class */
   private CitationGenerator() {}
 
-  public static String generateCitation(Dataset dataset, Organization org) {
+  public static Citation generateCitation(Dataset dataset, Organization org) {
     Objects.requireNonNull(org, "Organization shall be provided");
     return generateCitation(dataset, org.getTitle());
   }
@@ -99,14 +103,18 @@ public class CitationGenerator {
    * @param organizationTitle
    * @return generated citation as {@link String}
    */
-  public static String generateCitation(Dataset dataset, String organizationTitle) {
+  public static Citation generateCitation(Dataset dataset, String organizationTitle) {
 
     Objects.requireNonNull(dataset, "Dataset shall be provided");
     Objects.requireNonNull(organizationTitle, "Organization title shall be provided");
 
+    Citation citation = new Citation();
+
+    citation.setPeople(getAuthors(dataset.getContacts()));
+
     StringJoiner joiner = new StringJoiner(" ");
-    List<String> authorsName = generateAuthorsName(getAuthors(dataset.getContacts()));
-    String authors = authorsName.stream().collect(Collectors.joining(", "));
+    List<String> authorsName = generateAuthorsName(citation.getPeople());
+    String authors = String.join(", ", authorsName);
 
     boolean authorsNameAvailable = StringUtils.isNotBlank(authors);
     authors = authorsNameAvailable ? authors : organizationTitle;
@@ -149,7 +157,9 @@ public class CitationGenerator {
 
     joiner.add("accessed via GBIF.org on " + LocalDate.now(UTC) + ".");
 
-    return joiner.toString();
+    citation.setText(joiner.toString());
+
+    return citation;
   }
 
   /**
@@ -160,18 +170,18 @@ public class CitationGenerator {
    * @param contacts list of contacts available
    * @return ordered list of authors or empty list, never null
    */
-  public static List<Contact> getAuthors(List<Contact> contacts) {
+  public static List<Citation.Person> getAuthors(List<Contact> contacts) {
     if (contacts == null || contacts.isEmpty()) {
       return Collections.emptyList();
     }
 
-    List<Contact> uniqueContacts =
+    List<Citation.Person> uniqueContacts =
         getUniqueAuthors(
             contacts, ctc -> IS_NAME_PROVIDED_FCT.and(IS_ELIGIBLE_CONTACT_TYPE).test(ctc));
 
     // make sure we have at least one instance of {@link #MANDATORY_CONTACT_TYPE}
-    Optional<Contact> firstOriginator =
-        uniqueContacts.stream().filter(ctc -> MANDATORY_CONTACT_TYPE == ctc.getType()).findFirst();
+    Optional<Citation.Person> firstOriginator =
+        uniqueContacts.stream().filter(ctc -> ctc.getRoles().contains(MANDATORY_CONTACT_TYPE)).findFirst();
 
     if (firstOriginator.isPresent()) {
       return uniqueContacts;
@@ -186,14 +196,14 @@ public class CitationGenerator {
    * @param authors ordered list of authors
    * @return list of author names (if it can be generated) or empty list, never null
    */
-  public static List<String> generateAuthorsName(List<Contact> authors) {
+  public static List<String> generateAuthorsName(List<Citation.Person> authors) {
     if (authors == null || authors.isEmpty()) {
       return Collections.emptyList();
     }
 
     return authors.stream()
-        .filter(IS_NAME_PROVIDED_FCT)
-        .map(CitationGenerator::getAuthorName)
+        .filter(IS_PERSON_NAME_PROVIDED)
+        .map(Citation.Person::getAbbreviatedName)
         .collect(Collectors.toList());
   }
 
@@ -207,13 +217,22 @@ public class CitationGenerator {
    * @param filter {@link Predicate} used to pre-filter contacts
    * @return
    */
-  private static List<Contact> getUniqueAuthors(List<Contact> authors, Predicate<Contact> filter) {
-    List<Contact> uniqueContact = new ArrayList<>();
+  private static List<Citation.Person> getUniqueAuthors(List<Contact> authors, Predicate<Contact> filter) {
+    List<Citation.Person> uniqueContact = new ArrayList<>();
     if (authors != null) {
       authors.forEach(
           ctc -> {
             if (filter.test(ctc) && isNotAlreadyInList(ctc, uniqueContact)) {
-              uniqueContact.add(ctc);
+              HashSet<ContactType> contactTypes = new HashSet<>();
+              if(ctc.getType() != null) {
+                contactTypes.add(ctc.getType());
+              }
+              HashSet<String> userIds  = new HashSet<>();
+              if(ctc.getUserId() != null && !ctc.getUserId().isEmpty()) {
+                userIds.addAll(ctc.getUserId());
+              }
+              uniqueContact.add(new Citation.Person(ctc.getKey(), getAuthorName(ctc), ctc.getFirstName(), ctc.getLastName(),
+                                                    contactTypes, userIds));
             }
           });
     }
@@ -228,7 +247,7 @@ public class CitationGenerator {
    * @param uniqueContact
    * @return
    */
-  private static boolean isNotAlreadyInList(final Contact ctc, List<Contact> uniqueContact) {
+  private static boolean isNotAlreadyInList(Contact ctc, List<Citation.Person> uniqueContact) {
     return uniqueContact.stream()
         .noneMatch(
             contact ->
