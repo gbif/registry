@@ -8,7 +8,7 @@
   "citation": {
     "text":"This is a citation text",
     "identifier":"ABC",
-    "people": []
+    "contributors": []
   },
   "rights":"The rights",
   "logoUrl":"http://www.example.org",
