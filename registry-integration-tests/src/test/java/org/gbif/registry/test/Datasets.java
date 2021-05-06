@@ -45,7 +45,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final String DATASET_RIGHTS = "The rights";
   public static final License DATASET_LICENSE = License.CC_BY_NC_4_0;
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
-  public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC", null);
+  public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC", true);
 
   @Autowired
   public Datasets(
@@ -101,7 +101,7 @@ public class Datasets extends JsonBackedData<Dataset> {
     return datasetService.get(key);
   }
 
-  public static Citation buildExpectedCitation(Dataset dataset, String organizationTitle) {
+  public static CitationGenerator.CitationData buildExpectedCitation(Dataset dataset, String organizationTitle) {
     return CitationGenerator.generateCitation(dataset, organizationTitle);
   }
 
@@ -112,9 +112,9 @@ public class Datasets extends JsonBackedData<Dataset> {
    * @return a mutable mpa in case more properties shall be added.
    */
   public static Map<String, Object> buildExpectedProcessedProperties(Dataset dataset) {
-    Citation expectedCitation = buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE);
+    CitationGenerator.CitationData expectedCitation = buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE);
     Map<String, Object> processedProperties = new HashMap<>();
-    processedProperties.put("citation.text", expectedCitation.getText());
+    processedProperties.put("citation.text", expectedCitation.getCitation().getText());
     return processedProperties;
   }
 }
