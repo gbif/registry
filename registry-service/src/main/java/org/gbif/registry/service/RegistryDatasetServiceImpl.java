@@ -239,6 +239,9 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         // GBIF-generated one:
         || Constants.COL_DATASET_KEY.equals(dataset.getKey())
         || Constants.COL_DATASET_KEY.equals(dataset.getParentDatasetKey())) {
+      if (dataset.getCitation() != null) {
+        dataset.getCitation().setCitationProvidedBySource(true);
+      }
       return dataset;
     }
 
@@ -258,17 +261,19 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         || Strings.isNullOrEmpty(originalCitation.getText())) {
       // if the citation already exists keep it and only change the text. That allows us to keep the
       // identifier if provided.
-      Citation citation =
+      CitationGenerator.CitationData citation =
           CitationGenerator.generateCitation(
               dataset, organizationCache.getUnchecked(dataset.getPublishingOrganizationKey()));
       //Identifier is preserved from the original citation
       if (originalCitation != null){
-        citation.setIdentifier(originalCitation.getIdentifier());
+        citation.getCitation().setIdentifier(originalCitation.getIdentifier());
       }
-      dataset.setCitation(citation);
+      dataset.setCitation(citation.getCitation());
+      dataset.setContactsCitation(citation.getContacts());
     } else {
       // Append DOI if necessary, and append "accessed via GBIF.org".
       originalCitation.setText(CitationGenerator.generatePublisherProvidedCitation(dataset));
+      originalCitation.setCitationProvidedBySource(true);
     }
 
     return dataset;

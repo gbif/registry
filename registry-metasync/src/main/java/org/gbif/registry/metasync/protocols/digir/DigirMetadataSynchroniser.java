@@ -201,7 +201,7 @@ public class DigirMetadataSynchroniser extends BaseProtocolHandler {
     if (!resource.getRelatedInformation().isEmpty()) {
       dataset.setHomepage(resource.getRelatedInformation().iterator().next());
     }
-    dataset.setCitation(new Citation(resource.getCitation(), null, null));
+    dataset.setCitation(new Citation(resource.getCitation(), null, false));
     dataset.setRights(resource.getUseRestrictions());
     dataset.setContacts(convertToRegistryContacts(resource.getContacts()));
     dataset.addMachineTag(MachineTag.newInstance(TagName.DIGIR_CODE, resource.getCode()));
