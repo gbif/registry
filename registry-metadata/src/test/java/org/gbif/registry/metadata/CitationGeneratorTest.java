@@ -81,7 +81,7 @@ public class CitationGeneratorTest {
                   + LocalDate.now(ZoneId.of("UTC")).toString()
                   + ".",
                   citation.getCitation().getText());
-    assertEquals(citation.getContacts(), 1);
+    assertEquals(citation.getContacts().size(), 1);
   }
 
   @Test
