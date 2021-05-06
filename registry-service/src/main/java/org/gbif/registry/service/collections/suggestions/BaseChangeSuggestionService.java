@@ -21,6 +21,9 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
@@ -50,6 +53,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -82,6 +86,8 @@ public abstract class BaseChangeSuggestionService<
   private final CrudService<T> crudService;
   private final Class<T> clazz;
   private final ObjectMapper objectMapper;
+  private final EmailSender emailSender;
+  private final CollectionsEmailManager emailManager;
   private EntityType entityType;
 
   protected BaseChangeSuggestionService(
@@ -89,12 +95,16 @@ public abstract class BaseChangeSuggestionService<
       MergeService<T> mergeService,
       CrudService<T> crudService,
       Class<T> clazz,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      EmailSender emailSender,
+      CollectionsEmailManager emailManager) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
     this.clazz = clazz;
     this.objectMapper = objectMapper;
+    this.emailSender = emailSender;
+    this.emailManager = emailManager;
 
     if (clazz == Institution.class) {
       entityType = EntityType.INSTITUTION;
@@ -107,26 +117,36 @@ public abstract class BaseChangeSuggestionService<
   public int createChangeSuggestion(R changeSuggestion) {
     checkArgument(!changeSuggestion.getComments().isEmpty(), "A comment is required");
 
+    ChangeSuggestionDto dto = null;
     if (changeSuggestion.getType() == Type.CREATE) {
-      return createNewEntitySuggestion(changeSuggestion);
-    }
-    if (changeSuggestion.getType() == Type.UPDATE) {
-      return createUpdateSuggestion(changeSuggestion);
-    }
-    if (changeSuggestion.getType() == Type.DELETE) {
-      return createDeleteSuggestion(changeSuggestion);
-    }
-    if (changeSuggestion.getType() == Type.MERGE) {
-      return createMergeSuggestion(changeSuggestion);
-    }
-    if (changeSuggestion.getType() == Type.CONVERSION_TO_COLLECTION) {
-      return createConvertToCollectionSuggestion(changeSuggestion);
+      dto = createNewEntitySuggestionDto(changeSuggestion);
+    } else if (changeSuggestion.getType() == Type.UPDATE) {
+      dto = createUpdateSuggestionDto(changeSuggestion);
+    } else if (changeSuggestion.getType() == Type.DELETE) {
+      dto = createDeleteSuggestionDto(changeSuggestion);
+    } else if (changeSuggestion.getType() == Type.MERGE) {
+      dto = createMergeSuggestionDto(changeSuggestion);
+    } else if (changeSuggestion.getType() == Type.CONVERSION_TO_COLLECTION) {
+      dto = createConvertToCollectionSuggestionDto(changeSuggestion);
+    } else {
+      throw new IllegalArgumentException("Invalid suggestion type: " + changeSuggestion.getType());
     }
 
-    throw new IllegalArgumentException("Invalid suggestion type: " + changeSuggestion.getType());
+    changeSuggestionMapper.create(dto);
+
+    // send email
+    try {
+      BaseEmailModel emailModel =
+          emailManager.generateNewChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
+      emailSender.send(emailModel);
+    } catch (Exception e) {
+      LOG.error("Couldn't send email for new change suggestion");
+    }
+
+    return dto.getKey();
   }
 
-  protected int createUpdateSuggestion(R changeSuggestion) {
+  protected ChangeSuggestionDto createUpdateSuggestionDto(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
     checkArgument(changeSuggestion.getSuggestedEntity() != null);
 
@@ -137,23 +157,20 @@ public abstract class BaseChangeSuggestionService<
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setChanges(extractChanges(changeSuggestion.getSuggestedEntity(), currentEntity));
 
-    changeSuggestionMapper.create(dto);
-
-    return dto.getKey();
+    return dto;
   }
 
-  protected int createNewEntitySuggestion(R changeSuggestion) {
+  protected ChangeSuggestionDto createNewEntitySuggestionDto(R changeSuggestion) {
     checkArgument(changeSuggestion.getSuggestedEntity() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
     dto.setCountry(getCountry(changeSuggestion.getSuggestedEntity()));
     dto.setSuggestedEntity(toJson(changeSuggestion.getSuggestedEntity()));
 
-    changeSuggestionMapper.create(dto);
-    return dto.getKey();
+    return dto;
   }
 
-  protected int createDeleteSuggestion(R changeSuggestion) {
+  protected ChangeSuggestionDto createDeleteSuggestionDto(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
@@ -161,11 +178,10 @@ public abstract class BaseChangeSuggestionService<
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
-    changeSuggestionMapper.create(dto);
-    return dto.getKey();
+    return dto;
   }
 
-  protected int createMergeSuggestion(R changeSuggestion) {
+  protected ChangeSuggestionDto createMergeSuggestionDto(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
     checkArgument(changeSuggestion.getMergeTargetKey() != null);
 
@@ -175,12 +191,10 @@ public abstract class BaseChangeSuggestionService<
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
-    changeSuggestionMapper.create(dto);
-    return dto.getKey();
+    return dto;
   }
 
-  // TODO: suggestions roles
-  @Secured({GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void updateChangeSuggestion(R updatedChangeSuggestion) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
@@ -206,8 +220,7 @@ public abstract class BaseChangeSuggestionService<
     changeSuggestionMapper.update(dto);
   }
 
-  // TODO: suggestions roles
-  @Secured({GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void discardChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
@@ -216,10 +229,19 @@ public abstract class BaseChangeSuggestionService<
     dto.setDiscardedBy(getUsername());
     dto.setModifiedBy(getUsername());
     changeSuggestionMapper.update(dto);
+
+    // send email
+    try {
+      BaseEmailModel emailModel =
+          emailManager.generateDiscardedChangeSuggestionEmailModel(
+              dto.getKey(), dto.getEntityType());
+      emailSender.send(emailModel);
+    } catch (Exception e) {
+      LOG.error("Couldn't send email for discarded change suggestion");
+    }
   }
 
-  // TODO: suggestions roles
-  @Secured({GRSCICOLL_ADMIN_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public UUID applyChangeSuggestion(int suggestionKey) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
@@ -243,6 +265,15 @@ public abstract class BaseChangeSuggestionService<
     dto.setApplied(new Date());
     dto.setAppliedBy(getUsername());
     changeSuggestionMapper.update(dto);
+
+    // send email
+    try {
+      BaseEmailModel emailModel =
+          emailManager.generateAppliedChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
+      emailSender.send(emailModel);
+    } catch (Exception e) {
+      LOG.error("Couldn't send email for applied change suggestion");
+    }
 
     return createdEntity;
   }
@@ -445,7 +476,7 @@ public abstract class BaseChangeSuggestionService<
 
   protected abstract R newEmptyChangeSuggestion();
 
-  protected abstract int createConvertToCollectionSuggestion(R changeSuggestion);
+  protected abstract ChangeSuggestionDto createConvertToCollectionSuggestionDto(R changeSuggestion);
 
   protected abstract UUID applyConversionToCollection(ChangeSuggestionDto dto);
 }

@@ -3,6 +3,9 @@ package org.gbif.registry.ws.it.collections.resource;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -16,10 +19,12 @@ import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.merge.MergeService;
+import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,13 +38,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Institution> {
+public class InstitutionResourceIT
+    extends PrimaryCollectionEntityResourceIT<Institution, InstitutionChangeSuggestion> {
 
   @MockBean private InstitutionService institutionService;
 
   @MockBean private InstitutionDuplicatesService institutionDuplicatesService;
 
   @MockBean private InstitutionMergeService institutionMergeService;
+
+  @MockBean private InstitutionChangeSuggestionService institutionChangeSuggestionService;
 
   @Autowired
   public InstitutionResourceIT(
@@ -136,6 +144,28 @@ public class InstitutionResourceIT extends PrimaryCollectionEntityResourceIT<Ins
   @Override
   protected MergeService<Institution> getMockMergeService() {
     return institutionMergeService;
+  }
+
+  @Override
+  protected ChangeSuggestionService<Institution, InstitutionChangeSuggestion>
+      getMockChangeSuggestionService() {
+    return institutionChangeSuggestionService;
+  }
+
+  @Override
+  protected InstitutionChangeSuggestion newChangeSuggestion() {
+    InstitutionChangeSuggestion changeSuggestion = new InstitutionChangeSuggestion();
+    changeSuggestion.setType(Type.CREATE);
+    changeSuggestion.setComments(Collections.singletonList("comment"));
+    changeSuggestion.setProposerEmail("aaa@aa.com");
+
+    Institution i1 = new Institution();
+    i1.setCode("i1");
+    i1.setName("name1");
+    i1.setActive(true);
+    changeSuggestion.setSuggestedEntity(i1);
+
+    return changeSuggestion;
   }
 
   protected InstitutionClient getClient() {

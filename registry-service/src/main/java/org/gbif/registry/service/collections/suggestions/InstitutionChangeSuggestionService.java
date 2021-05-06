@@ -4,6 +4,8 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
@@ -14,10 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.validation.annotation.Validated;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -38,20 +39,24 @@ public class InstitutionChangeSuggestionService
       ChangeSuggestionMapper changeSuggestionMapper,
       InstitutionService institutionService,
       InstitutionMergeService institutionMergeService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      EmailSender emailSender,
+      CollectionsEmailManager emailManager) {
     super(
         changeSuggestionMapper,
         institutionMergeService,
         institutionService,
         Institution.class,
-        objectMapper);
+        objectMapper,
+        emailSender,
+        emailManager);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
   }
 
   @Override
-  protected int createConvertToCollectionSuggestion(
+  protected ChangeSuggestionDto createConvertToCollectionSuggestionDto(
       InstitutionChangeSuggestion institutionChangeSuggestion) {
     checkArgument(institutionChangeSuggestion.getEntityKey() != null);
 
@@ -65,8 +70,7 @@ public class InstitutionChangeSuggestionService
     Institution currentEntity = institutionService.get(institutionChangeSuggestion.getEntityKey());
     dto.setCountry(getCountry(currentEntity));
 
-    changeSuggestionMapper.create(dto);
-    return dto.getKey();
+    return dto;
   }
 
   @Override

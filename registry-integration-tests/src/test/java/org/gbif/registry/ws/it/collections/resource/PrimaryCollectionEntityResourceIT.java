@@ -25,6 +25,13 @@ import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.LenientEquals;
@@ -51,6 +58,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
@@ -59,7 +69,8 @@ import static org.mockito.Mockito.when;
 public abstract class PrimaryCollectionEntityResourceIT<
         T extends
             PrimaryCollectionEntity & Taggable & MachineTaggable & Identifiable & Contactable
-                & Commentable & OccurrenceMappeable & LenientEquals<T>>
+                & Commentable & OccurrenceMappeable & LenientEquals<T>,
+        R extends ChangeSuggestion<T>>
     extends BaseCollectionEntityResourceIT<T> {
 
   public PrimaryCollectionEntityResourceIT(
@@ -197,8 +208,79 @@ public abstract class PrimaryCollectionEntityResourceIT<
         () -> getPrimaryCollectionEntityClient().merge(UUID.randomUUID(), mergeParams));
   }
 
-  protected PrimaryCollectionEntityClient<T> getPrimaryCollectionEntityClient() {
-    return (PrimaryCollectionEntityClient<T>) baseClient;
+  @Test
+  public void createChangeSuggestionTest() {
+    int key = 1;
+    when(getMockChangeSuggestionService().createChangeSuggestion(any())).thenReturn(key);
+
+    assertEquals(
+        key, getPrimaryCollectionEntityClient().createChangeSuggestion(newChangeSuggestion()));
+  }
+
+  @Test
+  public void updateChangeSuggestionTest() {
+    doNothing().when(getMockChangeSuggestionService()).updateChangeSuggestion(any());
+
+    R changeSuggestion = newChangeSuggestion();
+    changeSuggestion.setKey(1);
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().updateChangeSuggestion(1, changeSuggestion));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> getPrimaryCollectionEntityClient().updateChangeSuggestion(2, changeSuggestion));
+  }
+
+  protected PrimaryCollectionEntityClient<T, R> getPrimaryCollectionEntityClient() {
+    return (PrimaryCollectionEntityClient<T, R>) baseClient;
+  }
+
+  @Test
+  public void getChangeSuggestionTest() {
+    R changeSuggestion = newChangeSuggestion();
+    changeSuggestion.setKey(1);
+    when(getMockChangeSuggestionService().getChangeSuggestion(anyInt()))
+        .thenReturn(changeSuggestion);
+
+    R changeSuggestionFetch =
+        getPrimaryCollectionEntityClient().getChangeSuggestion(changeSuggestion.getKey());
+    assertEquals(changeSuggestion, changeSuggestionFetch);
+  }
+
+  @Test
+  public void listChangeSuggestionTest() {
+    R changeSuggestion = newChangeSuggestion();
+    changeSuggestion.setKey(1);
+    when(getMockChangeSuggestionService().list(any(), any(), any(), anyString(), any(), any()))
+        .thenReturn(
+            new PagingResponse<>(
+                new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));
+
+    PagingResponse<R> result =
+        getPrimaryCollectionEntityClient()
+            .listChangeSuggestion(
+                Status.PENDING,
+                Type.CREATE,
+                Country.DENMARK,
+                "aaa@aa.com",
+                UUID.randomUUID(),
+                new PagingRequest());
+    assertEquals(1, result.getResults().size());
+  }
+
+  @Test
+  public void applyChangeSuggestionTest() {
+    UUID createdKey = UUID.randomUUID();
+    when(getMockChangeSuggestionService().applyChangeSuggestion(anyInt())).thenReturn(createdKey);
+
+    ApplySuggestionResult result = getPrimaryCollectionEntityClient().applyChangeSuggestion(1);
+    assertEquals(createdKey, result.getEntityCreatedKey());
+  }
+
+  @Test
+  public void discardChangeSuggestionTest() {
+    doNothing().when(getMockChangeSuggestionService()).discardChangeSuggestion(anyInt());
+    assertDoesNotThrow(() -> getPrimaryCollectionEntityClient().discardChangeSuggestion(1));
   }
 
   protected abstract PrimaryCollectionEntityService<T> getMockPrimaryEntityService();
@@ -206,4 +288,8 @@ public abstract class PrimaryCollectionEntityResourceIT<
   protected abstract DuplicatesService getMockDuplicatesService();
 
   protected abstract MergeService<T> getMockMergeService();
+
+  protected abstract ChangeSuggestionService<T, R> getMockChangeSuggestionService();
+
+  protected abstract R newChangeSuggestion();
 }

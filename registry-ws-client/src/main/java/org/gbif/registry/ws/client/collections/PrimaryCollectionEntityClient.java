@@ -22,9 +22,16 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,10 +42,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 public interface PrimaryCollectionEntityClient<
-        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable>
+        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable,
+        R extends ChangeSuggestion<T>>
     extends BaseCollectionEntityClient<T> {
 
   @RequestMapping(
@@ -90,4 +99,46 @@ public interface PrimaryCollectionEntityClient<
       value = "{key}/merge",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "changeSuggestion",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int createChangeSuggestion(@RequestBody R createSuggestion);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "changeSuggestion/{key}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody R suggestion);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "changeSuggestion/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  R getChangeSuggestion(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "changeSuggestion",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  PagingResponse<R> listChangeSuggestion(
+      @RequestParam(value = "status", required = false) Status status,
+      @RequestParam(value = "type", required = false) Type type,
+      @RequestParam(value = "country") Country country,
+      @RequestParam(value = "proposedBy", required = false) String proposedBy,
+      @RequestParam(value = "entityKey", required = false) UUID entityKey,
+      @SpringQueryMap Pageable page);
+
+  @RequestMapping(method = RequestMethod.PUT, value = "changeSuggestion/{key}/discard")
+  void discardChangeSuggestion(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "changeSuggestion/{key}/apply",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key);
 }

@@ -17,6 +17,7 @@ package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -34,7 +35,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/collection")
-public interface CollectionClient extends PrimaryCollectionEntityClient<Collection> {
+public interface CollectionClient
+    extends PrimaryCollectionEntityClient<Collection, CollectionChangeSuggestion> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody

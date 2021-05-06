@@ -18,6 +18,7 @@ package org.gbif.registry.ws.client.collections;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
@@ -35,7 +36,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/institution")
-public interface InstitutionClient extends PrimaryCollectionEntityClient<Institution> {
+public interface InstitutionClient
+    extends PrimaryCollectionEntityClient<Institution, InstitutionChangeSuggestion> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody

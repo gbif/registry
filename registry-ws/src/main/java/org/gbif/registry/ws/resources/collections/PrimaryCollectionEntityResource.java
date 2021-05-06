@@ -25,6 +25,7 @@ import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
 import org.gbif.api.model.collections.suggestions.Status;
@@ -203,17 +204,5 @@ public abstract class PrimaryCollectionEntityResource<
     ApplySuggestionResult result = new ApplySuggestionResult();
     result.setEntityCreatedKey(entityCreatedKey);
     return result;
-  }
-
-  public static class ApplySuggestionResult {
-    private UUID entityCreatedKey;
-
-    public UUID getEntityCreatedKey() {
-      return entityCreatedKey;
-    }
-
-    public void setEntityCreatedKey(UUID entityCreatedKey) {
-      this.entityCreatedKey = entityCreatedKey;
-    }
   }
 }

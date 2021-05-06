@@ -2,6 +2,9 @@ package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -16,10 +19,12 @@ import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesServ
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.merge.MergeService;
+import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,13 +39,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Collection> {
+public class CollectionResourceIT
+    extends PrimaryCollectionEntityResourceIT<Collection, CollectionChangeSuggestion> {
 
   @MockBean private CollectionService collectionService;
 
   @MockBean private CollectionDuplicatesService collectionDuplicatesService;
 
   @MockBean private CollectionMergeService collectionMergeService;
+
+  @MockBean private CollectionChangeSuggestionService collectionChangeSuggestionService;
 
   @Autowired
   public CollectionResourceIT(
@@ -120,6 +128,28 @@ public class CollectionResourceIT extends PrimaryCollectionEntityResourceIT<Coll
   @Override
   protected MergeService<Collection> getMockMergeService() {
     return collectionMergeService;
+  }
+
+  @Override
+  protected ChangeSuggestionService<Collection, CollectionChangeSuggestion>
+      getMockChangeSuggestionService() {
+    return collectionChangeSuggestionService;
+  }
+
+  @Override
+  protected CollectionChangeSuggestion newChangeSuggestion() {
+    CollectionChangeSuggestion changeSuggestion = new CollectionChangeSuggestion();
+    changeSuggestion.setType(Type.CREATE);
+    changeSuggestion.setComments(Collections.singletonList("comment"));
+    changeSuggestion.setProposerEmail("aaa@aa.com");
+
+    Collection c1 = new Collection();
+    c1.setCode("c1");
+    c1.setName("name1");
+    c1.setActive(true);
+    changeSuggestion.setSuggestedEntity(c1);
+
+    return changeSuggestion;
   }
 
   protected CollectionClient getClient() {

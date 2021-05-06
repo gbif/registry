@@ -3,6 +3,8 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
@@ -11,10 +13,9 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.validation.annotation.Validated;
 
 @Service
 @Validated
@@ -28,13 +29,17 @@ public class CollectionChangeSuggestionService
       ChangeSuggestionMapper changeSuggestionMapper,
       CollectionService collectionService,
       CollectionMergeService collectionMergeService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      EmailSender emailSender,
+      CollectionsEmailManager emailManager) {
     super(
         changeSuggestionMapper,
         collectionMergeService,
         collectionService,
         Collection.class,
-        objectMapper);
+        objectMapper,
+        emailSender,
+        emailManager);
     this.changeSuggestionMapper = changeSuggestionMapper;
   }
 
@@ -49,7 +54,8 @@ public class CollectionChangeSuggestionService
   }
 
   @Override
-  protected int createConvertToCollectionSuggestion(CollectionChangeSuggestion changeSuggestion) {
+  protected ChangeSuggestionDto createConvertToCollectionSuggestionDto(
+      CollectionChangeSuggestion changeSuggestion) {
     throw new UnsupportedOperationException();
   }
 
