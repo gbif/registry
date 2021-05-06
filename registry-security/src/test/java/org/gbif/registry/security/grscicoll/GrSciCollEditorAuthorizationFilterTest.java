@@ -15,14 +15,17 @@
  */
 package org.gbif.registry.security.grscicoll;
 
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
@@ -92,14 +95,22 @@ public class GrSciCollEditorAuthorizationFilterTest {
   private final CollectionMapper mockCollectionMapper = Mockito.mock(CollectionMapper.class);
   private final InstitutionMapper mockInstitutionMapper = Mockito.mock(InstitutionMapper.class);
   private final PersonMapper mockPersonMapper = Mockito.mock(PersonMapper.class);
+  private final ChangeSuggestionMapper changeSuggestionMapper =
+      Mockito.mock(ChangeSuggestionMapper.class);
   private final Authentication mockAuthentication = Mockito.mock(Authentication.class);
 
   private final GrSciCollEditorAuthorizationService authService =
       new GrSciCollEditorAuthorizationService(
-          mockUserRightsMapper, mockCollectionMapper, mockInstitutionMapper, mockPersonMapper);
+          mockUserRightsMapper,
+          mockCollectionMapper,
+          mockInstitutionMapper,
+          mockPersonMapper,
+          changeSuggestionMapper,
+          objectMapper);
 
   private final GrSciCollEditorAuthorizationFilter filter =
-      new GrSciCollEditorAuthorizationFilter(authService, mockAuthenticationFacade, objectMapper, null);
+      new GrSciCollEditorAuthorizationFilter(
+          authService, mockAuthenticationFacade, objectMapper, null);
 
   @Test
   public void ignoreGetRequestsTest() {
@@ -475,6 +486,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
+    when(mockRequest.getContent())
+        .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
     when(mockRequest.getMethod()).thenReturn("DELETE");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
@@ -571,5 +584,172 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void createChangeSuggestionNotLoggedTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateChangeSuggestionAsAdminTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_ADMIN_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateNewEntityChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.CREATE);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateModifyEntityChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.UPDATE);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateDeleteEntityChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.DELETE);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateMergeEntityChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.MERGE);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void updateConvertToCollectionEntityChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.CONVERSION_TO_COLLECTION);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void applyChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1/apply");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.CONVERSION_TO_COLLECTION);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void discardChangeSuggestionAsEditorTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1/discard");
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    ChangeSuggestionDto dto = new ChangeSuggestionDto();
+    dto.setType(Type.CONVERSION_TO_COLLECTION);
+    when(changeSuggestionMapper.get(1)).thenReturn(dto);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertThrows(
+      WebApplicationException.class,
+      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 }

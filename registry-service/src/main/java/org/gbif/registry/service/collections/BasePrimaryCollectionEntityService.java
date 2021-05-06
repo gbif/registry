@@ -16,8 +16,6 @@ import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;

@@ -38,12 +38,15 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Collections;
 import java.util.UUID;
 
+import javax.validation.ValidationException;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link ChangeSuggestionService}. */
@@ -51,7 +54,7 @@ public abstract class BaseChangeSuggestionServiceIT<
         T extends CollectionEntity & Contactable & LenientEquals<T>, R extends ChangeSuggestion<T>>
     extends BaseServiceIT {
 
-  protected static final String PROPOSER = "proposer";
+  protected static final String PROPOSER = "proposer@test.com";
   protected static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   @RegisterExtension
@@ -82,7 +85,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -143,7 +146,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.UPDATE);
     suggestion.setEntityKey(entityKey);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -193,7 +196,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.DELETE);
     suggestion.setEntityKey(entityKey);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -229,7 +232,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.MERGE);
     suggestion.setEntityKey(entityKey);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setMergeTargetKey(entity2Key);
     suggestion.setComments(Collections.singletonList("comment"));
 
@@ -263,7 +266,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -291,7 +294,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     int suggKey1 = changeSuggestionService.createChangeSuggestion(suggestion);
@@ -302,7 +305,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion2.setSuggestedEntity(entity2);
     suggestion2.setEntityKey(entity2Key);
     suggestion2.setType(Type.UPDATE);
-    suggestion2.setProposedBy(PROPOSER);
+    suggestion2.setProposerEmail(PROPOSER);
     suggestion2.setComments(Collections.singletonList("comment"));
 
     int suggKey2 = changeSuggestionService.createChangeSuggestion(suggestion2);
@@ -335,12 +338,29 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(0, results.getCount());
   }
 
+  @Test
+  public void invalidEmailTest() {
+    // State
+    T entity = createEntity();
+
+    R suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.CREATE);
+    suggestion.setProposerEmail("myfakeemail");
+    suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    assertThrows(
+        ValidationException.class,
+        () -> changeSuggestionService.createChangeSuggestion(suggestion));
+  }
+
   protected void assertCreatedSuggestion(R created) {
     assertEquals(Status.PENDING, created.getStatus());
     assertNull(created.getApplied());
     assertNull(created.getDiscarded());
     assertEquals(getSimplePrincipalProvider().get().getName(), created.getModifiedBy());
-    assertEquals(PROPOSER, created.getProposedBy());
+    assertEquals(PROPOSER, created.getProposerEmail());
     assertEquals(1, created.getComments().size());
   }
 

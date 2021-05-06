@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.validation.annotation.Validated;
+
 @Service
+@Validated
 public class CollectionChangeSuggestionService
     extends BaseChangeSuggestionService<Collection, CollectionChangeSuggestion> {
 

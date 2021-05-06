@@ -71,7 +71,7 @@ public class InstitutionChangeSuggestionServiceIT
     suggestion.setSuggestedEntity(i1);
     suggestion.setType(Type.CONVERSION_TO_COLLECTION);
     suggestion.setEntityKey(i1Key);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setNameForNewInstitutionForConvertedCollection("newInstitution");
     suggestion.setComments(Collections.singletonList("comment"));
 

@@ -16,21 +16,28 @@
 package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class GrSciCollEditorAuthorizationService {
@@ -38,20 +45,29 @@ public class GrSciCollEditorAuthorizationService {
   private static final Logger LOG =
       LoggerFactory.getLogger(GrSciCollEditorAuthorizationService.class);
 
+  public static final String INSTITUTION = "institution";
+  public static final String COLLECTION = "collection";
+
   private final UserRightsMapper userRightsMapper;
   private final CollectionMapper collectionMapper;
   private final InstitutionMapper institutionMapper;
   private final PersonMapper personMapper;
+  private final ChangeSuggestionMapper changeSuggestionMapper;
+  private final ObjectMapper objectMapper;
 
   public GrSciCollEditorAuthorizationService(
       UserRightsMapper userRightsMapper,
       CollectionMapper collectionMapper,
       InstitutionMapper institutionMapper,
-      PersonMapper personMapper) {
+      PersonMapper personMapper,
+      ChangeSuggestionMapper changeSuggestionMapper,
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.userRightsMapper = userRightsMapper;
     this.collectionMapper = collectionMapper;
     this.institutionMapper = institutionMapper;
     this.personMapper = personMapper;
+    this.changeSuggestionMapper = changeSuggestionMapper;
+    this.objectMapper = objectMapper;
   }
 
   public boolean isIrnIdentifier(Identifier identifier) {
@@ -123,5 +139,78 @@ public class GrSciCollEditorAuthorizationService {
     }
 
     return allowed;
+  }
+
+  public boolean allowedToCreateCollectionEntity(
+      String entityType, String username, Collection bodyEntity) {
+    if (INSTITUTION.equalsIgnoreCase(entityType)) {
+      return false;
+    }
+
+    if (COLLECTION.equalsIgnoreCase(entityType)) {
+      if (bodyEntity == null || bodyEntity.getInstitutionKey() == null) {
+        return false;
+      } else {
+        return allowedToModifyEntity(username, bodyEntity.getInstitutionKey());
+      }
+    }
+
+    return true;
+  }
+
+  public boolean allowedToModifyCollectionEntity(
+      String entityType,
+      UUID entityKey,
+      boolean isDelete,
+      String username,
+      Collection collectionInMessageBody) {
+
+    // editors cannot delete iDigBio entities
+    if (isDelete && isIDigBioEntity(entityType, entityKey)) {
+      return false;
+    }
+
+    if (INSTITUTION.equalsIgnoreCase(entityType) && !allowedToModifyEntity(username, entityKey)) {
+      return false;
+    }
+
+    if (COLLECTION.equalsIgnoreCase(entityType)
+        && !allowedToUpdateCollection(username, entityKey, collectionInMessageBody)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  public boolean allowedToUpdateChangeSuggestion(int key, String entityType, String username) {
+    ChangeSuggestionDto changeSuggestion = changeSuggestionMapper.get(key);
+    if (changeSuggestion.getType() == Type.CREATE) {
+      Collection entity = null;
+      if (COLLECTION.equalsIgnoreCase(entityType)) {
+        try {
+          entity = objectMapper.readValue(changeSuggestion.getSuggestedEntity(), Collection.class);
+        } catch (JsonProcessingException e) {
+          return false;
+        }
+      }
+      return allowedToCreateCollectionEntity(entityType, username, entity);
+    } else if (changeSuggestion.getType() == Type.UPDATE
+        || changeSuggestion.getType() == Type.DELETE) {
+      Collection entity = null;
+      if (COLLECTION.equalsIgnoreCase(entityType)) {
+        try {
+          entity = objectMapper.readValue(changeSuggestion.getSuggestedEntity(), Collection.class);
+        } catch (JsonProcessingException e) {
+          return false;
+        }
+        return allowedToModifyCollectionEntity(
+            entityType,
+            changeSuggestion.getEntityKey(),
+            changeSuggestion.getType() == Type.DELETE,
+            username,
+            entity);
+      }
+    }
+    return false;
   }
 }

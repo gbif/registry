@@ -17,9 +17,12 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.validation.annotation.Validated;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Service
+@Validated
 public class InstitutionChangeSuggestionService
     extends BaseChangeSuggestionService<Institution, InstitutionChangeSuggestion> {
 
