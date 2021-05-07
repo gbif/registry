@@ -31,6 +31,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +39,7 @@ import java.util.UUID;
 import javax.validation.Valid;
 
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.annotation.Validated;
@@ -122,10 +124,30 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
         datasetMapper.listDatasetsInNetwork(networkKey, page));
   }
 
+  /**
+   * Validates if a the requested dataset exists.
+   */
+  private void existDatasetCheck(UUID datasetKey) {
+    if(datasetMapper.get(datasetKey) == null) {
+      throw new WebApplicationException("Dataset " + datasetKey + " not found",HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * Validates if a the requested network exists.
+   */
+  private void existNetworkCheck(UUID networkKey) {
+    if(networkMapper.get(networkKey) == null) {
+      throw new WebApplicationException("NetworkKey " +  networkKey + " not found", HttpStatus.BAD_REQUEST);
+    }
+  }
+
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+    existDatasetCheck(datasetKey);
+    existNetworkCheck(networkKey);
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
     eventManager.post(ChangedComponentEvent.newInstance(datasetKey, Network.class, Dataset.class));
   }
@@ -135,6 +157,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Override
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+    existDatasetCheck(datasetKey);
+    existNetworkCheck(networkKey);
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
     eventManager.post(ChangedComponentEvent.newInstance(datasetKey, Network.class, Dataset.class));
   }

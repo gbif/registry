@@ -29,12 +29,14 @@ import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.xml.crypto.Data;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -197,6 +200,39 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     network1PublishingOrgs =
         service.publishingOrganizations(network1.getKey(), new PagingRequest());
     assertEquals(0, network1PublishingOrgs.getCount());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testConstituentsHandlingErrors(ServiceType serviceType) {
+    NetworkService service = (NetworkService) getService(serviceType);
+
+    Network network = testDataFactory.newPersistedNetwork();
+    Organization organization = testDataFactory.newPersistedOrganization();
+    Installation installation = testDataFactory.newPersistedInstallation();
+    Dataset dataset = testDataFactory.newPersistedDataset(organization.getKey(), installation.getKey());
+
+    //Simple add
+    service.addConstituent(network.getKey(), dataset.getKey());
+
+    //Exception class depends on the service type
+    Class<? extends  Throwable> expectedException = serviceType == ServiceType.RESOURCE? WebApplicationException.class : IllegalArgumentException.class;
+
+    //Adding to a non-existing network
+
+    assertThrows(expectedException, () -> service.addConstituent(UUID.randomUUID(), dataset.getKey()));
+
+    //Adding a non-existing dataset
+    assertThrows(expectedException, () -> service.addConstituent(network.getKey(), UUID.randomUUID()));
+
+    //Removing from a non-existing network
+    assertThrows(expectedException, () -> service.removeConstituent(UUID.randomUUID(), dataset.getKey()));
+
+    //Removing a non-existing dataset
+    assertThrows(expectedException, () -> service.removeConstituent(network.getKey(), UUID.randomUUID()));
+
+    //Simple remove
+    service.removeConstituent(network.getKey(), dataset.getKey());
   }
 
   @Override
