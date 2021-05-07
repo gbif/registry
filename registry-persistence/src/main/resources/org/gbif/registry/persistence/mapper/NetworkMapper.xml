@@ -88,7 +88,7 @@
   <select id="countDatasetsInNetwork" resultType="int">
     SELECT COUNT(*) AS num_constituents
     FROM dataset_network dn
-           JOIN dataset d ON d.key = dn.dataset_key
+    JOIN dataset d ON d.key = dn.dataset_key
     WHERE d.deleted IS NULL AND network_key = #{networkKey,jdbcType=OTHER}
   </select>
 
@@ -130,7 +130,7 @@
     WHERE n.deleted IS NULL
     ORDER BY n.created DESC, n.key
     <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
 
@@ -144,7 +144,7 @@
     </if>
     ORDER BY <if test="query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>n.created DESC, key
     <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
 
@@ -177,9 +177,8 @@
   <!-- Joined delete of tag to trigger cascade delete of the join table -->
   <delete id="deleteTag">
     DELETE FROM tag USING network_tag
-    WHERE
-      tag_key = tag.key AND
-      network_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
+    WHERE tag_key = tag.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND tag_key = #{tagKey,jdbcType=INTEGER}
   </delete>
 
   <!-- CONTACTS -->
@@ -219,23 +218,21 @@
   <!-- Joined delete of contact to trigger cascade delete of the join table -->
   <delete id="deleteContact">
     DELETE FROM contact USING network_contact
-    WHERE
-      contact_key = contact.key AND
-      network_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
+    WHERE contact_key = contact.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
   <delete id="deleteContacts">
     DELETE FROM contact USING network_contact
-    WHERE
-      contact_key = contact.key AND
-      network_contact = #{targetEntityKey,jdbcType=OTHER}
+    WHERE contact_key = contact.key AND
+          network_contact = #{targetEntityKey,jdbcType=OTHER}
   </delete>
 
   <select id="areRelated" resultType="boolean">
     SELECT true
     FROM network_contact
-    WHERE network_key = #{targetEntityKey,jdbcType=OTHER}
-      AND contact_key = #{contactKey,jdbcType=INTEGER}
+    WHERE network_key = #{targetEntityKey,jdbcType=OTHER} AND
+          contact_key = #{contactKey,jdbcType=INTEGER}
     LIMIT 1
   </select>
 
@@ -258,9 +255,8 @@
   <!-- Joined delete of identifier to trigger cascade delete of the join table -->
   <delete id="deleteIdentifier">
     DELETE FROM identifier USING network_identifier
-    WHERE
-      identifier_key = identifier.key AND
-      network_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+    WHERE identifier_key = identifier.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=INTEGER}
   </delete>
 
   <!-- ENDPOINTS -->
@@ -282,9 +278,8 @@
   <!-- Joined delete of endpoint to trigger cascade delete of the join table -->
   <delete id="deleteEndpoint">
     DELETE FROM endpoint USING network_endpoint
-    WHERE
-      endpoint_key = endpoint.key AND
-      network_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
+    WHERE endpoint_key = endpoint.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND endpoint_key = #{endpointKey,jdbcType=INTEGER}
   </delete>
 
   <!-- MACHINE TAGS -->
@@ -306,19 +301,17 @@
   <!-- Joined delete of machine_tag to trigger cascade delete of the join table -->
   <delete id="deleteMachineTag">
     DELETE FROM machine_tag USING network_machine_tag
-    WHERE
-      machine_tag_key = machine_tag.key AND
-      network_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
+    WHERE machine_tag_key = machine_tag.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND machine_tag_key = #{machineTagKey,jdbcType=INTEGER}
   </delete>
 
   <delete id="deleteMachineTags">
     DELETE FROM machine_tag USING network_machine_tag
-    WHERE
-    machine_tag_key = machine_tag.key AND
-    network_key = #{targetEntityKey,jdbcType=OTHER} AND
-    namespace = #{namespace}
+    WHERE machine_tag_key = machine_tag.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND
+          namespace = #{namespace}
     <if test="name != null" >
-      AND name = #{name}
+          AND name = #{name}
     </if>
   </delete>
 
@@ -327,28 +320,29 @@
     FROM network n
     INNER JOIN network_machine_tag nm ON nm.network_key = n.key
     INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR} AND n.deleted IS NULL
     <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
+          AND m.name=#{name,jdbcType=VARCHAR}
       <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
+          AND m.value=#{value,jdbcType=VARCHAR}
       </if>
     </if>
     ORDER BY n.key, n.created DESC
     <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
+
   <select id="countByMachineTag" resultType="Long">
     SELECT count(DISTINCT n.key)
     FROM network n
     INNER JOIN network_machine_tag nm ON nm.network_key = n.key
     INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
+    WHERE m.namespace = #{namespace,jdbcType=VARCHAR} AND n.deleted IS NULL
     <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
+          AND m.name=#{name,jdbcType=VARCHAR}
       <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
+          AND m.value=#{value,jdbcType=VARCHAR}
       </if>
     </if>
   </select>
@@ -372,9 +366,8 @@
   <!-- Joined delete of comment to trigger cascade delete of the join table -->
   <delete id="deleteComment">
     DELETE FROM comment USING network_comment
-    WHERE
-      comment_key = comment.key AND
-      network_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
+    WHERE comment_key = comment.key AND
+          network_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
 
@@ -409,13 +402,13 @@
     FROM network n
     INNER JOIN network_identifier ON network_key = n.key
     INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
+    WHERE identifier = #{identifier,jdbcType=VARCHAR} AND n.deleted IS NULL
     <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
+           AND ide.type=#{type,jdbcType=OTHER}
     </if>
     ORDER BY n.key, n.created DESC
     <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
   <select id="countByIdentifier" resultType="Long">
@@ -425,16 +418,16 @@
     INNER JOIN identifier ide ON identifier_key = ide.key
     WHERE identifier = #{identifier,jdbcType=VARCHAR}
     <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
+          AND ide.type=#{type,jdbcType=OTHER}
     </if>
   </select>
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
     SELECT key,title FROM (
-                            (SELECT key,title FROM network WHERE title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                            (SELECT key,title FROM network WHERE deleted IS NULL AND title ilike #{q}||'%' ORDER BY title LIMIT 25)
                             UNION ALL
-                            (SELECT key,title FROM network WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
+                            (SELECT key,title FROM network WHERE deleted IS NULL AND title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
                           ) t1 LIMIT 25
   </select>
 </mapper>
