@@ -30,6 +30,7 @@ import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Commentable;
@@ -61,7 +62,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
@@ -253,20 +253,21 @@ public abstract class PrimaryCollectionEntityResourceIT<
   public void listChangeSuggestionTest() {
     R changeSuggestion = newChangeSuggestion();
     changeSuggestion.setKey(1);
-    when(getMockChangeSuggestionService().list(any(), any(), any(), anyString(), any(), any()))
+    Status status = Status.PENDING;
+    Type type = Type.CREATE;
+    Country country = Country.DENMARK;
+    String proposedBy = "aa@aa.com";
+    UUID entityKey = UUID.randomUUID();
+    Pageable page = new PagingRequest();
+
+    when(getMockChangeSuggestionService().list(status, type, country, proposedBy, entityKey, page))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));
 
     PagingResponse<R> result =
         getPrimaryCollectionEntityClient()
-            .listChangeSuggestion(
-                Status.PENDING,
-                Type.CREATE,
-                Country.DENMARK,
-                "aaa@aa.com",
-                UUID.randomUUID(),
-                new PagingRequest());
+            .listChangeSuggestion(status, type, country, proposedBy, entityKey, page);
     assertEquals(1, result.getResults().size());
   }
 

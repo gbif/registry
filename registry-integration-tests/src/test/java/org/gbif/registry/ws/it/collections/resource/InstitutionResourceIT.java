@@ -132,8 +132,6 @@ public class InstitutionResourceIT
         convertedCollectionKey, getClient().convertToCollection(UUID.randomUUID(), params));
   }
 
-  // TODO: suggestions
-
   @Override
   protected PrimaryCollectionEntityService<Institution> getMockPrimaryEntityService() {
     return institutionService;
