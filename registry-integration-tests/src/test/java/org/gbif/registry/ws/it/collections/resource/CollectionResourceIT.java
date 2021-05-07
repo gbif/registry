@@ -21,6 +21,7 @@ import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.registry.ws.client.collections.CollectionClient;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;
@@ -54,11 +55,13 @@ public class CollectionResourceIT
   public CollectionResourceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
+      RequestTestFixture requestTestFixture,
       @LocalServerPort int localServerPort) {
     super(
         CollectionClient.class,
         simplePrincipalProvider,
         esServer,
+        requestTestFixture,
         Collection.class,
         localServerPort);
   }

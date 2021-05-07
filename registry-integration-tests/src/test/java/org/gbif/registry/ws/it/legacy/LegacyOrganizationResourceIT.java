@@ -26,7 +26,7 @@ import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
 import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.data.TestDataFactory;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;

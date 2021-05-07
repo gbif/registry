@@ -45,6 +45,7 @@ import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.PrimaryCollectionEntityClient;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.time.LocalDateTime;
@@ -77,9 +78,10 @@ public abstract class PrimaryCollectionEntityResourceIT<
       Class<? extends BaseCollectionEntityClient<T>> cls,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
+      RequestTestFixture requestTestFixture,
       Class<T> paramType,
       int localServerPort) {
-    super(cls, principalProvider, esServer, paramType, localServerPort);
+    super(cls, principalProvider, esServer, requestTestFixture, paramType, localServerPort);
   }
 
   @Test

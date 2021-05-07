@@ -33,7 +33,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.data.TestDataFactory;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NodeClient;

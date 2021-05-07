@@ -19,6 +19,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -35,9 +36,12 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -54,13 +58,14 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@SpringBootTest(
+    classes = {RegistryIntegrationTestsConfiguration.class, BaseServiceIT.MockConfig.class})
 @ContextConfiguration(
     initializers = {
       BaseServiceIT.ContextInitializer.class,
       BaseServiceIT.EsContainerContextInitializer.class
     })
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "mock"})
 public class BaseServiceIT {
 
   public static class EsContainerContextInitializer
@@ -172,5 +177,12 @@ public class BaseServiceIT {
 
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
+  }
+
+  @TestConfiguration
+  @Profile("mock")
+  public static class MockConfig {
+
+    @MockBean RequestTestFixture requestTestFixture;
   }
 }

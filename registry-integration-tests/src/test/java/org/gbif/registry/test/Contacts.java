@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.test.data;
+package org.gbif.registry.test;
 
-import org.gbif.api.model.registry.Network;
-import org.gbif.api.service.registry.NetworkService;
+import org.gbif.api.model.registry.Contact;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,27 +25,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
-public class Networks extends JsonBackedData<Network> {
-
-  private final NetworkService networkService;
+public class Contacts extends JsonBackedData<Contact> {
 
   @Autowired
-  public Networks(
-      NetworkService networkService,
-      ObjectMapper objectMapper,
-      SimplePrincipalProvider simplePrincipalProvider) {
+  private Contacts(ObjectMapper objectMapper, SimplePrincipalProvider simplePrincipalProvider) {
     super(
-        "data/network.json",
-        new TypeReference<Network>() {},
+        "data/contact.json",
+        new TypeReference<Contact>() {},
         objectMapper,
         simplePrincipalProvider);
-    this.networkService = networkService;
-  }
-
-  public Network newPersistedInstance() {
-    Network network = newInstance();
-    UUID networkUuid = networkService.create(network);
-
-    return networkService.get(networkUuid);
   }
 }

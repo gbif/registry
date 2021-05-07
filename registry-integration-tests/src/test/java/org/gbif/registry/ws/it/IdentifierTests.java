@@ -21,7 +21,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.NetworkEntityService;
-import org.gbif.registry.test.data.TestDataFactory;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.List;
 

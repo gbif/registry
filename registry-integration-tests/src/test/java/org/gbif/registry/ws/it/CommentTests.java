@@ -18,7 +18,7 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.service.registry.CommentService;
-import org.gbif.registry.test.data.TestDataFactory;
+import org.gbif.registry.test.TestDataFactory;
 
 import java.util.List;
 

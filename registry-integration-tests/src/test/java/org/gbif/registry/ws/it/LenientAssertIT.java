@@ -17,7 +17,7 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.registry.Contact;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.data.TestDataFactory;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import javax.annotation.Nullable;

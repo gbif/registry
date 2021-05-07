@@ -28,7 +28,7 @@ import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.surety.ChallengeCodeMapper;
 import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.data.TestDataFactory;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.registry.ws.resources.OrganizationResource;

@@ -19,6 +19,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.mocks.IdentityServiceMock;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -61,13 +62,13 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-    classes = {RegistryIntegrationTestsConfiguration.class, BaseResourceTest.MockConfig.class},
+    classes = {RegistryIntegrationTestsConfiguration.class, BaseResourceIT.MockConfig.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {BaseResourceTest.EsContainerContextInitializer.class})
+@ContextConfiguration(initializers = {BaseResourceIT.EsContainerContextInitializer.class})
 @ActiveProfiles({"test", "mock"})
 @AutoConfigureMockMvc
 @DirtiesContext
-public class BaseResourceTest {
+public class BaseResourceIT {
 
   public static class EsContainerContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -79,13 +80,17 @@ public class BaseResourceTest {
     }
   }
 
-  private final SimplePrincipalProvider simplePrincipalProvider;
   protected static EsManageServer esServer;
+  private final SimplePrincipalProvider simplePrincipalProvider;
+  protected final RequestTestFixture requestTestFixture;
 
-  public BaseResourceTest(
-      SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+  public BaseResourceIT(
+      SimplePrincipalProvider simplePrincipalProvider,
+      EsManageServer esServer,
+      RequestTestFixture requestTestFixture) {
     this.simplePrincipalProvider = simplePrincipalProvider;
-    BaseResourceTest.esServer = esServer;
+    BaseResourceIT.esServer = esServer;
+    this.requestTestFixture = requestTestFixture;
   }
 
   @BeforeEach

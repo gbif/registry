@@ -16,6 +16,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.it.collections.data.TestData;
 import org.gbif.registry.ws.it.collections.data.TestDataFactory;
+import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -26,8 +27,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,22 +35,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 abstract class BaseCollectionEntityResourceIT<
         T extends
             CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable
                 & LenientEquals<T>>
-    extends BaseResourceTest {
+    extends BaseResourceIT {
 
   protected final BaseCollectionEntityClient<T> baseClient;
   protected final TestData<T> testData;
   protected final Class<T> paramType;
-
-  @Autowired protected MockMvc mockMvc;
 
   @Autowired protected ObjectMapper objectMapper;
 
@@ -59,9 +53,10 @@ abstract class BaseCollectionEntityResourceIT<
       Class<? extends BaseCollectionEntityClient<T>> cls,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
+      RequestTestFixture requestTestFixture,
       Class<T> paramType,
       int localServerPort) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider, esServer, requestTestFixture);
     this.baseClient = prepareClient(TestConstants.TEST_GRSCICOLL_ADMIN, localServerPort, cls);
     this.testData = TestDataFactory.create(paramType);
     this.paramType = paramType;
@@ -106,17 +101,15 @@ abstract class BaseCollectionEntityResourceIT<
     T entity = testData.newEntity();
     entity.setKey(UUID.randomUUID());
 
-    mockMvc
-        .perform(
-            put("/grscicoll/"
-                    + paramType.getSimpleName().toLowerCase()
-                    + "/"
-                    + UUID.randomUUID().toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(entity))
-                .with(
-                    httpBasic(
-                        TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN)))
+    String path =
+        "/grscicoll/"
+            + paramType.getSimpleName().toLowerCase()
+            + "/"
+            + UUID.randomUUID().toString();
+
+    requestTestFixture
+        .putRequest(
+            TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN, entity, path)
         .andExpect(status().isBadRequest());
   }
 
@@ -125,13 +118,12 @@ abstract class BaseCollectionEntityResourceIT<
     UUID key = UUID.randomUUID();
     mockGetEntity(key, null);
 
-    mockMvc
-        .perform(
-            get(
-                "/grscicoll/"
-                    + paramType.getSimpleName().toLowerCase()
-                    + "/"
-                    + UUID.randomUUID().toString()))
+    requestTestFixture
+        .getRequest(
+            "/grscicoll/"
+                + paramType.getSimpleName().toLowerCase()
+                + "/"
+                + UUID.randomUUID().toString())
         .andExpect(status().isNotFound());
   }
 
