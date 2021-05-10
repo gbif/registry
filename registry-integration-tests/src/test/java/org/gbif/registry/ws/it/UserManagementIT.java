@@ -16,7 +16,9 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.EmailChangeRequest;
@@ -33,6 +35,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +53,7 @@ import static org.gbif.registry.ws.it.fixtures.UserTestFixture.USERNAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -108,6 +112,19 @@ public class UserManagementIT extends BaseItTest {
     requestTestFixture
         .getRequest(ALTERNATE_USERNAME, PASSWORD, "/user/login")
         .andExpect(status().isOk());
+
+
+    // Test search by rights on entity
+    userTestFixture.prepareAdminUser();
+    ResultActions result =requestTestFixture
+      .getSignedRequest(TEST_ADMIN, "/admin/user/search",
+                        ImmutableMap.<String,String>builder()
+                          .put("role", UserRole.USER.name())
+                          .build())
+      .andExpect(status().isOk());
+    PagingResponse<UserAdminView> adminUsers = requestTestFixture.extractJsonResponse(result, new TypeReference<PagingResponse<UserAdminView>>() { });
+    assertTrue(adminUsers.getCount() == 2);
+
   }
 
   @Test
@@ -199,6 +216,17 @@ public class UserManagementIT extends BaseItTest {
         requestTestFixture.extractJsonResponse(actions, UserAdminView.class);
 
     assertEquals(createdUser.getKey(), actualUserAdminView.getUser().getKey());
+
+    // Test search user role
+    userTestFixture.prepareAdminUser();
+    ResultActions result =requestTestFixture
+      .getSignedRequest(TEST_ADMIN, "/admin/user/search",
+                        ImmutableMap.<String,String>builder()
+                          .put("role", UserRole.USER.name())
+                          .build())
+      .andExpect(status().isOk());
+    PagingResponse<UserAdminView> adminUsers = requestTestFixture.extractJsonResponse(result, new TypeReference<PagingResponse<UserAdminView>>() { });
+    assertTrue(adminUsers.getCount() == 1);
   }
 
   @Test
@@ -300,10 +328,20 @@ public class UserManagementIT extends BaseItTest {
         .getSignedRequest(USERNAME, "/admin/user/" + USERNAME + "/editorRight")
         .andExpect(status().isOk());
 
+    // Test search by rights on entity
+    ResultActions rightsSearchResult =requestTestFixture
+      .getSignedRequest(TEST_ADMIN, "/admin/user/search",
+                        ImmutableMap.<String,String>builder()
+                          .put("editorRightsOn", key.toString()).build())
+      .andExpect(status().isOk());
+    PagingResponse<UserAdminView> editorUsers = requestTestFixture.extractJsonResponse(rightsSearchResult, new TypeReference<PagingResponse<UserAdminView>>() { });
+    assertTrue(editorUsers.getCount() == 1);
+
     // Admin delete right
     requestTestFixture
         .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight/" + key)
         .andExpect(status().isNoContent());
+
   }
 
   @Test

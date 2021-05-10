@@ -70,6 +70,14 @@
   <select id="search" resultMap="USER_MAP">
     SELECT <include refid="USER_FIELDS"/>
     FROM public.user u
+    <if test="editorRightsOn != null" >
+    JOIN editor_rights er ON er.username = u.username AND er.key IN <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
+                                                                      #{item}
+                                                                   </foreach>
+    </if>
+    <if test="roles != null" >
+    WHERE roles @> #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler}
+    </if>
     <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
     ORDER BY u.last_name, u.first_name, u.username
     <if test="page != null" >
@@ -80,6 +88,14 @@
   <select id="count" resultType="Integer" parameterType="map">
     SELECT COUNT(*)
     FROM public.user u <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+    <if test="editorRightsOn != null" >
+    JOIN editor_rights er ON er.username = u.username AND er.key IN <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
+                                                                      #{item}
+                                                                    </foreach>
+    </if>
+    <if test="roles != null" >
+    WHERE roles @> #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler}
+    </if>
   </select>
 
   <insert id="create" parameterType="org.gbif.api.model.common.GbifUser" useGeneratedKeys="true" keyProperty="key">

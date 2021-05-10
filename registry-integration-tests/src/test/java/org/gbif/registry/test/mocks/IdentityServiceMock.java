@@ -27,6 +27,7 @@ import org.gbif.registry.ws.it.fixtures.TestConstants;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -132,7 +133,7 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public PagingResponse<GbifUser> search(String query, @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles, @Nullable Set<UUID> editorRightsOn, @Nullable Pageable page) {
     throw new UnsupportedOperationException();
   }
 
