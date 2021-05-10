@@ -20,9 +20,11 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.service.common.IdentityAccessService;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -68,11 +70,14 @@ public interface IdentityService extends IdentityAccessService {
   boolean hasPendingConfirmation(int userKey);
 
   /**
-   * A simple search that supports paging.
+   * A simple search that supports paging and filter by role and editor rights on a list of entities.
    *
    * @return a pageable response of network entities, with accurate counts.
    */
-  PagingResponse<GbifUser> search(String query, @Nullable Pageable page);
+  PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles,
+                                  @Nullable Set<UUID> editorRightsOn,
+                                  @Nullable Pageable page);
+
 
   /**
    * Create a new user.
