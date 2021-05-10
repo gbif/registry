@@ -41,14 +41,12 @@
     Uses the default configuration english for the English language.
    -->
   <sql id="SIMPLE_SEARCH">
-    AND (
-          query  @@ o.fulltext_search
-          OR EXISTS(
-          SELECT contact_key
-          FROM organization_contact JOIN contact c ON c.key = contact_key
-          WHERE organization_key=o.key AND query @@ c.fulltext_search
-          )
-        )
+      query  @@ o.fulltext_search
+      OR EXISTS(
+        SELECT contact_key
+        FROM organization_contact JOIN contact c ON c.key = contact_key
+        WHERE organization_key=o.key AND query @@ c.fulltext_search
+      )
   </sql>
 
   <!--
@@ -181,11 +179,11 @@
   <!-- Basic paging search functionality -->
   <select id="search" resultMap="ORGANIZATION_MAP">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
+    FROM organization o
     <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
+    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
+    WHERE deleted IS NULL
     <if test="country != null" >
       AND o.country = #{country,jdbcType=OTHER}
     </if>
@@ -208,11 +206,11 @@
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM organization o <if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
+    FROM organization o
     <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
+    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
+    WHERE deleted IS NULL
     <if test="country != null" >
       AND o.country = #{country,jdbcType=OTHER}
     </if>
