@@ -226,7 +226,7 @@ public class UserManagementIT extends BaseItTest {
                           .build())
       .andExpect(status().isOk());
     PagingResponse<UserAdminView> adminUsers = requestTestFixture.extractJsonResponse(result, new TypeReference<PagingResponse<UserAdminView>>() { });
-    assertTrue(adminUsers.getCount() == 1);
+    assertTrue(adminUsers.getCount() == 2);
   }
 
   @Test
