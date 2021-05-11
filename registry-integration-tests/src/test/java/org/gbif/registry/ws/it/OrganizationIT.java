@@ -22,7 +22,6 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
@@ -64,7 +63,6 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   private final NodeService nodeClient;
   private final NetworkService networkService;
   private final OrganizationResource organizationResource;
-
 
   private final TestDataFactory testDataFactory;
 
@@ -145,7 +143,9 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   @Test
   public void searchByNetworkTest() {
     Installation installation = testDataFactory.newPersistedInstallation();
-    Dataset dataset = testDataFactory.newPersistedDataset(installation.getOrganizationKey(), installation.getKey());
+    Dataset dataset =
+        testDataFactory.newPersistedDataset(
+            installation.getOrganizationKey(), installation.getKey());
     Network network = testDataFactory.newPersistedNetwork();
 
     OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
