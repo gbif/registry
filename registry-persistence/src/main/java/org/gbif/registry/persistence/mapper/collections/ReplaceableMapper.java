@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
 
-public interface MergeableMapper {
+public interface ReplaceableMapper {
 
   void replace(
       @Param("targetEntityKey") UUID targetEntityKey, @Param("replacementKey") UUID replacementKey);

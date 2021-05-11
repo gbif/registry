@@ -1,6 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import org.gbif.api.model.collections.EntityType;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.vocabulary.Country;
@@ -15,7 +15,7 @@ import java.util.UUID;
 public class ChangeSuggestionDto {
 
   private Integer key;
-  private EntityType entityType;
+  private CollectionEntityType collectionEntityType;
   private UUID entityKey;
   private Type type;
   private Status status;
@@ -43,12 +43,12 @@ public class ChangeSuggestionDto {
     this.key = key;
   }
 
-  public EntityType getEntityType() {
-    return entityType;
+  public CollectionEntityType getCollectionEntityType() {
+    return collectionEntityType;
   }
 
-  public void setEntityType(EntityType entityType) {
-    this.entityType = entityType;
+  public void setCollectionEntityType(CollectionEntityType collectionEntityType) {
+    this.collectionEntityType = collectionEntityType;
   }
 
   public UUID getEntityKey() {

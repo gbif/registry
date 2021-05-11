@@ -18,7 +18,6 @@ package org.gbif.registry.persistence.mapper.collections;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 
@@ -33,11 +32,7 @@ import org.springframework.stereotype.Repository;
 /** Mapper for {@link Institution} entities. */
 @Repository
 public interface InstitutionMapper
-    extends BaseMapper<Institution>,
-        ContactableMapper,
-        LookupMapper<InstitutionMatchedDto>,
-        OccurrenceMappeableMapper,
-        MergeableMapper {
+    extends PrimaryEntityMapper<Institution>, LookupMapper<InstitutionMatchedDto> {
 
   List<Institution> list(
       @Param("params") InstitutionSearchParams searchParams,

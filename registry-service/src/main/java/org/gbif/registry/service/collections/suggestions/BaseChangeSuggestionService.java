@@ -3,8 +3,8 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.EntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.suggestions.Change;
@@ -21,6 +21,9 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.collections.EventType;
+import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
@@ -88,7 +91,8 @@ public abstract class BaseChangeSuggestionService<
   private final ObjectMapper objectMapper;
   private final EmailSender emailSender;
   private final CollectionsEmailManager emailManager;
-  private EntityType entityType;
+  private final EventManager eventManager;
+  private CollectionEntityType collectionEntityType;
 
   protected BaseChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
@@ -97,7 +101,8 @@ public abstract class BaseChangeSuggestionService<
       Class<T> clazz,
       ObjectMapper objectMapper,
       EmailSender emailSender,
-      CollectionsEmailManager emailManager) {
+      CollectionsEmailManager emailManager,
+      EventManager eventManager) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -105,11 +110,12 @@ public abstract class BaseChangeSuggestionService<
     this.objectMapper = objectMapper;
     this.emailSender = emailSender;
     this.emailManager = emailManager;
+    this.eventManager = eventManager;
 
     if (clazz == Institution.class) {
-      entityType = EntityType.INSTITUTION;
+      collectionEntityType = CollectionEntityType.INSTITUTION;
     } else if (clazz == Collection.class) {
-      entityType = EntityType.COLLECTION;
+      collectionEntityType = CollectionEntityType.COLLECTION;
     }
   }
 
@@ -134,10 +140,15 @@ public abstract class BaseChangeSuggestionService<
 
     changeSuggestionMapper.create(dto);
 
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.CREATE));
+
     // send email
     try {
       BaseEmailModel emailModel =
-          emailManager.generateNewChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
+          emailManager.generateNewChangeSuggestionEmailModel(
+              dto.getKey(), dto.getCollectionEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for new change suggestion");
@@ -218,6 +229,10 @@ public abstract class BaseChangeSuggestionService<
     dto.setComments(updatedChangeSuggestion.getComments());
     dto.setModifiedBy(getUsername());
     changeSuggestionMapper.update(dto);
+
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.UPDATE));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
@@ -230,11 +245,15 @@ public abstract class BaseChangeSuggestionService<
     dto.setModifiedBy(getUsername());
     changeSuggestionMapper.update(dto);
 
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.DISCARD_SUGGESTION));
+
     // send email
     try {
       BaseEmailModel emailModel =
           emailManager.generateDiscardedChangeSuggestionEmailModel(
-              dto.getKey(), dto.getEntityType());
+              dto.getKey(), dto.getCollectionEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for discarded change suggestion");
@@ -264,12 +283,17 @@ public abstract class BaseChangeSuggestionService<
     dto.setModifiedBy(getUsername());
     dto.setApplied(new Date());
     dto.setAppliedBy(getUsername());
+
     changeSuggestionMapper.update(dto);
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.APPLY_SUGGESTION));
 
     // send email
     try {
       BaseEmailModel emailModel =
-          emailManager.generateAppliedChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
+          emailManager.generateAppliedChangeSuggestionEmailModel(
+              dto.getKey(), dto.getCollectionEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for applied change suggestion");
@@ -292,7 +316,7 @@ public abstract class BaseChangeSuggestionService<
         changeSuggestionMapper.list(
             status,
             type,
-            entityType,
+            collectionEntityType,
             country,
             newEmptyChangeSuggestion().getProposerEmail(),
             entityKey,
@@ -302,7 +326,7 @@ public abstract class BaseChangeSuggestionService<
         changeSuggestionMapper.count(
             status,
             type,
-            entityType,
+            collectionEntityType,
             country,
             newEmptyChangeSuggestion().getProposerEmail(),
             entityKey);
@@ -367,7 +391,7 @@ public abstract class BaseChangeSuggestionService<
     dto.setStatus(Status.PENDING);
     dto.setType(changeSuggestion.getType());
     dto.setComments(changeSuggestion.getComments());
-    dto.setEntityType(entityType);
+    dto.setCollectionEntityType(collectionEntityType);
     dto.setProposedBy(changeSuggestion.getProposerEmail());
     dto.setModifiedBy(getUsername());
     return dto;

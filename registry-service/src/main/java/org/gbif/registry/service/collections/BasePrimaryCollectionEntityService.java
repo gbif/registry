@@ -18,18 +18,18 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
+import org.gbif.registry.events.collections.EventType;
+import org.gbif.registry.events.collections.ReplaceEntityEvent;
+import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
-import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.ws.WebApplicationException;
 
@@ -50,6 +50,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
@@ -58,26 +59,23 @@ public abstract class BasePrimaryCollectionEntityService<
                 & Commentable & OccurrenceMappeable>
     extends BaseCollectionEntityService<T> implements PrimaryCollectionEntityService<T> {
 
-  private final ContactableMapper contactableMapper;
   private final OccurrenceMappingMapper occurrenceMappingMapper;
-  private final OccurrenceMappeableMapper occurrenceMappeableMapper;
   private final AddressMapper addressMapper;
+  private final PrimaryEntityMapper<T> primaryEntityMapper;
 
   protected BasePrimaryCollectionEntityService(
       Class<T> objectClass,
-      BaseMapper<T> baseMapper,
+      PrimaryEntityMapper<T> primaryEntityMapper,
       AddressMapper addressMapper,
       MachineTagMapper machineTagMapper,
       TagMapper tagMapper,
       IdentifierMapper identifierMapper,
-      ContactableMapper contactableMapper,
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
-      OccurrenceMappeableMapper occurrenceMappeableMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
-        baseMapper,
+        primaryEntityMapper,
         tagMapper,
         machineTagMapper,
         identifierMapper,
@@ -86,9 +84,8 @@ public abstract class BasePrimaryCollectionEntityService<
         eventManager,
         withMyBatis);
     this.addressMapper = addressMapper;
-    this.contactableMapper = contactableMapper;
     this.occurrenceMappingMapper = occurrenceMappingMapper;
-    this.occurrenceMappeableMapper = occurrenceMappeableMapper;
+    this.primaryEntityMapper = primaryEntityMapper;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
@@ -134,7 +131,7 @@ public abstract class BasePrimaryCollectionEntityService<
       }
     }
 
-    eventManager.post(CreateCollectionEntityEvent.newInstance(entity, objectClass));
+    eventManager.post(CreateCollectionEntityEvent.newInstance(entity));
 
     return entity.getKey();
   }
@@ -181,7 +178,7 @@ public abstract class BasePrimaryCollectionEntityService<
 
     T newEntity = get(entity.getKey());
 
-    eventManager.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld, objectClass));
+    eventManager.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld));
   }
 
   private void updateAddress(Address newAddress, Address oldAddress) {
@@ -201,29 +198,31 @@ public abstract class BasePrimaryCollectionEntityService<
   @Override
   public void addContact(@NotNull UUID entityKey, @NotNull UUID personKey) {
     // check if the contact exists
-    List<Person> contacts = contactableMapper.listContacts(entityKey);
+    List<Person> contacts = primaryEntityMapper.listContacts(entityKey);
 
     if (contacts != null && contacts.stream().anyMatch(p -> p.getKey().equals(personKey))) {
       throw new WebApplicationException("Duplicate contact", HttpStatus.CONFLICT);
     }
 
-    contactableMapper.addContact(entityKey, personKey);
+    primaryEntityMapper.addContact(entityKey, personKey);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, Person.class, personKey, EventType.LINK));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void removeContact(@NotNull UUID entityKey, @NotNull UUID personKey) {
-    contactableMapper.removeContact(entityKey, personKey);
+    primaryEntityMapper.removeContact(entityKey, personKey);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Person.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, Person.class, personKey, EventType.UNLINK));
   }
 
   @Override
   public List<Person> listContacts(@PathVariable UUID key) {
-    return contactableMapper.listContacts(key);
+    return primaryEntityMapper.listContacts(key);
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
@@ -235,28 +234,47 @@ public abstract class BasePrimaryCollectionEntityService<
     checkArgument(
         occurrenceMapping.getKey() == null, "Unable to create an entity which already has a key");
     occurrenceMappingMapper.createOccurrenceMapping(occurrenceMapping);
-    occurrenceMappeableMapper.addOccurrenceMapping(entityKey, occurrenceMapping.getKey());
+    primaryEntityMapper.addOccurrenceMapping(entityKey, occurrenceMapping.getKey());
 
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            entityKey, objectClass, OccurrenceMapping.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey,
+            objectClass,
+            occurrenceMapping,
+            occurrenceMapping.getKey(),
+            EventType.CREATE));
 
     return occurrenceMapping.getKey();
   }
 
   @Override
   public List<OccurrenceMapping> listOccurrenceMappings(@NotNull UUID uuid) {
-    return occurrenceMappeableMapper.listOccurrenceMappings(uuid);
+    return primaryEntityMapper.listOccurrenceMappings(uuid);
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Override
   public void deleteOccurrenceMapping(UUID entityKey, int occurrenceMappingKey) {
-    occurrenceMappeableMapper.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
+    OccurrenceMapping occurrenceMappingToDelete = occurrenceMappingMapper.get(occurrenceMappingKey);
+    primaryEntityMapper.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            entityKey, objectClass, OccurrenceMapping.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey,
+            objectClass,
+            occurrenceMappingToDelete,
+            occurrenceMappingKey,
+            EventType.DELETE));
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
+  @Transactional
+  @Override
+  public void replace(UUID targetEntityKey, UUID replacementKey) {
+    primaryEntityMapper.replace(targetEntityKey, replacementKey);
+    eventManager.post(
+        ReplaceEntityEvent.newInstance(
+            objectClass, targetEntityKey, replacementKey, EventType.REPLACE));
   }
 
   /**

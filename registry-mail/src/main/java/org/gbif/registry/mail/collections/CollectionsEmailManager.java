@@ -1,6 +1,6 @@
 package org.gbif.registry.mail.collections;
 
-import org.gbif.api.model.collections.EntityType;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.registry.domain.mail.GrscicollChangeSuggestionDataModel;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
@@ -37,25 +37,26 @@ public class CollectionsEmailManager {
   }
 
   public BaseEmailModel generateNewChangeSuggestionEmailModel(
-      int suggestionKey, EntityType entityType) throws IOException {
+      int suggestionKey, CollectionEntityType collectionEntityType) throws IOException {
     return buildBaseEmailModel(
-        suggestionKey, entityType, CollectionsEmailType.NEW_CHANGE_SUGGESTION);
+        suggestionKey, collectionEntityType, CollectionsEmailType.NEW_CHANGE_SUGGESTION);
   }
 
   public BaseEmailModel generateAppliedChangeSuggestionEmailModel(
-      int suggestionKey, EntityType entityType) throws IOException {
+      int suggestionKey, CollectionEntityType collectionEntityType) throws IOException {
     return buildBaseEmailModel(
-        suggestionKey, entityType, CollectionsEmailType.APPLIED_CHANGE_SUGGESTION);
+        suggestionKey, collectionEntityType, CollectionsEmailType.APPLIED_CHANGE_SUGGESTION);
   }
 
   public BaseEmailModel generateDiscardedChangeSuggestionEmailModel(
-      int suggestionKey, EntityType entityType) throws IOException {
+      int suggestionKey, CollectionEntityType collectionEntityType) throws IOException {
     return buildBaseEmailModel(
-        suggestionKey, entityType, CollectionsEmailType.DISCARDED_CHANGE_SUGGESTION);
+        suggestionKey, collectionEntityType, CollectionsEmailType.DISCARDED_CHANGE_SUGGESTION);
   }
 
   private BaseEmailModel buildBaseEmailModel(
-      int suggestionKey, EntityType entityType, CollectionsEmailType emailType) throws IOException {
+      int suggestionKey, CollectionEntityType entityType, CollectionsEmailType emailType)
+      throws IOException {
     BaseEmailModel baseEmailModel;
     try {
       URL suggestionUrl =

@@ -116,8 +116,6 @@ public class CollectionResourceIT
     assertEquals(views.size(), result.getResults().size());
   }
 
-  // TODO: suggestions
-
   @Override
   protected PrimaryCollectionEntityService<Collection> getMockPrimaryEntityService() {
     return collectionService;

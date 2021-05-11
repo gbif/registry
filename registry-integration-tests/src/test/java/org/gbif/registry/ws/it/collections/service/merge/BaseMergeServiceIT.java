@@ -51,7 +51,6 @@ import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.merge.MergeService;
-import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -61,7 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
 
-import static org.gbif.registry.domain.collections.Constants.*;
+import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -74,7 +73,7 @@ public abstract class BaseMergeServiceIT<
                 & Taggable & Commentable>
     extends BaseServiceIT {
 
-  protected final MergeService mergeService;
+  protected final MergeService<T> mergeService;
   protected final CrudService<T> crudService;
   protected final IdentifierService identifierService;
   protected final ContactService contactService;
@@ -90,7 +89,7 @@ public abstract class BaseMergeServiceIT<
   public BaseMergeServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
-      MergeService mergeService,
+      MergeService<T> mergeService,
       CrudService<T> crudService,
       IdentifierService identifierService,
       ContactService contactService,
@@ -215,7 +214,7 @@ public abstract class BaseMergeServiceIT<
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
 
     // if the user has the idigbio role we can merge them
-    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR);
+    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR, UserRole.GRSCICOLL_ADMIN);
     assertDoesNotThrow(() -> mergeService.merge(e1.getKey(), e2.getKey()));
   }
 

@@ -22,7 +22,7 @@
   </sql>
 
   <sql id="SUGGESTION_PARAMS_CREATE">
-    #{entityType,jdbcType=OTHER},
+    #{collectionEntityType,jdbcType=OTHER},
     #{entityKey,jdbcType=OTHER},
     #{type,jdbcType=OTHER},
     #{status,jdbcType=OTHER},
@@ -77,8 +77,8 @@
       <if test="type != null">
         AND cs.type = #{type,jdbcType=OTHER}
       </if>
-      <if test="entityType != null">
-        AND cs.entity_type = #{entityType,jdbcType=OTHER}
+      <if test="collectionEntityType != null">
+        AND cs.entity_type = #{collectionEntityType,jdbcType=OTHER}
       </if>
       <if test="country != null">
         AND cs.country = #{country,jdbcType=VARCHAR}
@@ -106,8 +106,8 @@
       <if test="type != null">
         AND cs.type = #{type,jdbcType=OTHER}
       </if>
-      <if test="entityType != null">
-        AND cs.entity_type = #{entityType,jdbcType=OTHER}
+      <if test="collectionEntityType != null">
+        AND cs.entity_type = #{collectionEntityType,jdbcType=OTHER}
       </if>
       <if test="country != null">
         AND cs.country = #{country,jdbcType=VARCHAR}

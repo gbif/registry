@@ -1,6 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import org.gbif.api.model.collections.EntityType;
+import org.gbif.api.model.collections.CollectionEntityType;
 
 import java.util.Date;
 import java.util.UUID;
@@ -9,13 +9,16 @@ public class AuditLogDto {
 
   private long key;
   private long traceId;
-  private EntityType entityType;
-  private UUID entityKey;
+  private CollectionEntityType collectionEntityType;
+  private String subEntityType;
+  private String operation;
+  private UUID collectionEntityKey;
+  private String subEntityKey;
+  private UUID replacementKey;
   private Date created;
   private String createdBy;
   private String preState;
   private String postState;
-  private String note;
 
   public long getKey() {
     return key;
@@ -33,20 +36,52 @@ public class AuditLogDto {
     this.traceId = traceId;
   }
 
-  public EntityType getEntityType() {
-    return entityType;
+  public CollectionEntityType getCollectionEntityType() {
+    return collectionEntityType;
   }
 
-  public void setEntityType(EntityType entityType) {
-    this.entityType = entityType;
+  public void setCollectionEntityType(CollectionEntityType collectionEntityType) {
+    this.collectionEntityType = collectionEntityType;
   }
 
-  public UUID getEntityKey() {
-    return entityKey;
+  public String getSubEntityType() {
+    return subEntityType;
   }
 
-  public void setEntityKey(UUID entityKey) {
-    this.entityKey = entityKey;
+  public void setSubEntityType(String subEntityType) {
+    this.subEntityType = subEntityType;
+  }
+
+  public String getOperation() {
+    return operation;
+  }
+
+  public void setOperation(String operation) {
+    this.operation = operation;
+  }
+
+  public UUID getCollectionEntityKey() {
+    return collectionEntityKey;
+  }
+
+  public void setCollectionEntityKey(UUID collectionEntityKey) {
+    this.collectionEntityKey = collectionEntityKey;
+  }
+
+  public String getSubEntityKey() {
+    return subEntityKey;
+  }
+
+  public void setSubEntityKey(String subEntityKey) {
+    this.subEntityKey = subEntityKey;
+  }
+
+  public UUID getReplacementKey() {
+    return replacementKey;
+  }
+
+  public void setReplacementKey(UUID replacementKey) {
+    this.replacementKey = replacementKey;
   }
 
   public Date getCreated() {
@@ -79,13 +114,5 @@ public class AuditLogDto {
 
   public void setPostState(String postState) {
     this.postState = postState;
-  }
-
-  public String getNote() {
-    return note;
-  }
-
-  public void setNote(String note) {
-    this.note = note;
   }
 }

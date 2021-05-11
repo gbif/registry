@@ -15,7 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
-import org.gbif.registry.search.dataset.service.collections.CollectionsSearchResponse;
+import org.gbif.api.model.collections.search.CollectionsSearchResponse;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
 
 import java.util.List;

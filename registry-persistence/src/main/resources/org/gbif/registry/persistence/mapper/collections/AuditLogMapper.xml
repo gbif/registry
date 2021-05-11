@@ -8,18 +8,22 @@
   </resultMap>
 
   <sql id="AUDIT_LOG_WRITE_FIELDS">
-    trace_id, entity_type, entity_key, created, created_by, pre_state, post_state, note
+    trace_id, collection_entity_type, subEntityType, operation, collection_entity_key, sub_entity_key,
+    sub_entity_key, replacement_key, created, created_by, pre_state, post_state
   </sql>
 
   <sql id="AUDIT_LOG_PARAMS_CREATE">
-    #{traceId,jdbcType=OTHER},
-    #{entityType,jdbcType=OTHER},
-    #{entityKey,jdbcType=OTHER},
+    #{traceId,jdbcType=BIGINT},
+    #{collectionEntityType,jdbcType=OTHER},
+    #{subEntityType,jdbcType=VARCHAR},
+    #{operation,jdbcType=VARCHAR},
+    #{collectionEntityKey,jdbcType=OTHER},
+    #{subEntityKey,jdbcType=VARCHAR},
+    #{replacementKey,jdbcType=OTHER},
     now(), <!-- created -->
     #{createdBy,jdbcType=VARCHAR},
     #{preState,jdbcType=OTHER}::jsonb,
-    #{postState,jdbcType=OTHER}::jsonb,
-    #{note,jdbcType=VARCHAR}
+    #{postState,jdbcType=OTHER}::jsonb
   </sql>
 
   <insert id="create" parameterType="org.gbif.registry.persistence.mapper.collections.dto.AuditLogDto" useGeneratedKeys="true" keyProperty="key">

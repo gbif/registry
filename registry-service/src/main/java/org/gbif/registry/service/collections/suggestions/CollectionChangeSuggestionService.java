@@ -3,6 +3,7 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
@@ -31,7 +32,8 @@ public class CollectionChangeSuggestionService
       CollectionMergeService collectionMergeService,
       ObjectMapper objectMapper,
       EmailSender emailSender,
-      CollectionsEmailManager emailManager) {
+      CollectionsEmailManager emailManager,
+      EventManager eventManager) {
     super(
         changeSuggestionMapper,
         collectionMergeService,
@@ -39,7 +41,8 @@ public class CollectionChangeSuggestionService
         Collection.class,
         objectMapper,
         emailSender,
-        emailManager);
+        emailManager,
+        eventManager);
     this.changeSuggestionMapper = changeSuggestionMapper;
   }
 

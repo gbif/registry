@@ -8,6 +8,8 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.collections.EventType;
+import org.gbif.registry.events.collections.ReplaceEntityEvent;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -19,14 +21,15 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearch
 import org.gbif.registry.service.WithMyBatis;
 
 import java.util.List;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 
 @Validated
 @Service
@@ -53,10 +56,8 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
         machineTagMapper,
         tagMapper,
         identifierMapper,
-        institutionMapper,
         commentMapper,
         occurrenceMappingMapper,
-        institutionMapper,
         eventManager,
         withMyBatis);
     this.institutionMapper = institutionMapper;
@@ -67,26 +68,26 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     String query =
-      searchRequest.getQ() != null
-        ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
-        : searchRequest.getQ();
+        searchRequest.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            : searchRequest.getQ();
 
     InstitutionSearchParams params =
-      InstitutionSearchParams.builder()
-        .query(query)
-        .contactKey(searchRequest.getContact())
-        .code(searchRequest.getCode())
-        .name(searchRequest.getName())
-        .alternativeCode(searchRequest.getAlternativeCode())
-        .machineTagNamespace(searchRequest.getMachineTagNamespace())
-        .machineTagName(searchRequest.getMachineTagName())
-        .machineTagValue(searchRequest.getMachineTagValue())
-        .identifierType(searchRequest.getIdentifierType())
-        .identifier(searchRequest.getIdentifier())
-        .country(searchRequest.getCountry())
-        .city(searchRequest.getCity())
-        .fuzzyName(searchRequest.getFuzzyName())
-        .build();
+        InstitutionSearchParams.builder()
+            .query(query)
+            .contactKey(searchRequest.getContact())
+            .code(searchRequest.getCode())
+            .name(searchRequest.getName())
+            .alternativeCode(searchRequest.getAlternativeCode())
+            .machineTagNamespace(searchRequest.getMachineTagNamespace())
+            .machineTagName(searchRequest.getMachineTagName())
+            .machineTagValue(searchRequest.getMachineTagValue())
+            .identifierType(searchRequest.getIdentifierType())
+            .identifier(searchRequest.getIdentifier())
+            .country(searchRequest.getCountry())
+            .city(searchRequest.getCity())
+            .fuzzyName(searchRequest.getFuzzyName())
+            .build();
 
     long total = institutionMapper.count(params);
     return new PagingResponse<>(page, total, institutionMapper.list(params, page));
@@ -96,7 +97,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
   public PagingResponse<Institution> listDeleted(Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(
-      page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
+        page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
   }
 
   @Override
@@ -104,4 +105,11 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     return institutionMapper.suggest(q);
   }
 
+  @Override
+  public void convertToCollection(UUID targetEntityKey, UUID collectionKey) {
+    institutionMapper.convertToCollection(targetEntityKey, collectionKey);
+    eventManager.post(
+        ReplaceEntityEvent.newInstance(
+            Institution.class, targetEntityKey, collectionKey, EventType.CONVERSION_TO_COLLECTION));
+  }
 }

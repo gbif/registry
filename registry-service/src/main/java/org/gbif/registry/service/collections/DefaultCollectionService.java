@@ -57,10 +57,8 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
         machineTagMapper,
         tagMapper,
         identifierMapper,
-        collectionMapper,
         commentMapper,
         occurrenceMappingMapper,
-        collectionMapper,
         eventManager,
         withMyBatis);
     this.collectionMapper = collectionMapper;

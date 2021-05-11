@@ -36,7 +36,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.gbif.registry.domain.collections.Constants.*;
+import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -208,7 +208,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
         IllegalArgumentException.class,
         () -> institutionMergeService.convertToCollection(toConvert.getKey(), null, "test"));
 
-    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR);
+    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR, UserRole.GRSCICOLL_ADMIN);
     assertDoesNotThrow(
         () -> institutionMergeService.convertToCollection(toConvert.getKey(), null, "test"));
   }

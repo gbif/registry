@@ -15,24 +15,18 @@
  */
 package org.gbif.registry.service.collections.merge;
 
-import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.persistence.ContactableMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.persistence.mapper.collections.MergeableMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappeableMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserRoles;
 
@@ -60,43 +54,17 @@ import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE
 
 public abstract class BaseMergeService<
         T extends
-            CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
-                & Taggable & Commentable>
+            PrimaryCollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable
+                & Contactable & Taggable & Commentable>
     implements MergeService<T> {
 
-  // TODO: usar los servicios en lugar de los mappers. Necesito nuevos servicios para el audit log
-  // tb (como por ejemplo uno para mover un identifer)
+  protected final PrimaryCollectionEntityService<T> primaryEntityService;
 
-  protected final BaseMapper<T> baseMapper;
-  protected final MergeableMapper mergeableMapper;
-  protected final ContactableMapper contactableMapper;
-  protected final IdentifierMapper identifierMapper;
-  protected final OccurrenceMappeableMapper occurrenceMappeableMapper;
-  protected final PersonMapper personMapper;
-  private final MachineTagMapper machineTagMapper;
-  private final OccurrenceMappingMapper occurrenceMappingMapper;
-
-  protected BaseMergeService(
-      BaseMapper<T> baseMapper,
-      MergeableMapper mergeableMapper,
-      ContactableMapper contactableMapper,
-      IdentifierMapper identifierMapper,
-      OccurrenceMappeableMapper occurrenceMappeableMapper,
-      PersonMapper personMapper,
-      MachineTagMapper machineTagMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper) {
-    this.baseMapper = baseMapper;
-    this.mergeableMapper = mergeableMapper;
-    this.contactableMapper = contactableMapper;
-    this.identifierMapper = identifierMapper;
-    this.occurrenceMappeableMapper = occurrenceMappeableMapper;
-    this.personMapper = personMapper;
-    this.machineTagMapper = machineTagMapper;
-    this.occurrenceMappingMapper = occurrenceMappingMapper;
+  protected BaseMergeService(PrimaryCollectionEntityService<T> primaryEntityService) {
+    this.primaryEntityService = primaryEntityService;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
-  @Override
   @Transactional
   public void merge(UUID entityToReplaceKey, UUID replacementKey) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -106,12 +74,12 @@ public abstract class BaseMergeService<
         !entityToReplaceKey.equals(replacementKey),
         "The replacement has to be different than the entity to replace");
 
-    T entityToReplace = baseMapper.get(entityToReplaceKey);
+    T entityToReplace = primaryEntityService.get(entityToReplaceKey);
     checkArgument(
         entityToReplace != null, "Not found entity to replace with key " + entityToReplaceKey);
     checkArgument(entityToReplace.getDeleted() == null, "Cannot merge a deleted entity");
 
-    T replacement = baseMapper.get(replacementKey);
+    T replacement = primaryEntityService.get(replacementKey);
     checkArgument(replacement != null, "Not found replacement entity with key " + replacementKey);
     checkArgument(
         replacement.getDeleted() == null, "Cannot merge an entity with a deleted replacement");
@@ -137,20 +105,21 @@ public abstract class BaseMergeService<
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
-    mergeableMapper.replace(entityToReplaceKey, replacementKey);
+    primaryEntityService.replace(entityToReplaceKey, replacementKey);
 
     // merge entity fields
     T updatedEntityToReplace = mergeEntityFields(entityToReplace, replacement);
     updatedEntityToReplace.setModifiedBy(authentication.getName());
-    baseMapper.update(updatedEntityToReplace);
+    primaryEntityService.update(updatedEntityToReplace);
 
     // copy the identifiers
     entityToReplace
         .getIdentifiers()
         .forEach(
             i -> {
-              identifierMapper.createIdentifier(i);
-              baseMapper.addIdentifier(replacementKey, i.getKey());
+              i.setKey(null);
+              // TODO: created must be null, create utility method to reuse
+              primaryEntityService.addIdentifier(replacementKey, i);
             });
 
     // copy iDigBio machine tags
@@ -158,29 +127,27 @@ public abstract class BaseMergeService<
         .filter(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE))
         .forEach(
             mt -> {
-              machineTagMapper.createMachineTag(mt);
-              baseMapper.addMachineTag(replacementKey, mt.getKey());
+              mt.setKey(null);
+              primaryEntityService.addMachineTag(replacementKey, mt);
             });
 
     // merge contacts
     Objects.requireNonNull(entityToReplace.getContacts()).stream()
         .filter(c -> !replacement.getContacts().contains(c))
-        .forEach(c -> contactableMapper.addContact(replacementKey, c.getKey()));
+        .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
 
     // add the UUID key of the replaced entity as an identifier of the replacement
     Identifier keyIdentifier =
         new Identifier(IdentifierType.UUID, entityToReplace.getKey().toString());
-    keyIdentifier.setCreatedBy(authentication.getName());
-    identifierMapper.createIdentifier(keyIdentifier);
-    baseMapper.addIdentifier(replacementKey, keyIdentifier.getKey());
+    primaryEntityService.addIdentifier(replacementKey, keyIdentifier);
 
     // update occurrence mappings
     List<OccurrenceMapping> occMappings =
-        occurrenceMappeableMapper.listOccurrenceMappings(entityToReplaceKey);
+        primaryEntityService.listOccurrenceMappings(entityToReplaceKey);
     occMappings.forEach(
         om -> {
-          occurrenceMappingMapper.createOccurrenceMapping(om);
-          occurrenceMappeableMapper.addOccurrenceMapping(replacementKey, om.getKey());
+          om.setKey(null);
+          primaryEntityService.addOccurrenceMapping(replacementKey, om);
         });
 
     additionalOperations(entityToReplace, replacement);
@@ -225,6 +192,11 @@ public abstract class BaseMergeService<
 
                   // set value in target
                   if (sourceValue != null) {
+                    if (sourceValue instanceof Address) {
+                      // set the key to null to create the address
+                      ((Address) sourceValue).setKey(null);
+                    }
+
                     clazz
                         .getMethod("set" + capitalize.apply(f.getName()), f.getType())
                         .invoke(target, sourceValue);

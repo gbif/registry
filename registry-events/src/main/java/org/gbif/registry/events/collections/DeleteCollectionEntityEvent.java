@@ -18,26 +18,30 @@ package org.gbif.registry.events.collections;
 import org.gbif.api.model.collections.CollectionEntity;
 
 /** This event is fired after a new collection entity has been successfully deleted. */
-public class DeleteCollectionEntityEvent<T extends CollectionEntity> {
+public class DeleteCollectionEntityEvent<T extends CollectionEntity>
+    extends CollectionsBaseEvent<T> {
 
   private final T oldObject;
-  private final Class<T> objectClass;
+  private final T deletedObject;
 
   public static <T extends CollectionEntity> DeleteCollectionEntityEvent<T> newInstance(
-      T oldObject, Class<T> objectClass) {
-    return new DeleteCollectionEntityEvent<>(oldObject, objectClass);
+      T oldObject, T deletedObject) {
+    return new DeleteCollectionEntityEvent<>(
+        oldObject, deletedObject, (Class<T>) oldObject.getClass());
   }
 
-  private DeleteCollectionEntityEvent(T oldObject, Class<T> objectClass) {
+  private DeleteCollectionEntityEvent(
+      T oldObject, T deletedObject, Class<T> collectionEntityClass) {
+    super(EventType.DELETE, collectionEntityClass);
     this.oldObject = oldObject;
-    this.objectClass = objectClass;
+    this.deletedObject = deletedObject;
   }
 
   public T getOldObject() {
     return oldObject;
   }
 
-  public Class<T> getObjectClass() {
-    return objectClass;
+  public T getDeletedObject() {
+    return deletedObject;
   }
 }

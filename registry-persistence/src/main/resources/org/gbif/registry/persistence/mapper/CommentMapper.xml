@@ -31,4 +31,10 @@
     INSERT INTO comment(<include refid="WRITABLE_COMMENT_FIELDS"/>)
     VALUES(<include refid="WRITABLE_COMMENT_FIELD_TYPES"/>)
   </insert>
+
+  <select id="get" resultType="org.gbif.api.model.registry.Comment" >
+    SELECT key,content,created,created_by,modified,modified_by
+    FROM comment
+    WHERE key = #{key}
+  </select>
 </mapper>

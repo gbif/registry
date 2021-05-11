@@ -9,12 +9,18 @@
   <insert id="createOccurrenceMapping" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO occurrence_mapping(code, identifier, dataset_key, created_by, created)
     VALUES(
-      #{code,jdbcType=VARCHAR},
-      #{identifier,jdbcType=VARCHAR},
-      #{datasetKey,jdbcType=OTHER},
-      #{createdBy,jdbcType=VARCHAR},
-      now()
+    #{code,jdbcType=VARCHAR},
+    #{identifier,jdbcType=VARCHAR},
+    #{datasetKey,jdbcType=OTHER},
+    #{createdBy,jdbcType=VARCHAR},
+    now()
     )
   </insert>
+
+  <select id="get" resultType="org.gbif.api.model.collections.OccurrenceMapping">
+    SELECT <include refid="OCCURRENCE_MAPPING_FIELDS"/>
+    FROM occurrence_mapping
+    WHERE key = #{key}
+  </select>
 
 </mapper>

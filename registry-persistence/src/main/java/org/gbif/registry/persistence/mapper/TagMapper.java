@@ -17,10 +17,13 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Tag;
 
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TagMapper {
 
   int createTag(Tag tag);
+
+  Tag get(@Param("key") int key);
 }

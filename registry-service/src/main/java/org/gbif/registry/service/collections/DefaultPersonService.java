@@ -110,7 +110,7 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
       }
     }
 
-    eventManager.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
+    eventManager.post(CreateCollectionEntityEvent.newInstance(person));
     return person.getKey();
   }
 
@@ -154,7 +154,7 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
 
     // check if we have to delete the address
     Person newPerson = get(person.getKey());
-    eventManager.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson, Person.class));
+    eventManager.post(UpdateCollectionEntityEvent.newInstance(newPerson, oldPerson));
   }
 
   @Override

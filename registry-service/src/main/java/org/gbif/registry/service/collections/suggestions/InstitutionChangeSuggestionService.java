@@ -4,6 +4,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
@@ -41,7 +42,8 @@ public class InstitutionChangeSuggestionService
       InstitutionMergeService institutionMergeService,
       ObjectMapper objectMapper,
       EmailSender emailSender,
-      CollectionsEmailManager emailManager) {
+      CollectionsEmailManager emailManager,
+      EventManager eventManager) {
     super(
         changeSuggestionMapper,
         institutionMergeService,
@@ -49,7 +51,8 @@ public class InstitutionChangeSuggestionService
         Institution.class,
         objectMapper,
         emailSender,
-        emailManager);
+        emailManager,
+        eventManager);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;

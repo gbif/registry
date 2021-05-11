@@ -1,6 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.gbif.api.model.collections.EntityType;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
@@ -25,7 +25,7 @@ public interface ChangeSuggestionMapper {
   List<ChangeSuggestionDto> list(
       @Param("status") Status status,
       @Param("type") Type type,
-      @Param("entityType") EntityType entityType,
+      @Param("entityType") CollectionEntityType collectionEntityType,
       @Param("country") Country country,
       @Param("proposer") String proposer,
       @Param("entityKey") UUID entityKey,
@@ -34,7 +34,7 @@ public interface ChangeSuggestionMapper {
   long count(
       @Param("status") Status status,
       @Param("type") Type type,
-      @Param("entityType") EntityType entityType,
+      @Param("entityType") CollectionEntityType collectionEntityType,
       @Param("country") Country country,
       @Param("proposer") String proposer,
       @Param("entityKey") UUID entityKey);

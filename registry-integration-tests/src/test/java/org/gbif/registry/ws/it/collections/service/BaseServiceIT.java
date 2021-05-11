@@ -25,10 +25,10 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.sql.DataSource;
@@ -164,15 +164,19 @@ public class BaseServiceIT {
     }
   }
 
-  protected void resetSecurityContext(String principal, UserRole role) {
+  protected void resetSecurityContext(String principal, UserRole... role) {
     simplePrincipalProvider.setPrincipal(principal);
     SecurityContext ctx = SecurityContextHolder.createEmptyContext();
     SecurityContextHolder.setContext(ctx);
+    List<SimpleGrantedAuthority> authorities =
+        Arrays.stream(role)
+            .map(r -> new SimpleGrantedAuthority(r.name()))
+            .collect(Collectors.toList());
+    ;
+
     ctx.setAuthentication(
         new UsernamePasswordAuthenticationToken(
-            simplePrincipalProvider.get().getName(),
-            "",
-            Collections.singleton(new SimpleGrantedAuthority(role.name()))));
+            simplePrincipalProvider.get().getName(), "", authorities));
   }
 
   public SimplePrincipalProvider getSimplePrincipalProvider() {

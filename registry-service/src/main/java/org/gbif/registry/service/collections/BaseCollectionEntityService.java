@@ -14,8 +14,9 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
+import org.gbif.registry.events.collections.EventType;
+import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -25,6 +26,7 @@ import org.gbif.registry.service.WithMyBatis;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.validation.groups.Default;
 
@@ -86,17 +88,15 @@ public abstract class BaseCollectionEntityService<
   @Transactional
   @Override
   public void delete(UUID key) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
     T entityToDelete = get(key);
     checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
 
-    entityToDelete.setModifiedBy(authentication.getName());
+    // udpates audit fields like the modifiedBy
     update(entityToDelete);
 
     baseMapper.delete(key);
 
-    eventManager.post(DeleteCollectionEntityEvent.newInstance(get(key), objectClass));
+    eventManager.post(DeleteCollectionEntityEvent.newInstance(entityToDelete, get(key)));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
@@ -109,8 +109,8 @@ public abstract class BaseCollectionEntityService<
     int identifierKey =
         withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            entityKey, objectClass, Identifier.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, identifier, identifierKey, EventType.CREATE));
     return identifierKey;
   }
 
@@ -118,10 +118,12 @@ public abstract class BaseCollectionEntityService<
   @Transactional
   @Override
   public void deleteIdentifier(UUID entityKey, int identifierKey) {
+    Identifier identifierToDelete = identifierMapper.get(identifierKey);
     baseMapper.deleteIdentifier(entityKey, identifierKey);
+
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            entityKey, objectClass, Identifier.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, identifierToDelete, identifierKey, EventType.DELETE));
   }
 
   @Override
@@ -137,7 +139,8 @@ public abstract class BaseCollectionEntityService<
     tag.setCreatedBy(authentication.getName());
     int tagKey = withMyBatis.addTag(tagMapper, baseMapper, entityKey, tag);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, tag, tagKey, EventType.CREATE));
     return tagKey;
   }
 
@@ -152,9 +155,11 @@ public abstract class BaseCollectionEntityService<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void deleteTag(UUID entityKey, int tagKey) {
+    Tag tagToDelete = tagMapper.get(tagKey);
     baseMapper.deleteTag(entityKey, tagKey);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(entityKey, objectClass, Tag.class));
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, tagToDelete, tagKey, EventType.DELETE));
   }
 
   @Override
@@ -182,8 +187,8 @@ public abstract class BaseCollectionEntityService<
     machineTag.setCreatedBy(nameFromContext);
     int key = withMyBatis.addMachineTag(machineTagMapper, baseMapper, targetEntityKey, machineTag);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            targetEntityKey, objectClass, MachineTag.class));
+        SubEntityCollectionEvent.newInstance(
+            targetEntityKey, objectClass, machineTag, key, EventType.CREATE));
     return key;
   }
 
@@ -216,7 +221,11 @@ public abstract class BaseCollectionEntityService<
   @Secured(GRSCICOLL_ADMIN_ROLE)
   @Override
   public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
+    MachineTag machineTagToDelete = machineTagMapper.get(machineTagKey);
     baseMapper.deleteMachineTag(targetEntityKey, machineTagKey);
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            targetEntityKey, objectClass, machineTagToDelete, machineTagKey, EventType.DELETE));
   }
 
   @Secured(GRSCICOLL_ADMIN_ROLE)
@@ -228,19 +237,24 @@ public abstract class BaseCollectionEntityService<
   @Secured(GRSCICOLL_ADMIN_ROLE)
   @Override
   public void deleteMachineTags(UUID targetEntityKey, String namespace) {
+    List<MachineTag> machineTagsToDelete =
+        baseMapper.listMachineTags(targetEntityKey).stream()
+            .filter(mt -> mt.getNamespace().equals(namespace))
+            .collect(Collectors.toList());
+
     baseMapper.deleteMachineTags(targetEntityKey, namespace, null);
-    eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            targetEntityKey, objectClass, MachineTag.class));
+
+    machineTagsToDelete.forEach(
+        mt ->
+            eventManager.post(
+                SubEntityCollectionEvent.newInstance(
+                    targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
   }
 
   @Secured(GRSCICOLL_ADMIN_ROLE)
   @Override
   public void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
-    eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            targetEntityKey, objectClass, MachineTag.class));
   }
 
   /**
@@ -250,10 +264,17 @@ public abstract class BaseCollectionEntityService<
   @Secured(GRSCICOLL_ADMIN_ROLE)
   @Override
   public void deleteMachineTags(UUID targetEntityKey, String namespace, String name) {
+    List<MachineTag> machineTagsToDelete =
+        baseMapper.listMachineTags(targetEntityKey).stream()
+            .filter(mt -> mt.getNamespace().equals(namespace) && mt.getName().equals(name))
+            .collect(Collectors.toList());
+
     baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
-    eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            targetEntityKey, objectClass, MachineTag.class));
+    machineTagsToDelete.forEach(
+        mt ->
+            eventManager.post(
+                SubEntityCollectionEvent.newInstance(
+                    targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
   }
 
   @Override
@@ -279,8 +300,8 @@ public abstract class BaseCollectionEntityService<
     comment.setModifiedBy(authentication.getName());
     int key = withMyBatis.addComment(commentMapper, baseMapper, targetEntityKey, comment);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            targetEntityKey, objectClass, Comment.class));
+        SubEntityCollectionEvent.newInstance(
+            targetEntityKey, objectClass, comment, key, EventType.CREATE));
     return key;
   }
 
@@ -294,10 +315,11 @@ public abstract class BaseCollectionEntityService<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void deleteComment(UUID targetEntityKey, int commentKey) {
+    Comment commentToDelete = commentMapper.get(commentKey);
     baseMapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(
-        ChangedCollectionEntityComponentEvent.newInstance(
-            targetEntityKey, objectClass, Comment.class));
+        SubEntityCollectionEvent.newInstance(
+            targetEntityKey, objectClass, commentToDelete, commentKey, EventType.DELETE));
   }
 
   @GetMapping(value = "{key}/comment")

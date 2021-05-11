@@ -19,18 +19,15 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
-import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserRoles;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -52,32 +49,19 @@ import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE
 @Service
 public class InstitutionMergeService extends BaseMergeService<Institution> {
 
-  private final InstitutionMapper institutionMapper;
-  private final CollectionMapper collectionMapper;
-  private final MachineTagMapper machineTagMapper;
-  private final OccurrenceMappingMapper occurrenceMappingMapper;
+  private final InstitutionService institutionService;
+  private final CollectionService collectionService;
+  private final PersonService personService;
 
   @Autowired
   public InstitutionMergeService(
-      InstitutionMapper institutionMapper,
-      CollectionMapper collectionMapper,
-      IdentifierMapper identifierMapper,
-      MachineTagMapper machineTagMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper,
-      PersonMapper personMapper) {
-    super(
-        institutionMapper,
-        institutionMapper,
-        institutionMapper,
-        identifierMapper,
-        institutionMapper,
-        personMapper,
-        machineTagMapper,
-        occurrenceMappingMapper);
-    this.institutionMapper = institutionMapper;
-    this.collectionMapper = collectionMapper;
-    this.machineTagMapper = machineTagMapper;
-    this.occurrenceMappingMapper = occurrenceMappingMapper;
+      InstitutionService institutionService,
+      CollectionService collectionService,
+      PersonService personService) {
+    super(institutionService);
+    this.institutionService = institutionService;
+    this.collectionService = collectionService;
+    this.personService = personService;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
@@ -93,7 +77,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         institutionKeyForNewCollection != null || !Strings.isNullOrEmpty(newInstitutionName),
         "Either the institution key for the new collection or a name to create a new institution are required");
 
-    Institution institutionToConvert = institutionMapper.get(institutionKey);
+    Institution institutionToConvert = institutionService.get(institutionKey);
     checkArgument(
         institutionToConvert.getDeleted() == null, "Cannot convert a deleted institution");
     checkArgument(
@@ -132,12 +116,12 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
       newInstitution.setName(newInstitutionName);
       newInstitution.setCreatedBy(authentication.getName());
       newInstitution.setModifiedBy(authentication.getName());
-      institutionMapper.create(newInstitution);
+      institutionService.create(newInstitution);
 
       newCollection.setInstitutionKey(newInstitution.getKey());
     } else {
       Institution institutionForNewCollection =
-          institutionMapper.get(institutionKeyForNewCollection);
+          institutionService.get(institutionKeyForNewCollection);
       checkArgument(
           institutionForNewCollection.getDeleted() == null,
           "Cannot assign the new collection to a deleted institution");
@@ -145,8 +129,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
       newCollection.setInstitutionKey(institutionKeyForNewCollection);
     }
 
-    collectionMapper.create(newCollection);
-    institutionMapper.convertToCollection(institutionKey, newCollection.getKey());
+    collectionService.create(newCollection);
+    institutionService.convertToCollection(institutionKey, newCollection.getKey());
 
     // move the collections
     moveCollectionsToAnotherInstitution(
@@ -157,8 +141,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .getIdentifiers()
         .forEach(
             i -> {
-              identifierMapper.createIdentifier(i);
-              collectionMapper.addIdentifier(newCollection.getKey(), i.getKey());
+              i.setKey(null);
+              collectionService.addIdentifier(newCollection.getKey(), i);
             });
 
     // move the machine tags
@@ -166,8 +150,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .getMachineTags()
         .forEach(
             mt -> {
-              machineTagMapper.createMachineTag(mt);
-              collectionMapper.addMachineTag(newCollection.getKey(), mt.getKey());
+              mt.setKey(null);
+              collectionService.addMachineTag(newCollection.getKey(), mt);
             });
 
     // move the occurrence mappings
@@ -175,14 +159,14 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .getOccurrenceMappings()
         .forEach(
             om -> {
-              occurrenceMappingMapper.createOccurrenceMapping(om);
-              collectionMapper.addOccurrenceMapping(newCollection.getKey(), om.getKey());
+              om.setKey(null);
+              collectionService.addOccurrenceMapping(newCollection.getKey(), om);
             });
 
     // copy the contacts
     institutionToConvert
         .getContacts()
-        .forEach(c -> collectionMapper.addContact(newCollection.getKey(), c.getKey()));
+        .forEach(c -> collectionService.addContact(newCollection.getKey(), c.getKey()));
 
     return newCollection.getKey();
   }
@@ -221,12 +205,14 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
   @Override
   void additionalOperations(Institution entityToReplace, Institution replacement) {
     // fix primary institution of contacts
-    List<Person> persons = personMapper.list(entityToReplace.getKey(), null, null, null);
-    persons.forEach(
-        p -> {
-          p.setPrimaryInstitutionKey(replacement.getKey());
-          personMapper.update(p);
-        });
+    PagingResponse<Person> persons = personService.list(null, entityToReplace.getKey(), null, null);
+    persons
+        .getResults()
+        .forEach(
+            p -> {
+              p.setPrimaryInstitutionKey(replacement.getKey());
+              personService.update(p);
+            });
 
     moveCollectionsToAnotherInstitution(entityToReplace.getKey(), replacement.getKey());
   }
@@ -234,13 +220,15 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
   private void moveCollectionsToAnotherInstitution(
       UUID sourceInstitutionKey, UUID targetInstitutionKey) {
     // move the collections to the entity to keep
-    List<CollectionDto> collections =
-        collectionMapper.list(
-            CollectionSearchParams.builder().institutionKey(sourceInstitutionKey).build(), null);
-    collections.forEach(
-        c -> {
-          c.getCollection().setInstitutionKey(targetInstitutionKey);
-          collectionMapper.update(c.getCollection());
-        });
+    PagingResponse<CollectionView> collections =
+        collectionService.list(
+            CollectionSearchRequest.builder().institution(sourceInstitutionKey).build());
+    collections
+        .getResults()
+        .forEach(
+            c -> {
+              c.getCollection().setInstitutionKey(targetInstitutionKey);
+              collectionService.update(c.getCollection());
+            });
   }
 }

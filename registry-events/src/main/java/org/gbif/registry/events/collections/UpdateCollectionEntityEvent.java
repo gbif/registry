@@ -18,21 +18,21 @@ package org.gbif.registry.events.collections;
 import org.gbif.api.model.collections.CollectionEntity;
 
 /** This event is fired after a new collection entity has been successfully updated. */
-public class UpdateCollectionEntityEvent<T extends CollectionEntity> {
+public class UpdateCollectionEntityEvent<T extends CollectionEntity>
+    extends CollectionsBaseEvent<T> {
 
   private final T newObject;
   private final T oldObject;
-  private final Class<T> objectClass;
 
   public static <T extends CollectionEntity> UpdateCollectionEntityEvent<T> newInstance(
-      T newObject, T oldObject, Class<T> objectClass) {
-    return new UpdateCollectionEntityEvent<>(newObject, oldObject, objectClass);
+      T newObject, T oldObject) {
+    return new UpdateCollectionEntityEvent<>(newObject, oldObject, (Class<T>) newObject.getClass());
   }
 
-  private UpdateCollectionEntityEvent(T newObject, T oldObject, Class<T> objectClass) {
+  private UpdateCollectionEntityEvent(T newObject, T oldObject, Class<T> collectionEntityClass) {
+    super(EventType.UPDATE, collectionEntityClass);
     this.newObject = newObject;
     this.oldObject = oldObject;
-    this.objectClass = objectClass;
   }
 
   public T getNewObject() {
@@ -41,9 +41,5 @@ public class UpdateCollectionEntityEvent<T extends CollectionEntity> {
 
   public T getOldObject() {
     return oldObject;
-  }
-
-  public Class<T> getObjectClass() {
-    return objectClass;
   }
 }
