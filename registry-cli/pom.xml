@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>3.59-SNAPSHOT</version>
+    <version>3.59</version>
   </parent>
 
   <artifactId>registry-cli</artifactId>
