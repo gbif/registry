@@ -17,9 +17,11 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -56,9 +58,9 @@ public interface UserMapper extends ChallengeCodeSupportMapper<Integer> {
   void update(GbifUser user);
 
   List<GbifUser> search(
-      @Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
+    @Nullable @Param("query") String query, @Nullable @Param("roles") Set<UserRole> roles, @Nullable @Param("editorRightsOn") Set<UUID> editorRightsOn, @Nullable @Param("page") Pageable page);
 
-  int count(@Nullable @Param("query") String query);
+  int count(@Nullable @Param("query") String query, @Nullable @Param("roles") Set<UserRole> roles, @Nullable @Param("editorRightsOn") Set<UUID> editorRightsOn);
 
   /*
    * Editor rights

@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import javax.xml.bind.JAXBElement;
 import javax.xml.transform.stream.StreamSource;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
@@ -284,6 +285,11 @@ public class RequestTestFixture {
   public <T> T extractJsonResponse(ResultActions actions, Class<T> entityClass) throws Exception {
     String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     return objectMapper.readValue(content, entityClass);
+  }
+
+  public <T> T extractJsonResponse(ResultActions actions, TypeReference<T> typeReference) throws Exception {
+    String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+    return objectMapper.readValue(content, typeReference);
   }
 
   public <T> T extractXmlResponse(ResultActions actions, Class<T> entityClass) throws Exception {

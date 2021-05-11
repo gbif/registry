@@ -64,7 +64,6 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   private final NetworkService networkService;
   private final OrganizationResource organizationResource;
 
-
   private final TestDataFactory testDataFactory;
 
   @Autowired
@@ -144,7 +143,9 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   @Test
   public void searchByNetworkTest() {
     Installation installation = testDataFactory.newPersistedInstallation();
-    Dataset dataset = testDataFactory.newPersistedDataset(installation.getOrganizationKey(), installation.getKey());
+    Dataset dataset =
+        testDataFactory.newPersistedDataset(
+            installation.getOrganizationKey(), installation.getKey());
     Network network = testDataFactory.newPersistedNetwork();
 
     OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();

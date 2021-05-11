@@ -22,6 +22,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.PropertyConstants;
 import org.gbif.registry.identity.model.UserModelMutationResult;
@@ -180,12 +181,12 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public PagingResponse<GbifUser> list(@Nullable Pageable pageable) {
-    return search(null, pageable);
+    return search(null, null, null, pageable);
   }
 
   @Override
-  public PagingResponse<GbifUser> search(@Nullable String query, @Nullable Pageable pageable) {
-    return pagingResponse(pageable, userMapper.count(query), userMapper.search(query, pageable));
+  public PagingResponse<GbifUser> search(@Nullable String query, Set<UserRole> roles, @Nullable Set<UUID> editorRightsOn, @Nullable Pageable pageable) {
+    return pagingResponse(pageable, userMapper.count(query, roles, editorRightsOn), userMapper.search(query, roles, editorRightsOn, pageable));
   }
 
   /**

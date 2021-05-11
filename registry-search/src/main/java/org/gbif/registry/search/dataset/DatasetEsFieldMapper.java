@@ -20,6 +20,7 @@ import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.search.dataset.common.EsFieldMapper;
 
@@ -64,6 +65,8 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.DATASET_TITLE, "title")
           .put(DatasetSearchParameter.DOI, "doi")
           .put(DatasetSearchParameter.NETWORK_KEY, "networkKeys")
+          .put(DatasetSearchParameter.INSTALLATION_KEY, "installationKey")
+          .put(DatasetSearchParameter.ENDPOINT_TYPE, "endpoints.type")
           .build();
 
   public static final Map<String, Integer> CARDINALITIES =
@@ -74,6 +77,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put("continent", Continent.values().length)
           .put("type", DatasetType.values().length)
           .put("subtype", DatasetSubtype.values().length)
+          .put("endpoints.type", EndpointType.values().length)
           .build();
 
   private static final String[] EXCLUDE_FIELDS = new String[] {"all"};
