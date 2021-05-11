@@ -16,6 +16,7 @@
 package org.gbif.registry.domain.ws;
 
 import java.util.UUID;
+
 import javax.annotation.Nullable;
 
 public class OrganizationRequestSearchParams extends RequestSearchParams {
