@@ -85,7 +85,7 @@
     <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
 
     <!-- GBIF -->
-    <gbif-api.version>0.145</gbif-api.version>
+    <gbif-api.version>0.146</gbif-api.version>
     <gbif-common.version>0.50</gbif-common.version>
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
     <gbif-common-ws.version>1.15</gbif-common-ws.version>
