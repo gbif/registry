@@ -28,6 +28,7 @@ import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.mybatis.IdentitySuretyTestHelper;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.UserTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -120,6 +121,7 @@ public class UserManagementIT extends BaseItTest {
       .getSignedRequest(TEST_ADMIN, "/admin/user/search",
                         ImmutableMap.<String,String>builder()
                           .put("role", UserRole.USER.name())
+                          .put("1", TEST_ADMIN)
                           .build())
       .andExpect(status().isOk());
     PagingResponse<UserAdminView> adminUsers = requestTestFixture.extractJsonResponse(result, new TypeReference<PagingResponse<UserAdminView>>() { });
@@ -332,7 +334,10 @@ public class UserManagementIT extends BaseItTest {
     ResultActions rightsSearchResult =requestTestFixture
       .getSignedRequest(TEST_ADMIN, "/admin/user/search",
                         ImmutableMap.<String,String>builder()
-                          .put("editorRightsOn", key.toString()).build())
+                          .put("editorRightsOn", key.toString())
+                          .put("role", UserRoles.USER_ROLE)
+                          .put("q", USERNAME)
+                          .build())
       .andExpect(status().isOk());
     PagingResponse<UserAdminView> editorUsers = requestTestFixture.extractJsonResponse(rightsSearchResult, new TypeReference<PagingResponse<UserAdminView>>() { });
     assertTrue(editorUsers.getCount() == 1);
