@@ -59,8 +59,7 @@
   </sql>
 
   <sql id="SIMPLE_SEARCH">
-    WHERE
-      u.last_name ILIKE '%' || #{query} || '%' OR
+    u.last_name ILIKE '%' || #{query} || '%' OR
     u.first_name ILIKE '%' || #{query} || '%' OR
     u.email ILIKE '%' || #{query} || '%' OR
     u.username ILIKE '%' || #{query} || '%'
@@ -75,10 +74,12 @@
                                                                       #{item}
                                                                    </foreach>
     </if>
-    <if test="roles != null" >
-    WHERE roles @> #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler}
-    </if>
-    <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+    <where>
+      <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+      <if test="roles != null" >
+        AND roles @> #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler}
+      </if>
+    </where>
     ORDER BY u.last_name, u.first_name, u.username
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -87,15 +88,18 @@
 
   <select id="count" resultType="Integer" parameterType="map">
     SELECT COUNT(*)
-    FROM public.user u <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+    FROM public.user u
     <if test="editorRightsOn != null" >
     JOIN editor_rights er ON er.username = u.username AND er.key IN <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
                                                                       #{item}
                                                                     </foreach>
     </if>
-    <if test="roles != null" >
-    WHERE roles @> #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler}
-    </if>
+    <where>
+      <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
+      <if test="roles != null" >
+        AND roles @> #{roles,jdbcType=OTHER,typeHandler=org.gbif.registry.persistence.mapper.handler.UserRoleTypeHandler}
+      </if>
+    </where>
   </select>
 
   <insert id="create" parameterType="org.gbif.api.model.common.GbifUser" useGeneratedKeys="true" keyProperty="key">

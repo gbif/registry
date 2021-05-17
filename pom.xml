@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.59-SNAPSHOT</version>
+  <version>3.60-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -19,7 +19,7 @@
     <connection>scm:git:git@github.com:gbif/registry.git</connection>
     <url>https://github.com/gbif/registry</url>
     <developerConnection>scm:git:git@github.com:gbif/registry.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>registry-parent-3.59</tag>
   </scm>
 
   <repositories>
@@ -82,6 +82,7 @@
     <spring-cloud-openfeign.version>2.2.6.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.4.RELEASE</spring-cloud-zookeeper.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
+    <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
@@ -91,7 +92,7 @@
     <gbif-common-ws.version>1.15</gbif-common-ws.version>
     <gbif-directory.version>1.10</gbif-directory.version>
     <gbif-doi.version>2.14</gbif-doi.version>
-    <gbif-download-query-tools.version>1.41</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.42</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metrics.version>1.0</gbif-metrics.version>
     <gbif-parsers.version>0.36</gbif-parsers.version>
@@ -221,6 +222,11 @@
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-sleuth</artifactId>
         <version>${spring-cloud-sleuth.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-ui</artifactId>
+        <version>${springdoc-openapi-ui.version}</version>
       </dependency>
 
       <!-- GBIF dependencies -->
