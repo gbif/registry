@@ -23,6 +23,7 @@ import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
@@ -35,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
@@ -109,30 +109,27 @@ public abstract class BaseMergeService<
 
     // merge entity fields
     T updatedEntityToReplace = mergeEntityFields(entityToReplace, replacement);
-    updatedEntityToReplace.setModifiedBy(authentication.getName());
     primaryEntityService.update(updatedEntityToReplace);
 
     // copy the identifiers
     entityToReplace
         .getIdentifiers()
         .forEach(
-            i -> {
-              i.setKey(null);
-              // TODO: created must be null, create utility method to reuse
-              primaryEntityService.addIdentifier(replacementKey, i);
-            });
+            i ->
+                primaryEntityService.addIdentifier(
+                    replacementKey, new Identifier(i.getType(), i.getIdentifier())));
 
     // copy iDigBio machine tags
     entityToReplace.getMachineTags().stream()
         .filter(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE))
         .forEach(
-            mt -> {
-              mt.setKey(null);
-              primaryEntityService.addMachineTag(replacementKey, mt);
-            });
+            mt ->
+                primaryEntityService.addMachineTag(
+                    replacementKey,
+                    new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
     // merge contacts
-    Objects.requireNonNull(entityToReplace.getContacts()).stream()
+    entityToReplace.getContacts().stream()
         .filter(c -> !replacement.getContacts().contains(c))
         .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
 
@@ -147,7 +144,9 @@ public abstract class BaseMergeService<
     occMappings.forEach(
         om -> {
           om.setKey(null);
-          primaryEntityService.addOccurrenceMapping(replacementKey, om);
+          primaryEntityService.addOccurrenceMapping(
+              replacementKey,
+              new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
         });
 
     additionalOperations(entityToReplace, replacement);

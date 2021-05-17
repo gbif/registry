@@ -72,7 +72,7 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
       String subEntityKey,
       EventType eventType) {
     super(eventType, collectionEntityClass);
-    this.collectionEntityKey = Preconditions.checkNotNull(collectionEntityKey);
+    this.collectionEntityKey = collectionEntityKey;
     this.subEntityClass = Preconditions.checkNotNull(subEntityClass);
     this.subEntity = subEntity;
     this.subEntityKey = Preconditions.checkNotNull(subEntityKey);

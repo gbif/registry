@@ -18,10 +18,13 @@ package org.gbif.registry.service.collections.merge;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -91,7 +94,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     }
 
     Collection newCollection = new Collection();
-    newCollection.setKey(UUID.randomUUID());
     newCollection.setCode(institutionToConvert.getCode());
     newCollection.setAlternativeCodes(institutionToConvert.getAlternativeCodes());
     newCollection.setName(institutionToConvert.getName());
@@ -105,17 +107,12 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     newCollection.setApiUrl(institutionToConvert.getApiUrl());
     newCollection.setAddress(institutionToConvert.getAddress());
     newCollection.setMailingAddress(institutionToConvert.getMailingAddress());
-    newCollection.setCreatedBy(authentication.getName());
-    newCollection.setModifiedBy(authentication.getName());
 
     // if there is no institution passed we need to create a new institution
     if (institutionKeyForNewCollection == null) {
       Institution newInstitution = new Institution();
-      newInstitution.setKey(UUID.randomUUID());
       newInstitution.setCode(institutionToConvert.getCode());
       newInstitution.setName(newInstitutionName);
-      newInstitution.setCreatedBy(authentication.getName());
-      newInstitution.setModifiedBy(authentication.getName());
       institutionService.create(newInstitution);
 
       newCollection.setInstitutionKey(newInstitution.getKey());
@@ -140,19 +137,18 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     institutionToConvert
         .getIdentifiers()
         .forEach(
-            i -> {
-              i.setKey(null);
-              collectionService.addIdentifier(newCollection.getKey(), i);
-            });
+            i ->
+                collectionService.addIdentifier(
+                    newCollection.getKey(), new Identifier(i.getType(), i.getIdentifier())));
 
     // move the machine tags
     institutionToConvert
         .getMachineTags()
         .forEach(
-            mt -> {
-              mt.setKey(null);
-              collectionService.addMachineTag(newCollection.getKey(), mt);
-            });
+            mt ->
+                collectionService.addMachineTag(
+                    newCollection.getKey(),
+                    new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
     // move the occurrence mappings
     institutionToConvert
@@ -160,7 +156,9 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         .forEach(
             om -> {
               om.setKey(null);
-              collectionService.addOccurrenceMapping(newCollection.getKey(), om);
+              collectionService.addOccurrenceMapping(
+                  newCollection.getKey(),
+                  new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
             });
 
     // copy the contacts

@@ -25,7 +25,7 @@ public interface ChangeSuggestionMapper {
   List<ChangeSuggestionDto> list(
       @Param("status") Status status,
       @Param("type") Type type,
-      @Param("entityType") CollectionEntityType collectionEntityType,
+      @Param("collectionEntityType") CollectionEntityType collectionEntityType,
       @Param("country") Country country,
       @Param("proposer") String proposer,
       @Param("entityKey") UUID entityKey,
@@ -34,7 +34,7 @@ public interface ChangeSuggestionMapper {
   long count(
       @Param("status") Status status,
       @Param("type") Type type,
-      @Param("entityType") CollectionEntityType collectionEntityType,
+      @Param("collectionEntityType") CollectionEntityType collectionEntityType,
       @Param("country") Country country,
       @Param("proposer") String proposer,
       @Param("entityKey") UUID entityKey);

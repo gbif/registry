@@ -53,7 +53,6 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
         replacement.getReplacedBy() == null, "Cannot do a merge with an entity that was replaced");
   }
 
-  // TODO: si uso primaryCollectionEntity lo puedo mover a la base
   @Override
   Collection mergeEntityFields(Collection entityToReplace, Collection replacement) {
     setNullFields(replacement, entityToReplace);
@@ -85,7 +84,7 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   @Override
   void additionalOperations(Collection entityToReplace, Collection replacement) {
     // fix primary collection of contacts
-    PagingResponse<Person> persons = personService.list(null, entityToReplace.getKey(), null, null);
+    PagingResponse<Person> persons = personService.list(null, null, entityToReplace.getKey(), null);
     persons
         .getResults()
         .forEach(

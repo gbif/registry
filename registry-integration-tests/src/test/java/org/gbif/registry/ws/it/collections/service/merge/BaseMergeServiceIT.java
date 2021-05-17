@@ -58,7 +58,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -66,6 +65,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class BaseMergeServiceIT<
         T extends
@@ -106,7 +106,6 @@ public abstract class BaseMergeServiceIT<
     this.personService = personService;
   }
 
-  @WithMockUser(username = "aa")
   @Test
   public void mergeTest() {
     T toReplace = createEntityToReplace();
@@ -173,8 +172,8 @@ public abstract class BaseMergeServiceIT<
     assertEquals(2, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
     assertEquals(2, replacementUpdated.getContacts().size());
-    assertEquals(a2, replacementUpdated.getAddress());
-    assertEquals(ma1, replacementUpdated.getMailingAddress());
+    assertTrue(a2.lenientEquals(replacementUpdated.getAddress()));
+    assertTrue(ma1.lenientEquals(replacementUpdated.getMailingAddress()));
     assertEquals(replacement.getCreatedBy(), replacementUpdated.getCreatedBy());
     assertNull(replacementUpdated.getDeleted());
     assertEquals(1, replaced.getOccurrenceMappings().size());
