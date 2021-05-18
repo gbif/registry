@@ -314,13 +314,33 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       @PartialDate Date fromDate,
       @PartialDate Date toDate,
       Country publishingCountry,
-      @RequestParam(value = "datasetKey", required = false) UUID datasetKey) {
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) {
     return groupByYear(
-        occurrenceDownloadMapper.getDownloadedRecordsByDataset(
+        occurrenceDownloadMapper.getDownloadsByDataset(
             fromDate,
             toDate,
             Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
-            datasetKey));
+            datasetKey,
+            publishingOrgKey));
+  }
+
+  @GetMapping("statistics/downloadsByDataset")
+  @Override
+  public Map<Integer, Map<Integer, Long>> getDownloadsByDataset(
+    @PartialDate Date fromDate,
+    @PartialDate Date toDate,
+    Country publishingCountry,
+    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey
+  ) {
+    return groupByYear(
+      occurrenceDownloadMapper.getDownloadsByDataset(
+        fromDate,
+        toDate,
+        Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
+        datasetKey,
+        publishingOrgKey));
   }
 
   /** Aggregates the download statistics in tree structure of month grouped by year. */
