@@ -17,6 +17,7 @@ package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
+import org.gbif.registry.events.collections.AuditLogger;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -67,6 +68,9 @@ import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
     })
 @ActiveProfiles({"test", "mock"})
 public class BaseServiceIT {
+
+  // the audit log is tested in the AuditLogIT
+  @MockBean private AuditLogger auditLogger;
 
   public static class EsContainerContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {

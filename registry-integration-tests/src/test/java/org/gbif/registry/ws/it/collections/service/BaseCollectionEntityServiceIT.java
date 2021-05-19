@@ -62,9 +62,6 @@ public abstract class BaseCollectionEntityServiceIT<
                 & LenientEquals<T>>
     extends BaseServiceIT {
 
-  // the audit log is tested in the AuditLogIT
-  @MockBean private AuditLogger auditLogger;
-
   protected final CollectionEntityService<T> collectionEntityService;
   protected final Class<T> paramType;
   protected final TestData<T> testData;
