@@ -28,12 +28,9 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CollectionEntityService;
-import org.gbif.api.service.registry.CommentService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.TagService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.events.collections.AuditLogger;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.collections.data.TestData;
@@ -49,6 +46,7 @@ import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -63,6 +61,9 @@ public abstract class BaseCollectionEntityServiceIT<
             CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable
                 & LenientEquals<T>>
     extends BaseServiceIT {
+
+  // the audit log is tested in the AuditLogIT
+  @MockBean private AuditLogger auditLogger;
 
   protected final CollectionEntityService<T> collectionEntityService;
   protected final Class<T> paramType;
