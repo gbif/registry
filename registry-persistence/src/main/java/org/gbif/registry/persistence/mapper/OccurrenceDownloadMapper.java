@@ -72,5 +72,13 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,
       @Nullable @Param("publishingCountry") String publishingCountry,
-      @Nullable @Param("datasetKey") UUID datasetKey);
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey);
+
+  List<Facet.Count> getDownloadsByDataset(
+    @Nullable @Param("fromDate") Date fromDate,
+    @Nullable @Param("toDate") Date toDate,
+    @Nullable @Param("publishingCountry") String publishingCountry,
+    @Nullable @Param("datasetKey") UUID datasetKey,
+    @Nullable @Param("publishingOrgKey") UUID publishingOrgKey);
 }

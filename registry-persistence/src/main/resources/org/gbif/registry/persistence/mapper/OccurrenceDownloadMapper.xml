@@ -217,7 +217,7 @@
   </select>
 
   <select id="getDownloadsByUserCountry" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_COUNT_MAP" parameterType="map">
-    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(total_records) AS total_records, SUM(number_downloads) AS number_downloads
+    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(number_downloads) AS number_downloads
     FROM download_user_statistics
     <where>
       <if test="userCountry != null">AND user_country = #{userCountry,jdbcType=OTHER}</if>
@@ -229,8 +229,27 @@
   </select>
 
   <select id="getDownloadedRecordsByDataset" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_TOTAL_RECORDS_MAP" parameterType="map">
-    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(total_records) AS total_records, SUM(number_downloads) AS number_downloads
+    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(total_records) AS total_records
     FROM download_statistics
+    <if test="publishingOrgKey != null">
+    JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+    </if>
+    <where>
+      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+    </where>
+    GROUP BY year_month
+    ORDER BY year_month DESC;
+  </select>
+
+  <select id="getDownloadsByDataset" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_COUNT_MAP" parameterType="map">
+    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(number_downloads) AS number_downloads
+    FROM download_statistics
+    <if test="publishingOrgKey != null">
+    JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+    </if>
     <where>
       <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
       <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>

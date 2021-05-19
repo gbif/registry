@@ -36,7 +36,6 @@ import org.gbif.ws.security.KeyStore;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.xml.crypto.Data;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
