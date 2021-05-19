@@ -109,8 +109,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
           objectMapper);
 
   private final GrSciCollEditorAuthorizationFilter filter =
-      new GrSciCollEditorAuthorizationFilter(
-          authService, mockAuthenticationFacade, objectMapper, null);
+      new GrSciCollEditorAuthorizationFilter(authService, mockAuthenticationFacade, objectMapper);
 
   @Test
   public void ignoreGetRequestsTest() {
@@ -649,8 +648,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
@@ -669,8 +668,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
@@ -689,8 +688,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
@@ -709,8 +708,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
@@ -729,15 +728,16 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
   public void discardChangeSuggestionAsEditorTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/changeSuggestion/1/discard");
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/institution/changeSuggestion/1/discard");
     when(mockRequest.getMethod()).thenReturn("PUT");
     when(mockRequest.getContent()).thenReturn("{\"key\": 1}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
@@ -749,7 +749,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
     // WHEN, THEN
     assertThrows(
-      WebApplicationException.class,
-      () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 }

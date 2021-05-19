@@ -44,9 +44,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import brave.Tracing;
-import brave.baggage.BaggageField;
-
 import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
 import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 
@@ -85,17 +82,14 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   private final GrSciCollEditorAuthorizationService authService;
   private final AuthenticationFacade authenticationFacade;
   private final ObjectMapper objectMapper;
-  private final Tracing tracing;
 
   public GrSciCollEditorAuthorizationFilter(
       GrSciCollEditorAuthorizationService authService,
       AuthenticationFacade authenticationFacade,
-      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
-      Tracing tracing) {
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.authService = authService;
     this.authenticationFacade = authenticationFacade;
     this.objectMapper = objectMapper;
-    this.tracing = tracing;
   }
 
   @Override
@@ -107,14 +101,6 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     // methods
     final Authentication authentication = authenticationFacade.getAuthentication();
     final String path = request.getRequestURI();
-
-    // TODO
-//    tracing.tracer().currentSpan().tag("country-code-2", "aaa");
-//
-//    String baggageKey = "country-code";
-//    String baggageValue = "foo";
-//    BaggageField baggageField = BaggageField.create(baggageKey);
-//    baggageField.updateValue(baggageValue);
 
     // skip GET and OPTIONS requests and only check requests to grscicoll
     if (isNotGetOrOptionsRequest(request)

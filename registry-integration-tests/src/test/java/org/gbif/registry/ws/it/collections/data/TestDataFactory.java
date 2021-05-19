@@ -5,6 +5,7 @@ import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.net.URI;
 import java.util.Collections;
@@ -27,8 +28,6 @@ public class TestDataFactory {
     throw new UnsupportedOperationException();
   }
 
-  // TODO: populate more fields
-
   public static class CollectionTestData implements TestData<Collection> {
 
     public static final String NAME = "name";
@@ -49,6 +48,8 @@ public class TestDataFactory {
       collection.setDescription(DESCRIPTION);
       collection.setActive(true);
       collection.setAccessionStatus(ACCESSION_STATUS);
+      collection.setPreservationTypes(
+          Collections.singletonList(PreservationType.SAMPLE_CRYOPRESERVED));
       return collection;
     }
 
@@ -87,6 +88,7 @@ public class TestDataFactory {
       institution.setDescription(DESCRIPTION);
       institution.setHomepage(HOMEPAGE);
       institution.setAdditionalNames(Collections.emptyList());
+      institution.setAdditionalNames(Collections.singletonList("other"));
       return institution;
     }
 

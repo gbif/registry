@@ -24,6 +24,7 @@ import org.gbif.registry.cli.common.stubs.EditorAuthorizationServiceStub;
 import org.gbif.registry.cli.common.stubs.EventManagerStub;
 import org.gbif.registry.cli.common.stubs.SearchServiceStub;
 import org.gbif.registry.service.RegistryDatasetServiceImpl;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.resources.DatasetResource;
 
 import java.util.List;
@@ -72,7 +73,8 @@ public class DatasetUpdater {
             EditorAuthorizationServiceStub.class,
             EventManagerStub.class,
             RegistryDatasetServiceImpl.class,
-            DatasetResource.class)
+            DatasetResource.class,
+            WithMyBatis.class)
         .build();
   }
 

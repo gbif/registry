@@ -528,10 +528,10 @@ public class AuditLogIT extends BaseItTest {
     assertNotEquals(previousTraceId, logs.get(0).getTraceId());
     assertEquals(String.valueOf(subEntityKey), logs.get(0).getSubEntityKey());
 
-    if (operation == EventType.CREATE.name()) {
+    if (operation.equals(EventType.CREATE.name())) {
       assertNull(logs.get(0).getPreState());
       assertNotNull(logs.get(0).getPostState());
-    } else if (operation == EventType.DELETE.name()) {
+    } else if (operation.equals(EventType.DELETE.name())) {
       assertNotNull(logs.get(0).getPreState());
       assertNull(logs.get(0).getPostState());
     }

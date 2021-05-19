@@ -30,10 +30,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -49,7 +52,7 @@ public class AuditLogResource {
     this.auditLogMapper = auditLogMapper;
   }
 
-  // TODO: only for admins
+  @Secured(GRSCICOLL_ADMIN_ROLE)
   @GetMapping()
   public PagingResponse<AuditLog> getAuditLogs(
       @RequestParam(name = "traceId", required = false) Long traceId,
