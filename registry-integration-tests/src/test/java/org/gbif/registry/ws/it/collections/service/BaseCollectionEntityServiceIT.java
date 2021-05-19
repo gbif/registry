@@ -209,46 +209,40 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @Test
   public void tagsTest() {
-    TagService tagService = (TagService) collectionEntityService;
-
     UUID key = collectionEntityService.create(testData.newEntity());
 
     Tag tag = new Tag();
     tag.setValue("value");
-    int tagKey = tagService.addTag(key, tag);
+    int tagKey = collectionEntityService.addTag(key, tag);
 
-    List<Tag> tags = tagService.listTags(key, null);
+    List<Tag> tags = collectionEntityService.listTags(key, null);
     assertEquals(1, tags.size());
     assertEquals(tagKey, tags.get(0).getKey());
     assertEquals("value", tags.get(0).getValue());
 
-    tagService.deleteTag(key, tagKey);
-    assertEquals(0, tagService.listTags(key, null).size());
+    collectionEntityService.deleteTag(key, tagKey);
+    assertEquals(0, collectionEntityService.listTags(key, null).size());
   }
 
   @Test
   public void machineTagsTest() {
-    MachineTagService machineTagService = (MachineTagService) collectionEntityService;
-
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
 
     MachineTag machineTag = new MachineTag("ns", "name", "value");
-    int machineTagKey = machineTagService.addMachineTag(key, machineTag);
+    int machineTagKey = collectionEntityService.addMachineTag(key, machineTag);
 
-    List<MachineTag> machineTags = machineTagService.listMachineTags(key);
+    List<MachineTag> machineTags = collectionEntityService.listMachineTags(key);
     assertEquals(1, machineTags.size());
     assertEquals(machineTagKey, machineTags.get(0).getKey());
     assertEquals("value", machineTags.get(0).getValue());
 
-    machineTagService.deleteMachineTag(key, machineTagKey);
-    assertEquals(0, machineTagService.listMachineTags(key).size());
+    collectionEntityService.deleteMachineTag(key, machineTagKey);
+    assertEquals(0, collectionEntityService.listMachineTags(key).size());
   }
 
   @Test
   public void identifiersTest() {
-    IdentifierService identifierService = (IdentifierService) collectionEntityService;
-
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
 
@@ -256,36 +250,34 @@ public abstract class BaseCollectionEntityServiceIT<
     identifier.setIdentifier("identifier");
     identifier.setType(IdentifierType.LSID);
 
-    int identifierKey = identifierService.addIdentifier(key, identifier);
+    int identifierKey = collectionEntityService.addIdentifier(key, identifier);
 
-    List<Identifier> identifiers = identifierService.listIdentifiers(key);
+    List<Identifier> identifiers = collectionEntityService.listIdentifiers(key);
     assertEquals(1, identifiers.size());
     assertEquals(identifierKey, identifiers.get(0).getKey());
     assertEquals("identifier", identifiers.get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
 
-    identifierService.deleteIdentifier(key, identifierKey);
-    assertEquals(0, identifierService.listIdentifiers(key).size());
+    collectionEntityService.deleteIdentifier(key, identifierKey);
+    assertEquals(0, collectionEntityService.listIdentifiers(key).size());
   }
 
   @Test
   public void commentsTest() {
-    CommentService commentService = (CommentService) collectionEntityService;
-
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
 
     Comment comment = new Comment();
     comment.setContent("test comment");
 
-    int commentKey = commentService.addComment(key, comment);
+    int commentKey = collectionEntityService.addComment(key, comment);
 
-    List<Comment> comments = commentService.listComments(key);
+    List<Comment> comments = collectionEntityService.listComments(key);
     assertEquals(1, comments.size());
     assertEquals(commentKey, comments.get(0).getKey());
     assertEquals(comment.getContent(), comments.get(0).getContent());
 
-    commentService.deleteComment(key, commentKey);
-    assertEquals(0, commentService.listComments(key).size());
+    collectionEntityService.deleteComment(key, commentKey);
+    assertEquals(0, collectionEntityService.listComments(key).size());
   }
 }

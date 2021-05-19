@@ -16,6 +16,7 @@
 package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
+import org.gbif.registry.service.WithMyBatis;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -61,7 +62,7 @@ public class DirectoryUpdateService extends AbstractIdleService {
         SpringContextBuilder.create()
             .withDbConfiguration(config.db)
             .withDirectoryConfiguration(config.directory)
-            .withComponents(DirectoryUpdater.class)
+            .withComponents(DirectoryUpdater.class, WithMyBatis.class)
             .build(),
         Executors.newScheduledThreadPool(1));
   }
