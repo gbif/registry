@@ -88,25 +88,20 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
 
     if (!person.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : person.getMachineTags()) {
-        machineTag.setCreatedBy(person.getCreatedBy());
-        machineTagMapper.createMachineTag(machineTag);
-        personMapper.addMachineTag(person.getKey(), machineTag.getKey());
+        addMachineTag(person.getKey(), machineTag);
       }
     }
 
     if (!person.getTags().isEmpty()) {
       for (Tag tag : person.getTags()) {
         tag.setCreatedBy(person.getCreatedBy());
-        tagMapper.createTag(tag);
-        personMapper.addTag(person.getKey(), tag.getKey());
+        addTag(person.getKey(), tag);
       }
     }
 
     if (!person.getIdentifiers().isEmpty()) {
       for (Identifier identifier : person.getIdentifiers()) {
-        identifier.setCreatedBy(person.getCreatedBy());
-        identifierMapper.createIdentifier(identifier);
-        personMapper.addIdentifier(person.getKey(), identifier.getKey());
+        addIdentifier(person.getKey(), identifier);
       }
     }
 

@@ -109,25 +109,19 @@ public abstract class BasePrimaryCollectionEntityService<
 
     if (!entity.getMachineTags().isEmpty()) {
       for (MachineTag machineTag : entity.getMachineTags()) {
-        machineTag.setCreatedBy(entity.getCreatedBy());
-        machineTagMapper.createMachineTag(machineTag);
-        baseMapper.addMachineTag(entity.getKey(), machineTag.getKey());
+        addMachineTag(entity.getKey(), machineTag);
       }
     }
 
     if (!entity.getTags().isEmpty()) {
       for (Tag tag : entity.getTags()) {
-        tag.setCreatedBy(entity.getCreatedBy());
-        tagMapper.createTag(tag);
-        baseMapper.addTag(entity.getKey(), tag.getKey());
+        addTag(entity.getKey(), tag);
       }
     }
 
     if (!entity.getIdentifiers().isEmpty()) {
       for (Identifier identifier : entity.getIdentifiers()) {
-        identifier.setCreatedBy(entity.getCreatedBy());
-        identifierMapper.createIdentifier(identifier);
-        baseMapper.addIdentifier(entity.getKey(), identifier.getKey());
+        addIdentifier(entity.getKey(), identifier);
       }
     }
 
@@ -228,6 +222,7 @@ public abstract class BasePrimaryCollectionEntityService<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
+  @Override
   public int addOccurrenceMapping(UUID entityKey, OccurrenceMapping occurrenceMapping) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     occurrenceMapping.setCreatedBy(authentication.getName());

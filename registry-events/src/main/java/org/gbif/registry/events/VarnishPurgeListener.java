@@ -141,7 +141,6 @@ import com.google.common.eventbus.Subscribe;
  *       <li>grscicoll/{collection|institution}/changeSuggestion BAN
  *     </ul>
  */
-// TODO: clear grscicoll cache
 public class VarnishPurgeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(VarnishPurgeListener.class);

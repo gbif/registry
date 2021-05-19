@@ -10,7 +10,7 @@
           key bigserial NOT NULL PRIMARY KEY,
           trace_id bigserial NOT NULL,
           collection_entity_type enum_grscicoll_entity_type NOT NULL,
-          subEntityType varchar(50),
+          sub_entity_type varchar(50),
           operation varchar(50) NOT NULL,
           collection_entity_key uuid,
           sub_entity_key varchar(36),

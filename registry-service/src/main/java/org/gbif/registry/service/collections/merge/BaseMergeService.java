@@ -66,6 +66,7 @@ public abstract class BaseMergeService<
 
   @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
   @Transactional
+  @Override
   public void merge(UUID entityToReplaceKey, UUID replacementKey) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

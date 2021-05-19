@@ -35,6 +35,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
@@ -75,7 +76,8 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      CollectionDuplicatesService duplicatesService) {
+      CollectionDuplicatesService duplicatesService,
+      AuditLogMapper auditLogMapper) {
     super(
         collectionService,
         personService,

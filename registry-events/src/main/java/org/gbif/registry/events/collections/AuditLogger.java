@@ -1,21 +1,20 @@
 package org.gbif.registry.events.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
-import org.gbif.registry.persistence.mapper.collections.dto.AuditLogDto;
+import org.gbif.registry.domain.collections.AuditLog;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
 
 import brave.Tracer;
-
-// TODO: listeners que sean @Async?? luego poner @EnableAsync en Application
 
 @Component
 public class AuditLogger {
@@ -25,80 +24,83 @@ public class AuditLogger {
   private final ObjectMapper objectMapper;
 
   @Autowired
-  public AuditLogger(Tracer tracer, AuditLogMapper auditLogMapper, ObjectMapper objectMapper) {
+  public AuditLogger(
+      Tracer tracer,
+      AuditLogMapper auditLogMapper,
+      ObjectMapper objectMapper,
+      EventManager eventManager) {
     this.tracer = tracer;
     this.auditLogMapper = auditLogMapper;
     this.objectMapper = objectMapper;
+    eventManager.register(this);
   }
 
-  @EventListener
+  @Subscribe
   public <T extends CollectionEntity> void logCreatedEvents(CreateCollectionEntityEvent<T> event) {
-    AuditLogDto dto = collectionBaseEventToDto(event);
-    dto.setCollectionEntityKey(event.getNewObject().getKey());
-    dto.setPostState(toJson(event.getNewObject()));
-    auditLogMapper.create(dto);
+    AuditLog auditLog = collectionBaseEventToAuditLog(event);
+    auditLog.setCollectionEntityKey(event.getNewObject().getKey());
+    auditLog.setPostState(toJson(event.getNewObject()));
+    auditLogMapper.create(auditLog);
   }
 
-  @EventListener
+  @Subscribe
   public <T extends CollectionEntity> void logUpdatedEvents(UpdateCollectionEntityEvent<T> event) {
-    AuditLogDto dto = collectionBaseEventToDto(event);
-    dto.setCollectionEntityKey(event.getNewObject().getKey());
-    dto.setPreState(toJson(event.getOldObject()));
-    dto.setPostState(toJson(event.getNewObject()));
-    auditLogMapper.create(dto);
+    AuditLog auditLog = collectionBaseEventToAuditLog(event);
+    auditLog.setCollectionEntityKey(event.getNewObject().getKey());
+    auditLog.setPreState(toJson(event.getOldObject()));
+    auditLog.setPostState(toJson(event.getNewObject()));
+    auditLogMapper.create(auditLog);
   }
 
-  @EventListener
+  @Subscribe
   public <T extends CollectionEntity> void logDeletedEvents(DeleteCollectionEntityEvent<T> event) {
-    AuditLogDto dto = collectionBaseEventToDto(event);
-    dto.setCollectionEntityKey(event.getOldObject().getKey());
-    dto.setPreState(toJson(event.getOldObject()));
-    dto.setPostState(toJson(event.getDeletedObject()));
-    auditLogMapper.create(dto);
+    AuditLog auditLog = collectionBaseEventToAuditLog(event);
+    auditLog.setCollectionEntityKey(event.getOldObject().getKey());
+    auditLog.setPreState(toJson(event.getOldObject()));
+    auditLog.setPostState(toJson(event.getDeletedObject()));
+    auditLogMapper.create(auditLog);
   }
 
-  @EventListener
+  @Subscribe
   public <T extends CollectionEntity> void logReplacedEvents(ReplaceEntityEvent<T> event) {
-    AuditLogDto dto = collectionBaseEventToDto(event);
-    dto.setCollectionEntityKey(event.getTargetEntityKey());
-    dto.setReplacementKey(event.getReplacementKey());
-    auditLogMapper.create(dto);
+    AuditLog auditLog = collectionBaseEventToAuditLog(event);
+    auditLog.setCollectionEntityKey(event.getTargetEntityKey());
+    auditLog.setReplacementKey(event.getReplacementKey());
+    auditLogMapper.create(auditLog);
   }
 
-  @EventListener
+  @Subscribe
   public <T extends CollectionEntity, R> void logSubEntityEvents(
       SubEntityCollectionEvent<T, R> event) {
-    AuditLogDto dto = subEntityToDto(event);
-    auditLogMapper.create(dto);
+    AuditLog auditLog = subEntityEventToAuditLog(event);
+    auditLogMapper.create(auditLog);
   }
 
-  private <T extends CollectionEntity, R> AuditLogDto subEntityToDto(
+  private <T extends CollectionEntity, R> AuditLog subEntityEventToAuditLog(
       SubEntityCollectionEvent<T, R> event) {
-    AuditLogDto dto = collectionBaseEventToDto(event);
-    dto.setSubEntityType(event.getSubEntity().getClass().getSimpleName());
-    dto.setCollectionEntityKey(event.getCollectionEntityKey());
-    dto.setSubEntityKey(event.getSubEntityKey());
+    AuditLog auditLog = collectionBaseEventToAuditLog(event);
+    auditLog.setSubEntityType(event.getSubEntityClass().getSimpleName());
+    auditLog.setCollectionEntityKey(event.getCollectionEntityKey());
+    auditLog.setSubEntityKey(event.getSubEntityKey());
 
     if (event.getEventType() == EventType.CREATE) {
-      dto.setPostState(toJson(event.getSubEntity()));
+      auditLog.setPostState(toJson(event.getSubEntity()));
     } else if (event.getEventType() == EventType.DELETE) {
-      dto.setPreState(toJson(event.getSubEntity()));
+      auditLog.setPreState(toJson(event.getSubEntity()));
     }
 
-    return dto;
+    return auditLog;
   }
 
-  private <T extends CollectionEntity> AuditLogDto collectionBaseEventToDto(
+  private <T extends CollectionEntity> AuditLog collectionBaseEventToAuditLog(
       CollectionsBaseEvent<T> event) {
-    AuditLogDto dto = new AuditLogDto();
-    dto.setTraceId(tracer.currentSpan().context().traceId());
-    dto.setCollectionEntityType(event.getCollectionEntityType());
-    dto.setOperation(event.getEventType().name());
-    dto.setCreatedBy(getUsername());
-    return dto;
+    AuditLog auditLog = new AuditLog();
+    auditLog.setTraceId(getTraceId());
+    auditLog.setCollectionEntityType(event.getCollectionEntityType());
+    auditLog.setOperation(event.getEventType().name());
+    auditLog.setCreatedBy(getUsername());
+    return auditLog;
   }
-
-  // TODO: getusername y toJson deberian ir a una clase de utils ya q lo uso en changeSuggestion tb
 
   protected String getUsername() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -111,5 +113,12 @@ public class AuditLogger {
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Cannot serialize entity", e);
     }
+  }
+
+  private long getTraceId() {
+    if (tracer.currentSpan() != null) {
+      return tracer.currentSpan().context().traceId();
+    }
+    return tracer.newTrace().context().traceId();
   }
 }

@@ -32,7 +32,6 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.service.registry.DatasetService;
@@ -91,7 +90,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
   private final DuplicatesService duplicatesService;
 
   public PrimaryCollectionEntityServiceIT(
-    PrimaryCollectionEntityService<T> primaryCollectionEntityService,
+      PrimaryCollectionEntityService<T> primaryCollectionEntityService,
       PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,

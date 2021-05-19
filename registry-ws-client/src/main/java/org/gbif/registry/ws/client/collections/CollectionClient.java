@@ -63,6 +63,7 @@ public interface CollectionClient
   @ResponseBody
   CollectionView getCollectionView(@PathVariable("key") UUID key);
 
+  @Override
   default Collection get(UUID key) {
     CollectionView view = getCollectionView(key);
     return view != null ? view.getCollection() : null;

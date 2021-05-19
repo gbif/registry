@@ -1,11 +1,11 @@
-package org.gbif.registry.persistence.mapper.collections.dto;
+package org.gbif.registry.domain.collections;
 
 import org.gbif.api.model.collections.CollectionEntityType;
 
 import java.util.Date;
 import java.util.UUID;
 
-public class AuditLogDto {
+public class AuditLog {
 
   private long key;
   private long traceId;

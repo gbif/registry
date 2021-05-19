@@ -107,7 +107,8 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "pipeline_process",
           "pipeline_execution",
           "derived_dataset",
-          "change_suggestion");
+          "change_suggestion",
+          "grscicoll_audit_log");
 
   public TestCaseDatabaseInitializer() {}
 
