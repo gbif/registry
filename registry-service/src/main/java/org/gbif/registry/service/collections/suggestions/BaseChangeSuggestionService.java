@@ -318,7 +318,7 @@ public abstract class BaseChangeSuggestionService<
             type,
             collectionEntityType,
             country,
-            newEmptyChangeSuggestion().getProposerEmail(),
+            newEmptyChangeSuggestion().getProposedBy(),
             entityKey,
             page);
 
@@ -328,7 +328,7 @@ public abstract class BaseChangeSuggestionService<
             type,
             collectionEntityType,
             country,
-            newEmptyChangeSuggestion().getProposerEmail(),
+            newEmptyChangeSuggestion().getProposedBy(),
             entityKey);
 
     List<R> changeSuggestions =
@@ -392,7 +392,7 @@ public abstract class BaseChangeSuggestionService<
     dto.setType(changeSuggestion.getType());
     dto.setComments(changeSuggestion.getComments());
     dto.setCollectionEntityType(collectionEntityType);
-    dto.setProposedBy(changeSuggestion.getProposerEmail());
+    dto.setProposedBy(changeSuggestion.getProposedBy());
     dto.setModifiedBy(getUsername());
     return dto;
   }
@@ -434,7 +434,7 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setModified(dto.getModified());
     suggestion.setModifiedBy(dto.getModifiedBy());
     suggestion.setProposed(dto.getProposed());
-    suggestion.setProposerEmail(dto.getProposedBy());
+    suggestion.setProposedBy(dto.getProposedBy());
     suggestion.setMergeTargetKey(dto.getMergeTargetKey());
 
     // changes conversion
