@@ -15,6 +15,12 @@
   </properties>
 
   <dependencies>
+    <!-- Tools -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+    </dependency>
+
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -74,6 +80,12 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-ui</artifactId>
+    </dependency>
+
+    <!-- CSV exports -->
+    <dependency>
+      <groupId>net.sf.supercsv</groupId>
+      <artifactId>super-csv</artifactId>
     </dependency>
 
     <!-- GBIF dependencies -->
