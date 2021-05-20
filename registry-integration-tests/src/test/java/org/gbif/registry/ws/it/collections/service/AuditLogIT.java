@@ -164,7 +164,7 @@ public class AuditLogIT extends BaseItTest {
     // change suggestions
     InstitutionChangeSuggestion institutionChangeSuggestion = new InstitutionChangeSuggestion();
     institutionChangeSuggestion.setEntityKey(key);
-    institutionChangeSuggestion.setProposedBy("aa@aa.com");
+    institutionChangeSuggestion.setProposerEmail("aa@aa.com");
     institutionChangeSuggestion.setType(Type.UPDATE);
     institutionChangeSuggestion.setComments(Collections.singletonList("comment"));
     i = institutionClient.get(key);
@@ -241,7 +241,7 @@ public class AuditLogIT extends BaseItTest {
     // change suggestions
     CollectionChangeSuggestion collectionChangeSuggestion = new CollectionChangeSuggestion();
     collectionChangeSuggestion.setEntityKey(key);
-    collectionChangeSuggestion.setProposedBy("aa@aa.com");
+    collectionChangeSuggestion.setProposerEmail("aa@aa.com");
     collectionChangeSuggestion.setType(Type.UPDATE);
     collectionChangeSuggestion.setComments(Collections.singletonList("comment"));
     c = collectionClient.get(key);
@@ -364,6 +364,8 @@ public class AuditLogIT extends BaseItTest {
                 .build(),
             new PagingRequest());
     assertEquals(1, logs.size());
+    assertNull(logs.get(0).getPreState());
+    assertNotNull(logs.get(0).getPostState());
 
     changeSuggestion = client.getChangeSuggestion(suggKey);
     entity.setName("n4");
@@ -378,6 +380,8 @@ public class AuditLogIT extends BaseItTest {
                 .build(),
             new PagingRequest());
     assertEquals(1, logs.size());
+    assertNotNull(logs.get(0).getPreState());
+    assertNotNull(logs.get(0).getPostState());
 
     client.applyChangeSuggestion(suggKey);
     logs =
@@ -389,6 +393,8 @@ public class AuditLogIT extends BaseItTest {
                 .build(),
             new PagingRequest());
     assertEquals(1, logs.size());
+    assertNotNull(logs.get(0).getPreState());
+    assertNotNull(logs.get(0).getPostState());
 
     // create another sugg to discard it
     changeSuggestion.setKey(null);
@@ -413,6 +419,8 @@ public class AuditLogIT extends BaseItTest {
                 .build(),
             new PagingRequest());
     assertEquals(1, logs.size());
+    assertNotNull(logs.get(0).getPreState());
+    assertNotNull(logs.get(0).getPostState());
   }
 
   private <

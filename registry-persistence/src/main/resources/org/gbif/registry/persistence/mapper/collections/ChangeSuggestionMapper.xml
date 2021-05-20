@@ -10,12 +10,12 @@
   </resultMap>
 
   <sql id="SUGGESTION_WRITE_FIELDS">
-    entity_type, entity_key, type, status, proposed, proposed_by, country, changes, comments, suggested_entity,
+    entity_type, entity_key, type, status, proposed, proposed_by, proposer_email, country, changes, comments, suggested_entity,
     merge_target_key, institution_converted_collection, name_new_institution_converted_collection, modified, modified_by
   </sql>
 
   <sql id="SUGGESTION_READ_FIELDS">
-    cs.key, cs.entity_type, cs.entity_key, cs.type, cs.status, cs.proposed, cs.proposed_by, cs. applied,
+    cs.key, cs.entity_type, cs.entity_key, cs.type, cs.status, cs.proposed, cs.proposed_by, cs.proposer_email, cs. applied,
     cs.applied_by, cs.discarded_by, cs.discarded, cs.country, cs.suggested_entity, cs.comments,
     cs.merge_target_key, cs.changes, cs.institution_converted_collection, cs.name_new_institution_converted_collection,
     cs.modified, cs.modified_by
@@ -28,6 +28,7 @@
     #{status,jdbcType=OTHER},
     now(), <!-- proposed -->
     #{proposedBy,jdbcType=VARCHAR},
+    #{proposerEmail,jdbcType=VARCHAR},
     #{country,jdbcType=VARCHAR},
     #{changes,jdbcType=OTHER,typeHandler=SuggestedChangesTypeHandler}::jsonb,
     #{comments,jdbcType=OTHER,typeHandler=StringArrayTypeHandler},

@@ -85,7 +85,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -146,7 +146,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.UPDATE);
     suggestion.setEntityKey(entityKey);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -196,7 +196,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.DELETE);
     suggestion.setEntityKey(entityKey);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -232,7 +232,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.MERGE);
     suggestion.setEntityKey(entityKey);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setMergeTargetKey(entity2Key);
     suggestion.setComments(Collections.singletonList("comment"));
 
@@ -266,7 +266,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -294,7 +294,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy(PROPOSER);
+    suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
 
     int suggKey1 = changeSuggestionService.createChangeSuggestion(suggestion);
@@ -305,7 +305,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion2.setSuggestedEntity(entity2);
     suggestion2.setEntityKey(entity2Key);
     suggestion2.setType(Type.UPDATE);
-    suggestion2.setProposedBy(PROPOSER);
+    suggestion2.setProposerEmail(PROPOSER);
     suggestion2.setComments(Collections.singletonList("comment"));
 
     int suggKey2 = changeSuggestionService.createChangeSuggestion(suggestion2);
@@ -346,7 +346,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.CREATE);
-    suggestion.setProposedBy("myfakeemail");
+    suggestion.setProposerEmail("myfakeemail");
     suggestion.setComments(Collections.singletonList("comment"));
 
     // When
@@ -360,7 +360,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertNull(created.getApplied());
     assertNull(created.getDiscarded());
     assertEquals(getSimplePrincipalProvider().get().getName(), created.getModifiedBy());
-    assertEquals(PROPOSER, created.getProposedBy());
+    assertEquals(PROPOSER, created.getProposerEmail());
     assertEquals(1, created.getComments().size());
   }
 

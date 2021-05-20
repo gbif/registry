@@ -33,6 +33,8 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
   // it's a string so we can use uuids and integer keys
   private final String subEntityKey;
   private final R subEntity;
+  // only applies for subentities that can be updated like ChangeSuggestion
+  private R oldSubEntity;
 
   public static <T extends CollectionEntity, R> SubEntityCollectionEvent<T, R> newInstance(
       UUID collectionEntityKey,
@@ -44,6 +46,7 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
         collectionEntityKey,
         collectionEntityClass,
         subEntityClass,
+        null,
         null,
         subEntityKey.toString(),
         eventType);
@@ -60,6 +63,24 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
         collectionEntityClass,
         (Class<R>) subEntity.getClass(),
         subEntity,
+        null,
+        String.valueOf(subEntityKey),
+        eventType);
+  }
+
+  public static <T extends CollectionEntity, R> SubEntityCollectionEvent<T, R> newInstance(
+      UUID collectionEntityKey,
+      Class<T> collectionEntityClass,
+      R subEntity,
+      R oldSubEntity,
+      int subEntityKey,
+      EventType eventType) {
+    return new SubEntityCollectionEvent<>(
+        collectionEntityKey,
+        collectionEntityClass,
+        (Class<R>) subEntity.getClass(),
+        subEntity,
+        oldSubEntity,
         String.valueOf(subEntityKey),
         eventType);
   }
@@ -69,6 +90,7 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
       Class<T> collectionEntityClass,
       Class<R> subEntityClass,
       R subEntity,
+      R oldSubEntity,
       String subEntityKey,
       EventType eventType) {
     super(eventType, collectionEntityClass);
@@ -76,6 +98,7 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
     this.subEntityClass = Preconditions.checkNotNull(subEntityClass);
     this.subEntity = subEntity;
     this.subEntityKey = Preconditions.checkNotNull(subEntityKey);
+    this.oldSubEntity = oldSubEntity;
   }
 
   public UUID getCollectionEntityKey() {
@@ -88,6 +111,10 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
 
   public R getSubEntity() {
     return subEntity;
+  }
+
+  public R getOldSubEntity() {
+    return oldSubEntity;
   }
 
   public String getSubEntityKey() {

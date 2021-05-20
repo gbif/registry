@@ -1,9 +1,9 @@
 package org.gbif.registry.events.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
-import org.gbif.registry.domain.collections.AuditLog;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -87,6 +87,11 @@ public class AuditLogger {
       auditLog.setPostState(toJson(event.getSubEntity()));
     } else if (event.getEventType() == EventType.DELETE) {
       auditLog.setPreState(toJson(event.getSubEntity()));
+    } else if (event.getEventType() == EventType.UPDATE
+        || event.getEventType() == EventType.APPLY_SUGGESTION
+        || event.getEventType() == EventType.DISCARD_SUGGESTION) {
+      auditLog.setPreState(toJson(event.getOldSubEntity()));
+      auditLog.setPostState(toJson(event.getSubEntity()));
     }
 
     return auditLog;

@@ -16,7 +16,7 @@
           sub_entity_key varchar(36),
           replacement_key uuid,
           created timestamptz NOT NULL DEFAULT now(),
-          created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
+          created_by varchar CHECK (assert_min_length(created_by, 3)),
           pre_state jsonb,
           post_state jsonb)
       ]]>

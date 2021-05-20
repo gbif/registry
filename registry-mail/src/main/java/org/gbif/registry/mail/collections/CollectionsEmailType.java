@@ -36,7 +36,7 @@ public enum CollectionsEmailType implements EmailType {
 
   static {
     MESSAGE_SOURCE = new ResourceBundleMessageSource();
-    MESSAGE_SOURCE.setBasename("email/subjects/organization_email_subjects");
+    MESSAGE_SOURCE.setBasename("email/subjects/collections_email_subjects");
     MESSAGE_SOURCE.setDefaultEncoding(StandardCharsets.UTF_8.displayName());
   }
 

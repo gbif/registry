@@ -1,17 +1,8 @@
 package org.gbif.registry.service.collections.suggestions;
 
-import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.suggestions.Change;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
-import org.gbif.api.model.collections.suggestions.Status;
-import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.suggestions.*;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -34,15 +25,11 @@ import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -51,12 +38,9 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -151,7 +135,7 @@ public abstract class BaseChangeSuggestionService<
               dto.getKey(), dto.getCollectionEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
-      LOG.error("Couldn't send email for new change suggestion");
+      LOG.error("Couldn't send email for new change suggestion", e);
     }
 
     return dto.getKey();
@@ -215,8 +199,8 @@ public abstract class BaseChangeSuggestionService<
         "A comment is required");
 
     if (dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) {
-      // we do this to update the suggested entity with the current state and minimize the risk of
-      // having race conditions
+      // we get the current entity from the DB to update the suggested entity with the current state
+      // and minimize the risk of having race conditions
       R changeSuggestion = dtoToChangeSuggestion(dto);
 
       Set<ChangeDto> newChanges =
@@ -228,11 +212,14 @@ public abstract class BaseChangeSuggestionService<
 
     dto.setComments(updatedChangeSuggestion.getComments());
     dto.setModifiedBy(getUsername());
+
+    // keep a copy of the old dto for the audit log
+    ChangeSuggestionDto oldDto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
     changeSuggestionMapper.update(dto);
 
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
-            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.UPDATE));
+            dto.getEntityKey(), clazz, dto, oldDto, dto.getKey(), EventType.UPDATE));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
@@ -243,11 +230,14 @@ public abstract class BaseChangeSuggestionService<
     dto.setDiscarded(new Date());
     dto.setDiscardedBy(getUsername());
     dto.setModifiedBy(getUsername());
+
+    // keep a copy of the old dto for the audit log
+    ChangeSuggestionDto oldDto = changeSuggestionMapper.get(key);
     changeSuggestionMapper.update(dto);
 
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
-            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.DISCARD_SUGGESTION));
+            dto.getEntityKey(), clazz, dto, oldDto, dto.getKey(), EventType.DISCARD_SUGGESTION));
 
     // send email
     try {
@@ -256,7 +246,7 @@ public abstract class BaseChangeSuggestionService<
               dto.getKey(), dto.getCollectionEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
-      LOG.error("Couldn't send email for discarded change suggestion");
+      LOG.error("Couldn't send email for discarded change suggestion", e);
     }
   }
 
@@ -284,10 +274,13 @@ public abstract class BaseChangeSuggestionService<
     dto.setApplied(new Date());
     dto.setAppliedBy(getUsername());
 
+    // keep a copy of the old dto for the audit log
+    ChangeSuggestionDto oldDto = changeSuggestionMapper.get(suggestionKey);
     changeSuggestionMapper.update(dto);
+
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
-            dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.APPLY_SUGGESTION));
+            dto.getEntityKey(), clazz, dto, oldDto, dto.getKey(), EventType.APPLY_SUGGESTION));
 
     // send email
     try {
@@ -296,7 +289,7 @@ public abstract class BaseChangeSuggestionService<
               dto.getKey(), dto.getCollectionEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
-      LOG.error("Couldn't send email for applied change suggestion");
+      LOG.error("Couldn't send email for applied change suggestion", e);
     }
 
     return createdEntity;
@@ -392,7 +385,8 @@ public abstract class BaseChangeSuggestionService<
     dto.setType(changeSuggestion.getType());
     dto.setComments(changeSuggestion.getComments());
     dto.setCollectionEntityType(collectionEntityType);
-    dto.setProposedBy(changeSuggestion.getProposedBy());
+    dto.setProposerEmail(changeSuggestion.getProposerEmail());
+    dto.setProposedBy(getUsername());
     dto.setModifiedBy(getUsername());
     return dto;
   }
@@ -435,6 +429,7 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setModifiedBy(dto.getModifiedBy());
     suggestion.setProposed(dto.getProposed());
     suggestion.setProposedBy(dto.getProposedBy());
+    suggestion.setProposerEmail(dto.getProposerEmail());
     suggestion.setMergeTargetKey(dto.getMergeTargetKey());
 
     // changes conversion
