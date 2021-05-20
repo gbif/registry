@@ -17,7 +17,7 @@
           type enum_change_suggestion_type NOT NULL,
           status enum_change_suggestion_status NOT NULL,
           proposed timestamptz NOT NULL DEFAULT now(),
-          proposed_by varchar NOT NULL CHECK (assert_min_length(proposed_by, 3)),
+          proposed_by varchar CHECK (assert_min_length(proposed_by, 3)),
           proposer_email varchar NOT NULL CHECK (assert_min_length(proposer_email, 3)),
           applied timestamptz,
           applied_by varchar CHECK (assert_min_length(applied_by, 3)),

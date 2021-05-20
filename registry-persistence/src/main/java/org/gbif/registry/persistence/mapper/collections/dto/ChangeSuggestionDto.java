@@ -18,7 +18,7 @@ import lombok.Data;
 public class ChangeSuggestionDto {
 
   private Integer key;
-  private CollectionEntityType collectionEntityType;
+  private CollectionEntityType entityType;
   private UUID entityKey;
   private Type type;
   private Status status;

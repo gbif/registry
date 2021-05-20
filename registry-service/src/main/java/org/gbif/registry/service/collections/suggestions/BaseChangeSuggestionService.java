@@ -1,8 +1,17 @@
 package org.gbif.registry.service.collections.suggestions;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.*;
-import org.gbif.api.model.collections.suggestions.*;
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.CollectionEntityType;
+import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.suggestions.Change;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -25,11 +34,15 @@ import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -38,9 +51,12 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -131,8 +147,7 @@ public abstract class BaseChangeSuggestionService<
     // send email
     try {
       BaseEmailModel emailModel =
-          emailManager.generateNewChangeSuggestionEmailModel(
-              dto.getKey(), dto.getCollectionEntityType());
+          emailManager.generateNewChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for new change suggestion", e);
@@ -243,7 +258,7 @@ public abstract class BaseChangeSuggestionService<
     try {
       BaseEmailModel emailModel =
           emailManager.generateDiscardedChangeSuggestionEmailModel(
-              dto.getKey(), dto.getCollectionEntityType());
+              dto.getKey(), dto.getEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for discarded change suggestion", e);
@@ -285,8 +300,7 @@ public abstract class BaseChangeSuggestionService<
     // send email
     try {
       BaseEmailModel emailModel =
-          emailManager.generateAppliedChangeSuggestionEmailModel(
-              dto.getKey(), dto.getCollectionEntityType());
+          emailManager.generateAppliedChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for applied change suggestion", e);
@@ -307,22 +321,11 @@ public abstract class BaseChangeSuggestionService<
 
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status,
-            type,
-            collectionEntityType,
-            country,
-            proposerEmail,
-            entityKey,
-            page);
+            status, type, collectionEntityType, country, proposerEmail, entityKey, page);
 
     long count =
         changeSuggestionMapper.count(
-            status,
-            type,
-            collectionEntityType,
-            country,
-            proposerEmail,
-            entityKey);
+            status, type, collectionEntityType, country, proposerEmail, entityKey);
 
     List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());
@@ -384,7 +387,7 @@ public abstract class BaseChangeSuggestionService<
     dto.setStatus(Status.PENDING);
     dto.setType(changeSuggestion.getType());
     dto.setComments(changeSuggestion.getComments());
-    dto.setCollectionEntityType(collectionEntityType);
+    dto.setEntityType(collectionEntityType);
     dto.setProposerEmail(changeSuggestion.getProposerEmail());
     dto.setProposedBy(getUsername());
     dto.setModifiedBy(getUsername());
