@@ -164,7 +164,7 @@ public class AuditLogIT extends BaseItTest {
     // change suggestions
     InstitutionChangeSuggestion institutionChangeSuggestion = new InstitutionChangeSuggestion();
     institutionChangeSuggestion.setEntityKey(key);
-    institutionChangeSuggestion.setProposerEmail("aa@aa.com");
+    institutionChangeSuggestion.setProposedBy("aa@aa.com");
     institutionChangeSuggestion.setType(Type.UPDATE);
     institutionChangeSuggestion.setComments(Collections.singletonList("comment"));
     i = institutionClient.get(key);
@@ -241,7 +241,7 @@ public class AuditLogIT extends BaseItTest {
     // change suggestions
     CollectionChangeSuggestion collectionChangeSuggestion = new CollectionChangeSuggestion();
     collectionChangeSuggestion.setEntityKey(key);
-    collectionChangeSuggestion.setProposerEmail("aa@aa.com");
+    collectionChangeSuggestion.setProposedBy("aa@aa.com");
     collectionChangeSuggestion.setType(Type.UPDATE);
     collectionChangeSuggestion.setComments(Collections.singletonList("comment"));
     c = collectionClient.get(key);
