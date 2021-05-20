@@ -142,7 +142,7 @@ public class CollectionResourceIT
     CollectionChangeSuggestion changeSuggestion = new CollectionChangeSuggestion();
     changeSuggestion.setType(Type.CREATE);
     changeSuggestion.setComments(Collections.singletonList("comment"));
-    changeSuggestion.setProposerEmail("aaa@aa.com");
+    changeSuggestion.setProposedBy("aaa@aa.com");
 
     Collection c1 = new Collection();
     c1.setCode("c1");
