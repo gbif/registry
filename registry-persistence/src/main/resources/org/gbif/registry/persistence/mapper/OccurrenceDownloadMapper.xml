@@ -64,6 +64,8 @@
     <result property="count" column="total_records" />
   </resultMap>
 
+  <resultMap id="DOWNLOAD_STATISTICS" type="org.gbif.api.model.occurrence.DownloadStatistics" autoMapping="true"/>
+
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
     key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after
   </sql>
@@ -258,5 +260,38 @@
     </where>
     GROUP BY year_month
     ORDER BY year_month DESC;
+  </select>
+
+  <select id="getDownloadStatistics" resultMap="DOWNLOAD_STATISTICS" parameterType="map">
+    SELECT year_month, dataset_key, SUM(number_downloads) AS number_downloads, SUM(total_records) AS total_records
+    FROM download_statistics
+    <if test="publishingOrgKey != null">
+      JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+    </if>
+    <where>
+      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+    </where>
+    GROUP BY dataset_key, year_month
+    ORDER BY year_month DESC
+    <if test="page != null" >
+    LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countDownloadStatistics" resultType="Long" parameterType="map">
+    SELECT COUNT(*)
+    FROM download_statistics
+    <if test="publishingOrgKey != null">
+      JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+    </if>
+    <where>
+      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+    </where>
   </select>
 </mapper>

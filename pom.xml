@@ -126,6 +126,7 @@
     <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.4.14</zookeeper.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
+    <super-csv.version>2.4.0</super-csv.version>
 
     <!-- Test -->
     <junit.version>5.6.3</junit.version>
@@ -581,6 +582,13 @@
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-client-sniffer</artifactId>
         <version>${elasticsearch.version}</version>
+      </dependency>
+
+      <!-- CSV exports -->
+      <dependency>
+        <groupId>net.sf.supercsv</groupId>
+        <artifactId>super-csv</artifactId>
+        <version>${super-csv.version}</version>
       </dependency>
 
       <!-- Caching -->
