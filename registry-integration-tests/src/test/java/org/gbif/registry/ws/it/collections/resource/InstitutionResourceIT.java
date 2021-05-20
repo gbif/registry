@@ -158,7 +158,7 @@ public class InstitutionResourceIT
     InstitutionChangeSuggestion changeSuggestion = new InstitutionChangeSuggestion();
     changeSuggestion.setType(Type.CREATE);
     changeSuggestion.setComments(Collections.singletonList("comment"));
-    changeSuggestion.setProposerEmail("aaa@aa.com");
+    changeSuggestion.setProposedBy("aaa@aa.com");
 
     Institution i1 = new Institution();
     i1.setCode("i1");
