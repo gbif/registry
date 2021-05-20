@@ -84,8 +84,8 @@
       <if test="country != null">
         AND cs.country = #{country,jdbcType=VARCHAR}
       </if>
-      <if test="proposer != null">
-        AND cs.proposed_by = #{proposer,jdbcType=OTHER}
+      <if test="proposerEmail != null">
+        AND cs.proposer_email = #{proposerEmail,jdbcType=OTHER}
       </if>
       <if test="entityKey != null">
         AND cs.entity_key = #{entityKey,jdbcType=OTHER}
@@ -113,8 +113,8 @@
       <if test="country != null">
         AND cs.country = #{country,jdbcType=VARCHAR}
       </if>
-      <if test="proposer != null">
-        AND cs.proposed_by = #{proposer,jdbcType=OTHER}
+      <if test="proposerEmail != null">
+        AND cs.proposer_email = #{proposerEmail,jdbcType=OTHER}
       </if>
       <if test="entityKey != null">
         AND cs.entity_key = #{entityKey,jdbcType=OTHER}

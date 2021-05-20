@@ -300,7 +300,7 @@ public abstract class BaseChangeSuggestionService<
       @Nullable Status status,
       @Nullable Type type,
       @Nullable Country country,
-      @Nullable String proposedBy,
+      @Nullable String proposerEmail,
       @Nullable UUID entityKey,
       @Nullable Pageable pageable) {
     Pageable page = pageable == null ? new PagingRequest() : pageable;
@@ -311,7 +311,7 @@ public abstract class BaseChangeSuggestionService<
             type,
             collectionEntityType,
             country,
-            newEmptyChangeSuggestion().getProposedBy(),
+            proposerEmail,
             entityKey,
             page);
 
@@ -321,7 +321,7 @@ public abstract class BaseChangeSuggestionService<
             type,
             collectionEntityType,
             country,
-            newEmptyChangeSuggestion().getProposedBy(),
+            proposerEmail,
             entityKey);
 
     List<R> changeSuggestions =

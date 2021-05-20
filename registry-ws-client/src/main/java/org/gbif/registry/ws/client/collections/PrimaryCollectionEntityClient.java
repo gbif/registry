@@ -128,7 +128,7 @@ public interface PrimaryCollectionEntityClient<
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "country") Country country,
-      @RequestParam(value = "proposedBy", required = false) String proposedBy,
+      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
       @SpringQueryMap Pageable page);
 
