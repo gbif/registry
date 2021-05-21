@@ -128,30 +128,6 @@ public class PersonResource extends BaseCollectionEntityResource<Person> impleme
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
 
-    if (!person.getMachineTags().isEmpty()) {
-      for (MachineTag machineTag : person.getMachineTags()) {
-        machineTag.setCreatedBy(person.getCreatedBy());
-        machineTagMapper.createMachineTag(machineTag);
-        personMapper.addMachineTag(person.getKey(), machineTag.getKey());
-      }
-    }
-
-    if (!person.getTags().isEmpty()) {
-      for (Tag tag : person.getTags()) {
-        tag.setCreatedBy(person.getCreatedBy());
-        tagMapper.createTag(tag);
-        personMapper.addTag(person.getKey(), tag.getKey());
-      }
-    }
-
-    if (!person.getIdentifiers().isEmpty()) {
-      for (Identifier identifier : person.getIdentifiers()) {
-        identifier.setCreatedBy(person.getCreatedBy());
-        identifierMapper.createIdentifier(identifier);
-        personMapper.addIdentifier(person.getKey(), identifier.getKey());
-      }
-    }
-
     eventManager.post(CreateCollectionEntityEvent.newInstance(person, Person.class));
     return person.getKey();
   }

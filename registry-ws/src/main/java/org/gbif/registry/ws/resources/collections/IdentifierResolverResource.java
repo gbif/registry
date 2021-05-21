@@ -43,6 +43,9 @@ import static org.gbif.registry.ws.util.GrscicollUtils.GRSCICOLL_PATH;
  * Resolves the grscicoll identifiers to the corresponding entity ({@link
  * org.gbif.api.model.collections.Collection} or {@link
  * org.gbif.api.model.collections.Institution}).
+ *
+ * <p>This controller receives as parameter URLs like http://grbio.org/cool/gd90-pmbb and responds
+ * with a redirect to the corresponding page of the collection entity on the GBIF portal.
  */
 @Validated
 @RestController

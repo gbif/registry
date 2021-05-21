@@ -219,37 +219,6 @@ public abstract class BaseCollectionEntityIT<
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void createFullEntityTest(ServiceType serviceType) {
-    CrudService<T> service = getService(serviceType, resource, client);
-
-    T entity = newEntity();
-
-    MachineTag machineTag = new MachineTag("ns", "name", "value");
-    entity.setMachineTags(Collections.singletonList(machineTag));
-
-    Tag tag = new Tag();
-    tag.setValue("value");
-    entity.setTags(Collections.singletonList(tag));
-
-    Identifier identifier = new Identifier();
-    identifier.setIdentifier("id");
-    identifier.setType(IdentifierType.LSID);
-    entity.setIdentifiers(Collections.singletonList(identifier));
-
-    UUID key = service.create(entity);
-    T entitySaved = service.get(key);
-
-    assertEquals(1, entitySaved.getMachineTags().size());
-    assertEquals("value", entitySaved.getMachineTags().get(0).getValue());
-    assertEquals(1, entitySaved.getTags().size());
-    assertEquals("value", entitySaved.getTags().get(0).getValue());
-    assertEquals(1, entitySaved.getIdentifiers().size());
-    assertEquals("id", entitySaved.getIdentifiers().get(0).getIdentifier());
-    assertEquals(IdentifierType.LSID, entitySaved.getIdentifiers().get(0).getType());
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
   public void tagsTest(ServiceType serviceType) {
     CrudService<T> service = getService(serviceType, resource, client);
     TagService tagService = (TagService) service;
