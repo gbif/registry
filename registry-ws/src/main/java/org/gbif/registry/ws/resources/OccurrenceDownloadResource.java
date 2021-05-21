@@ -386,8 +386,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) throws
     IOException {
 
-      String headerValue = String.format("attachment; filename=\"download_statistics.%s\"",
-                                       format.name().toLowerCase());
+      String headerValue = "attachment; filename=download_statistics." +  format.name().toLowerCase();
       response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
 

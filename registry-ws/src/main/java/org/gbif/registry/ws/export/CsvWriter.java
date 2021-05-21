@@ -103,8 +103,8 @@ public class CsvWriter<T> {
                                       null,                                             //publishingOrganizationTitle
                                       new ListUUIDProcessor(),                          //networkKeys
                                       null,                                             //projectIdentifier
-                                      new ParseInt(),                                   //recordCount
-                                      new ParseInt()                                    //nameUsagesCount
+                                      new Optional(new ParseInt()),                     //recordCount
+                                      new Optional(new ParseInt())                      //nameUsagesCount
                                       })
       .preference(preference)
       .pager(pager)
