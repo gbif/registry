@@ -62,13 +62,9 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -395,7 +391,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
 
-      CsvWriter.downloadStatisticsTsvWriter(Iterables.downloadStatistics(this,
+      CsvWriter.downloadStatisticsCsvWriter(Iterables.downloadStatistics(this,
                                                                          fromDate,
                                                                          toDate,
                                                                          publishingCountry,

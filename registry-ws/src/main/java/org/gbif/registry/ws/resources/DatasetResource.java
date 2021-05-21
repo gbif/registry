@@ -19,6 +19,7 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -41,6 +42,7 @@ import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -66,6 +68,7 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.ws.NotFoundException;
 
 import java.io.ByteArrayInputStream;
@@ -84,6 +87,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
@@ -93,6 +97,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -185,6 +190,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
       DatasetSearchRequest searchRequest) {
     return searchService.search(searchRequest);
+  }
+
+  @GetMapping("search/export")
+  public void search(HttpServletResponse response,
+                     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+                     DatasetSearchRequest searchRequest) throws IOException {
+
+    String headerValue = String.format("attachment; filename=\"gbifdatasets.%s\"", format.name().toLowerCase());
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+
+    CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest, searchService),
+                                           format)
+      .export(response.getWriter());
   }
 
   @GetMapping("suggest")
