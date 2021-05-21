@@ -19,24 +19,29 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
+import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.WebApplicationException;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +52,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -56,8 +62,13 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -341,6 +352,57 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
         Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
         datasetKey,
         publishingOrgKey));
+  }
+
+  @GetMapping("statistics")
+  @Override
+  public PagingResponse<DownloadStatistics> getDownloadStatistics(
+    @PartialDate Date fromDate,
+    @PartialDate Date toDate,
+    Country publishingCountry,
+    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey,
+    Pageable page
+  ) {
+    String country = Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null);
+    return new PagingResponse<>(page,
+                                occurrenceDownloadMapper.countDownloadStatistics(fromDate,
+                                                                                 toDate,
+                                                                                 country,
+                                                                                 datasetKey,
+                                                                                 publishingOrgKey),
+                                occurrenceDownloadMapper.getDownloadStatistics(fromDate,
+                                                                               toDate,
+                                                                               country,
+                                                                               datasetKey,
+                                                                               publishingOrgKey,
+                                                                               page));
+  }
+
+  @GetMapping("statistics/export")
+  public void getDownloadStatistics(
+    HttpServletResponse response,
+    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+    @PartialDate Date fromDate,
+    @PartialDate Date toDate,
+    Country publishingCountry,
+    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) throws
+    IOException {
+
+      String headerValue = String.format("attachment; filename=\"download_statistics.%s\"",
+                                       format.name().toLowerCase());
+      response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+
+
+      CsvWriter.downloadStatisticsTsvWriter(Iterables.downloadStatistics(this,
+                                                                         fromDate,
+                                                                         toDate,
+                                                                         publishingCountry,
+                                                                         datasetKey,
+                                                                         publishingOrgKey),
+                                            format)
+      .export(response.getWriter());
   }
 
   /** Aggregates the download statistics in tree structure of month grouped by year. */
