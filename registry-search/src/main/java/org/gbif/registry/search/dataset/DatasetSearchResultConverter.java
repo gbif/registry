@@ -73,13 +73,10 @@ public class DatasetSearchResultConverter
     getLicenceValue(fields, "license").ifPresent(d::setLicense);
     getStringValue(fields, "projectId").ifPresent(d::setProjectIdentifier);
 
-    if (Objects.nonNull(d.getType())) {
-      if (DatasetType.CHECKLIST == d.getType()) {
-        getIntValue(fields, "nameUsagesCount").ifPresent(d::setRecordCount);
-      } else {
-        getIntValue(fields, "occurrenceCount").ifPresent(d::setRecordCount);
-      }
-    }
+    //Set counts
+    getIntValue(fields, "nameUsagesCount").ifPresent(d::setNameUsagesCount);
+    getIntValue(fields, "occurrenceCount").ifPresent(d::setRecordCount);
+
 
     getListValue(fields, "keyword").ifPresent(d::setKeywords);
 
