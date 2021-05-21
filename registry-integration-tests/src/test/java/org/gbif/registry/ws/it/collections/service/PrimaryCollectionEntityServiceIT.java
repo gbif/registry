@@ -47,7 +47,6 @@ import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -97,11 +96,10 @@ public abstract class PrimaryCollectionEntityServiceIT<
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
       IdentityService identityService,
       DuplicatesService duplicatesService,
       Class<T> paramType) {
-    super(primaryCollectionEntityService, principalProvider, esServer, identityService, paramType);
+    super(primaryCollectionEntityService, principalProvider, identityService, paramType);
     this.personService = personService;
     this.datasetService = datasetService;
     this.nodeService = nodeService;

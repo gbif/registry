@@ -86,10 +86,8 @@ public class BaseResourceIT {
 
   public BaseResourceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture) {
     this.simplePrincipalProvider = simplePrincipalProvider;
-    BaseResourceIT.esServer = esServer;
     this.requestTestFixture = requestTestFixture;
   }
 

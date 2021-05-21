@@ -31,7 +31,6 @@ import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -65,10 +64,9 @@ public abstract class BaseChangeSuggestionServiceIT<
 
   protected BaseChangeSuggestionServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       ChangeSuggestionService<T, R> changeSuggestionService,
       CrudService<T> crudService) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider);
     this.changeSuggestionService = changeSuggestionService;
     this.crudService = crudService;
   }

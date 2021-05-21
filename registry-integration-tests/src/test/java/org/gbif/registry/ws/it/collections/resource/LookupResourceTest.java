@@ -7,7 +7,6 @@ import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.registry.ws.client.collections.LookupClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -35,10 +34,9 @@ public class LookupResourceTest extends BaseResourceIT {
   @Autowired
   public LookupResourceTest(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       @LocalServerPort int localServerPort) {
-    super(simplePrincipalProvider, esServer, requestTestFixture);
+    super(simplePrincipalProvider, requestTestFixture);
     this.lookupClient =
         prepareClient(TestConstants.TEST_GRSCICOLL_ADMIN, localServerPort, LookupClient.class);
   }

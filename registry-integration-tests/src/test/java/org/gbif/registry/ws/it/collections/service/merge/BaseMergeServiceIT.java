@@ -49,7 +49,6 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -88,7 +87,6 @@ public abstract class BaseMergeServiceIT<
 
   public BaseMergeServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       MergeService<T> mergeService,
       CrudService<T> crudService,
       IdentifierService identifierService,
@@ -96,7 +94,7 @@ public abstract class BaseMergeServiceIT<
       MachineTagService machineTagService,
       OccurrenceMappingService occurrenceMappingService,
       PersonService personService) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider);
     this.mergeService = mergeService;
     this.crudService = crudService;
     this.identifierService = identifierService;

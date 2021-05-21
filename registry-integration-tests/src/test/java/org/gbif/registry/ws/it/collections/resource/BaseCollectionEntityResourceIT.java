@@ -12,7 +12,6 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.it.collections.data.TestData;
 import org.gbif.registry.ws.it.collections.data.TestDataFactory;
@@ -52,11 +51,10 @@ abstract class BaseCollectionEntityResourceIT<
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T>> cls,
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       Class<T> paramType,
       int localServerPort) {
-    super(simplePrincipalProvider, esServer, requestTestFixture);
+    super(simplePrincipalProvider, requestTestFixture);
     this.baseClient = prepareClient(TestConstants.TEST_GRSCICOLL_ADMIN, localServerPort, cls);
     this.testData = TestDataFactory.create(paramType);
     this.paramType = paramType;

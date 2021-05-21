@@ -74,7 +74,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
       IdentityService identityService,
       CollectionDuplicatesService duplicatesService) {
     super(
@@ -85,7 +84,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         organizationService,
         installationService,
         principalProvider,
-        esServer,
         identityService,
         duplicatesService,
         Collection.class);

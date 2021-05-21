@@ -18,7 +18,6 @@ package org.gbif.registry.ws.it.collections.service;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.events.collections.AuditLogger;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -144,11 +143,9 @@ public class BaseServiceIT {
   }
 
   private final SimplePrincipalProvider simplePrincipalProvider;
-  protected static EsManageServer esServer;
 
-  public BaseServiceIT(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
+  public BaseServiceIT(SimplePrincipalProvider simplePrincipalProvider) {
     this.simplePrincipalProvider = simplePrincipalProvider;
-    BaseServiceIT.esServer = esServer;
   }
 
   @BeforeEach

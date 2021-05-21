@@ -14,7 +14,6 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
@@ -53,13 +52,11 @@ public class InstitutionResourceIT
   @Autowired
   public InstitutionResourceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       @LocalServerPort int localServerPort) {
     super(
         InstitutionClient.class,
         simplePrincipalProvider,
-        esServer,
         requestTestFixture,
         Institution.class,
         localServerPort);

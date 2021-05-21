@@ -41,7 +41,6 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
@@ -77,11 +76,10 @@ public abstract class PrimaryCollectionEntityResourceIT<
   public PrimaryCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T>> cls,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       Class<T> paramType,
       int localServerPort) {
-    super(cls, principalProvider, esServer, requestTestFixture, paramType, localServerPort);
+    super(cls, principalProvider, requestTestFixture, paramType, localServerPort);
   }
 
   @Test
@@ -260,7 +258,8 @@ public abstract class PrimaryCollectionEntityResourceIT<
     UUID entityKey = UUID.randomUUID();
     Pageable page = new PagingRequest();
 
-    when(getMockChangeSuggestionService().list(status, type, country, proposerEmail, entityKey, page))
+    when(getMockChangeSuggestionService()
+            .list(status, type, country, proposerEmail, entityKey, page))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));

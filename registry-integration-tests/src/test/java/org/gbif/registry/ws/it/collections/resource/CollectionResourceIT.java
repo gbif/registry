@@ -54,13 +54,11 @@ public class CollectionResourceIT
   @Autowired
   public CollectionResourceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       @LocalServerPort int localServerPort) {
     super(
         CollectionClient.class,
         simplePrincipalProvider,
-        esServer,
         requestTestFixture,
         Collection.class,
         localServerPort);

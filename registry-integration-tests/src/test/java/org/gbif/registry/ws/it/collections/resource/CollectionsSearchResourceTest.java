@@ -29,10 +29,9 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
   @Autowired
   public CollectionsSearchResourceTest(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       @LocalServerPort int localServerPort) {
-    super(simplePrincipalProvider, esServer, requestTestFixture);
+    super(simplePrincipalProvider, requestTestFixture);
     this.collectionsSearchClient =
         prepareClient(
             TestConstants.TEST_GRSCICOLL_ADMIN, localServerPort, CollectionsSearchClient.class);

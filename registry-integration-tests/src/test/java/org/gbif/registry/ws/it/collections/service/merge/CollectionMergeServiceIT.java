@@ -21,7 +21,6 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -41,14 +40,12 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
   @Autowired
   public CollectionMergeServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       CollectionMergeService collectionMergeService,
       CollectionService collectionService,
       InstitutionService institutionService,
       PersonService personService) {
     super(
         simplePrincipalProvider,
-        esServer,
         collectionMergeService,
         collectionService,
         collectionService,

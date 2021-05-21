@@ -24,7 +24,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -48,12 +47,10 @@ public class InstitutionChangeSuggestionServiceIT
   @Autowired
   public InstitutionChangeSuggestionServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       InstitutionChangeSuggestionService institutionChangeSuggestionService,
       InstitutionService institutionService,
       CollectionService collectionService) {
-    super(
-        simplePrincipalProvider, esServer, institutionChangeSuggestionService, institutionService);
+    super(simplePrincipalProvider, institutionChangeSuggestionService, institutionService);
     this.institutionChangeSuggestionService = institutionChangeSuggestionService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;

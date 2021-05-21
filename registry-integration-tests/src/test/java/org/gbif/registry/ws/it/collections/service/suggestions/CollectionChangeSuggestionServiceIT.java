@@ -21,7 +21,6 @@ import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -38,10 +37,9 @@ public class CollectionChangeSuggestionServiceIT
   @Autowired
   public CollectionChangeSuggestionServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       CollectionChangeSuggestionService collectionChangeSuggestionService,
       CollectionService collectionService) {
-    super(simplePrincipalProvider, esServer, collectionChangeSuggestionService, collectionService);
+    super(simplePrincipalProvider, collectionChangeSuggestionService, collectionService);
   }
 
   @Override

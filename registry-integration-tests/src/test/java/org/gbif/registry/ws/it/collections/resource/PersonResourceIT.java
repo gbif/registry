@@ -11,7 +11,6 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.PersonClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -42,13 +41,11 @@ public class PersonResourceIT extends BaseCollectionEntityResourceIT<Person> {
   @Autowired
   public PersonResourceIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       RequestTestFixture requestTestFixture,
       @LocalServerPort int localServerPort) {
     super(
         PersonClient.class,
         simplePrincipalProvider,
-        esServer,
         requestTestFixture,
         Person.class,
         localServerPort);

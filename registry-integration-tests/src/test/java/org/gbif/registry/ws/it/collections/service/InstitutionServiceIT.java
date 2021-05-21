@@ -30,7 +30,6 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -60,7 +59,6 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer,
       IdentityService identityService,
       InstitutionDuplicatesService duplicatesService) {
     super(
@@ -71,7 +69,6 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         organizationService,
         installationService,
         principalProvider,
-        esServer,
         identityService,
         duplicatesService,
         Institution.class);

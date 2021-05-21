@@ -27,7 +27,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
@@ -60,11 +59,10 @@ public class CollectionsSearchIT extends BaseServiceIT {
   @Autowired
   public CollectionsSearchIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
       CollectionsSearchService collectionsSearchService,
       InstitutionService institutionService,
       CollectionService collectionService) {
-    super(simplePrincipalProvider, esServer);
+    super(simplePrincipalProvider);
     this.searchService = collectionsSearchService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
