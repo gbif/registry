@@ -51,6 +51,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,14 +69,14 @@ public class LookupServiceIT extends BaseServiceIT {
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
-  private final Institution i1 = new Institution();
-  private final Institution i2 = new Institution();
-  private final Institution i3 = new Institution();
-  private final Institution i4 = new Institution();
-  private final Collection c1 = new Collection();
-  private final Collection c2 = new Collection();
-  private final Collection c3 = new Collection();
-  private final Collection c4 = new Collection();
+  private Institution i1 = new Institution();
+  private Institution i2 = new Institution();
+  private Institution i3 = new Institution();
+  private Institution i4 = new Institution();
+  private Collection c1 = new Collection();
+  private Collection c2 = new Collection();
+  private Collection c3 = new Collection();
+  private Collection c4 = new Collection();
 
   private final LookupService lookupService;
   private final InstitutionService institutionService;
@@ -113,45 +114,53 @@ public class LookupServiceIT extends BaseServiceIT {
     Address address1 = new Address();
     address1.setCountry(Country.AFGHANISTAN);
     i1.setAddress(address1);
-    i1.getIdentifiers().add(new Identifier(IdentifierType.GRSCICOLL_ID, "12345"));
-    institutionService.create(i1);
+    UUID key = institutionService.create(i1);
+    institutionService.addIdentifier(key, new Identifier(IdentifierType.GRSCICOLL_ID, "12345"));
+    i1 = institutionService.get(key);
 
     i2.setCode("I2");
     i2.setName("Institution 2");
     i2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("II2", "test")));
-    i2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-inst"));
-    institutionService.create(i2);
+    key = institutionService.create(i2);
+    institutionService.addIdentifier(key, new Identifier(IdentifierType.LSID, "lsid-inst"));
+    i2 = institutionService.get(key);
 
     i3.setCode("ACT");
     i3.setName("Institution 3");
     i3.setActive(true);
-    institutionService.create(i3);
+    key = institutionService.create(i3);
+    i3 = institutionService.get(key);
 
     i4.setCode("ACT");
     i4.setName("Institution 4");
-    institutionService.create(i4);
+    key = institutionService.create(i4);
+    i4 = institutionService.get(key);
 
     c1.setCode("C1");
     c1.setName("Collection 1");
     c1.setInstitutionKey(i1.getKey());
-    c1.getIdentifiers().add(new Identifier(IdentifierType.GRSCICOLL_ID, "54321"));
-    collectionService.create(c1);
+    key = collectionService.create(c1);
+    collectionService.addIdentifier(key, new Identifier(IdentifierType.GRSCICOLL_ID, "54321"));
+    c1 = collectionService.get(key);
 
     c2.setCode("C2");
     c2.setName("Collection 2");
     c2.setInstitutionKey(i2.getKey());
     c2.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC2", "test")));
-    c2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-coll"));
-    collectionService.create(c2);
+    key = collectionService.create(c2);
+    collectionService.addIdentifier(key, new Identifier(IdentifierType.LSID, "lsid-coll"));
+    c2 = collectionService.get(key);
 
     c3.setCode("ACT");
     c3.setName("Collection 3");
     c3.setActive(true);
-    collectionService.create(c3);
+    key = collectionService.create(c3);
+    c3 = collectionService.get(key);
 
     c4.setCode("ACT");
     c4.setName("Collection 4");
-    collectionService.create(c4);
+    key = collectionService.create(c4);
+    c4 = collectionService.get(key);
   }
 
   @Test
