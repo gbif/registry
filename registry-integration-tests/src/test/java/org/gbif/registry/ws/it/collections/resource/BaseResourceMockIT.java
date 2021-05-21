@@ -16,59 +16,49 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.test.mocks.IdentityServiceMock;
+import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
-import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
-import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.gbif.ws.security.GbifAuthService;
-import org.gbif.ws.security.GbifAuthenticationManager;
-import org.gbif.ws.security.GbifAuthenticationManagerImpl;
-import org.gbif.ws.security.KeyStore;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.PlatformTransactionManager;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
+import io.zonky.test.db.postgres.embedded.ConnectionInfo;
+import io.zonky.test.db.postgres.embedded.DatabasePreparer;
+import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
+import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
+import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    classes = {RegistryIntegrationTestsConfiguration.class, BaseResourceIT.MockConfig.class},
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {BaseResourceIT.EsContainerContextInitializer.class})
-@ActiveProfiles({"test", "mock"})
+@SpringBootTest(classes = RegistryIntegrationTestsConfiguration.class)
+@ContextConfiguration(initializers = {BaseResourceMockIT.ContextInitializer.class})
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
-public class BaseResourceIT {
+public class BaseResourceMockIT {
 
   public static class EsContainerContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -80,17 +70,71 @@ public class BaseResourceIT {
     }
   }
 
-  protected static EsManageServer esServer;
-  private final SimplePrincipalProvider simplePrincipalProvider;
-  protected final RequestTestFixture requestTestFixture;
+  /** Prepares a Tests database using an embedded Postgres instance. */
+  public static class EmbeddedDataBaseInitializer {
+    private final DataSource dataSource;
+    private final PreparedDbProvider provider;
+    private final ConnectionInfo connectionInfo;
+    private final List<Consumer<EmbeddedPostgres.Builder>> builderCustomizers =
+        new CopyOnWriteArrayList();
 
-  public BaseResourceIT(
-      SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer,
-      RequestTestFixture requestTestFixture) {
+    public EmbeddedDataBaseInitializer(DatabasePreparer preparer) {
+      try {
+        this.provider = PreparedDbProvider.forPreparer(preparer, this.builderCustomizers);
+        this.connectionInfo = provider.createNewDatabase();
+        this.dataSource = provider.createDataSourceFromConnectionInfo(this.connectionInfo);
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+    }
+
+    public DataSource getDataSource() {
+      return dataSource;
+    }
+
+    public ConnectionInfo getConnectionInfo() {
+      return connectionInfo;
+    }
+  }
+
+  /** Custom ContextInitializer to expose the registry DB data source and search flags. */
+  public static class ContextInitializer
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+    @Override
+    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+
+      EmbeddedDataBaseInitializer database =
+          new EmbeddedDataBaseInitializer(
+              LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
+
+      RegistryDatabaseInitializer.init(database.getDataSource());
+
+      TestPropertyValues.of(
+              Stream.of(dbTestPropertyPairs(database)).flatMap(Stream::of).toArray(String[]::new))
+          .applyTo(configurableApplicationContext.getEnvironment());
+
+      TestPropertyValues.of("elasticsearch.mock=true")
+          .applyTo(configurableApplicationContext.getEnvironment());
+    }
+
+    /** Creates the registry datasource settings from the embedded database. */
+    String[] dbTestPropertyPairs(EmbeddedDataBaseInitializer database) {
+      return new String[] {
+        "registry.datasource.url=jdbc:postgresql://localhost:"
+            + database.getConnectionInfo().getPort()
+            + "/"
+            + database.getConnectionInfo().getDbName(),
+        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
+        "registry.datasource.password="
+      };
+    }
+  }
+
+  private final SimplePrincipalProvider simplePrincipalProvider;
+
+  public BaseResourceMockIT(SimplePrincipalProvider simplePrincipalProvider) {
     this.simplePrincipalProvider = simplePrincipalProvider;
-    BaseResourceIT.esServer = esServer;
-    this.requestTestFixture = requestTestFixture;
   }
 
   @BeforeEach
@@ -123,49 +167,5 @@ public class BaseResourceIT {
 
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
-  }
-
-  protected <T> T prepareClient(int localServerPort, KeyStore keyStore, Class<T> cls) {
-    return prepareClient(IT_APP_KEY2, IT_APP_KEY2, localServerPort, keyStore, cls);
-  }
-
-  protected <T> T prepareClient(
-      String username, int localServerPort, KeyStore keyStore, Class<T> cls) {
-    return prepareClient(username, IT_APP_KEY2, localServerPort, keyStore, cls);
-  }
-
-  protected <T> T prepareClient(
-      String username, String appKey, int localServerPort, KeyStore keyStore, Class<T> cls) {
-    ClientBuilder clientBuilder = new ClientBuilder();
-    return clientBuilder
-        .withUrl("http://localhost:" + localServerPort)
-        .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
-        .build(cls);
-  }
-
-  protected <T> T prepareClient(String username, int localServerPort, Class<T> cls) {
-    ClientBuilder clientBuilder = new ClientBuilder();
-    return clientBuilder
-        .withUrl("http://localhost:" + localServerPort)
-        .withCredentials(username, username)
-        .build(cls);
-  }
-
-  @TestConfiguration
-  @Profile("mock")
-  public static class MockConfig {
-
-    @Qualifier("registryDataSource")
-    @MockBean
-    DataSource dataSource;
-
-    @MockBean PlatformTransactionManager platformTransactionManager;
-
-    @Primary
-    @Bean
-    GbifAuthenticationManager gbifAuthenticationManager() {
-      return new GbifAuthenticationManagerImpl(
-          new IdentityServiceMock(), Mockito.mock(GbifAuthService.class));
-    }
   }
 }

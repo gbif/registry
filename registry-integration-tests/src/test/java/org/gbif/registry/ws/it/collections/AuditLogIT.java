@@ -1,4 +1,4 @@
-package org.gbif.registry.ws.it.collections.service;
+package org.gbif.registry.ws.it.collections;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
@@ -51,6 +51,7 @@ import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.registry.ws.client.collections.PersonClient;
 import org.gbif.registry.ws.client.collections.PrimaryCollectionEntityClient;
 import org.gbif.registry.ws.it.BaseItTest;
+import org.gbif.registry.ws.it.collections.service.CollectionsDatabaseInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 

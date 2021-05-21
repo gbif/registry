@@ -76,8 +76,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer,
       IdentityService identityService,
-      CollectionDuplicatesService duplicatesService,
-      AuditLogMapper auditLogMapper) {
+      CollectionDuplicatesService duplicatesService) {
     super(
         collectionService,
         personService,

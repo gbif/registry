@@ -75,11 +75,6 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     mailingAddress.setCountry(Country.AFGHANISTAN);
     person.setMailingAddress(mailingAddress);
 
-    Identifier identifier = new Identifier();
-    identifier.setIdentifier("id");
-    identifier.setType(IdentifierType.IH_IRN);
-    person.setIdentifiers(Collections.singletonList(identifier));
-
     UUID key = personService.create(person);
     Person personSaved = personService.get(key);
 
@@ -88,9 +83,6 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     assertEquals("mailing", personSaved.getMailingAddress().getAddress());
     assertEquals("city", personSaved.getMailingAddress().getCity());
     assertEquals(Country.AFGHANISTAN, personSaved.getMailingAddress().getCountry());
-    assertThat(1, greaterThanOrEqualTo(personSaved.getIdentifiers().size()));
-    assertEquals("id", personSaved.getIdentifiers().get(0).getIdentifier());
-    assertEquals(IdentifierType.IH_IRN, personSaved.getIdentifiers().get(0).getType());
   }
 
   @Test

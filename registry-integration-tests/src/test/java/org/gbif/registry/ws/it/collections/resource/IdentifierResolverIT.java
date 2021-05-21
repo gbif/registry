@@ -21,15 +21,11 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.search.test.EsManageServer;
-import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -40,10 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Tests the {@link org.gbif.registry.ws.resources.collections.IdentifierResolverResource}. */
-public class IdentifierResolverIT extends BaseItTest {
-
-  @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+public class IdentifierResolverIT extends BaseResourceMockIT {
 
   private static final String BASE_URL = "/" + GRSCICOLL_PATH + "/resolve";
   private static final String IDENTIFIER_PARAM = "identifier";
@@ -63,9 +56,8 @@ public class IdentifierResolverIT extends BaseItTest {
       MockMvc mockMvc,
       CollectionService collectionService,
       InstitutionService institutionService,
-      SimplePrincipalProvider simplePrincipalProvider,
-      EsManageServer esServer) {
-    super(simplePrincipalProvider, esServer);
+      SimplePrincipalProvider simplePrincipalProvider) {
+    super(simplePrincipalProvider);
     this.mockMvc = mockMvc;
     this.collectionService = collectionService;
     this.institutionService = institutionService;

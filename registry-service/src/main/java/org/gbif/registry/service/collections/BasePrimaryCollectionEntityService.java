@@ -107,24 +107,6 @@ public abstract class BasePrimaryCollectionEntityService<
     entity.setKey(UUID.randomUUID());
     baseMapper.create(entity);
 
-    if (!entity.getMachineTags().isEmpty()) {
-      for (MachineTag machineTag : entity.getMachineTags()) {
-        addMachineTag(entity.getKey(), machineTag);
-      }
-    }
-
-    if (!entity.getTags().isEmpty()) {
-      for (Tag tag : entity.getTags()) {
-        addTag(entity.getKey(), tag);
-      }
-    }
-
-    if (!entity.getIdentifiers().isEmpty()) {
-      for (Identifier identifier : entity.getIdentifiers()) {
-        addIdentifier(entity.getKey(), identifier);
-      }
-    }
-
     eventManager.post(CreateCollectionEntityEvent.newInstance(entity));
 
     return entity.getKey();

@@ -4,10 +4,7 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.events.EventManager;
@@ -85,25 +82,6 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
 
     person.setKey(UUID.randomUUID());
     personMapper.create(person);
-
-    if (!person.getMachineTags().isEmpty()) {
-      for (MachineTag machineTag : person.getMachineTags()) {
-        addMachineTag(person.getKey(), machineTag);
-      }
-    }
-
-    if (!person.getTags().isEmpty()) {
-      for (Tag tag : person.getTags()) {
-        tag.setCreatedBy(person.getCreatedBy());
-        addTag(person.getKey(), tag);
-      }
-    }
-
-    if (!person.getIdentifiers().isEmpty()) {
-      for (Identifier identifier : person.getIdentifiers()) {
-        addIdentifier(person.getKey(), identifier);
-      }
-    }
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(person));
     return person.getKey();
