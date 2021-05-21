@@ -144,30 +144,6 @@ public abstract class ExtendedCollectionEntityResource<
     entity.setKey(UUID.randomUUID());
     baseMapper.create(entity);
 
-    if (!entity.getMachineTags().isEmpty()) {
-      for (MachineTag machineTag : entity.getMachineTags()) {
-        machineTag.setCreatedBy(entity.getCreatedBy());
-        machineTagMapper.createMachineTag(machineTag);
-        baseMapper.addMachineTag(entity.getKey(), machineTag.getKey());
-      }
-    }
-
-    if (!entity.getTags().isEmpty()) {
-      for (Tag tag : entity.getTags()) {
-        tag.setCreatedBy(entity.getCreatedBy());
-        tagMapper.createTag(tag);
-        baseMapper.addTag(entity.getKey(), tag.getKey());
-      }
-    }
-
-    if (!entity.getIdentifiers().isEmpty()) {
-      for (Identifier identifier : entity.getIdentifiers()) {
-        identifier.setCreatedBy(entity.getCreatedBy());
-        identifierMapper.createIdentifier(identifier);
-        baseMapper.addIdentifier(entity.getKey(), identifier.getKey());
-      }
-    }
-
     eventManager.post(CreateCollectionEntityEvent.newInstance(entity, objectClass));
     return entity.getKey();
   }
