@@ -197,7 +197,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
                      DatasetSearchRequest searchRequest) throws IOException {
 
-    String headerValue = String.format("attachment; filename=\"gbifdatasets.%s\"", format.name().toLowerCase());
+    String headerValue = "attachment; filename=gbif_datasets." + format.name().toLowerCase();
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
     CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest, searchService),
