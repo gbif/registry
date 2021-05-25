@@ -4,6 +4,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
@@ -93,8 +94,11 @@ public class CsvWriterTest {
     datasetSearchResult.setSubtype(DatasetSubtype.DERIVED_FROM_OCCURRENCE);
     datasetSearchResult.setHostingOrganizationKey(UUID.randomUUID());
     datasetSearchResult.setHostingOrganizationTitle("HostingOrganizationTitle" + consecutive);
+    datasetSearchResult.setHostingCountry(Country.DENMARK);
     datasetSearchResult.setPublishingOrganizationKey(UUID.randomUUID());
     datasetSearchResult.setPublishingOrganizationTitle("PublishingOrganizationTitle" + consecutive);
+    datasetSearchResult.setPublishingCountry(Country.COSTA_RICA);
+    datasetSearchResult.setEndorsingNodeKey(UUID.randomUUID());
     datasetSearchResult.setNetworkKeys(Arrays.asList(UUID.randomUUID(), UUID.randomUUID()));
     datasetSearchResult.setProjectIdentifier("project" + consecutive);
     datasetSearchResult.setRecordCount(consecutive);
@@ -115,16 +119,19 @@ public class CsvWriterTest {
     assertEquals(datasetSearchResult.getSubtype().name(), line[5]);
     assertEquals(datasetSearchResult.getHostingOrganizationKey().toString(), line[6]);
     assertEquals(datasetSearchResult.getHostingOrganizationTitle(), line[7]);
-    assertEquals(datasetSearchResult.getPublishingOrganizationKey().toString(), line[8]);
-    assertEquals(datasetSearchResult.getPublishingOrganizationTitle(), line[9]);
+    assertEquals(datasetSearchResult.getHostingCountry().getIso2LetterCode(), line[8]);
+    assertEquals(datasetSearchResult.getPublishingOrganizationKey().toString(), line[9]);
+    assertEquals(datasetSearchResult.getPublishingOrganizationTitle(), line[10]);
+    assertEquals(datasetSearchResult.getPublishingCountry().getIso2LetterCode(), line[11]);
+    assertEquals(datasetSearchResult.getEndorsingNodeKey().toString(), line[12]);
     assertTrue(datasetSearchResult.getNetworkKeys()
-                 .containsAll(Arrays.stream(line[10].split(CsvWriter.ARRAY_DELIMITER))
+                 .containsAll(Arrays.stream(line[13].split(CsvWriter.ARRAY_DELIMITER))
                                 .map(UUID::fromString)
                                 .collect(Collectors.toList())));
-    assertEquals(datasetSearchResult.getProjectIdentifier(), line[11]);
-    assertEquals(datasetSearchResult.getRecordCount(), Integer.parseInt(line[12]));
+    assertEquals(datasetSearchResult.getProjectIdentifier(), line[14]);
+    assertEquals(datasetSearchResult.getRecordCount(), Integer.parseInt(line[15]));
     //Last characters has carriage return \r
-    assertEquals(datasetSearchResult.getNameUsagesCount(), Integer.parseInt(line[13].replace("\r","")));
+    assertEquals(datasetSearchResult.getNameUsagesCount(), Integer.parseInt(line[16].replace("\r","")));
   }
 
   @Test
