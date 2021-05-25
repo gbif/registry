@@ -51,21 +51,23 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.CONTINENT, "continent")
           .put(DatasetSearchParameter.COUNTRY, "country")
           .put(DatasetSearchParameter.PUBLISHING_COUNTRY, "publishingCountry")
+          .put(DatasetSearchParameter.PUBLISHING_ORG, "publishingOrganizationKey")
+          .put(DatasetSearchParameter.ENDORSING_NODE_KEY, "endorsingNodeKey")
           .put(DatasetSearchParameter.YEAR, "year")
           .put(DatasetSearchParameter.DECADE, "decade")
+           .put(DatasetSearchParameter.INSTALLATION_KEY, "installationKey")
           .put(DatasetSearchParameter.HOSTING_ORG, "hostingOrganizationKey")
+          .put(DatasetSearchParameter.HOSTING_COUNTRY, "hostingCountry")
           .put(DatasetSearchParameter.KEYWORD, "keyword")
           .put(DatasetSearchParameter.LICENSE, "license")
           .put(DatasetSearchParameter.MODIFIED_DATE, "modified")
           .put(DatasetSearchParameter.PROJECT_ID, "project.identifier")
-          .put(DatasetSearchParameter.PUBLISHING_ORG, "publishingOrganizationKey")
           .put(DatasetSearchParameter.RECORD_COUNT, "occurrenceCount")
           .put(DatasetSearchParameter.SUBTYPE, "subtype")
           .put(DatasetSearchParameter.TYPE, "type")
           .put(DatasetSearchParameter.DATASET_TITLE, "title")
           .put(DatasetSearchParameter.DOI, "doi")
           .put(DatasetSearchParameter.NETWORK_KEY, "networkKeys")
-          .put(DatasetSearchParameter.INSTALLATION_KEY, "installationKey")
           .put(DatasetSearchParameter.ENDPOINT_TYPE, "endpoints.type")
           .build();
 
@@ -152,9 +154,11 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "description",
       "publishingOrganizationKey",
       "publishingOrganizationTitle",
+      "publishingCountry",
+      "endorsingNodeKey",
       "hostingOrganizationKey",
       "hostingOrganizationTitle",
-      "publishingCountry",
+      "hostingCountry",
       "license",
       "projectId",
       "nameUsagesCount",
