@@ -49,6 +49,8 @@ import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
@@ -85,14 +87,14 @@ public abstract class BaseMergeService<
     checkArgument(
         replacement.getDeleted() == null, "Cannot merge an entity with a deleted replacement");
 
-    // check IH_IRN identifiers. If both entities have them we don't allow to do the replacement
+    // check IH IRN machine tags. If both entities have them we don't allow to do the replacement
     // because we wouldn't know how to sync them with IH: if we move it to the replacement this
     // entity will be synced with 2 IH entities and the second sync will overwrite the first one; if
     // we don't move it, then the next IH sync will create a new entity for that IRN, hence the
     // replacement would be useless.
-    if (containsIHIdentifier(entityToReplace) && containsIHIdentifier(replacement)) {
+    if (containsIHMachineTag(entityToReplace) && containsIHMachineTag(replacement)) {
       throw new IllegalArgumentException(
-          "Cannot do the replacement because both entities have an IH IRN identifier");
+          "Cannot do the replacement because both entities have an IH IRN machine tag");
     }
 
     if (!SecurityContextCheck.checkUserInRole(
@@ -113,16 +115,20 @@ public abstract class BaseMergeService<
     primaryEntityService.update(updatedEntityToReplace);
 
     // copy the identifiers
-    entityToReplace
-        .getIdentifiers()
+    entityToReplace.getIdentifiers().stream()
+        .filter(i -> !containsIdentifier(replacement, i))
         .forEach(
             i ->
                 primaryEntityService.addIdentifier(
                     replacementKey, new Identifier(i.getType(), i.getIdentifier())));
 
-    // copy iDigBio machine tags
+    // copy iDigBio and IH machine tags
     entityToReplace.getMachineTags().stream()
-        .filter(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE))
+        .filter(
+            mt ->
+                mt.getNamespace().equals(IDIGBIO_NAMESPACE)
+                    || mt.getNamespace().equals(IH_NAMESPACE))
+        .filter(mt -> !containsMachineTag(replacement, mt))
         .forEach(
             mt ->
                 primaryEntityService.addMachineTag(
@@ -142,24 +148,40 @@ public abstract class BaseMergeService<
     // update occurrence mappings
     List<OccurrenceMapping> occMappings =
         primaryEntityService.listOccurrenceMappings(entityToReplaceKey);
-    occMappings.forEach(
-        om -> {
-          om.setKey(null);
-          primaryEntityService.addOccurrenceMapping(
-              replacementKey,
-              new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
-        });
+    occMappings.stream()
+        .filter(om -> !containsOccurrenceMapping(replacement, om))
+        .forEach(
+            om -> {
+              om.setKey(null);
+              primaryEntityService.addOccurrenceMapping(
+                  replacementKey,
+                  new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
+            });
 
     additionalOperations(entityToReplace, replacement);
   }
 
-  protected boolean containsIHIdentifier(T entity) {
-    return entity.getIdentifiers().stream().anyMatch(i -> i.getType() == IdentifierType.IH_IRN);
+  protected boolean containsIHMachineTag(T entity) {
+    return entity.getMachineTags().stream()
+        .anyMatch(mt -> mt.getNamespace().equals(IH_NAMESPACE) && mt.getName().equals(IRN_TAG));
   }
 
   protected boolean isIDigBioRecord(T entity) {
     return entity.getMachineTags().stream()
         .anyMatch(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE));
+  }
+
+  protected boolean containsIdentifier(T entity, Identifier identifier) {
+    return entity.getIdentifiers().stream().anyMatch(i -> i.lenientEquals(identifier));
+  }
+
+  protected boolean containsMachineTag(T entity, MachineTag machineTag) {
+    return entity.getMachineTags().stream().anyMatch(mt -> mt.lenientEquals(machineTag));
+  }
+
+  protected boolean containsOccurrenceMapping(T entity, OccurrenceMapping occurrenceMapping) {
+    return entity.getOccurrenceMappings().stream()
+        .anyMatch(om -> om.lenientEquals(occurrenceMapping));
   }
 
   protected void setNullFields(T target, T source) {

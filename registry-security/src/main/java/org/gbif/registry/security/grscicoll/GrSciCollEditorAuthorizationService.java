@@ -70,26 +70,6 @@ public class GrSciCollEditorAuthorizationService {
     this.objectMapper = objectMapper;
   }
 
-  public boolean isIrnIdentifier(Identifier identifier) {
-    return identifier != null && identifier.getType() == IdentifierType.IH_IRN;
-  }
-
-  public boolean isIrnIdentifier(String entityType, UUID entityKey, int identifierKey) {
-    List<Identifier> entityIdentifiers = null;
-    if ("collection".equalsIgnoreCase(entityType)) {
-      entityIdentifiers = collectionMapper.listIdentifiers(entityKey);
-    } else if ("institution".equalsIgnoreCase(entityType)) {
-      entityIdentifiers = institutionMapper.listIdentifiers(entityKey);
-    } else if ("person".equalsIgnoreCase(entityType)) {
-      entityIdentifiers = personMapper.listIdentifiers(entityKey);
-    } else {
-      return false;
-    }
-
-    return entityIdentifiers.stream()
-        .anyMatch(i -> i.getKey().equals(identifierKey) && isIrnIdentifier(i));
-  }
-
   public boolean isIDigBioEntity(String entityType, UUID entityKey) {
     List<MachineTag> machineTags;
     if ("collection".equalsIgnoreCase(entityType)) {

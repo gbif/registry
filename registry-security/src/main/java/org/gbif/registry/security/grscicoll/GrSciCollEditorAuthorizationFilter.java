@@ -121,9 +121,6 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
         if (isChangeSuggestionRequest(path)) {
           checkChangeSuggestionUpdate(path, username);
         } else {
-          // editors cannot edit IH_IRN identifiers
-          checkIrnIdentifierPermissions(request, path, username);
-
           // editors cannot edit machine tags
           checkMachineTagsPermissions(path, username);
 
@@ -214,34 +211,6 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
               "User {0} is not allowed to create or delente machine tags of GrSciColl entities",
               username),
           HttpStatus.FORBIDDEN);
-    }
-  }
-
-  private void checkIrnIdentifierPermissions(
-      HttpServletRequest request, String path, String username) {
-    if (path.contains("/identifier")) {
-      if ("POST".equals(request.getMethod())) {
-        Identifier identifierToCreate = readEntity(request, Identifier.class);
-        if (authService.isIrnIdentifier(identifierToCreate)) {
-          throw new WebApplicationException(
-              MessageFormat.format("User {0} is not allowed to create an IRN identifier", username),
-              HttpStatus.FORBIDDEN);
-        }
-      } else if ("DELETE".equals(request.getMethod())) {
-        Matcher matcher = IDENTIFIER_PATTERN_DELETE.matcher(path);
-        if (matcher.find()) {
-          String entityType = matcher.group(1);
-          UUID entityKey = UUID.fromString(matcher.group(2));
-          int identifierKey = Integer.parseInt(matcher.group(3));
-          if (authService.isIrnIdentifier(entityType, entityKey, identifierKey)) {
-            throw new WebApplicationException(
-                MessageFormat.format(
-                    "User {0} is not allowed to delete an IRN identifier {1} from {2} {3}",
-                    username, identifierKey, entityType, entityKey),
-                HttpStatus.FORBIDDEN);
-          }
-        }
-      }
     }
   }
 
