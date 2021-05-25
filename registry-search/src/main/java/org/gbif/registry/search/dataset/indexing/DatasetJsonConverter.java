@@ -216,6 +216,9 @@ public class DatasetJsonConverter {
             dataset.put("hostingOrganizationKey", hostingOrg.getKey().toString());
             dataset.put("hostingOrganizationTitle", hostingOrg.getTitle());
             dataset.put("hostingOrganizationTitleAutocomplete", hostingOrg.getTitle());
+            if (Objects.nonNull(hostingOrg.getCountry())) {
+              dataset.put("hostingCountry", hostingOrg.getCountry().getIso2LetterCode());
+            }
           }
         }
       }
@@ -228,6 +231,9 @@ public class DatasetJsonConverter {
         dataset.put("publishingOrganizationTitleAutocomplete", publisher.getTitle());
         if (Objects.nonNull(publisher.getCountry())) {
           dataset.put("publishingCountry", publisher.getCountry().getIso2LetterCode());
+        }
+        if (Objects.nonNull(publisher.getEndorsingNodeKey())) {
+          dataset.put("endorsingNodeKey", publisher.getEndorsingNodeKey().toString());
         }
       } else {
         dataset.put("publishingCountry", Country.UNKNOWN.getIso2LetterCode());
