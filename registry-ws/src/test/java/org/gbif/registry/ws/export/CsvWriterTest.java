@@ -68,8 +68,8 @@ public class CsvWriterTest {
 
     //Test data
     List<DownloadStatistics> stats = Arrays.asList(
-      new DownloadStatistics(UUID.randomUUID(), 10, 10, LocalDate.of(2020,1,1)),
-      new DownloadStatistics(UUID.randomUUID(), 10, 10, LocalDate.of(2021, 2,1)));
+      new DownloadStatistics(UUID.randomUUID(), 10L, 10L, LocalDate.of(2020,1,1)),
+      new DownloadStatistics(UUID.randomUUID(), 10L, 10L, LocalDate.of(2021, 2,1)));
 
     StringWriter writer = new StringWriter();
 
