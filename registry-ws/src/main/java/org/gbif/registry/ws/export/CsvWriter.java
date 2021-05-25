@@ -3,6 +3,7 @@ package org.gbif.registry.ws.export;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
@@ -88,8 +89,8 @@ public class CsvWriter<T> {
   public static CsvWriter<DatasetSearchResult> datasetSearchResultCsvWriter(Iterable<DatasetSearchResult> pager,
                                                                            ExportFormat preference) {
     return CsvWriter.<DatasetSearchResult>builder()
-      .fields(new String[]{"key", "title", "doi", "license", "type", "subType", "hostingOrganizationKey", "hostingOrganizationTitle", "publishingOrganizationKey", "publishingOrganizationTitle","networkKeys", "projectIdentifier", "recordCount", "nameUsagesCount"})
-      .header(new String[]{"dataset_key", "title", "doi", "license", "type", "sub_type", "hosting_organization_Key", "hosting_organization_title", "publishing_organization_key", "publishing_organization_title","network_keys", "project_identifier", "occurrence_records_count", "name_usages_count"})
+      .fields(new String[]{"key", "title", "doi", "license", "type", "subType", "hostingOrganizationKey", "hostingOrganizationTitle", "hostingCountry", "publishingOrganizationKey", "publishingOrganizationTitle", "publishingCountry","endorsingNodeKey", "networkKeys", "projectIdentifier", "recordCount", "nameUsagesCount"})
+      .header(new String[]{"dataset_key", "title", "doi", "license", "type", "sub_type", "hosting_organization_Key", "hosting_organization_title", "hosting_country","publishing_organization_key", "publishing_organization_title", "publishing_country", "endorsing_node_key", "network_keys", "project_identifier", "occurrence_records_count", "name_usages_count"})
       //  "recordCount", "nameUsagesCount"
       .processors(new CellProcessor[]{new UUIDProcessor(), //key
                                       null,                                             //title
@@ -99,8 +100,11 @@ public class CsvWriter<T> {
                                       new Optional(new ParseEnum(DatasetSubtype.class)),//subType
                                       new UUIDProcessor(),                              //hostingOrganizationKey
                                       null,                                             //hostingOrganizationTitle
+                                      new CountryProcessor(),                           //hostingCountry
                                       new UUIDProcessor(),                              //publishingOrganizationKey
                                       null,                                             //publishingOrganizationTitle
+                                      new CountryProcessor(),                           //publishingCountry
+                                      new UUIDProcessor(),                              //endorsingNodeKey
                                       new ListUUIDProcessor(),                          //networkKeys
                                       null,                                             //projectIdentifier
                                       new Optional(new ParseInt()),                     //recordCount
@@ -139,6 +143,17 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? value.toString() : "";
+    }
+  }
+
+
+  /**
+   * Null aware Country processor.
+   */
+  private static class CountryProcessor implements CellProcessor {
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? ((Country) value).getIso2LetterCode() : "";
     }
   }
 }
