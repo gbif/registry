@@ -20,6 +20,7 @@ import lombok.SneakyThrows;
 import org.supercsv.cellprocessor.Optional;
 import org.supercsv.cellprocessor.ParseEnum;
 import org.supercsv.cellprocessor.ParseInt;
+import org.supercsv.cellprocessor.ParseLong;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
@@ -77,8 +78,8 @@ public class CsvWriter<T> {
               .fields(new String[]{"datasetKey", "totalRecords", "numberDownloads", "year", "month"})
               .header(new String[]{"dataset_key", "total_records", "number_downloads", "year", "month"})
               .processors(new CellProcessor[]{new UUIDProcessor(),           //datasetKey
-                                              new Optional(new ParseInt()),  //totalRecords
-                                              new Optional(new ParseInt()),  //numberDowloads
+                                              new Optional(new ParseLong()),  //totalRecords
+                                              new Optional(new ParseLong()),  //numberDowloads
                                               new Optional(new ParseInt()),  //year
                                               new Optional(new ParseInt())   //month
                                               })
