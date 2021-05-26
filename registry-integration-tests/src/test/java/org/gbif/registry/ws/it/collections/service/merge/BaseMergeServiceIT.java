@@ -59,6 +59,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -184,13 +185,13 @@ public abstract class BaseMergeServiceIT<
   public void preconditionsTest() {
     T e1 = createEntityToReplace();
     crudService.create(e1);
-    Identifier id1 = new Identifier(IdentifierType.IH_IRN, "test");
-    identifierService.addIdentifier(e1.getKey(), id1);
+    MachineTag mt1 = new MachineTag(IDIGBIO_NAMESPACE, IRN_TAG, "test");
+    machineTagService.addMachineTag(e1.getKey(), mt1);
 
     T e2 = createReplacement();
     crudService.create(e2);
-    Identifier id2 = new Identifier(IdentifierType.IH_IRN, "test");
-    identifierService.addIdentifier(e2.getKey(), id2);
+    MachineTag mt2 = new MachineTag(IDIGBIO_NAMESPACE, IRN_TAG, "test");
+    machineTagService.addMachineTag(e2.getKey(), mt2);
 
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
@@ -202,8 +203,8 @@ public abstract class BaseMergeServiceIT<
         IllegalArgumentException.class, () -> mergeService.merge(UUID.randomUUID(), e2.getKey()));
 
     // test that we can't merge 2 idigbio entities
-    identifierService.deleteIdentifier(e1.getKey(), id1.getKey());
-    identifierService.deleteIdentifier(e2.getKey(), id2.getKey());
+    machineTagService.deleteMachineTag(e1.getKey(), mt1.getKey());
+    machineTagService.deleteMachineTag(e2.getKey(), mt2.getKey());
 
     machineTagService.addMachineTag(e1.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar"));
     machineTagService.addMachineTag(e2.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2"));
