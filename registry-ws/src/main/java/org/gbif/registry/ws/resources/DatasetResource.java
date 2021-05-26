@@ -135,6 +135,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
   private static final int ALL_DATASETS_LIMIT = 200;
+  public static final int SEARCH_EXPORT_LIMIT = 300;
 
   private final RegistryDatasetService registryDatasetService;
   private final DatasetSearchService searchService;
@@ -200,7 +201,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     String headerValue = "attachment; filename=gbif_datasets." + format.name().toLowerCase();
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
-    CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest, searchService),
+    CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest,
+                                                                          searchService,
+                                                                          SEARCH_EXPORT_LIMIT),
                                            format)
       .export(response.getWriter());
   }

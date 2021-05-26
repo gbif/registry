@@ -9,12 +9,9 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.registry.events.EventManager;
@@ -234,6 +231,8 @@ public abstract class BasePrimaryCollectionEntityService<
   @Override
   public void deleteOccurrenceMapping(UUID entityKey, int occurrenceMappingKey) {
     OccurrenceMapping occurrenceMappingToDelete = occurrenceMappingMapper.get(occurrenceMappingKey);
+    checkArgument(occurrenceMappingToDelete != null, "Occurrence Mapping to delete doesn't exist");
+
     primaryEntityMapper.deleteOccurrenceMapping(entityKey, occurrenceMappingKey);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
