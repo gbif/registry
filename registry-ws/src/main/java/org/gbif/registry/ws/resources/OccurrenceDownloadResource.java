@@ -41,7 +41,10 @@ import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.ws.WebApplicationException;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -92,15 +95,17 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
-  public static final int STATS_EXPORT_LIMIT = 500;
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final IdentityAccessService identityService;
   private final DoiIssuingService doiIssuingService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
 
-  // Page size to iterate over dataset usages
+  //Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
+
+  //Page size to iterate over download stats export service
+  private static final int STATS_EXPORT_LIMIT = 7_500;
 
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
 
@@ -390,16 +395,17 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       String headerValue = "attachment; filename=download_statistics." +  format.name().toLowerCase();
       response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
-
-      CsvWriter.downloadStatisticsCsvWriter(Iterables.downloadStatistics(this,
-                                                                         fromDate,
-                                                                         toDate,
-                                                                         publishingCountry,
-                                                                         datasetKey,
-                                                                         publishingOrgKey,
-                                                                         STATS_EXPORT_LIMIT),
-                                            format)
-      .export(response.getWriter());
+      try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+        CsvWriter.downloadStatisticsCsvWriter(Iterables.downloadStatistics(this,
+                                                                           fromDate,
+                                                                           toDate,
+                                                                           publishingCountry,
+                                                                           datasetKey,
+                                                                           publishingOrgKey,
+                                                                           STATS_EXPORT_LIMIT),
+                                              format)
+        .export(writer);
+      }
   }
 
   /** Aggregates the download statistics in tree structure of month grouped by year. */
