@@ -57,14 +57,10 @@ public class CsvWriter<T> {
   @SneakyThrows
   public void export(Writer writer) {
     try (ICsvBeanWriter beanWriter = new CsvBeanWriter(writer, csvPreference())) {
-      int count = 1;
       beanWriter.writeHeader(header);
       for (T o : pager) {
         beanWriter.write(o, fields, processors);
-        count++;
       }
-      System.out.println("count export " + count);
-      writer.flush();
     }
   }
 

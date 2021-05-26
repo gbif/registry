@@ -71,11 +71,14 @@ import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.ws.NotFoundException;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -135,7 +138,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
 
   private static final int ALL_DATASETS_LIMIT = 200;
-  public static final int SEARCH_EXPORT_LIMIT = 300;
+
+  //Page size to iterate over search export service
+  private static final int SEARCH_EXPORT_LIMIT = 300;
 
   private final RegistryDatasetService registryDatasetService;
   private final DatasetSearchService searchService;
@@ -201,11 +206,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     String headerValue = "attachment; filename=gbif_datasets." + format.name().toLowerCase();
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
-    CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest,
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest,
                                                                           searchService,
-                                                                          SEARCH_EXPORT_LIMIT),
-                                           format)
-      .export(response.getWriter());
+                                                                          SEARCH_EXPORT_LIMIT), format)
+      .export(writer);
+    }
   }
 
   @GetMapping("suggest")
