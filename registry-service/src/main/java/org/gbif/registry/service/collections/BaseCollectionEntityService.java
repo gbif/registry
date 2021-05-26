@@ -119,6 +119,8 @@ public abstract class BaseCollectionEntityService<
   @Override
   public void deleteIdentifier(UUID entityKey, int identifierKey) {
     Identifier identifierToDelete = identifierMapper.get(identifierKey);
+    checkArgument(identifierToDelete != null, "Identifier to delete doesn't exist");
+
     baseMapper.deleteIdentifier(entityKey, identifierKey);
 
     eventManager.post(
@@ -156,6 +158,8 @@ public abstract class BaseCollectionEntityService<
   @Override
   public void deleteTag(UUID entityKey, int tagKey) {
     Tag tagToDelete = tagMapper.get(tagKey);
+    checkArgument(tagToDelete != null, "Tag to delete doesn't exist");
+
     baseMapper.deleteTag(entityKey, tagKey);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
@@ -222,6 +226,8 @@ public abstract class BaseCollectionEntityService<
   @Override
   public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
     MachineTag machineTagToDelete = machineTagMapper.get(machineTagKey);
+    checkArgument(machineTagToDelete != null, "Machine Tag to delete doesn't exist");
+
     baseMapper.deleteMachineTag(targetEntityKey, machineTagKey);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
@@ -270,6 +276,7 @@ public abstract class BaseCollectionEntityService<
             .collect(Collectors.toList());
 
     baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
+
     machineTagsToDelete.forEach(
         mt ->
             eventManager.post(
@@ -316,6 +323,8 @@ public abstract class BaseCollectionEntityService<
   @Override
   public void deleteComment(UUID targetEntityKey, int commentKey) {
     Comment commentToDelete = commentMapper.get(commentKey);
+    checkArgument(commentToDelete != null, "Comment to delete doesn't exist");
+
     baseMapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
