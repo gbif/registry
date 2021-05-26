@@ -92,6 +92,7 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
+  public static final int STATS_EXPORT_LIMIT = 500;
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final IdentityAccessService identityService;
@@ -395,7 +396,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
                                                                          toDate,
                                                                          publishingCountry,
                                                                          datasetKey,
-                                                                         publishingOrgKey),
+                                                                         publishingOrgKey,
+                                                                         STATS_EXPORT_LIMIT),
                                             format)
       .export(response.getWriter());
   }
