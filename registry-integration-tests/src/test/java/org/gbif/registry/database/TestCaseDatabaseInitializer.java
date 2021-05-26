@@ -147,6 +147,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
        * – endpoint_machine_tag
        * – metasync_history
        * – namespace_rights
+       * - country_rights
        * – network_identifier
        * – node_contact
        * – node_endpoint

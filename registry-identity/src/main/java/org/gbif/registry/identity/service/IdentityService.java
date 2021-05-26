@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.service.common.IdentityAccessService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 
@@ -76,6 +77,8 @@ public interface IdentityService extends IdentityAccessService {
    */
   PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles,
                                   @Nullable Set<UUID> editorRightsOn,
+                                  @Nullable Set<String> namespaceRightsOn,
+                                  @Nullable Set<Country> countryRightsOn,
                                   @Nullable Pageable page);
 
 
@@ -175,4 +178,34 @@ public interface IdentityService extends IdentityAccessService {
    * Remove rights from the given entity for the user.
    */
   void deleteEditorRight(String userName, UUID key);
+
+  /**
+   * Lists the namespaces the user has editor permissions on.
+   */
+  List<String> listNamespaceRights(String userName);
+
+  /**
+   * Grant the user rights over the given namespace.
+   */
+  void addNamespaceRight(String userName, String namespace);
+
+  /**
+   * Remove rights from the given namespace for the user.
+   */
+  void deleteNamespaceRight(String userName, String namespace);
+
+  /**
+   * Lists the countries the user has editor permissions on.
+   */
+  List<Country> listCountryRights(String userName);
+
+  /**
+   * Grant the user rights over the given country.
+   */
+  void addCountryRight(String userName, Country country);
+
+  /**
+   * Remove rights from the given country for the user.
+   */
+  void deleteCountryRight(String userName, Country country);
 }

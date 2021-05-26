@@ -46,6 +46,7 @@ import com.google.common.base.Strings;
 
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 /** Service to merge duplicated {@link Institution}. */
@@ -67,7 +68,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     this.personService = personService;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   public UUID convertToCollection(
       UUID institutionKey,
       @Nullable UUID institutionKeyForNewCollection,

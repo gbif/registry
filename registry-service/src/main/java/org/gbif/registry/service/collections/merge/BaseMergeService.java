@@ -52,6 +52,7 @@ import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
 import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 public abstract class BaseMergeService<
@@ -66,7 +67,7 @@ public abstract class BaseMergeService<
     this.primaryEntityService = primaryEntityService;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void merge(UUID entityToReplaceKey, UUID replacementKey) {

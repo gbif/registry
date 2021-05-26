@@ -32,4 +32,12 @@
     WHERE username = #{username}
   </select>
 
+  <select id="countryExistsForUser" resultType="java.lang.Boolean">
+    SELECT EXISTS (
+              SELECT true
+              FROM country_rights
+              WHERE country = #{country} AND username = #{username}
+            )
+  </select>
+
 </mapper>

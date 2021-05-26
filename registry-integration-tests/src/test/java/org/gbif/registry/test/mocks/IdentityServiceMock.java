@@ -19,6 +19,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
@@ -133,7 +134,8 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles, @Nullable Set<UUID> editorRightsOn, @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles, @Nullable Set<UUID> editorRightsOn, Set<String> namespaceRightsOn,
+                                         @Nullable Set<Country> countryRightsOn, @Nullable Pageable page) {
     throw new UnsupportedOperationException();
   }
 
@@ -206,6 +208,36 @@ public class IdentityServiceMock implements IdentityService {
 
   @Override
   public void deleteEditorRight(String userName, UUID key) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<String> listNamespaceRights(String userName) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void addNamespaceRight(String userName, String namespace) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void deleteNamespaceRight(String userName, String namespace) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public List<Country> listCountryRights(String userName) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void addCountryRight(String userName, Country country) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void deleteCountryRight(String userName, Country country) {
     throw new UnsupportedOperationException();
   }
 

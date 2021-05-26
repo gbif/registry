@@ -28,10 +28,10 @@ public interface UserRightsMapper {
 
   List<UUID> getKeysByUser(@Param("username") String username);
 
-  @Deprecated
   boolean namespaceExistsForUser(@Param("username") String username, @Param("ns") String namespace);
 
-  @Deprecated
   boolean allowedToDeleteMachineTag(
       @Param("username") String username, @Param("key") int machineTagKey);
+
+  boolean countryExistsForUser(@Param("username") String username, @Param("country") String country);
 }
