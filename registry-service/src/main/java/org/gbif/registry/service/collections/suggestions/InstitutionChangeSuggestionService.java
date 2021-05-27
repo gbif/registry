@@ -1,5 +1,6 @@
 package org.gbif.registry.service.collections.suggestions;
 
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
@@ -79,6 +80,10 @@ public class InstitutionChangeSuggestionService
   @Override
   public InstitutionChangeSuggestion getChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
+
+    if (dto.getEntityType() != CollectionEntityType.INSTITUTION) {
+      return null;
+    }
 
     InstitutionChangeSuggestion suggestion = dtoToChangeSuggestion(dto);
     suggestion.setInstitutionForConvertedCollection(dto.getInstitutionConvertedCollection());

@@ -142,6 +142,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   //Page size to iterate over search export service
   private static final int SEARCH_EXPORT_LIMIT = 300;
 
+  //Search export file header
+  private static final String EXPORT_FILE_PRE = "attachment; filename=gbif_datasets.";
+
   private final RegistryDatasetService registryDatasetService;
   private final DatasetSearchService searchService;
   private final MetadataMapper metadataMapper;
@@ -203,13 +206,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
                      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
                      DatasetSearchRequest searchRequest) throws IOException {
 
-    String headerValue = "attachment; filename=gbif_datasets." + format.name().toLowerCase();
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
       CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest,
-                                                                          searchService,
-                                                                          SEARCH_EXPORT_LIMIT), format)
+                                                                            searchService,
+                                                                            SEARCH_EXPORT_LIMIT),
+                                             format)
       .export(writer);
     }
   }

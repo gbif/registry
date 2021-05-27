@@ -81,6 +81,7 @@ public abstract class BaseChangeSuggestionService<
               "modifiedBy",
               "created",
               "modified",
+              "deleted",
               "key",
               "convertedToCollection"));
 

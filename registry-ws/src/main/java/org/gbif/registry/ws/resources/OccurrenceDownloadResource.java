@@ -106,6 +106,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   //Page size to iterate over download stats export service
   private static final int STATS_EXPORT_LIMIT = 7_500;
+  //Download stats file header
+  private static final String EXPORT_FILE_HEADER_PRE = "attachment; filename=download_statistics.";
 
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
 
@@ -392,8 +394,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) throws
     IOException {
 
-      String headerValue = "attachment; filename=download_statistics." +  format.name().toLowerCase();
-      response.setHeader(HttpHeaders.CONTENT_DISPOSITION, headerValue);
+      response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_HEADER_PRE + format.name().toLowerCase());
 
       try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
         CsvWriter.downloadStatisticsCsvWriter(Iterables.downloadStatistics(this,
