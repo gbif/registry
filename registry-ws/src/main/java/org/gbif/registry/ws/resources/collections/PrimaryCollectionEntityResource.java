@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
@@ -177,6 +178,7 @@ public abstract class PrimaryCollectionEntityResource<
     changeSuggestionService.updateChangeSuggestion(suggestion);
   }
 
+  @NullToNotFound
   @GetMapping(value = "changeSuggestion/{key}")
   public R getChangeSuggestion(@PathVariable("key") int key) {
     return changeSuggestionService.getChangeSuggestion(key);
