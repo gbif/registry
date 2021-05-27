@@ -110,9 +110,9 @@ public class CsvWriter<T> {
                                                                             ExportFormat preference) {
     return CsvWriter.<DatasetSearchResult>builder()
       .fields(new String[]{"key", "title", "doi", "license", "type", "subType", "hostingOrganizationKey", "hostingOrganizationTitle", "hostingCountry", "publishingOrganizationKey", "publishingOrganizationTitle", "publishingCountry","endorsingNodeKey", "networkKeys", "projectIdentifier", "recordCount", "nameUsagesCount"})
-      .header(new String[]{"dataset_key", "title", "doi", "license", "type", "sub_type", "hosting_organization_Key", "hosting_organization_title", "hosting_country","publishing_organization_key", "publishing_organization_title", "publishing_country", "endorsing_node_key", "network_keys", "project_identifier", "occurrence_records_count", "name_usages_count"})
+      .header(new String[]{"dataset_key", "title", "doi", "license", "type", "sub_type", "hosting_organization_key", "hosting_organization_title", "hosting_country","publishing_organization_key", "publishing_organization_title", "publishing_country", "endorsing_node_key", "network_keys", "project_identifier", "occurrence_records_count", "name_usages_count"})
       //  "recordCount", "nameUsagesCount"
-      .processors(new CellProcessor[]{new UUIDProcessor(),                              //key
+      .processors(new CellProcessor[]{new UUIDProcessor(),//key
         new CleanStringProcessor(),                       //title
         new DOIProcessor(),                               //doi
         new Optional(new ParseEnum(License.class)),       //license
