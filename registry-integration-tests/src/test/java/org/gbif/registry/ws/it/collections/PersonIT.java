@@ -21,12 +21,10 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.CollectionClient;
@@ -35,7 +33,6 @@ import org.gbif.registry.ws.client.collections.PersonClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
-import java.util.Collections;
 import java.util.UUID;
 
 import org.junit.jupiter.params.ParameterizedTest;

@@ -82,8 +82,6 @@ import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
 import java.net.URI;
 import java.util.UUID;
 
-import org.apache.ibatis.type.LocalDateTimeTypeHandler;
-import org.apache.ibatis.type.LocalDateTypeHandler;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

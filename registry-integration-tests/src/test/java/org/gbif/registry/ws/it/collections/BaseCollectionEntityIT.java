@@ -41,7 +41,6 @@ import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
