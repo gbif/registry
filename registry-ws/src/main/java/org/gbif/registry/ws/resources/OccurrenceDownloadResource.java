@@ -111,7 +111,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private static final int EXPORT_LIMIT = 5_000;
 
   //Export header prefix
-  private static final String FILE_HEADER_PRE = "attachment; filename=datasets_download_usage.";
+  private static final String FILE_HEADER_PRE = "attachment; filename=datasets_download_usage_";
 
   //Download stats file header
   private static final String EXPORT_FILE_HEADER_PRE = "attachment; filename=download_statistics.";
@@ -257,7 +257,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     @PathVariable("key") String key,
     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format) throws IOException {
 
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, FILE_HEADER_PRE + format.name().toLowerCase());
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,  FILE_HEADER_PRE + key + '.' + format.name().toLowerCase());
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
       CsvWriter.datasetOccurrenceDownloadUsageCsvWriter(Iterables.datasetOccurrenceDownloadUsages(this,
