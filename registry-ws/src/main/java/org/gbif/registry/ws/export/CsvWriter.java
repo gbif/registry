@@ -90,17 +90,17 @@ public class CsvWriter<T> {
                                                                           ExportFormat preference) {
 
     return CsvWriter.<DownloadStatistics>builder()
-              .fields(new String[]{"datasetKey", "totalRecords", "numberDownloads", "year", "month"})
-              .header(new String[]{"dataset_key", "total_records", "number_downloads", "year", "month"})
-              .processors(new CellProcessor[]{new UUIDProcessor(),           //datasetKey
-                                              new Optional(new ParseLong()),  //totalRecords
-                                              new Optional(new ParseLong()),  //numberDowloads
-                                              new Optional(new ParseInt()),  //year
-                                              new Optional(new ParseInt())   //month
-                                              })
-              .preference(preference)
-              .pager(pager)
-              .build();
+      .fields(new String[]{"datasetKey", "totalRecords", "numberDownloads", "year", "month"})
+      .header(new String[]{"dataset_key", "total_records", "number_downloads", "year", "month"})
+      .processors(new CellProcessor[]{new UUIDProcessor(),           //datasetKey
+        new Optional(new ParseLong()),  //totalRecords
+        new Optional(new ParseLong()),  //numberDowloads
+        new Optional(new ParseInt()),  //year
+        new Optional(new ParseInt())   //month
+      })
+      .preference(preference)
+      .pager(pager)
+      .build();
   }
 
   /**
@@ -113,23 +113,23 @@ public class CsvWriter<T> {
       .header(new String[]{"dataset_key", "title", "doi", "license", "type", "sub_type", "hosting_organization_Key", "hosting_organization_title", "hosting_country","publishing_organization_key", "publishing_organization_title", "publishing_country", "endorsing_node_key", "network_keys", "project_identifier", "occurrence_records_count", "name_usages_count"})
       //  "recordCount", "nameUsagesCount"
       .processors(new CellProcessor[]{new UUIDProcessor(),                              //key
-                                      new CleanStringProcessor(),                       //title
-                                      new DOIProcessor(),                               //doi
-                                      new Optional(new ParseEnum(License.class)),       //license
-                                      new Optional(new ParseEnum(DatasetType.class)),   //type
-                                      new Optional(new ParseEnum(DatasetSubtype.class)),//subType
-                                      new UUIDProcessor(),                              //hostingOrganizationKey
-                                      new CleanStringProcessor(),                       //hostingOrganizationTitle
-                                      new CountryProcessor(),                           //hostingCountry
-                                      new UUIDProcessor(),                              //publishingOrganizationKey
-                                      new CleanStringProcessor(),                       //publishingOrganizationTitle
-                                      new CountryProcessor(),                           //publishingCountry
-                                      new UUIDProcessor(),                              //endorsingNodeKey
-                                      new ListUUIDProcessor(),                          //networkKeys
-                                      new CleanStringProcessor(),                       //projectIdentifier
-                                      new Optional(new ParseInt()),                     //recordCount
-                                      new Optional(new ParseInt())                      //nameUsagesCount
-                                      })
+        new CleanStringProcessor(),                       //title
+        new DOIProcessor(),                               //doi
+        new Optional(new ParseEnum(License.class)),       //license
+        new Optional(new ParseEnum(DatasetType.class)),   //type
+        new Optional(new ParseEnum(DatasetSubtype.class)),//subType
+        new UUIDProcessor(),                              //hostingOrganizationKey
+        new CleanStringProcessor(),                       //hostingOrganizationTitle
+        new CountryProcessor(),                           //hostingCountry
+        new UUIDProcessor(),                              //publishingOrganizationKey
+        new CleanStringProcessor(),                       //publishingOrganizationTitle
+        new CountryProcessor(),                           //publishingCountry
+        new UUIDProcessor(),                              //endorsingNodeKey
+        new ListUUIDProcessor(),                          //networkKeys
+        new CleanStringProcessor(),                       //projectIdentifier
+        new Optional(new ParseInt()),                     //recordCount
+        new Optional(new ParseInt())                      //nameUsagesCount
+      })
       .preference(preference)
       .pager(pager)
       .build();
@@ -141,16 +141,14 @@ public class CsvWriter<T> {
   public static CsvWriter<DatasetOccurrenceDownloadUsage> datasetOccurrenceDownloadUsageCsvWriter(Iterable<DatasetOccurrenceDownloadUsage> pager,
                                                                                                   ExportFormat preference) {
     return CsvWriter.<DatasetOccurrenceDownloadUsage>builder()
-      .fields(new String[]{"download",     "downloadKey",  "datasetDOI", "datasetKey",  "datasetTitle",  "datasetCitation",  "numberRecords"})
-      .header(new String[]{"download_doi", "download_key", "dataset_doi", "dataset_key", "dataset_title", "dataset_citation", "number_records"})
-      .processors(new CellProcessor[]{new DownloadDOIProcessor(),   //download.doi
-                                      null,                         //downloadKey
-                                      new DOIProcessor(),           //datasetDOI
-                                      new UUIDProcessor(),          //datasetKey
-                                      new CleanStringProcessor(),   //datasetTitle
-                                      new CleanStringProcessor(),   //datasetCitation
-                                      new Optional(new ParseLong()) //numberRecords
-                                      })
+      .fields(new String[]{"datasetDOI", "datasetKey",  "datasetTitle",  "datasetCitation",  "numberRecords"})
+      .header(new String[]{"dataset_doi", "dataset_key", "dataset_title", "dataset_citation", "number_records"})
+      .processors(new CellProcessor[]{new DOIProcessor(),           //datasetDOI
+        new UUIDProcessor(),          //datasetKey
+        new CleanStringProcessor(),   //datasetTitle
+        new CleanStringProcessor(),   //datasetCitation
+        new Optional(new ParseLong()) //numberRecords
+      })
       .preference(preference)
       .pager(pager)
       .build();
