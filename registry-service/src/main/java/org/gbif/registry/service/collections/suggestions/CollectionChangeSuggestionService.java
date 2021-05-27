@@ -55,7 +55,7 @@ public class CollectionChangeSuggestionService
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
 
     if (dto.getEntityType() != CollectionEntityType.COLLECTION) {
-      return null;
+      throw new IllegalArgumentException("Wrong key for collection change suggestion: " + key);
     }
 
     return dtoToChangeSuggestion(dto);

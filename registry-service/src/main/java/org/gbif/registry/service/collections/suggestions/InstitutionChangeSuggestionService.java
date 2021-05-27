@@ -85,7 +85,7 @@ public class InstitutionChangeSuggestionService
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
 
     if (dto.getEntityType() != CollectionEntityType.INSTITUTION) {
-      return null;
+      throw new IllegalArgumentException("Wrong key for institution change suggestion: " + key);
     }
 
     InstitutionChangeSuggestion suggestion = dtoToChangeSuggestion(dto);
