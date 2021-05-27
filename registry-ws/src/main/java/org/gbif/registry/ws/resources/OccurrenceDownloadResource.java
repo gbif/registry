@@ -106,6 +106,13 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   //Page size to iterate over download stats export service
   private static final int STATS_EXPORT_LIMIT = 7_500;
+
+  //Page size to iterate over download stats export service
+  private static final int EXPORT_LIMIT = 5_000;
+
+  //Export header prefix
+  private static final String FILE_HEADER_PRE = "attachment; filename=datasets_download_usage.";
+
   //Download stats file header
   private static final String EXPORT_FILE_HEADER_PRE = "attachment; filename=download_statistics.";
 
@@ -242,6 +249,23 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       @PathVariable("key") String key, Pageable page) {
     Download download = get(key);
     return listDatasetUsagesInternal(key, page, download);
+  }
+
+  @GetMapping("{key}/datasets/export")
+  public void exportListDatasetUsagesByKey(
+    HttpServletResponse response,
+    @PathVariable("key") String key,
+    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format) throws IOException {
+
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, FILE_HEADER_PRE + format.name().toLowerCase());
+
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.datasetOccurrenceDownloadUsageCsvWriter(Iterables.datasetOccurrenceDownloadUsages(this,
+                                                                                                  key,
+                                                                                                  EXPORT_LIMIT),
+                                                        format)
+        .export(writer);
+    }
   }
 
   private PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesInternal(
