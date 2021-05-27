@@ -30,6 +30,8 @@ import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
+import org.gbif.registry.security.SecurityContextCheck;
+import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
@@ -93,6 +95,7 @@ public abstract class BaseChangeSuggestionService<
   private final EmailSender emailSender;
   private final CollectionsEmailManager emailManager;
   private final EventManager eventManager;
+  private final GrSciCollEditorAuthorizationService grSciCollEditorAuthorizationService;
   private CollectionEntityType collectionEntityType;
 
   protected BaseChangeSuggestionService(
@@ -103,7 +106,8 @@ public abstract class BaseChangeSuggestionService<
       ObjectMapper objectMapper,
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
-      EventManager eventManager) {
+      EventManager eventManager,
+      GrSciCollEditorAuthorizationService grSciCollEditorAuthorizationService) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -112,6 +116,7 @@ public abstract class BaseChangeSuggestionService<
     this.emailSender = emailSender;
     this.emailManager = emailManager;
     this.eventManager = eventManager;
+    this.grSciCollEditorAuthorizationService = grSciCollEditorAuthorizationService;
 
     if (clazz == Institution.class) {
       collectionEntityType = CollectionEntityType.INSTITUTION;
@@ -433,8 +438,12 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setModifiedBy(dto.getModifiedBy());
     suggestion.setProposed(dto.getProposed());
     suggestion.setProposedBy(dto.getProposedBy());
-    suggestion.setProposerEmail(dto.getProposerEmail());
     suggestion.setMergeTargetKey(dto.getMergeTargetKey());
+
+    // we only show the proposer email for users with the right permissions (data protection)
+    if (hasRightsToSeeProposerEmail(dto)) {
+      suggestion.setProposerEmail(dto.getProposerEmail());
+    }
 
     // changes conversion
     suggestion.setChanges(
@@ -495,6 +504,13 @@ public abstract class BaseChangeSuggestionService<
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Cannot serialize entity", e);
     }
+  }
+
+  protected boolean hasRightsToSeeProposerEmail(ChangeSuggestionDto dto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
+        || grSciCollEditorAuthorizationService.allowedToUpdateChangeSuggestion(
+            dto.getKey(), dto.getEntityType().name().toLowerCase(), getUsername());
   }
 
   protected abstract R newEmptyChangeSuggestion();
