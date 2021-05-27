@@ -172,20 +172,17 @@ public class CsvWriterTest {
    * Test one DatasetOccurrenceDownloadUsage against its expected exported data.
    */
   private void assertDatasetOccurrenceDownloadUsage(DatasetOccurrenceDownloadUsage downloadUsage, String[] line) {
-    //"download",     "downloadKey",  "datasetDOI", "datasetKey",  "datasetTitle",  "datasetCitation",  "numberRecords"
-    assertEquals(downloadUsage.getDownload().getDoi().toString(), line[0]);
-    assertEquals(downloadUsage.getDownloadKey(), line[1]);
-    assertEquals(downloadUsage.getDatasetDOI().toString(), line[2]);
-    assertEquals(downloadUsage.getDatasetKey().toString(), line[3]);
-    assertEquals(downloadUsage.getDatasetTitle(), line[4]);
-    assertEquals(downloadUsage.getDatasetCitation(), line[5]);
-    assertEquals(downloadUsage.getNumberRecords(), Long.parseLong(line[6].replace("\r","")));
+    assertEquals(downloadUsage.getDatasetDOI().toString(), line[0]);
+    assertEquals(downloadUsage.getDatasetKey().toString(), line[1]);
+    assertEquals(downloadUsage.getDatasetTitle(), line[2]);
+    assertEquals(downloadUsage.getDatasetCitation(), line[3]);
+    assertEquals(downloadUsage.getNumberRecords(), Long.parseLong(line[4].replace("\r","")));
   }
 
   /**
    * Generates test instances of DatasetOccurrenceDownloadUsage.
    */
-  private static DatasetOccurrenceDownloadUsage newDatasetOccurrenceDownloadUsageTest(int consecutive, Download download) {
+  private static DatasetOccurrenceDownloadUsage newDatasetOccurrenceDownloadUsageTest(int consecutive) {
     DatasetOccurrenceDownloadUsage downloadUsage = new DatasetOccurrenceDownloadUsage();
 
     downloadUsage.setDatasetKey(UUID.randomUUID());
@@ -193,8 +190,6 @@ public class CsvWriterTest {
     downloadUsage.setDatasetTitle("UsageTitle" + consecutive);
     downloadUsage.setDatasetCitation("Citation" + consecutive);
     downloadUsage.setNumberRecords(consecutive);
-    downloadUsage.setDownloadKey(download.getKey());
-    downloadUsage.setDownload(download);
 
     return downloadUsage;
   }
@@ -203,12 +198,8 @@ public class CsvWriterTest {
   public void datasetOccurrenceDownloadUsageTest() {
 
     //Test data
-    Download download = new Download();
-    download.setKey("0220580-200613084148143");
-    download.setDoi(new DOI("10.21373/6m9yw0"));
-
-    List<DatasetOccurrenceDownloadUsage> downloadUsages = Arrays.asList(newDatasetOccurrenceDownloadUsageTest(1, download),
-                                                                        newDatasetOccurrenceDownloadUsageTest(2, download));
+    List<DatasetOccurrenceDownloadUsage> downloadUsages = Arrays.asList(newDatasetOccurrenceDownloadUsageTest(1),
+                                                                        newDatasetOccurrenceDownloadUsageTest(2));
 
     StringWriter writer = new StringWriter();
 
