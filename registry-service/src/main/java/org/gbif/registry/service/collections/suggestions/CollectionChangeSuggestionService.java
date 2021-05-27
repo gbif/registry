@@ -1,6 +1,7 @@
 package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.events.EventManager;
@@ -48,7 +49,13 @@ public class CollectionChangeSuggestionService
 
   @Override
   public CollectionChangeSuggestion getChangeSuggestion(int key) {
-    return dtoToChangeSuggestion(changeSuggestionMapper.get(key));
+    ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
+
+    if (dto.getEntityType() != CollectionEntityType.COLLECTION) {
+      return null;
+    }
+
+    return dtoToChangeSuggestion(dto);
   }
 
   @Override
