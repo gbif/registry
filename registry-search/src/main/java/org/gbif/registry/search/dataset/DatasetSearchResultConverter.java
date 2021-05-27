@@ -62,14 +62,19 @@ public class DatasetSearchResultConverter
     getDatasetSubTypeValue(fields, "subtype").ifPresent(d::setSubtype);
     getHighlightOrStringValue(fields, hit.getHighlightFields(), "description")
         .ifPresent(d::setDescription);
+
     getUuidValue(fields, "publishingOrganizationKey").ifPresent(d::setPublishingOrganizationKey);
     getHighlightOrStringValue(fields, hit.getHighlightFields(), "publishingOrganizationTitle")
         .ifPresent(d::setPublishingOrganizationTitle);
+    getCountryValue(fields, "publishingCountry").ifPresent(d::setPublishingCountry);
+    getUuidValue(fields, "endorsingNodeKey").ifPresent(d::setEndorsingNodeKey);
+
     getUuidValue(fields, "hostingOrganizationKey").ifPresent(d::setHostingOrganizationKey);
     getHighlightOrStringValue(fields, hit.getHighlightFields(), "hostingOrganizationTitle")
         .ifPresent(d::setHostingOrganizationTitle);
+    getCountryValue(fields, "hostingCountry").ifPresent(d::setHostingCountry);
 
-    getCountryValue(fields, "publishingCountry").ifPresent(d::setPublishingCountry);
+
     getLicenceValue(fields, "license").ifPresent(d::setLicense);
     getStringValue(fields, "projectId").ifPresent(d::setProjectIdentifier);
 
