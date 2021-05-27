@@ -30,6 +30,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -126,7 +127,7 @@ public abstract class BaseChangeSuggestionServiceIT<
   }
 
   @Test
-  public void changeInstitutionSuggestionTest() {
+  public void updateEntityChangeSuggestionTest() {
     // State
     T entity = createEntity();
 
@@ -179,9 +180,6 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(Status.APPLIED, suggestion.getStatus());
     assertNotNull(suggestion.getApplied());
     assertNotNull(suggestion.getAppliedBy());
-
-    T appliedEntity = crudService.get(entityKey);
-    assertTrue(appliedEntity.lenientEquals(suggestion.getSuggestedEntity()));
   }
 
   @Test
@@ -334,6 +332,12 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     assertEquals(0, results.getResults().size());
     assertEquals(0, results.getCount());
+
+    // When - user with no rights can't see the proposer email
+    resetSecurityContext("user", UserRole.USER);
+    results = changeSuggestionService.list(null, null, null, null, entity2Key, DEFAULT_PAGE);
+    // Then
+    assertTrue(results.getResults().stream().allMatch(v -> v.getProposerEmail() == null));
   }
 
   @Test

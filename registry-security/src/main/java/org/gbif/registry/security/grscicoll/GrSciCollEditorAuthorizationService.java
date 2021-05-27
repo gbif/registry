@@ -17,9 +17,7 @@ package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.Type;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
@@ -177,7 +175,8 @@ public class GrSciCollEditorAuthorizationService {
     } else if (changeSuggestion.getType() == Type.UPDATE
         || changeSuggestion.getType() == Type.DELETE) {
       Collection entity = null;
-      if (COLLECTION.equalsIgnoreCase(entityType)) {
+      if (COLLECTION.equalsIgnoreCase(entityType)
+          && changeSuggestion.getSuggestedEntity() != null) {
         try {
           entity = objectMapper.readValue(changeSuggestion.getSuggestedEntity(), Collection.class);
         } catch (JsonProcessingException e) {

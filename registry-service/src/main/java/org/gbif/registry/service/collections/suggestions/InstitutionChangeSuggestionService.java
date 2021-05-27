@@ -10,6 +10,7 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
+import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
 import java.util.UUID;
@@ -44,7 +45,8 @@ public class InstitutionChangeSuggestionService
       ObjectMapper objectMapper,
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
-      EventManager eventManager) {
+      EventManager eventManager,
+      GrSciCollEditorAuthorizationService grSciCollEditorAuthorizationService) {
     super(
         changeSuggestionMapper,
         institutionMergeService,
@@ -53,7 +55,8 @@ public class InstitutionChangeSuggestionService
         objectMapper,
         emailSender,
         emailManager,
-        eventManager);
+        eventManager,
+        grSciCollEditorAuthorizationService);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
@@ -82,7 +85,7 @@ public class InstitutionChangeSuggestionService
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
 
     if (dto.getEntityType() != CollectionEntityType.INSTITUTION) {
-      return null;
+      throw new IllegalArgumentException("Wrong key for institution change suggestion: " + key);
     }
 
     InstitutionChangeSuggestion suggestion = dtoToChangeSuggestion(dto);
