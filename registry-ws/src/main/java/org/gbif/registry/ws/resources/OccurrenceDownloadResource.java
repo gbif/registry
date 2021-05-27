@@ -114,7 +114,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private static final String FILE_HEADER_PRE = "attachment; filename=datasets_download_usage_";
 
   //Download stats file header
-  private static final String EXPORT_FILE_HEADER_PRE = "attachment; filename=download_statistics.";
+  private static final String EXPORT_FILE_HEADER_PRE = "attachment; filename=downloads_statistics.";
 
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
 
