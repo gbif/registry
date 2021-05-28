@@ -20,6 +20,8 @@ public class ChangeSuggestionDto {
   private Integer key;
   private CollectionEntityType entityType;
   private UUID entityKey;
+  private String entityName;
+  private Country entityCountry;
   private Type type;
   private Status status;
   private String proposedBy;
@@ -29,7 +31,6 @@ public class ChangeSuggestionDto {
   private Date applied;
   private String discardedBy;
   private Date discarded;
-  private Country country;
   private String suggestedEntity;
   private Set<ChangeDto> changes = new HashSet<>();
   private List<String> comments = new ArrayList<>();

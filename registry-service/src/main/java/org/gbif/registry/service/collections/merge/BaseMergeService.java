@@ -184,7 +184,10 @@ public abstract class BaseMergeService<
         .anyMatch(om -> om.lenientEquals(occurrenceMapping));
   }
 
-  protected void setNullFields(T target, T source) {
+  /**
+   * Sets the fields that are null in target with the value of the source.
+   */
+  protected void setNullFieldsInTarget(T target, T source) {
     Class<T> clazz = (Class<T>) target.getClass();
     Arrays.stream(clazz.getDeclaredFields())
         .filter(f -> !f.getType().isAssignableFrom(List.class))

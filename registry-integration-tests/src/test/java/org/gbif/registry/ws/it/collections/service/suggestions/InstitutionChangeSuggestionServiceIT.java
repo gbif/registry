@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.it.collections.service.suggestions;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
@@ -23,6 +24,7 @@ import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -62,6 +64,11 @@ public class InstitutionChangeSuggestionServiceIT
     Institution i1 = new Institution();
     i1.setCode("i1");
     i1.setName("institution 1");
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    i1.setAddress(address);
+
     UUID i1Key = institutionService.create(i1);
 
     InstitutionChangeSuggestion suggestion = new InstitutionChangeSuggestion();
@@ -78,6 +85,8 @@ public class InstitutionChangeSuggestionServiceIT
     // Then
     suggestion = institutionChangeSuggestionService.getChangeSuggestion(suggKey);
     assertCreatedSuggestion(suggestion);
+    assertEquals(Country.DENMARK, suggestion.getEntityCountry());
+    assertEquals(i1.getName(), suggestion.getEntityName());
     assertEquals(Type.CONVERSION_TO_COLLECTION, suggestion.getType());
 
     // When

@@ -17,9 +17,9 @@ package org.gbif.registry.ws.it.collections.service.suggestions;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
 import org.gbif.api.model.collections.suggestions.Status;
@@ -51,7 +51,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link ChangeSuggestionService}. */
 public abstract class BaseChangeSuggestionServiceIT<
-        T extends CollectionEntity & Contactable & LenientEquals<T>, R extends ChangeSuggestion<T>>
+        T extends PrimaryCollectionEntity & Contactable & LenientEquals<T>,
+        R extends ChangeSuggestion<T>>
     extends BaseServiceIT {
 
   protected static final String PROPOSER = "proposer@test.com";
@@ -94,7 +95,8 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertCreatedSuggestion(suggestion);
     assertEquals(Type.CREATE, suggestion.getType());
-    assertEquals(Country.DENMARK, suggestion.getCountry());
+    assertNull(suggestion.getEntityCountry());
+    assertNull(suggestion.getEntityName());
     assertTrue(suggestion.getChanges().isEmpty());
 
     // When - update the suggestion (e.g.: the reviewer does some changes)
@@ -155,7 +157,8 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertCreatedSuggestion(suggestion);
     assertEquals(Type.UPDATE, suggestion.getType());
-    assertEquals(Country.DENMARK, suggestion.getCountry());
+    assertEquals(Country.DENMARK, suggestion.getEntityCountry());
+    assertEquals(entity.getName(), suggestion.getEntityName());
     assertEquals(address.getCity(), suggestion.getSuggestedEntity().getAddress().getCity());
     assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
     assertEquals(numberChanges, suggestion.getChanges().size());
@@ -186,6 +189,11 @@ public abstract class BaseChangeSuggestionServiceIT<
   public void deleteInstitutionSuggestionTest() {
     // State
     T entity = createEntity();
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
+
     UUID entityKey = crudService.create(entity);
 
     R suggestion = createEmptyChangeSuggestion();
@@ -201,6 +209,8 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertCreatedSuggestion(suggestion);
+    assertEquals(Country.DENMARK, suggestion.getEntityCountry());
+    assertEquals(entity.getName(), suggestion.getEntityName());
     assertEquals(Type.DELETE, suggestion.getType());
 
     // When
@@ -219,6 +229,11 @@ public abstract class BaseChangeSuggestionServiceIT<
   public void mergeInstitutionSuggestionTest() {
     // State
     T entity = createEntity();
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
+
     UUID entityKey = crudService.create(entity);
 
     T entity2 = createEntity();
@@ -238,6 +253,8 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertCreatedSuggestion(suggestion);
+    assertEquals(Country.DENMARK, suggestion.getEntityCountry());
+    assertEquals(entity.getName(), suggestion.getEntityName());
     assertEquals(Type.MERGE, suggestion.getType());
 
     // When

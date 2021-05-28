@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.service.collections.merge;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
@@ -105,8 +106,17 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     newCollection.setHomepage(institutionToConvert.getHomepage());
     newCollection.setCatalogUrl(institutionToConvert.getCatalogUrl());
     newCollection.setApiUrl(institutionToConvert.getApiUrl());
-    newCollection.setAddress(institutionToConvert.getAddress());
-    newCollection.setMailingAddress(institutionToConvert.getMailingAddress());
+
+    if (institutionToConvert.getAddress() != null) {
+      Address address = institutionToConvert.getAddress();
+      address.setKey(null);
+      newCollection.setAddress(address);
+    }
+    if (institutionToConvert.getMailingAddress() != null) {
+      Address address = institutionToConvert.getMailingAddress();
+      address.setKey(null);
+      newCollection.setMailingAddress(address);
+    }
 
     // if there is no institution passed we need to create a new institution
     if (institutionKeyForNewCollection == null) {
@@ -189,7 +199,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     replacement.getAlternativeCodes().addAll(entityToReplace.getAlternativeCodes());
 
     // Copy over information that would be lost when removing these duplicates
-    setNullFields(replacement, entityToReplace);
+    setNullFieldsInTarget(replacement, entityToReplace);
     replacement.setEmail(mergeLists(entityToReplace.getEmail(), replacement.getEmail()));
     replacement.setPhone(mergeLists(entityToReplace.getPhone(), replacement.getPhone()));
     replacement.setDisciplines(

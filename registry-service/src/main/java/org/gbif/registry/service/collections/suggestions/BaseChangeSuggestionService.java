@@ -2,11 +2,11 @@ package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
@@ -62,8 +62,8 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 
 public abstract class BaseChangeSuggestionService<
         T extends
-            CollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable & Contactable
-                & OccurrenceMappeable,
+            PrimaryCollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable
+                & Contactable & OccurrenceMappeable,
         R extends ChangeSuggestion<T>>
     implements ChangeSuggestionService<T, R> {
 
@@ -167,7 +167,6 @@ public abstract class BaseChangeSuggestionService<
     checkArgument(changeSuggestion.getSuggestedEntity() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
-    dto.setCountry(getCountry(changeSuggestion.getSuggestedEntity()));
     dto.setSuggestedEntity(toJson(changeSuggestion.getSuggestedEntity()));
 
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
@@ -180,7 +179,6 @@ public abstract class BaseChangeSuggestionService<
     checkArgument(changeSuggestion.getSuggestedEntity() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
-    dto.setCountry(getCountry(changeSuggestion.getSuggestedEntity()));
     dto.setSuggestedEntity(toJson(changeSuggestion.getSuggestedEntity()));
 
     return dto;
@@ -188,13 +186,7 @@ public abstract class BaseChangeSuggestionService<
 
   protected ChangeSuggestionDto createDeleteSuggestionDto(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
-
-    ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
-
-    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
-    dto.setCountry(getCountry(currentEntity));
-
-    return dto;
+    return createBaseChangeSuggestionDto(changeSuggestion);
   }
 
   protected ChangeSuggestionDto createMergeSuggestionDto(R changeSuggestion) {
@@ -203,9 +195,6 @@ public abstract class BaseChangeSuggestionService<
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
     dto.setMergeTargetKey(changeSuggestion.getMergeTargetKey());
-
-    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
-    dto.setCountry(getCountry(currentEntity));
 
     return dto;
   }
@@ -319,7 +308,7 @@ public abstract class BaseChangeSuggestionService<
   public PagingResponse<R> list(
       @Nullable Status status,
       @Nullable Type type,
-      @Nullable Country country,
+      @Nullable Country entityCountry,
       @Nullable String proposerEmail,
       @Nullable UUID entityKey,
       @Nullable Pageable pageable) {
@@ -327,11 +316,11 @@ public abstract class BaseChangeSuggestionService<
 
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status, type, collectionEntityType, country, proposerEmail, entityKey, page);
+            status, type, collectionEntityType, entityCountry, proposerEmail, entityKey, page);
 
     long count =
         changeSuggestionMapper.count(
-            status, type, collectionEntityType, country, proposerEmail, entityKey);
+            status, type, collectionEntityType, entityCountry, proposerEmail, entityKey);
 
     List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());
@@ -397,6 +386,13 @@ public abstract class BaseChangeSuggestionService<
     dto.setProposerEmail(changeSuggestion.getProposerEmail());
     dto.setProposedBy(getUsername());
     dto.setModifiedBy(getUsername());
+
+    if (changeSuggestion.getEntityKey() != null) {
+      T currentEntity = crudService.get(changeSuggestion.getEntityKey());
+      dto.setEntityCountry(getCountry(currentEntity));
+      dto.setEntityName(currentEntity.getName());
+    }
+
     return dto;
   }
 
@@ -427,7 +423,8 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setKey(dto.getKey());
     suggestion.setStatus(dto.getStatus());
     suggestion.setType(dto.getType());
-    suggestion.setCountry(dto.getCountry());
+    suggestion.setEntityCountry(dto.getEntityCountry());
+    suggestion.setEntityName(dto.getEntityName());
     suggestion.setAppliedBy(dto.getAppliedBy());
     suggestion.setApplied(dto.getApplied());
     suggestion.setDiscarded(dto.getDiscarded());

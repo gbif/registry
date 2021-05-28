@@ -10,15 +10,16 @@
   </resultMap>
 
   <sql id="SUGGESTION_WRITE_FIELDS">
-    entity_type, entity_key, type, status, proposed, proposed_by, proposer_email, country, changes, comments, suggested_entity,
-    merge_target_key, institution_converted_collection, name_new_institution_converted_collection, modified, modified_by
+    entity_type, entity_key, type, status, proposed, proposed_by, proposer_email, entity_country, changes, comments,
+    suggested_entity, merge_target_key, institution_converted_collection, name_new_institution_converted_collection,
+    modified, modified_by, entity_name
   </sql>
 
   <sql id="SUGGESTION_READ_FIELDS">
     cs.key, cs.entity_type, cs.entity_key, cs.type, cs.status, cs.proposed, cs.proposed_by, cs.proposer_email, cs. applied,
-    cs.applied_by, cs.discarded_by, cs.discarded, cs.country, cs.suggested_entity, cs.comments,
+    cs.applied_by, cs.discarded_by, cs.discarded, cs.entity_country, cs.suggested_entity, cs.comments,
     cs.merge_target_key, cs.changes, cs.institution_converted_collection, cs.name_new_institution_converted_collection,
-    cs.modified, cs.modified_by
+    cs.modified, cs.modified_by, cs.entity_name
   </sql>
 
   <sql id="SUGGESTION_PARAMS_CREATE">
@@ -29,7 +30,7 @@
     now(), <!-- proposed -->
     #{proposedBy,jdbcType=VARCHAR},
     #{proposerEmail,jdbcType=VARCHAR},
-    #{country,jdbcType=VARCHAR},
+    #{entityCountry,jdbcType=VARCHAR},
     #{changes,jdbcType=OTHER,typeHandler=SuggestedChangesTypeHandler}::jsonb,
     #{comments,jdbcType=OTHER,typeHandler=StringArrayTypeHandler},
     #{suggestedEntity,jdbcType=OTHER}::jsonb,
@@ -37,7 +38,8 @@
     #{institutionConvertedCollection,jdbcType=OTHER},
     #{nameNewInstitutionConvertedCollection,jdbcType=VARCHAR},
     now(), <!-- modified -->
-    #{modifiedBy,jdbcType=VARCHAR}
+    #{modifiedBy,jdbcType=VARCHAR},
+    #{entityName,jdbcType=VARCHAR}
   </sql>
 
   <sql id="SUGGESTION_PARAMS_UPDATE">
@@ -81,8 +83,8 @@
       <if test="entityType != null">
         AND cs.entity_type = #{entityType,jdbcType=OTHER}
       </if>
-      <if test="country != null">
-        AND cs.country = #{country,jdbcType=VARCHAR}
+      <if test="entityCountry != null">
+        AND cs.entity_country = #{entityCountry,jdbcType=VARCHAR}
       </if>
       <if test="proposerEmail != null">
         AND cs.proposer_email = #{proposerEmail,jdbcType=OTHER}
@@ -110,8 +112,8 @@
       <if test="entityType != null">
         AND cs.entity_type = #{entityType,jdbcType=OTHER}
       </if>
-      <if test="country != null">
-        AND cs.country = #{country,jdbcType=VARCHAR}
+      <if test="entityCountry != null">
+        AND cs.entity_country = #{entityCountry,jdbcType=VARCHAR}
       </if>
       <if test="proposerEmail != null">
         AND cs.proposer_email = #{proposerEmail,jdbcType=OTHER}
