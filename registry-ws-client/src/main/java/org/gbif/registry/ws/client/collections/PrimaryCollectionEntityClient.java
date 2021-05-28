@@ -31,7 +31,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.vocabulary.Country;
 
 import java.util.List;
 import java.util.UUID;
@@ -127,7 +126,6 @@ public interface PrimaryCollectionEntityClient<
   PagingResponse<R> listChangeSuggestion(
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
-      @RequestParam(value = "entityCountry") Country entityCountry,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
       @SpringQueryMap Pageable page);

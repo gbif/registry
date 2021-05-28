@@ -4,7 +4,6 @@ import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 
 import java.util.List;
@@ -26,7 +25,6 @@ public interface ChangeSuggestionMapper {
       @Param("status") Status status,
       @Param("type") Type type,
       @Param("entityType") CollectionEntityType entityType,
-      @Param("entityCountry") Country entityCountry,
       @Param("proposerEmail") String proposerEmail,
       @Param("entityKey") UUID entityKey,
       @Nullable @Param("page") Pageable page);
@@ -35,7 +33,6 @@ public interface ChangeSuggestionMapper {
       @Param("status") Status status,
       @Param("type") Type type,
       @Param("entityType") CollectionEntityType entityType,
-      @Param("entityCountry") Country entityCountry,
       @Param("proposerEmail") String proposerEmail,
       @Param("entityKey") UUID entityKey);
 

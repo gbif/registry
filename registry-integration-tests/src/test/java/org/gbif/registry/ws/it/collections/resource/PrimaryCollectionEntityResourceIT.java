@@ -253,20 +253,18 @@ public abstract class PrimaryCollectionEntityResourceIT<
     changeSuggestion.setKey(1);
     Status status = Status.PENDING;
     Type type = Type.CREATE;
-    Country country = Country.DENMARK;
     String proposerEmail = "aa@aa.com";
     UUID entityKey = UUID.randomUUID();
     Pageable page = new PagingRequest();
 
-    when(getMockChangeSuggestionService()
-            .list(status, type, country, proposerEmail, entityKey, page))
+    when(getMockChangeSuggestionService().list(status, type, proposerEmail, entityKey, page))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));
 
     PagingResponse<R> result =
         getPrimaryCollectionEntityClient()
-            .listChangeSuggestion(status, type, country, proposerEmail, entityKey, page);
+            .listChangeSuggestion(status, type, proposerEmail, entityKey, page);
     assertEquals(1, result.getResults().size());
   }
 
