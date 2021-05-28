@@ -26,7 +26,7 @@ public interface ChangeSuggestionMapper {
       @Param("status") Status status,
       @Param("type") Type type,
       @Param("entityType") CollectionEntityType entityType,
-      @Param("country") Country country,
+      @Param("entityCountry") Country entityCountry,
       @Param("proposerEmail") String proposerEmail,
       @Param("entityKey") UUID entityKey,
       @Nullable @Param("page") Pageable page);
@@ -35,7 +35,7 @@ public interface ChangeSuggestionMapper {
       @Param("status") Status status,
       @Param("type") Type type,
       @Param("entityType") CollectionEntityType entityType,
-      @Param("country") Country country,
+      @Param("entityCountry") Country entityCountry,
       @Param("proposerEmail") String proposerEmail,
       @Param("entityKey") UUID entityKey);
 

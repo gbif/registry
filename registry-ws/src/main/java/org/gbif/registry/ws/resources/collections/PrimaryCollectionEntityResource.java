@@ -188,11 +188,12 @@ public abstract class PrimaryCollectionEntityResource<
   public PagingResponse<R> listChangeSuggestion(
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
-      Country country,
+      Country entityCountry,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
       Pageable page) {
-    return changeSuggestionService.list(status, type, country, proposerEmail, entityKey, page);
+    return changeSuggestionService.list(
+        status, type, entityCountry, proposerEmail, entityKey, page);
   }
 
   @PutMapping(value = "changeSuggestion/{key}/discard")

@@ -3,7 +3,6 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
@@ -68,14 +67,10 @@ public class InstitutionChangeSuggestionService
     checkArgument(institutionChangeSuggestion.getEntityKey() != null);
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(institutionChangeSuggestion);
-    dto.setType(Type.CONVERSION_TO_COLLECTION);
     dto.setInstitutionConvertedCollection(
         institutionChangeSuggestion.getInstitutionForConvertedCollection());
     dto.setNameNewInstitutionConvertedCollection(
         institutionChangeSuggestion.getNameForNewInstitutionForConvertedCollection());
-
-    Institution currentEntity = institutionService.get(institutionChangeSuggestion.getEntityKey());
-    dto.setCountry(getCountry(currentEntity));
 
     return dto;
   }

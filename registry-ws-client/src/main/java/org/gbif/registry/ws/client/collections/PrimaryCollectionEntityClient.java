@@ -127,7 +127,7 @@ public interface PrimaryCollectionEntityClient<
   PagingResponse<R> listChangeSuggestion(
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
-      @RequestParam(value = "country") Country country,
+      @RequestParam(value = "entityCountry") Country entityCountry,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
       @SpringQueryMap Pageable page);

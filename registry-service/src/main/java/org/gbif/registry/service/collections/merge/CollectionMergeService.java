@@ -55,7 +55,7 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
 
   @Override
   Collection mergeEntityFields(Collection entityToReplace, Collection replacement) {
-    setNullFields(replacement, entityToReplace);
+    setNullFieldsInTarget(replacement, entityToReplace);
     replacement.setEmail(mergeLists(entityToReplace.getEmail(), replacement.getEmail()));
     replacement.setPhone(mergeLists(entityToReplace.getPhone(), replacement.getPhone()));
     replacement.setContentTypes(
