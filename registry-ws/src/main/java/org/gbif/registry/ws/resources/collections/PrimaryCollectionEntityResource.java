@@ -38,7 +38,6 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
@@ -188,12 +187,10 @@ public abstract class PrimaryCollectionEntityResource<
   public PagingResponse<R> listChangeSuggestion(
       @RequestParam(value = "status", required = false) Status status,
       @RequestParam(value = "type", required = false) Type type,
-      Country entityCountry,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
       Pageable page) {
-    return changeSuggestionService.list(
-        status, type, entityCountry, proposerEmail, entityKey, page);
+    return changeSuggestionService.list(status, type, proposerEmail, entityKey, page);
   }
 
   @PutMapping(value = "changeSuggestion/{key}/discard")

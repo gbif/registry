@@ -308,7 +308,6 @@ public abstract class BaseChangeSuggestionService<
   public PagingResponse<R> list(
       @Nullable Status status,
       @Nullable Type type,
-      @Nullable Country entityCountry,
       @Nullable String proposerEmail,
       @Nullable UUID entityKey,
       @Nullable Pageable pageable) {
@@ -316,11 +315,10 @@ public abstract class BaseChangeSuggestionService<
 
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status, type, collectionEntityType, entityCountry, proposerEmail, entityKey, page);
+            status, type, collectionEntityType, proposerEmail, entityKey, page);
 
     long count =
-        changeSuggestionMapper.count(
-            status, type, collectionEntityType, entityCountry, proposerEmail, entityKey);
+        changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey);
 
     List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());
@@ -387,12 +385,6 @@ public abstract class BaseChangeSuggestionService<
     dto.setProposedBy(getUsername());
     dto.setModifiedBy(getUsername());
 
-    if (changeSuggestion.getEntityKey() != null) {
-      T currentEntity = crudService.get(changeSuggestion.getEntityKey());
-      dto.setEntityCountry(getCountry(currentEntity));
-      dto.setEntityName(currentEntity.getName());
-    }
-
     return dto;
   }
 
@@ -423,8 +415,6 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setKey(dto.getKey());
     suggestion.setStatus(dto.getStatus());
     suggestion.setType(dto.getType());
-    suggestion.setEntityCountry(dto.getEntityCountry());
-    suggestion.setEntityName(dto.getEntityName());
     suggestion.setAppliedBy(dto.getAppliedBy());
     suggestion.setApplied(dto.getApplied());
     suggestion.setDiscarded(dto.getDiscarded());
@@ -436,6 +426,13 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setProposed(dto.getProposed());
     suggestion.setProposedBy(dto.getProposedBy());
     suggestion.setMergeTargetKey(dto.getMergeTargetKey());
+
+    if (dto.getEntityKey() != null) {
+      // we take the country and the name from the current entity
+      T currentEntity = crudService.get(dto.getEntityKey());
+      suggestion.setEntityCountry(getCountry(currentEntity));
+      suggestion.setEntityName(currentEntity.getName());
+    }
 
     // we only show the proposer email for users with the right permissions (data protection)
     if (hasRightsToSeeProposerEmail(dto)) {

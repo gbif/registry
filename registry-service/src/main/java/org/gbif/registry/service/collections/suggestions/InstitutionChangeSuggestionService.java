@@ -33,7 +33,6 @@ public class InstitutionChangeSuggestionService
       LoggerFactory.getLogger(InstitutionChangeSuggestionService.class);
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
-  private final InstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
 
   @Autowired
@@ -57,7 +56,6 @@ public class InstitutionChangeSuggestionService
         eventManager,
         grSciCollEditorAuthorizationService);
     this.changeSuggestionMapper = changeSuggestionMapper;
-    this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
   }
 

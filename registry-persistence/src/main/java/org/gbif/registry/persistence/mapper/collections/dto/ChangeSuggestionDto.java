@@ -20,8 +20,6 @@ public class ChangeSuggestionDto {
   private Integer key;
   private CollectionEntityType entityType;
   private UUID entityKey;
-  private String entityName;
-  private Country entityCountry;
   private Type type;
   private Status status;
   private String proposedBy;
