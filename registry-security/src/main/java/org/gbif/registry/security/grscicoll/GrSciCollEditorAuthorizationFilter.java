@@ -16,7 +16,7 @@
 package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
@@ -79,12 +79,12 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   public static final String INSTITUTION = "institution";
   public static final String COLLECTION = "collection";
 
-  private final GrSciCollEditorAuthorizationService authService;
+  private final GrSciCollAuthorizationService authService;
   private final AuthenticationFacade authenticationFacade;
   private final ObjectMapper objectMapper;
 
   public GrSciCollEditorAuthorizationFilter(
-      GrSciCollEditorAuthorizationService authService,
+      GrSciCollAuthorizationService authService,
       AuthenticationFacade authenticationFacade,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.authService = authService;
@@ -108,27 +108,26 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
         && !isChangeSuggestionCreation(request, path)) {
       // user must NOT be null if the resource requires editor rights restrictions
       ensureUserSetInSecurityContext(authentication, HttpStatus.FORBIDDEN);
-      final String username = authentication.getName();
 
       // validate only if user is not GrSciColl admin
       if (!checkUserInRole(authentication, UserRoles.GRSCICOLL_ADMIN_ROLE)) {
         // only editors allowed to modify, because admins already excluded
-        if (!checkUserInRole(authentication, UserRoles.GRSCICOLL_EDITOR_ROLE)) {
+        if (!checkUserInRole(
+            authentication, UserRoles.GRSCICOLL_EDITOR_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
           throw new WebApplicationException(
               "User has no GrSciColl editor rights", HttpStatus.FORBIDDEN);
         }
 
         if (isChangeSuggestionRequest(path)) {
-          checkChangeSuggestionUpdate(path, username);
+          checkChangeSuggestionUpdate(path, authentication);
         } else {
           // editors cannot edit machine tags
-          checkMachineTagsPermissions(path, username);
+          // TODO: only if they have the scope
+          checkMachineTagsPermissions(path, authentication);
 
-          // editors cannot create institutions or collections without institution
-          checkInstitutionAndCollectionCreationPermissions(request, path, username);
+          checkInstitutionAndCollectionCreationPermissions(request, path, authentication);
 
-          // check user rights in institution and collection
-          checkInstitutionAndCollectionUpdatePermissions(request, path, username);
+          checkInstitutionAndCollectionUpdatePermissions(request, path, authentication);
         }
       }
     }
@@ -144,72 +143,89 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     return "POST".equals(request.getMethod()) && isChangeSuggestionRequest(path);
   }
 
-  private void checkChangeSuggestionUpdate(String path, String username) {
+  private void checkChangeSuggestionUpdate(String path, Authentication authentication) {
     Matcher matcher = CHANGE_SUGGESTION_UPDATE_PATTERN.matcher(path);
     if (matcher.find()) {
       String entityType = matcher.group(1);
       int key = Integer.parseInt(matcher.group(2));
-      if (!authService.allowedToUpdateChangeSuggestion(key, entityType, username)) {
+      if (!authService.allowedToUpdateChangeSuggestion(key, entityType, authentication)) {
         throw new WebApplicationException(
             MessageFormat.format(
-                "User {0} is not allowed to update change suggestion {1}", username, key),
+                "User {0} is not allowed to update change suggestion {1}", authentication, key),
             HttpStatus.FORBIDDEN);
       }
     }
   }
 
   private void checkInstitutionAndCollectionUpdatePermissions(
-      HttpServletRequest request, String path, String username) {
-    boolean isDelete = "DELETE".equals(request.getMethod());
+      HttpServletRequest request, String path, Authentication authentication) {
     Matcher matcher = ENTITY_PATTERN.matcher(path);
     if (matcher.find()) {
       UUID entityKey = UUID.fromString(matcher.group(2));
       String entityType = matcher.group(1);
 
-      Collection collectionInMessageBody = null;
-      if (path.startsWith("/grscicoll/collection")) {
+      boolean isDeleteOrMergeOrConversion =
+          "DELETE".equals(request.getMethod())
+              || path.contains("/merge")
+              || path.contains("/convertToCollection");
+
+      boolean allowed = false;
+      if (INSTITUTION.equalsIgnoreCase(entityType)) {
+        allowed =
+            authService.allowedToModifyInstitution(
+                authentication, entityKey, isDeleteOrMergeOrConversion);
+      } else if (COLLECTION.equalsIgnoreCase(entityType)) {
+        Collection collectionInMessageBody = null;
         if (FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches()) {
           collectionInMessageBody = readEntity(request, Collection.class);
         }
+
+        allowed =
+            authService.allowedToModifyCollection(
+                authentication, entityKey, collectionInMessageBody, isDeleteOrMergeOrConversion);
       }
 
-      if (!authService.allowedToModifyCollectionEntity(
-          entityType, entityKey, isDelete, username, collectionInMessageBody)) {
+      if (!allowed) {
         throw new WebApplicationException(
             MessageFormat.format(
                 "User {0} is not allowed to modify entity {1} of type {2}",
-                username, entityKey, entityType),
+                authentication.getName(), entityKey, entityType),
             HttpStatus.FORBIDDEN);
       }
     }
   }
 
   private void checkInstitutionAndCollectionCreationPermissions(
-      HttpServletRequest request, String path, String username) {
+      HttpServletRequest request, String path, Authentication authentication) {
     Matcher createEntityMatch = INST_COLL_CREATE_PATTERN.matcher(path);
     if ("POST".equals(request.getMethod()) && createEntityMatch.find()) {
       String entityType = createEntityMatch.group(1);
 
-      Collection collection = null;
-      if (COLLECTION.equalsIgnoreCase(entityType)) {
-        collection = readEntity(request, Collection.class);
+      boolean allowed = false;
+      if (INSTITUTION.equalsIgnoreCase(entityType)) {
+        Institution institution = readEntity(request, Institution.class);
+        allowed = authService.allowedToCreateInstitution(institution, authentication);
+      } else if (COLLECTION.equalsIgnoreCase(entityType)) {
+        Collection collection = readEntity(request, Collection.class);
+        allowed = authService.allowedToCreateCollection(collection, authentication);
       }
 
-      if (!authService.allowedToCreateCollectionEntity(entityType, username, collection)) {
+      if (!allowed) {
         throw new WebApplicationException(
             MessageFormat.format(
-                "User {0} is not allowed to create entity {1}", username, entityType),
+                "User {0} is not allowed to create entity {1}", authentication, entityType),
             HttpStatus.FORBIDDEN);
       }
     }
   }
 
-  private void checkMachineTagsPermissions(String path, String username) {
+  private void checkMachineTagsPermissions(String path, Authentication authentication) {
+    // TODO
     if (path.contains("/machineTag")) {
       throw new WebApplicationException(
           MessageFormat.format(
               "User {0} is not allowed to create or delente machine tags of GrSciColl entities",
-              username),
+              authentication.getName()),
           HttpStatus.FORBIDDEN);
     }
   }

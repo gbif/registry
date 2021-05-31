@@ -99,8 +99,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
       Mockito.mock(ChangeSuggestionMapper.class);
   private final Authentication mockAuthentication = Mockito.mock(Authentication.class);
 
-  private final GrSciCollEditorAuthorizationService authService =
-      new GrSciCollEditorAuthorizationService(
+  private final GrSciCollAuthorizationService authService =
+      new GrSciCollAuthorizationService(
           mockUserRightsMapper,
           mockCollectionMapper,
           mockInstitutionMapper,

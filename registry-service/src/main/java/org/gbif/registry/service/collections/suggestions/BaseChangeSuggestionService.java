@@ -30,8 +30,7 @@ import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationService;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
@@ -95,7 +94,7 @@ public abstract class BaseChangeSuggestionService<
   private final EmailSender emailSender;
   private final CollectionsEmailManager emailManager;
   private final EventManager eventManager;
-  private final GrSciCollEditorAuthorizationService grSciCollEditorAuthorizationService;
+  private final GrSciCollAuthorizationService grSciCollAuthorizationService;
   private CollectionEntityType collectionEntityType;
 
   protected BaseChangeSuggestionService(
@@ -107,7 +106,7 @@ public abstract class BaseChangeSuggestionService<
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
       EventManager eventManager,
-      GrSciCollEditorAuthorizationService grSciCollEditorAuthorizationService) {
+      GrSciCollAuthorizationService grSciCollAuthorizationService) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -116,7 +115,7 @@ public abstract class BaseChangeSuggestionService<
     this.emailSender = emailSender;
     this.emailManager = emailManager;
     this.eventManager = eventManager;
-    this.grSciCollEditorAuthorizationService = grSciCollEditorAuthorizationService;
+    this.grSciCollAuthorizationService = grSciCollAuthorizationService;
 
     if (clazz == Institution.class) {
       collectionEntityType = CollectionEntityType.INSTITUTION;
@@ -427,13 +426,6 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setProposedBy(dto.getProposedBy());
     suggestion.setMergeTargetKey(dto.getMergeTargetKey());
 
-    if (dto.getEntityKey() != null) {
-      // we take the country and the name from the current entity
-      T currentEntity = crudService.get(dto.getEntityKey());
-      suggestion.setEntityCountry(getCountry(currentEntity));
-      suggestion.setEntityName(currentEntity.getName());
-    }
-
     // we only show the proposer email for users with the right permissions (data protection)
     if (hasRightsToSeeProposerEmail(dto)) {
       suggestion.setProposerEmail(dto.getProposerEmail());
@@ -454,13 +446,18 @@ public abstract class BaseChangeSuggestionService<
                 })
             .collect(Collectors.toList()));
 
+    T currentEntity = crudService.get(dto.getEntityKey());
+    if (dto.getEntityKey() != null) {
+      // we take the country and the name from the current entity
+      suggestion.setEntityCountry(getCountry(currentEntity));
+      suggestion.setEntityName(currentEntity.getName());
+    }
+
     // merge view
     try {
       if (dto.getType() == Type.CREATE) {
         suggestion.setSuggestedEntity(objectMapper.readValue(dto.getSuggestedEntity(), clazz));
       } else if (dto.getType() == Type.UPDATE) {
-        T entity = crudService.get(dto.getEntityKey());
-
         // we sort the changes because we can have multiple changes in the same field. We are only
         // interested in the last change so we want to apply them in order (older changes could be
         // discarded but it doesn't matter much since we're not expecting too many changes in the
@@ -476,9 +473,9 @@ public abstract class BaseChangeSuggestionService<
                       + changeDto.getFieldName().substring(0, 1).toUpperCase()
                       + changeDto.getFieldName().substring(1),
                   changeDto.getFieldType())
-              .invoke(entity, changeDto.getSuggested());
+              .invoke(currentEntity, changeDto.getSuggested());
         }
-        suggestion.setSuggestedEntity(entity);
+        suggestion.setSuggestedEntity(currentEntity);
       }
     } catch (Exception e) {
       throw new IllegalStateException("Error while applying suggested change to the merge view", e);
@@ -502,9 +499,8 @@ public abstract class BaseChangeSuggestionService<
 
   protected boolean hasRightsToSeeProposerEmail(ChangeSuggestionDto dto) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
-        || grSciCollEditorAuthorizationService.allowedToUpdateChangeSuggestion(
-            dto.getKey(), dto.getEntityType().name().toLowerCase(), getUsername());
+    return grSciCollAuthorizationService.allowedToUpdateChangeSuggestion(
+        dto.getKey(), dto.getEntityType().name().toLowerCase(), authentication);
   }
 
   protected abstract R newEmptyChangeSuggestion();

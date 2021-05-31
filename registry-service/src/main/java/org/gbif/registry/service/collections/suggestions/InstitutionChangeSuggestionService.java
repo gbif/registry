@@ -9,7 +9,7 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationService;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
 import java.util.UUID;
@@ -44,7 +44,8 @@ public class InstitutionChangeSuggestionService
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
       EventManager eventManager,
-      GrSciCollEditorAuthorizationService grSciCollEditorAuthorizationService) {
+      GrSciCollAuthorizationService grSciCollAuthorizationService
+  ) {
     super(
         changeSuggestionMapper,
         institutionMergeService,
@@ -53,8 +54,7 @@ public class InstitutionChangeSuggestionService
         objectMapper,
         emailSender,
         emailManager,
-        eventManager,
-        grSciCollEditorAuthorizationService);
+        eventManager, grSciCollAuthorizationService);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionMergeService = institutionMergeService;
   }
