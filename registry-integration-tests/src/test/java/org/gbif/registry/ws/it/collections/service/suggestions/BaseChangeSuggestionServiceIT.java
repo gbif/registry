@@ -187,7 +187,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertEquals(numberChanges, suggestion.getChanges().size());
     assertEquals(1, suggestion.getChanges().stream().filter(Change::isOverwritten).count());
-    assertEquals(1, suggestion.getChanges().stream().filter(Change::isStillRelevant).count());
+    assertEquals(1, suggestion.getChanges().stream().filter(Change::isOutdated).count());
 
     // When
     changeSuggestionService.applyChangeSuggestion(suggKey);

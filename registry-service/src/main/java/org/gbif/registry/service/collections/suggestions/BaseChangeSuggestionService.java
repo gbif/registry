@@ -473,8 +473,8 @@ public abstract class BaseChangeSuggestionService<
                           + changeDto.getFieldName().substring(1))
                   .invoke(currentEntity);
 
-          // if it's the same as the current it's not relevant anymore
-          change.setStillRelevant(Objects.equals(currentValue, changeDto.getSuggested()));
+          // if it's the same as the current it's considered outdated
+          change.setOutdated(Objects.equals(currentValue, changeDto.getSuggested()));
           changes.add(change);
 
           if (!changeDto.isOverwritten()) {
@@ -523,6 +523,7 @@ public abstract class BaseChangeSuggestionService<
     change.setAuthor(dto.getAuthor());
     change.setCreated(dto.getCreated());
     change.setOverwritten(dto.isOverwritten());
+
     return change;
   }
 
