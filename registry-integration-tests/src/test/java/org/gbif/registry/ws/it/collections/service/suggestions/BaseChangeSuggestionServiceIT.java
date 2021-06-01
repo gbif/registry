@@ -96,9 +96,10 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertCreatedSuggestion(suggestion);
     assertEquals(Type.CREATE, suggestion.getType());
-    assertNull(suggestion.getEntityCountry());
-    assertNull(suggestion.getEntityName());
-    assertTrue(suggestion.getChanges().isEmpty());
+    assertEquals(Country.DENMARK, suggestion.getEntityCountry());
+    assertEquals(entity.getName(), suggestion.getEntityName());
+    int changes = suggestion.getChanges().size();
+    assertTrue(changes > 0);
 
     // When - update the suggestion (e.g.: the reviewer does some changes)
     entity.setCode(UUID.randomUUID().toString());
@@ -109,7 +110,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
-    assertEquals(1, suggestion.getChanges().size());
+    assertEquals(changes + 1, suggestion.getChanges().size());
     assertEquals(2, suggestion.getComments().size());
 
     // When
