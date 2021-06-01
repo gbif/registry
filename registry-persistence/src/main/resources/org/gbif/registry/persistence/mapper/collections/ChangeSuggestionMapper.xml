@@ -67,6 +67,13 @@
     WHERE cs.key = #{key,jdbcType=INTEGER}
   </select>
 
+  <select id="getByKeyAndType" resultMap="CHANGE_SUGGESTION_DTO_MAP">
+    SELECT
+    <include refid="SUGGESTION_READ_FIELDS"/>
+    FROM change_suggestion cs
+    WHERE cs.key = #{key,jdbcType=INTEGER} AND cs.entity_type = #{entityType,jdbcType=OTHER}
+  </select>
+
   <select id="list" resultType="ChangeSuggestionDto" resultMap="CHANGE_SUGGESTION_DTO_MAP" parameterType="Pageable">
     SELECT
     <include refid="SUGGESTION_READ_FIELDS"/>

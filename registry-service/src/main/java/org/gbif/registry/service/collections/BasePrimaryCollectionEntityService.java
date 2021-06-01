@@ -47,6 +47,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 @Validated
@@ -85,7 +86,7 @@ public abstract class BasePrimaryCollectionEntityService<
     this.primaryEntityMapper = primaryEntityMapper;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -110,7 +111,7 @@ public abstract class BasePrimaryCollectionEntityService<
   }
 
   @Validated({PostPersist.class, Default.class})
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void update(T entity) {
@@ -166,7 +167,7 @@ public abstract class BasePrimaryCollectionEntityService<
     }
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void addContact(@NotNull UUID entityKey, @NotNull UUID personKey) {
@@ -183,7 +184,7 @@ public abstract class BasePrimaryCollectionEntityService<
             entityKey, objectClass, Person.class, personKey, EventType.LINK));
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void removeContact(@NotNull UUID entityKey, @NotNull UUID personKey) {
@@ -198,7 +199,7 @@ public abstract class BasePrimaryCollectionEntityService<
     return primaryEntityMapper.listContacts(key);
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -226,7 +227,7 @@ public abstract class BasePrimaryCollectionEntityService<
     return primaryEntityMapper.listOccurrenceMappings(uuid);
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void deleteOccurrenceMapping(UUID entityKey, int occurrenceMappingKey) {
@@ -243,7 +244,7 @@ public abstract class BasePrimaryCollectionEntityService<
             EventType.DELETE));
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, IDIGBIO_GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void replace(UUID targetEntityKey, UUID replacementKey) {

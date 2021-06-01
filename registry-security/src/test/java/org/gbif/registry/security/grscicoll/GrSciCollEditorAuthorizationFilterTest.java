@@ -398,8 +398,14 @@ public class GrSciCollEditorAuthorizationFilterTest {
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
 
-    // WHEN, THEN
-    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
   }
 
   @Test
@@ -546,7 +552,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 
-    // we return the old institution key in the mapepr
+    // we return the old institution key in the mapper
     doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, anotherInstKey);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);

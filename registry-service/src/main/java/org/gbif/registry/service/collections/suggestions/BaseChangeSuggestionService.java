@@ -59,6 +59,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -199,7 +200,7 @@ public abstract class BaseChangeSuggestionService<
     return dto;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void updateChangeSuggestion(R updatedChangeSuggestion) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
@@ -240,7 +241,7 @@ public abstract class BaseChangeSuggestionService<
             dto.getEntityKey(), clazz, dto, oldDto, dto.getKey(), EventType.UPDATE));
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void discardChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
@@ -268,7 +269,7 @@ public abstract class BaseChangeSuggestionService<
     }
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public UUID applyChangeSuggestion(int suggestionKey) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);

@@ -36,6 +36,7 @@ import com.google.common.base.Strings;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 @Validated
 @Service
@@ -68,7 +69,7 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
     this.personMapper = personMapper;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -87,7 +88,7 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
     return person.getKey();
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void update(Person person) {

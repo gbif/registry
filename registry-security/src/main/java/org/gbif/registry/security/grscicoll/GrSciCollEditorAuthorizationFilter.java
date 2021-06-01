@@ -17,6 +17,7 @@ package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
@@ -67,14 +68,13 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+).*");
   public static final Pattern FIRST_CLASS_ENTITY_UPDATE =
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
-  public static final Pattern IDENTIFIER_PATTERN_DELETE =
-      Pattern.compile(
-          ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/identifier/([0-9]+).*");
   public static final Pattern CHANGE_SUGGESTION_UPDATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)/changeSuggestion/([0-9]+).*");
-
   public static final Pattern INST_COLL_CREATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)$");
+  public static final Pattern MACHINE_TAG_PATTERN_DELETE =
+      Pattern.compile(
+          ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/machineTag/([0-9]+).*");
 
   public static final String INSTITUTION = "institution";
   public static final String COLLECTION = "collection";
@@ -122,8 +122,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
           checkChangeSuggestionUpdate(path, authentication);
         } else {
           // editors cannot edit machine tags
-          // TODO: only if they have the scope
-          checkMachineTagsPermissions(path, authentication);
+          checkMachineTagsPermissions(request, path, authentication);
 
           checkInstitutionAndCollectionCreationPermissions(request, path, authentication);
 
@@ -219,14 +218,28 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     }
   }
 
-  private void checkMachineTagsPermissions(String path, Authentication authentication) {
-    // TODO
+  private void checkMachineTagsPermissions(
+      HttpServletRequest request, String path, Authentication authentication) {
     if (path.contains("/machineTag")) {
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "User {0} is not allowed to create or delente machine tags of GrSciColl entities",
-              authentication.getName()),
-          HttpStatus.FORBIDDEN);
+      boolean allowed = false;
+      if ("POST".equals(request.getMethod())) {
+        MachineTag machineTagToCreate = readEntity(request, MachineTag.class);
+        allowed = authService.allowedToCreateMachineTag(authentication, machineTagToCreate);
+      } else if ("DELETE".equals(request.getMethod())) {
+        Matcher matcher = MACHINE_TAG_PATTERN_DELETE.matcher(path);
+        if (matcher.find()) {
+          int machineTagKey = Integer.parseInt(matcher.group(3));
+          allowed = authService.allowedToDeleteMachineTag(authentication, machineTagKey);
+        }
+      }
+
+      if (!allowed) {
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to create or delete machine tag",
+                authentication.getName()),
+            HttpStatus.FORBIDDEN);
+      }
     }
   }
 

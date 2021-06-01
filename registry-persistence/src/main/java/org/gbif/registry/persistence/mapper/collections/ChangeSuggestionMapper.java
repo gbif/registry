@@ -21,6 +21,9 @@ public interface ChangeSuggestionMapper {
 
   ChangeSuggestionDto get(@Param("key") int key);
 
+  ChangeSuggestionDto getByKeyAndType(
+      @Param("key") int key, @Param("entityType") CollectionEntityType entityType);
+
   List<ChangeSuggestionDto> list(
       @Param("status") Status status,
       @Param("type") Type type,

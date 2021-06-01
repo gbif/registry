@@ -16,20 +16,20 @@
 package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
+import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserRoles;
-import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
-import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 
 import java.util.UUID;
 
@@ -39,6 +39,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
@@ -56,8 +57,7 @@ public class GrSciCollAuthorizationService {
   private final CollectionMapper collectionMapper;
   private final InstitutionMapper institutionMapper;
   private final PersonMapper personMapper;
-  private final InstitutionChangeSuggestionService institutionChangeSuggestionService;
-  private final CollectionChangeSuggestionService collectionChangeSuggestionService;
+  private final ChangeSuggestionMapper changeSuggestionMapper;
   private final ObjectMapper objectMapper;
 
   public GrSciCollAuthorizationService(
@@ -65,16 +65,40 @@ public class GrSciCollAuthorizationService {
       CollectionMapper collectionMapper,
       InstitutionMapper institutionMapper,
       PersonMapper personMapper,
-      InstitutionChangeSuggestionService institutionChangeSuggestionService,
-      CollectionChangeSuggestionService collectionChangeSuggestionService,
+      ChangeSuggestionMapper changeSuggestionMapper,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.userRightsMapper = userRightsMapper;
     this.collectionMapper = collectionMapper;
     this.institutionMapper = institutionMapper;
     this.personMapper = personMapper;
-    this.institutionChangeSuggestionService = institutionChangeSuggestionService;
-    this.collectionChangeSuggestionService = collectionChangeSuggestionService;
+    this.changeSuggestionMapper = changeSuggestionMapper;
     this.objectMapper = objectMapper;
+  }
+
+  public boolean allowedToCreateMachineTag(Authentication authentication, MachineTag machineTag) {
+    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      return true;
+    }
+
+    String username = authentication.getName();
+    if (username == null || machineTag == null || machineTag.getNamespace() == null) {
+      return false;
+    }
+
+    return userRightsMapper.namespaceExistsForUser(username, machineTag.getNamespace());
+  }
+
+  public boolean allowedToDeleteMachineTag(Authentication authentication, int machineTagKey) {
+    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      return true;
+    }
+
+    String username = authentication.getName();
+    if (username == null) {
+      return false;
+    }
+
+    return userRightsMapper.allowedToDeleteMachineTag(username, machineTagKey);
   }
 
   private boolean allowedToModifyEntity(String username, UUID key) {
@@ -112,6 +136,11 @@ public class GrSciCollAuthorizationService {
     }
 
     Institution institution = institutionMapper.get(institutionKey);
+
+    if (institution == null) {
+      return false;
+    }
+
     return allowedToModifyEntity(authentication.getName(), institutionKey)
         || allowedToModifyCountry(authentication.getName(), extractCountry(institution));
   }
@@ -135,6 +164,10 @@ public class GrSciCollAuthorizationService {
     }
 
     Collection persistedCollection = collectionMapper.get(collectionKey);
+
+    if (persistedCollection == null) {
+      return false;
+    }
 
     // check if the user has changed the institution and has permissions in the new one. This has to
     // be the first check since it's more restrictive.
@@ -169,7 +202,9 @@ public class GrSciCollAuthorizationService {
 
       Institution persistedInstitution =
           institutionMapper.get(persistedCollection.getInstitutionKey());
-      return allowedToModifyCountry(username, extractCountry(persistedInstitution));
+      if (persistedInstitution != null) {
+        return allowedToModifyCountry(username, extractCountry(persistedInstitution));
+      }
     }
 
     return false;
@@ -181,6 +216,11 @@ public class GrSciCollAuthorizationService {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
       return true;
     }
+
+    if (institution == null) {
+      return false;
+    }
+
     return allowedToModifyCountry(authentication.getName(), extractCountry(institution));
   }
 
@@ -207,15 +247,16 @@ public class GrSciCollAuthorizationService {
     }
 
     if (INSTITUTION.equalsIgnoreCase(entityType)) {
-      InstitutionChangeSuggestion changeSuggestion =
-          institutionChangeSuggestionService.getChangeSuggestion(key);
+      ChangeSuggestionDto changeSuggestion =
+          changeSuggestionMapper.getByKeyAndType(key, CollectionEntityType.INSTITUTION);
 
       if (changeSuggestion == null) {
         return false;
       }
 
       if (changeSuggestion.getType() == Type.CREATE) {
-        return allowedToCreateInstitution(changeSuggestion.getSuggestedEntity(), authentication);
+        return allowedToCreateInstitution(
+            readEntity(changeSuggestion.getSuggestedEntity(), Institution.class), authentication);
       }
 
       boolean isDeleteOrMergeOrConversion =
@@ -226,25 +267,24 @@ public class GrSciCollAuthorizationService {
       return allowedToModifyInstitution(
           authentication, changeSuggestion.getEntityKey(), isDeleteOrMergeOrConversion);
     } else if (COLLECTION.equalsIgnoreCase(entityType)) {
-      CollectionChangeSuggestion changeSuggestion =
-          collectionChangeSuggestionService.getChangeSuggestion(key);
+      ChangeSuggestionDto changeSuggestion =
+          changeSuggestionMapper.getByKeyAndType(key, CollectionEntityType.COLLECTION);
 
       if (changeSuggestion == null) {
         return false;
       }
 
+      Collection suggestedEntity =
+          readEntity(changeSuggestion.getSuggestedEntity(), Collection.class);
       if (changeSuggestion.getType() == Type.CREATE) {
-        return allowedToCreateCollection(changeSuggestion.getSuggestedEntity(), authentication);
+        return allowedToCreateCollection(suggestedEntity, authentication);
       }
 
       boolean isDeleteOrMerge =
           changeSuggestion.getType() == Type.DELETE || changeSuggestion.getType() == Type.MERGE;
 
       return allowedToModifyCollection(
-          authentication,
-          changeSuggestion.getEntityKey(),
-          changeSuggestion.getSuggestedEntity(),
-          isDeleteOrMerge);
+          authentication, changeSuggestion.getEntityKey(), suggestedEntity, isDeleteOrMerge);
     }
 
     return false;
@@ -258,5 +298,14 @@ public class GrSciCollAuthorizationService {
       return entity.getMailingAddress().getCountry();
     }
     return null;
+  }
+
+  private <T> T readEntity(String content, Class<T> clazz) {
+    try {
+      return objectMapper.readValue(content, clazz);
+    } catch (JsonProcessingException e) {
+      LOG.warn("Couldn't read json content", e);
+      return null;
+    }
   }
 }

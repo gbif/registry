@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 @Validated
 public abstract class BaseCollectionEntityService<
@@ -84,7 +85,7 @@ public abstract class BaseCollectionEntityService<
     return baseMapper.get(key);
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void delete(UUID key) {
@@ -99,7 +100,7 @@ public abstract class BaseCollectionEntityService<
     eventManager.post(DeleteCollectionEntityEvent.newInstance(entityToDelete, get(key)));
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -114,7 +115,7 @@ public abstract class BaseCollectionEntityService<
     return identifierKey;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public void deleteIdentifier(UUID entityKey, int identifierKey) {
@@ -133,7 +134,7 @@ public abstract class BaseCollectionEntityService<
     return baseMapper.listIdentifiers(key);
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Validated({PrePersist.class, Default.class})
   @Override
   public int addTag(UUID entityKey, Tag tag) {
@@ -146,7 +147,7 @@ public abstract class BaseCollectionEntityService<
     return tagKey;
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public int addTag(UUID key, String value) {
     Tag tag = new Tag();
@@ -154,7 +155,7 @@ public abstract class BaseCollectionEntityService<
     return addTag(key, tag);
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteTag(UUID entityKey, int tagKey) {
     Tag tagToDelete = tagMapper.get(tagKey);
@@ -182,7 +183,7 @@ public abstract class BaseCollectionEntityService<
    * @param machineTag MachineTag to add
    * @return key of MachineTag created
    */
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
@@ -196,7 +197,7 @@ public abstract class BaseCollectionEntityService<
     return key;
   }
 
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -208,7 +209,7 @@ public abstract class BaseCollectionEntityService<
     return addMachineTag(targetEntityKey, machineTag);
   }
 
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
   public int addMachineTag(UUID targetEntityKey, TagName tagName, String value) {
@@ -222,7 +223,7 @@ public abstract class BaseCollectionEntityService<
    * @param targetEntityKey key of target entity to delete MachineTag from
    * @param machineTagKey key of MachineTag to delete
    */
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
     MachineTag machineTagToDelete = machineTagMapper.get(machineTagKey);
@@ -234,13 +235,13 @@ public abstract class BaseCollectionEntityService<
             targetEntityKey, objectClass, machineTagToDelete, machineTagKey, EventType.DELETE));
   }
 
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteMachineTags(UUID targetEntityKey, TagNamespace tagNamespace) {
     deleteMachineTags(targetEntityKey, tagNamespace.getNamespace());
   }
 
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteMachineTags(UUID targetEntityKey, String namespace) {
     List<MachineTag> machineTagsToDelete =
@@ -257,7 +258,7 @@ public abstract class BaseCollectionEntityService<
                     targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
   }
 
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteMachineTags(UUID targetEntityKey, TagName tagName) {
     deleteMachineTags(targetEntityKey, tagName.getNamespace().getNamespace(), tagName.getName());
@@ -267,7 +268,7 @@ public abstract class BaseCollectionEntityService<
    * The webservice method to delete all machine tag of a particular name in a namespace. Ensures
    * that the caller is authorized to perform the action by looking at the namespace.
    */
-  @Secured(GRSCICOLL_ADMIN_ROLE)
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteMachineTags(UUID targetEntityKey, String namespace, String name) {
     List<MachineTag> machineTagsToDelete =
@@ -297,7 +298,7 @@ public abstract class BaseCollectionEntityService<
    * @param comment Comment to add
    * @return key of Comment created
    */
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -319,7 +320,7 @@ public abstract class BaseCollectionEntityService<
    * @param targetEntityKey key of target entity to delete comment from
    * @param commentKey key of Comment to delete
    */
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void deleteComment(UUID targetEntityKey, int commentKey) {
     Comment commentToDelete = commentMapper.get(commentKey);
