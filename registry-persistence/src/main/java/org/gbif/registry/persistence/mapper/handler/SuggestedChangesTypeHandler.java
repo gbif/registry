@@ -112,7 +112,9 @@ public class SuggestedChangesTypeHandler extends BaseTypeHandler<Set<ChangeDto>>
 
         changeDto.setCreated(
             OBJECT_MAPPER.readValue(element.get("created").toString(), Date.class));
-        changeDto.setAuthor(element.get("author").asText());
+        if (!element.get("author").isNull()) {
+          changeDto.setAuthor(element.get("author").asText());
+        }
         changeDto.setOverwritten(element.get("overwritten").asBoolean());
 
         dtos.add(changeDto);
