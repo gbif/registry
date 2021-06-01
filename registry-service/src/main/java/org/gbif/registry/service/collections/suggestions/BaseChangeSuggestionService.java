@@ -154,7 +154,8 @@ public abstract class BaseChangeSuggestionService<
     // send email
     try {
       BaseEmailModel emailModel =
-          emailManager.generateNewChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
+          emailManager.generateNewChangeSuggestionEmailModel(
+              dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for new change suggestion", e);
@@ -181,6 +182,8 @@ public abstract class BaseChangeSuggestionService<
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
     dto.setSuggestedEntity(toJson(changeSuggestion.getSuggestedEntity()));
+    dto.setChanges(
+        extractChanges(changeSuggestion.getSuggestedEntity(), createEmptyEntityInstance()));
 
     return dto;
   }
@@ -262,7 +265,7 @@ public abstract class BaseChangeSuggestionService<
     try {
       BaseEmailModel emailModel =
           emailManager.generateDiscardedChangeSuggestionEmailModel(
-              dto.getKey(), dto.getEntityType());
+              dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for discarded change suggestion", e);
@@ -304,7 +307,8 @@ public abstract class BaseChangeSuggestionService<
     // send email
     try {
       BaseEmailModel emailModel =
-          emailManager.generateAppliedChangeSuggestionEmailModel(dto.getKey(), dto.getEntityType());
+          emailManager.generateAppliedChangeSuggestionEmailModel(
+              dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for applied change suggestion", e);
@@ -496,7 +500,15 @@ public abstract class BaseChangeSuggestionService<
           dto.getChanges().stream().map(this::changeDtoToChange).collect(Collectors.toList()));
 
       if (dto.getSuggestedEntity() != null) {
-        suggestion.setSuggestedEntity(readJson(dto.getSuggestedEntity(), clazz));
+        T suggestedEntity = readJson(dto.getSuggestedEntity(), clazz);
+        suggestion.setSuggestedEntity(suggestedEntity);
+
+        if (suggestion.getEntityName() == null) {
+          suggestion.setEntityName(suggestedEntity.getName());
+        }
+        if (suggestion.getEntityCountry() == null) {
+          suggestion.setEntityCountry(getCountry(suggestedEntity));
+        }
       }
     }
 
@@ -536,6 +548,15 @@ public abstract class BaseChangeSuggestionService<
       return objectMapper.readValue(content, clazz);
     } catch (JsonProcessingException e) {
       throw new IllegalStateException("Couldn't read json: " + content);
+    }
+  }
+
+  private T createEmptyEntityInstance() {
+    try {
+      return clazz.newInstance();
+    } catch (InstantiationException | IllegalAccessException e) {
+      throw new IllegalStateException(
+          "Couldn't create new instance of class " + clazz.getSimpleName());
     }
   }
 
