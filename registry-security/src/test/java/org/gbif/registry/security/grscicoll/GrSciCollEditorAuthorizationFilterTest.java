@@ -15,11 +15,11 @@
  */
 package org.gbif.registry.security.grscicoll;
 
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
@@ -31,7 +31,6 @@ import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +63,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
   private static final UUID COLL_KEY = UUID.randomUUID();
   private static final int IH_IDENTIFIER_KEY = 1;
   private static final int LSID_IDENTIFIER_KEY = 2;
+  private static final Institution INSTITUTION = new Institution();
+  private static final Collection COLLECTION = new Collection();
   private static final Identifier IH_IDENTIFIER = new Identifier(IdentifierType.IH_IRN, "IH");
   private static final Identifier LSID_IDENTIFIER = new Identifier(IdentifierType.LSID, "LSID");
   private static final String USERNAME = "user";
@@ -82,6 +83,13 @@ public class GrSciCollEditorAuthorizationFilterTest {
   static {
     IH_IDENTIFIER.setKey(IH_IDENTIFIER_KEY);
     LSID_IDENTIFIER.setKey(LSID_IDENTIFIER_KEY);
+    COLLECTION.setKey(COLL_KEY);
+    COLLECTION.setCode(UUID.randomUUID().toString());
+    COLLECTION.setName(UUID.randomUUID().toString());
+    COLLECTION.setInstitutionKey(INST_KEY);
+    INSTITUTION.setKey(INST_KEY);
+    INSTITUTION.setCode(UUID.randomUUID().toString());
+    INSTITUTION.setName(UUID.randomUUID().toString());
   }
 
   private final GbifHttpServletRequestWrapper mockRequest =
@@ -145,7 +153,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void addIrnIdentifierAsEditorTest() {
+  public void addIdentifierAsEditorTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI())
@@ -166,7 +174,24 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void deleteIrnIdentifierAsEditorTest() {
+  public void addIdentifierAsEditorWithScopeTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/institution/" + INST_KEY.toString() + "/identifier");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn("{\"key\": 1, \"type\": \"IH_IRN\" }");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void deleteIdentifierAsEditorTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI())
@@ -193,33 +218,19 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void addNonIrnIdentifierAsEditorTest() {
+  public void deleteIdentifierAsEditorWithScopeTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI())
-        .thenReturn("/grscicoll/institution/" + INST_KEY.toString() + "/identifier");
-    when(mockRequest.getMethod()).thenReturn("POST");
-    when(mockRequest.getContent()).thenReturn("{\"key\": 1, \"type\": \"LSID\" }");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
-
-    // WHEN, THEN
-    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
-  }
-
-  @Test
-  public void deleteNonIrnIdentifierAsEditorTest() {
-    // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI())
-        .thenReturn("/grscicoll/institution/" + INST_KEY.toString() + "/identifier/1");
+        .thenReturn(
+            "/grscicoll/institution/"
+                + INST_KEY.toString()
+                + "/identifier/"
+                + IH_IDENTIFIER.getKey());
     when(mockRequest.getMethod()).thenReturn("DELETE");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(Collections.singletonList(LSID_IDENTIFIER))
-        .when(mockInstitutionMapper)
-        .listIdentifiers(INST_KEY);
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
 
     // WHEN, THEN
@@ -325,6 +336,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockRequest.getContent()).thenReturn("{\"key\": \"" + INST_KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
 
     // WHEN, THEN
@@ -361,6 +373,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockRequest.getContent()).thenReturn("{\"content\": \"comment\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
 
     // WHEN, THEN
@@ -417,10 +430,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 
-    List<MachineTag> machineTags = new ArrayList<>();
-    machineTags.add(new MachineTag(Constants.IDIGBIO_NAMESPACE, "foo", "bar"));
-    doReturn(machineTags).when(mockInstitutionMapper).listMachineTags(INST_KEY);
-
     // WHEN, THEN
     assertThrows(
         WebApplicationException.class,
@@ -437,7 +446,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
         .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
 
     // WHEN, THEN
@@ -454,7 +463,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
         .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
     doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
 
@@ -472,7 +481,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
         .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
     doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
     doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
 
@@ -497,10 +505,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 
-    List<MachineTag> machineTags = new ArrayList<>();
-    machineTags.add(new MachineTag(Constants.IDIGBIO_NAMESPACE, "foo", "bar"));
-    doReturn(machineTags).when(mockCollectionMapper).listMachineTags(COLL_KEY);
-
     // WHEN, THEN
     assertThrows(
         WebApplicationException.class,
@@ -523,7 +527,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 
     // we return the old institution key in the mapepr
-    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, anotherInstKey);
     doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
 
@@ -551,9 +554,9 @@ public class GrSciCollEditorAuthorizationFilterTest {
             "{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + anotherInstKey + "\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
 
     // we return the old institution key in the mapper
-    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, anotherInstKey);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
 
@@ -570,7 +573,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockRequest.getContent()).thenReturn("{\"content\": \"comment\"}");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(INST_KEY).when(mockCollectionMapper).getInstitutionKey(COLL_KEY);
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
     doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
 
     // WHEN, THEN

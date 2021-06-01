@@ -163,8 +163,9 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       UUID entityKey = UUID.fromString(matcher.group(2));
       String entityType = matcher.group(1);
 
-      boolean isDeleteOrMergeOrConversion =
-          "DELETE".equals(request.getMethod())
+      boolean firstClassEntityUpdate = FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches();
+      boolean isDeleteEntityOrMergeOrConversion =
+          ("DELETE".equals(request.getMethod()) && firstClassEntityUpdate)
               || path.contains("/merge")
               || path.contains("/convertToCollection");
 
@@ -172,16 +173,19 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       if (INSTITUTION.equalsIgnoreCase(entityType)) {
         allowed =
             authService.allowedToModifyInstitution(
-                authentication, entityKey, isDeleteOrMergeOrConversion);
+                authentication, entityKey, isDeleteEntityOrMergeOrConversion);
       } else if (COLLECTION.equalsIgnoreCase(entityType)) {
         Collection collectionInMessageBody = null;
-        if (FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches()) {
+        if (firstClassEntityUpdate) {
           collectionInMessageBody = readEntity(request, Collection.class);
         }
 
         allowed =
             authService.allowedToModifyCollection(
-                authentication, entityKey, collectionInMessageBody, isDeleteOrMergeOrConversion);
+                authentication,
+                entityKey,
+                collectionInMessageBody,
+                isDeleteEntityOrMergeOrConversion);
       }
 
       if (!allowed) {

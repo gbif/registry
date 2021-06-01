@@ -125,12 +125,14 @@ public class GrSciCollAuthorizationService {
   }
 
   public boolean allowedToModifyInstitution(
-      Authentication authentication, UUID institutionKey, boolean isDeleteOrMergeOrConversion) {
+      Authentication authentication,
+      UUID institutionKey,
+      boolean isDeleteEntityOrMergeOrConversion) {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
       return true;
     }
 
-    if (isDeleteOrMergeOrConversion
+    if (isDeleteEntityOrMergeOrConversion
         && !checkUserInRole(authentication, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
       return false;
     }
@@ -149,12 +151,13 @@ public class GrSciCollAuthorizationService {
       Authentication authentication,
       UUID collectionKey,
       Collection collectionInMessageBody,
-      boolean isDeleteOrMerge) {
+      boolean isDeleteEntityOrMerge) {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
       return true;
     }
 
-    if (isDeleteOrMerge && !checkUserInRole(authentication, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
+    if (isDeleteEntityOrMerge
+        && !checkUserInRole(authentication, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
       return false;
     }
 
