@@ -20,6 +20,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
+import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
 import org.gbif.api.model.collections.suggestions.Status;
@@ -100,7 +101,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertTrue(suggestion.getChanges().isEmpty());
 
     // When - update the suggestion (e.g.: the reviewer does some changes)
-    int numberChanges = reviewEntity(entity);
+    entity.setCode(UUID.randomUUID().toString());
     suggestion.setSuggestedEntity(entity);
     suggestion.getComments().add("Review");
     changeSuggestionService.updateChangeSuggestion(suggestion);
@@ -108,7 +109,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     // Then
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
     assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
-    assertEquals(numberChanges, suggestion.getChanges().size());
+    assertEquals(1, suggestion.getChanges().size());
     assertEquals(2, suggestion.getComments().size());
 
     // When
@@ -164,16 +165,28 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(numberChanges, suggestion.getChanges().size());
 
     // When - update the suggestion (e.g.: the reviewer does some changes)
-    numberChanges += reviewEntity(entity);
+    entity.setCode(UUID.randomUUID().toString());
+    numberChanges++;
     suggestion.setSuggestedEntity(entity);
     suggestion.getComments().add("Review");
     changeSuggestionService.updateChangeSuggestion(suggestion);
 
     // Then
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
-    assertTrue(entity.lenientEquals(suggestion.getSuggestedEntity()));
     assertEquals(numberChanges, suggestion.getChanges().size());
     assertEquals(2, suggestion.getComments().size());
+    assertEquals(1, suggestion.getChanges().stream().filter(Change::isOverwritten).count());
+
+    // When - modify current entity with same change as suggestion
+    T currentEntity = crudService.get(entityKey);
+    currentEntity.setCode(entity.getCode());
+    crudService.update(currentEntity);
+
+    // Then
+    suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
+    assertEquals(numberChanges, suggestion.getChanges().size());
+    assertEquals(1, suggestion.getChanges().stream().filter(Change::isOverwritten).count());
+    assertEquals(1, suggestion.getChanges().stream().filter(Change::isStillRelevant).count());
 
     // When
     changeSuggestionService.applyChangeSuggestion(suggKey);
@@ -388,8 +401,6 @@ public abstract class BaseChangeSuggestionServiceIT<
   abstract T createEntity();
 
   abstract int updateEntity(T entity);
-
-  abstract int reviewEntity(T entity);
 
   abstract R createEmptyChangeSuggestion();
 }

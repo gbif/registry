@@ -3,6 +3,7 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
@@ -19,6 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Service
 @Validated
@@ -48,6 +51,14 @@ public class CollectionChangeSuggestionService
         eventManager,
         grSciCollEditorAuthorizationService);
     this.changeSuggestionMapper = changeSuggestionMapper;
+  }
+
+  @Override
+  public int createChangeSuggestion(CollectionChangeSuggestion changeSuggestion) {
+    checkArgument(
+        changeSuggestion.getType() != Type.CONVERSION_TO_COLLECTION,
+        "Conversion type is not allowed for collections");
+    return super.createChangeSuggestion(changeSuggestion);
   }
 
   @Override

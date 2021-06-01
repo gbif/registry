@@ -129,13 +129,6 @@ public class InstitutionChangeSuggestionServiceIT
   }
 
   @Override
-  int reviewEntity(Institution entity) {
-    entity.setCode(UUID.randomUUID().toString());
-    entity.setDescription(UUID.randomUUID().toString());
-    return 2;
-  }
-
-  @Override
   InstitutionChangeSuggestion createEmptyChangeSuggestion() {
     return new InstitutionChangeSuggestion();
   }

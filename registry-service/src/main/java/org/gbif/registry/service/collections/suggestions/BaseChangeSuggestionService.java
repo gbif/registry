@@ -36,8 +36,8 @@ import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.common.Strings;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -216,7 +217,15 @@ public abstract class BaseChangeSuggestionService<
       Set<ChangeDto> newChanges =
           extractChanges(
               updatedChangeSuggestion.getSuggestedEntity(), changeSuggestion.getSuggestedEntity());
-      dto.getChanges().addAll(newChanges);
+
+      for (ChangeDto newChange : newChanges) {
+        // update the overwritten flag
+        dto.getChanges().stream()
+            .filter(c -> c.getFieldName().equals(newChange.getFieldName()))
+            .forEach(c -> c.setOverwritten(true));
+        dto.getChanges().add(newChange);
+      }
+
       dto.setSuggestedEntity(toJson(updatedChangeSuggestion.getSuggestedEntity()));
     }
 
@@ -333,7 +342,7 @@ public abstract class BaseChangeSuggestionService<
         continue;
       }
       try {
-        String methodPrefix = field.getType().isAssignableFrom(Boolean.TYPE) ? "is" : "get";
+        String methodPrefix = getGetterPrefix(field.getType());
         Object suggestedValue =
             clazz
                 .getMethod(
@@ -363,7 +372,11 @@ public abstract class BaseChangeSuggestionService<
 
           changeDto.setPrevious(previousValue);
           changeDto.setSuggested(suggestedValue);
-          changeDto.setAuthor(getUsername());
+
+          String username = getUsername();
+          if (!Strings.isNullOrEmpty(username)) {
+            changeDto.setAuthor(username);
+          }
           changeDto.setCreated(new Date());
           changes.add(changeDto);
         }
@@ -427,6 +440,11 @@ public abstract class BaseChangeSuggestionService<
     suggestion.setProposedBy(dto.getProposedBy());
     suggestion.setMergeTargetKey(dto.getMergeTargetKey());
 
+    // we only show the proposer email for users with the right permissions (data protection)
+    if (hasRightsToSeeProposerEmail(dto)) {
+      suggestion.setProposerEmail(dto.getProposerEmail());
+    }
+
     if (dto.getEntityKey() != null) {
       // we take the country and the name from the current entity
       T currentEntity = crudService.get(dto.getEntityKey());
@@ -434,57 +452,70 @@ public abstract class BaseChangeSuggestionService<
       suggestion.setEntityName(currentEntity.getName());
     }
 
-    // we only show the proposer email for users with the right permissions (data protection)
-    if (hasRightsToSeeProposerEmail(dto)) {
-      suggestion.setProposerEmail(dto.getProposerEmail());
-    }
-
-    // changes conversion
-    suggestion.setChanges(
-        dto.getChanges().stream()
-            .map(
-                ch -> {
-                  Change change = new Change();
-                  change.setField(ch.getFieldName());
-                  change.setPrevious(ch.getPrevious());
-                  change.setSuggested(ch.getSuggested());
-                  change.setAuthor(ch.getAuthor());
-                  change.setCreated(ch.getCreated());
-                  return change;
-                })
-            .collect(Collectors.toList()));
-
     // merge view
-    try {
-      if (dto.getType() == Type.CREATE) {
-        suggestion.setSuggestedEntity(objectMapper.readValue(dto.getSuggestedEntity(), clazz));
-      } else if (dto.getType() == Type.UPDATE) {
-        T entity = crudService.get(dto.getEntityKey());
+    if (dto.getType() == Type.UPDATE
+        && (dto.getStatus() != Status.DISCARDED && dto.getStatus() != Status.APPLIED)) {
+      try {
+        T currentEntity = crudService.get(dto.getEntityKey());
+        List<Change> changes = new ArrayList<>();
+        suggestion.setChanges(changes);
+        for (ChangeDto changeDto : dto.getChanges()) {
+          Change change = changeDtoToChange(changeDto);
+          Object currentValue =
+              clazz
+                  .getMethod(
+                      getGetterPrefix(changeDto.getFieldType())
+                          + changeDto.getFieldName().substring(0, 1).toUpperCase()
+                          + changeDto.getFieldName().substring(1))
+                  .invoke(currentEntity);
 
-        // we sort the changes because we can have multiple changes in the same field. We are only
-        // interested in the last change so we want to apply them in order (older changes could be
-        // discarded but it doesn't matter much since we're not expecting too many changes in the
-        // same field - the original and another one if the reviewer wants to change it)
-        List<ChangeDto> changesSorted =
-            dto.getChanges().stream()
-                .sorted(Comparator.comparing(ChangeDto::getCreated))
-                .collect(Collectors.toList());
-        for (ChangeDto changeDto : changesSorted) {
-          clazz
-              .getMethod(
-                  "set"
-                      + changeDto.getFieldName().substring(0, 1).toUpperCase()
-                      + changeDto.getFieldName().substring(1),
-                  changeDto.getFieldType())
-              .invoke(entity, changeDto.getSuggested());
+          // if it's the same as the current it's not relevant anymore
+          change.setStillRelevant(Objects.equals(currentValue, changeDto.getSuggested()));
+          changes.add(change);
+
+          if (!changeDto.isOverwritten()) {
+            clazz
+                .getMethod(
+                    "set"
+                        + changeDto.getFieldName().substring(0, 1).toUpperCase()
+                        + changeDto.getFieldName().substring(1),
+                    changeDto.getFieldType())
+                .invoke(currentEntity, changeDto.getSuggested());
+          }
         }
-        suggestion.setSuggestedEntity(entity);
+
+        suggestion.setSuggestedEntity(currentEntity);
+      } catch (Exception e) {
+        throw new IllegalStateException(
+            "Error while applying suggested change to the merge view", e);
       }
-    } catch (Exception e) {
-      throw new IllegalStateException("Error while applying suggested change to the merge view", e);
+    } else {
+      // if it's not an active update we don't do the merge and we don't calculate the stillRelevant
+      // field for the changes
+      suggestion.setChanges(
+          dto.getChanges().stream().map(this::changeDtoToChange).collect(Collectors.toList()));
+
+      if (dto.getSuggestedEntity() != null) {
+        suggestion.setSuggestedEntity(readJson(dto.getSuggestedEntity(), clazz));
+      }
     }
 
     return suggestion;
+  }
+
+  private Change changeDtoToChange(ChangeDto dto) {
+    Change change = new Change();
+    change.setField(dto.getFieldName());
+    change.setPrevious(dto.getPrevious());
+    change.setSuggested(dto.getSuggested());
+    change.setAuthor(dto.getAuthor());
+    change.setCreated(dto.getCreated());
+    change.setOverwritten(dto.isOverwritten());
+    return change;
+  }
+
+  private String getGetterPrefix(Class<?> fieldType) {
+    return fieldType.isAssignableFrom(Boolean.TYPE) ? "is" : "get";
   }
 
   protected String getUsername() {
@@ -497,6 +528,14 @@ public abstract class BaseChangeSuggestionService<
       return objectMapper.writeValueAsString(entity);
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Cannot serialize entity", e);
+    }
+  }
+
+  private <S> S readJson(String content, Class<S> clazz) {
+    try {
+      return objectMapper.readValue(content, clazz);
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Couldn't read json: " + content);
     }
   }
 
