@@ -28,6 +28,7 @@ public class ChangeDto implements Serializable {
   private transient Object previous;
   private Date created;
   private String author;
+  private boolean overwritten;
 
   public String getFieldName() {
     return fieldName;
@@ -85,12 +86,21 @@ public class ChangeDto implements Serializable {
     this.author = author;
   }
 
+  public boolean isOverwritten() {
+    return overwritten;
+  }
+
+  public void setOverwritten(boolean overwritten) {
+    this.overwritten = overwritten;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ChangeDto changeDto = (ChangeDto) o;
-    return Objects.equals(fieldName, changeDto.fieldName)
+    return overwritten == changeDto.overwritten
+        && Objects.equals(fieldName, changeDto.fieldName)
         && Objects.equals(fieldType, changeDto.fieldType)
         && Objects.equals(fieldGenericTypeName, changeDto.fieldGenericTypeName)
         && Objects.equals(suggested, changeDto.suggested)
@@ -102,6 +112,13 @@ public class ChangeDto implements Serializable {
   @Override
   public int hashCode() {
     return Objects.hash(
-        fieldName, fieldType, fieldGenericTypeName, suggested, previous, created, author);
+        fieldName,
+        fieldType,
+        fieldGenericTypeName,
+        suggested,
+        previous,
+        created,
+        author,
+        overwritten);
   }
 }

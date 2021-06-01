@@ -62,13 +62,6 @@ public class CollectionChangeSuggestionServiceIT
   }
 
   @Override
-  int reviewEntity(Collection entity) {
-    entity.setCode(UUID.randomUUID().toString());
-    entity.setDescription(UUID.randomUUID().toString());
-    return 2;
-  }
-
-  @Override
   CollectionChangeSuggestion createEmptyChangeSuggestion() {
     return new CollectionChangeSuggestion();
   }
