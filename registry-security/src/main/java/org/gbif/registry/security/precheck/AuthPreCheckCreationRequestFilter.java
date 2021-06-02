@@ -351,7 +351,8 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
     return contentNormalized.isEmpty() || contentNormalized.equals("{}");
   }
 
-  private static class Resource {
+  @VisibleForTesting
+  static class Resource {
     String name;
     UUID key;
 
