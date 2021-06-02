@@ -1025,7 +1025,8 @@ public class GrSciCollEditorAuthorizationFilterTest {
       boolean countryRights)
       throws JsonProcessingException {
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/institution/" + INST_KEY + "/convertToCollection");
     when(mockRequest.getMethod()).thenReturn("PUT");
 
     ConvertToCollectionParams params = new ConvertToCollectionParams();
@@ -1034,6 +1035,15 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(roles).when(mockAuthentication).getAuthorities();
     doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+
+    Institution institutionForConvertedCollection = new Institution();
+    institutionForConvertedCollection.setKey(params.getInstitutionForNewCollectionKey());
+    institutionForConvertedCollection.setCode(UUID.randomUUID().toString());
+    institutionForConvertedCollection.setName(UUID.randomUUID().toString());
+    doReturn(institutionForConvertedCollection)
+        .when(mockInstitutionMapper)
+        .get(params.getInstitutionForNewCollectionKey());
+
     doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
     doReturn(targetInstitutionRights)
         .when(mockUserRightsMapper)

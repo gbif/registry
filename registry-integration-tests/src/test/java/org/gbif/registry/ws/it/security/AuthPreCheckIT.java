@@ -211,7 +211,7 @@ public class AuthPreCheckIT extends BaseItTest {
         .andExpect(status().isOk());
 
     // check that the pre check call didn't perform the action
-    assertEquals(1, institutionService.list(InstitutionSearchRequest.builder().build()).getCount());
+    assertEquals(2, institutionService.list(InstitutionSearchRequest.builder().build()).getCount());
 
     identityService.deleteEditorRight(EDITOR, INSTITUTION_KEY);
 

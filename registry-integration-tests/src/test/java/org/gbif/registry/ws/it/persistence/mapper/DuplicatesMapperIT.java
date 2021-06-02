@@ -138,7 +138,7 @@ public class DuplicatesMapperIT extends BaseItTest {
     MachineTag mtIh = new MachineTag(IH_NAMESPACE, IRN_TAG, "foo");
     mtIh.setCreatedBy("test");
     machineTagMapper.createMachineTag(mtIh);
-    institutionMapper.addMachineTag(c1.getKey(), mtIh.getKey());
+    collectionMapper.addMachineTag(c1.getKey(), mtIh.getKey());
 
     List<DuplicateMetadataDto> metadataDtos =
         duplicatesMapper.getCollectionsMetadata(Collections.singleton(c1.getKey()));
