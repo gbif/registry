@@ -33,6 +33,8 @@ import org.gbif.registry.security.UserRoles;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -124,17 +126,43 @@ public class GrSciCollAuthorizationService {
     return allowed;
   }
 
-  public boolean allowedToModifyInstitution(
-      Authentication authentication,
-      UUID institutionKey,
-      boolean isDeleteEntityOrMergeOrConversion) {
-    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
-      return true;
+  public boolean allowedToDeleteInstitution(Authentication authentication, UUID institutionKey) {
+    if (!checkUserInRole(
+        authentication, UserRoles.GRSCICOLL_ADMIN_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
+      return false;
     }
 
-    if (isDeleteEntityOrMergeOrConversion
-        && !checkUserInRole(authentication, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
+    return allowedToModifyInstitution(authentication, institutionKey);
+  }
+
+  public boolean allowedToMergeInstitution(
+      Authentication authentication, UUID institutionKey, UUID targetEntityKey) {
+    if (!checkUserInRole(
+        authentication, UserRoles.GRSCICOLL_ADMIN_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
       return false;
+    }
+
+    return allowedToModifyInstitution(authentication, institutionKey)
+        && allowedToModifyInstitution(authentication, targetEntityKey);
+  }
+
+  public boolean allowedToConvertInstitution(
+      Authentication authentication,
+      UUID institutionKey,
+      @Nullable UUID institutionForNewCollectionKey) {
+    if (!checkUserInRole(
+        authentication, UserRoles.GRSCICOLL_ADMIN_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
+      return false;
+    }
+
+    return allowedToModifyInstitution(authentication, institutionKey)
+        && (institutionForNewCollectionKey == null
+            || allowedToModifyInstitution(authentication, institutionForNewCollectionKey));
+  }
+
+  public boolean allowedToModifyInstitution(Authentication authentication, UUID institutionKey) {
+    if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
+      return true;
     }
 
     Institution institution = institutionMapper.get(institutionKey);
@@ -147,28 +175,35 @@ public class GrSciCollAuthorizationService {
         || allowedToModifyCountry(authentication.getName(), extractCountry(institution));
   }
 
+  public boolean allowedToDeleteCollection(Authentication authentication, UUID collectionKey) {
+    if (!checkUserInRole(
+        authentication, UserRoles.GRSCICOLL_ADMIN_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
+      return false;
+    }
+
+    return allowedToModifyCollection(authentication, collectionKey, null);
+  }
+
+  public boolean allowedToMergeCollection(
+      Authentication authentication, UUID collectionKey, UUID targetEntityKey) {
+    if (!checkUserInRole(
+        authentication, UserRoles.GRSCICOLL_ADMIN_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
+      return false;
+    }
+
+    return allowedToModifyCollection(authentication, collectionKey, null)
+        && allowedToModifyCollection(authentication, targetEntityKey, null);
+  }
+
   public boolean allowedToModifyCollection(
-      Authentication authentication,
-      UUID collectionKey,
-      Collection collectionInMessageBody,
-      boolean isDeleteEntityOrMerge) {
+      Authentication authentication, UUID collectionKey, Collection collectionInMessageBody) {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
       return true;
     }
 
-    if (isDeleteEntityOrMerge
-        && !checkUserInRole(authentication, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
-      return false;
-    }
-
     String username = authentication.getName();
-    if (username == null || collectionKey == null) {
-      return false;
-    }
-
     Collection persistedCollection = collectionMapper.get(collectionKey);
-
-    if (persistedCollection == null) {
+    if (username == null || collectionKey == null || persistedCollection == null) {
       return false;
     }
 
@@ -187,13 +222,9 @@ public class GrSciCollAuthorizationService {
       }
     }
 
-    // check permissions in the collection
-    if (allowedToModifyEntity(username, collectionKey)) {
-      return true;
-    }
-
-    // check country of the collection
-    if (allowedToModifyCountry(username, extractCountry(persistedCollection))) {
+    // check permissions in the collection and the country
+    if (allowedToModifyEntity(username, collectionKey)
+        || allowedToModifyCountry(username, extractCountry(persistedCollection))) {
       return true;
     }
 
@@ -236,9 +267,10 @@ public class GrSciCollAuthorizationService {
       return true;
     }
 
-    if (collection == null || collection.getInstitutionKey() == null) {
+    if (collection == null) {
       return false;
     }
+
     return allowedToModifyEntity(authentication.getName(), collection.getInstitutionKey())
         || allowedToModifyCountry(authentication.getName(), extractCountry(collection));
   }
@@ -260,15 +292,19 @@ public class GrSciCollAuthorizationService {
       if (changeSuggestion.getType() == Type.CREATE) {
         return allowedToCreateInstitution(
             readEntity(changeSuggestion.getSuggestedEntity(), Institution.class), authentication);
+      } else if (changeSuggestion.getType() == Type.DELETE) {
+        return allowedToDeleteInstitution(authentication, changeSuggestion.getEntityKey());
+      } else if (changeSuggestion.getType() == Type.MERGE) {
+        return allowedToMergeInstitution(
+            authentication, changeSuggestion.getEntityKey(), changeSuggestion.getMergeTargetKey());
+      } else if (changeSuggestion.getType() == Type.CONVERSION_TO_COLLECTION) {
+        return allowedToConvertInstitution(
+            authentication,
+            changeSuggestion.getEntityKey(),
+            changeSuggestion.getInstitutionConvertedCollection());
+      } else {
+        return allowedToModifyInstitution(authentication, changeSuggestion.getEntityKey());
       }
-
-      boolean isDeleteOrMergeOrConversion =
-          changeSuggestion.getType() == Type.DELETE
-              || changeSuggestion.getType() == Type.MERGE
-              || changeSuggestion.getType() == Type.CONVERSION_TO_COLLECTION;
-
-      return allowedToModifyInstitution(
-          authentication, changeSuggestion.getEntityKey(), isDeleteOrMergeOrConversion);
     } else if (COLLECTION.equalsIgnoreCase(entityType)) {
       ChangeSuggestionDto changeSuggestion =
           changeSuggestionMapper.getByKeyAndType(key, CollectionEntityType.COLLECTION);
@@ -281,13 +317,15 @@ public class GrSciCollAuthorizationService {
           readEntity(changeSuggestion.getSuggestedEntity(), Collection.class);
       if (changeSuggestion.getType() == Type.CREATE) {
         return allowedToCreateCollection(suggestedEntity, authentication);
+      } else if (changeSuggestion.getType() == Type.DELETE) {
+        return allowedToDeleteCollection(authentication, changeSuggestion.getEntityKey());
+      } else if (changeSuggestion.getType() == Type.MERGE) {
+        return allowedToMergeCollection(
+            authentication, changeSuggestion.getEntityKey(), changeSuggestion.getMergeTargetKey());
+      } else {
+        return allowedToModifyCollection(
+            authentication, changeSuggestion.getEntityKey(), suggestedEntity);
       }
-
-      boolean isDeleteOrMerge =
-          changeSuggestion.getType() == Type.DELETE || changeSuggestion.getType() == Type.MERGE;
-
-      return allowedToModifyCollection(
-          authentication, changeSuggestion.getEntityKey(), suggestedEntity, isDeleteOrMerge);
     }
 
     return false;

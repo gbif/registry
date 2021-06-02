@@ -17,6 +17,8 @@ package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
+import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
@@ -75,6 +77,10 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   public static final Pattern MACHINE_TAG_PATTERN_DELETE =
       Pattern.compile(
           ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/machineTag/([0-9]+).*");
+  public static final Pattern MERGE_PATTERN =
+      Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+)/merge$");
+  public static final Pattern CONVERSION_PATTERN =
+      Pattern.compile(".*/grscicoll/institution/([a-f0-9-]+)/convertToCollection$");
 
   public static final String INSTITUTION = "institution";
   public static final String COLLECTION = "collection";
@@ -164,28 +170,41 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       String entityType = matcher.group(1);
 
       boolean firstClassEntityUpdate = FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches();
-      boolean isDeleteEntityOrMergeOrConversion =
-          ("DELETE".equals(request.getMethod()) && firstClassEntityUpdate)
-              || path.contains("/merge")
-              || path.contains("/convertToCollection");
+      boolean isDeleteEntity = "DELETE".equals(request.getMethod()) && firstClassEntityUpdate;
+      boolean isMerge = MERGE_PATTERN.matcher(path).matches();
+      boolean isConversion = CONVERSION_PATTERN.matcher(path).matches();
 
       boolean allowed = false;
       if (INSTITUTION.equalsIgnoreCase(entityType)) {
-        allowed =
-            authService.allowedToModifyInstitution(
-                authentication, entityKey, isDeleteEntityOrMergeOrConversion);
-      } else if (COLLECTION.equalsIgnoreCase(entityType)) {
-        Collection collectionInMessageBody = null;
-        if (firstClassEntityUpdate) {
-          collectionInMessageBody = readEntity(request, Collection.class);
+        if (isDeleteEntity) {
+          allowed = authService.allowedToDeleteInstitution(authentication, entityKey);
+        } else if (isMerge) {
+          allowed =
+              authService.allowedToMergeInstitution(
+                  authentication, entityKey, getMergeTargetEntityKey(request));
+        } else if (isConversion) {
+          allowed =
+              authService.allowedToConvertInstitution(
+                  authentication, entityKey, getConversionNewInstitutionKey(request));
+        } else {
+          allowed = authService.allowedToModifyInstitution(authentication, entityKey);
         }
-
-        allowed =
-            authService.allowedToModifyCollection(
-                authentication,
-                entityKey,
-                collectionInMessageBody,
-                isDeleteEntityOrMergeOrConversion);
+      } else if (COLLECTION.equalsIgnoreCase(entityType)) {
+        if (isDeleteEntity) {
+          allowed = authService.allowedToDeleteCollection(authentication, entityKey);
+        } else if (isMerge) {
+          allowed =
+              authService.allowedToMergeCollection(
+                  authentication, entityKey, getMergeTargetEntityKey(request));
+        } else {
+          Collection collectionInMessageBody = null;
+          if (firstClassEntityUpdate) {
+            collectionInMessageBody = readEntity(request, Collection.class);
+          }
+          allowed =
+              authService.allowedToModifyCollection(
+                  authentication, entityKey, collectionInMessageBody);
+        }
       }
 
       if (!allowed) {
@@ -196,6 +215,17 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
             HttpStatus.FORBIDDEN);
       }
     }
+  }
+
+  private UUID getMergeTargetEntityKey(HttpServletRequest request) {
+    MergeParams mergeParams = readEntity(request, MergeParams.class);
+    return mergeParams != null ? mergeParams.getReplacementEntityKey() : null;
+  }
+
+  private UUID getConversionNewInstitutionKey(HttpServletRequest request) {
+    ConvertToCollectionParams conversionParams =
+        readEntity(request, ConvertToCollectionParams.class);
+    return conversionParams != null ? conversionParams.getInstitutionForNewCollectionKey() : null;
   }
 
   private void checkInstitutionAndCollectionCreationPermissions(
@@ -248,8 +278,12 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   private <T> T readEntity(HttpServletRequest request, Class<T> clazz) {
+    String content = ((GbifHttpServletRequestWrapper) request).getContent();
+    if (content == null) {
+      return null;
+    }
     try {
-      return objectMapper.readValue(((GbifHttpServletRequestWrapper) request).getContent(), clazz);
+      return objectMapper.readValue(content, clazz);
     } catch (JsonProcessingException e) {
       LOG.warn("Couldn't read entity from message body", e);
       return null;

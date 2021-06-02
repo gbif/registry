@@ -15,10 +15,15 @@
  */
 package org.gbif.registry.security.grscicoll;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
+import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
@@ -48,6 +53,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -65,11 +71,17 @@ public class GrSciCollEditorAuthorizationFilterTest {
   private static final int LSID_IDENTIFIER_KEY = 2;
   private static final Institution INSTITUTION = new Institution();
   private static final Collection COLLECTION = new Collection();
+  private static final Country COUNTRY = Country.SPAIN;
+  private static final String NAMESPACE = "ns.gbif.org";
+  private static final MachineTag MACHINE_TAG = new MachineTag(NAMESPACE, "test", "value");
+  private static final int MACHINE_TAG_KEY = 1;
   private static final Identifier IH_IDENTIFIER = new Identifier(IdentifierType.IH_IRN, "IH");
   private static final Identifier LSID_IDENTIFIER = new Identifier(IdentifierType.LSID, "LSID");
   private static final String USERNAME = "user";
   private static final List<GrantedAuthority> ROLES_GRSCICOLL_EDITOR_ONLY =
       Collections.singletonList(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_EDITOR_ROLE));
+  private static final List<GrantedAuthority> ROLES_GRSCICOLL_MEDIATOR_ONLY =
+      Collections.singletonList(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_MEDIATOR_ROLE));
   private static final List<GrantedAuthority> ROLES_GRSCICOLL_ADMIN_ONLY =
       Collections.singletonList(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE));
   private static final List<GrantedAuthority> ROLES_USER_ONLY =
@@ -83,13 +95,19 @@ public class GrSciCollEditorAuthorizationFilterTest {
   static {
     IH_IDENTIFIER.setKey(IH_IDENTIFIER_KEY);
     LSID_IDENTIFIER.setKey(LSID_IDENTIFIER_KEY);
+
+    Address address = new Address();
+    address.setKey(1);
+    address.setCountry(COUNTRY);
     COLLECTION.setKey(COLL_KEY);
     COLLECTION.setCode(UUID.randomUUID().toString());
     COLLECTION.setName(UUID.randomUUID().toString());
     COLLECTION.setInstitutionKey(INST_KEY);
+    COLLECTION.setAddress(address);
     INSTITUTION.setKey(INST_KEY);
     INSTITUTION.setCode(UUID.randomUUID().toString());
     INSTITUTION.setName(UUID.randomUUID().toString());
+    INSTITUTION.setAddress(address);
   }
 
   private final GbifHttpServletRequestWrapper mockRequest =
@@ -238,13 +256,9 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void addMachineTagAsEditorTest() {
+  public void addMachineTagAsEditorTest() throws JsonProcessingException {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI())
-        .thenReturn("/grscicoll/institution/" + INST_KEY.toString() + "/machineTag");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    mockAddMachineTagInstitution(ROLES_GRSCICOLL_EDITOR_ONLY, false, false);
 
     // WHEN
     WebApplicationException ex =
@@ -257,30 +271,10 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void institutionCreationAsAdminTest() {
+  public void addMachineTagAsEditorWithNamespaceButNotEntityRightsTest()
+      throws JsonProcessingException {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution");
-    when(mockRequest.getMethod()).thenReturn("POST");
-    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_ADMIN_AND_EDITOR).when(mockAuthentication).getAuthorities();
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
-
-    // WHEN, THEN
-    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
-  }
-
-  @Test
-  public void institutionCreationAsEditorTest() {
-    // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution");
-    when(mockRequest.getMethod()).thenReturn("POST");
-    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    mockAddMachineTagInstitution(ROLES_GRSCICOLL_EDITOR_ONLY, true, false);
 
     // WHEN
     WebApplicationException ex =
@@ -293,13 +287,19 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void institutionCreationAsUserTest() {
+  public void addMachineTagAsEditorWithNamespaceAndEntityRightsTest()
+      throws JsonProcessingException {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution");
-    when(mockRequest.getMethod()).thenReturn("POST");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_USER_ONLY).when(mockAuthentication).getAuthorities();
+    mockAddMachineTagInstitution(ROLES_GRSCICOLL_EDITOR_ONLY, true, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void deleteMachineTagAsEditorTest() {
+    // GIVEN
+    mockDeleteMachineTagInstitution(ROLES_GRSCICOLL_EDITOR_ONLY, true, false);
 
     // WHEN
     WebApplicationException ex =
@@ -312,47 +312,144 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void collectionCreationAsEditorAndInstitutionRightsTest() {
+  public void deleteMachineTagAsEditorWithNamespaceButNotEntityRightsTest() {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection");
-    when(mockRequest.getMethod()).thenReturn("POST");
-    when(mockRequest.getContent())
-        .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    mockDeleteMachineTagInstitution(ROLES_GRSCICOLL_EDITOR_ONLY, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void deleteMachineTagAsEditorWithNamespaceAndEntityRightsTest() {
+    // GIVEN
+    mockDeleteMachineTagInstitution(ROLES_GRSCICOLL_EDITOR_ONLY, true, true);
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
-  public void institutionUpdateAsEditorTest() {
+  public void institutionCreationAsAdminTest() throws JsonProcessingException {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    mockInstitutionCreation(ROLES_GRSCICOLL_ADMIN_ONLY, false);
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
-  public void institutionUpdateAsEditorWithNoRightsTest() {
+  public void institutionCreationAsEditorAndCountryRightsTest() throws JsonProcessingException {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent()).thenReturn("{\"key\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    mockInstitutionCreation(ROLES_GRSCICOLL_EDITOR_ONLY, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionCreationAsMediatorAndCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionCreation(ROLES_GRSCICOLL_MEDIATOR_ONLY, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionCreationAsUserTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionCreation(ROLES_USER_ONLY, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void collectionCreationAsEditorTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionCreation(ROLES_GRSCICOLL_EDITOR_ONLY, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void collectionCreationAsEditorAndInstitutionRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionCreation(ROLES_GRSCICOLL_EDITOR_ONLY, true, false);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionCreationAsEditorAndCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionCreation(ROLES_GRSCICOLL_EDITOR_ONLY, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionCreationAsMediatorAndCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionCreation(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionUpdateAsEditorWithEntityRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, true, false);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionUpdateAsEditorWithCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionUpdateAsMediatorWithCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionUpdate(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionUpdateAsEditorWithNoRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, false, false);
 
     // WHEN
     WebApplicationException ex =
@@ -404,12 +501,7 @@ public class GrSciCollEditorAuthorizationFilterTest {
   @Test
   public void institutionDeletionAsEditorTest() {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
-    when(mockRequest.getMethod()).thenReturn("DELETE");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    mockInstitutionDeletion(ROLES_GRSCICOLL_EDITOR_ONLY, false, false);
 
     // WHEN
     WebApplicationException ex =
@@ -422,13 +514,93 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void idigbioInstitutionDeletionAsEditorTest() {
+  public void institutionDeletionAsMediatorTest() {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
-    when(mockRequest.getMethod()).thenReturn("DELETE");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    mockInstitutionDeletion(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void institutionDeletionAsMediatorWithCountryRightsTest() {
+    // GIVEN
+    mockInstitutionDeletion(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void institutionDeletionAsMediatorWithEntityRightsTest() {
+    // GIVEN
+    mockInstitutionDeletion(ROLES_GRSCICOLL_MEDIATOR_ONLY, true, false);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionUpdateAsEditorWithCollectionRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, true, false, false);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionUpdateAsEditorWithInstitutionRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, false, true, false);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionUpdateAsEditorWithCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, false, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionUpdateAsMediatorWithCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionUpdate(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, false, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionUpdateAsEditorWithNoRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, false, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void collectionDeletionAsEditorTest() {
+    // GIVEN
+    mockCollectionDeletion(ROLES_GRSCICOLL_EDITOR_ONLY, false, false);
 
     // WHEN, THEN
     assertThrows(
@@ -437,73 +609,47 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
-  public void updateCollectionAsEditorWithCollectionRightsTest() {
+  public void collectionDeletionAsMediatorTest() {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent())
-        .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+    mockCollectionDeletion(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, false);
+
+    // WHEN, THEN
+    assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void collectionDeletionAsMediatorWithEntityRightsTest() {
+    // GIVEN
+    mockCollectionDeletion(ROLES_GRSCICOLL_MEDIATOR_ONLY, true, false);
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
-  public void updateCollectionAsEditorWithInstitutionRightsTest() {
+  public void collectionDeletionAsMediatorWithCountryRightsTest() {
     // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent())
-        .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
-    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
-    doReturn(true).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    mockCollectionDeletion(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, true);
 
     // WHEN, THEN
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
   @Test
-  public void updateCollectionAsEditorWithNoRightsTest() {
+  public void collectionDeletionAsEditorWithCountryRightsTest() {
     // GIVEN
     when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
     when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent())
-        .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
-    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
-
-    // WHEN
-    WebApplicationException ex =
-        assertThrows(
-            WebApplicationException.class,
-            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
-
-    // THEN
-    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
-  }
-
-  @Test
-  public void idigbioCollectionDeletionAsEditorTest() {
-    // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
-    when(mockRequest.getContent())
-        .thenReturn("{\"key\": \"" + COLL_KEY + "\", \"institutionKey\": \"" + INST_KEY + "\"}");
     when(mockRequest.getMethod()).thenReturn("DELETE");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+    doReturn(false).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+    doReturn(true)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
 
     // WHEN, THEN
     assertThrows(
@@ -760,5 +906,296 @@ public class GrSciCollEditorAuthorizationFilterTest {
     assertThrows(
         WebApplicationException.class,
         () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void mergeCollectionAsEditorTest() throws JsonProcessingException {
+    // GIVEN
+    mockMergeCollection(ROLES_GRSCICOLL_EDITOR_ONLY, true, true, true);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void mergeCollectionAsMediatorAndRightsOnSourceTest() throws JsonProcessingException {
+    // GIVEN
+    mockMergeCollection(ROLES_GRSCICOLL_MEDIATOR_ONLY, true, false, true);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void mergeCollectionAsMediatorAndRightsOnSourceAndTargetTest()
+      throws JsonProcessingException {
+    // GIVEN
+    mockMergeCollection(ROLES_GRSCICOLL_MEDIATOR_ONLY, true, true, true);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void convertInstitutionAsEditorTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionConversion(ROLES_GRSCICOLL_EDITOR_ONLY, true, true, true);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void convertInstitutionAsMediatorWithNoRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionConversion(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void convertInstitutionAsMediatorWithEntityRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionConversion(ROLES_GRSCICOLL_MEDIATOR_ONLY, true, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void convertInstitutionAsMediatorWithCountryRightsTest() throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionConversion(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, false, true);
+
+    // WHEN
+    WebApplicationException ex =
+        assertThrows(
+            WebApplicationException.class,
+            () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
+  public void convertInstitutionAsMediatorWithEntityAndTargetRightsTest()
+      throws JsonProcessingException {
+    // GIVEN
+    mockInstitutionConversion(ROLES_GRSCICOLL_MEDIATOR_ONLY, true, true, false);
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  private void mockInstitutionConversion(
+      List<GrantedAuthority> roles,
+      boolean institutionRights,
+      boolean targetInstitutionRights,
+      boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+
+    ConvertToCollectionParams params = new ConvertToCollectionParams();
+    params.setInstitutionForNewCollectionKey(UUID.randomUUID());
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(params));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(targetInstitutionRights)
+        .when(mockUserRightsMapper)
+        .keyExistsForUser(USERNAME, params.getInstitutionForNewCollectionKey());
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockInstitutionUpdate(
+      List<GrantedAuthority> roles, boolean institutionRights, boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(INSTITUTION));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockCollectionUpdate(
+      List<GrantedAuthority> roles,
+      boolean collectionRights,
+      boolean institutionRights,
+      boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
+    when(mockRequest.getMethod()).thenReturn("PUT");
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(COLLECTION));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(collectionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockInstitutionCreation(List<GrantedAuthority> roles, boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(INSTITUTION));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockCollectionCreation(
+      List<GrantedAuthority> roles, boolean collectionRights, boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(COLLECTION));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(collectionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockCollectionDeletion(
+      List<GrantedAuthority> roles, boolean collectionRights, boolean countryRights) {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY);
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+    doReturn(collectionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockInstitutionDeletion(
+      List<GrantedAuthority> roles, boolean institutionRights, boolean countryRights) {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/" + INST_KEY);
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
+  }
+
+  private void mockAddMachineTagInstitution(
+      List<GrantedAuthority> roles, boolean nsRights, boolean institutionRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/institution/" + INST_KEY.toString() + "/machineTag");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(MACHINE_TAG));
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(nsRights)
+        .when(mockUserRightsMapper)
+        .namespaceExistsForUser(USERNAME, MACHINE_TAG.getNamespace());
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+  }
+
+  private void mockDeleteMachineTagInstitution(
+      List<GrantedAuthority> roles, boolean nsRights, boolean institutionRights) {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI())
+        .thenReturn(
+            "/grscicoll/institution/" + INST_KEY.toString() + "/machineTag/" + MACHINE_TAG_KEY);
+    when(mockRequest.getMethod()).thenReturn("DELETE");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(INSTITUTION).when(mockInstitutionMapper).get(INST_KEY);
+    doReturn(nsRights)
+        .when(mockUserRightsMapper)
+        .allowedToDeleteMachineTag(USERNAME, MACHINE_TAG_KEY);
+    doReturn(institutionRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, INST_KEY);
+  }
+
+  private void mockMergeCollection(
+      List<GrantedAuthority> roles,
+      boolean sourceRights,
+      boolean targetRights,
+      boolean countryRights)
+      throws JsonProcessingException {
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection/" + COLL_KEY + "/merge");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    MergeParams mergeParams = new MergeParams();
+    mergeParams.setReplacementEntityKey(UUID.randomUUID());
+    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(mergeParams));
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(roles).when(mockAuthentication).getAuthorities();
+    doReturn(COLLECTION).when(mockCollectionMapper).get(COLL_KEY);
+
+    Collection targetEntity = new Collection();
+    targetEntity.setKey(mergeParams.getReplacementEntityKey());
+    targetEntity.setCode(UUID.randomUUID().toString());
+    targetEntity.setName(UUID.randomUUID().toString());
+    doReturn(targetEntity).when(mockCollectionMapper).get(mergeParams.getReplacementEntityKey());
+
+    doReturn(sourceRights).when(mockUserRightsMapper).keyExistsForUser(USERNAME, COLL_KEY);
+    doReturn(targetRights)
+        .when(mockUserRightsMapper)
+        .keyExistsForUser(USERNAME, mergeParams.getReplacementEntityKey());
+    doReturn(countryRights)
+        .when(mockUserRightsMapper)
+        .countryExistsForUser(USERNAME, COUNTRY.getIso2LetterCode());
   }
 }

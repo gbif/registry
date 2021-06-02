@@ -15,6 +15,8 @@
  */
 package org.gbif.registry.persistence.mapper;
 
+import org.gbif.api.vocabulary.Country;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -33,5 +35,10 @@ public interface UserRightsMapper {
   boolean allowedToDeleteMachineTag(
       @Param("username") String username, @Param("key") int machineTagKey);
 
-  boolean countryExistsForUser(@Param("username") String username, @Param("country") String country);
+  List<String> getNamespacesByUser(@Param("username") String username);
+
+  boolean countryExistsForUser(
+      @Param("username") String username, @Param("country") String country);
+
+  List<Country> getCountriesByUser(@Param("username") String username);
 }
