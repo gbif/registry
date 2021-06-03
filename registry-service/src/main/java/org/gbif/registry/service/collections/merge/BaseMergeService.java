@@ -28,8 +28,6 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.registry.security.UserRoles;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -53,7 +51,6 @@ import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
 import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 public abstract class BaseMergeService<
         T extends
@@ -98,12 +95,9 @@ public abstract class BaseMergeService<
           "Cannot do the replacement because both entities have an IH IRN machine tag");
     }
 
-    if (!SecurityContextCheck.checkUserInRole(
-            authentication, UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE)
-        && isIDigBioRecord(entityToReplace)
-        && isIDigBioRecord(replacement)) {
+    if (isIDigBioRecord(entityToReplace) && isIDigBioRecord(replacement)) {
       throw new IllegalArgumentException(
-          "Cannot do the replacement because both entities are iDigBio records and the user is not an iDigBio editor");
+          "Cannot do the replacement because both entities are iDigBio records");
     }
 
     checkMergeExtraPreconditions(entityToReplace, replacement);
@@ -185,9 +179,7 @@ public abstract class BaseMergeService<
         .anyMatch(om -> om.lenientEquals(occurrenceMapping));
   }
 
-  /**
-   * Sets the fields that are null in target with the value of the source.
-   */
+  /** Sets the fields that are null in target with the value of the source. */
   protected void setNullFieldsInTarget(T target, T source) {
     Class<T> clazz = (Class<T>) target.getClass();
     Arrays.stream(clazz.getDeclaredFields())

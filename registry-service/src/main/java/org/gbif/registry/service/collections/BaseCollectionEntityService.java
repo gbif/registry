@@ -92,7 +92,7 @@ public abstract class BaseCollectionEntityService<
     T entityToDelete = get(key);
     checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
 
-    // udpates audit fields like the modifiedBy
+    // updates audit fields like the modifiedBy
     update(entityToDelete);
 
     baseMapper.delete(key);

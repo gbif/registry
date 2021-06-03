@@ -586,7 +586,8 @@
   <update id="replace">
     UPDATE institution
     SET deleted = now(),
-        replaced_by = #{replacementKey,jdbcType=OTHER}
+        replaced_by = #{replacementKey,jdbcType=OTHER},
+        modified_by = #{user,jdbcType=VARCHAR}
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
 

@@ -48,7 +48,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
@@ -248,7 +247,8 @@ public abstract class BasePrimaryCollectionEntityService<
   @Transactional
   @Override
   public void replace(UUID targetEntityKey, UUID replacementKey) {
-    primaryEntityMapper.replace(targetEntityKey, replacementKey);
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    primaryEntityMapper.replace(targetEntityKey, replacementKey, authentication.getName());
     eventManager.post(
         ReplaceEntityEvent.newInstance(
             objectClass, targetEntityKey, replacementKey, EventType.REPLACE));

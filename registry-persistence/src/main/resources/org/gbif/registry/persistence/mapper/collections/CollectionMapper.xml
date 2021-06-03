@@ -607,7 +607,8 @@
   <update id="replace">
     UPDATE collection
     SET deleted = now(),
-    replaced_by = #{replacementKey,jdbcType=OTHER}
+    replaced_by = #{replacementKey,jdbcType=OTHER},
+    modified_by = #{user,jdbcType=VARCHAR}
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->

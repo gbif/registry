@@ -22,5 +22,7 @@ import org.apache.ibatis.annotations.Param;
 public interface ReplaceableMapper {
 
   void replace(
-      @Param("targetEntityKey") UUID targetEntityKey, @Param("replacementKey") UUID replacementKey);
+      @Param("targetEntityKey") UUID targetEntityKey,
+      @Param("replacementKey") UUID replacementKey,
+      @Param("user") String user);
 }

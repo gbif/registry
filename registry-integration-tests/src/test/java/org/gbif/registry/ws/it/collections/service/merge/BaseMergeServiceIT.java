@@ -210,10 +210,6 @@ public abstract class BaseMergeServiceIT<
     machineTagService.addMachineTag(e2.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2"));
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
-
-    // if the user has the idigbio role we can merge them
-    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR, UserRole.GRSCICOLL_ADMIN);
-    assertDoesNotThrow(() -> mergeService.merge(e1.getKey(), e2.getKey()));
   }
 
   protected Dataset createDataset() {

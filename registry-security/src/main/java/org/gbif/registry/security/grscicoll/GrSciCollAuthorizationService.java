@@ -342,6 +342,10 @@ public class GrSciCollAuthorizationService {
   }
 
   private <T> T readEntity(String content, Class<T> clazz) {
+    if (content == null) {
+      return null;
+    }
+
     try {
       return objectMapper.readValue(content, clazz);
     } catch (JsonProcessingException e) {
