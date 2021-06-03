@@ -9,9 +9,10 @@ import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -51,35 +52,40 @@ public class CollectionsEmailManager {
         collectionEntityType,
         CollectionsEmailType.NEW_CHANGE_SUGGESTION,
         entityKey,
-        suggestionType);
+        suggestionType,
+        null);
   }
 
   public BaseEmailModel generateAppliedChangeSuggestionEmailModel(
       int suggestionKey,
       CollectionEntityType collectionEntityType,
       @Nullable UUID entityKey,
-      Type suggestionType)
+      Type suggestionType,
+      Set<String> recipients)
       throws IOException {
     return buildBaseEmailModel(
         suggestionKey,
         collectionEntityType,
         CollectionsEmailType.APPLIED_CHANGE_SUGGESTION,
         entityKey,
-        suggestionType);
+        suggestionType,
+        recipients);
   }
 
   public BaseEmailModel generateDiscardedChangeSuggestionEmailModel(
       int suggestionKey,
       CollectionEntityType collectionEntityType,
       @Nullable UUID entityKey,
-      Type suggestionType)
+      Type suggestionType,
+      Set<String> recipients)
       throws IOException {
     return buildBaseEmailModel(
         suggestionKey,
         collectionEntityType,
         CollectionsEmailType.DISCARDED_CHANGE_SUGGESTION,
         entityKey,
-        suggestionType);
+        suggestionType,
+        recipients);
   }
 
   private BaseEmailModel buildBaseEmailModel(
@@ -87,7 +93,8 @@ public class CollectionsEmailManager {
       CollectionEntityType entityType,
       CollectionsEmailType emailType,
       @Nullable UUID entityKey,
-      Type suggestionType)
+      Type suggestionType,
+      Set<String> recipients)
       throws IOException {
     BaseEmailModel baseEmailModel;
     try {
@@ -114,12 +121,15 @@ public class CollectionsEmailManager {
           new GrscicollChangeSuggestionDataModel();
       templateDataModel.setChangeSuggestionUrl(suggestionUrl);
 
+      Set<String> allRecipients = new HashSet<>();
+      allRecipients.add(collectionsMailConfigurationProperties.getRecipient());
+      if (recipients != null && !recipients.isEmpty()) {
+        allRecipients.addAll(recipients);
+      }
+
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
-              emailType,
-              Collections.singleton(collectionsMailConfigurationProperties.getRecipient()),
-              templateDataModel,
-              Locale.ENGLISH);
+              emailType, allRecipients, templateDataModel, Locale.ENGLISH);
     } catch (TemplateException e) {
       throw new IOException(e);
     }

@@ -203,6 +203,7 @@ public class InstitutionMapperIT extends BaseItTest {
 
     assertSearch(InstitutionSearchParams.builder().build(), page, 3);
     assertSearch(InstitutionSearchParams.builder().code("i1").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().code("I1").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().name("n2").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().code("i2").name("n2").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().code("i1").name("n2").build(), page, 0);

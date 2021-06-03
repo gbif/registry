@@ -27,6 +27,7 @@ public class BaseEmailModel {
   private final String subject;
   private final String body;
   private final Set<String> ccAddresses;
+  private final String from;
 
   public BaseEmailModel(Set<String> emailAddresses, String subject, String body) {
     this(emailAddresses, subject, body, Collections.emptySet());
@@ -34,10 +35,20 @@ public class BaseEmailModel {
 
   public BaseEmailModel(
       Set<String> emailAddresses, String subject, String body, Set<String> ccAddresses) {
+    this(emailAddresses, subject, body, ccAddresses, null);
+  }
+
+  public BaseEmailModel(
+      Set<String> emailAddresses,
+      String subject,
+      String body,
+      Set<String> ccAddresses,
+      String from) {
     this.emailAddresses = emailAddresses != null ? emailAddresses : Collections.emptySet();
     this.subject = subject;
     this.body = body;
     this.ccAddresses = ccAddresses != null ? ccAddresses : Collections.emptySet();
+    this.from = from;
   }
 
   public Set<String> getEmailAddresses() {
@@ -56,6 +67,10 @@ public class BaseEmailModel {
     return ccAddresses;
   }
 
+  public String getFrom() {
+    return from;
+  }
+
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
@@ -63,6 +78,7 @@ public class BaseEmailModel {
         .add("subject", subject)
         .add("body", body)
         .add("ccAddresses", ccAddresses)
+        .add("from", from)
         .toString();
   }
 }

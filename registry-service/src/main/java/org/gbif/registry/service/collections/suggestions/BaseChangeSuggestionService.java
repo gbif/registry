@@ -37,6 +37,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -265,7 +266,11 @@ public abstract class BaseChangeSuggestionService<
     try {
       BaseEmailModel emailModel =
           emailManager.generateDiscardedChangeSuggestionEmailModel(
-              dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
+              dto.getKey(),
+              dto.getEntityType(),
+              dto.getEntityKey(),
+              dto.getType(),
+              Collections.singleton(dto.getProposerEmail()));
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for discarded change suggestion", e);
@@ -308,7 +313,11 @@ public abstract class BaseChangeSuggestionService<
     try {
       BaseEmailModel emailModel =
           emailManager.generateAppliedChangeSuggestionEmailModel(
-              dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
+              dto.getKey(),
+              dto.getEntityType(),
+              dto.getEntityKey(),
+              dto.getType(),
+              Collections.singleton(dto.getProposerEmail()));
       emailSender.send(emailModel);
     } catch (Exception e) {
       LOG.error("Couldn't send email for applied change suggestion", e);

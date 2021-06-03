@@ -26,6 +26,8 @@ public class CollectionsMailConfigurationProperties {
 
   private Boolean enabled = Boolean.FALSE;
 
+  private String from;
+
   public String getRecipient() {
     return recipient;
   }
@@ -40,5 +42,13 @@ public class CollectionsMailConfigurationProperties {
 
   public void setEnabled(Boolean enabled) {
     this.enabled = enabled;
+  }
+
+  public String getFrom() {
+    return from;
+  }
+
+  public void setFrom(String from) {
+    this.from = from;
   }
 }
