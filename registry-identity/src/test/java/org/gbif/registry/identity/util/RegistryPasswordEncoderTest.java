@@ -17,6 +17,7 @@ package org.gbif.registry.identity.util;
 
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -56,5 +57,10 @@ public class RegistryPasswordEncoderTest {
     String encoded2 =
         encoder.encode(password, encoded1); // encode again reading the salt genarate above
     assertEquals(encoded1, encoded2); // verify they
+  }
+
+  @Test
+  public void test() {
+    System.out.println(encoder.encode("P1p3r!!"));
   }
 }

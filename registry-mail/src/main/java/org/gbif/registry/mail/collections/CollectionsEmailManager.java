@@ -9,6 +9,7 @@ import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Objects;
@@ -129,7 +130,12 @@ public class CollectionsEmailManager {
 
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
-              emailType, allRecipients, templateDataModel, Locale.ENGLISH);
+              emailType,
+              allRecipients,
+              collectionsMailConfigurationProperties.getFrom(),
+              templateDataModel,
+              Locale.ENGLISH,
+              Collections.emptySet());
     } catch (TemplateException e) {
       throw new IOException(e);
     }

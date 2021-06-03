@@ -61,4 +61,26 @@ public interface EmailTemplateProcessor {
       Set<String> ccAddresses,
       String... subjectParams)
       throws IOException, TemplateException;
+
+  /**
+   * Construct an email to send.
+   *
+   * @param emailType email type
+   * @param emailAddresses email address
+   * @param from the sender
+   * @param templateDataModel data which fill template
+   * @param locale language locale
+   * @param ccAddresses carbon copy addresses
+   * @param subjectParams computable params for subject message formatting
+   * @return email data which is ready to be sent
+   */
+  BaseEmailModel buildEmail(
+    EmailType emailType,
+    Set<String> emailAddresses,
+    String from,
+    Object templateDataModel,
+    Locale locale,
+    Set<String> ccAddresses,
+    String... subjectParams)
+    throws IOException, TemplateException;
 }

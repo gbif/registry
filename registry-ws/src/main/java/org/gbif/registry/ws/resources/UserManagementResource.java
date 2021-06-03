@@ -557,6 +557,10 @@ public class UserManagementResource {
 
     final Country country = Country.fromIsoCode(countryParam);
 
+    if (country == null) {
+      throw new IllegalArgumentException("Country not found: " + countryParam);
+    }
+
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);
     if (currentUser == null) {
@@ -578,6 +582,10 @@ public class UserManagementResource {
       @PathVariable String username, @PathVariable String countryParam) {
 
     final Country country = Country.fromIsoCode(countryParam);
+
+    if (country == null) {
+      throw new IllegalArgumentException("Country not found: " + countryParam);
+    }
 
     // Ensure user exists
     GbifUser currentUser = identityService.get(username);
