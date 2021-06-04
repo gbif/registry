@@ -61,7 +61,7 @@
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
   </sql>
 
   <insert id="create" parameterType="CollectionPerson">
@@ -98,17 +98,40 @@
   <select id="list" resultType="CollectionPerson" resultMap="COLLECTION_PERSON_MAP" parameterType="Pageable">
     SELECT <include refid="PERSON_READ_FIELDS"/>
     FROM collection_person p
-    <if test="query != null" >
+    <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
     </if>
+    <if test="params.machineTagNamespace != null || params.machineTagName != null || params.machineTagValue != null" >
+      INNER JOIN collection_person_machine_tag cpmt ON cpmt.collection_person_key = p.key
+      INNER JOIN machine_tag mt on mt.key = cpmt.machine_tag_key
+    </if>
+    <if test="params.identifierType != null || params.identifier != null" >
+      INNER JOIN collection_person_identifier cpi on cpi.collection_person_key = p.key
+      INNER JOIN identifier id on id.key = cpi.identifier_key
+    </if>
     WHERE p.deleted IS NULL
-    <if test="institutionKey != null" >
-      AND p.primary_institution_key = #{institutionKey,jdbcType=OTHER}
+    <if test="params.institutionKey != null" >
+      AND p.primary_institution_key = #{params.institutionKey,jdbcType=OTHER}
     </if>
-    <if test="collectionKey != null" >
-      AND p.primary_collection_key = #{collectionKey,jdbcType=OTHER}
+    <if test="params.collectionKey != null" >
+      AND p.primary_collection_key = #{params.collectionKey,jdbcType=OTHER}
     </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(p.fulltext_search, query) DESC, </if>p.created DESC, p.key
+    <if test="params.machineTagNamespace != null" >
+      AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
+    </if>
+    <if test="params.machineTagName != null" >
+      AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
+    </if>
+    <if test="params.machineTagValue != null" >
+      AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
+    </if>
+    <if test="params.identifierType != null" >
+      AND id.type = #{params.identifierType,jdbcType=OTHER}
+    </if>
+    <if test="params.identifier != null" >
+      AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
+    </if>
+    ORDER BY <if test="params.query != null" >ts_rank_cd(p.fulltext_search, query) DESC, </if>p.created DESC, p.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -117,15 +140,38 @@
   <select id="count" resultType="Long">
     SELECT COUNT(*)
     FROM collection_person p
-    <if test="query != null" >
+    <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
     </if>
-    WHERE p.deleted IS NULL
-    <if test="institutionKey != null" >
-      AND p.primary_institution_key = #{institutionKey,jdbcType=OTHER}
+    <if test="params.machineTagNamespace != null || params.machineTagName != null || params.machineTagValue != null" >
+      INNER JOIN collection_person_machine_tag cpmt ON cpmt.collection_person_key = p.key
+      INNER JOIN machine_tag mt on mt.key = cpmt.machine_tag_key
     </if>
-    <if test="collectionKey != null" >
-      AND p.primary_collection_key = #{collectionKey,jdbcType=OTHER}
+    <if test="params.identifierType != null || params.identifier != null" >
+      INNER JOIN collection_person_identifier cpi on cpi.collection_person_key = p.key
+      INNER JOIN identifier id on id.key = cpi.identifier_key
+    </if>
+    WHERE p.deleted IS NULL
+    <if test="params.institutionKey != null" >
+      AND p.primary_institution_key = #{params.institutionKey,jdbcType=OTHER}
+    </if>
+    <if test="params.collectionKey != null" >
+      AND p.primary_collection_key = #{params.collectionKey,jdbcType=OTHER}
+    </if>
+    <if test="params.machineTagNamespace != null" >
+      AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
+    </if>
+    <if test="params.machineTagName != null" >
+      AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
+    </if>
+    <if test="params.machineTagValue != null" >
+      AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
+    </if>
+    <if test="params.identifierType != null" >
+      AND id.type = #{params.identifierType,jdbcType=OTHER}
+    </if>
+    <if test="params.identifier != null" >
+      AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
     </if>
   </select>
 

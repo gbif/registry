@@ -2,6 +2,7 @@ package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -57,12 +58,18 @@ public class PersonResourceIT extends BaseCollectionEntityResourceIT<Person> {
     Person p2 = testData.newEntity();
     List<Person> persons = Arrays.asList(p1, p2);
 
-    when(personService.list(anyString(), any(UUID.class), any(UUID.class), any(Pageable.class)))
+    when(personService.list(any(PersonSearchRequest.class)))
         .thenReturn(
             new PagingResponse<>(new PagingRequest(), Long.valueOf(persons.size()), persons));
 
     PagingResponse<Person> result =
-        getClient().list("foo", UUID.randomUUID(), UUID.randomUUID(), new PagingRequest());
+        getClient()
+            .list(
+                PersonSearchRequest.builder()
+                    .query("foo")
+                    .primaryInstitution(UUID.randomUUID())
+                    .primaryCollection(UUID.randomUUID())
+                    .build());
     assertEquals(persons.size(), result.getResults().size());
   }
 

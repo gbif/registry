@@ -191,25 +191,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
         () -> institutionMergeService.convertToCollection(UUID.randomUUID(), null, null));
   }
 
-  @Test
-  public void convertIDigBioInstitution() {
-    Institution toConvert = new Institution();
-    toConvert.setCode("idig");
-    toConvert.setName("idig");
-    institutionService.create(toConvert);
-
-    institutionService.addMachineTag(
-        toConvert.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar"));
-
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> institutionMergeService.convertToCollection(toConvert.getKey(), null, "test"));
-
-    resetSecurityContext("idigibo", UserRole.IDIGBIO_GRSCICOLL_EDITOR, UserRole.GRSCICOLL_ADMIN);
-    assertDoesNotThrow(
-        () -> institutionMergeService.convertToCollection(toConvert.getKey(), null, "test"));
-  }
-
   @Override
   Institution createEntityToReplace() {
     Institution toReplace = new Institution();

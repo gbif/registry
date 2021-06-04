@@ -19,12 +19,17 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -91,18 +96,21 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     Person person3 = testData.newEntity();
     UUID key3 = personService.create(person3);
 
-    PagingResponse<Person> response = personService.list(null, null, null, DEFAULT_PAGE);
+    PagingResponse<Person> response =
+        personService.list(PersonSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertThat(3, greaterThanOrEqualTo(response.getResults().size()));
 
     personService.delete(key3);
 
-    response = personService.list(null, null, null, DEFAULT_PAGE);
+    response = personService.list(PersonSearchRequest.builder().page(DEFAULT_PAGE).build());
     assertThat(2, greaterThanOrEqualTo(response.getResults().size()));
 
-    response = personService.list(null, null, null, new PagingRequest(0L, 1));
+    response =
+        personService.list(PersonSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
     assertEquals(1, response.getResults().size());
 
-    response = personService.list(null, null, null, new PagingRequest(0L, 0));
+    response =
+        personService.list(PersonSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -123,36 +131,67 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     UUID key2 = personService.create(person2);
 
     // query params
-    PagingResponse<Person> response = personService.list("dummy", null, null, DEFAULT_PAGE);
+    PagingResponse<Person> response =
+        personService.list(PersonSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
     // empty queries are ignored and return all elements
-    response = personService.list("", null, null, DEFAULT_PAGE);
+    response =
+        personService.list(PersonSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
     assertEquals(2, response.getResults().size());
 
-    response = personService.list("city", null, null, DEFAULT_PAGE);
+    response =
+        personService.list(PersonSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
-    response = personService.list("city2", null, null, DEFAULT_PAGE);
+    response =
+        personService.list(PersonSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
-    assertEquals(2, personService.list("c", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(2, personService.list("dum add", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(0, personService.list("<", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(0, personService.list("\"<\"", null, null, DEFAULT_PAGE).getResults().size());
-    assertEquals(2, personService.list("  ", null, null, DEFAULT_PAGE).getResults().size());
+    assertEquals(
+        2,
+        personService
+            .list(PersonSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        personService
+            .list(PersonSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        0,
+        personService
+            .list(PersonSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        0,
+        personService
+            .list(PersonSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        personService
+            .list(PersonSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
 
     // update address
     person2 = personService.get(key2);
     person2.getMailingAddress().setCity("city3");
     personService.update(person2);
-    response = personService.list("city3", null, null, DEFAULT_PAGE);
+    response =
+        personService.list(PersonSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
 
     personService.delete(key2);
-    response = personService.list("city3", null, null, DEFAULT_PAGE);
+    response =
+        personService.list(PersonSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -182,13 +221,28 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     person3.setPrimaryInstitutionKey(institutionKey2);
     personService.create(person3);
 
-    PagingResponse<Person> response = personService.list(null, institutionKey1, null, DEFAULT_PAGE);
+    PagingResponse<Person> response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .primaryInstitution(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(2, response.getResults().size());
 
-    response = personService.list(null, institutionKey2, null, new PagingRequest(0L, 2));
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .primaryInstitution(institutionKey2)
+                .page(new PagingRequest(0L, 2))
+                .build());
     assertEquals(1, response.getResults().size());
 
-    response = personService.list(null, UUID.randomUUID(), null, new PagingRequest(0L, 2));
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .primaryInstitution(UUID.randomUUID())
+                .page(new PagingRequest(0L, 2))
+                .build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -218,13 +272,28 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     person3.setPrimaryCollectionKey(collectionKey2);
     personService.create(person3);
 
-    PagingResponse<Person> response = personService.list(null, null, collectionKey1, DEFAULT_PAGE);
+    PagingResponse<Person> response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .primaryCollection(collectionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(2, response.getResults().size());
 
-    response = personService.list(null, null, collectionKey2, new PagingRequest(0L, 2));
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .primaryCollection(collectionKey2)
+                .page(new PagingRequest(0L, 2))
+                .build());
     assertEquals(1, response.getResults().size());
 
-    response = personService.list(null, null, UUID.randomUUID(), new PagingRequest(0L, 2));
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .primaryCollection(UUID.randomUUID())
+                .page(new PagingRequest(0L, 2))
+                .build());
     assertEquals(0, response.getResults().size());
   }
 
@@ -246,29 +315,104 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     Person person1 = testData.newEntity();
     person1.setFirstName("person1");
     person1.setPrimaryCollectionKey(collectionKey1);
-    personService.create(person1);
+    UUID personKey1 = personService.create(person1);
+
+    Identifier id1 = new Identifier(IdentifierType.IH_IRN, "test");
+    personService.addIdentifier(personKey1, id1);
 
     Person person2 = testData.newEntity();
     person2.setFirstName("person2");
     person2.setPrimaryCollectionKey(collectionKey1);
     person2.setPrimaryInstitutionKey(institutionKey1);
-    personService.create(person2);
+    UUID personKey2 = personService.create(person2);
+
+    MachineTag mt1 = new MachineTag(Constants.IH_NAMESPACE, Constants.IRN_TAG, "test");
+    personService.addMachineTag(personKey2, mt1);
 
     PagingResponse<Person> response =
-        personService.list("person1", null, collectionKey1, DEFAULT_PAGE);
+        personService.list(
+            PersonSearchRequest.builder()
+                .query("person1")
+                .primaryCollection(collectionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
 
-    response = personService.list(LAST_NAME, null, collectionKey1, DEFAULT_PAGE);
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .query(LAST_NAME)
+                .primaryCollection(collectionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(2, response.getResults().size());
 
-    response = personService.list(LAST_NAME, institutionKey1, collectionKey1, DEFAULT_PAGE);
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .query(LAST_NAME)
+                .primaryInstitution(institutionKey1)
+                .primaryCollection(collectionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
 
-    response = personService.list("person2", institutionKey1, collectionKey1, DEFAULT_PAGE);
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .query("person2")
+                .primaryInstitution(institutionKey1)
+                .primaryCollection(collectionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
 
-    response = personService.list("person unknown", institutionKey1, collectionKey1, DEFAULT_PAGE);
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .query("person unknown")
+                .primaryInstitution(institutionKey1)
+                .primaryCollection(collectionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(0, response.getResults().size());
+
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .identifierType(IdentifierType.IH_IRN)
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .identifier(id1.getIdentifier())
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        personService.list(
+            PersonSearchRequest.builder().machineTagName(mt1.getName()).page(DEFAULT_PAGE).build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .machineTagNamespace(mt1.getNamespace())
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        personService.list(
+            PersonSearchRequest.builder()
+                .machineTagValue(mt1.getValue())
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
   }
 
   @Test

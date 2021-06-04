@@ -16,12 +16,12 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
@@ -35,11 +35,7 @@ public interface PersonClient extends BaseCollectionEntityClient<Person> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  PagingResponse<Person> list(
-      @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
-      @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
-      @SpringQueryMap Pageable page);
+  PagingResponse<Person> list(@SpringQueryMap PersonSearchRequest searchRequest);
 
   @RequestMapping(
       method = RequestMethod.GET,

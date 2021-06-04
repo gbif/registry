@@ -18,6 +18,7 @@ package org.gbif.registry.ws.resources.collections;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
@@ -69,12 +70,8 @@ public class PersonResource extends BaseCollectionEntityResource<Person> {
   }
 
   @GetMapping
-  public PagingResponse<Person> list(
-      @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
-      @RequestParam(value = "primaryCollection", required = false) UUID collectionKey,
-      Pageable page) {
-    return personService.list(query, institutionKey, collectionKey, page);
+  public PagingResponse<Person> list(PersonSearchRequest searchRequest) {
+    return personService.list(searchRequest);
   }
 
   @GetMapping("deleted")

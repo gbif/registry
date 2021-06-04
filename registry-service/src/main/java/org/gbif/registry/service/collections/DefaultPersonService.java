@@ -1,6 +1,7 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -16,6 +17,7 @@ import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.collections.params.PersonSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 
 import java.util.List;
@@ -132,16 +134,28 @@ public class DefaultPersonService extends BaseCollectionEntityService<Person>
   }
 
   @Override
-  public PagingResponse<Person> list(
-      @Nullable String query,
-      @Nullable UUID institutionKey,
-      @Nullable UUID collectionKey,
-      @Nullable Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    query = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    long total = personMapper.count(institutionKey, collectionKey, query);
-    return new PagingResponse<>(
-        page, total, personMapper.list(institutionKey, collectionKey, query, page));
+  public PagingResponse<Person> list(PersonSearchRequest searchRequest) {
+    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    String query =
+        searchRequest.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            : searchRequest.getQ();
+
+    PersonSearchParams params =
+        PersonSearchParams.builder()
+            .query(query)
+            .collectionKey(searchRequest.getPrimaryCollection())
+            .institutionKey(searchRequest.getPrimaryInstitution())
+            .identifier(searchRequest.getIdentifier())
+            .identifierType(searchRequest.getIdentifierType())
+            .machineTagName(searchRequest.getMachineTagName())
+            .machineTagNamespace(searchRequest.getMachineTagNamespace())
+            .machineTagValue(searchRequest.getMachineTagValue())
+            .build();
+
+    long total = personMapper.count(params);
+    return new PagingResponse<>(page, total, personMapper.list(params, page));
   }
 
   @Override
