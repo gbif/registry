@@ -26,10 +26,11 @@ import com.google.common.collect.Lists;
 
 /**
  * Class to temporarily keep paragraph strings before they are used as a single, concatenated string
- * argument in other rules. Digester needs public access to this otherwise package scoped class.
- * </br> Note HTML is used to concatenate paragraphs using
- *
- * <p>instead of newline character ("\n"), see POR-3138.
+ * argument in other rules, and to reverse this transformation.
+ * <br>
+ * Digester needs public access to this otherwise package scoped class.
+ * <br>
+ * Note HTML is used to concatenate paragraphs using &lt;p/&gt; instead of newline character ("\n"), see POR-3138.
  *
  * @see <a href="http://dev.gbif.org/issues/browse/POR-3138">POR-3138</a>
  */
@@ -38,10 +39,24 @@ public class ParagraphContainer {
   private static final Joiner paraJoin = Joiner.on("\n");
   private final List<String> paragraphs = new ArrayList<>();
 
+  public ParagraphContainer() {}
+
+  public ParagraphContainer(String concatenated) {
+    if (concatenated != null) {
+      for (String c : concatenated.split("</p>\n?<p>")) {
+        appendParagraph(c.replace("<p>", "").replace("</p>", ""));
+      }
+    }
+  }
+
   public void appendParagraph(String para) {
     if (!Strings.isNullOrEmpty(para)) {
       paragraphs.add(para.trim());
     }
+  }
+
+  public List<String> getParagraphs() {
+    return paragraphs;
   }
 
   @Override

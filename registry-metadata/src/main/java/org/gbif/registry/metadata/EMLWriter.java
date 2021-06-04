@@ -39,6 +39,8 @@ import com.google.common.collect.Lists;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 
+import org.gbif.registry.metadata.parse.ParagraphContainer;
+
 /**
  * A simple tool to serialize a dataset object into an XML document compliant with the latest
  * version of the GBIF Metadata Profile, currently version 1.1.
@@ -176,6 +178,10 @@ public class EMLWriter {
     /** @return list of {@link Contact} of type ContactType.ADMINISTRATIVE_POINT_OF_CONTACT */
     public List<Contact> getContacts() {
       return contactAdapter.getContacts();
+    }
+
+    public List<String> getDescription() {
+      return new ParagraphContainer(dataset.getDescription()).getParagraphs();
     }
 
     public Contact getMetadataProvider() {
