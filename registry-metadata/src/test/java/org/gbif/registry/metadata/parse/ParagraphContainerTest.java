@@ -38,4 +38,38 @@ public class ParagraphContainerTest {
     container.appendParagraph(" <p>is it me</p>");
     assertEquals("<p>Hello</p>\n<p>world!</p>\n<p>is it me</p>", container.toString());
   }
+
+  @Test
+  public void testFromString() {
+    ParagraphContainer container = new ParagraphContainer(null);
+    assertEquals(0, container.getParagraphs().size());
+
+    container = new ParagraphContainer("");
+    assertEquals(0, container.getParagraphs().size());
+
+    container = new ParagraphContainer("<p></p>");
+    assertEquals(0, container.getParagraphs().size());
+
+    container = new ParagraphContainer("Hello");
+    assertEquals(1, container.getParagraphs().size());
+    assertEquals("Hello", container.getParagraphs().get(0));
+
+    container = new ParagraphContainer("<p>Hello</p>\n<p>world!</p>");
+    assertEquals(2, container.getParagraphs().size());
+    assertEquals("Hello", container.getParagraphs().get(0));
+    assertEquals("world!", container.getParagraphs().get(1));
+
+    container = new ParagraphContainer("<p>Hello</p>\n<p>world!</p>\n<p>is it me</p>");
+    assertEquals(3, container.getParagraphs().size());
+    assertEquals("Hello", container.getParagraphs().get(0));
+    assertEquals("world!", container.getParagraphs().get(1));
+    assertEquals("is it me", container.getParagraphs().get(2));
+
+    // Simulate e.g. manual edits to the description
+    container = new ParagraphContainer("\n<p>Hello</p><p>world!</p>\n<p>is it me</p>\n");
+    assertEquals(3, container.getParagraphs().size());
+    assertEquals("Hello", container.getParagraphs().get(0));
+    assertEquals("world!", container.getParagraphs().get(1));
+    assertEquals("is it me", container.getParagraphs().get(2));
+  }
 }
