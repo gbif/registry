@@ -22,6 +22,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
@@ -48,7 +49,6 @@ import com.google.common.base.Strings;
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.security.UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE;
 
 /** Service to merge duplicated {@link Institution}. */
 @Service
@@ -88,12 +88,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     checkArgument(
         institutionToConvert.getConvertedToCollection() == null,
         "Cannot convert an already converted institution");
-
-    if (!SecurityContextCheck.checkUserInRole(
-            authentication, UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE)
-        && isIDigBioRecord(institutionToConvert)) {
-      throw new IllegalArgumentException("Cannot convert an iDigBio institution");
-    }
 
     Collection newCollection = new Collection();
     newCollection.setCode(institutionToConvert.getCode());
@@ -214,7 +208,9 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
   @Override
   void additionalOperations(Institution entityToReplace, Institution replacement) {
     // fix primary institution of contacts
-    PagingResponse<Person> persons = personService.list(null, entityToReplace.getKey(), null, null);
+    PagingResponse<Person> persons =
+        personService.list(
+            PersonSearchRequest.builder().primaryInstitution(entityToReplace.getKey()).build());
     persons
         .getResults()
         .forEach(

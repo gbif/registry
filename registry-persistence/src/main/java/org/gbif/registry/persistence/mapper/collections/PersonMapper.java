@@ -18,9 +18,9 @@ package org.gbif.registry.persistence.mapper.collections;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
+import org.gbif.registry.persistence.mapper.collections.params.PersonSearchParams;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -32,15 +32,10 @@ import org.springframework.stereotype.Repository;
 public interface PersonMapper extends BaseMapper<Person> {
 
   List<Person> list(
-      @Nullable @Param("institutionKey") UUID institutionKey,
-      @Nullable @Param("collectionKey") UUID collectionKey,
-      @Nullable @Param("query") String query,
+      @Nullable @Param("params") PersonSearchParams searchParams,
       @Nullable @Param("page") Pageable page);
 
-  long count(
-      @Nullable @Param("institutionKey") UUID institutionKey,
-      @Nullable @Param("collectionKey") UUID collectionKey,
-      @Nullable @Param("query") String query);
+  long count(@Nullable @Param("params") PersonSearchParams searchParams);
 
   /** A simple suggest by title service. */
   List<PersonSuggestResult> suggest(@Nullable @Param("q") String q);

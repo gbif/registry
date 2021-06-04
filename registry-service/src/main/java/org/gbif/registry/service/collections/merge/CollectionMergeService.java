@@ -18,6 +18,7 @@ package org.gbif.registry.service.collections.merge;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.PersonService;
@@ -84,7 +85,9 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   @Override
   void additionalOperations(Collection entityToReplace, Collection replacement) {
     // fix primary collection of contacts
-    PagingResponse<Person> persons = personService.list(null, null, entityToReplace.getKey(), null);
+    PagingResponse<Person> persons =
+        personService.list(
+            PersonSearchRequest.builder().primaryCollection(entityToReplace.getKey()).build());
     persons
         .getResults()
         .forEach(
