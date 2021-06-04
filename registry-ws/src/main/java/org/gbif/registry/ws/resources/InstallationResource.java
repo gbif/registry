@@ -31,7 +31,7 @@ import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;
 import org.gbif.registry.domain.ws.InstallationRequestSearchParams;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;

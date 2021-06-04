@@ -21,6 +21,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.PersonMapper;
+import org.gbif.registry.persistence.mapper.collections.params.PersonSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -127,7 +128,8 @@ public class PersonMapperIT extends BaseItTest {
     personMapper.create(p1);
     personMapper.create(p2);
 
-    List<Person> staffs = personMapper.list(null, null, null, PAGE.apply(5, 0L));
+    List<Person> staffs =
+        personMapper.list(PersonSearchParams.builder().build(), PAGE.apply(5, 0L));
     assertEquals(2, staffs.size());
   }
 
@@ -158,17 +160,19 @@ public class PersonMapperIT extends BaseItTest {
 
     Pageable pageable = PAGE.apply(5, 0L);
 
-    List<Person> persons = personMapper.list(null, null, "FN1", pageable);
+    List<Person> persons =
+        personMapper.list(PersonSearchParams.builder().query("FN1").build(), pageable);
     assertEquals(1, persons.size());
     assertEquals("FN1", persons.get(0).getFirstName());
 
-    persons = personMapper.list(null, null, "FN0", pageable);
+    persons = personMapper.list(PersonSearchParams.builder().query("FN0").build(), pageable);
     assertEquals(0, persons.size());
 
-    persons = personMapper.list(null, null, "12345", pageable);
+    persons = personMapper.list(PersonSearchParams.builder().query("12345").build(), pageable);
     assertEquals(2, persons.size());
 
-    persons = personMapper.list(null, null, "dummy address f ", pageable);
+    persons =
+        personMapper.list(PersonSearchParams.builder().query("dummy address f ").build(), pageable);
     assertEquals(1, persons.size());
   }
 }

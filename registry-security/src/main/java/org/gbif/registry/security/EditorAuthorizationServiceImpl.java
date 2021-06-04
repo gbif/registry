@@ -59,7 +59,6 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     this.machineTagMapper = machineTagMapper;
   }
 
-  @Deprecated
   @Override
   public boolean allowedToModifyNamespace(String name, String ns) {
     if (name == null) {
@@ -68,7 +67,6 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     return userRightsMapper.namespaceExistsForUser(name, ns);
   }
 
-  @Deprecated
   @Override
   public boolean allowedToDeleteMachineTag(String name, int machineTagKey) {
     if (name == null) {
@@ -83,8 +81,11 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       return false;
     }
 
-    return TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-        && allowedToModifyDataset(name, datasetKey);
+    // it calls the allowedToModifyDataset for convenience since it first checks the
+    // allowedToModifyEntity and returns if true
+    return (allowedToModifyNamespace(name, machineTag.getNamespace())
+        || (TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace()))
+            && allowedToModifyDataset(name, datasetKey));
   }
 
   @Override
@@ -98,8 +99,11 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
       return false;
     }
 
-    return TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace())
-        && allowedToModifyDataset(name, datasetKey);
+    // it calls the allowedToModifyDataset for convenience since it first checks the
+    // allowedToModifyEntity and returns if true
+    return (allowedToModifyNamespace(name, machineTag.getNamespace())
+        || (TagNamespace.GBIF_DEFAULT_TERM.getNamespace().equals(machineTag.getNamespace()))
+            && allowedToModifyDataset(name, datasetKey));
   }
 
   @Override

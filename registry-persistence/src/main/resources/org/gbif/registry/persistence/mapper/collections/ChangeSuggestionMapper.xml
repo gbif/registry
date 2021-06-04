@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="CHANGE_SUGGESTION_DTO_MAP" type="ChangeSuggestionDto" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="comments" column="comments" typeHandler="StringArrayTypeHandler"/>
+    <result property="changes" column="changes" typeHandler="SuggestedChangesTypeHandler"/>
+  </resultMap>
+
+  <sql id="SUGGESTION_WRITE_FIELDS">
+    entity_type, entity_key, type, status, proposed, proposed_by, proposer_email, changes, comments,
+    suggested_entity, merge_target_key, institution_converted_collection, name_new_institution_converted_collection,
+    modified, modified_by
+  </sql>
+
+  <sql id="SUGGESTION_READ_FIELDS">
+    cs.key, cs.entity_type, cs.entity_key, cs.type, cs.status, cs.proposed, cs.proposed_by, cs.proposer_email, cs. applied,
+    cs.applied_by, cs.discarded_by, cs.discarded, cs.suggested_entity, cs.comments,
+    cs.merge_target_key, cs.changes, cs.institution_converted_collection, cs.name_new_institution_converted_collection,
+    cs.modified, cs.modified_by
+  </sql>
+
+  <sql id="SUGGESTION_PARAMS_CREATE">
+    #{entityType,jdbcType=OTHER},
+    #{entityKey,jdbcType=OTHER},
+    #{type,jdbcType=OTHER},
+    #{status,jdbcType=OTHER},
+    now(), <!-- proposed -->
+    #{proposedBy,jdbcType=VARCHAR},
+    #{proposerEmail,jdbcType=VARCHAR},
+    #{changes,jdbcType=OTHER,typeHandler=SuggestedChangesTypeHandler}::jsonb,
+    #{comments,jdbcType=OTHER,typeHandler=StringArrayTypeHandler},
+    #{suggestedEntity,jdbcType=OTHER}::jsonb,
+    #{mergeTargetKey,jdbcType=OTHER},
+    #{institutionConvertedCollection,jdbcType=OTHER},
+    #{nameNewInstitutionConvertedCollection,jdbcType=VARCHAR},
+    now(), <!-- modified -->
+    #{modifiedBy,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="SUGGESTION_PARAMS_UPDATE">
+    suggested_entity = #{suggestedEntity,jdbcType=OTHER}::jsonb,
+    status = #{status,jdbcType=OTHER},
+    comments = #{comments,jdbcType=OTHER,typeHandler=StringArrayTypeHandler},
+    changes = #{changes,jdbcType=OTHER,typeHandler=SuggestedChangesTypeHandler}::jsonb,
+    modified = now(),
+    modified_by = #{modifiedBy,jdbcType=VARCHAR},
+    discarded = #{discarded,jdbcType=OTHER},
+    discarded_by = #{discardedBy,jdbcType=INTEGER},
+    applied = #{applied,jdbcType=OTHER},
+    applied_by = #{appliedBy,jdbcType=INTEGER},
+    entity_key = #{entityKey,jdbcType=INTEGER}
+  </sql>
+
+  <insert id="create" parameterType="ChangeSuggestionDto" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO change_suggestion(<include refid="SUGGESTION_WRITE_FIELDS"/>)
+    VALUES(<include refid="SUGGESTION_PARAMS_CREATE"/>)
+  </insert>
+
+  <!--  Note: you can get entities which are deleted -->
+  <select id="get" resultMap="CHANGE_SUGGESTION_DTO_MAP">
+    SELECT
+    <include refid="SUGGESTION_READ_FIELDS"/>
+    FROM change_suggestion cs
+    WHERE cs.key = #{key,jdbcType=INTEGER}
+  </select>
+
+  <select id="getByKeyAndType" resultMap="CHANGE_SUGGESTION_DTO_MAP">
+    SELECT
+    <include refid="SUGGESTION_READ_FIELDS"/>
+    FROM change_suggestion cs
+    WHERE cs.key = #{key,jdbcType=INTEGER} AND cs.entity_type = #{entityType,jdbcType=OTHER}
+  </select>
+
+  <select id="list" resultType="ChangeSuggestionDto" resultMap="CHANGE_SUGGESTION_DTO_MAP" parameterType="Pageable">
+    SELECT
+    <include refid="SUGGESTION_READ_FIELDS"/>
+    FROM change_suggestion cs
+    <where>
+      <if test="status != null">
+        cs.status = #{status,jdbcType=OTHER}
+      </if>
+      <if test="type != null">
+        AND cs.type = #{type,jdbcType=OTHER}
+      </if>
+      <if test="entityType != null">
+        AND cs.entity_type = #{entityType,jdbcType=OTHER}
+      </if>
+      <if test="proposerEmail != null">
+        AND cs.proposer_email = #{proposerEmail,jdbcType=OTHER}
+      </if>
+      <if test="entityKey != null">
+        AND cs.entity_key = #{entityKey,jdbcType=OTHER}
+      </if>
+    </where>
+    ORDER BY cs.proposed DESC
+    <if test="page != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Long">
+    SELECT count(DISTINCT cs.key)
+    FROM change_suggestion cs
+    <where>
+      <if test="status != null">
+        cs.status = #{status,jdbcType=OTHER}
+      </if>
+      <if test="type != null">
+        AND cs.type = #{type,jdbcType=OTHER}
+      </if>
+      <if test="entityType != null">
+        AND cs.entity_type = #{entityType,jdbcType=OTHER}
+      </if>
+      <if test="proposerEmail != null">
+        AND cs.proposer_email = #{proposerEmail,jdbcType=OTHER}
+      </if>
+      <if test="entityKey != null">
+        AND cs.entity_key = #{entityKey,jdbcType=OTHER}
+      </if>
+    </where>
+  </select>
+
+  <update id="update" parameterType="ChangeSuggestionDto">
+    UPDATE change_suggestion
+    SET <include refid="SUGGESTION_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=INTEGER}
+  </update>
+
+</mapper>

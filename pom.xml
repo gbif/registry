@@ -83,6 +83,7 @@
     <spring-cloud-zookeeper.version>2.2.4.RELEASE</spring-cloud-zookeeper.version>
     <mybatis-spring-boot-starter.version>2.0.1</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
+    <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
     <gbif-api.version>0.153-SNAPSHOT</gbif-api.version>
@@ -217,6 +218,11 @@
         <groupId>de.codecentric</groupId>
         <artifactId>spring-boot-admin-starter-client</artifactId>
         <version>${spring-boot-admin.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-starter-sleuth</artifactId>
+        <version>${spring-cloud-sleuth.version}</version>
       </dependency>
       <dependency>
         <groupId>org.springdoc</groupId>

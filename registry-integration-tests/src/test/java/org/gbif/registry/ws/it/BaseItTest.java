@@ -78,9 +78,7 @@ public class BaseItTest {
     }
   }
 
-  /**
-   * Prepares a Tests database using an embedded Postgres instance.
-   */
+  /** Prepares a Tests database using an embedded Postgres instance. */
   public static class EmbeddedDataBaseInitializer {
     private final DataSource dataSource;
     private final PreparedDbProvider provider;
@@ -128,9 +126,7 @@ public class BaseItTest {
           .applyTo(configurableApplicationContext.getEnvironment());
     }
 
-    /**
-     * Creates the registry datasource settings from the embedded database.
-     */
+    /** Creates the registry datasource settings from the embedded database. */
     String[] dbTestPropertyPairs(EmbeddedDataBaseInitializer database) {
       return new String[] {
         "registry.datasource.url=jdbc:postgresql://localhost:"

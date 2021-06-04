@@ -43,32 +43,47 @@ public class AuthPreCheckCreationRequestFilterTest {
     when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution");
     assertEquals(
         GrSciCollEditorAuthorizationFilter.INSTITUTION,
-        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get());
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
 
     when(mockRequest.getRequestURI()).thenReturn("/grscicoll/collection");
     assertEquals(
         GrSciCollEditorAuthorizationFilter.COLLECTION,
-        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get());
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
 
     when(mockRequest.getRequestURI()).thenReturn("/dataset");
     when(mockRequest.getMethod()).thenReturn("POST");
     assertEquals(
         EditorAuthorizationFilter.DATASET,
-        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get());
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
 
     when(mockRequest.getRequestURI()).thenReturn("/organization");
     when(mockRequest.getMethod()).thenReturn("POST");
     assertEquals(
         EditorAuthorizationFilter.ORGANIZATION,
-        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get());
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
 
     when(mockRequest.getRequestURI()).thenReturn("/installation");
     when(mockRequest.getMethod()).thenReturn("POST");
     assertEquals(
         EditorAuthorizationFilter.INSTALLATION,
-        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get());
-  }
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
 
-  @Test
-  public void createEntityTest() {}
+    when(mockRequest.getRequestURI())
+        .thenReturn("/dataset/f822c473-fea5-467c-93ca-3f09befd9817/machineTag");
+    assertEquals(
+        EditorAuthorizationFilter.MACHINE_TAG,
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
+
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/institution/f822c473-fea5-467c-93ca-3f09befd9817/merge");
+    assertEquals(
+        AuthPreCheckCreationRequestFilter.INSTITUTION_MERGE,
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
+
+    when(mockRequest.getRequestURI())
+        .thenReturn("/grscicoll/collection/f822c473-fea5-467c-93ca-3f09befd9817/merge");
+    assertEquals(
+        AuthPreCheckCreationRequestFilter.COLLECTION_MERGE,
+        authPreCheckCreationRequestFilter.getResourceToCreate(mockRequest).get().name);
+  }
 }

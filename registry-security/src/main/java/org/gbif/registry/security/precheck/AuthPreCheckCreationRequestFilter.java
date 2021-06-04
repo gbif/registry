@@ -15,10 +15,15 @@
  */
 package org.gbif.registry.security.precheck;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
@@ -33,10 +38,15 @@ import org.gbif.ws.server.GbifHttpServletRequestWrapper;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,6 +69,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import static org.gbif.registry.security.EditorAuthorizationFilter.DATASET;
 import static org.gbif.registry.security.EditorAuthorizationFilter.INSTALLATION;
+import static org.gbif.registry.security.EditorAuthorizationFilter.MACHINE_TAG;
 import static org.gbif.registry.security.EditorAuthorizationFilter.NETWORK;
 import static org.gbif.registry.security.EditorAuthorizationFilter.NODE;
 import static org.gbif.registry.security.EditorAuthorizationFilter.ORGANIZATION;
@@ -66,6 +77,7 @@ import static org.gbif.registry.security.EditorAuthorizationFilter.POST_RESOURCE
 import static org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter.COLLECTION;
 import static org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter.INSTITUTION;
 import static org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter.INST_COLL_CREATE_PATTERN;
+import static org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter.MERGE_PATTERN;
 import static org.gbif.registry.security.precheck.AuthPreCheckInterceptor.containsCheckPermissionsOnlyParam;
 
 /**
@@ -87,6 +99,8 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
       LoggerFactory.getLogger(AuthPreCheckCreationRequestFilter.class);
 
   private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[\\h\\s+]");
+  static final String INSTITUTION_MERGE = "institutionMerge";
+  static final String COLLECTION_MERGE = "collectionMerge";
 
   private final UserRightsMapper userRightsMapper;
   private final OrganizationMapper organizationMapper;
@@ -130,8 +144,9 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
     if (containsCheckPermissionsOnlyParam(request)
         && "POST".equals(request.getMethod())
         && isEmptyBody(((GbifHttpServletRequestWrapper) request).getContent())) {
+
       // if the body is empty we create it
-      Optional<String> resource = getResourceToCreate(request);
+      Optional<Resource> resource = getResourceToCreate(request);
       if (resource.isPresent()) {
         Authentication authentication = authenticationFacade.getAuthentication();
         Optional<Object> entity = createEntity(authentication.getName(), resource.get());
@@ -149,28 +164,40 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private Optional<Object> createEntity(String username, String entityName) {
-    Map<String, UUID> scopeEntities = identifyUserRights(username);
+  private Optional<Object> createEntity(String username, Resource resource) {
+    Map<String, Set<UUID>> scopeEntities = identifyUserRights(username);
+    List<String> namespaces = userRightsMapper.getNamespacesByUser(username);
+    List<Country> countryScopes = userRightsMapper.getCountriesByUser(username);
 
-    if (scopeEntities.isEmpty()) {
-      return Optional.empty();
-    }
+    Function<String, UUID> getScope =
+        k -> {
+          if (scopeEntities.containsKey(k)) {
+            return scopeEntities.get(k).iterator().next();
+          }
+          return null;
+        };
 
     Supplier<UUID> endorsingNodeOrganizationSupplier =
         () -> {
           // get a random organization that is endorsed by this node
           List<Organization> endorsedOrgs =
-              organizationMapper.organizationsEndorsedBy(scopeEntities.get(NODE), null);
+              organizationMapper.organizationsEndorsedBy(getScope.apply(NODE), null);
           if (endorsedOrgs != null && !endorsedOrgs.isEmpty()) {
             return endorsedOrgs.get(0).getKey();
           }
           return null;
         };
 
-    if (entityName.equals(DATASET)) {
+    if (resource.name.equals(MACHINE_TAG)) {
+      return namespaces.isEmpty()
+          ? Optional.empty()
+          : Optional.of(new MachineTag(namespaces.get(0), "authPreCheck", "authPreCheck"));
+    }
+
+    if (resource.name.equals(DATASET)) {
       Dataset dataset = new Dataset();
-      dataset.setPublishingOrganizationKey(scopeEntities.get(ORGANIZATION));
-      dataset.setInstallationKey(scopeEntities.get(INSTALLATION));
+      dataset.setPublishingOrganizationKey(getScope.apply(ORGANIZATION));
+      dataset.setInstallationKey(getScope.apply(INSTALLATION));
 
       if (scopeEntities.containsKey(NODE)) {
         dataset.setPublishingOrganizationKey(endorsingNodeOrganizationSupplier.get());
@@ -179,36 +206,76 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
       return Optional.of(dataset);
     }
 
-    if (entityName.equals(ORGANIZATION)) {
+    if (resource.name.equals(ORGANIZATION)) {
       Organization organization = new Organization();
-      organization.setEndorsingNodeKey(scopeEntities.get(NODE));
+      organization.setEndorsingNodeKey(getScope.apply(NODE));
       return Optional.of(organization);
     }
 
-    if (entityName.equals(INSTALLATION)) {
+    if (resource.name.equals(INSTALLATION)) {
       Installation installation = new Installation();
-      installation.setOrganizationKey(scopeEntities.get(ORGANIZATION));
+      installation.setOrganizationKey(getScope.apply(ORGANIZATION));
       if (scopeEntities.containsKey(NODE)) {
         installation.setOrganizationKey(endorsingNodeOrganizationSupplier.get());
       }
       return Optional.of(installation);
     }
 
-    if (entityName.equals(COLLECTION)) {
+    // grscicoll
+    if (resource.name.equals(INSTITUTION) && !countryScopes.isEmpty()) {
+      Institution institution = new Institution();
+      Address address = new Address();
+      address.setCountry(countryScopes.get(0));
+      institution.setAddress(address);
+      return Optional.of(institution);
+    }
+
+    if (resource.name.equals(COLLECTION)) {
       Collection collection = new Collection();
-      collection.setInstitutionKey(scopeEntities.get(INSTITUTION));
+      collection.setInstitutionKey(getScope.apply(INSTITUTION));
+
+      if (!countryScopes.isEmpty()) {
+        Address address = new Address();
+        address.setCountry(countryScopes.get(0));
+        collection.setAddress(address);
+      }
+
       return Optional.of(collection);
+    }
+
+    // grscicoll merge
+    BiFunction<String, Predicate<UUID>, UUID> getScopeWithFilter =
+        (k, p) -> {
+          if (scopeEntities.containsKey(k)) {
+            return scopeEntities.get(k).stream().filter(p).findFirst().orElse(null);
+          }
+          return null;
+        };
+
+    if (resource.name.equals(INSTITUTION_MERGE)) {
+      MergeParams mergeParams = new MergeParams();
+      mergeParams.setReplacementEntityKey(
+          getScopeWithFilter.apply(INSTITUTION, k -> !k.equals(resource.key)));
+      return Optional.of(mergeParams);
+    }
+
+    if (resource.name.equals(COLLECTION_MERGE)) {
+      MergeParams mergeParams = new MergeParams();
+      mergeParams.setReplacementEntityKey(
+          getScopeWithFilter.apply(COLLECTION, k -> !k.equals(resource.key)));
+      return Optional.of(mergeParams);
     }
 
     return Optional.empty();
   }
 
-  private Map<String, UUID> identifyUserRights(String username) {
-    Map<String, UUID> entitiesFound = new HashMap<>();
+  private Map<String, Set<UUID>> identifyUserRights(String username) {
+    Map<String, Set<UUID>> entitiesFound = new HashMap<>();
 
     List<UUID> keys = userRightsMapper.getKeysByUser(username);
     for (UUID k : keys) {
-      resolveUserRight(k).ifPresent(t -> entitiesFound.put(t, k));
+      resolveUserRight(k)
+          .ifPresent(t -> entitiesFound.computeIfAbsent(t, v -> new HashSet<>()).add(k));
     }
     return entitiesFound;
   }
@@ -239,13 +306,24 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
   }
 
   @VisibleForTesting
-  Optional<String> getResourceToCreate(HttpServletRequest request) {
+  Optional<Resource> getResourceToCreate(HttpServletRequest request) {
     final String path = request.getRequestURI();
 
+    if (path.contains("/machineTag")) {
+      return Optional.of(new Resource(MACHINE_TAG));
+    }
+
     if (path.contains(GrSciCollEditorAuthorizationFilter.GRSCICOLL_PATH)) {
+      Matcher mergeMatch = MERGE_PATTERN.matcher(path);
+      if (mergeMatch.matches()) {
+        return mergeMatch.group(1).equals(INSTITUTION)
+            ? Optional.of(new Resource(INSTITUTION_MERGE, UUID.fromString(mergeMatch.group(2))))
+            : Optional.of(new Resource(COLLECTION_MERGE, UUID.fromString(mergeMatch.group(2))));
+      }
+
       Matcher createEntityMatch = INST_COLL_CREATE_PATTERN.matcher(path);
-      if (createEntityMatch.find()) {
-        return Optional.of(createEntityMatch.group(1));
+      if (createEntityMatch.matches()) {
+        return Optional.of(new Resource(createEntityMatch.group(1)));
       }
     } else {
       final String requestWithMethod = request.getMethod() + " " + path;
@@ -257,7 +335,7 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
               .findFirst();
 
       if (networkEntityMatcher.isPresent()) {
-        return Optional.of(networkEntityMatcher.get().group(1));
+        return Optional.of(new Resource(networkEntityMatcher.get().group(1)));
       }
     }
 
@@ -271,5 +349,20 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
 
     String contentNormalized = WHITESPACE_PATTERN.matcher(content).replaceAll("");
     return contentNormalized.isEmpty() || contentNormalized.equals("{}");
+  }
+
+  @VisibleForTesting
+  static class Resource {
+    String name;
+    UUID key;
+
+    Resource(String name) {
+      this.name = name;
+    }
+
+    Resource(String name, UUID key) {
+      this.name = name;
+      this.key = key;
+    }
   }
 }

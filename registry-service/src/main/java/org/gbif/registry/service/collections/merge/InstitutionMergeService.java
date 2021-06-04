@@ -15,27 +15,30 @@
  */
 package org.gbif.registry.service.collections.merge;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
-import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.PersonSearchRequest;
+import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserRoles;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -44,39 +47,29 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 /** Service to merge duplicated {@link Institution}. */
 @Service
 public class InstitutionMergeService extends BaseMergeService<Institution> {
 
-  private final InstitutionMapper institutionMapper;
-  private final CollectionMapper collectionMapper;
-  private final MachineTagMapper machineTagMapper;
-  private final OccurrenceMappingMapper occurrenceMappingMapper;
+  private final InstitutionService institutionService;
+  private final CollectionService collectionService;
+  private final PersonService personService;
 
   @Autowired
   public InstitutionMergeService(
-      InstitutionMapper institutionMapper,
-      CollectionMapper collectionMapper,
-      IdentifierMapper identifierMapper,
-      MachineTagMapper machineTagMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper,
-      PersonMapper personMapper) {
-    super(
-        institutionMapper,
-        institutionMapper,
-        institutionMapper,
-        identifierMapper,
-        institutionMapper,
-        personMapper,
-        machineTagMapper,
-        occurrenceMappingMapper);
-    this.institutionMapper = institutionMapper;
-    this.collectionMapper = collectionMapper;
-    this.machineTagMapper = machineTagMapper;
-    this.occurrenceMappingMapper = occurrenceMappingMapper;
+      InstitutionService institutionService,
+      CollectionService collectionService,
+      PersonService personService) {
+    super(institutionService);
+    this.institutionService = institutionService;
+    this.collectionService = collectionService;
+    this.personService = personService;
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   public UUID convertToCollection(
       UUID institutionKey,
       @Nullable UUID institutionKeyForNewCollection,
@@ -89,21 +82,14 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
         institutionKeyForNewCollection != null || !Strings.isNullOrEmpty(newInstitutionName),
         "Either the institution key for the new collection or a name to create a new institution are required");
 
-    Institution institutionToConvert = institutionMapper.get(institutionKey);
+    Institution institutionToConvert = institutionService.get(institutionKey);
     checkArgument(
         institutionToConvert.getDeleted() == null, "Cannot convert a deleted institution");
     checkArgument(
         institutionToConvert.getConvertedToCollection() == null,
         "Cannot convert an already converted institution");
 
-    if (!SecurityContextCheck.checkUserInRole(
-            authentication, UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE)
-        && isIDigBioRecord(institutionToConvert)) {
-      throw new IllegalArgumentException("Cannot convert an iDigBio institution");
-    }
-
     Collection newCollection = new Collection();
-    newCollection.setKey(UUID.randomUUID());
     newCollection.setCode(institutionToConvert.getCode());
     newCollection.setAlternativeCodes(institutionToConvert.getAlternativeCodes());
     newCollection.setName(institutionToConvert.getName());
@@ -115,25 +101,29 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     newCollection.setHomepage(institutionToConvert.getHomepage());
     newCollection.setCatalogUrl(institutionToConvert.getCatalogUrl());
     newCollection.setApiUrl(institutionToConvert.getApiUrl());
-    newCollection.setAddress(institutionToConvert.getAddress());
-    newCollection.setMailingAddress(institutionToConvert.getMailingAddress());
-    newCollection.setCreatedBy(authentication.getName());
-    newCollection.setModifiedBy(authentication.getName());
+
+    if (institutionToConvert.getAddress() != null) {
+      Address address = institutionToConvert.getAddress();
+      address.setKey(null);
+      newCollection.setAddress(address);
+    }
+    if (institutionToConvert.getMailingAddress() != null) {
+      Address address = institutionToConvert.getMailingAddress();
+      address.setKey(null);
+      newCollection.setMailingAddress(address);
+    }
 
     // if there is no institution passed we need to create a new institution
     if (institutionKeyForNewCollection == null) {
       Institution newInstitution = new Institution();
-      newInstitution.setKey(UUID.randomUUID());
       newInstitution.setCode(institutionToConvert.getCode());
       newInstitution.setName(newInstitutionName);
-      newInstitution.setCreatedBy(authentication.getName());
-      newInstitution.setModifiedBy(authentication.getName());
-      institutionMapper.create(newInstitution);
+      institutionService.create(newInstitution);
 
       newCollection.setInstitutionKey(newInstitution.getKey());
     } else {
       Institution institutionForNewCollection =
-          institutionMapper.get(institutionKeyForNewCollection);
+          institutionService.get(institutionKeyForNewCollection);
       checkArgument(
           institutionForNewCollection.getDeleted() == null,
           "Cannot assign the new collection to a deleted institution");
@@ -141,8 +131,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
       newCollection.setInstitutionKey(institutionKeyForNewCollection);
     }
 
-    collectionMapper.create(newCollection);
-    institutionMapper.convertToCollection(institutionKey, newCollection.getKey());
+    collectionService.create(newCollection);
+    institutionService.convertToCollection(institutionKey, newCollection.getKey());
 
     // move the collections
     moveCollectionsToAnotherInstitution(
@@ -152,33 +142,34 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     institutionToConvert
         .getIdentifiers()
         .forEach(
-            i -> {
-              identifierMapper.createIdentifier(i);
-              collectionMapper.addIdentifier(newCollection.getKey(), i.getKey());
-            });
+            i ->
+                collectionService.addIdentifier(
+                    newCollection.getKey(), new Identifier(i.getType(), i.getIdentifier())));
 
     // move the machine tags
     institutionToConvert
         .getMachineTags()
         .forEach(
-            mt -> {
-              machineTagMapper.createMachineTag(mt);
-              collectionMapper.addMachineTag(newCollection.getKey(), mt.getKey());
-            });
+            mt ->
+                collectionService.addMachineTag(
+                    newCollection.getKey(),
+                    new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
     // move the occurrence mappings
     institutionToConvert
         .getOccurrenceMappings()
         .forEach(
             om -> {
-              occurrenceMappingMapper.createOccurrenceMapping(om);
-              collectionMapper.addOccurrenceMapping(newCollection.getKey(), om.getKey());
+              om.setKey(null);
+              collectionService.addOccurrenceMapping(
+                  newCollection.getKey(),
+                  new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
             });
 
     // copy the contacts
     institutionToConvert
         .getContacts()
-        .forEach(c -> collectionMapper.addContact(newCollection.getKey(), c.getKey()));
+        .forEach(c -> collectionService.addContact(newCollection.getKey(), c.getKey()));
 
     return newCollection.getKey();
   }
@@ -203,7 +194,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     replacement.getAlternativeCodes().addAll(entityToReplace.getAlternativeCodes());
 
     // Copy over information that would be lost when removing these duplicates
-    setNullFields(replacement, entityToReplace);
+    setNullFieldsInTarget(replacement, entityToReplace);
     replacement.setEmail(mergeLists(entityToReplace.getEmail(), replacement.getEmail()));
     replacement.setPhone(mergeLists(entityToReplace.getPhone(), replacement.getPhone()));
     replacement.setDisciplines(
@@ -217,12 +208,16 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
   @Override
   void additionalOperations(Institution entityToReplace, Institution replacement) {
     // fix primary institution of contacts
-    List<Person> persons = personMapper.list(entityToReplace.getKey(), null, null, null);
-    persons.forEach(
-        p -> {
-          p.setPrimaryInstitutionKey(replacement.getKey());
-          personMapper.update(p);
-        });
+    PagingResponse<Person> persons =
+        personService.list(
+            PersonSearchRequest.builder().primaryInstitution(entityToReplace.getKey()).build());
+    persons
+        .getResults()
+        .forEach(
+            p -> {
+              p.setPrimaryInstitutionKey(replacement.getKey());
+              personService.update(p);
+            });
 
     moveCollectionsToAnotherInstitution(entityToReplace.getKey(), replacement.getKey());
   }
@@ -230,13 +225,15 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
   private void moveCollectionsToAnotherInstitution(
       UUID sourceInstitutionKey, UUID targetInstitutionKey) {
     // move the collections to the entity to keep
-    List<CollectionDto> collections =
-        collectionMapper.list(
-            CollectionSearchParams.builder().institutionKey(sourceInstitutionKey).build(), null);
-    collections.forEach(
-        c -> {
-          c.getCollection().setInstitutionKey(targetInstitutionKey);
-          collectionMapper.update(c.getCollection());
-        });
+    PagingResponse<CollectionView> collections =
+        collectionService.list(
+            CollectionSearchRequest.builder().institution(sourceInstitutionKey).build());
+    collections
+        .getResults()
+        .forEach(
+            c -> {
+              c.getCollection().setInstitutionKey(targetInstitutionKey);
+              collectionService.update(c.getCollection());
+            });
   }
 }

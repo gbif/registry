@@ -16,7 +16,10 @@
 package org.gbif.registry.security.grscicoll;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
+import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
@@ -67,22 +70,27 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+).*");
   public static final Pattern FIRST_CLASS_ENTITY_UPDATE =
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
-  public static final Pattern IDENTIFIER_PATTERN_DELETE =
-      Pattern.compile(
-          ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/identifier/([0-9]+).*");
-
+  public static final Pattern CHANGE_SUGGESTION_UPDATE_PATTERN =
+      Pattern.compile(".*/grscicoll/(collection|institution)/changeSuggestion/([0-9]+).*");
   public static final Pattern INST_COLL_CREATE_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)$");
+  public static final Pattern MACHINE_TAG_PATTERN_DELETE =
+      Pattern.compile(
+          ".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)/machineTag/([0-9]+).*");
+  public static final Pattern MERGE_PATTERN =
+      Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+)/merge$");
+  public static final Pattern CONVERSION_PATTERN =
+      Pattern.compile(".*/grscicoll/institution/([a-f0-9-]+)/convertToCollection$");
 
   public static final String INSTITUTION = "institution";
   public static final String COLLECTION = "collection";
 
-  private final GrSciCollEditorAuthorizationService authService;
+  private final GrSciCollAuthorizationService authService;
   private final AuthenticationFacade authenticationFacade;
   private final ObjectMapper objectMapper;
 
   public GrSciCollEditorAuthorizationFilter(
-      GrSciCollEditorAuthorizationService authService,
+      GrSciCollAuthorizationService authService,
       AuthenticationFacade authenticationFacade,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.authService = authService;
@@ -101,161 +109,181 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     final String path = request.getRequestURI();
 
     // skip GET and OPTIONS requests and only check requests to grscicoll
-    if (isNotGetOrOptionsRequest(request) && path.contains(GRSCICOLL_PATH)) {
+    if (isNotGetOrOptionsRequest(request)
+        && path.contains(GRSCICOLL_PATH)
+        && !isChangeSuggestionCreation(request, path)) {
       // user must NOT be null if the resource requires editor rights restrictions
       ensureUserSetInSecurityContext(authentication, HttpStatus.FORBIDDEN);
-      final String username = authentication.getName();
 
       // validate only if user is not GrSciColl admin
       if (!checkUserInRole(authentication, UserRoles.GRSCICOLL_ADMIN_ROLE)) {
         // only editors allowed to modify, because admins already excluded
-        if (!checkUserInRole(authentication, UserRoles.GRSCICOLL_EDITOR_ROLE)) {
+        if (!checkUserInRole(
+            authentication, UserRoles.GRSCICOLL_EDITOR_ROLE, UserRoles.GRSCICOLL_MEDIATOR_ROLE)) {
           throw new WebApplicationException(
               "User has no GrSciColl editor rights", HttpStatus.FORBIDDEN);
         }
 
-        // editors cannot edit IH_IRN identifiers
-        checkIrnIdentifierPermissions(request, path, username);
+        if (isChangeSuggestionRequest(path)) {
+          checkChangeSuggestionUpdate(path, authentication);
+        } else {
+          // editors cannot edit machine tags
+          checkMachineTagsPermissions(request, path, authentication);
 
-        // editors cannot edit machine tags
-        checkMachineTagsPermissions(path, username);
+          checkInstitutionAndCollectionCreationPermissions(request, path, authentication);
 
-        // editors cannot create institutions or collections without institution
-        checkInstitutionAndCollectionCreationPermissions(request, path, username);
-
-        // check user rights in institution and collection
-        checkInstitutionAndCollectionUpdatePermissions(request, path, username);
+          checkInstitutionAndCollectionUpdatePermissions(request, path, authentication);
+        }
       }
     }
     filterChain.doFilter(request, response);
   }
 
-  private void checkInstitutionAndCollectionUpdatePermissions(
-      HttpServletRequest request, String path, String username) {
-    boolean isDelete = "DELETE".equals(request.getMethod());
-    if (path.startsWith("/grscicoll/institution")) {
-      // we check user rights of the institution
-      Matcher matcher = ENTITY_PATTERN.matcher(path);
-      if (matcher.find()) {
-        UUID entityKey = UUID.fromString(matcher.group(2));
-        String entityType = matcher.group(1);
+  private boolean isChangeSuggestionRequest(String path) {
+    return path.contains("/changeSuggestion");
+  }
 
-        // editors cannot delete iDigBio entities
-        if (isDelete && authService.isIDigBioEntity(entityType, entityKey)) {
-          throw new WebApplicationException(
-              MessageFormat.format(
-                  "User {0} is not allowed to delete an IDigBio institution {1}",
-                  username, entityKey),
-              HttpStatus.FORBIDDEN);
-        }
+  // it's a POST but can be done by anyone
+  private boolean isChangeSuggestionCreation(HttpServletRequest request, String path) {
+    return "POST".equals(request.getMethod()) && isChangeSuggestionRequest(path);
+  }
 
-        if (!authService.allowedToModifyEntity(username, entityKey)) {
-          throw new WebApplicationException(
-              MessageFormat.format(
-                  "User {0} is not allowed to edit entity {1}", username, entityKey),
-              HttpStatus.FORBIDDEN);
-        }
-      }
-    } else if (path.startsWith("/grscicoll/collection")) {
-      // we check user rights of the collection and its institution
-      Matcher matcher = ENTITY_PATTERN.matcher(path);
-      if (matcher.find()) {
-        UUID entityKey = UUID.fromString(matcher.group(2));
-        String entityType = matcher.group(1);
-
-        // editors cannot delete iDigBio entities
-        if (isDelete && authService.isIDigBioEntity(entityType, entityKey)) {
-          throw new WebApplicationException(
-              MessageFormat.format(
-                  "User {0} is not allowed to delete an IDigBio collection {1}",
-                  username, entityKey),
-              HttpStatus.FORBIDDEN);
-        }
-
-        Collection collectionInMessageBody = null;
-        if (FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches()) {
-          collectionInMessageBody = readEntity(request, Collection.class);
-        }
-        if (!authService.allowedToUpdateCollection(username, entityKey, collectionInMessageBody)) {
-          throw new WebApplicationException(
-              MessageFormat.format(
-                  "User {0} is not allowed to edit or create entity {1}", username, entityKey),
-              HttpStatus.FORBIDDEN);
-        }
+  private void checkChangeSuggestionUpdate(String path, Authentication authentication) {
+    Matcher matcher = CHANGE_SUGGESTION_UPDATE_PATTERN.matcher(path);
+    if (matcher.find()) {
+      String entityType = matcher.group(1);
+      int key = Integer.parseInt(matcher.group(2));
+      if (!authService.allowedToUpdateChangeSuggestion(key, entityType, authentication)) {
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to update change suggestion {1}", authentication, key),
+            HttpStatus.FORBIDDEN);
       }
     }
   }
 
-  private void checkInstitutionAndCollectionCreationPermissions(
-      HttpServletRequest request, String path, String username) {
-    Matcher createEntityMatch = INST_COLL_CREATE_PATTERN.matcher(path);
-    if ("POST".equals(request.getMethod()) && createEntityMatch.find()) {
-      String entityType = createEntityMatch.group(1);
+  private void checkInstitutionAndCollectionUpdatePermissions(
+      HttpServletRequest request, String path, Authentication authentication) {
+    Matcher matcher = ENTITY_PATTERN.matcher(path);
+    if (matcher.find()) {
+      UUID entityKey = UUID.fromString(matcher.group(2));
+      String entityType = matcher.group(1);
 
-      boolean allowed = true;
+      boolean firstClassEntityUpdate = FIRST_CLASS_ENTITY_UPDATE.matcher(path).matches();
+      boolean isDeleteEntity = "DELETE".equals(request.getMethod()) && firstClassEntityUpdate;
+      boolean isMerge = MERGE_PATTERN.matcher(path).matches();
+      boolean isConversion = CONVERSION_PATTERN.matcher(path).matches();
+
+      boolean allowed = false;
       if (INSTITUTION.equalsIgnoreCase(entityType)) {
-        allowed = false;
-      }
-
-      if (COLLECTION.equalsIgnoreCase(entityType)) {
-        Collection collection = readEntity(request, Collection.class);
-        if (collection == null || collection.getInstitutionKey() == null) {
-          allowed = false;
+        if (isDeleteEntity) {
+          allowed = authService.allowedToDeleteInstitution(authentication, entityKey);
+        } else if (isMerge) {
+          allowed =
+              authService.allowedToMergeInstitution(
+                  authentication, entityKey, getMergeTargetEntityKey(request));
+        } else if (isConversion) {
+          allowed =
+              authService.allowedToConvertInstitution(
+                  authentication, entityKey, getConversionNewInstitutionKey(request));
         } else {
-          allowed = authService.allowedToModifyEntity(username, collection.getInstitutionKey());
+          allowed = authService.allowedToModifyInstitution(authentication, entityKey);
+        }
+      } else if (COLLECTION.equalsIgnoreCase(entityType)) {
+        if (isDeleteEntity) {
+          allowed = authService.allowedToDeleteCollection(authentication, entityKey);
+        } else if (isMerge) {
+          allowed =
+              authService.allowedToMergeCollection(
+                  authentication, entityKey, getMergeTargetEntityKey(request));
+        } else {
+          Collection collectionInMessageBody = null;
+          if (firstClassEntityUpdate) {
+            collectionInMessageBody = readEntity(request, Collection.class);
+          }
+          allowed =
+              authService.allowedToModifyCollection(
+                  authentication, entityKey, collectionInMessageBody);
         }
       }
 
       if (!allowed) {
         throw new WebApplicationException(
             MessageFormat.format(
-                "User {0} is not allowed to create entity {1}", username, entityType),
+                "User {0} is not allowed to modify entity {1} of type {2}",
+                authentication.getName(), entityKey, entityType),
             HttpStatus.FORBIDDEN);
       }
     }
   }
 
-  private void checkMachineTagsPermissions(String path, String username) {
-    if (path.contains("/machineTag")) {
-      throw new WebApplicationException(
-          MessageFormat.format(
-              "User {0} is not allowed to create or delente machine tags of GrSciColl entities",
-              username),
-          HttpStatus.FORBIDDEN);
+  private UUID getMergeTargetEntityKey(HttpServletRequest request) {
+    MergeParams mergeParams = readEntity(request, MergeParams.class);
+    return mergeParams != null ? mergeParams.getReplacementEntityKey() : null;
+  }
+
+  private UUID getConversionNewInstitutionKey(HttpServletRequest request) {
+    ConvertToCollectionParams conversionParams =
+        readEntity(request, ConvertToCollectionParams.class);
+    return conversionParams != null ? conversionParams.getInstitutionForNewCollectionKey() : null;
+  }
+
+  private void checkInstitutionAndCollectionCreationPermissions(
+      HttpServletRequest request, String path, Authentication authentication) {
+    Matcher createEntityMatch = INST_COLL_CREATE_PATTERN.matcher(path);
+    if ("POST".equals(request.getMethod()) && createEntityMatch.find()) {
+      String entityType = createEntityMatch.group(1);
+
+      boolean allowed = false;
+      if (INSTITUTION.equalsIgnoreCase(entityType)) {
+        Institution institution = readEntity(request, Institution.class);
+        allowed = authService.allowedToCreateInstitution(institution, authentication);
+      } else if (COLLECTION.equalsIgnoreCase(entityType)) {
+        Collection collection = readEntity(request, Collection.class);
+        allowed = authService.allowedToCreateCollection(collection, authentication);
+      }
+
+      if (!allowed) {
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to create entity {1}", authentication, entityType),
+            HttpStatus.FORBIDDEN);
+      }
     }
   }
 
-  private void checkIrnIdentifierPermissions(
-      HttpServletRequest request, String path, String username) {
-    if (path.contains("/identifier")) {
+  private void checkMachineTagsPermissions(
+      HttpServletRequest request, String path, Authentication authentication) {
+    if (path.contains("/machineTag")) {
+      boolean allowed = false;
       if ("POST".equals(request.getMethod())) {
-        Identifier identifierToCreate = readEntity(request, Identifier.class);
-        if (authService.isIrnIdentifier(identifierToCreate)) {
-          throw new WebApplicationException(
-              MessageFormat.format("User {0} is not allowed to create an IRN identifier", username),
-              HttpStatus.FORBIDDEN);
-        }
+        MachineTag machineTagToCreate = readEntity(request, MachineTag.class);
+        allowed = authService.allowedToCreateMachineTag(authentication, machineTagToCreate);
       } else if ("DELETE".equals(request.getMethod())) {
-        Matcher matcher = IDENTIFIER_PATTERN_DELETE.matcher(path);
+        Matcher matcher = MACHINE_TAG_PATTERN_DELETE.matcher(path);
         if (matcher.find()) {
-          String entityType = matcher.group(1);
-          UUID entityKey = UUID.fromString(matcher.group(2));
-          int identifierKey = Integer.parseInt(matcher.group(3));
-          if (authService.isIrnIdentifier(entityType, entityKey, identifierKey)) {
-            throw new WebApplicationException(
-                MessageFormat.format(
-                    "User {0} is not allowed to delete an IRN identifier {1} from {2} {3}",
-                    username, identifierKey, entityType, entityKey),
-                HttpStatus.FORBIDDEN);
-          }
+          int machineTagKey = Integer.parseInt(matcher.group(3));
+          allowed = authService.allowedToDeleteMachineTag(authentication, machineTagKey);
         }
+      }
+
+      if (!allowed) {
+        throw new WebApplicationException(
+            MessageFormat.format(
+                "User {0} is not allowed to create or delete machine tag",
+                authentication.getName()),
+            HttpStatus.FORBIDDEN);
       }
     }
   }
 
   private <T> T readEntity(HttpServletRequest request, Class<T> clazz) {
+    String content = ((GbifHttpServletRequestWrapper) request).getContent();
+    if (content == null) {
+      return null;
+    }
     try {
-      return objectMapper.readValue(((GbifHttpServletRequestWrapper) request).getContent(), clazz);
+      return objectMapper.readValue(content, clazz);
     } catch (JsonProcessingException e) {
       LOG.warn("Couldn't read entity from message body", e);
       return null;

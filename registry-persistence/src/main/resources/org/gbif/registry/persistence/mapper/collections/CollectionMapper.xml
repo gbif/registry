@@ -195,7 +195,7 @@
       AND ccp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
     </if>
     <if test="params.code != null" >
-      AND c.code = #{params.code,jdbcType=VARCHAR}
+      AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
     </if>
     <if test="params.alternativeCode != null" >
       AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
@@ -263,7 +263,7 @@
       AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
     </if>
     <if test="params.code != null" >
-      AND c.code = #{params.code,jdbcType=VARCHAR}
+      AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
     </if>
     <if test="params.alternativeCode != null" >
       AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
@@ -607,7 +607,8 @@
   <update id="replace">
     UPDATE collection
     SET deleted = now(),
-    replaced_by = #{replacementKey,jdbcType=OTHER}
+    replaced_by = #{replacementKey,jdbcType=OTHER},
+    modified_by = #{user,jdbcType=VARCHAR}
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->

@@ -17,6 +17,7 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
 
@@ -58,9 +59,19 @@ public interface UserMapper extends ChallengeCodeSupportMapper<Integer> {
   void update(GbifUser user);
 
   List<GbifUser> search(
-    @Nullable @Param("query") String query, @Nullable @Param("roles") Set<UserRole> roles, @Nullable @Param("editorRightsOn") Set<UUID> editorRightsOn, @Nullable @Param("page") Pageable page);
+      @Nullable @Param("query") String query,
+      @Nullable @Param("roles") Set<UserRole> roles,
+      @Nullable @Param("editorRightsOn") Set<UUID> editorRightsOn,
+      @Nullable @Param("namespaceRightsOn") Set<String> namespaceRightsOn,
+      @Nullable @Param("countryRightsOn") Set<Country> countryRightsOn,
+      @Nullable @Param("page") Pageable page);
 
-  int count(@Nullable @Param("query") String query, @Nullable @Param("roles") Set<UserRole> roles, @Nullable @Param("editorRightsOn") Set<UUID> editorRightsOn);
+  int count(
+      @Nullable @Param("query") String query,
+      @Nullable @Param("roles") Set<UserRole> roles,
+      @Nullable @Param("editorRightsOn") Set<UUID> editorRightsOn,
+      @Nullable @Param("namespaceRightsOn") Set<String> namespaceRightsOn,
+      @Nullable @Param("countryRightsOn") Set<Country> countryRightsOn);
 
   /*
    * Editor rights
@@ -70,4 +81,19 @@ public interface UserMapper extends ChallengeCodeSupportMapper<Integer> {
   void addEditorRight(@Param("userName") String userName, @Param("key") UUID key);
 
   void deleteEditorRight(@Param("userName") String userName, @Param("key") UUID key);
+
+  /** Namespace rights. */
+  void addNamespaceRight(@Param("userName") String userName, @Param("namespace") String namespace);
+
+  void deleteNamespaceRight(
+      @Param("userName") String userName, @Param("namespace") String namespace);
+
+  List<String> listNamespaceRights(@Param("userName") String userName);
+
+  /** Country rights */
+  void addCountryRight(@Param("userName") String userName, @Param("country") Country country);
+
+  void deleteCountryRight(@Param("userName") String userName, @Param("country") Country country);
+
+  List<Country> listCountryRights(@Param("userName") String userName);
 }
