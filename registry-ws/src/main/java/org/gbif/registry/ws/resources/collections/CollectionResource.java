@@ -21,11 +21,13 @@ import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.WithMyBatis;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -40,11 +42,19 @@ import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchP
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
+import org.gbif.registry.ws.export.CsvWriter;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,6 +79,12 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
 
   private final CollectionMapper collectionMapper;
   private final DuplicatesService duplicatesService;
+
+  //Prefix for the export file format
+  private final static String EXPORT_FILE_PRE = "collections.";
+
+  //Page size to iterate over download stats export service
+  private static final int EXPORT_LIMIT = 5_000;
 
   public CollectionResource(
       CollectionMapper collectionMapper,
@@ -148,6 +164,18 @@ public class CollectionResource extends ExtendedCollectionEntityResource<Collect
         collectionDtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
 
     return new PagingResponse<>(page, total, views);
+  }
+
+  @GetMapping("export")
+  public void export(HttpServletResponse response,
+                     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+                     CollectionSearchRequest searchRequest) throws IOException {
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
+
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.collections(Iterables.collections(searchRequest, this, EXPORT_LIMIT), format)
+        .export(writer);
+    }
   }
 
   @GetMapping("deleted")

@@ -15,25 +15,43 @@
  */
 package org.gbif.registry.ws.export;
 
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadStatistics;
+import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.io.StringWriter;
+import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -207,5 +225,157 @@ public class CsvWriterTest {
     csvWriter.export(writer);
 
     assertExport(downloadUsages, writer, csvWriter, this::assertDatasetOccurrenceDownloadUsage);
+  }
+
+
+  /**
+   * Generates test instances of CollectionView.
+   */
+  @SneakyThrows
+  private static CollectionView newCollectionView(int consecutive) {
+    CollectionView collectionView = new CollectionView();
+
+    collectionView.setInstitutionCode("INST" + consecutive);
+    collectionView.setInstitutionName("INST" + consecutive);
+
+    Address address = new Address();
+    address.setAddress("Universitetsparken 15");
+    address.setCity("Copenhagen");
+    address.setCountry(Country.DENMARK);
+    address.setPostalCode("2100");
+    address.setProvince("Zealand");
+    address.setKey(consecutive);
+
+    Collection collection = new Collection();
+    collection.setInstitutionKey(UUID.randomUUID());
+    collection.setEmail(Collections.singletonList("ints" + consecutive + "@gbif.org"));
+    collection.setPhone(Collections.singletonList("1234" + consecutive));
+    collection.setAddress(address);
+
+    AlternativeCode alternativeCode = new AlternativeCode();
+    alternativeCode.setCode("alt" + consecutive);
+    alternativeCode.setDescription("altDescription" + consecutive);
+    collection.setAlternativeCodes(Collections.singletonList(alternativeCode));
+    collection.setApiUrl(new URI("http://coll" + consecutive + ".org"));
+    collection.setCatalogUrl(new URI("http://cat" + consecutive + ".org"));
+    collection.setCode("COL" + consecutive);
+    collection.setContentTypes(Collections.singletonList(CollectionContentType.ARCHAEOLOGICA_WOODEN_ARTIFACTS));
+    collection.setCreatedBy("me");
+    collection.setCreated(new Date());
+    collection.setModifiedBy("me");
+    collection.setModified(new Date());
+    collection.setDescription("Collections description" + consecutive);
+    collection.setGeography("Geo" + consecutive);
+    collection.setHomepage(new URI("http://coll" + consecutive + ".org"));
+    collection.setImportantCollectors(Collections.singletonList("Collector" + consecutive));
+    collection.setIncorporatedCollections(Collections.singletonList("Coll1." + consecutive));
+    collection.setKey(UUID.randomUUID());
+    collection.setName("Collection" + consecutive);
+    collection.setMailingAddress(address);
+    collection.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
+    collection.setTaxonomicCoverage("world");
+
+    collection.setActive(true);
+    Comment comment = new Comment();
+    comment.setContent("Comment" + consecutive);
+    comment.setKey(consecutive);
+    collection.setComments(Collections.singletonList(comment));
+
+    collection.setDoi(new DOI("10.21373/6m9yw" + consecutive));
+
+    Identifier identifier = new Identifier();
+    identifier.setIdentifier("identifier" + consecutive);
+    identifier.setType(IdentifierType.LSID);
+    identifier.setKey(consecutive);
+    collection.setIdentifiers(Collections.singletonList(identifier));
+
+    MachineTag machineTag = new MachineTag();
+    machineTag.setName("gbif");
+    machineTag.setName("collections");
+    machineTag.setValue("v" + consecutive);
+    machineTag.setKey(consecutive);
+    collection.setMachineTags(Collections.singletonList(machineTag));
+
+    collection.setNumberSpecimens(consecutive);
+
+    Tag tag = new Tag();
+    tag.setValue("tag" + consecutive);
+    tag.setKey(consecutive);
+    collection.setTags(Collections.singletonList(tag));
+
+    collection.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection.setCollectionSummary(Collections.singletonMap("count", consecutive));
+    collection.setIndexHerbariorumRecord(false);
+    collection.setPersonalCollection(false);
+    collection.setReplacedBy(UUID.randomUUID());
+    collection.setNotes("Note" + consecutive);
+    collectionView.setCollection(collection);
+
+    return collectionView;
+  }
+
+  @Test
+  public void collectionsTest() {
+
+    //Test data
+    CollectionView collectionView1 = newCollectionView(1);
+    CollectionView collectionView2 = newCollectionView(2);
+
+    List<CollectionView> collections = Arrays.asList(collectionView1, collectionView2);
+
+    StringWriter writer = new StringWriter();
+
+    CsvWriter<CollectionView> csvWriter = CsvWriter.collections(collections, ExportFormat.CSV);
+    csvWriter.export(writer);
+
+    assertExport(collections, writer, csvWriter, this::assertCollection);
+  }
+
+  /**
+   * Test one DatasetOccurrenceDownloadUsage against its expected exported data.
+   */
+  private void assertCollection(CollectionView collectionView, String[] line) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat(StdDateFormat.DATE_FORMAT_STR_ISO8601);
+    assertEquals(collectionView.getCollection().getKey().toString(), line[0]);
+    assertEquals(collectionView.getCollection().getCode(), line[1]);
+    assertEquals(collectionView.getCollection().getName(), line[2]);
+    assertEquals(collectionView.getCollection().getDescription(), line[3]);
+    assertEquals(CsvWriter.ListCollectionContentTypeProcessor.toString(collectionView.getCollection().getContentTypes()), line[4]); //
+    assertEquals(collectionView.getCollection().isActive(), Boolean.parseBoolean(line[5]));
+    assertEquals(collectionView.getCollection().isPersonalCollection(), Boolean.parseBoolean(line[6]));
+    assertEquals(collectionView.getCollection().getDoi().toString(), line[7]);
+    assertEquals(CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getEmail()), line[8]);
+    assertEquals(CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getPhone()), line[9]);
+    assertEquals(collectionView.getCollection().getHomepage().toString(), line[10]);
+    assertEquals(collectionView.getCollection().getCatalogUrl().toString(), line[11]);
+    assertEquals(collectionView.getCollection().getApiUrl().toString(), line[12]);
+    assertEquals(CsvWriter.ListPreservationTypeProcessor.toString(collectionView.getCollection().getPreservationTypes()), line[13]);
+    assertEquals(collectionView.getCollection().getAccessionStatus().name(), line[14]);
+    assertEquals(collectionView.getInstitutionName(), line[15]);
+    assertEquals(collectionView.getInstitutionCode(), line[16]);
+    assertEquals(collectionView.getCollection().getInstitutionKey().toString(), line[17]);
+    assertEquals(CsvWriter.AddressProcessor.toString(collectionView.getCollection().getMailingAddress()), line[18]);
+    assertEquals(CsvWriter.AddressProcessor.toString(collectionView.getCollection().getAddress()), line[19]);
+    assertEquals(collectionView.getCollection().getCreatedBy(), line[20]);
+    assertEquals(collectionView.getCollection().getModifiedBy(), line[21]);
+    assertEquals(dateFormat.format(collectionView.getCollection().getCreated()), line[22]);
+    assertEquals(dateFormat.format(collectionView.getCollection().getModified()), line[23]);
+    assertEquals(Optional.ofNullable(collectionView.getCollection().getDeleted()).map(dateFormat::format).orElse(""), line[24]);
+    assertEquals(CsvWriter.ListTagsProcessor.toString(collectionView.getCollection().getTags()), line[25]);
+    assertEquals(CsvWriter.ListIdentifierProcessor.toString(collectionView.getCollection().getIdentifiers()), line[26]);
+    assertEquals(CsvWriter.ListContactProcessor.toString(collectionView.getCollection().getContacts()), line[27]);
+    assertEquals(collectionView.getCollection().isIndexHerbariorumRecord(), Boolean.parseBoolean(line[28]));
+    assertEquals(collectionView.getCollection().getNumberSpecimens(), Integer.parseInt(line[29]));
+    assertEquals(CsvWriter.ListMachineTagProcessor.toString(collectionView.getCollection().getMachineTags()), line[30]);
+    assertEquals(collectionView.getCollection().getTaxonomicCoverage(), line[31]);
+    assertEquals(collectionView.getCollection().getGeography(), line[32]);
+    assertEquals(collectionView.getCollection().getNotes(), line[33]);
+    assertEquals(CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getIncorporatedCollections()), line[34]);
+    assertEquals(CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getImportantCollectors()), line[35]);
+    assertEquals(CsvWriter.CollectionSummaryProcessor.toString(collectionView.getCollection().getCollectionSummary()), line[36]);
+    assertEquals(CsvWriter.ListAlternativeCodeProcessor.toString(collectionView.getCollection().getAlternativeCodes()), line[37]);
+    assertEquals(CsvWriter.ListCommentProcessor.toString(collectionView.getCollection().getComments()), line[38]);
+    assertEquals(CsvWriter.ListOccurrenceMappingsProcessor.toString(collectionView.getCollection().getOccurrenceMappings()), line[39]);
+    assertEquals(collectionView.getCollection().getReplacedBy().toString(), line[40].replace("\r",""));
   }
 }
