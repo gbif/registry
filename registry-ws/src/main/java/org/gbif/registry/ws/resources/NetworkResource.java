@@ -26,7 +26,7 @@ import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.domain.ws.NetworkRequestSearchParams;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;

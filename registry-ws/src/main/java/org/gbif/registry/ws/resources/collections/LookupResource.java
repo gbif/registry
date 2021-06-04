@@ -20,6 +20,7 @@ import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.service.collections.lookup.DefaultLookupService;
+import org.gbif.registry.service.collections.lookup.LookupService;
 
 import java.util.UUID;
 
@@ -35,9 +36,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "grscicoll/lookup", produces = MediaType.APPLICATION_JSON_VALUE)
 public class LookupResource {
 
-  private final DefaultLookupService lookupService;
+  private final LookupService lookupService;
 
-  public LookupResource(DefaultLookupService lookupService) {
+  public LookupResource(LookupService lookupService) {
     this.lookupService = lookupService;
   }
 

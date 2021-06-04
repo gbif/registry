@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.PersonSuggestResult;
-import org.gbif.api.service.collections.PersonService;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,11 +31,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/person")
-public interface PersonClient extends BaseCollectionEntityClient<Person>, PersonService {
+public interface PersonClient extends BaseCollectionEntityClient<Person> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<Person> list(
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "primaryInstitution", required = false) UUID institutionKey,
@@ -48,7 +46,6 @@ public interface PersonClient extends BaseCollectionEntityClient<Person>, Person
       value = "deleted",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<Person> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
@@ -56,6 +53,5 @@ public interface PersonClient extends BaseCollectionEntityClient<Person>, Person
       value = "suggest",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   List<PersonSuggestResult> suggest(@RequestParam(value = "q", required = false) String q);
 }

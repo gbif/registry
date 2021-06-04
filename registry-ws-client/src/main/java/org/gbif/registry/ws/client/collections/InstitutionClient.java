@@ -16,16 +16,20 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.InstitutionService;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,11 +37,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/institution")
 public interface InstitutionClient
-    extends ExtendedBaseCollectionEntityClient<Institution>, InstitutionService {
+    extends PrimaryCollectionEntityClient<Institution, InstitutionChangeSuggestion> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<Institution> list(@SpringQueryMap InstitutionSearchRequest searchRequest);
 
   @RequestMapping(
@@ -45,7 +48,6 @@ public interface InstitutionClient
       value = "deleted",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<Institution> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
@@ -53,6 +55,14 @@ public interface InstitutionClient
       value = "suggest",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/convertToCollection",
+      produces = MediaType.APPLICATION_JSON_VALUE,
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  UUID convertToCollection(
+      @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params);
 }

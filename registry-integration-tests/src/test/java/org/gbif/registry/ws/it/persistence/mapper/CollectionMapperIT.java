@@ -215,6 +215,7 @@ public class CollectionMapperIT extends BaseItTest {
     page = PAGE.apply(5, 0L);
     assertSearch(CollectionSearchParams.builder().build(), page, 4);
     assertSearch(CollectionSearchParams.builder().code("c1").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().code("C1").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().name("n2").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().code("c3").name("n3").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().code("c1").name("n3").build(), page, 0);

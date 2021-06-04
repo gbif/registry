@@ -20,4 +20,11 @@
     INSERT INTO tag(<include refid="WRITABLE_TAG_FIELDS"/>)
     VALUES(<include refid="WRITABLE_TAG_FIELD_TYPES"/>)
   </insert>
+
+  <select id="get" resultType="org.gbif.api.model.registry.Tag">
+    SELECT key, value, created,created_by
+    FROM tag
+    WHERE key = #{key}
+  </select>
+
 </mapper>

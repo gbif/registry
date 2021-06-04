@@ -131,10 +131,6 @@
     </dependency>
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-events</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-pipelines</artifactId>
     </dependency>
     <dependency>

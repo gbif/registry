@@ -32,4 +32,24 @@
     WHERE username = #{username}
   </select>
 
+  <select id="countryExistsForUser" resultType="java.lang.Boolean">
+    SELECT EXISTS (
+              SELECT true
+              FROM country_rights
+              WHERE country = #{country} AND username = #{username}
+            )
+  </select>
+
+  <select id="getNamespacesByUser" resultType="java.lang.String">
+    SELECT namespace
+    FROM namespace_rights
+    WHERE username = #{username}
+  </select>
+
+  <select id="getCountriesByUser" resultType="org.gbif.api.vocabulary.Country">
+    SELECT country
+    FROM country_rights
+    WHERE username = #{username}
+  </select>
+
 </mapper>

@@ -32,9 +32,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-/**
- * Allows to send {@link BaseEmailModel}
- */
+/** Allows to send {@link BaseEmailModel} */
 @Service
 @Qualifier("emailSender")
 public class EmailSenderImpl implements EmailSender {
@@ -86,7 +84,12 @@ public class EmailSenderImpl implements EmailSender {
         helper.setBcc(mailConfigProperties.getBcc().toArray(new String[0]));
       }
 
-      helper.setFrom(mailConfigProperties.getFrom());
+      if (emailModel.getFrom() != null) {
+        helper.setFrom(emailModel.getFrom());
+      } else {
+        helper.setFrom(mailConfigProperties.getFrom());
+      }
+
       helper.setSubject(emailModel.getSubject());
       helper.setSentDate(new Date());
       helper.setText(emailModel.getBody(), true);

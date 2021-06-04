@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.search.dataset.service.collections;
 
+import org.gbif.api.model.collections.search.CollectionsSearchResponse;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 

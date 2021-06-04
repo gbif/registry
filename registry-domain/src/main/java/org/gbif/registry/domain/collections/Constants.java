@@ -15,7 +15,9 @@
  */
 package org.gbif.registry.domain.collections;
 
-public class Constants {
+public final class Constants {
 
   public static final String IDIGBIO_NAMESPACE = "iDigBio.org";
+  public static final String IH_NAMESPACE = "ih.gbif.org";
+  public static final String IRN_TAG = "irn";
 }
