@@ -167,9 +167,13 @@
   </#if>
     <language>${dataset.dataLanguage!"en"}</language>
 <#-- A brief description of the resource. -->
+  <#if eml.description?has_content>
     <abstract>
-        <para>${dataset.description!}</para>
+      <#list eml.description![] as d>
+        <para>${d!}</para>
+      </#list>
     </abstract>
+  </#if>
 <#-- Zero or more sets of keywords and an associated thesaurus for each. -->
   <#list dataset.keywordCollections![] as ks>
     <#if ks.keywords?has_content>
@@ -424,7 +428,7 @@
               </#if>
             </#list>
           </#list>
-        </gbif>
+      </gbif>
     </metadata>
 </additionalMetadata>
 

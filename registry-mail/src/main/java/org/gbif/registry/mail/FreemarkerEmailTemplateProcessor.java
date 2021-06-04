@@ -54,6 +54,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
     return buildEmail(
         emailType,
         emailAddresses,
+        null,
         templateDataModel,
         locale,
         Collections.emptySet(),
@@ -80,6 +81,31 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
       Set<String> ccAddresses,
       String... subjectParams)
       throws IOException, TemplateException {
+    return buildEmail(
+        emailType, emailAddresses, null, templateDataModel, locale, ccAddresses, subjectParams);
+  }
+
+  /**
+   * Build a {@link BaseEmailModel} from
+   *
+   * @param emailType template type (new user, reset password or welcome)
+   * @param emailAddresses email addresses
+   * @param templateDataModel source data
+   * @param locale locale
+   * @param ccAddresses carbon copy addresses
+   * @param subjectParams computable params for subject message formatting
+   * @return email model to send
+   */
+  @Override
+  public BaseEmailModel buildEmail(
+      EmailType emailType,
+      Set<String> emailAddresses,
+      String from,
+      Object templateDataModel,
+      Locale locale,
+      Set<String> ccAddresses,
+      String... subjectParams)
+      throws IOException, TemplateException {
     Objects.requireNonNull(emailAddresses, "emailAddress shall be provided");
     Objects.requireNonNull(templateDataModel, "templateDataModel shall be provided");
     Objects.requireNonNull(locale, "locale shall be provided");
@@ -90,7 +116,7 @@ public abstract class FreemarkerEmailTemplateProcessor implements EmailTemplateP
         FreeMarkerTemplateUtils.processTemplateIntoString(freemarkerTemplate, templateDataModel);
 
     return new BaseEmailModel(
-        emailAddresses, emailType.getSubject(locale, subjectParams), htmlBody, ccAddresses);
+        emailAddresses, emailType.getSubject(locale, subjectParams), htmlBody, ccAddresses, from);
   }
 
   private Configuration createFreemarkerConfiguration(Locale locale) {

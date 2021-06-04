@@ -15,23 +15,30 @@
  */
 package org.gbif.registry.service.collections.merge;
 
-import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
+import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.persistence.ContactableMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.*;
-import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.registry.security.UserRoles;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,44 +46,27 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.domain.collections.Constants.*;
+import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 public abstract class BaseMergeService<
         T extends
-            CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
-                & Taggable & Commentable>
-    implements MergeService {
+            PrimaryCollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable
+                & Contactable & Taggable & Commentable>
+    implements MergeService<T> {
 
-  protected final BaseMapper<T> baseMapper;
-  protected final MergeableMapper mergeableMapper;
-  protected final ContactableMapper contactableMapper;
-  protected final IdentifierMapper identifierMapper;
-  protected final OccurrenceMappeableMapper occurrenceMappeableMapper;
-  protected final PersonMapper personMapper;
-  private final MachineTagMapper machineTagMapper;
-  private final OccurrenceMappingMapper occurrenceMappingMapper;
+  protected final PrimaryCollectionEntityService<T> primaryEntityService;
 
-  protected BaseMergeService(
-      BaseMapper<T> baseMapper,
-      MergeableMapper mergeableMapper,
-      ContactableMapper contactableMapper,
-      IdentifierMapper identifierMapper,
-      OccurrenceMappeableMapper occurrenceMappeableMapper,
-      PersonMapper personMapper,
-      MachineTagMapper machineTagMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper) {
-    this.baseMapper = baseMapper;
-    this.mergeableMapper = mergeableMapper;
-    this.contactableMapper = contactableMapper;
-    this.identifierMapper = identifierMapper;
-    this.occurrenceMappeableMapper = occurrenceMappeableMapper;
-    this.personMapper = personMapper;
-    this.machineTagMapper = machineTagMapper;
-    this.occurrenceMappingMapper = occurrenceMappingMapper;
+  protected BaseMergeService(PrimaryCollectionEntityService<T> primaryEntityService) {
+    this.primaryEntityService = primaryEntityService;
   }
 
-  @Override
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
+  @Override
   public void merge(UUID entityToReplaceKey, UUID replacementKey) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -85,90 +75,90 @@ public abstract class BaseMergeService<
         !entityToReplaceKey.equals(replacementKey),
         "The replacement has to be different than the entity to replace");
 
-    T entityToReplace = baseMapper.get(entityToReplaceKey);
+    T entityToReplace = primaryEntityService.get(entityToReplaceKey);
     checkArgument(
         entityToReplace != null, "Not found entity to replace with key " + entityToReplaceKey);
     checkArgument(entityToReplace.getDeleted() == null, "Cannot merge a deleted entity");
 
-    T replacement = baseMapper.get(replacementKey);
+    T replacement = primaryEntityService.get(replacementKey);
     checkArgument(replacement != null, "Not found replacement entity with key " + replacementKey);
     checkArgument(
         replacement.getDeleted() == null, "Cannot merge an entity with a deleted replacement");
 
-    // check IH_IRN identifiers. If both entities have them we don't allow to do the replacement
+    // check IH IRN machine tags. If both entities have them we don't allow to do the replacement
     // because we wouldn't know how to sync them with IH: if we move it to the replacement this
     // entity will be synced with 2 IH entities and the second sync will overwrite the first one; if
     // we don't move it, then the next IH sync will create a new entity for that IRN, hence the
     // replacement would be useless.
-    if (containsIHIdentifier(entityToReplace) && containsIHIdentifier(replacement)) {
+    if (containsIHMachineTag(entityToReplace) && containsIHMachineTag(replacement)) {
       throw new IllegalArgumentException(
-          "Cannot do the replacement because both entities have an IH IRN identifier");
+          "Cannot do the replacement because both entities have an IH IRN machine tag");
     }
 
-    if (!SecurityContextCheck.checkUserInRole(
-            authentication, UserRoles.IDIGBIO_GRSCICOLL_EDITOR_ROLE)
-        && isIDigBioRecord(entityToReplace)
-        && isIDigBioRecord(replacement)) {
+    if (isIDigBioRecord(entityToReplace) && isIDigBioRecord(replacement)) {
       throw new IllegalArgumentException(
-          "Cannot do the replacement because both entities are iDigBio records and the user is not an iDigBio editor");
+          "Cannot do the replacement because both entities are iDigBio records");
     }
 
     checkMergeExtraPreconditions(entityToReplace, replacement);
 
     // delete and set the replacement
-    entityToReplace.setModifiedBy(authentication.getName());
-    baseMapper.update(entityToReplace);
-    mergeableMapper.replace(entityToReplaceKey, replacementKey);
+    primaryEntityService.replace(entityToReplaceKey, replacementKey);
 
     // merge entity fields
     T updatedEntityToReplace = mergeEntityFields(entityToReplace, replacement);
-    updatedEntityToReplace.setModifiedBy(authentication.getName());
-    baseMapper.update(updatedEntityToReplace);
+    primaryEntityService.update(updatedEntityToReplace);
 
     // copy the identifiers
-    entityToReplace
-        .getIdentifiers()
+    entityToReplace.getIdentifiers().stream()
+        .filter(i -> !containsIdentifier(replacement, i))
         .forEach(
-            i -> {
-              identifierMapper.createIdentifier(i);
-              baseMapper.addIdentifier(replacementKey, i.getKey());
-            });
+            i ->
+                primaryEntityService.addIdentifier(
+                    replacementKey, new Identifier(i.getType(), i.getIdentifier())));
 
-    // copy iDigBio machine tags
+    // copy iDigBio and IH machine tags
     entityToReplace.getMachineTags().stream()
-        .filter(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE))
+        .filter(
+            mt ->
+                mt.getNamespace().equals(IDIGBIO_NAMESPACE)
+                    || mt.getNamespace().equals(IH_NAMESPACE))
+        .filter(mt -> !containsMachineTag(replacement, mt))
         .forEach(
-            mt -> {
-              machineTagMapper.createMachineTag(mt);
-              baseMapper.addMachineTag(replacementKey, mt.getKey());
-            });
+            mt ->
+                primaryEntityService.addMachineTag(
+                    replacementKey,
+                    new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
     // merge contacts
-    Objects.requireNonNull(entityToReplace.getContacts()).stream()
+    entityToReplace.getContacts().stream()
         .filter(c -> !replacement.getContacts().contains(c))
-        .forEach(c -> contactableMapper.addContact(replacementKey, c.getKey()));
+        .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
 
     // add the UUID key of the replaced entity as an identifier of the replacement
     Identifier keyIdentifier =
         new Identifier(IdentifierType.UUID, entityToReplace.getKey().toString());
-    keyIdentifier.setCreatedBy(authentication.getName());
-    identifierMapper.createIdentifier(keyIdentifier);
-    baseMapper.addIdentifier(replacementKey, keyIdentifier.getKey());
+    primaryEntityService.addIdentifier(replacementKey, keyIdentifier);
 
     // update occurrence mappings
     List<OccurrenceMapping> occMappings =
-        occurrenceMappeableMapper.listOccurrenceMappings(entityToReplaceKey);
-    occMappings.forEach(
-        om -> {
-          occurrenceMappingMapper.createOccurrenceMapping(om);
-          occurrenceMappeableMapper.addOccurrenceMapping(replacementKey, om.getKey());
-        });
+        primaryEntityService.listOccurrenceMappings(entityToReplaceKey);
+    occMappings.stream()
+        .filter(om -> !containsOccurrenceMapping(replacement, om))
+        .forEach(
+            om -> {
+              om.setKey(null);
+              primaryEntityService.addOccurrenceMapping(
+                  replacementKey,
+                  new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
+            });
 
     additionalOperations(entityToReplace, replacement);
   }
 
-  protected boolean containsIHIdentifier(T entity) {
-    return entity.getIdentifiers().stream().anyMatch(i -> i.getType() == IdentifierType.IH_IRN);
+  protected boolean containsIHMachineTag(T entity) {
+    return entity.getMachineTags().stream()
+        .anyMatch(mt -> mt.getNamespace().equals(IH_NAMESPACE) && mt.getName().equals(IRN_TAG));
   }
 
   protected boolean isIDigBioRecord(T entity) {
@@ -176,7 +166,21 @@ public abstract class BaseMergeService<
         .anyMatch(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE));
   }
 
-  protected void setNullFields(T target, T source) {
+  protected boolean containsIdentifier(T entity, Identifier identifier) {
+    return entity.getIdentifiers().stream().anyMatch(i -> i.lenientEquals(identifier));
+  }
+
+  protected boolean containsMachineTag(T entity, MachineTag machineTag) {
+    return entity.getMachineTags().stream().anyMatch(mt -> mt.lenientEquals(machineTag));
+  }
+
+  protected boolean containsOccurrenceMapping(T entity, OccurrenceMapping occurrenceMapping) {
+    return entity.getOccurrenceMappings().stream()
+        .anyMatch(om -> om.lenientEquals(occurrenceMapping));
+  }
+
+  /** Sets the fields that are null in target with the value of the source. */
+  protected void setNullFieldsInTarget(T target, T source) {
     Class<T> clazz = (Class<T>) target.getClass();
     Arrays.stream(clazz.getDeclaredFields())
         .filter(f -> !f.getType().isAssignableFrom(List.class))
@@ -206,6 +210,11 @@ public abstract class BaseMergeService<
 
                   // set value in target
                   if (sourceValue != null) {
+                    if (sourceValue instanceof Address) {
+                      // set the key to null to create the address
+                      ((Address) sourceValue).setKey(null);
+                    }
+
                     clazz
                         .getMethod("set" + capitalize.apply(f.getName()), f.getType())
                         .invoke(target, sourceValue);

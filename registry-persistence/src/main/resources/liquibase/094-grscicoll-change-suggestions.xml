@@ -1,0 +1,37 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="94" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TYPE enum_grscicoll_entity_type AS ENUM ('INSTITUTION', 'COLLECTION', 'PERSON');
+        CREATE TYPE enum_change_suggestion_status AS ENUM ('PENDING', 'APPLIED', 'DISCARDED');
+        CREATE TYPE enum_change_suggestion_type AS ENUM ('CREATE', 'UPDATE', 'DELETE', 'MERGE', 'CONVERSION_TO_COLLECTION');
+
+        CREATE TABLE change_suggestion (
+          key serial NOT NULL PRIMARY KEY,
+          entity_type enum_grscicoll_entity_type NOT NULL,
+          entity_key uuid,
+          type enum_change_suggestion_type NOT NULL,
+          status enum_change_suggestion_status NOT NULL,
+          proposed timestamptz NOT NULL DEFAULT now(),
+          proposed_by varchar CHECK (assert_min_length(proposed_by, 3)),
+          proposer_email varchar NOT NULL CHECK (assert_min_length(proposer_email, 3)),
+          applied timestamptz,
+          applied_by varchar CHECK (assert_min_length(applied_by, 3)),
+          discarded timestamptz,
+          discarded_by varchar CHECK (assert_min_length(discarded_by, 3)),
+          suggested_entity jsonb,
+          comments text[],
+          merge_target_key uuid,
+          changes jsonb,
+          institution_converted_collection uuid,
+          name_new_institution_converted_collection text,
+          modified timestamptz,
+          modified_by varchar CHECK (assert_min_length(modified_by, 3)));
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

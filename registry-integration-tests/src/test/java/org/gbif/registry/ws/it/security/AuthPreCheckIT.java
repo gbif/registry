@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.ws.it.security;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.GbifUser;
@@ -24,30 +25,36 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.Base64Utils;
 
 import com.google.common.collect.Sets;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -57,6 +64,7 @@ public class AuthPreCheckIT extends BaseItTest {
 
   private static final String ADMIN = "admin_user";
   private static final String EDITOR = "editor_user";
+  private static final String MEDIATOR = "mediator_user";
 
   private static final BiFunction<String, String, String> BASIC_AUTH_HEADER =
       (username, pass) ->
@@ -67,17 +75,19 @@ public class AuthPreCheckIT extends BaseItTest {
   private final MockMvc mockMvc;
   private final IdentityService identityService;
   private final InstitutionService institutionService;
-  private final NodeService nodeService;
-  private final OrganizationService organizationService;
   private final DatasetService datasetService;
+
+  private static UUID NODE_KEY;
+  private static UUID ORG_KEY;
+  private static UUID INSTITUTION_KEY;
+  private static UUID INSTITUTION_KEY_2;
+  private static final Country COUNTRY = Country.SPAIN;
 
   @Autowired
   public AuthPreCheckIT(
       MockMvc mockMvc,
       IdentityService identityService,
       InstitutionService institutionService,
-      NodeService nodeService,
-      OrganizationService organizationService,
       DatasetService datasetService,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer) {
@@ -85,13 +95,15 @@ public class AuthPreCheckIT extends BaseItTest {
     this.mockMvc = mockMvc;
     this.identityService = identityService;
     this.institutionService = institutionService;
-    this.nodeService = nodeService;
-    this.organizationService = organizationService;
     this.datasetService = datasetService;
   }
 
-  @BeforeEach
-  public void initUsers() {
+  @BeforeAll
+  public static void loadData(
+      @Autowired IdentityService identityService,
+      @Autowired NodeService nodeService,
+      @Autowired OrganizationService organizationService,
+      @Autowired InstitutionService institutionService) {
     GbifUser admin = new GbifUser();
     admin.setUserName(ADMIN);
     admin.setFirstName(ADMIN);
@@ -100,8 +112,6 @@ public class AuthPreCheckIT extends BaseItTest {
     admin.getSettings().put("language", "en");
     admin.getSettings().put("country", "dk");
     admin.setRoles(Sets.newHashSet(UserRole.GRSCICOLL_ADMIN, UserRole.REGISTRY_ADMIN));
-
-    // password equals to username
     identityService.create(admin, TEST_PASSWORD);
 
     Integer adminKey = identityService.get(ADMIN).getKey();
@@ -115,16 +125,64 @@ public class AuthPreCheckIT extends BaseItTest {
     editor.getSettings().put("language", "en");
     editor.getSettings().put("country", "dk");
     editor.setRoles(Sets.newHashSet(UserRole.GRSCICOLL_EDITOR, UserRole.REGISTRY_EDITOR));
-
-    // password equals to username
     identityService.create(editor, TEST_PASSWORD);
 
     Integer editorKey = identityService.get(EDITOR).getKey();
     identityService.updateLastLogin(editorKey);
+
+    GbifUser mediator = new GbifUser();
+    mediator.setUserName(MEDIATOR);
+    mediator.setFirstName(MEDIATOR);
+    mediator.setLastName(MEDIATOR);
+    mediator.setEmail(MEDIATOR + "@test.com");
+    mediator.getSettings().put("language", "en");
+    mediator.getSettings().put("country", "dk");
+    mediator.setRoles(Sets.newHashSet(UserRole.GRSCICOLL_MEDIATOR));
+    identityService.create(mediator, TEST_PASSWORD);
+
+    Integer mediatorKey = identityService.get(MEDIATOR).getKey();
+    identityService.updateLastLogin(mediatorKey);
+
+    Node node = new Node();
+    node.setTitle("title");
+    node.setType(NodeType.COUNTRY);
+    node.setParticipationStatus(ParticipationStatus.AFFILIATE);
+    NODE_KEY = nodeService.create(node);
+
+    Organization organization = new Organization();
+    organization.setTitle("title");
+    organization.setLanguage(Language.ABKHAZIAN);
+    organization.setEndorsingNodeKey(NODE_KEY);
+    ORG_KEY = organizationService.create(organization);
+    organizationService.confirmEndorsement(ORG_KEY);
+
+    Institution institution = new Institution();
+    institution.setCode("i1");
+    institution.setName("i1");
+
+    Address address = new Address();
+    address.setCountry(COUNTRY);
+    institution.setAddress(address);
+
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            ADMIN,
+            "",
+            Collections.singleton(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE))));
+
+    INSTITUTION_KEY = institutionService.create(institution);
+
+    Institution institution2 = new Institution();
+    institution2.setCode("i2");
+    institution2.setName("i2");
+    INSTITUTION_KEY_2 = institutionService.create(institution2);
   }
 
   @Test
   public void creationGrSciCollRequestTest() throws Exception {
+    resetSecurityContext(ADMIN, UserRole.GRSCICOLL_ADMIN);
     mockMvc
         .perform(
             post("/grscicoll/collection")
@@ -133,12 +191,16 @@ public class AuthPreCheckIT extends BaseItTest {
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden());
 
-    resetSecurityContext(TEST_ADMIN, UserRole.GRSCICOLL_ADMIN);
-    Institution institution = new Institution();
-    institution.setCode("i1");
-    institution.setName("i1");
-    UUID institutionKey = institutionService.create(institution);
-    identityService.addEditorRight(EDITOR, institutionKey);
+    resetSecurityContext(EDITOR, UserRole.GRSCICOLL_EDITOR);
+    mockMvc
+        .perform(
+            post("/grscicoll/collection")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+
+    identityService.addEditorRight(EDITOR, INSTITUTION_KEY);
 
     mockMvc
         .perform(
@@ -149,7 +211,27 @@ public class AuthPreCheckIT extends BaseItTest {
         .andExpect(status().isOk());
 
     // check that the pre check call didn't perform the action
-    assertEquals(1, institutionService.list(InstitutionSearchRequest.builder().build()).getCount());
+    assertEquals(2, institutionService.list(InstitutionSearchRequest.builder().build()).getCount());
+
+    identityService.deleteEditorRight(EDITOR, INSTITUTION_KEY);
+
+    mockMvc
+        .perform(
+            post("/grscicoll/collection")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+
+    identityService.addCountryRight(EDITOR, COUNTRY);
+
+    mockMvc
+        .perform(
+            post("/grscicoll/collection")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
   }
 
   @Test
@@ -162,20 +244,8 @@ public class AuthPreCheckIT extends BaseItTest {
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden());
 
-    resetSecurityContext(TEST_ADMIN, UserRole.REGISTRY_ADMIN);
-    Node node = new Node();
-    node.setTitle("title");
-    node.setType(NodeType.COUNTRY);
-    node.setParticipationStatus(ParticipationStatus.AFFILIATE);
-    UUID nodeKey = nodeService.create(node);
-    identityService.addEditorRight(EDITOR, nodeKey);
-
-    Organization organization = new Organization();
-    organization.setTitle("title");
-    organization.setLanguage(Language.ABKHAZIAN);
-    organization.setEndorsingNodeKey(nodeKey);
-    UUID orgKey = organizationService.create(organization);
-    organizationService.confirmEndorsement(orgKey);
+    resetSecurityContext(EDITOR, UserRole.REGISTRY_EDITOR);
+    identityService.addEditorRight(EDITOR, NODE_KEY);
 
     mockMvc
         .perform(
@@ -191,20 +261,65 @@ public class AuthPreCheckIT extends BaseItTest {
     // add subresource to the organization
     mockMvc
         .perform(
-            post("/organization/" + orgKey + "/identifier")
+            post("/organization/" + ORG_KEY + "/identifier")
                 .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
                 .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
     // we remove the editor rights to the node
-    identityService.deleteEditorRight(EDITOR, nodeKey);
+    identityService.deleteEditorRight(EDITOR, NODE_KEY);
     mockMvc
         .perform(
-            post("/organization/" + orgKey + "/identifier")
+            post("/organization/" + ORG_KEY + "/identifier")
                 .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
                 .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  public void creationMachineTagRequestTest() throws Exception {
+    mockMvc
+        .perform(
+            post("/node/" + NODE_KEY + "/machineTag")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+
+    resetSecurityContext(EDITOR, UserRole.GRSCICOLL_EDITOR);
+    identityService.addNamespaceRight(EDITOR, "ns");
+
+    mockMvc
+        .perform(
+            post("/node/" + NODE_KEY + "/machineTag")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  public void creationMergeRequestTest() throws Exception {
+    mockMvc
+        .perform(
+            post("/grscicoll/institution/" + INSTITUTION_KEY + "/merge")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(EDITOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden());
+
+    resetSecurityContext(MEDIATOR, UserRole.GRSCICOLL_MEDIATOR);
+    identityService.addEditorRight(MEDIATOR, INSTITUTION_KEY);
+    identityService.addEditorRight(MEDIATOR, INSTITUTION_KEY_2);
+
+    mockMvc
+        .perform(
+            post("/grscicoll/institution/" + INSTITUTION_KEY + "/merge")
+                .queryParam(AuthPreCheckInterceptor.CHECK_PERMISSIONS_ONLY_PARAM, "true")
+                .header("Authorization", BASIC_AUTH_HEADER.apply(MEDIATOR, TEST_PASSWORD))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk());
   }
 }

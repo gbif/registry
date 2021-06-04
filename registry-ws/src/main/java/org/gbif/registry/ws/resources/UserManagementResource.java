@@ -21,6 +21,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.domain.ws.EmailChangeRequest;
@@ -293,13 +294,20 @@ public class UserManagementResource {
       @Nullable @RequestParam(value = "q", required = false) String query,
       @Nullable @RequestParam(value = "role", required = false) Set<UserRole> roles,
       @Nullable @RequestParam(value = "editorRightsOn", required = false) Set<UUID> editorRightsOn,
+      @Nullable @RequestParam(value = "namespaceRightsOn", required = false) Set<String> namespaceRightsOn,
+      @Nullable @RequestParam(value = "countryRightsOn", required = false) Set<String> countryRightsOn,
       Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q =
         Optional.ofNullable(query)
             .map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v)))
             .orElse(null);
-    return identityService.search(q, roles, editorRightsOn, page);
+    Set<Country> countries =
+        Optional.ofNullable(countryRightsOn)
+            .map(v -> v.stream().map(Country::fromIsoCode).collect(Collectors.toSet()))
+            .orElse(null);
+
+    return identityService.search(q, roles, editorRightsOn, namespaceRightsOn, countries, page);
   }
 
   /**
@@ -451,9 +459,151 @@ public class UserManagementResource {
     }
   }
 
+  /** List the namespace rights for a user. */
+  @GetMapping("{username}/namespaceRight")
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  public ResponseEntity<List<String>> namespaceRights(
+    @PathVariable String username, Authentication authentication) {
+    // Non-admin users can only see their own entry.
+    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
+      String usernameInContext = authentication.getName();
+      if (!usernameInContext.equals(username)) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
+    }
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    List<String> rights = identityService.listNamespaceRights(username);
+    return ResponseEntity.ok(rights);
+  }
+
+  /** Add a namespace right for a user. */
+  @PostMapping(
+      path = "{username}/namespaceRight",
+      consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  @Secured({ADMIN_ROLE})
+  public ResponseEntity<String> addNamespaceRight(
+      @PathVariable String username, @RequestBody @NotNull String namespace) {
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    if (identityService.listNamespaceRights(username).contains(namespace)) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    } else {
+      identityService.addNamespaceRight(username, namespace);
+      return ResponseEntity.ok(namespace);
+    }
+  }
+
+  /** Delete a namespace right for a user. */
+  @DeleteMapping("{username}/namespaceRight/{namespace}")
+  @Secured(ADMIN_ROLE)
+  public ResponseEntity<Void> deleteNamespaceRight(
+      @PathVariable String username, @PathVariable String namespace) {
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    if (!identityService.listNamespaceRights(username).contains(namespace)) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    } else {
+      identityService.deleteNamespaceRight(username, namespace);
+      return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+  }
+
+  /** List the namespace rights for a user. */
+  @GetMapping("{username}/countryRight")
+  @Secured({ADMIN_ROLE, USER_ROLE})
+  public ResponseEntity<List<Country>> countryRights(
+    @PathVariable String username, Authentication authentication) {
+    // Non-admin users can only see their own entry.
+    if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
+      String usernameInContext = authentication.getName();
+      if (!usernameInContext.equals(username)) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      }
+    }
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    List<Country> rights = identityService.listCountryRights(username);
+    return ResponseEntity.ok(rights);
+  }
+
+  /** Add a country right for a user. */
+  @PostMapping(
+      path = "{username}/countryRight",
+      consumes = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  @Secured({ADMIN_ROLE})
+  public ResponseEntity<String> addCountryRight(
+      @PathVariable String username, @RequestBody @NotNull String countryParam) {
+
+    final Country country = Country.fromIsoCode(countryParam);
+
+    if (country == null) {
+      throw new IllegalArgumentException("Country not found: " + countryParam);
+    }
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    if (identityService.listCountryRights(username).contains(country)) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    } else {
+      identityService.addCountryRight(username, country);
+      return ResponseEntity.ok(country.getIso2LetterCode());
+    }
+  }
+
+  /** Delete a country right for a user. */
+  @DeleteMapping("{username}/countryRight/{countryParam}")
+  @Secured(ADMIN_ROLE)
+  public ResponseEntity<Void> deleteCountryRight(
+      @PathVariable String username, @PathVariable String countryParam) {
+
+    final Country country = Country.fromIsoCode(countryParam);
+
+    if (country == null) {
+      throw new IllegalArgumentException("Country not found: " + countryParam);
+    }
+
+    // Ensure user exists
+    GbifUser currentUser = identityService.get(username);
+    if (currentUser == null) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    if (!identityService.listCountryRights(username).contains(country)) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    } else {
+      identityService.deleteCountryRight(username, country);
+      return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+  }
+
   /**
-   * Changes the user email only if the token presented is valid for the user account. The
-   * username is expected to be present in the security context (authenticated by appkey).
+   * Changes the user email only if the token presented is valid for the user account. The username
+   * is expected to be present in the security context (authenticated by appkey).
    */
   @Secured({USER_ROLE})
   @PutMapping(path = "changeEmail", consumes = MediaType.APPLICATION_JSON_VALUE)

@@ -17,10 +17,13 @@ package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.OccurrenceMapping;
 
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OccurrenceMappingMapper {
 
   int createOccurrenceMapping(OccurrenceMapping occurrenceMapping);
+
+  OccurrenceMapping get(@Param("key") int key);
 }

@@ -18,6 +18,7 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
@@ -114,19 +115,22 @@ public class UserManagementIT extends BaseItTest {
         .getRequest(ALTERNATE_USERNAME, PASSWORD, "/user/login")
         .andExpect(status().isOk());
 
-
     // Test search by rights on entity
     userTestFixture.prepareAdminUser();
-    ResultActions result =requestTestFixture
-      .getSignedRequest(TEST_ADMIN, "/admin/user/search",
-                        ImmutableMap.<String,String>builder()
-                          .put("role", UserRole.USER.name())
-                          .put("1", TEST_ADMIN)
-                          .build())
-      .andExpect(status().isOk());
-    PagingResponse<UserAdminView> adminUsers = requestTestFixture.extractJsonResponse(result, new TypeReference<PagingResponse<UserAdminView>>() { });
+    ResultActions result =
+        requestTestFixture
+            .getSignedRequest(
+                TEST_ADMIN,
+                "/admin/user/search",
+                ImmutableMap.<String, String>builder()
+                    .put("role", UserRole.USER.name())
+                    .put("1", TEST_ADMIN)
+                    .build())
+            .andExpect(status().isOk());
+    PagingResponse<UserAdminView> adminUsers =
+        requestTestFixture.extractJsonResponse(
+            result, new TypeReference<PagingResponse<UserAdminView>>() {});
     assertTrue(adminUsers.getCount() == 2);
-
   }
 
   @Test
@@ -221,13 +225,16 @@ public class UserManagementIT extends BaseItTest {
 
     // Test search user role
     userTestFixture.prepareAdminUser();
-    ResultActions result =requestTestFixture
-      .getSignedRequest(TEST_ADMIN, "/admin/user/search",
-                        ImmutableMap.<String,String>builder()
-                          .put("role", UserRole.USER.name())
-                          .build())
-      .andExpect(status().isOk());
-    PagingResponse<UserAdminView> adminUsers = requestTestFixture.extractJsonResponse(result, new TypeReference<PagingResponse<UserAdminView>>() { });
+    ResultActions result =
+        requestTestFixture
+            .getSignedRequest(
+                TEST_ADMIN,
+                "/admin/user/search",
+                ImmutableMap.<String, String>builder().put("role", UserRole.USER.name()).build())
+            .andExpect(status().isOk());
+    PagingResponse<UserAdminView> adminUsers =
+        requestTestFixture.extractJsonResponse(
+            result, new TypeReference<PagingResponse<UserAdminView>>() {});
     assertTrue(adminUsers.getCount() == 2);
   }
 
@@ -331,22 +338,26 @@ public class UserManagementIT extends BaseItTest {
         .andExpect(status().isOk());
 
     // Test search by rights on entity
-    ResultActions rightsSearchResult =requestTestFixture
-      .getSignedRequest(TEST_ADMIN, "/admin/user/search",
-                        ImmutableMap.<String,String>builder()
-                          .put("editorRightsOn", key.toString())
-                          .put("role", UserRoles.USER_ROLE)
-                          .put("q", USERNAME)
-                          .build())
-      .andExpect(status().isOk());
-    PagingResponse<UserAdminView> editorUsers = requestTestFixture.extractJsonResponse(rightsSearchResult, new TypeReference<PagingResponse<UserAdminView>>() { });
+    ResultActions rightsSearchResult =
+        requestTestFixture
+            .getSignedRequest(
+                TEST_ADMIN,
+                "/admin/user/search",
+                ImmutableMap.<String, String>builder()
+                    .put("editorRightsOn", key.toString())
+                    .put("role", UserRoles.USER_ROLE)
+                    .put("q", USERNAME)
+                    .build())
+            .andExpect(status().isOk());
+    PagingResponse<UserAdminView> editorUsers =
+        requestTestFixture.extractJsonResponse(
+            rightsSearchResult, new TypeReference<PagingResponse<UserAdminView>>() {});
     assertTrue(editorUsers.getCount() == 1);
 
     // Admin delete right
     requestTestFixture
         .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/editorRight/" + key)
         .andExpect(status().isNoContent());
-
   }
 
   @Test
@@ -438,5 +449,169 @@ public class UserManagementIT extends BaseItTest {
     requestTestFixture
         .getRequest(ALTERNATIVE_EMAIL, PASSWORD, "/user/login")
         .andExpect(status().isOk());
+  }
+
+  @Test
+  public void testUserNamespaceRights() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
+    String namespace = "ns.test.com";
+
+    // Admin add right
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, namespace, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isCreated());
+
+    // Admin see rights
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isOk());
+
+    // See own rights
+    requestTestFixture
+        .getSignedRequest(USERNAME, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isOk());
+
+    // Test search by rights on entity
+    ResultActions rightsSearchResult =
+        requestTestFixture
+            .getSignedRequest(
+                TEST_ADMIN,
+                "/admin/user/search",
+                ImmutableMap.<String, String>builder()
+                    .put("namespaceRightsOn", namespace)
+                    .put("role", UserRoles.USER_ROLE)
+                    .put("q", USERNAME)
+                    .build())
+            .andExpect(status().isOk());
+    PagingResponse<UserAdminView> editorUsers =
+        requestTestFixture.extractJsonResponse(
+            rightsSearchResult, new TypeReference<PagingResponse<UserAdminView>>() {});
+    assertTrue(editorUsers.getCount() == 1);
+
+    // Admin delete right
+    requestTestFixture
+        .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/namespaceRight/" + namespace)
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  public void testUserNamespaceRightsErrors() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
+    String namespace = "ns2.test.com";
+
+    // User doesn't exist
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, namespace, "/admin/user/someOtherUser/namespaceRight")
+        .andExpect(status().isNotFound());
+
+    // Not an admin user
+    requestTestFixture
+        .postSignedRequestPlainText(
+            USERNAME, namespace, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isForbidden());
+
+    // Right already exists
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, namespace, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isCreated());
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, namespace, "/admin/user/" + USERNAME + "/namespaceRight")
+        .andExpect(status().isConflict());
+
+    // Right doesn't exist
+    String randomNamespace = "foo";
+    requestTestFixture
+        .deleteSignedRequest(
+            TEST_ADMIN, "/admin/user/" + USERNAME + "/namespaceRight/" + randomNamespace)
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void testUserCountryRights() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
+    String country = Country.SPAIN.getIso2LetterCode();
+
+    // Admin add right
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, country, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isCreated());
+
+    // Admin see rights
+    requestTestFixture
+        .getSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isOk());
+
+    // See own rights
+    requestTestFixture
+        .getSignedRequest(USERNAME, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isOk());
+
+    // Test search by rights on entity
+    ResultActions rightsSearchResult =
+        requestTestFixture
+            .getSignedRequest(
+                TEST_ADMIN,
+                "/admin/user/search",
+                ImmutableMap.<String, String>builder()
+                    .put("countryRightsOn", country)
+                    .put("role", UserRoles.USER_ROLE)
+                    .put("q", USERNAME)
+                    .build())
+            .andExpect(status().isOk());
+    PagingResponse<UserAdminView> editorUsers =
+        requestTestFixture.extractJsonResponse(
+            rightsSearchResult, new TypeReference<PagingResponse<UserAdminView>>() {});
+    assertTrue(editorUsers.getCount() == 1);
+
+    // Admin delete right
+    requestTestFixture
+        .deleteSignedRequest(TEST_ADMIN, "/admin/user/" + USERNAME + "/countryRight/" + country)
+        .andExpect(status().isNoContent());
+  }
+
+  @Test
+  public void testUserCountryRightsErrors() throws Exception {
+    // Create a first admin user; this can't be done through the API
+    userTestFixture.prepareAdminUser();
+    userTestFixture.prepareUser();
+    String country = Country.AFGHANISTAN.getIso2LetterCode();
+
+    // User doesn't exist
+    requestTestFixture
+        .postSignedRequestPlainText(TEST_ADMIN, country, "/admin/user/someOtherUser/countryRight")
+        .andExpect(status().isNotFound());
+
+    // Not an admin user
+    requestTestFixture
+        .postSignedRequestPlainText(USERNAME, country, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isForbidden());
+
+    // Right already exists
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, country, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isCreated());
+    requestTestFixture
+        .postSignedRequestPlainText(
+            TEST_ADMIN, country, "/admin/user/" + USERNAME + "/countryRight")
+        .andExpect(status().isConflict());
+
+    // Right doesn't exist
+    String randomCountry = "FO";
+    requestTestFixture
+        .deleteSignedRequest(
+            TEST_ADMIN, "/admin/user/" + USERNAME + "/countryRight/" + randomCountry)
+        .andExpect(status().isNotFound());
   }
 }

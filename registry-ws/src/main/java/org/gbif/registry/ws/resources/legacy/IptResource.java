@@ -349,15 +349,11 @@ public class IptResource {
       if (contact != null
           && LegacyResourceUtils.isValidOnUpdate(
               dataset, datasetService, organizationService, installationService)) {
-        // update only fields that could have changed
+        // update only fields that could have changed and are not read from EML.
+        // (A crawl will be triggered and EML read, unless the EML is not modified.)
         existing.setModifiedBy(user);
-        existing.setTitle(dataset.getTitle());
-        existing.setDescription(dataset.getDescription());
-        existing.setHomepage(dataset.getHomepage());
-        existing.setLogoUrl(dataset.getLogoUrl());
         existing.setType(dataset.getType());
         existing.setInstallationKey(dataset.getInstallationKey());
-
         existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
         // persist changes

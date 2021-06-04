@@ -189,7 +189,7 @@
       AND icp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
     </if>
     <if test="params.code != null" >
-      AND i.code = #{params.code,jdbcType=VARCHAR}
+      AND lower(i.code) = lower(#{params.code,jdbcType=VARCHAR})
     </if>
     <if test="params.alternativeCode != null" >
       AND i.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
@@ -257,7 +257,7 @@
       AND icp.collection_person_key = #{params.contactKey,jdbcType=OTHER}
     </if>
     <if test="params.code != null" >
-      AND i.code = #{params.code,jdbcType=VARCHAR}
+      AND lower(i.code) = lower(#{params.code,jdbcType=VARCHAR})
     </if>
     <if test="params.alternativeCode != null" >
       AND i.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
@@ -586,7 +586,8 @@
   <update id="replace">
     UPDATE institution
     SET deleted = now(),
-        replaced_by = #{replacementKey,jdbcType=OTHER}
+        replaced_by = #{replacementKey,jdbcType=OTHER},
+        modified_by = #{user,jdbcType=VARCHAR}
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
 

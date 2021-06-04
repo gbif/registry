@@ -16,11 +16,10 @@
 package org.gbif.registry.events;
 
 import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
-import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.NetworkEntity;
@@ -32,15 +31,15 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.DerivedDataset;
-import org.gbif.registry.events.collections.ChangedCollectionEntityComponentEvent;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
+import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.varnish.VarnishPurger;
 
 import java.net.URI;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -110,6 +109,36 @@ import com.google.common.eventbus.Subscribe;
  *       <li>derivedDataset/dataset/{datasetKey} BAN
  *       <li>derivedDataset/dataset/{doiPrefix}/{doiSuffix} BAN
  *       <li>derivedDataset/user/{user} BAN
+ *     </ul>
+ *     <h4>Institution</h4>
+ *     <ul>
+ *       <li>grscicoll/institution/{key} PURGE
+ *       <li>grscicoll/institution/{d.parentKey} PURGE
+ *       <li>grscicoll/institution BAN
+ *       <li>grscicoll/institution/suggest BAN
+ *       <li>grscicoll/search BAN
+ *     </ul>
+ *     <h4>Collection</h4>
+ *     <ul>
+ *       <li>grscicoll/collection/{key} PURGE
+ *       <li>grscicoll/collection/{d.parentKey} PURGE
+ *       <li>grscicoll/collection BAN
+ *       <li>grscicoll/collection/suggest BAN
+ *       <li>grscicoll/search BAN
+ *     </ul>
+ *     <h4>Person</h4>
+ *     <ul>
+ *       <li>grscicoll/person/{key} PURGE
+ *       <li>grscicoll/person/{d.parentKey} PURGE
+ *       <li>grscicoll/person BAN
+ *       <li>grscicoll/person/suggest BAN
+ *       <li>grscicoll/institution/{key}/contact
+ *       <li>grscicoll/collection/{key}/contact
+ *     </ul>
+ *     <h4>ChangeSuggestion</h4>
+ *     <ul>
+ *       <li>grscicoll/{collection|institution}/changeSuggestion/{key} PURGE
+ *       <li>grscicoll/{collection|institution}/changeSuggestion BAN
  *     </ul>
  */
 public class VarnishPurgeListener {
@@ -205,47 +234,65 @@ public class VarnishPurgeListener {
   public final <T extends CollectionEntity> void createdCollection(
       CreateCollectionEntityEvent<T> event) {
     purgeEntityAndBanLists(
-        path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+        path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
         event.getNewObject().getKey());
 
-    if (event.getObjectClass().equals(Person.class)) {
+    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
       cascadePersonChange((Person) event.getNewObject());
     }
+
+    purger.ban("grscicoll/search");
   }
 
   @Subscribe
   public final <T extends CollectionEntity> void updatedCollection(
       UpdateCollectionEntityEvent<T> event) {
     purgeEntityAndBanLists(
-        path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+        path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
         event.getOldObject().getKey());
 
-    if (event.getObjectClass().equals(Person.class)) {
-      cascadePersonChange((Person) event.getOldObject(), (Person) event.getNewObject());
+    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
+      cascadePersonChange((Person) event.getOldObject());
     }
+
+    purger.ban("grscicoll/search");
   }
 
   @Subscribe
   public final <T extends CollectionEntity> void deletedCollection(
       DeleteCollectionEntityEvent<T> event) {
     purgeEntityAndBanLists(
-        path("grscicoll", event.getObjectClass().getSimpleName().toLowerCase()),
+        path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
         event.getOldObject().getKey());
 
-    if (event.getObjectClass().equals(Person.class)) {
+    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
       cascadePersonChange((Person) event.getOldObject());
     }
+
+    purger.ban("grscicoll/search");
   }
 
   @Subscribe
-  public final void collectionEntityComponentChange(ChangedCollectionEntityComponentEvent event) {
-    purgeEntityAndBanLists(
-        path("grscicoll", event.getTargetClass().getSimpleName().toLowerCase()),
-        event.getTargetEntityKey());
-
-    if (event.getTargetClass().equals(Person.class)) {
-      cascadePersonChange(personService.get(event.getTargetEntityKey()));
+  public final <T extends CollectionEntity, R> void collectionSubEntityChange(
+      SubEntityCollectionEvent<T, R> event) {
+    if (event.getSubEntityClass().equals(ChangeSuggestionDto.class)) {
+      purgeEntityAndBanLists(
+          path(
+              "grscicoll",
+              event.getCollectionEntityType().name().toLowerCase(),
+              "changeSuggestion"),
+          event.getSubEntityKey());
+    } else {
+      purgeEntityAndBanLists(
+          path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
+          event.getCollectionEntityKey());
     }
+
+    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
+      cascadePersonChange(personService.get(event.getCollectionEntityKey()));
+    }
+
+    purger.ban("grscicoll/search");
   }
 
   @Subscribe
@@ -324,21 +371,17 @@ public class VarnishPurgeListener {
 
   private void cascadePersonChange(Person... persons) {
     Set<UUID> collectionKeys = new UUIDHashSet();
-    for (Person p : persons) {
-      List<CollectionView> collections =
-          collectionService
-              .list(CollectionSearchRequest.builder().contact(p.getKey()).build())
-              .getResults();
-      collections.forEach(c -> collectionKeys.add(c.getCollection().getKey()));
-    }
-
     Set<UUID> institutionKeys = new UUIDHashSet();
     for (Person p : persons) {
-      List<Institution> institutions =
-          institutionService
-              .list(InstitutionSearchRequest.builder().contact(p.getKey()).build())
-              .getResults();
-      institutions.forEach(i -> institutionKeys.add(i.getKey()));
+      collectionService
+          .list(CollectionSearchRequest.builder().contact(p.getKey()).build())
+          .getResults()
+          .forEach(c -> collectionKeys.add(c.getCollection().getKey()));
+
+      institutionService
+          .list(InstitutionSearchRequest.builder().contact(p.getKey()).build())
+          .getResults()
+          .forEach(i -> institutionKeys.add(i.getKey()));
     }
 
     // /collection/{collectionKey}/contact BAN
@@ -361,13 +404,21 @@ public class VarnishPurgeListener {
    * check which entity class was supplied, but as it is some type of NetworkEntity we deal with the
    * right urls.
    */
-  private void purgeEntityAndBanLists(String rootPath, UUID key) {
+  private void purgeEntityAndBanLists(String rootPath, String entityPath) {
 
     // purge entity detail
-    purger.purge(path(rootPath, key));
+    purger.purge(entityPath);
 
     // banRegex lists and searches
     purger.ban(String.format("%s(/search|/suggest)?[^/]*$", rootPath));
+  }
+
+  private void purgeEntityAndBanLists(String rootPath, UUID key) {
+    purgeEntityAndBanLists(rootPath, path(rootPath, key));
+  }
+
+  private void purgeEntityAndBanLists(String rootPath, int key) {
+    purgeEntityAndBanLists(rootPath, path(rootPath, key));
   }
 
   private void purgeEntityAndBanLists(Class cl, UUID key) {

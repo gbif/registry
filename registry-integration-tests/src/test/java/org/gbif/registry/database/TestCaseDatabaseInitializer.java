@@ -106,7 +106,9 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "pipeline_step",
           "pipeline_process",
           "pipeline_execution",
-          "derived_dataset");
+          "derived_dataset",
+          "change_suggestion",
+          "grscicoll_audit_log");
 
   public TestCaseDatabaseInitializer() {}
 
@@ -145,6 +147,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
        * – endpoint_machine_tag
        * – metasync_history
        * – namespace_rights
+       * - country_rights
        * – network_identifier
        * – node_contact
        * – node_endpoint

@@ -1,0 +1,17 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="96" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TABLE country_rights (
+          username text NOT NULL,
+          country varchar(2) NOT NULL CHECK (length(country) = 2),
+          PRIMARY KEY (username, country)
+        );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
