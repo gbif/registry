@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.AuditLogMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="AUDIT_LOG_MAP" type="org.gbif.registry.domain.collections.AuditLog"
+             autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
+  <sql id="AUDIT_LOG_WRITE_FIELDS">
+    trace_id, collection_entity_type, sub_entity_type, operation, collection_entity_key, sub_entity_key,
+    replacement_key, created, created_by, pre_state, post_state
+  </sql>
+
+  <sql id="AUDIT_LOG_READ_FIELDS">
+    key, trace_id, collection_entity_type, sub_entity_type, operation, collection_entity_key, sub_entity_key,
+    replacement_key, created, created_by, pre_state, post_state
+  </sql>
+
+  <sql id="AUDIT_LOG_PARAMS_CREATE">
+    #{traceId,jdbcType=BIGINT},
+    #{collectionEntityType,jdbcType=OTHER},
+    #{subEntityType,jdbcType=VARCHAR},
+    #{operation,jdbcType=VARCHAR},
+    #{collectionEntityKey,jdbcType=OTHER},
+    #{subEntityKey,jdbcType=VARCHAR},
+    #{replacementKey,jdbcType=OTHER},
+    now(), <!-- created -->
+    #{createdBy,jdbcType=VARCHAR},
+    #{preState,jdbcType=OTHER}::jsonb,
+    #{postState,jdbcType=OTHER}::jsonb
+  </sql>
+
+  <insert id="create" parameterType="org.gbif.registry.domain.collections.AuditLog"
+          useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO grscicoll_audit_log(<include refid="AUDIT_LOG_WRITE_FIELDS"/>)
+    VALUES(<include refid="AUDIT_LOG_PARAMS_CREATE"/>)
+  </insert>
+
+  <select id="list" resultMap="AUDIT_LOG_MAP">
+    SELECT <include refid="AUDIT_LOG_READ_FIELDS"/>
+    FROM grscicoll_audit_log
+    <where>
+      <if test="params.traceId != null">
+        trace_id = #{params.traceId,jdbcType=BIGINT}
+      </if>
+      <if test="params.collectionEntityType != null">
+        AND collection_entity_type = #{params.collectionEntityType,jdbcType=OTHER}
+      </if>
+      <if test="params.subEntityType != null">
+        AND sub_entity_type = #{params.subEntityType,jdbcType=VARCHAR}
+      </if>
+      <if test="params.subEntityKey != null">
+        AND sub_entity_key = #{params.subEntityKey,jdbcType=VARCHAR}
+      </if>
+      <if test="params.operation != null">
+        AND operation = #{params.operation,jdbcType=VARCHAR}
+      </if>
+      <if test="params.collectionEntityKey != null">
+        AND collection_entity_key = #{params.collectionEntityKey,jdbcType=OTHER}
+      </if>
+      <if test="params.createdBy != null">
+        AND created_by = #{params.createdBy,jdbcType=VARCHAR}
+      </if>
+      <if test="params.dateFrom != null">
+        AND created &gt;= #{params.dateFrom,jdbcType=VARCHAR}
+      </if>
+      <if test="params.dateTo != null">
+        AND created &lt;= #{params.dateTo,jdbcType=VARCHAR}
+      </if>
+    </where>
+    ORDER BY created DESC
+    <if test="page != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Long">
+    SELECT count(DISTINCT key)
+    FROM grscicoll_audit_log
+    <where>
+      <if test="params.traceId != null">
+        trace_id = #{params.traceId,jdbcType=BIGINT}
+      </if>
+      <if test="params.collectionEntityType != null">
+        AND collection_entity_type = #{params.collectionEntityType,jdbcType=OTHER}
+      </if>
+      <if test="params.subEntityType != null">
+        AND sub_entity_type = #{params.subEntityType,jdbcType=VARCHAR}
+      </if>
+      <if test="params.subEntityKey != null">
+        AND sub_entity_key = #{params.subEntityKey,jdbcType=VARCHAR}
+      </if>
+      <if test="params.operation != null">
+        AND operation = #{params.operation,jdbcType=VARCHAR}
+      </if>
+      <if test="params.collectionEntityKey != null">
+        AND collection_entity_key = #{params.collectionEntityKey,jdbcType=OTHER}
+      </if>
+      <if test="params.createdBy != null">
+        AND created_by = #{params.createdBy,jdbcType=VARCHAR}
+      </if>
+      <if test="params.dateFrom != null">
+        AND created &gt;= #{params.dateFrom,jdbcType=VARCHAR}
+      </if>
+      <if test="params.dateTo != null">
+        AND created &lt;= #{params.dateTo,jdbcType=VARCHAR}
+      </if>
+    </where>
+  </select>
+
+</mapper>

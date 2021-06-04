@@ -1,0 +1,25 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="95" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TABLE grscicoll_audit_log (
+          key bigserial NOT NULL PRIMARY KEY,
+          trace_id bigserial NOT NULL,
+          collection_entity_type enum_grscicoll_entity_type NOT NULL,
+          sub_entity_type varchar(50),
+          operation varchar(50) NOT NULL,
+          collection_entity_key uuid,
+          sub_entity_key varchar(36),
+          replacement_key uuid,
+          created timestamptz NOT NULL DEFAULT now(),
+          created_by varchar CHECK (assert_min_length(created_by, 3)),
+          pre_state jsonb,
+          post_state jsonb)
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

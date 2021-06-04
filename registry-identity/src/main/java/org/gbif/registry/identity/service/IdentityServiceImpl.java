@@ -22,6 +22,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.identity.model.ModelMutationError;
 import org.gbif.registry.identity.model.PropertyConstants;
@@ -181,12 +182,22 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
 
   @Override
   public PagingResponse<GbifUser> list(@Nullable Pageable pageable) {
-    return search(null, null, null, pageable);
+    return search(null, null, null, null, null, pageable);
   }
 
   @Override
-  public PagingResponse<GbifUser> search(@Nullable String query, Set<UserRole> roles, @Nullable Set<UUID> editorRightsOn, @Nullable Pageable pageable) {
-    return pagingResponse(pageable, userMapper.count(query, roles, editorRightsOn), userMapper.search(query, roles, editorRightsOn, pageable));
+  public PagingResponse<GbifUser> search(
+      @Nullable String query,
+      Set<UserRole> roles,
+      @Nullable Set<UUID> editorRightsOn,
+      @Nullable Set<String> namespaceRightsOn,
+      @Nullable Set<Country> countryRightsOn,
+      @Nullable Pageable pageable) {
+    return pagingResponse(
+        pageable,
+        userMapper.count(query, roles, editorRightsOn, namespaceRightsOn, countryRightsOn),
+        userMapper.search(
+            query, roles, editorRightsOn, namespaceRightsOn, countryRightsOn, pageable));
   }
 
   /**
@@ -369,5 +380,35 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Override
   public void deleteEditorRight(String userName, UUID key) {
     userMapper.deleteEditorRight(userName, key);
+  }
+
+  @Override
+  public List<String> listNamespaceRights(String userName) {
+    return userMapper.listNamespaceRights(userName);
+  }
+
+  @Override
+  public void addNamespaceRight(String userName, String namespace) {
+    userMapper.addNamespaceRight(userName, namespace);
+  }
+
+  @Override
+  public void deleteNamespaceRight(String userName, String namespace) {
+    userMapper.deleteNamespaceRight(userName, namespace);
+  }
+
+  @Override
+  public List<Country> listCountryRights(String userName) {
+    return userMapper.listCountryRights(userName);
+  }
+
+  @Override
+  public void addCountryRight(String userName, Country country) {
+    userMapper.addCountryRight(userName, country);
+  }
+
+  @Override
+  public void deleteCountryRight(String userName, Country country) {
+    userMapper.deleteCountryRight(userName, country);
   }
 }

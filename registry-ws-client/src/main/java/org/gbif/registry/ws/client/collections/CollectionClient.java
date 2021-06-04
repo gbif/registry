@@ -17,11 +17,11 @@ package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.CollectionService;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,11 +36,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/collection")
 public interface CollectionClient
-    extends ExtendedBaseCollectionEntityClient<Collection>, CollectionService {
+    extends PrimaryCollectionEntityClient<Collection, CollectionChangeSuggestion> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<CollectionView> list(@SpringQueryMap CollectionSearchRequest searchRequest);
 
   @RequestMapping(
@@ -48,7 +47,6 @@ public interface CollectionClient
       value = "deleted",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   PagingResponse<CollectionView> listDeleted(@SpringQueryMap Pageable page);
 
   @RequestMapping(
@@ -56,7 +54,6 @@ public interface CollectionClient
       value = "suggest",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q);
 
   @RequestMapping(
@@ -64,7 +61,6 @@ public interface CollectionClient
       value = "{key}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
   CollectionView getCollectionView(@PathVariable("key") UUID key);
 
   @Override

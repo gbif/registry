@@ -31,7 +31,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.ws.OrganizationRequestSearchParams;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.persistence.WithMyBatis;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;

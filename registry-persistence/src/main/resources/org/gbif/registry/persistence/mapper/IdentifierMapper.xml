@@ -37,4 +37,11 @@
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
   </select>
+
+  <select id="get" resultType="org.gbif.api.model.registry.Identifier">
+    SELECT key,type,identifier,created,created_by
+    FROM identifier
+    WHERE key = #{key}
+  </select>
+
 </mapper>

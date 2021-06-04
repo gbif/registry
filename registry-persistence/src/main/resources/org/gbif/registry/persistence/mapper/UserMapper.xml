@@ -70,9 +70,22 @@
     SELECT <include refid="USER_FIELDS"/>
     FROM public.user u
     <if test="editorRightsOn != null" >
-    JOIN editor_rights er ON er.username = u.username AND er.key IN <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
-                                                                      #{item}
-                                                                   </foreach>
+      JOIN editor_rights er ON er.username = u.username AND er.key IN
+        <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+    </if>
+    <if test="namespaceRightsOn != null" >
+      JOIN namespace_rights nr ON nr.username = u.username AND nr.namespace IN
+      <foreach item="item" index="index" collection="namespaceRightsOn" open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
+    <if test="countryRightsOn != null" >
+      JOIN country_rights cr ON cr.username = u.username AND cr.country IN
+      <foreach item="item" index="index" collection="countryRightsOn" open="(" separator="," close=")">
+        #{item}
+      </foreach>
     </if>
     <where>
       <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
@@ -90,9 +103,22 @@
     SELECT COUNT(*)
     FROM public.user u
     <if test="editorRightsOn != null" >
-    JOIN editor_rights er ON er.username = u.username AND er.key IN <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
-                                                                      #{item}
-                                                                    </foreach>
+      JOIN editor_rights er ON er.username = u.username AND er.key IN
+        <foreach item="item" index="index" collection="editorRightsOn" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+    </if>
+    <if test="namespaceRightsOn != null" >
+      JOIN namespace_rights nr ON nr.username = u.username AND nr.namespace IN
+      <foreach item="item" index="index" collection="namespaceRightsOn" open="(" separator="," close=")">
+        #{item}
+      </foreach>
+    </if>
+    <if test="countryRightsOn != null" >
+      JOIN country_rights cr ON cr.username = u.username AND cr.country IN
+      <foreach item="item" index="index" collection="countryRightsOn" open="(" separator="," close=")">
+        #{item}
+      </foreach>
     </if>
     <where>
       <if test="query != null" > <include refid="SIMPLE_SEARCH"/> </if>
@@ -188,4 +214,44 @@
     WHERE username = #{userName,jdbcType=VARCHAR}
       AND key = #{key,jdbcType=OTHER}
   </delete>
+
+  <update id="addNamespaceRight">
+    INSERT INTO namespace_rights(username,namespace)
+    VALUES(
+            #{userName,jdbcType=VARCHAR},
+            #{namespace,jdbcType=VARCHAR}
+          )
+  </update>
+
+  <delete id="deleteNamespaceRight">
+    DELETE FROM namespace_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+      AND namespace = #{namespace,jdbcType=VARCHAR}
+  </delete>
+
+  <select id="listNamespaceRights" resultType="java.lang.String">
+    SELECT namespace
+    FROM namespace_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+  </select>
+
+  <update id="addCountryRight">
+    INSERT INTO country_rights(username,country)
+    VALUES(
+    #{userName,jdbcType=VARCHAR},
+    #{country,jdbcType=VARCHAR}
+    )
+  </update>
+
+  <delete id="deleteCountryRight">
+    DELETE FROM country_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+    AND country = #{country,jdbcType=VARCHAR}
+  </delete>
+
+  <select id="listCountryRights" resultType="org.gbif.api.vocabulary.Country">
+    SELECT country
+    FROM country_rights
+    WHERE username = #{userName,jdbcType=VARCHAR}
+  </select>
 </mapper>

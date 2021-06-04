@@ -60,6 +60,7 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
+import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
@@ -78,6 +79,7 @@ import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusType
 import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.SuggestedChangesTypeHandler;
 
 import java.net.URI;
 import java.util.UUID;
@@ -156,6 +158,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("CollectionMatchedDto", CollectionMatchedDto.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("ChangeSuggestionDto", ChangeSuggestionDto.class);
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
@@ -214,6 +219,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("AlternativeCodesTypeHandler", AlternativeCodesTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("SuggestedChangesTypeHandler", SuggestedChangesTypeHandler.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);

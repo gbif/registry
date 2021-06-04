@@ -28,6 +28,10 @@ application:
 grscicoll:
   portal:
     url: https://www.gbif-dev.org/grscicoll/
+  registryPortal:
+    url: https://registry.gbif-dev.org/
+  mail:
+    enabled: false
 
 derivedDataset:
   text: Derived dataset GBIF.org ({0}) Filtered export of GBIF occurrence data https://doi.org/{1}

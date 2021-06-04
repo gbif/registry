@@ -143,31 +143,47 @@
   </sql>
 
   <select id="getInstitutionsMetadata" resultType="DuplicateMetadataDto">
-    SELECT DISTINCT ON (i.key) i.key, i.active, idt IS NOT NULL AS is_ih, mt IS NOT NULL AS is_idigbio
+    SELECT DISTINCT ON (i.key) i.key, i.active, ih IS NOT NULL AS is_ih, idigbio IS NOT NULL AS is_idigbio
     FROM institution i
-    LEFT JOIN institution_identifier ii ON ii.institution_key = i.key
-    LEFT JOIN identifier idt ON idt.key = ii.identifier_key AND idt.type = 'IH_IRN'
-    LEFT JOIN institution_machine_tag imt ON imt.institution_key = i.key
-    LEFT JOIN machine_tag mt ON mt.key = imt.machine_tag_key AND mt.namespace = 'iDigBio.org'
+    LEFT JOIN LATERAL (
+      SELECT imt.institution_key AS inst_key, mt.key AS mt_key
+      FROM institution_machine_tag imt
+      INNER JOIN machine_tag mt ON mt.key = imt.machine_tag_key AND mt.namespace = 'iDigBio.org'
+      WHERE imt.institution_key = i.key
+      ) idigbio ON idigbio.inst_key = i.key
+    LEFT JOIN LATERAL (
+      SELECT imt.institution_key AS inst_key, mt.key AS mt_key
+      FROM institution_machine_tag imt
+      INNER JOIN machine_tag mt ON mt.key = imt.machine_tag_key AND mt.namespace = 'ih.gbif.org' AND mt.name = 'irn'
+      WHERE imt.institution_key = i.key
+      ) ih ON ih.inst_key = i.key
     WHERE i.key IN
     <foreach item="item" collection="institutionKeys" open="(" separator="," close=")">
       #{item}
     </foreach>
-    ORDER BY i.key, idt.key, mt.key NULLS LAST
+    ORDER BY i.key, ih.mt_key, idigbio.mt_key NULLS LAST
   </select>
 
   <select id="getCollectionsMetadata" resultType="DuplicateMetadataDto">
-    SELECT DISTINCT ON (c.key) c.key, c.active, idt IS NOT NULL AS is_ih, mt IS NOT NULL AS is_idigbio
+    SELECT DISTINCT ON (c.key) c.key, c.active, ih IS NOT NULL AS is_ih, idigbio IS NOT NULL AS is_idigbio
     FROM collection c
-    LEFT JOIN collection_identifier ci ON ci.collection_key = c.key
-    LEFT JOIN identifier idt ON idt.key = ci.identifier_key AND idt.type = 'IH_IRN'
-    LEFT JOIN collection_machine_tag cmt ON cmt.collection_key = c.key
-    LEFT JOIN machine_tag mt ON mt.key = cmt.machine_tag_key AND mt.namespace = 'iDigBio.org'
+    LEFT JOIN LATERAL (
+      SELECT cmt.collection_key AS coll_key, mt.key AS mt_key
+      FROM collection_machine_tag cmt
+      INNER JOIN machine_tag mt ON mt.key = cmt.machine_tag_key AND mt.namespace = 'iDigBio.org'
+      WHERE cmt.collection_key = c.key
+      ) idigbio ON idigbio.coll_key = c.key
+    LEFT JOIN LATERAL (
+      SELECT cmt.collection_key AS coll_key, mt.key AS mt_key
+      FROM collection_machine_tag cmt
+      INNER JOIN machine_tag mt ON mt.key = cmt.machine_tag_key AND mt.namespace = 'ih.gbif.org' AND mt.name = 'irn'
+      WHERE cmt.collection_key = c.key
+      ) ih ON ih.coll_key = c.key
     WHERE c.key IN
     <foreach item="item" collection="collectionKeys" open="(" separator="," close=")">
       #{item}
     </foreach>
-    ORDER BY c.key, idt.key, mt.key NULLS LAST
+    ORDER BY c.key, ih.mt_key, idigbio.mt_key NULLS LAST
   </select>
 
 </mapper>

@@ -17,11 +17,8 @@ package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.DuplicatesMapper;
@@ -42,6 +39,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
+import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -56,7 +55,6 @@ public class DuplicatesMapperIT extends BaseItTest {
   private InstitutionMapper institutionMapper;
   private CollectionMapper collectionMapper;
   private MachineTagMapper machineTagMapper;
-  private IdentifierMapper identifierMapper;
 
   @Autowired
   public DuplicatesMapperIT(
@@ -64,7 +62,6 @@ public class DuplicatesMapperIT extends BaseItTest {
       InstitutionMapper institutionMapper,
       CollectionMapper collectionMapper,
       MachineTagMapper machineTagMapper,
-      IdentifierMapper identifierMapper,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer) {
     super(principalProvider, esServer);
@@ -72,7 +69,6 @@ public class DuplicatesMapperIT extends BaseItTest {
     this.institutionMapper = institutionMapper;
     this.collectionMapper = collectionMapper;
     this.machineTagMapper = machineTagMapper;
-    this.identifierMapper = identifierMapper;
   }
 
   @Test
@@ -91,10 +87,10 @@ public class DuplicatesMapperIT extends BaseItTest {
     machineTagMapper.createMachineTag(mt);
     institutionMapper.addMachineTag(inst1.getKey(), mt.getKey());
 
-    Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
-    identifier.setCreatedBy("test");
-    identifierMapper.createIdentifier(identifier);
-    institutionMapper.addIdentifier(inst1.getKey(), identifier.getKey());
+    MachineTag mtIh = new MachineTag(IH_NAMESPACE, IRN_TAG, "foo");
+    mtIh.setCreatedBy("test");
+    machineTagMapper.createMachineTag(mtIh);
+    institutionMapper.addMachineTag(inst1.getKey(), mtIh.getKey());
 
     List<DuplicateMetadataDto> metadataDtos =
         duplicatesMapper.getInstitutionsMetadata(Collections.singleton(inst1.getKey()));
@@ -139,10 +135,10 @@ public class DuplicatesMapperIT extends BaseItTest {
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(c1.getKey(), mt.getKey());
 
-    Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
-    identifier.setCreatedBy("test");
-    identifierMapper.createIdentifier(identifier);
-    collectionMapper.addIdentifier(c1.getKey(), identifier.getKey());
+    MachineTag mtIh = new MachineTag(IH_NAMESPACE, IRN_TAG, "foo");
+    mtIh.setCreatedBy("test");
+    machineTagMapper.createMachineTag(mtIh);
+    collectionMapper.addMachineTag(c1.getKey(), mtIh.getKey());
 
     List<DuplicateMetadataDto> metadataDtos =
         duplicatesMapper.getCollectionsMetadata(Collections.singleton(c1.getKey()));

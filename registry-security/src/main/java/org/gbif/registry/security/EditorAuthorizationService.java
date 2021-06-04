@@ -34,7 +34,6 @@ public interface EditorAuthorizationService {
    * @param ns the namespace in question
    * @return true if the user is allowed to modify the namespace.
    */
-  @Deprecated
   boolean allowedToModifyNamespace(@Nullable String name, String ns);
 
   /**
@@ -44,7 +43,6 @@ public interface EditorAuthorizationService {
    * @param machineTagKey the machine tag in question
    * @return true if rights exist for this user to delete the tag.
    */
-  @Deprecated
   boolean allowedToDeleteMachineTag(@Nullable String name, int machineTagKey);
 
   /**

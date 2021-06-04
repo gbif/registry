@@ -18,13 +18,9 @@ package org.gbif.registry.service.collections.merge;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Person;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
-
-import java.util.List;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.PersonService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,22 +31,13 @@ import com.google.common.base.Preconditions;
 @Service
 public class CollectionMergeService extends BaseMergeService<Collection> {
 
+  private final PersonService personService;
+
   @Autowired
   protected CollectionMergeService(
-      CollectionMapper collectionMapper,
-      IdentifierMapper identifierMapper,
-      PersonMapper personMapper,
-      MachineTagMapper machineTagMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper) {
-    super(
-        collectionMapper,
-        collectionMapper,
-        collectionMapper,
-        identifierMapper,
-        collectionMapper,
-        personMapper,
-        machineTagMapper,
-        occurrenceMappingMapper);
+      CollectionService collectionService, PersonService personService) {
+    super(collectionService);
+    this.personService = personService;
   }
 
   @Override
@@ -68,7 +55,7 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
 
   @Override
   Collection mergeEntityFields(Collection entityToReplace, Collection replacement) {
-    setNullFields(replacement, entityToReplace);
+    setNullFieldsInTarget(replacement, entityToReplace);
     replacement.setEmail(mergeLists(entityToReplace.getEmail(), replacement.getEmail()));
     replacement.setPhone(mergeLists(entityToReplace.getPhone(), replacement.getPhone()));
     replacement.setContentTypes(
@@ -97,11 +84,13 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   @Override
   void additionalOperations(Collection entityToReplace, Collection replacement) {
     // fix primary collection of contacts
-    List<Person> persons = personMapper.list(null, entityToReplace.getKey(), null, null);
-    persons.forEach(
-        p -> {
-          p.setPrimaryCollectionKey(replacement.getKey());
-          personMapper.update(p);
-        });
+    PagingResponse<Person> persons = personService.list(null, null, entityToReplace.getKey(), null);
+    persons
+        .getResults()
+        .forEach(
+            p -> {
+              p.setPrimaryCollectionKey(replacement.getKey());
+              personService.update(p);
+            });
   }
 }

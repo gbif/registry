@@ -15,9 +15,11 @@
  */
 package org.gbif.registry.service.collections.merge;
 
+import org.gbif.api.model.collections.CollectionEntity;
+
 import java.util.UUID;
 
-public interface MergeService {
+public interface MergeService<T extends CollectionEntity> {
 
   void merge(UUID entityToReplaceKey, UUID replacementKey);
 }
