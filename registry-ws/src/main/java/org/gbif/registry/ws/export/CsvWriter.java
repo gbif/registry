@@ -41,10 +41,6 @@ import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.io.Writer;
-import java.lang.reflect.Field;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +53,6 @@ import org.supercsv.cellprocessor.FmtBool;
 import org.supercsv.cellprocessor.FmtDate;
 import org.supercsv.cellprocessor.FmtNumber;
 import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.ParseBigDecimal;
 import org.supercsv.cellprocessor.ParseEnum;
 import org.supercsv.cellprocessor.ParseInt;
 import org.supercsv.cellprocessor.ParseLong;
@@ -301,7 +296,7 @@ public class CsvWriter<T> {
       .processors(new CellProcessor[]{
         new UUIDProcessor(),                                                //key: UUID
         null,                                                               //code: String
-        null,                                                               //name: String
+        new CleanStringProcessor(),                                         //name: String
         new CleanStringProcessor(),                                         //description: String
         new ListCollectionContentTypeProcessor(),                           //contentTypes: List
         new Optional(new FmtBool("true", "false")),     //active: boolean
@@ -315,7 +310,7 @@ public class CsvWriter<T> {
         new ListPreservationTypeProcessor(),                                //preservationTypes: List
         new Optional(new ParseEnum(AccessionStatus.class)),                 //accessionStatus: AccessionStatus
         null,                                                               //institutionCode: String
-        null,                                                               //institutionName: String
+        new CleanStringProcessor(),                                         //institutionName: String
         new UUIDProcessor(),                                                //institutionKey: UUID
         new AddressProcessor(),                                             //mailingAddress: Address
         new AddressProcessor(),                                             //address: Address
@@ -330,8 +325,8 @@ public class CsvWriter<T> {
         new Optional(new FmtBool("true", "false")),     //indexHerbariorumRecord: boolean
         new Optional(new ParseInt()),                                       //numberSpecimens: int
         new ListMachineTagProcessor(),                                      //machineTags: List
-        null,                                                               //taxonomicCoverage: String
-        null,                                                               //geography: String
+        new CleanStringProcessor(),                                         //taxonomicCoverage: String
+        new CleanStringProcessor(),                                         //geography: String
         new CleanStringProcessor(),                                         //notes: String
         new ListStringProcessor(),                                          //incorporatedCollections: List
         new ListStringProcessor(),                                          //importantCollectors: List
@@ -440,14 +435,14 @@ public class CsvWriter<T> {
         null,                                                               //code: String
         new CleanStringProcessor(),                                         //name: String
         new CleanStringProcessor(),                                         //description: String
-        new ParseEnum(InstitutionType.class),                               //type:InstitutionType
-        new FmtBool("true", "false"),                   //active: boolean
+        new Optional( new ParseEnum(InstitutionType.class)),                //type:InstitutionType
+        new Optional(new FmtBool("true", "false")),     //active: boolean
         new ListStringProcessor(),                                          //email: List<String>
         new ListStringProcessor(),                                          //phone: List<String>
         new UriProcessor(),                                                 //homepage: URI
         new UriProcessor(),                                                 //catalogUrl: URI
         new UriProcessor(),                                                 //apiUrl: URI
-        new ParseEnum(InstitutionGovernance.class),                         //institutionalGovernance:InstitutionGovernance
+        new Optional(new ParseEnum(InstitutionGovernance.class)),           //institutionalGovernance:InstitutionGovernance
         new ListDisciplinesProcessor(),                                     //disciplines:List
         new Optional(new FmtNumber("###.####")),              //latitude: BigDecimal
         new Optional(new FmtNumber("###.####")),              //longitude: BigDecimal
@@ -458,9 +453,9 @@ public class CsvWriter<T> {
         new CleanStringProcessor(),                                         //geographicDescription: String
         new CleanStringProcessor(),                                         //taxonomicDescription: String
         new Optional(new ParseInt()),                                       //numberSpecimens: int
-        new FmtBool("true", "false"),                   //indexHerbariorumRecord: boolean
+        new Optional(new FmtBool("true", "false")),     //indexHerbariorumRecord: boolean
         new UriProcessor(),                                                 //logoUrl: URI
-        null,                                                               //citesPermitNumber: String
+        new CleanStringProcessor(),                                         //citesPermitNumber: String
         null,                                                               //createdBy: String
         null,                                                               //modifiedBy: String
         new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601),                 //created: Date
