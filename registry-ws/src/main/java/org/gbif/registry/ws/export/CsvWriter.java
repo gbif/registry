@@ -513,7 +513,6 @@ public class CsvWriter<T> {
     }
   }
 
-
   /**
    * Null aware Country processor.
    */
@@ -607,9 +606,9 @@ public class CsvWriter<T> {
   }
 
   /**
-   * Joins elements using | as a convention for nested objects.
+   * Joins elements using as a delimiter.
    */
-  private static String nestedElementJoiner(String delimiter, String...elements) {
+  public static String notNullJoiner(String delimiter, String...elements) {
     return  Arrays.stream(elements)
               .filter(s -> s != null && !s.isEmpty())
               .collect(Collectors.joining(delimiter));
@@ -621,11 +620,11 @@ public class CsvWriter<T> {
   public static class AddressProcessor implements CellProcessor {
 
     public static String toString(Address address) {
-      return CleanStringProcessor.cleanString(nestedElementJoiner(" ",
-                                                                   address.getAddress(),
-                                                                   address.getCity(),
-                                                                   address.getProvince(),
-                                                                   address.getPostalCode(),
+      return CleanStringProcessor.cleanString(notNullJoiner(" ",
+                                                            address.getAddress(),
+                                                            address.getCity(),
+                                                            address.getProvince(),
+                                                            address.getPostalCode(),
                                                                    address.getCountry() != null? address.getCountry().getTitle() : ""));
     }
 
@@ -716,10 +715,10 @@ public class CsvWriter<T> {
     }
 
     public static String toString(MachineTag machineTag) {
-      return nestedElementJoiner(":",
-                                 machineTag.getNamespace(),
-                                 machineTag.getName(),
-                                 machineTag.getValue());
+      return notNullJoiner(":",
+                           machineTag.getNamespace(),
+                           machineTag.getName(),
+                           machineTag.getValue());
     }
 
     @Override
@@ -740,13 +739,13 @@ public class CsvWriter<T> {
     }
 
     public static String toString(Person contact) {
-      return CleanStringProcessor.cleanString(nestedElementJoiner(" ",
-                                                                   contact.getFirstName(),
-                                                                   contact.getLastName(),
-                                                                   contact.getPhone(),
-                                                                   contact.getEmail(),
-                                                                   contact.getPosition(),
-                                                                   contact.getAreaResponsibility()));
+      return CleanStringProcessor.cleanString(notNullJoiner(" ",
+                                                            contact.getFirstName(),
+                                                            contact.getLastName(),
+                                                            contact.getPhone(),
+                                                            contact.getEmail(),
+                                                            contact.getPosition(),
+                                                            contact.getAreaResponsibility()));
     }
 
     @Override
@@ -818,10 +817,10 @@ public class CsvWriter<T> {
     }
 
     public static String toString(OccurrenceMapping occurrenceMapping) {
-      return nestedElementJoiner(":",
-                                 occurrenceMapping.getCode(),
-                                 occurrenceMapping.getIdentifier(),
-                                 occurrenceMapping.getDatasetKey().toString());
+      return notNullJoiner(":",
+                           occurrenceMapping.getCode(),
+                           occurrenceMapping.getIdentifier(),
+                           occurrenceMapping.getDatasetKey().toString());
     }
 
     @Override
