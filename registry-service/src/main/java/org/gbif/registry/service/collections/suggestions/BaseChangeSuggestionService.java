@@ -1,3 +1,18 @@
+/*
+ * Copyright 2020 Global Biodiversity Information Facility (GBIF)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Address;
@@ -27,6 +42,7 @@ import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
+import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
@@ -98,6 +114,7 @@ public abstract class BaseChangeSuggestionService<
   private final CollectionsEmailManager emailManager;
   private final EventManager eventManager;
   private final GrSciCollAuthorizationService grSciCollAuthorizationService;
+  private final CollectionsMailConfigurationProperties collectionsMailConfigurationProperties;
   private CollectionEntityType collectionEntityType;
 
   protected BaseChangeSuggestionService(
@@ -109,7 +126,8 @@ public abstract class BaseChangeSuggestionService<
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
       EventManager eventManager,
-      GrSciCollAuthorizationService grSciCollAuthorizationService) {
+      GrSciCollAuthorizationService grSciCollAuthorizationService,
+      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties) {
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -119,6 +137,7 @@ public abstract class BaseChangeSuggestionService<
     this.emailManager = emailManager;
     this.eventManager = eventManager;
     this.grSciCollAuthorizationService = grSciCollAuthorizationService;
+    this.collectionsMailConfigurationProperties = collectionsMailConfigurationProperties;
 
     if (clazz == Institution.class) {
       collectionEntityType = CollectionEntityType.INSTITUTION;
@@ -153,13 +172,15 @@ public abstract class BaseChangeSuggestionService<
             dto.getEntityKey(), clazz, dto, dto.getKey(), EventType.CREATE));
 
     // send email
-    try {
-      BaseEmailModel emailModel =
-          emailManager.generateNewChangeSuggestionEmailModel(
-              dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
-      emailSender.send(emailModel);
-    } catch (Exception e) {
-      LOG.error("Couldn't send email for new change suggestion", e);
+    if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
+      try {
+        BaseEmailModel emailModel =
+            emailManager.generateNewChangeSuggestionEmailModel(
+                dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
+        emailSender.send(emailModel);
+      } catch (Exception e) {
+        LOG.error("Couldn't send email for new change suggestion", e);
+      }
     }
 
     return dto.getKey();
@@ -263,17 +284,19 @@ public abstract class BaseChangeSuggestionService<
             dto.getEntityKey(), clazz, dto, oldDto, dto.getKey(), EventType.DISCARD_SUGGESTION));
 
     // send email
-    try {
-      BaseEmailModel emailModel =
-          emailManager.generateDiscardedChangeSuggestionEmailModel(
-              dto.getKey(),
-              dto.getEntityType(),
-              dto.getEntityKey(),
-              dto.getType(),
-              Collections.singleton(dto.getProposerEmail()));
-      emailSender.send(emailModel);
-    } catch (Exception e) {
-      LOG.error("Couldn't send email for discarded change suggestion", e);
+    if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
+      try {
+        BaseEmailModel emailModel =
+            emailManager.generateDiscardedChangeSuggestionEmailModel(
+                dto.getKey(),
+                dto.getEntityType(),
+                dto.getEntityKey(),
+                dto.getType(),
+                Collections.singleton(dto.getProposerEmail()));
+        emailSender.send(emailModel);
+      } catch (Exception e) {
+        LOG.error("Couldn't send email for discarded change suggestion", e);
+      }
     }
   }
 
@@ -310,17 +333,19 @@ public abstract class BaseChangeSuggestionService<
             dto.getEntityKey(), clazz, dto, oldDto, dto.getKey(), EventType.APPLY_SUGGESTION));
 
     // send email
-    try {
-      BaseEmailModel emailModel =
-          emailManager.generateAppliedChangeSuggestionEmailModel(
-              dto.getKey(),
-              dto.getEntityType(),
-              dto.getEntityKey(),
-              dto.getType(),
-              Collections.singleton(dto.getProposerEmail()));
-      emailSender.send(emailModel);
-    } catch (Exception e) {
-      LOG.error("Couldn't send email for applied change suggestion", e);
+    if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
+      try {
+        BaseEmailModel emailModel =
+            emailManager.generateAppliedChangeSuggestionEmailModel(
+                dto.getKey(),
+                dto.getEntityType(),
+                dto.getEntityKey(),
+                dto.getType(),
+                Collections.singleton(dto.getProposerEmail()));
+        emailSender.send(emailModel);
+      } catch (Exception e) {
+        LOG.error("Couldn't send email for applied change suggestion", e);
+      }
     }
 
     return createdEntity;
