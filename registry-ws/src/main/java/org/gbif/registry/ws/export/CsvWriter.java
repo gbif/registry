@@ -17,13 +17,13 @@ package org.gbif.registry.ws.export;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -35,9 +35,16 @@ import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -48,9 +55,9 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import org.supercsv.cellprocessor.FmtBool;
 import org.supercsv.cellprocessor.FmtDate;
+import org.supercsv.cellprocessor.FmtNumber;
 import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.ParseBool;
-import org.supercsv.cellprocessor.ParseDate;
+import org.supercsv.cellprocessor.ParseBigDecimal;
 import org.supercsv.cellprocessor.ParseEnum;
 import org.supercsv.cellprocessor.ParseInt;
 import org.supercsv.cellprocessor.ParseLong;
@@ -338,7 +345,140 @@ public class CsvWriter<T> {
       .preference(preference)
       .pager(pager)
       .build();
+  }
 
+  /**
+   * Creates an CsvWriter/exporter of Collection.
+   */
+  public static CsvWriter<Institution> institutions(Iterable<Institution> pager,
+                                                    ExportFormat preference) {
+    return CsvWriter.<Institution>builder()
+      .fields(new String[]{
+        "key",
+        "code",
+        "name",
+        "description",
+        "type",
+        "active",
+        "email",
+        "phone",
+        "homepage",
+        "catalogUrl",
+        "apiUrl",
+        "institutionalGovernance",
+        "disciplines",
+        "latitude",
+        "longitude",
+        "mailingAddress",
+        "address",
+        "additionalNames",
+        "foundingDate",
+        "geographicDescription",
+        "taxonomicDescription",
+        "numberSpecimens",
+        "indexHerbariorumRecord",
+        "logoUrl",
+        "citesPermitNumber",
+        "createdBy",
+        "modifiedBy",
+        "created",
+        "modified",
+        "deleted",
+        "tags",
+        "identifiers",
+        "contacts",
+        "machineTags",
+        "alternativeCodes",
+        "comments",
+        "occurrenceMappings",
+        "replacedBy",
+        "convertedToCollection"
+      })
+      .header(new String[]{
+        "key",
+        "code",
+        "name",
+        "description",
+        "type",
+        "active",
+        "email",
+        "phone",
+        "homepage",
+        "catalog_url",
+        "api_url",
+        "institutional_governance",
+        "disciplines",
+        "latitude",
+        "longitude",
+        "mailing_address",
+        "address",
+        "additional_names",
+        "founding_date",
+        "geographic_description",
+        "taxonomic_description",
+        "number_specimens",
+        "index_herbariorum_record",
+        "logo_url",
+        "cites_permit_number",
+        "created_by",
+        "modified_by",
+        "created",
+        "modified",
+        "deleted",
+        "tags",
+        "identifiers",
+        "contacts",
+        "machine_tags",
+        "alternative_codes",
+        "comments",
+        "occurrence_mappings",
+        "replaced_by",
+        "converted_to_collection"
+      })
+      .processors(new CellProcessor[]{
+        new UUIDProcessor(),                                                //key: UUID
+        null,                                                               //code: String
+        new CleanStringProcessor(),                                         //name: String
+        new CleanStringProcessor(),                                         //description: String
+        new ParseEnum(InstitutionType.class),                               //type:InstitutionType
+        new FmtBool("true", "false"),                   //active: boolean
+        new ListStringProcessor(),                                          //email: List<String>
+        new ListStringProcessor(),                                          //phone: List<String>
+        new UriProcessor(),                                                 //homepage: URI
+        new UriProcessor(),                                                 //catalogUrl: URI
+        new UriProcessor(),                                                 //apiUrl: URI
+        new ParseEnum(InstitutionGovernance.class),                         //institutionalGovernance:InstitutionGovernance
+        new ListDisciplinesProcessor(),                                     //disciplines:List
+        new Optional(new FmtNumber("###.####")),              //latitude: BigDecimal
+        new Optional(new FmtNumber("###.####")),              //longitude: BigDecimal
+        new AddressProcessor(),                                             //mailingAddress: Address
+        new AddressProcessor(),                                             //address: Address
+        new ListStringProcessor(),                                          //additionalNames: List<String>
+        new Optional(new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601)),   //foundingDate: Date
+        new CleanStringProcessor(),                                         //geographicDescription: String
+        new CleanStringProcessor(),                                         //taxonomicDescription: String
+        new Optional(new ParseInt()),                                       //numberSpecimens: int
+        new FmtBool("true", "false"),                   //indexHerbariorumRecord: boolean
+        new UriProcessor(),                                                 //logoUrl: URI
+        null,                                                               //citesPermitNumber: String
+        null,                                                               //createdBy: String
+        null,                                                               //modifiedBy: String
+        new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601),                 //created: Date
+        new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601),                 //modified: Date
+        new Optional(new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601)),   //deleted: Date
+        new ListTagsProcessor(),                                            //tags: List<Tag>
+        new ListIdentifierProcessor(),                                      //identifiers: List<Identifier>
+        new ListContactProcessor(),                                         //contacts: List<Person>
+        new ListMachineTagProcessor(),                                      //machineTags: List<MachineTag>
+        new ListAlternativeCodeProcessor(),                                 //alternativeCodes: List<AlternativeCoe>
+        new ListCommentProcessor(),                                         //comments: List<Comment>
+        new ListOccurrenceMappingsProcessor(),                              //occurrenceMappings: List<OccurrenceMapping>
+        new UUIDProcessor(),                                                //replacedBy: UUID
+        new UUIDProcessor()                                                 //convertedToCollection: UUID
+      })
+      .preference(preference)
+      .pager(pager)
+      .build();
   }
 
   /**
@@ -640,6 +780,23 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<OccurrenceMapping>)value) : "";
+    }
+  }
+
+  /**
+   * Null aware List<Discipline> processor.
+   */
+  public static class ListDisciplinesProcessor implements CellProcessor {
+
+    public static String toString(List<Discipline> value) {
+      return value.stream()
+        .map(Discipline::name)
+        .collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? toString((List<Discipline>)value) : "";
     }
   }
 
