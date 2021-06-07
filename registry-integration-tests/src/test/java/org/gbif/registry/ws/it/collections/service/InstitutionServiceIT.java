@@ -36,6 +36,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Collections;
 import java.util.UUID;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
@@ -402,5 +403,23 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
   @Test
   public void possibleDuplicatesTest() {
     testDuplicatesCommonCases();
+  }
+
+  @Test
+  public void invalidEmailsTest() {
+    Institution institution = new Institution();
+    institution.setCode("cc");
+    institution.setName("n1");
+    institution.setEmail(Collections.singletonList("asfs"));
+
+    assertThrows(ConstraintViolationException.class, () -> institutionService.create(institution));
+
+    institution.setEmail(Collections.singletonList("aa@aa.com"));
+    UUID key = institutionService.create(institution);
+    Institution institutionCreated = institutionService.get(key);
+
+    institutionCreated.getEmail().add("asfs");
+    assertThrows(
+        ConstraintViolationException.class, () -> institutionService.update(institutionCreated));
   }
 }
