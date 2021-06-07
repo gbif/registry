@@ -20,17 +20,27 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
+import org.gbif.registry.ws.export.CsvWriter;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,6 +58,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
     extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
+
+  //Prefix for the export file format
+  private final static String EXPORT_FILE_PRE = "institutions.";
+
+  //Page size to iterate over download stats export service
+  private static final int EXPORT_LIMIT = 5_000;
 
   private final InstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
@@ -76,6 +92,18 @@ public class InstitutionResource
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
+  }
+
+  @GetMapping("export")
+  public void export(HttpServletResponse response,
+                      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+                      InstitutionSearchRequest searchRequest) throws IOException {
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
+
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.institutions(Iterables.institutions(searchRequest, institutionService, EXPORT_LIMIT), format)
+        .export(writer);
+    }
   }
 
   @GetMapping("deleted")
