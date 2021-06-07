@@ -60,10 +60,10 @@ public class CollectionResource
   public final CollectionService collectionService;
 
   //Prefix for the export file format
-  private final static String EXPORT_FILE_PRE = "collections.";
+  private final static String EXPORT_FILE_PRE = "attachment; filename=collections.";
 
   //Page size to iterate over download stats export service
-  private static final int EXPORT_LIMIT = 5_000;
+  private static final int EXPORT_LIMIT = 1_000;
 
   public CollectionResource(
       CollectionMergeService collectionMergeService,

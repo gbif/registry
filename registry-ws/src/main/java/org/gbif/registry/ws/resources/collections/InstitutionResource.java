@@ -60,10 +60,10 @@ public class InstitutionResource
     extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
   //Prefix for the export file format
-  private final static String EXPORT_FILE_PRE = "institutions.";
+  private final static String EXPORT_FILE_PRE = "attachment; filename=institutions.";
 
   //Page size to iterate over download stats export service
-  private static final int EXPORT_LIMIT = 5_000;
+  private static final int EXPORT_LIMIT = 1_000;
 
   private final InstitutionService institutionService;
   private final InstitutionMergeService institutionMergeService;
