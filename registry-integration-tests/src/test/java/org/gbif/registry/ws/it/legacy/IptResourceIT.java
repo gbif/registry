@@ -118,13 +118,19 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * The test begins by persisting a new Organization. </br> Then, it sends a register IPT (POST)
+   * The test begins by persisting a new Organization.
+   * <p>
+   * Then, it sends a register IPT (POST)
    * request to create a new Installation associated to this organization. The request is sent in
    * exactly the same way as the IPT would send it, using the URL path (/ipt/register), URL encoded
    * form parameters, and basic authentication. The web service authorizes the request, and then
-   * persists the Installation, associated to the Organization. </br> Upon receiving an HTTP
+   * persists the Installation, associated to the Organization.
+   * <p>
+   * Upon receiving an HTTP
    * Response, the test parses its XML content in order to extract the registered IPT UUID for
-   * example. </br> Last, the test validates that the installation was persisted correctly.
+   * example.
+   * <p>
+   * Last, the test validates that the installation was persisted correctly.
    */
   @Test
   public void testRegisterIpt() throws Exception {
@@ -162,14 +168,20 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * The test begins by persisting a new Organization, and Installation associated to the
-   * Organization. </br> Then, it sends an update IPT (POST) request to update the same
-   * Installation. The request is sent in exactly the same way as the IPT would send it, using the
-   * URL path (/ipt/update/{key}), URL encoded form parameters, and basic authentication. The web
-   * service authorizes the request, and then persists the Installation, updating its information.
-   * </br> Upon receiving an HTTP Response, the test parses its XML content in order to extract the
-   * registered IPT UUID for example. </br> Next, the test validates that the Installation's
-   * information was updated correctly. The same request is then resent once more, and the test
+   * The test begins by persisting a new Organization, and Installation associated
+   * to the Organization.
+   * <p>
+   * Then, it sends an update IPT (POST) request to update the same Installation.
+   * The request is sent in exactly the same way as the IPT would send it, using
+   * the URL path (/ipt/update/{key}), URL encoded form parameters, and basic
+   * authentication. The web service authorizes the request, and then persists
+   * the Installation, updating its information.
+   * <p>
+   * Upon receiving an HTTP Response, the test parses its XML content in order
+   * to extract the registered IPT UUID for example.
+   * <p>
+   * Next, the test validates that the Installation's information was updated
+   * correctly. The same request is then resent once more, and the test
    * validates that no duplicate installation, contact, or endpoint was created.
    */
   @Test
@@ -360,13 +372,19 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * The test begins by persisting a new Organization and IPT Installation. </br> Then, it sends a
-   * register Dataset (POST) request to create a new Dataset owned by this organization and
-   * associated to this IPT installation. The request is sent in exactly the same way as the IPT
-   * would send it, using the URL path (/ipt/resource), URL encoded form parameters, and basic
-   * authentication. The web service authorizes the request, and then persists the Installation,
-   * associated to the Organization/Installation. </br> Upon receiving an HTTP Response, the test
-   * parses its XML content in order to extract the registered Dataset UUID for example. </br> Last,
+   * The test begins by persisting a new Organization and IPT Installation.
+   * <p>
+   * Then, it sends a register Dataset (POST) request to create a new Dataset
+   * owned by this organization and associated to this IPT installation. The
+   * request is sent in exactly the same way as the IPT would send it, using the
+   * URL path (/ipt/resource), URL encoded form parameters, and basic
+   * authentication. The web service authorizes the request, and then persists
+   * the Installation, associated to the Organization/Installation.
+   * <p>
+   * Upon receiving an HTTP Response, the test parses its XML content in order
+   * to extract the registered Dataset UUID for example.
+   * <p>
+   * Last,
    * the test validates that the dataset was persisted correctly.
    */
   @Test
@@ -407,6 +425,10 @@ public class IptResourceIT extends BaseItTest {
             organizationKey,
             installationKey,
             DatasetType.OCCURRENCE);
+
+    // information that is only persisted on creation, not on updates
+    assertEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
 
     // some additional information to check
     assertNotNull(dataset.getCreatedBy());
@@ -463,6 +485,10 @@ public class IptResourceIT extends BaseItTest {
             organizationKey,
             installationKey,
             DatasetType.SAMPLING_EVENT);
+
+    // information that is only persisted on creation, not on updates
+    assertEquals(TestConstants.DATASET_NAME, dataset.getTitle());
+    assertEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
 
     // some additional information to check
     assertNotNull(dataset.getCreatedBy());
@@ -539,15 +565,21 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * The test begins by persisting a new Organization, Installation associated to the Organization,
-   * and Dataset associated to the Organization. </br> Then, it sends an update Dataset (POST)
-   * request to update the same Dataset. The request is sent in exactly the same way as the IPT
-   * would send it, using the URL path (/ipt/resource/{key}), URL encoded form parameters, and basic
-   * authentication. The web service authorizes the request, and then persists the Dataset, updating
-   * its information. </br> Upon receiving an HTTP Response, the test parses its XML content in
-   * order to extract the registered Dataset UUID for example. </br> Next, the test validates that
-   * the Dataset's information was updated correctly. The same request is then resent once more, and
-   * the test validates that no duplicate Dataset, contact, or endpoint was created.
+   * The test begins by persisting a new Organization, Installation associated
+   * to the Organization, and Dataset associated to the Organization.
+   * <p>
+   * Then, it sends an update Dataset (POST) request to update the same Dataset.
+   * The request is sent in exactly the same way as the IPT would send it, using
+   * the URL path (/ipt/resource/{key}), URL encoded form parameters, and basic
+   * authentication. The web service authorizes the request, and then persists
+   * the Dataset, updating its information.
+   * <p>
+   * Upon receiving an HTTP Response, the test parses its XML content in order
+   * to extract the registered Dataset UUID for example.
+   * <p>
+   * Next, the test validates that the Dataset's information was updated
+   * correctly. The same request is then resent once more, and the test
+   * validates that no duplicate Dataset, contact, or endpoint was created.
    */
   @Test
   public void testUpdateIptDataset() throws Exception {
@@ -600,6 +632,8 @@ public class IptResourceIT extends BaseItTest {
     assertEquals(Datasets.DATASET_CITATION.getIdentifier(), dataset.getCitation().getIdentifier());
     assertEquals(Datasets.DATASET_ABBREVIATION, dataset.getAbbreviation());
     assertEquals(Datasets.DATASET_ALIAS, dataset.getAlias());
+    assertEquals(Datasets.DATASET_TITLE, dataset.getTitle());
+    assertEquals(Datasets.DATASET_DESCRIPTION, dataset.getDescription());
 
     // before sending the same POST request..
     // count the number of datasets, contacts and endpoints
@@ -708,11 +742,15 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * The test begins by persisting a new Organization, Installation associated to the Organization,
-   * and Dataset associated to the Organization. </br> Then, it sends an update Dataset (POST)
-   * request to update the same Dataset. This populates the primary contact and endpoints. </br>
-   * Then, it sends a delete Dataset (POST) request to delete the Dataset. </br> Next, the test
-   * validates that the Dataset was deleted correctly.
+   * The test begins by persisting a new Organization, Installation associated
+   * to the Organization, and Dataset associated to the Organization.
+   * <p>
+   * Then, it sends an update Dataset (POST) request to update the same Dataset.
+   * This populates the primary contact and endpoints.
+   * <p>
+   * Then, it sends a delete Dataset (POST) request to delete the Dataset.
+   * <p>
+   * Next, the test validates that the Dataset was deleted correctly.
    */
   @Test
   public void testDeleteIptDataset() throws Exception {
@@ -750,7 +788,7 @@ public class IptResourceIT extends BaseItTest {
    * Retrieve installation presumed already to exist, and make a series of assertions to ensure it
    * is valid.
    *
-   * @param installation installation
+   * @param installation    installation
    * @param organizationKey hosting organization key
    */
   private void validateExistingIptInstallation(Installation installation, UUID organizationKey) {
@@ -771,7 +809,7 @@ public class IptResourceIT extends BaseItTest {
    * Retrieve dataset presumed already to exist, and make a series of assertions to ensure it is
    * valid.
    *
-   * @param dataset dataset
+   * @param dataset         dataset
    * @param organizationKey publishing organization key
    * @param installationKey installation key
    */
@@ -856,7 +894,7 @@ public class IptResourceIT extends BaseItTest {
    * Retrieve persisted IPT dataset, and make a series of assertions to ensure it has been properly
    * persisted.
    *
-   * @param datasetKey installation key (UUID)
+   * @param datasetKey      installation key (UUID)
    * @param organizationKey installation publishing organization key
    * @return validated installation
    */
@@ -869,8 +907,6 @@ public class IptResourceIT extends BaseItTest {
     assertEquals(organizationKey, dataset.getPublishingOrganizationKey());
     assertEquals(installationKey, dataset.getInstallationKey());
     assertEquals(datasetType, dataset.getType());
-    assertEquals(TestConstants.DATASET_NAME, dataset.getTitle());
-    assertEquals(TestConstants.DATASET_DESCRIPTION, dataset.getDescription());
     assertNotNull(dataset.getCreated());
     assertNotNull(dataset.getModified());
 
@@ -918,9 +954,11 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * Populate a list of name value pairs used in the common ws requests for IPT registrations and
-   * updates. </br> Basically a copy of the method in the IPT, to ensure the parameter names are
-   * identical.
+   * Populate a list of name value pairs used in the common ws requests for IPT
+   * registrations and updates.
+   * <p>
+   * Basically a copy of the method in the IPT, to ensure the parameter names
+   * are identical.
    *
    * @param organizationKey organization key (UUID)
    * @return list of name value pairs, or an empty list if the IPT or organisation key were null
@@ -950,9 +988,11 @@ public class IptResourceIT extends BaseItTest {
   }
 
   /**
-   * Populate a list of name value pairs used in the common ws requests for IPT dataset
-   * registrations and updates. </br> Basically a copy of the method in the IPT, to ensure the
-   * parameter names are identical.
+   * Populate a list of name value pairs used in the common ws requests for IPT
+   * dataset registrations and updates.
+   * <p>
+   * Basically a copy of the method in the IPT, to ensure the parameter names
+   * are identical.
    *
    * @param installationKey installation key
    * @return list of name value pairs, or an empty list if the dataset or organisation key were null

@@ -46,6 +46,8 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final License DATASET_LICENSE = License.CC_BY_NC_4_0;
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
   public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC", true);
+  public static final String DATASET_TITLE = "Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"";
+  public static final String DATASET_DESCRIPTION = "The Berlin Botanical...";
 
   @Autowired
   public Datasets(
