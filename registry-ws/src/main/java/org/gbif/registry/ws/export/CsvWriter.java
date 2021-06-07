@@ -212,6 +212,7 @@ public class CsvWriter<T> {
         "collection.code",
         "collection.name",
         "collection.description",
+        "collection.address",
         "collection.contentTypes",
         "collection.active",
         "collection.personalCollection",
@@ -255,6 +256,7 @@ public class CsvWriter<T> {
         "code",
         "name",
         "description",
+        "country",
         "content_types",
         "active",
         "personal_collection",
@@ -298,6 +300,7 @@ public class CsvWriter<T> {
         null,                                                               //code: String
         new CleanStringProcessor(),                                         //name: String
         new CleanStringProcessor(),                                         //description: String
+        new CountryAddressProcessor(),                                      //address: extract the country
         new ListCollectionContentTypeProcessor(),                           //contentTypes: List
         new Optional(new FmtBool("true", "false")),     //active: boolean
         new Optional(new FmtBool("true", "false")),     //personalCollection: boolean
@@ -353,6 +356,7 @@ public class CsvWriter<T> {
         "code",
         "name",
         "description",
+        "address",
         "type",
         "active",
         "email",
@@ -394,6 +398,7 @@ public class CsvWriter<T> {
         "code",
         "name",
         "description",
+        "country",
         "type",
         "active",
         "email",
@@ -435,6 +440,7 @@ public class CsvWriter<T> {
         null,                                                               //code: String
         new CleanStringProcessor(),                                         //name: String
         new CleanStringProcessor(),                                         //description: String
+        new CountryAddressProcessor(),                                      //address: extract the country
         new Optional( new ParseEnum(InstitutionType.class)),                //type:InstitutionType
         new Optional(new FmtBool("true", "false")),     //active: boolean
         new ListStringProcessor(),                                          //email: List<String>
@@ -626,6 +632,42 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString(((Address)value)) : "";
+    }
+  }
+
+
+  /**
+   * Extracts the Country value of an Address and checks any other address in the  context for its country value.
+   */
+  public static class CountryAddressProcessor implements CellProcessor {
+
+    public static String getCountry(Address address) {
+      return address.getCountry() != null ? address.getCountry().getIso2LetterCode() : null;
+    }
+
+    public static String nextAddressObject(CsvContext csvContext) {
+      for(int i = csvContext.getColumnNumber(); i < csvContext.getRowSource().size(); i++) {
+        Object next = csvContext.getRowSource().get(i);
+        if (next != null && csvContext.getRowSource().get(i) instanceof Address) {
+          return getCountry(((Address)next));
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      if (value != null) {
+        String countryCode = getCountry((Address)value);
+        if(countryCode != null) {
+          return countryCode;
+        } else {
+          String nextCountryCode = nextAddressObject(csvContext);
+          return nextCountryCode !=  null? nextCountryCode : "";
+        }
+      } else {
+        return java.util.Optional.ofNullable(nextAddressObject(csvContext)).orElse("");
+      }
     }
   }
 
