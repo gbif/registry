@@ -90,7 +90,7 @@ public class CollectionResource
     return collectionService.list(searchRequest);
   }
 
-  private String getFileNameFromSearch(CollectionSearchRequest searchRequest) {
+  private String getExportFileHeader(CollectionSearchRequest searchRequest, ExportFormat format) {
     String preFileName = CsvWriter.notNullJoiner("-",
                                                  searchRequest.getCountry() != null? searchRequest.getCountry().getIso2LetterCode() : null,
                                                  searchRequest.getCity(),
@@ -110,14 +110,16 @@ public class CollectionResource
     if(preFileName.length() > 0) {
       preFileName += "-";
     }
-    return preFileName;
+    return String.format(EXPORT_FILE_PRE,
+                         preFileName,
+                         format.name().toLowerCase());
   }
 
   @GetMapping("export")
   public void export(HttpServletResponse response,
                      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
                      CollectionSearchRequest searchRequest) throws IOException {
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getFileNameFromSearch(searchRequest) + EXPORT_FILE_PRE + format.name().toLowerCase());
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest,format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
       CsvWriter.collections(Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
