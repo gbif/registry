@@ -526,14 +526,18 @@ public class CsvWriter<T> {
    */
   public static class CleanStringProcessor implements CellProcessor {
 
-    public static final String DELIMETERS_MATCH =
+    private static final String DELIMETERS_MATCH =
       "\\t|\\n|\\r|(?:(?>\\u000D\\u000A)|[\\u000A\\u000B\\u000C\\u000D\\u0085\\u2028\\u2029\\u0000])";
 
-    public static final Pattern DELIMETERS_MATCH_PATTERN = Pattern.compile(DELIMETERS_MATCH);
+    private static final Pattern DELIMETERS_MATCH_PATTERN = Pattern.compile(DELIMETERS_MATCH);
+
+    public static String cleanString(String value) {
+      return DELIMETERS_MATCH_PATTERN.matcher(value).replaceAll(" ");
+    }
 
     @Override
     public String execute(Object value, CsvContext context) {
-      return value != null ? DELIMETERS_MATCH_PATTERN.matcher((String) value).replaceAll(" ") : "";
+      return value != null ? CleanStringProcessor.cleanString((String)value) : "";
     }
 
   }
@@ -575,7 +579,9 @@ public class CsvWriter<T> {
   public static class ListStringProcessor implements CellProcessor {
 
     public static String toString(List<String> value) {
-      return String.join(ARRAY_DELIMITER, value);
+      return  value.stream()
+                .map(CleanStringProcessor::cleanString)
+                .collect(Collectors.joining(ARRAY_DELIMITER));
     }
 
     @Override
@@ -601,19 +607,20 @@ public class CsvWriter<T> {
     return  Arrays.stream(elements)
               .filter(s -> s != null && !s.isEmpty())
               .collect(Collectors.joining(delimiter));
-          }
+  }
+
   /**
    * Null aware Uri processor.
    */
   public static class AddressProcessor implements CellProcessor {
 
     public static String toString(Address address) {
-      return nestedElementJoiner("|",
-                                 address.getAddress(),
-                                 address.getCity(),
-                                 address.getProvince(),
-                                 address.getPostalCode(),
-                                 address.getCountry() != null? address.getCountry().getTitle() : "");
+      return CleanStringProcessor.cleanString(nestedElementJoiner(" ",
+                                                                   address.getAddress(),
+                                                                   address.getCity(),
+                                                                   address.getProvince(),
+                                                                   address.getPostalCode(),
+                                                                   address.getCountry() != null? address.getCountry().getTitle() : ""));
     }
 
     @Override
@@ -629,7 +636,9 @@ public class CsvWriter<T> {
   public static class ListTagsProcessor implements CellProcessor {
 
     public static String toString(List<Tag> value) {
-      return value.stream().map(Tag::getValue).collect(Collectors.joining(ARRAY_DELIMITER));
+      return value.stream()
+              .map(t -> CleanStringProcessor.cleanString(t.getValue()))
+              .collect(Collectors.joining(ARRAY_DELIMITER));
     }
 
     @Override
@@ -665,7 +674,7 @@ public class CsvWriter<T> {
     }
 
     public static String toString(MachineTag machineTag) {
-      return nestedElementJoiner("|",
+      return nestedElementJoiner(":",
                                  machineTag.getNamespace(),
                                  machineTag.getName(),
                                  machineTag.getValue());
@@ -689,12 +698,13 @@ public class CsvWriter<T> {
     }
 
     public static String toString(Person contact) {
-      return nestedElementJoiner("|",
-                                 contact.getLastName(),
-                                 contact.getLastName(),
-                                 contact.getEmail(),
-                                 contact.getPosition(),
-                                 contact.getAreaResponsibility());
+      return CleanStringProcessor.cleanString(nestedElementJoiner(" ",
+                                                                   contact.getFirstName(),
+                                                                   contact.getLastName(),
+                                                                   contact.getPhone(),
+                                                                   contact.getEmail(),
+                                                                   contact.getPosition(),
+                                                                   contact.getAreaResponsibility()));
     }
 
     @Override
@@ -727,7 +737,7 @@ public class CsvWriter<T> {
 
     public static String toString(List<Comment> value) {
       return value.stream()
-        .map(c -> CleanStringProcessor.DELIMETERS_MATCH_PATTERN.matcher(c.getContent()).replaceAll(" "))
+        .map(c -> CleanStringProcessor.cleanString(c.getContent()))
         .collect(Collectors.joining(ARRAY_DELIMITER));
     }
 
@@ -766,7 +776,7 @@ public class CsvWriter<T> {
     }
 
     public static String toString(OccurrenceMapping occurrenceMapping) {
-      return nestedElementJoiner("|",
+      return nestedElementJoiner(":",
                                  occurrenceMapping.getCode(),
                                  occurrenceMapping.getIdentifier(),
                                  occurrenceMapping.getDatasetKey().toString());
