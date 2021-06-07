@@ -60,7 +60,7 @@ public class InstitutionResource
     extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
   //Prefix for the export file format
-  private final static String EXPORT_FILE_PRE = "attachment; filename=institutions.";
+  private final static String EXPORT_FILE_PRE = "attachment; filename=%sinstitutions.%s";
 
   //Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
@@ -94,7 +94,7 @@ public class InstitutionResource
     return institutionService.list(searchRequest);
   }
 
-  private String getFileNameFromSearch(InstitutionSearchRequest searchRequest) {
+  private String getExportFileHeader(InstitutionSearchRequest searchRequest, ExportFormat format) {
     String preFileName = CsvWriter.notNullJoiner("-",
                                                 searchRequest.getCountry() != null? searchRequest.getCountry().getIso2LetterCode() : null,
                                                 searchRequest.getCity(),
@@ -113,14 +113,17 @@ public class InstitutionResource
     if(preFileName.length() > 0) {
       preFileName += "-";
     }
-    return preFileName;
+
+    return String.format(EXPORT_FILE_PRE,
+                         preFileName,
+                         format.name().toLowerCase());
   }
 
   @GetMapping("export")
   public void export(HttpServletResponse response,
                       @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
                       InstitutionSearchRequest searchRequest) throws IOException {
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getFileNameFromSearch(searchRequest) + EXPORT_FILE_PRE + format.name().toLowerCase());
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
       CsvWriter.institutions(Iterables.institutions(searchRequest, institutionService, EXPORT_LIMIT), format)
