@@ -21,14 +21,15 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.domain.collections.AuditLog;
+import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -62,8 +63,12 @@ public class AuditLogResource {
       @RequestParam(name = "operation", required = false) String operation,
       @RequestParam(name = "collectionEntityKey", required = false) UUID collectionEntityKey,
       @RequestParam(name = "createdBy", required = false) String createdBy,
-      @RequestParam(name = "dateFrom", required = false) Date dateFrom,
-      @RequestParam(name = "dateTo", required = false) Date dateTo,
+      @RequestParam(name = "dateFrom", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          Date dateFrom,
+      @RequestParam(name = "dateTo", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          Date dateTo,
       Pageable page) {
     page = page != null ? page : new PagingRequest();
 
