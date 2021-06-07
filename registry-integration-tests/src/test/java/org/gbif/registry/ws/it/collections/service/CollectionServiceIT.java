@@ -35,9 +35,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.identity.service.IdentityService;
-import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -48,6 +46,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
@@ -562,5 +561,22 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     params.setNotInInstitutions(new ArrayList<>(keysFound));
     result = duplicatesService.findPossibleDuplicates(params);
     assertEquals(0, result.getDuplicates().size());
+  }
+
+  @Test
+  public void invalidEmailsTest() {
+    Collection collection = new Collection();
+    collection.setCode("cc");
+    collection.setName("n1");
+    collection.setEmail(Collections.singletonList("asfs"));
+
+    assertThrows(ConstraintViolationException.class, () -> collectionService.create(collection));
+
+    collection.setEmail(Collections.singletonList("aa@aa.com"));
+    UUID key = collectionService.create(collection);
+    Collection collectionCreated = collectionService.get(key);
+
+    collectionCreated.getEmail().add("asfs");
+    assertThrows(ConstraintViolationException.class, () -> collectionService.update(collectionCreated));
   }
 }

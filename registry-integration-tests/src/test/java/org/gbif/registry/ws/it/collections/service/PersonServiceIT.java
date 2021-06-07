@@ -33,7 +33,10 @@ import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Collections;
 import java.util.UUID;
+
+import javax.validation.ConstraintViolationException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +47,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
@@ -491,5 +495,21 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
 
     personService.delete(key2);
     assertEquals(2, personService.listDeleted(DEFAULT_PAGE).getResults().size());
+  }
+
+  @Test
+  public void invalidEmailsTest() {
+    Person person = new Person();
+    person.setFirstName("asfsafas");
+    person.setEmail("asfs");
+
+    assertThrows(ConstraintViolationException.class, () -> personService.create(person));
+
+    person.setEmail("aa@aa.com");
+    UUID key = personService.create(person);
+    Person personCreated = personService.get(key);
+
+    personCreated.setEmail("asfs");
+    assertThrows(ConstraintViolationException.class, () -> personService.update(personCreated));
   }
 }
