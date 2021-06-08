@@ -40,6 +40,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -60,7 +61,7 @@ public class CollectionResource
   public final CollectionService collectionService;
 
   //Prefix for the export file format
-  private final static String EXPORT_FILE_PRE = "attachment; filename=collections.";
+  private final static String EXPORT_FILE_NAME = "%scollections.%s";
 
   //Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
@@ -110,16 +111,19 @@ public class CollectionResource
     if(preFileName.length() > 0) {
       preFileName += "-";
     }
-    return String.format(EXPORT_FILE_PRE,
-                         preFileName,
-                         format.name().toLowerCase());
+    return ContentDisposition
+            .builder("attachment")
+            .filename(String.format(EXPORT_FILE_NAME, preFileName, format.name().toLowerCase()))
+            .build()
+            .toString();
   }
 
   @GetMapping("export")
   public void export(HttpServletResponse response,
                      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
                      CollectionSearchRequest searchRequest) throws IOException {
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest,format));
+
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
       CsvWriter.collections(Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
