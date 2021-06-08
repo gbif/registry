@@ -59,10 +59,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class InstitutionResource
     extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
-  //Prefix for the export file format
-  private final static String EXPORT_FILE_PRE = "attachment; filename=institutions.";
+  // Prefix for the export file format
+  private static final String EXPORT_FILE_PRE = "attachment; filename=institutions.";
 
-  //Page size to iterate over download stats export service
+  // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
 
   private final InstitutionService institutionService;
@@ -95,20 +95,25 @@ public class InstitutionResource
   }
 
   @GetMapping("export")
-  public void export(HttpServletResponse response,
-                      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-                      InstitutionSearchRequest searchRequest) throws IOException {
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
+  public void export(
+      HttpServletResponse response,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+      InstitutionSearchRequest searchRequest)
+      throws IOException {
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.institutions(Iterables.institutions(searchRequest, institutionService, EXPORT_LIMIT), format)
-        .export(writer);
+      CsvWriter.institutions(
+              Iterables.institutions(searchRequest, institutionService, EXPORT_LIMIT), format)
+          .export(writer);
     }
   }
 
   @GetMapping("deleted")
-  public PagingResponse<Institution> listDeleted(Pageable page) {
-    return institutionService.listDeleted(page);
+  public PagingResponse<Institution> listDeleted(
+      @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
+    return institutionService.listDeleted(replacedBy, page);
   }
 
   @GetMapping("suggest")

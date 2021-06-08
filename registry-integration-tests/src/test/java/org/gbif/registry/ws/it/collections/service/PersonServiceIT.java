@@ -33,7 +33,6 @@ import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.Collections;
 import java.util.UUID;
 
 import javax.validation.ConstraintViolationException;

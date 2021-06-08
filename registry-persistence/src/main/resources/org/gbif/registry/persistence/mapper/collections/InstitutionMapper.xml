@@ -297,6 +297,9 @@
     SELECT <include refid="INSTITUTION_READ_FIELDS"/>
     FROM institution i
     WHERE i.deleted IS NOT NULL
+    <if test="replacedBy != null" >
+      AND i.replaced_by = #{replacedBy,jdbcType=OTHER}
+    </if>
     ORDER BY i.created DESC, i.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -307,6 +310,9 @@
     SELECT count(*)
     FROM institution
     WHERE deleted IS NOT NULL
+    <if test="replacedBy != null" >
+      AND replaced_by = #{replacedBy,jdbcType=OTHER}
+    </if>
   </select>
 
   <!-- LOOKUP -->

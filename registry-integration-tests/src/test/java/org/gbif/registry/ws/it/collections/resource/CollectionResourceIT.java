@@ -14,7 +14,6 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
@@ -107,10 +106,11 @@ public class CollectionResourceIT
     List<CollectionView> views =
         Arrays.asList(c1, c2).stream().map(CollectionView::new).collect(Collectors.toList());
 
-    when(collectionService.listDeleted(any(Pageable.class)))
+    when(collectionService.listDeleted(any(UUID.class), any(Pageable.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    PagingResponse<CollectionView> result = getClient().listDeleted(new PagingRequest());
+    PagingResponse<CollectionView> result =
+        getClient().listDeleted(UUID.randomUUID(), new PagingRequest());
     assertEquals(views.size(), result.getResults().size());
   }
 

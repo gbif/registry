@@ -44,10 +44,11 @@ public interface CollectionMapper
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
 
   /** @return the collections marked as deleted */
-  List<CollectionDto> deleted(@Param("page") Pageable page);
+  List<CollectionDto> deleted(
+      @Nullable @Param("replacedBy") UUID replacedBy, @Param("page") Pageable page);
 
   /** @return the count of the collections marked as deleted. */
-  long countDeleted();
+  long countDeleted(@Nullable @Param("replacedBy") UUID replacedBy);
 
   /**
    * Finds a collection by any of its identifiers.

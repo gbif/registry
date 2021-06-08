@@ -44,10 +44,11 @@ public interface InstitutionMapper
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
 
   /** @return the institutions marked as deleted */
-  List<Institution> deleted(@Param("page") Pageable page);
+  List<Institution> deleted(
+      @Nullable @Param("replacedBy") UUID replacedBy, @Param("page") Pageable page);
 
   /** @return the count of the institutions marked as deleted. */
-  long countDeleted();
+  long countDeleted(@Nullable @Param("replacedBy") UUID replacedBy);
 
   /**
    * Finds an institution by any of its identifiers.
