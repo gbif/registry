@@ -40,6 +40,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,8 +60,8 @@ public class CollectionResource
 
   public final CollectionService collectionService;
 
-  // Prefix for the export file format
-  private static final String EXPORT_FILE_PRE = "attachment; filename=collections.";
+  //Prefix for the export file format
+  private static final String EXPORT_FILE_NAME = "%scollections.%s";
 
   // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
@@ -90,19 +91,43 @@ public class CollectionResource
     return collectionService.list(searchRequest);
   }
 
+  private String getExportFileHeader(CollectionSearchRequest searchRequest, ExportFormat format) {
+    String preFileName = CsvWriter.notNullJoiner("-",
+                                                 searchRequest.getCountry() != null? searchRequest.getCountry().getIso2LetterCode() : null,
+                                                 searchRequest.getCity(),
+                                                 searchRequest.getInstitution() != null? searchRequest.getInstitution().toString() : null,
+                                                 searchRequest.getAlternativeCode(),
+                                                 searchRequest.getCode(),
+                                                 searchRequest.getName(),
+                                                 searchRequest.getContact() != null? searchRequest.getContact().toString() : null,
+                                                 searchRequest.getIdentifierType() != null? searchRequest.getIdentifierType().name() : null,
+                                                 searchRequest.getIdentifier(),
+                                                 searchRequest.getMachineTagNamespace(),
+                                                 searchRequest.getMachineTagName(),
+                                                 searchRequest.getMachineTagValue(),
+                                                 searchRequest.getFuzzyName(),
+                                                 searchRequest.getQ()
+    );
+    if(preFileName.length() > 0) {
+      preFileName += "-";
+    }
+    return ContentDisposition
+            .builder("attachment")
+            .filename(String.format(EXPORT_FILE_NAME, preFileName, format.name().toLowerCase()))
+            .build()
+            .toString();
+  }
+
   @GetMapping("export")
-  public void export(
-      HttpServletResponse response,
-      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-      CollectionSearchRequest searchRequest)
-      throws IOException {
-    response.setHeader(
-        HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
+  public void export(HttpServletResponse response,
+                     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+                     CollectionSearchRequest searchRequest) throws IOException {
+
+    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.collections(
-              Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
-          .export(writer);
+      CsvWriter.collections(Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
+        .export(writer);
     }
   }
 
