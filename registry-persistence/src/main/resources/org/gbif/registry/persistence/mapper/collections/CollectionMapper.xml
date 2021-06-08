@@ -302,11 +302,14 @@
     </if>
   </select>
 
-  <select id="deleted" resultType="CollectionDto"  resultMap="COLLECTION_DTO_MAP" parameterType="Pageable">
+  <select id="deleted" resultType="CollectionDto"  resultMap="COLLECTION_DTO_MAP">
     SELECT <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
     FROM collection c
     LEFT JOIN institution inst ON inst.key = c.institution_key
     WHERE c.deleted IS NOT NULL
+    <if test="replacedBy != null" >
+      AND c.replaced_by = #{replacedBy,jdbcType=OTHER}
+    </if>
     ORDER BY c.created DESC, c.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -317,6 +320,9 @@
     SELECT count(*)
     FROM collection
     WHERE deleted IS NOT NULL
+    <if test="replacedBy != null" >
+      AND replaced_by = #{replacedBy,jdbcType=OTHER}
+    </if>
   </select>
 
   <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.collections.PersonMapper.COLLECTION_PERSON_MAP">

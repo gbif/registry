@@ -106,12 +106,13 @@ public class InstitutionResourceIT
 
     List<Institution> institutions = Arrays.asList(i1, i2);
 
-    when(institutionService.listDeleted(any(Pageable.class)))
+    when(institutionService.listDeleted(any(UUID.class), any(Pageable.class)))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    PagingResponse<Institution> result = getClient().listDeleted(new PagingRequest());
+    PagingResponse<Institution> result =
+        getClient().listDeleted(UUID.randomUUID(), new PagingRequest());
     assertEquals(institutions.size(), result.getResults().size());
   }
 

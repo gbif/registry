@@ -273,13 +273,27 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     institution2.setName("Institution name2");
     UUID key2 = institutionService.create(institution2);
 
-    assertEquals(0, institutionService.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(0, institutionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
 
     institutionService.delete(key1);
-    assertEquals(1, institutionService.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(1, institutionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
 
     institutionService.delete(key2);
-    assertEquals(2, institutionService.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(2, institutionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+
+    Institution institution3 = testData.newEntity();
+    institution3.setCode("code3");
+    institution3.setName("Institution name");
+    UUID key3 = institutionService.create(institution3);
+
+    Institution institution4 = testData.newEntity();
+    institution4.setCode("code4");
+    institution4.setName("Institution name4");
+    UUID key4 = institutionService.create(institution4);
+
+    assertEquals(0, institutionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
+    institutionService.replace(key3, key4);
+    assertEquals(1, institutionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
   }
 
   @Test

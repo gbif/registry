@@ -23,6 +23,8 @@ import org.gbif.registry.service.WithMyBatis;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -94,10 +96,12 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
   }
 
   @Override
-  public PagingResponse<Institution> listDeleted(Pageable page) {
+  public PagingResponse<Institution> listDeleted(@Nullable UUID replacedBy, Pageable page) {
     page = page == null ? new PagingRequest() : page;
     return new PagingResponse<>(
-        page, institutionMapper.countDeleted(), institutionMapper.deleted(page));
+        page,
+        institutionMapper.countDeleted(replacedBy),
+        institutionMapper.deleted(replacedBy, page));
   }
 
   @Override

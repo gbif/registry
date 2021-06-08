@@ -25,8 +25,8 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.api.util.iterables.Iterables;
+import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.registry.ws.export.CsvWriter;
@@ -59,10 +59,10 @@ public class CollectionResource
 
   public final CollectionService collectionService;
 
-  //Prefix for the export file format
-  private final static String EXPORT_FILE_PRE = "attachment; filename=collections.";
+  // Prefix for the export file format
+  private static final String EXPORT_FILE_PRE = "attachment; filename=collections.";
 
-  //Page size to iterate over download stats export service
+  // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
 
   public CollectionResource(
@@ -91,20 +91,25 @@ public class CollectionResource
   }
 
   @GetMapping("export")
-  public void export(HttpServletResponse response,
-                     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-                     CollectionSearchRequest searchRequest) throws IOException {
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
+  public void export(
+      HttpServletResponse response,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+      CollectionSearchRequest searchRequest)
+      throws IOException {
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.collections(Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
-        .export(writer);
+      CsvWriter.collections(
+              Iterables.collections(searchRequest, collectionService, EXPORT_LIMIT), format)
+          .export(writer);
     }
   }
 
   @GetMapping("deleted")
-  public PagingResponse<CollectionView> listDeleted(Pageable page) {
-    return collectionService.listDeleted(page);
+  public PagingResponse<CollectionView> listDeleted(
+      @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
+    return collectionService.listDeleted(replacedBy, page);
   }
 
   @GetMapping("suggest")

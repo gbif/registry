@@ -15,11 +15,8 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -39,11 +36,7 @@ import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchP
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
@@ -417,13 +410,27 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collection2.setName("Collection name2");
     UUID key2 = collectionService.create(collection2);
 
-    assertEquals(0, collectionService.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(0, collectionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
 
     collectionService.delete(key1);
-    assertEquals(1, collectionService.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(1, collectionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
 
     collectionService.delete(key2);
-    assertEquals(2, collectionService.listDeleted(DEFAULT_PAGE).getResults().size());
+    assertEquals(2, collectionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+
+    Collection collection3 = testData.newEntity();
+    collection3.setCode("code3");
+    collection3.setName("Collection name3");
+    UUID key3 = collectionService.create(collection3);
+
+    Collection collection4 = testData.newEntity();
+    collection4.setCode("code4");
+    collection4.setName("Collection name4");
+    UUID key4 = collectionService.create(collection4);
+
+    assertEquals(0, collectionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
+    collectionService.replace(key3, key4);
+    assertEquals(1, collectionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
   }
 
   @Test
@@ -577,6 +584,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     Collection collectionCreated = collectionService.get(key);
 
     collectionCreated.getEmail().add("asfs");
-    assertThrows(ConstraintViolationException.class, () -> collectionService.update(collectionCreated));
+    assertThrows(
+        ConstraintViolationException.class, () -> collectionService.update(collectionCreated));
   }
 }

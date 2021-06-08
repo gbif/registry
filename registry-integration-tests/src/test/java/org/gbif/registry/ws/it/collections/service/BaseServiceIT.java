@@ -173,7 +173,6 @@ public class BaseServiceIT {
         Arrays.stream(role)
             .map(r -> new SimpleGrantedAuthority(r.name()))
             .collect(Collectors.toList());
-    ;
 
     ctx.setAuthentication(
         new UsernamePasswordAuthenticationToken(

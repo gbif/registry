@@ -22,6 +22,11 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
+
+@Getter
+@SuperBuilder
 public abstract class SearchParams {
 
   @Nullable UUID contactKey;
@@ -37,121 +42,4 @@ public abstract class SearchParams {
   @Nullable Country country;
   @Nullable String city;
   @Nullable String fuzzyName;
-
-  @Nullable
-  public UUID getContactKey() {
-    return contactKey;
-  }
-
-  public void setContactKey(@Nullable UUID contactKey) {
-    this.contactKey = contactKey;
-  }
-
-  @Nullable
-  public String getQuery() {
-    return query;
-  }
-
-  public void setQuery(@Nullable String query) {
-    this.query = query;
-  }
-
-  @Nullable
-  public String getCode() {
-    return code;
-  }
-
-  public void setCode(@Nullable String code) {
-    this.code = code;
-  }
-
-  @Nullable
-  public String getName() {
-    return name;
-  }
-
-  public void setName(@Nullable String name) {
-    this.name = name;
-  }
-
-  @Nullable
-  public String getAlternativeCode() {
-    return alternativeCode;
-  }
-
-  public void setAlternativeCode(@Nullable String alternativeCode) {
-    this.alternativeCode = alternativeCode;
-  }
-
-  @Nullable
-  public String getMachineTagNamespace() {
-    return machineTagNamespace;
-  }
-
-  public void setMachineTagNamespace(@Nullable String machineTagNamespace) {
-    this.machineTagNamespace = machineTagNamespace;
-  }
-
-  @Nullable
-  public String getMachineTagName() {
-    return machineTagName;
-  }
-
-  public void setMachineTagName(@Nullable String machineTagName) {
-    this.machineTagName = machineTagName;
-  }
-
-  @Nullable
-  public String getMachineTagValue() {
-    return machineTagValue;
-  }
-
-  public void setMachineTagValue(@Nullable String machineTagValue) {
-    this.machineTagValue = machineTagValue;
-  }
-
-  @Nullable
-  public IdentifierType getIdentifierType() {
-    return identifierType;
-  }
-
-  public void setIdentifierType(@Nullable IdentifierType identifierType) {
-    this.identifierType = identifierType;
-  }
-
-  @Nullable
-  public String getIdentifier() {
-    return identifier;
-  }
-
-  public void setIdentifier(@Nullable String identifier) {
-    this.identifier = identifier;
-  }
-
-  @Nullable
-  public Country getCountry() {
-    return country;
-  }
-
-  public void setCountry(@Nullable Country country) {
-    this.country = country;
-  }
-
-  @Nullable
-  public String getCity() {
-    return city;
-  }
-
-  public void setCity(@Nullable String city) {
-    this.city = city;
-  }
-
-  @Nullable
-  public String getFuzzyName() {
-    return fuzzyName;
-  }
-
-  public void setFuzzyName(@Nullable String fuzzyName) {
-    this.fuzzyName = fuzzyName;
-  }
 }

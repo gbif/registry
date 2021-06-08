@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -112,11 +114,11 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
   }
 
   @Override
-  public PagingResponse<CollectionView> listDeleted(Pageable page) {
+  public PagingResponse<CollectionView> listDeleted(@Nullable UUID replacedBy, Pageable page) {
     page = page == null ? new PagingRequest() : page;
 
-    long total = collectionMapper.countDeleted();
-    List<CollectionDto> dtos = collectionMapper.deleted(page);
+    long total = collectionMapper.countDeleted(replacedBy);
+    List<CollectionDto> dtos = collectionMapper.deleted(replacedBy, page);
     List<CollectionView> views =
         dtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
 
