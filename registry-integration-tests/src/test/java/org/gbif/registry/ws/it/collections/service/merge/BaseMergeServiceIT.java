@@ -48,7 +48,6 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
-import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -60,7 +59,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

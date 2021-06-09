@@ -26,11 +26,11 @@ import org.gbif.api.service.registry.NetworkService;
 import org.gbif.registry.domain.ws.NetworkRequestSearchParams;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.List;

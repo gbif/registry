@@ -26,7 +26,6 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -35,8 +34,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

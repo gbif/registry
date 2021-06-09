@@ -58,7 +58,6 @@ import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.metadata.EMLWriter;
 import org.gbif.registry.metadata.parse.DatasetParser;
-import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
@@ -68,6 +67,7 @@ import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.RegistryDatasetService;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.ws.NotFoundException;
 
