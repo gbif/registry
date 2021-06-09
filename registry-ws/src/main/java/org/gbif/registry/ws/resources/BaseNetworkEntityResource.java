@@ -37,7 +37,6 @@ import org.gbif.registry.events.CreateEvent;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
-import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.BaseNetworkEntityMapper;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
@@ -46,6 +45,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.service.WithMyBatis;
 
 import java.util.Collection;
 import java.util.List;

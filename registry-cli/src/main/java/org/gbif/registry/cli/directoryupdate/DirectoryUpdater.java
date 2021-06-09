@@ -24,9 +24,9 @@ import org.gbif.api.service.directory.NodeService;
 import org.gbif.api.service.directory.ParticipantService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.cli.common.DirectoryRegistryMapping;
-import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
+import org.gbif.registry.service.WithMyBatis;
 
 import java.util.HashMap;
 import java.util.HashSet;

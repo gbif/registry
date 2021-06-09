@@ -30,8 +30,6 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
-import org.gbif.registry.security.SecurityContextCheck;
-import org.gbif.registry.security.UserRoles;
 
 import java.util.UUID;
 

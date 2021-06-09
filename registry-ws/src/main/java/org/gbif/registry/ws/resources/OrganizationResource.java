@@ -31,13 +31,13 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.ws.OrganizationRequestSearchParams;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.security.SecurityContextCheck;
+import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
 import java.util.List;

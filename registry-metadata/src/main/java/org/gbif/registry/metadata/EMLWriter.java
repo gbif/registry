@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriod;
 import org.gbif.api.model.registry.eml.temporal.VerbatimTimePeriodType;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.registry.metadata.contact.ContactAdapter;
+import org.gbif.registry.metadata.parse.ParagraphContainer;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -38,8 +39,6 @@ import com.google.common.collect.Lists;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-
-import org.gbif.registry.metadata.parse.ParagraphContainer;
 
 /**
  * A simple tool to serialize a dataset object into an XML document compliant with the latest

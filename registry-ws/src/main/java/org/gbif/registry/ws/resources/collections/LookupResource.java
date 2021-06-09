@@ -19,7 +19,6 @@ import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.service.collections.lookup.DefaultLookupService;
 import org.gbif.registry.service.collections.lookup.LookupService;
 
 import java.util.UUID;
