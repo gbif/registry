@@ -60,7 +60,7 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
       }
     }
 
-    String[] contentTypes = webRequest.getParameterValues("contentTypes");
+    String[] contentTypes = webRequest.getParameterValues("contentType");
     if (contentTypes != null && contentTypes.length > 0) {
       searchRequest.setContentTypes(
           Arrays.stream(contentTypes)
@@ -68,7 +68,7 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
               .collect(Collectors.toList()));
     }
 
-    String[] preservationTypes = webRequest.getParameterValues("preservationTypes");
+    String[] preservationTypes = webRequest.getParameterValues("preservationType");
     if (preservationTypes != null && preservationTypes.length > 0) {
       searchRequest.setPreservationTypes(
           Arrays.stream(preservationTypes)
