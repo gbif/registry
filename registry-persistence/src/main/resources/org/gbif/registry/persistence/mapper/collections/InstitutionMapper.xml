@@ -223,6 +223,21 @@
     <if test="params.fuzzyName != null" >
       AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
     </if>
+    <if test="params.type != null" >
+      AND i.type = #{params.type,jdbcType=OTHER}
+    </if>
+    <if test="params.institutionalGovernance != null" >
+      AND i.institutional_governance = #{params.institutionalGovernance,jdbcType=OTHER}
+    </if>
+    <if test="params.disciplines != null" >
+      AND i.discipline @> ARRAY
+      <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.active != null" >
+      AND i.active = #{params.active,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              i.created DESC, i.key
@@ -290,6 +305,21 @@
     </if>
     <if test="params.fuzzyName != null" >
       AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
+    </if>
+    <if test="params.type != null" >
+      AND i.type = #{params.type,jdbcType=OTHER}
+    </if>
+    <if test="params.institutionalGovernance != null" >
+      AND i.institutional_governance = #{params.institutionalGovernance,jdbcType=OTHER}
+    </if>
+    <if test="params.disciplines != null" >
+      AND i.discipline @> ARRAY
+      <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.active != null" >
+      AND i.active = #{params.active,jdbcType=OTHER}
     </if>
   </select>
 

@@ -87,7 +87,6 @@ public class TestDataFactory {
       institution.setName(NAME);
       institution.setDescription(DESCRIPTION);
       institution.setHomepage(HOMEPAGE);
-      institution.setAdditionalNames(Collections.emptyList());
       institution.setAdditionalNames(Collections.singletonList("other"));
       return institution;
     }

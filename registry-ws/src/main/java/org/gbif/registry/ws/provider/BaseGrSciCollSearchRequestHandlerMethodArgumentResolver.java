@@ -63,6 +63,15 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     request.setCity(webRequest.getParameter("city"));
     request.setFuzzyName(webRequest.getParameter("fuzzyName"));
 
+    String active = webRequest.getParameter("active");
+    if (!Strings.isNullOrEmpty(active)) {
+      try {
+        request.setActive(Boolean.parseBoolean(active));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid boolean for active: " + active);
+      }
+    }
+
     String countryParam = webRequest.getParameter("country");
     if (!Strings.isNullOrEmpty(countryParam)) {
       Country country = Country.fromIsoCode(countryParam);

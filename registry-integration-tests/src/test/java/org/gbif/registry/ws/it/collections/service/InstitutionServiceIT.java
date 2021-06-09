@@ -29,10 +29,14 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -81,6 +85,10 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     Institution institution1 = testData.newEntity();
     institution1.setCode("c1");
     institution1.setName("n1");
+    institution1.setActive(true);
+    institution1.setType(InstitutionType.HERBARIUM);
+    institution1.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
+    institution1.setDisciplines(Collections.singletonList(Discipline.OCEAN));
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -92,6 +100,8 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     Institution institution2 = testData.newEntity();
     institution2.setCode("c2");
     institution2.setName("n2");
+    institution2.setActive(false);
+    institution2.setDisciplines(Arrays.asList(Discipline.OCEAN, Discipline.AGRICULTURAL));
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
@@ -185,6 +195,52 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         2,
         institutionService
             .list(InstitutionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().active(true).page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .type(InstitutionType.HERBARIUM)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .institutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .disciplines(Collections.singletonList(Discipline.OCEAN))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .disciplines(Arrays.asList(Discipline.OCEAN, Discipline.AGRICULTURAL))
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 

@@ -15,8 +15,11 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -31,12 +34,20 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
@@ -89,6 +100,15 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     Collection collection1 = testData.newEntity();
     collection1.setCode("c1");
     collection1.setName("n1");
+    collection1.setActive(true);
+    collection1.setAccessionStatus(null);
+    collection1.setPersonalCollection(true);
+    collection1.setContentTypes(
+        Arrays.asList(
+            CollectionContentType.RECORDS_ASSOCIATED_DATA,
+            CollectionContentType.ARCHAEOLOGICAL_C14));
+    collection1.setPreservationTypes(
+        Arrays.asList(PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED));
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -100,6 +120,12 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     Collection collection2 = testData.newEntity();
     collection2.setCode("c2");
     collection2.setName("n2");
+    collection2.setActive(false);
+    collection2.setContentTypes(
+        Collections.singletonList(CollectionContentType.RECORDS_ASSOCIATED_DATA));
+    collection2.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
+    collection2.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection2.setPersonalCollection(false);
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
@@ -193,6 +219,88 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         collectionService
             .list(
                 CollectionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        collectionService
+            .list(CollectionSearchRequest.builder().active(true).page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .accessionStatus(AccessionStatus.INSTITUTIONAL)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        0,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .accessionStatus(AccessionStatus.PROJECT)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        Collections.singletonList(CollectionContentType.RECORDS_ASSOCIATED_DATA))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        Arrays.asList(
+                            CollectionContentType.RECORDS_ASSOCIATED_DATA,
+                            CollectionContentType.ARCHAEOLOGICAL_C14))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .preservationTypes(
+                        Arrays.asList(
+                            PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .preservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .personalCollection(true)
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 

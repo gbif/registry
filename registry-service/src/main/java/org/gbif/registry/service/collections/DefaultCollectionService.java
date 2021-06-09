@@ -102,6 +102,11 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
             .country(searchRequest.getCountry())
             .city(searchRequest.getCity())
             .fuzzyName(searchRequest.getFuzzyName())
+            .active(searchRequest.getActive())
+            .contentTypes(searchRequest.getContentTypes())
+            .preservationTypes(searchRequest.getPreservationTypes())
+            .accessionStatus(searchRequest.getAccessionStatus())
+            .personalCollection(searchRequest.getPersonalCollection())
             .build();
 
     long total = collectionMapper.count(params);

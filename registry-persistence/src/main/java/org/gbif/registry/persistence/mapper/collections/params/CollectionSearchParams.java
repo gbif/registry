@@ -15,6 +15,11 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.PreservationType;
+
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -27,4 +32,8 @@ import lombok.experimental.SuperBuilder;
 public class CollectionSearchParams extends SearchParams {
 
   @Nullable UUID institutionKey;
+  @Nullable List<CollectionContentType> contentTypes;
+  @Nullable List<PreservationType> preservationTypes;
+  @Nullable AccessionStatus accessionStatus;
+  @Nullable Boolean personalCollection;
 }
