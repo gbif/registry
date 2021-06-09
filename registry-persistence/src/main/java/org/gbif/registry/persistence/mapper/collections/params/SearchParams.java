@@ -42,4 +42,5 @@ public abstract class SearchParams {
   @Nullable Country country;
   @Nullable String city;
   @Nullable String fuzzyName;
+  @Nullable Boolean active;
 }

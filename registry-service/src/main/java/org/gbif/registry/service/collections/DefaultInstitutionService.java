@@ -89,6 +89,10 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
             .country(searchRequest.getCountry())
             .city(searchRequest.getCity())
             .fuzzyName(searchRequest.getFuzzyName())
+            .active(searchRequest.getActive())
+            .type(searchRequest.getType())
+            .institutionalGovernance(searchRequest.getInstitutionalGovernance())
+            .disciplines(searchRequest.getDisciplines())
             .build();
 
     long total = institutionMapper.count(params);

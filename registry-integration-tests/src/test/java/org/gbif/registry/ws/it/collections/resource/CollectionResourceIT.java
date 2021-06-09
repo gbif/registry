@@ -14,6 +14,8 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
@@ -77,6 +79,10 @@ public class CollectionResourceIT
     req.setCity("city");
     req.setInstitution(UUID.randomUUID());
     req.setCountry(Country.DENMARK);
+    req.setPersonalCollection(true);
+    req.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    req.setPreservationTypes(
+        Arrays.asList(PreservationType.SAMPLE_CRYOPRESERVED, PreservationType.SAMPLE_DRIED));
     PagingResponse<CollectionView> result = getClient().list(req);
     assertEquals(views.size(), result.getResults().size());
   }

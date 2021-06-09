@@ -14,6 +14,8 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
@@ -77,6 +79,9 @@ public class InstitutionResourceIT
     req.setCity("city");
     req.setContact(UUID.randomUUID());
     req.setCountry(Country.DENMARK);
+    req.setActive(true);
+    req.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
+    req.setDisciplines(Arrays.asList(Discipline.AGRICULTURAL, Discipline.OCEAN));
 
     PagingResponse<Institution> result = getClient().list(req);
     assertEquals(institutions.size(), result.getResults().size());

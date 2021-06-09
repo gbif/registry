@@ -16,6 +16,13 @@
 package org.gbif.registry.ws.provider;
 
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.InstitutionType;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -40,6 +47,21 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
 
     InstitutionSearchRequest searchRequest = new InstitutionSearchRequest();
     fillSearchRequestParams(searchRequest, webRequest);
+
+    searchRequest.setType(
+        VocabularyUtils.lookupEnum(webRequest.getParameter("type"), InstitutionType.class));
+
+    searchRequest.setInstitutionalGovernance(
+        VocabularyUtils.lookupEnum(
+            webRequest.getParameter("institutionalGovernance"), InstitutionGovernance.class));
+
+    String[] disciplines = webRequest.getParameterValues("disciplines");
+    if (disciplines != null && disciplines.length > 0) {
+      searchRequest.setDisciplines(
+          Arrays.stream(disciplines)
+              .map(v -> VocabularyUtils.lookupEnum(v, Discipline.class))
+              .collect(Collectors.toList()));
+    }
 
     return searchRequest;
   }

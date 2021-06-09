@@ -16,8 +16,14 @@
 package org.gbif.registry.ws.provider;
 
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.PreservationType;
 
+import java.util.Arrays;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -51,6 +57,36 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
         searchRequest.setInstitution(UUID.fromString(institution));
       } catch (Exception e) {
         throw new IllegalArgumentException("Invalid UUID for institution: " + institution);
+      }
+    }
+
+    String[] contentTypes = webRequest.getParameterValues("contentTypes");
+    if (contentTypes != null && contentTypes.length > 0) {
+      searchRequest.setContentTypes(
+          Arrays.stream(contentTypes)
+              .map(v -> VocabularyUtils.lookupEnum(v, CollectionContentType.class))
+              .collect(Collectors.toList()));
+    }
+
+    String[] preservationTypes = webRequest.getParameterValues("preservationTypes");
+    if (preservationTypes != null && preservationTypes.length > 0) {
+      searchRequest.setPreservationTypes(
+          Arrays.stream(preservationTypes)
+              .map(v -> VocabularyUtils.lookupEnum(v, PreservationType.class))
+              .collect(Collectors.toList()));
+    }
+
+    searchRequest.setAccessionStatus(
+        VocabularyUtils.lookupEnum(
+            webRequest.getParameter("accessionStatus"), AccessionStatus.class));
+
+    String personalCollection = webRequest.getParameter("personalCollection");
+    if (!Strings.isNullOrEmpty(personalCollection)) {
+      try {
+        searchRequest.setPersonalCollection(Boolean.parseBoolean(personalCollection));
+      } catch (Exception e) {
+        throw new IllegalArgumentException(
+            "Invalid boolean for personalCollection: " + personalCollection);
       }
     }
 

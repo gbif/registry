@@ -15,10 +15,22 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.InstitutionType;
+
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
 public class InstitutionSearchParams extends SearchParams {
+
+  @Nullable InstitutionType type;
+  @Nullable InstitutionGovernance institutionalGovernance;
+  @Nullable List<Discipline> disciplines;
 }
