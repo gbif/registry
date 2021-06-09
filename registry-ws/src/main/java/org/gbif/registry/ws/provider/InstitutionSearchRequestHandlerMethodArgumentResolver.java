@@ -55,7 +55,7 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
         VocabularyUtils.lookupEnum(
             webRequest.getParameter("institutionalGovernance"), InstitutionGovernance.class));
 
-    String[] disciplines = webRequest.getParameterValues("disciplines");
+    String[] disciplines = webRequest.getParameterValues("discipline");
     if (disciplines != null && disciplines.length > 0) {
       searchRequest.setDisciplines(
           Arrays.stream(disciplines)
