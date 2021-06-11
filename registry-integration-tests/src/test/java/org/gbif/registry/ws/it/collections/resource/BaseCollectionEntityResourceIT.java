@@ -41,6 +41,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -49,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 abstract class BaseCollectionEntityResourceIT<
@@ -62,6 +64,7 @@ abstract class BaseCollectionEntityResourceIT<
   protected final Class<T> paramType;
 
   @Autowired protected ObjectMapper objectMapper;
+  @Autowired protected MockMvc mockMvc;
 
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T>> cls,
@@ -124,6 +127,14 @@ abstract class BaseCollectionEntityResourceIT<
         .putRequest(
             TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN, entity, path)
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void emptyOffsetTest() throws Exception {
+    mockMvc
+        .perform(
+            get("/grscicoll/" + paramType.getSimpleName().toLowerCase()).queryParam("offset", ""))
+        .andExpect(status().is2xxSuccessful());
   }
 
   @Test
