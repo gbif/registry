@@ -32,6 +32,7 @@ import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -51,7 +52,7 @@ public class CollectionChangeSuggestionService
       ChangeSuggestionMapper changeSuggestionMapper,
       CollectionService collectionService,
       CollectionMergeService collectionMergeService,
-      ObjectMapper objectMapper,
+      @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
       EventManager eventManager,
