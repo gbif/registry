@@ -167,12 +167,12 @@ public abstract class PrimaryCollectionEntityResource<
   }
 
   @PostMapping(value = "changeSuggestion")
-  public int createChangeSuggestion(@RequestBody R createSuggestion) {
+  public int createChangeSuggestion(@RequestBody @Trim R createSuggestion) {
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
   }
 
   @PutMapping(value = "changeSuggestion/{key}")
-  public void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody R suggestion) {
+  public void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody @Trim R suggestion) {
     checkArgument(key == suggestion.getKey());
     changeSuggestionService.updateChangeSuggestion(suggestion);
   }
