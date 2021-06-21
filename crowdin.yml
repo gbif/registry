@@ -10,3 +10,4 @@ files:
     translation: >-
       /registry-mail/src/main/resources/email/templates/%file_name%_%two_letters_code%.ftl
     type: html
+    dest: /registry-mail/src/main/resources/email/templates/%file_name%.html
