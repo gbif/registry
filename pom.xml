@@ -25,15 +25,15 @@
   <repositories>
     <repository>
       <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
+      <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
     <repository>
       <id>gbif-thirdparty</id>
-      <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
+      <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
     </repository>
     <repository>
       <id>cloudera-release</id>
-      <url>http://repository.cloudera.com/artifactory/cloudera-repos/</url>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -43,11 +43,11 @@
   <distributionManagement>
     <repository>
       <id>gbif-release</id>
-      <url>http://repository.gbif.org/content/repositories/releases</url>
+      <url>https://repository.gbif.org/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
       <id>gbif-snapshot</id>
-      <url>http://repository.gbif.org/content/repositories/snapshots</url>
+      <url>https://repository.gbif.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -722,7 +722,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
         <configuration>
-          <topSiteURL>http://gbif.github.io/registry/</topSiteURL>
+          <topSiteURL>https://gbif.github.io/registry/</topSiteURL>
         </configuration>
       </plugin>
 
