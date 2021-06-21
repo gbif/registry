@@ -229,7 +229,6 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("IDigBioCollectionDto", IDigBioCollectionDto.class);
-
     };
   }
 }

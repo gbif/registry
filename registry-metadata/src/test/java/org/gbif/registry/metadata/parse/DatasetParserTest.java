@@ -1022,28 +1022,28 @@ public class DatasetParserTest {
   @Test
   public void testEmlParsingMultipleParagraphs() throws IOException {
     Dataset dataset =
-      DatasetParser.parse(
-        MetadataType.EML,
-        FileUtils.classpathStream("eml/multiple-paragraphs-html.xml"));
+        DatasetParser.parse(
+            MetadataType.EML, FileUtils.classpathStream("eml/multiple-paragraphs-html.xml"));
 
     // Multiple paragraphs in description
     assertNotNull(dataset.getDescription());
-    assertEquals("<p>Two CRLFs follow this word:\n" +
-        "\n" +
-        "One CRLF follows this word:\n" +
-        "A new paragraph follows this word:</p>\n" +
-        "<p>A list made with CRLFs follows:\n" +
-        "- Apple;\n" +
-        "- Ball;\n" +
-        "New paragraph.</p>\n" +
-        "<p>An HTML list follows this line break:\n" +
-        "<ul>\n" +
-        "<li><a href=\"https://en.wikipedia.org/wiki/Atlantic\">Atlantic</a> (ocean),</li>\n" +
-        "<li>Indo-Pacific</li>\n" +
-        "</ul>\n" +
-        "End paragraph.</p>\n" +
-        "<p>More HTML: <i>i</i>, <b>b</b>, <em>em</em>, <strong>strong</strong>.</p>",
-      dataset.getDescription());
+    assertEquals(
+        "<p>Two CRLFs follow this word:\n"
+            + "\n"
+            + "One CRLF follows this word:\n"
+            + "A new paragraph follows this word:</p>\n"
+            + "<p>A list made with CRLFs follows:\n"
+            + "- Apple;\n"
+            + "- Ball;\n"
+            + "New paragraph.</p>\n"
+            + "<p>An HTML list follows this line break:\n"
+            + "<ul>\n"
+            + "<li><a href=\"https://en.wikipedia.org/wiki/Atlantic\">Atlantic</a> (ocean),</li>\n"
+            + "<li>Indo-Pacific</li>\n"
+            + "</ul>\n"
+            + "End paragraph.</p>\n"
+            + "<p>More HTML: <i>i</i>, <b>b</b>, <em>em</em>, <strong>strong</strong>.</p>",
+        dataset.getDescription());
 
     // Write the EML out, then read again
     StringWriter writer = new StringWriter();

@@ -60,5 +60,4 @@ public class DatasetOccurrenceDownloadUsageResource
     return new PagingResponse<>(
         page, (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
   }
-
 }

@@ -56,7 +56,6 @@ public class CitationGenerator {
 
     private final Citation citation;
     private final List<CitationContact> contacts;
-
   }
 
   private static final ZoneId UTC = ZoneId.of("UTC");
@@ -66,7 +65,7 @@ public class CitationGenerator {
   private static final Predicate<Contact> IS_NAME_PROVIDED_FCT =
       ctc -> StringUtils.isNotBlank(ctc.getLastName());
   private static final Predicate<CitationContact> IS_CONTACT_NAME_PROVIDED =
-    ctc -> StringUtils.isNotBlank(ctc.getLastName());
+      ctc -> StringUtils.isNotBlank(ctc.getLastName());
   private static final Predicate<Contact> IS_ELIGIBLE_CONTACT_TYPE =
       ctc -> AUTHOR_CONTACT_TYPE.contains(ctc.getType());
 
@@ -192,7 +191,9 @@ public class CitationGenerator {
 
     // make sure we have at least one instance of {@link #MANDATORY_CONTACT_TYPE}
     Optional<CitationContact> firstOriginator =
-        uniqueContacts.stream().filter(ctc -> ctc.getRoles().contains(MANDATORY_CONTACT_TYPE)).findFirst();
+        uniqueContacts.stream()
+            .filter(ctc -> ctc.getRoles().contains(MANDATORY_CONTACT_TYPE))
+            .findFirst();
 
     if (firstOriginator.isPresent()) {
       return uniqueContacts;
@@ -228,32 +229,40 @@ public class CitationGenerator {
    * @param filter {@link Predicate} used to pre-filter contacts
    * @return
    */
-  private static List<CitationContact> getUniqueAuthors(List<Contact> authors, Predicate<Contact> filter) {
+  private static List<CitationContact> getUniqueAuthors(
+      List<Contact> authors, Predicate<Contact> filter) {
     List<CitationContact> uniqueContact = new ArrayList<>();
     if (authors != null) {
       authors.forEach(
           ctc -> {
             if (filter.test(ctc)) {
-             Optional<CitationContact> author = findInAuthorList(ctc, uniqueContact);
-             if (!author.isPresent()) {
-              HashSet<ContactType> contactTypes = new HashSet<>();
-              if(ctc.getType() != null) {
-                contactTypes.add(ctc.getType());
-              }
-              HashSet<String> userIds  = new HashSet<>();
-              if(ctc.getUserId() != null && !ctc.getUserId().isEmpty()) {
-                userIds.addAll(ctc.getUserId());
-              }
-              uniqueContact.add(new CitationContact(ctc.getKey(), getAuthorName(ctc), ctc.getFirstName(), ctc.getLastName(),
-                                                    contactTypes, userIds));
+              Optional<CitationContact> author = findInAuthorList(ctc, uniqueContact);
+              if (!author.isPresent()) {
+                HashSet<ContactType> contactTypes = new HashSet<>();
+                if (ctc.getType() != null) {
+                  contactTypes.add(ctc.getType());
+                }
+                HashSet<String> userIds = new HashSet<>();
+                if (ctc.getUserId() != null && !ctc.getUserId().isEmpty()) {
+                  userIds.addAll(ctc.getUserId());
+                }
+                uniqueContact.add(
+                    new CitationContact(
+                        ctc.getKey(),
+                        getAuthorName(ctc),
+                        ctc.getFirstName(),
+                        ctc.getLastName(),
+                        contactTypes,
+                        userIds));
               } else {
-               author.ifPresent(a -> {
-                 a.getRoles().add(ctc.getType());
-                 if(ctc.getUserId() != null) {
-                   a.getUserId().addAll(ctc.getUserId());
-                 }
-               });
-             }
+                author.ifPresent(
+                    a -> {
+                      a.getRoles().add(ctc.getType());
+                      if (ctc.getUserId() != null) {
+                        a.getUserId().addAll(ctc.getUserId());
+                      }
+                    });
+              }
             }
           });
     }
@@ -268,11 +277,14 @@ public class CitationGenerator {
    * @param uniqueContact
    * @return
    */
-  private static Optional<CitationContact> findInAuthorList(Contact ctc, List<CitationContact> uniqueContacts) {
+  private static Optional<CitationContact> findInAuthorList(
+      Contact ctc, List<CitationContact> uniqueContacts) {
     return uniqueContacts.stream()
-                         .filter(author -> StringUtils.equalsIgnoreCase(ctc.getLastName(), author.getLastName())
-                                           && StringUtils.equalsIgnoreCase(ctc.getFirstName(), author.getFirstName()))
-                         .findFirst();
+        .filter(
+            author ->
+                StringUtils.equalsIgnoreCase(ctc.getLastName(), author.getLastName())
+                    && StringUtils.equalsIgnoreCase(ctc.getFirstName(), author.getFirstName()))
+        .findFirst();
   }
 
   /**

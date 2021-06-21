@@ -264,8 +264,8 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       CitationGenerator.CitationData citation =
           CitationGenerator.generateCitation(
               dataset, organizationCache.getUnchecked(dataset.getPublishingOrganizationKey()));
-      //Identifier is preserved from the original citation
-      if (originalCitation != null){
+      // Identifier is preserved from the original citation
+      if (originalCitation != null) {
         citation.getCitation().setIdentifier(originalCitation.getIdentifier());
       }
       dataset.setCitation(citation.getCitation());

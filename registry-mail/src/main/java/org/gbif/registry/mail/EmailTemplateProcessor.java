@@ -75,12 +75,12 @@ public interface EmailTemplateProcessor {
    * @return email data which is ready to be sent
    */
   BaseEmailModel buildEmail(
-    EmailType emailType,
-    Set<String> emailAddresses,
-    String from,
-    Object templateDataModel,
-    Locale locale,
-    Set<String> ccAddresses,
-    String... subjectParams)
-    throws IOException, TemplateException;
+      EmailType emailType,
+      Set<String> emailAddresses,
+      String from,
+      Object templateDataModel,
+      Locale locale,
+      Set<String> ccAddresses,
+      String... subjectParams)
+      throws IOException, TemplateException;
 }

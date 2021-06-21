@@ -75,12 +75,13 @@ public interface IdentityService extends IdentityAccessService {
    *
    * @return a pageable response of network entities, with accurate counts.
    */
-  PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles,
-                                  @Nullable Set<UUID> editorRightsOn,
-                                  @Nullable Set<String> namespaceRightsOn,
-                                  @Nullable Set<Country> countryRightsOn,
-                                  @Nullable Pageable page);
-
+  PagingResponse<GbifUser> search(
+      String query,
+      @Nullable Set<UserRole> roles,
+      @Nullable Set<UUID> editorRightsOn,
+      @Nullable Set<String> namespaceRightsOn,
+      @Nullable Set<Country> countryRightsOn,
+      @Nullable Pageable page);
 
   /**
    * Create a new user.

@@ -112,17 +112,17 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
       @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey);
 
   @RequestMapping(
-    method = RequestMethod.GET,
-    value = "statistics/downloadsByDataset",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.GET,
+      value = "statistics/downloadsByDataset",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   Map<Integer, Map<Integer, Long>> getDownloadsByDataset(
-    @PartialDate("fromDate") Date fromDate,
-    @PartialDate("toDate") Date toDate,
-    @RequestParam(value = "publishingCountry", required = false) Country publishingCountry,
-    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey);
+      @PartialDate("fromDate") Date fromDate,
+      @PartialDate("toDate") Date toDate,
+      @RequestParam(value = "publishingCountry", required = false) Country publishingCountry,
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey);
 
   @RequestMapping(
       method = RequestMethod.POST,

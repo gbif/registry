@@ -101,19 +101,19 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private final DoiIssuingService doiIssuingService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
 
-  //Page size to iterate over dataset usages
+  // Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
 
-  //Page size to iterate over download stats export service
+  // Page size to iterate over download stats export service
   private static final int STATS_EXPORT_LIMIT = 7_500;
 
-  //Page size to iterate over download stats export service
+  // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 5_000;
 
-  //Export header prefix
+  // Export header prefix
   private static final String FILE_HEADER_PRE = "attachment; filename=datasets_download_usage_";
 
-  //Download stats file header
+  // Download stats file header
   private static final String EXPORT_FILE_HEADER_PRE = "attachment; filename=downloads_statistics.";
 
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
@@ -253,18 +253,18 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   @GetMapping("{key}/datasets/export")
   public void exportListDatasetUsagesByKey(
-    HttpServletResponse response,
-    @PathVariable("key") String key,
-    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format) throws IOException {
+      HttpServletResponse response,
+      @PathVariable("key") String key,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format)
+      throws IOException {
 
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION,  FILE_HEADER_PRE + key + '.' + format.name().toLowerCase());
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, FILE_HEADER_PRE + key + '.' + format.name().toLowerCase());
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.datasetOccurrenceDownloadUsageCsvWriter(Iterables.datasetOccurrenceDownloadUsages(this,
-                                                                                                  key,
-                                                                                                  EXPORT_LIMIT),
-                                                        format)
-        .export(writer);
+      CsvWriter.datasetOccurrenceDownloadUsageCsvWriter(
+              Iterables.datasetOccurrenceDownloadUsages(this, key, EXPORT_LIMIT), format)
+          .export(writer);
     }
   }
 
@@ -367,70 +367,66 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @GetMapping("statistics/downloadsByDataset")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsByDataset(
-    @PartialDate Date fromDate,
-    @PartialDate Date toDate,
-    Country publishingCountry,
-    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey
-  ) {
+      @PartialDate Date fromDate,
+      @PartialDate Date toDate,
+      Country publishingCountry,
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) {
     return groupByYear(
-      occurrenceDownloadMapper.getDownloadsByDataset(
-        fromDate,
-        toDate,
-        Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
-        datasetKey,
-        publishingOrgKey));
+        occurrenceDownloadMapper.getDownloadsByDataset(
+            fromDate,
+            toDate,
+            Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),
+            datasetKey,
+            publishingOrgKey));
   }
 
   @GetMapping("statistics")
   @Override
   public PagingResponse<DownloadStatistics> getDownloadStatistics(
-    @PartialDate Date fromDate,
-    @PartialDate Date toDate,
-    Country publishingCountry,
-    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey,
-    Pageable page
-  ) {
-    String country = Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null);
-    return new PagingResponse<>(page,
-                                occurrenceDownloadMapper.countDownloadStatistics(fromDate,
-                                                                                 toDate,
-                                                                                 country,
-                                                                                 datasetKey,
-                                                                                 publishingOrgKey),
-                                occurrenceDownloadMapper.getDownloadStatistics(fromDate,
-                                                                               toDate,
-                                                                               country,
-                                                                               datasetKey,
-                                                                               publishingOrgKey,
-                                                                               page));
+      @PartialDate Date fromDate,
+      @PartialDate Date toDate,
+      Country publishingCountry,
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey,
+      Pageable page) {
+    String country =
+        Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null);
+    return new PagingResponse<>(
+        page,
+        occurrenceDownloadMapper.countDownloadStatistics(
+            fromDate, toDate, country, datasetKey, publishingOrgKey),
+        occurrenceDownloadMapper.getDownloadStatistics(
+            fromDate, toDate, country, datasetKey, publishingOrgKey, page));
   }
 
   @GetMapping("statistics/export")
   public void getDownloadStatistics(
-    HttpServletResponse response,
-    @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-    @PartialDate Date fromDate,
-    @PartialDate Date toDate,
-    Country publishingCountry,
-    @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
-    @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) throws
-    IOException {
+      HttpServletResponse response,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+      @PartialDate Date fromDate,
+      @PartialDate Date toDate,
+      Country publishingCountry,
+      @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
+      @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey)
+      throws IOException {
 
-      response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_HEADER_PRE + format.name().toLowerCase());
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_HEADER_PRE + format.name().toLowerCase());
 
-      try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-        CsvWriter.downloadStatisticsCsvWriter(Iterables.downloadStatistics(this,
-                                                                           fromDate,
-                                                                           toDate,
-                                                                           publishingCountry,
-                                                                           datasetKey,
-                                                                           publishingOrgKey,
-                                                                           STATS_EXPORT_LIMIT),
-                                              format)
-        .export(writer);
-      }
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
+      CsvWriter.downloadStatisticsCsvWriter(
+              Iterables.downloadStatistics(
+                  this,
+                  fromDate,
+                  toDate,
+                  publishingCountry,
+                  datasetKey,
+                  publishingOrgKey,
+                  STATS_EXPORT_LIMIT),
+              format)
+          .export(writer);
+    }
   }
 
   /** Aggregates the download statistics in tree structure of month grouped by year. */
