@@ -83,8 +83,7 @@ public class BaseResourceIT {
   protected final RequestTestFixture requestTestFixture;
 
   public BaseResourceIT(
-      SimplePrincipalProvider simplePrincipalProvider,
-      RequestTestFixture requestTestFixture) {
+      SimplePrincipalProvider simplePrincipalProvider, RequestTestFixture requestTestFixture) {
     this.simplePrincipalProvider = simplePrincipalProvider;
     this.requestTestFixture = requestTestFixture;
   }

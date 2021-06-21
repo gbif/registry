@@ -287,7 +287,8 @@ public class RequestTestFixture {
     return objectMapper.readValue(content, entityClass);
   }
 
-  public <T> T extractJsonResponse(ResultActions actions, TypeReference<T> typeReference) throws Exception {
+  public <T> T extractJsonResponse(ResultActions actions, TypeReference<T> typeReference)
+      throws Exception {
     String content = actions.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
     return objectMapper.readValue(content, typeReference);
   }

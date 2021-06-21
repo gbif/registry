@@ -24,7 +24,6 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 /** Type of emails related to organization endorsement */
 public enum CollectionsEmailType implements EmailType {
-
   NEW_CHANGE_SUGGESTION("newChangeSuggestion", "grscicoll_suggestion_created.ftl"),
   APPLIED_CHANGE_SUGGESTION("appliedChangeSuggestion", "grscicoll_suggestion_applied.ftl"),
   DISCARDED_CHANGE_SUGGESTION("discardedChangeSuggestion", "grscicoll_suggestion_discarded.ftl");

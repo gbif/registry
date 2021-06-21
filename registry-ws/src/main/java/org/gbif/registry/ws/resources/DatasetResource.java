@@ -139,10 +139,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   private static final int ALL_DATASETS_LIMIT = 200;
 
-  //Page size to iterate over search export service
+  // Page size to iterate over search export service
   private static final int SEARCH_EXPORT_LIMIT = 300;
 
-  //Search export file header
+  // Search export file header
   private static final String EXPORT_FILE_PRE = "attachment; filename=gbif_datasets.";
 
   private final RegistryDatasetService registryDatasetService;
@@ -202,18 +202,20 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   @GetMapping("search/export")
-  public void search(HttpServletResponse response,
-                     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-                     DatasetSearchRequest searchRequest) throws IOException {
+  public void search(
+      HttpServletResponse response,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+      DatasetSearchRequest searchRequest)
+      throws IOException {
 
-    response.setHeader(HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
+    response.setHeader(
+        HttpHeaders.CONTENT_DISPOSITION, EXPORT_FILE_PRE + format.name().toLowerCase());
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.datasetSearchResultCsvWriter(Iterables.datasetSearchResults(searchRequest,
-                                                                            searchService,
-                                                                            SEARCH_EXPORT_LIMIT),
-                                             format)
-      .export(writer);
+      CsvWriter.datasetSearchResultCsvWriter(
+              Iterables.datasetSearchResults(searchRequest, searchService, SEARCH_EXPORT_LIMIT),
+              format)
+          .export(writer);
     }
   }
 
