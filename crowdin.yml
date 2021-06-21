@@ -9,3 +9,4 @@ files:
       - /registry-mail/src/main/resources/email/templates/*_??.ftl
     translation: >-
       /registry-mail/src/main/resources/email/templates/%file_name%_%two_letters_code%.ftl
+    type: html
