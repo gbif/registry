@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.ConfirmableTemplateDataModel" -->
 <#include "header.ftl">
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Hello ${name},</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Bonjour ${name},</h4>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We received a request to reset the password of your GBIF account. Please click the button below to reset your password:</p>
 
@@ -16,12 +16,12 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    You can also copy the following URL and paste into your browser: <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
+    Vous pouvez également copier l'URL suivante et la coller dans votre navigateur : <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
 </p>
 
 
 </p><p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>The GBIF Secretariat</em>
+    <em>Le Secrétariat du GBIF</em>
 </p>
 
 <#include "footer.ftl">
