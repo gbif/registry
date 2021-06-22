@@ -109,7 +109,7 @@
     <tr style="margin: 0;padding: 0;line-height: 1.65;">
         <td align="center" style="margin: 0;padding: 0;line-height: 1.65;">
             <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-                <a href="${url}" class="button" style="margin: 0;padding: 0;line-height: 1.65;color: white;text-decoration: none;display: inline-block;background: #509E2F;border: solid #509E2F;border-width: 10px 20px 8px;font-weight: bold;border-radius: 4px;">Endorse</a>
+                <a href="${url}" class="button" style="margin: 0;padding: 0;line-height: 1.65;color: white;text-decoration: none;display: inline-block;background: #509E2F;border: solid #509E2F;border-width: 10px 20px 8px;font-weight: bold;border-radius: 4px;">Approuver</a>
             </p>
         </td>
     </tr>
