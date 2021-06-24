@@ -10,7 +10,7 @@
 </p>
 
 <#if downloadUrls?size != 0>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Метаданные загрузки находок не были удалены. Вы по-прежнему можете цитировать любые созданные вами загрузки:</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Метаданные загрузки находок не были удалены.  Вы по-прежнему можете цитировать любые созданные вами загрузки:</p>
 <ul style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list downloadUrls as downloadUrl>
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #509E2F;text-decoration: none;">${downloadUrl}</a></li>

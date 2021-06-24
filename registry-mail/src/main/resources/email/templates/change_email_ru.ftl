@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.ConfirmableTemplateDataModel" -->
+<#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountChangeEmailTemplateDataModel" -->
 <#include "header.ftl">
 
 <h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Уважаемый/ая ${name},</h4>
@@ -21,6 +21,7 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     Вы также можете скопировать следующий URL и вставить в свой браузер: <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
 </p>
+
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>GBIF Секретариат</em>
