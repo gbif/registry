@@ -102,4 +102,5 @@
   <include file="liquibase/094-grscicoll-change-suggestions.xml" />
   <include file="liquibase/095-grscicoll-audit-log.xml" />
   <include file="liquibase/096-country-rights.xml" />
+  <include file="liquibase/097-ror-grid-identifiers.xml" />
 </databaseChangeLog>
