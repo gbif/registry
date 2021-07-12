@@ -1,12 +1,13 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseTemplateDataModel" -->
 <#include "header.ftl">
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Уважаемый/ая ${name},</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Уважаемый/ая ${name},</h4>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Спасибо за регистрацию на GBIF.org. Теперь вы можете загружать результаты вашего поиска сотен миллионов
-    бесплатных и открытых записей о биоразнообразии, предоставленных сообществом участников и публикаторов GBIF.</p>
+    бесплатных и открытых записей о биоразнообразии, предоставленных сообществом участников и публикаторов GBIF.
+</p>
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Следующие шаги</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Следующие шаги</h4>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Цитирование данных, которые вы загружаете</h5>
 
