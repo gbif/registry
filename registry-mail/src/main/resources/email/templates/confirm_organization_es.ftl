@@ -51,7 +51,7 @@
 </p>
 
 <#if organization.description?has_content>
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Description</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Descripción</h4>
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     ${organization.description!}
 </p>
