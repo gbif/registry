@@ -37,46 +37,55 @@ public class BasicUserSuretyDelegate implements UserSuretyDelegate {
 
   @Override
   public void onNewUser(GbifUser gbifUser) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public boolean confirmUser(GbifUser gbifUser, UUID uuid) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public boolean confirmAndNotifyUser(GbifUser gbifUser, UUID uuid) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public boolean confirmUserAndEmail(GbifUser gbifUser, String s, UUID uuid) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public void onDeleteUser(GbifUser gbifUser, List<Download> list) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public void onPasswordReset(GbifUser gbifUser) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public void onPasswordChanged(GbifUser gbifUser) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public void onChangeEmail(GbifUser gbifUser, String newEmail) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 
   @Override
   public void onEmailChanged(GbifUser gbifUser, String oldEmail) {
-    throw new UnsupportedOperationException("OccurrenceUserSuretyDelegate does not support this operation");
+    throw new UnsupportedOperationException(
+        "OccurrenceUserSuretyDelegate does not support this operation");
   }
 }
