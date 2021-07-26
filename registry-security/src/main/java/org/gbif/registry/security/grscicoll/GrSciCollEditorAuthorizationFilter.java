@@ -67,7 +67,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
   public static final String GRSCICOLL_PATH = "grscicoll";
   public static final Pattern ENTITY_PATTERN =
-      Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+).*");
+      Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+).*");
   public static final Pattern FIRST_CLASS_ENTITY_UPDATE =
       Pattern.compile(".*/grscicoll/(collection|institution|person)/([a-f0-9-]+)$");
   public static final Pattern CHANGE_SUGGESTION_UPDATE_PATTERN =
