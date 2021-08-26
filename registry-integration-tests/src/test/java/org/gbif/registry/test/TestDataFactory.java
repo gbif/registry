@@ -120,6 +120,13 @@ public class TestDataFactory {
     return datasets.newPersistedInstance(doi, organization.getKey(), installation.getKey());
   }
 
+  public Dataset newPersistedDeletedDataset(DOI doi) {
+    Organization organization = newPersistedOrganization();
+    Installation installation = newPersistedInstallation(organization.getKey());
+
+    return datasets.newPersistedDeletedInstance(doi, organization.getKey(), installation.getKey());
+  }
+
   public Dataset newPersistedDataset(UUID organizationKey, UUID installationKey) {
     return datasets.newPersistedInstance(organizationKey, installationKey);
   }
