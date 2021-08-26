@@ -139,6 +139,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization);
 
+    if (organization.isEndorsementApproved()) {
+      organizationMapper.changeEndorsementStatus(newOrganization, EndorsementStatus.ENDORSED);
+    }
+
     if (SecurityContextCheck.checkUserInRole(authentication, APP_ROLE)) {
       // for trusted app, we accept contacts to include on the endorsement request
       Optional.ofNullable(organization.getContacts())
@@ -335,10 +339,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     organizationEndorsementService.changeEndorsementStatus(organizationKey, status);
   }
 
-  /**
-   * Confirm the endorsement of an organization.
-   * This endpoint is used by email endorsement.
-   */
+  /** Confirm the endorsement of an organization. This endpoint is used by email endorsement. */
   @PostMapping(path = "{key}/endorsement", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(APP_ROLE)
   public ResponseEntity<Void> confirmEndorsement(
@@ -360,8 +361,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * Confirm the endorsement of an organization.
-   * This endpoint is used by the registry console endorsement.
+   * Confirm the endorsement of an organization. This endpoint is used by the registry console
+   * endorsement.
    */
   @PutMapping("{key}/endorsement")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -380,8 +381,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   /**
-   * Revoke the endorsement from an organization.
-   * This endpoint is used by the registry console endorsement.
+   * Revoke the endorsement from an organization. This endpoint is used by the registry console
+   * endorsement.
    */
   @DeleteMapping("{key}/endorsement")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
