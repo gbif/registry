@@ -265,7 +265,6 @@ public class NodeIT extends NetworkEntityIT<Node> {
     Node node = create(newEntity(serviceType), serviceType, 1);
     // publishing organization (required field)
     Organization o = testDataFactory.newOrganization(node.getKey());
-    o.setEndorsementApproved(true);
     o.setEndorsingNodeKey(node.getKey());
     UUID organizationKey = organizationService.create(o);
 
