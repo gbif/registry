@@ -360,10 +360,14 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         Optional<Dataset> datasetWrapper =
             datasets.stream().filter(d -> d.getDeleted() == null).findFirst();
 
-        // no dataset with the identifier - throw an exception
+        // there is no non-deleted datasets, try deleted ones
+        if (!datasetWrapper.isPresent()) {
+          datasetWrapper = datasets.stream().findFirst();
+        }
+
+        // no datasets with the identifier at all - throw an exception
         if (!datasetWrapper.isPresent()) {
           LOG.error("Dataset with the DOI [{}] was not found", datasetKeyOrDoi);
-          LOG.debug("There are deleted datasets with the DOI [{}]", datasetKeyOrDoi);
           throw new IllegalArgumentException(
               "Dataset with the DOI [" + datasetKeyOrDoi + "] was not found");
         }

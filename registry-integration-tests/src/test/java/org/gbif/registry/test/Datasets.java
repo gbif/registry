@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class Datasets extends JsonBackedData<Dataset> {
 
-  private static DatasetService datasetService;
+  private final DatasetService datasetService;
 
   public static final String DATASET_ALIAS = "BGBM";
   public static final String DATASET_ABBREVIATION = "BGBM";
@@ -74,7 +74,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   }
 
   /**
-   * Persist a new Dataset associated to an publishing organization and installation for use in Unit
+   * Persist a new Dataset associated to a publishing organization and installation for use in Unit
    * Tests.
    *
    * @param doi dataset DOI
@@ -91,7 +91,25 @@ public class Datasets extends JsonBackedData<Dataset> {
   }
 
   /**
-   * Persist a new Dataset associated to an publishing organization and installation for use in Unit
+   * Persist a new deleted Dataset associated to a publishing organization and installation for use in Unit
+   * Tests.
+   *
+   * @param doi dataset DOI
+   * @param organizationKey publishing organization key
+   * @param installationKey installation key
+   * @return persisted deleted Dataset
+   */
+  public Dataset newPersistedDeletedInstance(DOI doi, UUID organizationKey, UUID installationKey) {
+    Dataset dataset = newInstance(organizationKey, installationKey);
+    dataset.setDoi(doi);
+    UUID key = datasetService.create(dataset);
+    datasetService.delete(key);
+    // some properties like created, modified are only set when the dataset is retrieved anew
+    return datasetService.get(key);
+  }
+
+  /**
+   * Persist a new Dataset associated to a publishing organization and installation for use in Unit
    * Tests.
    *
    * @param organizationKey publishing organization key
