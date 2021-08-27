@@ -10,7 +10,7 @@ files:
         pis-SB: pis
         tkl-TK: tkl
         tvl-TV: tvl
-        zh-TW: zh-tw
+        zh-TW: zh-TW
   - source: /registry-mail/src/main/resources/email/templates/*.ftl
     ignore:
       - /registry-mail/src/main/resources/email/templates/*_??.ftl
@@ -24,4 +24,4 @@ files:
         pis-SB: pis
         tkl-TK: tkl
         tvl-TV: tvl
-        zh-TW: zh-tw
+        zh-TW: zh-TW
