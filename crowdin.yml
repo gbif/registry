@@ -4,6 +4,13 @@ files:
       - /registry-mail/src/main/resources/email/subjects/*_??.properties
     translation: >-
       /registry-mail/src/main/resources/email/subjects/%file_name%_%two_letters_code%.properties
+    languages_mapping:
+      two_letters_code:
+        niu-NU: niu
+        pis-SB: pis
+        tkl-TK: tkl
+        tvl-TV: tvl
+        zh-TW: zh-tw
   - source: /registry-mail/src/main/resources/email/templates/*.ftl
     ignore:
       - /registry-mail/src/main/resources/email/templates/*_??.ftl
@@ -11,3 +18,10 @@ files:
       /registry-mail/src/main/resources/email/templates/%file_name%_%two_letters_code%.ftl
     type: html
     dest: /registry-mail/src/main/resources/email/templates/%file_name%.html
+    languages_mapping:
+      two_letters_code:
+        niu-NU: niu
+        pis-SB: pis
+        tkl-TK: tkl
+        tvl-TV: tvl
+        zh-TW: zh-tw
