@@ -18,12 +18,12 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     To help you decide whether to endorse this organization, consult our
-    <a href="https://www.gbif.org/endorsement-guidelines" style="color: #509E2F;text-decoration: none;">endorsement guidelines</a>
+    <a href="https://www.gbif.org/endorsement-guidelines" style="color: #4ba2ce;text-decoration: none;">endorsement guidelines</a>
     and the information included below.
     If you are ready to endorse, you can go straight ahead, using the button at the bottom of this email.
     If the process takes longer, if you cannot take it on at this time, or if you decide against endorsing the organization,
     please notify us by email to
-    <a href="mailto:helpdesk@gbif.org" style="color: #509E2F;text-decoration: none;">helpdesk@gbif.org</a>.
+    <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
@@ -45,7 +45,7 @@
         <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.country.title!}</li>
     </#if>
     <#list organization.homepage! as homepage>
-        <li style="margin: 0;padding: 0;line-height: 1.65;"><a href="${homepage}" style="color: #509E2F;text-decoration: none;">${homepage}</a></li>
+        <li style="margin: 0;padding: 0;line-height: 1.65;"><a href="${homepage}" style="color: #4ba2ce;text-decoration: none;">${homepage}</a></li>
     </#list>
     </ul>
 </p>
@@ -116,12 +116,12 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    You can also copy the following URL and paste into your browser: <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
+    You can also copy the following URL and paste into your browser: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     If you do NOT want to endorse this organization, please send an email to
-    <a href="mailto:helpdesk@gbif.org" style="color: #509E2F;text-decoration: none;">helpdesk@gbif.org</a> including a copy
+    <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a> including a copy
     of this message and a short explanation.
 </p>
 

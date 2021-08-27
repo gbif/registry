@@ -7,7 +7,7 @@
     You, or someone else has requested the password for the organisation
     <b>${organization.title}</b>
     to be sent to your e-mail address
-    <a href="mailto:${email}" style="margin: 0;padding: 0;line-height: 1.65;color: #509E2F;text-decoration: none;font-weight: bold;">${email}</a>
+    <a href="mailto:${email}" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">${email}</a>
 </p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">The information requested is</h5>
