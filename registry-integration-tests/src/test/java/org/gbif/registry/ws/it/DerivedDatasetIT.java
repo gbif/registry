@@ -98,7 +98,8 @@ public class DerivedDatasetIT extends BaseItTest {
     Dataset firstDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset1"));
     Dataset secondDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset2"));
     Dataset thirdDataset = testDataFactory.newPersistedDeletedDataset(new DOI("10.21373/dataset2"));
-    Dataset fourthDataset = testDataFactory.newPersistedDeletedDataset(new DOI("10.21373/dataset2"));
+    Dataset fourthDataset =
+        testDataFactory.newPersistedDeletedDataset(new DOI("10.21373/dataset2"));
 
     // prepare request
     DerivedDatasetCreationRequest requestData = new DerivedDatasetCreationRequest();
