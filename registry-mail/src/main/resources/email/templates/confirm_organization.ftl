@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.OrganizationTemplateDataModel" -->
 <#include "header.ftl">
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Dear ${name},</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear ${name},</h5>
 
 <#if !hasReachableNodeManager()>
     <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
@@ -31,7 +31,7 @@
     and respond to this endorsement request as soon as possible, and within a maximum of 30 days.
 </p>
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">${organization.title!}</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">${organization.title!}</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
@@ -51,14 +51,14 @@
 </p>
 
 <#if organization.description?has_content>
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Description</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Description</h5>
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     ${organization.description!}
 </p>
 </#if>
 
 <#if organization.contacts?has_content>
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Contacts</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Contacts</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list organization.contacts! as contact>
@@ -85,7 +85,7 @@
 </#if>
 
 <#if organization.comments?has_content>
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Additional information</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Additional information</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
@@ -100,7 +100,7 @@
 </#if>
 
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Endorsement</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Endorsement</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     Click this button to endorse <b>${organization.title!}</b>:</p>
