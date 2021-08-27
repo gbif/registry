@@ -31,5 +31,14 @@ This module offers:
 
   * `identity.surety.mail.urlTemplate.resetPassword` template url address 'reset password'
 
+## Translations
+
+We support localization for GRSciColl and identity emails. 
+Organization related emails and their properties not to be translated!
+
+All the translations are managed at the CrowdIn project https://crowdin.com/project/gbif-registry.
+So we apply changes only for english files (without extension).
+
+
 [Parent](../README.md)
 
