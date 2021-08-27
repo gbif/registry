@@ -9,7 +9,7 @@
     <tr style="margin: 0;padding: 0;line-height: 1.65;">
         <td align="center" style="margin: 0;padding: 0;line-height: 1.65;">
             <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-                <a href="${url}" class="button" style="margin: 0;padding: 0;line-height: 1.65;color: white;text-decoration: none;display: inline-block;background: #509E2F;border: solid #509E2F;border-width: 10px 20px 8px;font-weight: bold;border-radius: 4px;">Reset</a>
+                <a href="${url}" class="button" style="margin: 0;padding: .375rem .75rem;line-height: 1.65;text-decoration: none;display: inline-block;font-weight: 400;text-align: center;vertical-align: middle;cursor: pointer;user-select: none;background-color: transparent;border: 1px solid #61a861;font-size: 14px;border-radius: .25rem;color: #61a861;">Reset</a>
             </p>
         </td>
     </tr>
