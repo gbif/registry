@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.OrganizationTemplateDataModel" -->
 <#include "header.ftl">
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Dear ${name},</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     The following message is to inform you that

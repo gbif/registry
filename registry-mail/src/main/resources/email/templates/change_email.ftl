@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountChangeEmailTemplateDataModel" -->
 <#include "header.ftl">
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Hello ${name},</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hello ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     We received a request to change the email address of your GBIF account from <a href="mailto:${currentEmail}" style="color: #509E2F;text-decoration: none;">${currentEmail}</a> to <a href="mailto:${newEmail}" style="color: #509E2F;text-decoration: none;">${newEmail}</a>.
