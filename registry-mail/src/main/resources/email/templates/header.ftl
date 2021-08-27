@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width">
   <meta name="ProgId" content="Word.Document">
 </head>
-<body style="margin: 0;padding: 0;font-size: 16px;font-family: Roboto, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;height: 100%;background: #f8f8f8;width: 100% !important;">
+<body style="margin: 0;padding: 0;font-size: 14px;color: #4E565F;font-family: Roboto, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;height: 100%;background: #f8f8f8;width: 100% !important;">
 
-<table style="margin: 0;padding: 0;height: 100%;background: #f8f8f8;width: 100% !important;">
+<table style="margin: 0;padding: 20px 0 0 0;height: 100%;background: #f8f8f8;width: 100% !important;">
   <!-- Main message -->
   <tr>
-    <td style="margin: 0 auto !important;display: block !important;max-width: 580px !important;">
+    <td style="margin: 0 auto !important;display: block !important;max-width: 900px !important;">
 
       <!-- Message start -->
       <table style="margin: 0;padding: 0;border-collapse: collapse;width: 100% !important;">
         <tr>
-          <td align="center" style="margin: 0;padding: 10px 0;background: #509E2F;color: white;font-size:20px;font-weight: bold;">
-            <img src="cid:logo.png" width="300" height="114" alt="GBIF &ndash; Global Biodiversity Information Facility" style="margin: 0 auto;padding: 0;max-width: 100%;display: block;">
+          <td align="center" style="margin: 0;padding: 30px 55px;background: white;color: white;font-size:20px;font-weight: bold;">
+            <div style="border-bottom: 1px solid #dee2e6;">
+              <img src="cid:logo.png" width="250" alt="GBIF &ndash; Global Biodiversity Information Facility" style="margin: 0 auto;padding: 0;max-width: 100%;display: block;">
+            </div>
           </td>
         </tr>
         <tr>
-          <td style="padding: 30px 35px;background: white;">
+          <td style="padding: 0 55px 30px 55px;background: white;">
