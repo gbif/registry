@@ -13,10 +13,10 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Метаданные загрузки находок не были удалены.  Вы по-прежнему можете цитировать любые созданные вами загрузки:</p>
 <ul style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list downloadUrls as downloadUrl>
-    <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #509E2F;text-decoration: none;">${downloadUrl}</a></li>
+    <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>
     </#list>
 </ul>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Если вы используете загрузку GBIF.org в публикации, сообщите об этом по адресу  <a href="mailto:communications@gbif.org" style="color: #509E2F;text-decoration: none;">communications@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you use a GBIF.org download in a publication, please notify <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
 </#if>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Если вы захотите загрузить данные с GBIF.org в будущем, вам потребуется создать новую учетную запись.</p>
