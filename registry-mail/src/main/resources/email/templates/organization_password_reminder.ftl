@@ -11,15 +11,15 @@
 </p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">The information requested is</h5>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
-        <li style="margin: 0;padding: 0;line-height: 1.65;">
-            Username: ${organization.key}
-        </li>
-        <li style="margin: 0;padding: 0;line-height: 1.65;">
-            Password: ${organization.password}</li>
-    </ul>
-</p>
+
+<ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
+    <li style="margin: 0;padding: 0;line-height: 1.65;">
+        Username: ${organization.key}
+    </li>
+    <li style="margin: 0;padding: 0;line-height: 1.65;">
+        Password: ${organization.password}
+    </li>
+</ul>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you did not request this information, please disregard this message</p>
 

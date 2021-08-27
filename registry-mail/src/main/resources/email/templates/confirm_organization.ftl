@@ -33,22 +33,20 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">${organization.title!}</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
+<ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list organization.address! as addr>
         <li style="margin: 0;padding: 0;line-height: 1.65;">${addr}</li>
     </#list>
-        <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.city!}</li>
-        <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.province!}</li>
-        <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.postalCode!}</li>
+    <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.city!}</li>
+    <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.province!}</li>
+    <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.postalCode!}</li>
     <#if (organization.country??) >
         <li style="margin: 0;padding: 0;line-height: 1.65;">${organization.country.title!}</li>
     </#if>
     <#list organization.homepage! as homepage>
         <li style="margin: 0;padding: 0;line-height: 1.65;"><a href="${homepage}" style="color: #4ba2ce;text-decoration: none;">${homepage}</a></li>
     </#list>
-    </ul>
-</p>
+</ul>
 
 <#if organization.description?has_content>
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Description</h5>
@@ -60,34 +58,43 @@
 <#if organization.contacts?has_content>
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Contacts</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list organization.contacts! as contact>
-<ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <#if contact.firstName?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.computeCompleteName()}</li></#if>
-    <#if contact.type?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.type}</li></#if>
-    <#if contact.position?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.position?join(", ")}</li></#if>
-    <#if contact.description?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.description}</li></#if>
-    <#if contact.organization?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.organization}</li></#if>
+        <ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
+            <#if contact.firstName?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.computeCompleteName()}</li></#if>
+            <#if contact.type?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.type}</li></#if>
+            <#if contact.position?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.position?join(", ")}</li></#if>
+            <#if contact.description?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.description}</li></#if>
+            <#if contact.organization?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.organization}</li></#if>
 
-    <#if contact.email?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.email?join(", ")}</li></#if>
-    <#if contact.phone?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.phone?join(", ")}</li></#if>
+            <#if contact.email?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.email?join(", ")}</li></#if>
+            <#if contact.phone?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.phone?join(", ")}</li></#if>
 
-    <#list contact.address! as addr>
-    <#if addr?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${addr}</li></#if>
+            <#list contact.address! as addr>
+                <#if addr?has_content>
+                    <li style="margin: 0;padding: 0;line-height: 1.65;">${addr}</li></#if>
+            </#list>
+            <#if contact.city?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.city}</li></#if>
+            <#if contact.province?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.province}</li></#if>
+            <#if contact.postalCode?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.postalCode}</li></#if>
+            <#if contact.country?has_content>
+                <li style="margin: 0;padding: 0;line-height: 1.65;">${contact.country}</li></#if>
+        </ul>
     </#list>
-    <#if contact.city?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.city}</li></#if>
-    <#if contact.province?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.province}</li></#if>
-    <#if contact.postalCode?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.postalCode}</li></#if>
-    <#if contact.country?has_content><li style="margin: 0;padding: 0;line-height: 1.65;">${contact.country}</li></#if>
-</ul>
-</#list>
-</p>
 </#if>
 
 <#if organization.comments?has_content>
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Additional information</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <ul style="list-style: none;margin: 0 0 20px;padding: 0;line-height: 1.65;">
         <#list organization.comments! as comment>
         <#--comments can be in Markdown but we only support endline for now-->
@@ -96,7 +103,6 @@
         </#list>
         </#list>
     </ul>
-</p>
 </#if>
 
 
