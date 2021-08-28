@@ -30,6 +30,7 @@ message:
 identity:
   surety:
     mail:
+      supportedLocales: en,ru,es,fr
       urlTemplate:
         confirmUser: https://demo.gbif-dev.org/{0}/user/confirm?username={1}&code={2}
         resetPassword: https://demo.gbif-dev.org/{0}/user/confirm?username={1}&code={2}
@@ -51,6 +52,8 @@ application:
 grscicoll:
   portal:
     url: https://www.gbif-dev.org/grscicoll/
+  registryPortal:
+      url: https://registry.gbif-dev.org/
 
 derivedDataset:
   text: Derived dataset GBIF.org ({0}) Filtered export of GBIF occurrence data https://doi.org/{1}
@@ -151,7 +154,7 @@ spring:
   # Liquibase
   liquibase:
     change-log: classpath:liquibase/master.xml
-    enabled: true
+    enabled: false
     default-schema: public
   # Mail
   mail:
