@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.ConfirmableTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Уважаемый/ая ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Уважаемый пользователь ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Мы получили запрос на сброс пароля вашей учетной записи GBIF. Нажмите на кнопку, чтобы сбросить пароль:</p>
 
