@@ -27,27 +27,23 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Узнайте, как другие используют данные</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Что вы можете делать с данными, опосредованными GBIF? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
-    As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Что вы можете делать с данными, опосредованными GBIF? Взгляните на некоторые <a href="https://www.gbif.org/ru/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">недавние основные моменты</a>!
+    В рамках своей текущей программы по отслеживанию использования открытых данных о биоразнообразии секретариат GBIF представляет недавние исследования и собирает его каждый год в нашем <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Обзоре Науки</a>.</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Вопросы и отзывы</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Если у вас есть технические вопросы, связанные с получением или использованием данных, обратитесь к часто задаваемым вопросам на GBIF.org или на форуме сообщества.
-    If you don't find an answer to your question, you can reach out to <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
+    Если вы не нашли ответа на свой вопрос, вы можете обратиться в <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">У нас есть общедоступные репозитории на GitHub, в которых мы документируем,
     управляем и отвечаем: от запросов службы поддержки до ошибок и проблем с функциональностью и содержанием сайта до предложений о полезных дополнительных функциях и улучшениях.
     Вы можете внести свой вклад, нажав кнопку чата в строке меню в верхней части каждой страницы.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
-    non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">По вопросам прессы обращайтесь по электронной почте <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. По всем другим частным или нетехническим вопросам обращайтесь по адресу <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Будьте в курсе последних событий в сети GBIF</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Следуйте за нами в социальных сетях или подпишитесь на нашу рассылку. You'll hear from us (roughly in descending order of frequency)
-    via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Следуйте за нами в социальных сетях или подпишитесь на нашу рассылку. Вы услышите от нас (примерно в порядке убывания) через <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>, <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> и <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">новостную рассылку</a>.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
