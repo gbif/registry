@@ -57,9 +57,6 @@ import freemarker.template.TemplateException;
 @Service
 public class IdentityEmailManager {
 
-  // supported locales
-  private static final List<String> SUPPORTED_LOCALES = Arrays.asList("en", "ru");
-
   private final EmailTemplateProcessor emailTemplateProcessor;
   private final IdentitySuretyMailConfigurationProperties identityMailConfigProperties;
   private final String doiUrl;
@@ -246,6 +243,7 @@ public class IdentityEmailManager {
   }
 
   private String findSuitableLocaleTagAmongAvailable(Locale locale) {
-    return Locale.lookupTag(Locale.LanguageRange.parse(locale.toLanguageTag()), SUPPORTED_LOCALES);
+    return Locale.lookupTag(Locale.LanguageRange.parse(locale.toLanguageTag()),
+        identityMailConfigProperties.getSupportedLocales());
   }
 }

@@ -28,6 +28,11 @@
       "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
     },
     {
+      "name": "identity.surety.mail.supportedLocales",
+      "type": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties",
+      "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties"
+    },
+    {
       "name": "identity.surety.mail.urlTemplate",
       "type": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties",
       "sourceType": "org.gbif.registry.mail.config.IdentitySuretyMailConfigurationProperties$UrlTemplateProperties",
