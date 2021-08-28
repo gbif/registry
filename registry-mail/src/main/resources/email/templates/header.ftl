@@ -4,6 +4,17 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
   <meta name="viewport" content="width=device-width">
   <meta name="ProgId" content="Word.Document">
+  <style>
+    a {
+      color: #4ba2ce;
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: #2c79a1 !important;
+      text-decoration: underline !important;
+    }
+  </style>
 </head>
 <body <#if .locale == "ar">dir="rtl" lang="ar"</#if> style="margin: 0;padding: 0;font-size: 14px;color: #4E565F;font-family: Roboto, &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;line-height: 1.65;height: 100%;background: #f8f8f8;width: 100% !important;">
 
