@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width">
   <meta name="ProgId" content="Word.Document">
   <style>
-    a {
+    a:not(.button) {
       color: #4ba2ce;
       text-decoration: none;
     }
 
-    a:hover {
+    a:not(.button):hover {
       color: #2c79a1 !important;
       text-decoration: underline !important;
     }
