@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountDeleteDataModel" -->
 <#include "header.ftl">
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size: 20px;line-height: 1.25;">Уважаемый пользователь ${name},</h4>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Уважаемый пользователь ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     Ваш аккаунт <b>${name}</b> на GBIF.org был удален, а ваша личная информация стерта.
