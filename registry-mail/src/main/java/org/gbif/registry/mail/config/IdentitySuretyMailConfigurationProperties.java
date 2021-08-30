@@ -18,11 +18,24 @@ package org.gbif.registry.mail.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 @ConfigurationProperties(prefix = "identity.surety.mail")
 public class IdentitySuretyMailConfigurationProperties {
 
+  private List<String> supportedLocales = new ArrayList<>();
+
   private UrlTemplateProperties urlTemplate;
+
+  public List<String> getSupportedLocales() {
+    return supportedLocales;
+  }
+
+  public void setSupportedLocales(List<String> supportedLocales) {
+    this.supportedLocales = supportedLocales;
+  }
 
   public UrlTemplateProperties getUrlTemplate() {
     return urlTemplate;
