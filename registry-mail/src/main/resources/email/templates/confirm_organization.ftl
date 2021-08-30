@@ -76,8 +76,6 @@
                     <#list contact.email as email>
                         <a href="mailto:${email}" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;">${email}</a><#if email_has_next>, </#if>
                     </#list>
-
-                    ${contact.email?join(", ")}
                 </li>
             </#if>
             <#if contact.phone?has_content>

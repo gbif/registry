@@ -15,6 +15,7 @@ message:
 identity:
   surety:
     mail:
+      supportedLocales: en,ru,es,fr
       urlTemplate:
         confirmUser: https://demo.gbif-dev.org/{0}/user/confirm?username={1}&code={2}
         resetPassword: https://demo.gbif-dev.org/{0}/user/confirm?username={1}&code={2}
