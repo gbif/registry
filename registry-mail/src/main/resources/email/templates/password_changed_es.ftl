@@ -5,7 +5,7 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     La contraseña de su cuenta de GBIF <b>${name}</b> ha cambiado. 
-    If you didn't change it, please contact <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a> immediately.
+    Si no ha solicitado este cambio, por favor, póngase en contacto con <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a> inmediatamente.
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
