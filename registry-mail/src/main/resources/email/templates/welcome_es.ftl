@@ -10,8 +10,7 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite los datos que descarga</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The data accessed through GBIF.org represents the work of scientists, researchers, curators, data and IT specialists,
-    and other professionals in hundreds of organizations around the world. When you use the <i>DOI</i> (Digital Object Identifier)
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los datos accedidos a través de GBIF.org representan el trabajo de científicos, investigadores, conservadores, especialistas de datos y de TI, y otros profesionales en cientos de organizaciones de todo el mundo. When you use the <i>DOI</i> (Digital Object Identifier)
     assigned to each search result you download, you help ensure that they get full credit for their efforts.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
