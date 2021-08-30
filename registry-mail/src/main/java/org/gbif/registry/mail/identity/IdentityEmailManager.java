@@ -37,7 +37,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -243,7 +242,8 @@ public class IdentityEmailManager {
   }
 
   private String findSuitableLocaleTagAmongAvailable(Locale locale) {
-    return Locale.lookupTag(Locale.LanguageRange.parse(locale.toLanguageTag()),
+    return Locale.lookupTag(
+        Locale.LanguageRange.parse(locale.toLanguageTag()),
         identityMailConfigProperties.getSupportedLocales());
   }
 }
