@@ -10,11 +10,10 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite los datos que descarga</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los datos accedidos a través de GBIF.org representan el trabajo de científicos, investigadores, conservadores, especialistas de datos y de TI, y otros profesionales en cientos de organizaciones de todo el mundo. When you use the <i>DOI</i> (Digital Object Identifier)
-    assigned to each search result you download, you help ensure that they get full credit for their efforts.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los datos accedidos a través de GBIF.org representan el trabajo de científicos, investigadores, conservadores, especialistas de datos y de TI, y otros profesionales en cientos de organizaciones de todo el mundo. Cuando se usa el <i>DOI</i> (Digital Object Identifier)
+    asignado a cada descarga de resultados de búsqueda, se ayuda a garantizar que los autores reciban todo el crédito por sus esfuerzos.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
-    maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">El DOI se incluye en el email de confirmación que se recibe cuando una descarga está lista y, además, se puede consultar el historial de descargas en el perfil de su cuenta de GBIF. By citing data in this way, you can simplify the references in your research,
     ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
     enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
 
