@@ -13,30 +13,25 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los datos accedidos a través de GBIF.org representan el trabajo de científicos, investigadores, conservadores, especialistas de datos y de TI, y otros profesionales en cientos de organizaciones de todo el mundo. Cuando se usa el <i>DOI</i> (Digital Object Identifier)
     asignado a cada descarga de resultados de búsqueda, se ayuda a garantizar que los autores reciban todo el crédito por sus esfuerzos.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">El DOI se incluye en el email de confirmación que se recibe cuando una descarga está lista y, además, se puede consultar el historial de DOIs de sus descargas en el perfil de su cuenta de GBIF. By citing data in this way, you can simplify the references in your research,
-    ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">¿Quiere saber más sobre esto?</a></p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">El DOI se incluye en el email de confirmación que se recibe cuando una descarga está lista y, además, se puede consultar el historial de DOIs de sus descargas en el perfil de su cuenta de GBIF. Al citar los datos de esta manera, puede simplificar las referencias en sus investigaciones, garantizar la capacidad para repetir o actualiza resultados de búsqueda, y enlazar usos de datos directamente a los datasets relevantes, permitiéndonos automatizar el informe de esos usos a los publicadores y otros usuarios relacionados. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">¿Quiere saber más sobre esto?</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Join one of the communities</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Únase a una de las comunidades</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Para preguntas y discusiones sobre el uso de datos mediados por GBIF, por favor, únase al <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">foro de la comunidad GBIF</a>.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
-    group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">La <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">lista de usuarios del API de GBIF</a> proporciona un grupo de discusión activa entre usuarios donde cada uno puede publicar preguntas y mantenerse informado de las últimas noticias sobre el API de GBIF y su infraestructura.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Learn how others use the data</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Aprenda como otros usan los datos</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
-    As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">¿Qué puede hacer con los datos mediados por GBIF? ¡Eche un vistazo a los <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">últimos acontecimientos</a>!
+    Como parte del programa en curso para rastrear los usos de los datos de biodiversidad abiertos, la Secretaría de GBIF presenta investigaciones recientes y las compila cada año en su <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Questions or feedback</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Preguntas o sugerencias</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you have technical questions related to getting or using data, please refer to the FAQs on GBIF.org or the community forum.
-    If you don't find an answer to your question, you can reach out to <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si tiene preguntas técnicas relativas a la obtención o el uso de nuestros datos, por favor, consulte nuestra sección de preguntas frecuentes en GBIF.org o el foro de la comunidad.
+    Si no encuentra respuesta a su pregunta, puede contactarnos en <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We maintain public repositories on GitHub where we document,
-    manage and respond to everything from help desk requests to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Disponemos de repositorios públicos en GitHub donde documentamos, gestionamos y respondemos cualquier consulta del help desk, así como también bugs o problemas relacionados con el funcionamiento del sitio web y su contenido. Lo mismo respecto a sugerencias sobre nuevas funcionalidades o mejoras que puedan ser de utilidad.
     You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
