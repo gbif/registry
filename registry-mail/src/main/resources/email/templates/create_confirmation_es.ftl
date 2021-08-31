@@ -3,7 +3,7 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hola ${name},</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Thanks for registering at GBIF.org.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Gracias por registrarse en GBIF.org.
     Por favor, confirme su cuenta de GBIF pulsando el siguiente botón:</p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
