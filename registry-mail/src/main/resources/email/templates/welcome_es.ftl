@@ -32,16 +32,15 @@
     Si no encuentra respuesta a su pregunta, puede contactarnos en <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Disponemos de repositorios públicos en GitHub donde documentamos, gestionamos y respondemos cualquier consulta del help desk, así como también bugs o problemas relacionados con el funcionamiento del sitio web y su contenido. Lo mismo respecto a sugerencias sobre nuevas funcionalidades o mejoras que puedan ser de utilidad.
-    You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
+    Puede contribuir a esto haciendo uso del botón de chat que aparece en la barra del menú en la parte superior de cada página del sitio web.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
-    non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Para consultas de prensa, por favor, envíenos un email a <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. Para cuestiones privadas o que no sean técnicas, puede escribirnos a <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Stay up to date with the GBIF network</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Manténgase al día sobre la red de GBIF</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Follow us on social media or sign up for our email list. You'll hear from us (roughly in descending order of frequency)
-    via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Síganos en nuestras redes sociales o dése de alta en nuestra lista de correo. Nos encontrarás (en orden descendente de frecuencia de actualizaciones)
+    en <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
+    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> y la <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">newsletter de GBIF</a>.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
