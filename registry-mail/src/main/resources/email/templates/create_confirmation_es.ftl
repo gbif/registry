@@ -17,11 +17,11 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    También puede copiar el siguiente enlace y pegarlo en su navegador: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
+    También puede copiar la siguiente URL y pegarla en su navegador: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>La Secretaría de GBIF</em>
+    <em>Secretaría de GBIF</em>
 </p>
 
 <#include "footer.ftl">
