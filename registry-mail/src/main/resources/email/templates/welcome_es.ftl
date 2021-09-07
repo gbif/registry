@@ -3,17 +3,16 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">Hola ${name},</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Gracias por registrarse en GBIF.org. Ya puede descargar los resultados de sus búsquedas de cientos de millones de registros de biodiversidad abiertos y gratuitos puestos a disposición por la comunidad de participantes y publicadores de GBIF.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Gracias por registrarse en GBIF.org. Ya puede descargar los resultados de sus búsquedas desde los cientos de millones de registros de biodiversidad gratuitos y abiertos, puestos a disposición por la comunidad de participantes y publicadores de GBIF.
 </p>
 
 <h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Siguientes pasos</h4>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite los datos que descarga</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite los datos que descargue</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los datos accedidos a través de GBIF.org representan el trabajo de científicos, investigadores, conservadores, especialistas de datos y de TI, y otros profesionales en cientos de organizaciones de todo el mundo. Cuando se usa el <i>DOI</i> (Digital Object Identifier)
-    asignado a cada descarga de resultados de búsqueda, se ayuda a garantizar que los autores reciban todo el crédito por sus esfuerzos.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los datos a los que se accede a través de GBIF.org representan el trabajo de científicos, investigadores, curadores, especialistas en datos e informática y otros profesionales de cientos de organizaciones de todo el mundo. Si usa el <i>DOI</i> (Digital Object Identifier) asignado a cada descarga de resultados de búsqueda, ayuda a garantizar que los autores reciban todo el crédito por sus esfuerzos.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">El DOI se incluye en el email de confirmación que se recibe cuando una descarga está lista y, además, se puede consultar el historial de DOIs de sus descargas en el perfil de su cuenta de GBIF. Al citar los datos de esta manera, puede simplificar las referencias en sus investigaciones, garantizar la capacidad para repetir o actualiza resultados de búsqueda, y enlazar usos de datos directamente a los datasets relevantes, permitiéndonos automatizar el informe de esos usos a los publicadores y otros usuarios relacionados. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">¿Quiere saber más sobre esto?</a></p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">El DOI se incluye en el correo electrónico de confirmación que se recibe cuando una descarga está lista y el perfil de su cuenta también mantiene un registro de todos sus DOI de descarga. Al citar los datos de esta manera, puede simplificar las referencias en sus investigaciones, garantizar la capacidad para repetir o actualiza resultados de búsqueda, y enlazar usos de datos directamente a los datasets relevantes, permitiéndonos automatizar el informe de esos usos a los publicadores y otros usuarios relacionados. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">¿Quiere saber más sobre esto?</a></p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Únase a una de las comunidades</h5>
 
