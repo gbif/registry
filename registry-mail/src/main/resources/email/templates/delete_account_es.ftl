@@ -10,23 +10,23 @@
 </p>
 
 <#if downloadUrls?size != 0>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los metadatos de las descargas de registros de presencia no se han borrado.  Todavía puede citar cualquiera de las descargas que haya realizado:</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Los metadatos de las descargas de registros biológicos no se eliminan.  Puede seguir citando cualquiera de las descargas que haya creado:</p>
 <ul style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list downloadUrls as downloadUrl>
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>
     </#list>
 </ul>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si utiliza alguna descarga de GBIF.org en una publicación, por favor, notifíquelo a <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si utiliza alguna descarga de GBIF.org en una publicación, por favor notifíquelo a <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
 </#if>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si desea descargar más datos de GBIF.org en el futuro tendrá que crear una nueva cuenta.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si desea descargar más datos de GBIF.org en el futuro, deberá crear una nueva cuenta.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
-        Gracias en nombre de toda la comunidad de GBIF
+        Gracias, en nombre de toda la comunidad de GBIF,
         <br>
-        La Secretaría de GBIF
+        Secretaría de GBIF
     </em>
 </p>
 
