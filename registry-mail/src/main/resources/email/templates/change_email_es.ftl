@@ -4,8 +4,8 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hola ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Hemos recibido una petición para cambiar el email de tu cuenta de GBIF de <a href="mailto:${currentEmail}" style="color: #4ba2ce;text-decoration: none;">${currentEmail}</a> a <a href="mailto:${newEmail}" style="color: #4ba2ce;text-decoration: none;">${newEmail}</a>.
-    Por favor, pulse el siguiente botón para cambiar el email:
+    Hemos recibido una solictud para cambiar el correo electrónico de su cuenta GBIF de <a href="mailto:${currentEmail}" style="color: #4ba2ce;text-decoration: none;">${currentEmail}</a> a <a href="mailto:${newEmail}" style="color: #4ba2ce;text-decoration: none;">${newEmail}</a>.
+    Por favor, pulse el siguiente botón para cambiar su correo electrónico:
 </p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
@@ -19,12 +19,12 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    También puede copiar el siguiente enlace y pegarlo en su navegador: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
+    También puede copiar la siguiente URL y pegarla en su navegador: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
 </p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>La Secretaría de GBIF</em>
+    <em>Secretaría de GBIF</em>
 </p>
 
 <#include "footer.ftl">
