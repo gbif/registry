@@ -4,12 +4,12 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hola ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    La contraseña de su cuenta de GBIF <b>${name}</b> ha cambiado. 
-    Si no ha solicitado este cambio, por favor, póngase en contacto con <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a> inmediatamente.
+    La contraseña de su cuenta GBIF <b>${name}</b> fue cambiada. 
+    Si no ha solicitado este cambio, por favor póngase en contacto con <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a> inmediatamente.
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>La Secretaría de GBIF</em>
+    <em>Secretaría de GBIF</em>
 </p>
 
 <#include "footer.ftl">
