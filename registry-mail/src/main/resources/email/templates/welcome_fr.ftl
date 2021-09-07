@@ -3,17 +3,17 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">Bonjour ${name},</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Merci de votre enregistrement sur GBIF.org. You're ready now to download the results of your searches of the hundreds of millions
-    of free and open biodiversity records made available by the GBIF community of participants and publishers.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Merci de votre enregistrement sur GBIF.org. Vous êtes maintenant prêt à télécharger les résultats de vos recherches sur les centaines de millions
+    d'enregistrements sur la biodiversité gratuits et ouverts mis à disposition par la communauté des participants et des fournisseurs de données de GBIF.
 </p>
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Next steps</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Étapes suivantes</h4>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite the data you download</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Citer les données que vous téléchargez</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The data accessed through GBIF.org represents the work of scientists, researchers, curators, data and IT specialists,
-    and other professionals in hundreds of organizations around the world. When you use the <i>DOI</i> (Digital Object Identifier)
-    assigned to each search result you download, you help ensure that they get full credit for their efforts.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Les données auxquelles vous avez accès via GBIF.org représentent le travail de scientifiques, de chercheurs, de conservateurs, de spécialistes des données, de spécialistes informatiques,
+    et d'autres professionnels dans des centaines d'organisations à travers le monde. Lorsque vous utilisez le <i>DOI</i> (Identificateur d'objets numériques)
+    assigné à chaque résultat de recherche que vous téléchargez, vous aidez à vous assurer qu'ils obtiennent le crédit complet pour leurs efforts.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
     maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
