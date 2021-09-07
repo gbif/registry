@@ -37,16 +37,14 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Manténgase al día con la red de GBIF</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Síganos en las redes sociales o suscríbase a nuestra lista de correo electrónico. Nos encontrarás (en orden descendente de frecuencia de actualizaciones)
-    en <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> y la <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">newsletter de GBIF</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Síganos en las redes sociales o suscríbase a nuestra lista de correo electrónico. Nos encontrarás (en orden descendente de frecuencia de actualizaciones) a través de <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>, <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> y el <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">boletín de GBIF</a>.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
         Gracias en nombre de toda la comunidad de GBIF
         <br>
-        La Secretaría de GBIF
+       Secretaría de GBIF
     </em>
 </p>
 
