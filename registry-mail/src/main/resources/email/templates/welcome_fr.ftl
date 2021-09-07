@@ -15,41 +15,41 @@
     et d'autres professionnels dans des centaines d'organisations à travers le monde. Lorsque vous utilisez le <i>DOI</i> (Identificateur d'objets numériques)
     assigné à chaque résultat de recherche que vous téléchargez, vous aidez à vous assurer qu'ils obtiennent le crédit complet pour leurs efforts.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
-    maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
-    ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Le DOI est inclus dans l'e-mail de confirmation que vous recevez lorsque votre téléchargement est prêt, et votre compte
+    conserve également un enregistrement de tous vos DOI de téléchargement. En citant des données de cette manière, vous pouvez simplifier les références dans vos recherches,
+    assurer votre capacité à répéter ou à mettre à jour les résultats de la recherche, et lier les usages directement aux jeux de données pertinents,
+    nous permettant d'automatiser les rapports de ces utilisations aux fournisseurs de données et aux utilisateurs. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Vous voulez plus de détails ?</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Join one of the communities</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Rejoignez l'une des communautés</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Pour des questions et des discussions sur l'utilisation des données du GBIF, veuillez rejoindre le <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">forum de la communauté GBIF</a>.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
-    group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">La <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">liste des utilisateurs de l'API GBIF</a> fournit un groupe de discussion entre pairs actif
+    où vous pouvez poster des questions et rester informé des mises à jour de l'API GBIF et de l'infrastructure sous-jacente.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Learn how others use the data</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Apprenez comment les autres utilisent les données</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
-    As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Que pouvez-vous faire avec les données du GBIF ? Jetez un coup d'oeil à quelques <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">faits saillants récents</a> !
+    Dans le cadre de son programme de suivi de l'utilisation des données sur la biodiversité ouverte, le secrétariat du GBIF met en avant des recherches récentes et
+    compile l'information chaque année dans notre <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">revue scientifique</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Questions or feedback</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Questions et commentaires</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you have technical questions related to getting or using data, please refer to the FAQs on GBIF.org or the community forum.
-    If you don't find an answer to your question, you can reach out to <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si vous avez des questions techniques concernant l'obtention ou l'utilisation de données, veuillez vous référer à la FAQ sur GBIF.org ou au forum de la communauté.
+    Si vous ne trouvez pas de réponse à votre question, vous pouvez contacter <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We maintain public repositories on GitHub where we document,
-    manage and respond to everything from help desk requests to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
-    You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Nous maintenons des dépôts publics sur GitHub où nous documentons,
+    gérons et répondons à toutes les questions, allant des demandes d'aide aux bogues rencontrés, aux problèmes liés aux fonctionnalités et au contenu du site, et aux suggestions sur des fonctionnalités et améliorations supplémentaires utiles.
+    Vous pouvez y contribuer en cliquant sur le bouton de discussion dans la barre de menu en haut de chaque page.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
-    non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Pour toute demande de presse, veuillez envoyez un e-mail à <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. Pour toute autre question privée ou
+    questions non techniques, veuillez envoyez un e-mail à <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Stay up to date with the GBIF network</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Restez à jour avec le réseau GBIF</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Follow us on social media or sign up for our email list. You'll hear from us (roughly in descending order of frequency)
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Suivez-nous sur les réseaux sociaux ou inscrivez-vous à notre liste de diffusion. Vous entendrez parler de nous (approximativement en ordre décroissant de fréquence)
     via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
+    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> et la <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">newsletter GBIF</a>.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
