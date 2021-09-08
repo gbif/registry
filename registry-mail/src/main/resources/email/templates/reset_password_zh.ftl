@@ -16,12 +16,12 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    You can also copy the following URL and paste into your browser: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
+    您也可以复制以下URL并粘贴到您的浏览器： <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
 </p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>The GBIF Secretariat</em>
+    <em>GBIF 秘书处</em>
 </p>
 
 <#include "footer.ftl">
