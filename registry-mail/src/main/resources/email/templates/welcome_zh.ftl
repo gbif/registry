@@ -54,9 +54,9 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
-        Thanks, on behalf of the GBIF network,
+        代表GBIF网络感谢您，
         <br>
-        The GBIF Secretariat
+        GBIF秘书处
     </em>
 </p>
 
