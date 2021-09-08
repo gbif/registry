@@ -32,9 +32,8 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">如果您有获取或使用数据相关的技术问题，请参阅GBIF.org或社区论坛上的FAQs。
     如果您找不到问题的答案，您可以联系 <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We maintain public repositories on GitHub where we document,
-    manage and respond to everything from help desk requests to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
-    You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">我们在 GitHub 上维护公共存储库，在那里我们记录、管理和响应所有内容，从服务台请求到站点功能和内容的错误和问题，再到有关有用的附加功能和改进的建议。
+    您可以通过点击每个页面顶部菜单栏中的聊天按钮来为此做出贡献。</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
     non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
