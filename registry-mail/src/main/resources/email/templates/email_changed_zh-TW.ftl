@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountEmailChangedTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hello ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">您好 ${name}，</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     The email of your GBIF account
@@ -14,7 +14,7 @@
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>The GBIF Secretariat</em>
+    <em>GBIF 秘書處</em>
 </p>
 
 <#include "footer.ftl">
