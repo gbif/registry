@@ -3,7 +3,7 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">您好 ${name}，</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We received a request to reset the password of your GBIF account. Please click the button below to reset your password:</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">我們收到了重設您帳戶密碼的請求。 Please click the button below to reset your password:</p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
     <tr style="margin: 0;padding: 0;line-height: 1.65;">
