@@ -24,7 +24,7 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Learn how others use the data</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">O que você pode fazer com os dados mediados pelo GBIF? Dê uma olhada em alguns<a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">destaques recentes</a>!
     As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
     compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
 
