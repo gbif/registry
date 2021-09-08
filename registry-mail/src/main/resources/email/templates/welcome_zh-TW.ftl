@@ -3,13 +3,12 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">您好 ${name}，</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">謝謝您在 GBIF.org 註冊， You're ready now to download the results of your searches of the hundreds of millions
-    of free and open biodiversity records made available by the GBIF community of participants and publishers.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">謝謝您在 GBIF.org 註冊， 您已可以開始下載由 GBIF 社群參與者與發佈者提供之上億筆免費與開放的生物多樣性紀錄。
 </p>
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Next steps</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">下一步</h4>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite the data you download</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">引用您下載的資料</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The data accessed through GBIF.org represents the work of scientists, researchers, curators, data and IT specialists,
     and other professionals in hundreds of organizations around the world. When you use the <i>DOI</i> (Digital Object Identifier)
@@ -20,20 +19,20 @@
     ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
     enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Join one of the communities</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">加入討論社群</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
     group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Learn how others use the data</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">看看其他人如何使用資料</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
     As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
     compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Questions or feedback</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">有任何問題或意見嗎？</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you have technical questions related to getting or using data, please refer to the FAQs on GBIF.org or the community forum.
     If you don't find an answer to your question, you can reach out to <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
