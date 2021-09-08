@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">{name} 様</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">${name} 様</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF.orgに登録していただきありがとうございます。 You're ready now to download the results of your searches of the hundreds of millions
     of free and open biodiversity records made available by the GBIF community of participants and publishers.
