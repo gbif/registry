@@ -39,9 +39,9 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
     non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Stay up to date with the GBIF network</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">保持最新的 GBIF 网络</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Follow us on social media or sign up for our email list. You'll hear from us (roughly in descending order of frequency)
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">在社交媒体上关注我们或注册我们的电子邮件列表。 You'll hear from us (roughly in descending order of frequency)
     via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
     <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
 
