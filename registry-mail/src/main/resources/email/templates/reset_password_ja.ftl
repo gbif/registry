@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.ConfirmableTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hello ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">{name} 様</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We received a request to reset the password of your GBIF account. Please click the button below to reset your password:</p>
 
@@ -16,12 +16,12 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    You can also copy the following URL and paste into your browser: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
+    下記URLをコピーしてブラウザに貼り付けることもできます: <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
 </p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>The GBIF Secretariat</em>
+    <em>GBIF事務局</em>
 </p>
 
 <#include "footer.ftl">
