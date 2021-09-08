@@ -5,7 +5,7 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     您的 GBIF 帐户 <b>${name}</b> 的密码已更改。 
-    If you didn't change it, please contact <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a> immediately.
+    如果您没有更改，请立即联系 <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a>。
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
