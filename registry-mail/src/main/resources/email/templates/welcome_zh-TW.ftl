@@ -1,9 +1,9 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">Hello ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">您好 ${name}，</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Thanks for registering at GBIF.org. You're ready now to download the results of your searches of the hundreds of millions
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">謝謝您在 GBIF.org 註冊， You're ready now to download the results of your searches of the hundreds of millions
     of free and open biodiversity records made available by the GBIF community of participants and publishers.
 </p>
 
