@@ -5,7 +5,7 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     我们收到了一个请求，要将您的 GBIF 帐户的电子邮件地址从 <a href="mailto:${currentEmail}" style="color: #4ba2ce;text-decoration: none;">${currentEmail}</a> 更改为 <a href="mailto:${newEmail}" style="color: #4ba2ce;text-decoration: none;">${newEmail}</a>。
-    请单击下方按钮更改您的电子邮件：
+    请点击下方按钮更改您的电子邮件：
 </p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
