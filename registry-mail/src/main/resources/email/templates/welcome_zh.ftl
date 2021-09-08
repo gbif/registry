@@ -24,8 +24,7 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">了解他人如何使用数据</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">您可以对GBIF中介数据做什么？ 看一些 <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">最近的亮点</a>！
-    As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
+    作为跟踪生物多样性开放数据使用情况的持续计划的一部分，GBIF 秘书处每年都会在我们的<a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>中介绍最近的研究并对其进行汇编。</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">问题或反馈</h5>
 
@@ -35,8 +34,7 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">我们在 GitHub 上维护公共存储库，在那里我们记录、管理和响应所有内容，从服务台请求到站点功能和内容的错误和问题，再到有关有用的附加功能和改进的建议。
     您可以通过点击每个页面顶部菜单栏中的聊天按钮来为此做出贡献。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
-    non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">对于媒体查询，请发送电子邮件到 <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>。 对于所有其他私人查询或非技术性问题，请发送电子邮件到 <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>。</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">保持最新的 GBIF 网络</h5>
 
