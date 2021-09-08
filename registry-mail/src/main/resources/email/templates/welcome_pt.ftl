@@ -3,26 +3,21 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">Hello ${name},</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Obrigado por se registrar em GBIF.org. You're ready now to download the results of your searches of the hundreds of millions
-    of free and open biodiversity records made available by the GBIF community of participants and publishers.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Obrigado por se registrar em GBIF.org. Agora você está pronto para baixar os resultados de suas buscas das centenas de milhões de registros abertos gratuitos disponibilizados pela comunidade GBIF de participantes e publicadores.
 </p>
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Next steps</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Próximos passos</h4>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite the data you download</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite os dados que você baixar</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The data accessed through GBIF.org represents the work of scientists, researchers, curators, data and IT specialists,
-    and other professionals in hundreds of organizations around the world. When you use the <i>DOI</i> (Digital Object Identifier)
-    assigned to each search result you download, you help ensure that they get full credit for their efforts.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Os dados acessados através de GBIF.org representam o trabalho de cientistas, pesquisadores, curadores, especialistas de dados e de tecnologia da informação, e outros profissionais em centenas de organizações ao redor do mundo. Quando você usa o <i>DO</i> (Identificador digital de objeto) atribuído a cada resultado de busca que você baixa, você assegura que eles irão receber crédito integral pelos esforços deles.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
-    maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
-    ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
+    maintains a record of all your download DOIs. Citando os dados dessa forma, você pode simplificar as referências em sua pesquisa,    assegurar sua habilidade em repetir ou atualizar os resultados de suas buscas, assim como associar os usos diretamente com os conjuntos de dados relevantes, nos ajudando a automatizar a divulgação desses usos aos publicadores e usuários comuns. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Quer mais detalhes?</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Join one of the communities</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Junte-se a uma das comunidades</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Para perguntas e discussões sobre o uso dos dados mediados pelo GBIF, junte-se ao<a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">fórum da comunidade GBIF</a>.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
     group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
