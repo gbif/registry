@@ -18,18 +18,17 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">关于使用 GBIF 中介数据的问题和讨论，请加入 <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF 社区论坛</a>。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
-    group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;"><a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API 用户列表</a>提供了一个活跃的点对点讨论组，您可以在其中发布问题并随时了解 GBIF API 和底层基础架构的更新。</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">了解他人如何使用数据</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">您可以对GBIF中介数据做什么？ 看一些 <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">最近的亮点</a>！
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">您可以对GBIF中介数据做什么？ 看一些 <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">近期亮点</a>！
     作为跟踪生物多样性开放数据使用情况的持续计划的一部分，GBIF 秘书处每年都会在我们的<a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>中介绍最近的研究并对其进行汇编。</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">问题或反馈</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">如果您有获取或使用数据相关的技术问题，请参阅GBIF.org或社区论坛上的FAQs。
-    如果您找不到问题的答案，您可以联系 <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>。</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">如果您有关于获取或使用数据的技术问题，请参阅GBIF.org或社区论坛上的常见问题。
+    如果您没有找到问题的答案，您可以联系 <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>。</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">我们在 GitHub 上维护公共存储库，在那里我们记录、管理和响应所有内容，从服务台请求到站点功能和内容的错误和问题，再到有关有用的附加功能和改进的建议。
     您可以通过点击每个页面顶部菜单栏中的聊天按钮来为此做出贡献。</p>
