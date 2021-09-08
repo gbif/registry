@@ -16,17 +16,17 @@
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>
     </#list>
 </ul>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you use a GBIF.org download in a publication, please notify <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">如果您在出版物中使用从GBIF.org下载的内容，请通知 <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>。</p>
 </#if>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Should you wish to download data from GBIF.org in the future, you will need to create a new account.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">如果您希望以后从 GBIF.org 下载数据，您将需要创建一个新帐户。</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
-        Thanks, on behalf of the GBIF network,
+        代表GBIF网络感谢您，
         <br>
-        The GBIF Secretariat
+        GBIF秘书处
     </em>
 </p>
 
