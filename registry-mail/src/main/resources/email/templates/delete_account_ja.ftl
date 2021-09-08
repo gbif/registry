@@ -1,32 +1,32 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountDeleteDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">${name} 様</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Your GBIF.org account
+    あなたの GBIF.org アカウント
     <b>${name}</b>
-    has been deleted, and your personal information has been erased.
+    が削除され、個人情報が消去されました。
 </p>
 
 <#if downloadUrls?size != 0>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Occurrence download metadata is not deleted.  You can still cite any of the downloads you created:</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">オカレンスのダウンロードメタデータは削除されません。  あなたが作成したダウンロードはどれも引用可能です：</p>
 <ul style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list downloadUrls as downloadUrl>
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>
     </#list>
 </ul>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you use a GBIF.org download in a publication, please notify <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">出版物でGBIF.orgのダウンロードをご利用になる場合は、 <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a> までご連絡ください。</p>
 </#if>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Should you wish to download data from GBIF.org in the future, you will need to create a new account.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">今後GBIF.orgからデータをダウンロードしたい場合は、新しいアカウントを作成する必要があります。</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
-        Thanks, on behalf of the GBIF network,
+        よろしくお願いいたします。
         <br>
-        The GBIF Secretariat
+        GBIF事務局
     </em>
 </p>
 
