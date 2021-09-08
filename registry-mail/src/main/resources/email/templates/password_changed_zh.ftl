@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hello ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">您好 ${name}，</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     The password for your GBIF account <b>${name}</b> was changed. 
