@@ -4,7 +4,7 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">${name}，您好！</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">感谢您注册GBIF.org。
-    请点击下方按钮确认您的 GBIF 帐户。</p>
+    请点击下方按钮确认您的 GBIF 帐户：</p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
     <tr style="margin: 0;padding: 0;line-height: 1.65;">
