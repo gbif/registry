@@ -3,7 +3,7 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">${name}，您好！</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">我们收到了重置您的 GBIF 帐户密码的请求。 请单击下方按钮重置您的密码：</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">我们收到了重置您的 GBIF 帐户密码的请求。 请点击下方按钮重置您的密码：</p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
     <tr style="margin: 0;padding: 0;line-height: 1.65;">
