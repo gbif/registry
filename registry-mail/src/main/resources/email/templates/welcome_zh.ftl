@@ -41,9 +41,9 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">保持最新的 GBIF 网络</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">在社交媒体上关注我们或注册我们的电子邮件列表。 You'll hear from us (roughly in descending order of frequency)
-    via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">在社交媒体上关注我们或注册我们的电子邮件列表。 您将通过以下渠道收到我们的消息（大致按频率降序排列）
+    <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
+    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> 和 <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
