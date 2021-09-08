@@ -12,8 +12,7 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">通过 GBIF.org 获取的数据代表了全球数百个组织的科学家、研究人员、策展人、数据和 IT 专家以及其他专业人员的工作。 当您使用分配给您下载的每个检索结果的 <i>DOI</i>（数字对象标识符）时，您帮助确保他们的努力得到充分认可。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
-    maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">当您的下载准备就绪，DOI 包含在您收到的确认电子邮件中，您的帐户资料也会保留您所有下载 DOI 的记录。 By citing data in this way, you can simplify the references in your research,
     ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
     enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
 
