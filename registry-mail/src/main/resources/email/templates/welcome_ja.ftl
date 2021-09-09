@@ -10,15 +10,14 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">ダウンロードしたデータを引用する</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF を介してアクセスしたデータは、世界中の数百の組織に所属する科学者、研究者、キュレーター、データおよびIT専門家、その他の専門家の仕事を表しています。 When you use the <i>DOI</i> (Digital Object Identifier)
-    assigned to each search result you download, you help ensure that they get full credit for their efforts.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF を介してアクセスしたデータは、世界中の数百の組織に所属する科学者、研究者、キュレーター、データおよびIT専門家、その他の専門家の仕事を表しています。 ダウンロードした検索結果に割り当てられた <i>DOI</i> (Digital Object Identifier)
+    を使用することで、上記の人々の尽力に対して十分な評価を与えることにつながります。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
-    maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
-    ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">DOIはダウンロードの準備が整った際に受信する確認メールに含まれています。また、アカウントのプロファイルでもダウンロードDOIの記録を保持しています。 このようにデータを引用することで、研究における参考文献を簡略化することができます。
+また、検索結果を繰り返したり、更新したりすることが可能になり、関連するデータセットに対してデータ利用を直接リンクさせることができます。
+これにより、出版者やユーザーへの利用報告を自動化することができます。 <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">詳細はこちら</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Join one of the communities</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">コミュニティに参加する</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
 
