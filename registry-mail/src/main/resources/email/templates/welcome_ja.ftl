@@ -35,16 +35,14 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">私たちは、GitHub上の公開リポジトリを管理し、文書化しています。
 ここでは、サイトの機能やコンテンツに関するバグや問題といったヘルプデスクへの依頼から、便利な追加機能や改善点に関する提案まで、あらゆることを記録、管理して対応しています。
-    You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
+    各ページの上部にあるメニューバーのチャットボタンをクリックすることで、貢献できます。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
-    non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">報道に関する質問は、 <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a> へお知らせください。 その他、個人的な質問や技術以外の問い合わせは、<a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a> までお知らせください。</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Stay up to date with the GBIF network</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">GBIFネットワークの最新情報を受け取る</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Follow us on social media or sign up for our email list. You'll hear from us (roughly in descending order of frequency)
-    via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">ソーシャルメディアでフォローするか、メーリングリストに登録してください。 今後は（大まかに頻度が高いものから順に）下記の方法でお知らせを通知いたします。
+ <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>、<a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>、<a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a>、<a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIFニュースレター</a></p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
