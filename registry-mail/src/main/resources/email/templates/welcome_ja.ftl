@@ -33,8 +33,8 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">データの取得や利用に関する技術的な質問がある場合は、GBIF.orgまたはコミュニティフォーラムのFAQを参照してください。
     質問への回答が見つからない場合は、 <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a> までお問い合わせください。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We maintain public repositories on GitHub where we document,
-    manage and respond to everything from help desk requests to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">私たちは、GitHub上の公開リポジトリを管理し、文書化しています。
+ここでは、サイトの機能やコンテンツに関するバグや問題といったヘルプデスクへの依頼から、便利な追加機能や改善点に関する提案まで、あらゆることを記録、管理して対応しています。
     You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
