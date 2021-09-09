@@ -19,21 +19,19 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">コミュニティに参加する</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF を介したデータの使用に関する質問や議論のある方は、 <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF コミュニティフォーラム</a> に参加してください。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
-    group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;"><a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API のユーザーリスト</a> は、活動中のピアツーピアのディスカッショングループを提供しており、質問を投稿したり、GBIF APIや基盤となるインフラストラクチャの更新情報を把握することができます。</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Learn how others use the data</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">データの利用方法を知る</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
-    As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF を介したデータで何ができるでしょうか。 <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">最近のハイライト</a>をご覧ください！
+    オープンな生物多様性データの使用を追跡するための進行中のプログラムの一環として、 GBIF事務局は最近の研究を特集し、毎年 <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">サイエンスレビュー</a>としてまとめています。</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Questions or feedback</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">質問やフィードバック</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you have technical questions related to getting or using data, please refer to the FAQs on GBIF.org or the community forum.
-    If you don't find an answer to your question, you can reach out to <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">データの取得や利用に関する技術的な質問がある場合は、GBIF.orgまたはコミュニティフォーラムのFAQを参照してください。
+    質問への回答が見つからない場合は、 <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a> までお問い合わせください。</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We maintain public repositories on GitHub where we document,
     manage and respond to everything from help desk requests to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
