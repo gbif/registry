@@ -12,9 +12,9 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">通过 GBIF.org 获取的数据代表了全球数百个组织的科学家、研究人员、策展人、数据和 IT 专家以及其他专业人员的工作。 当您使用分配给您下载的每个检索结果的 <i>DOI</i>（数字对象标识符）时，您帮助确保他们的努力得到充分认可。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">当您的下载准备就绪，DOI 包含在您收到的确认电子邮件中，您的帐户资料也会保留您所有下载 DOI 的记录。 通过以这种方式引用数据，您可以简化您研究中的参考资料，确保您能够重复或更新检索结果， 并将使用情况直接链接到相关数据集，使我们能够将这些用途自动报告给出版商和用户。 <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">想要更多详细信息吗？</a></p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">当您的下载准备就绪，DOI 包含在您收到的确认电子邮件中，您的帐户资料也会保留您所有下载 DOI 的记录。 通过以这种方式引用数据，您可以简化您研究中的参考资料，确保您能够重复或更新检索结果， 并将使用情况直接链接到相关数据集，使我们能够将这些用途自动报告给发布者和用户。 <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">想了解更多详细信息吗？</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">加入其中一个社区</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">加入一个社区</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">关于使用 GBIF 中介数据的问题和讨论，请加入 <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF 社区论坛</a>。</p>
 
