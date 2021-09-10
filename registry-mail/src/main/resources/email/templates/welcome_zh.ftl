@@ -3,7 +3,7 @@
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">${name}，您好！</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">感谢您注册GBIF.org。 您现在可以下载从 GBIF 参与者和出版商社区提供的数亿个免费和开放的生物多样性记录中检索的结果。
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">感谢您注册GBIF.org。 您现在可以下载检索结果，这些结果来自 GBIF 成员和发布者提供的数亿个免费、开放的生物多样性记录。
 </p>
 
 <h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">后续步骤</h4>
