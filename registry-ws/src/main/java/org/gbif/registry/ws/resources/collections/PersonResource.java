@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Deprecated
 @RestController
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> {

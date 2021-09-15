@@ -55,6 +55,7 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
+@Deprecated
 @Validated
 @Service
 public class DefaultPersonService extends BaseCollectionEntityService<Person>

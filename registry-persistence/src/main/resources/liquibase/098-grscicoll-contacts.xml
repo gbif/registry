@@ -1,0 +1,44 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="98" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TABLE collection_contact(
+          key serial NOT NULL PRIMARY KEY,
+          first_name text NOT NULL CHECK (assert_min_length(first_name, 1)),
+          last_name text CHECK (assert_min_length(last_name, 1)),
+          position text[],
+          phone text[],
+          fax text[],
+          email text[],
+          address text[],
+          city text CHECK (assert_min_length(city, 1)),
+          province text CHECK (assert_min_length(province, 1)),
+          country char(2) CHECK (assert_min_length(country, 2)),
+          postal_code text CHECK (assert_min_length(postal_code, 1)),
+          taxonomic_expertise text[],
+          notes text,
+          user_ids jsonb,
+          created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
+          modified_by varchar NOT NULL CHECK (assert_min_length(modified_by, 3)),
+          created timestamptz NOT NULL DEFAULT now(),
+          modified timestamptz NOT NULL DEFAULT now());
+
+          CREATE TABLE collection_collection_contact (
+            collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+            collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_contact_key, collection_key)
+          );
+
+          CREATE TABLE institution_collection_contact (
+            institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+            collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
+            PRIMARY KEY (collection_contact_key, institution_key)
+          );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

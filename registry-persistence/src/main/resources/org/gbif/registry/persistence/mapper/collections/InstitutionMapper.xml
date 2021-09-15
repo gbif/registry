@@ -13,6 +13,7 @@
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contacts" column="key" select="listContacts"/>
+    <collection property="contactPersons" column="key" select="listContactPersons"/>
     <collection property="tags" column="key" select="listTags"/>
     <collection property="identifiers" column="key" select="listIdentifiers"/>
     <collection property="machineTags" column="key" select="listMachineTags"/>
@@ -133,6 +134,7 @@
     WHERE i.key = #{key,jdbcType=OTHER}
   </select>
 
+  <!-- old contacts model -->
   <select id="listContacts" resultMap="org.gbif.registry.persistence.mapper.collections.PersonMapper.COLLECTION_PERSON_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.PersonMapper.PERSON_READ_FIELDS"/>
     FROM collection_person p INNER JOIN institution_collection_person ON collection_person_key = p.key
@@ -152,6 +154,30 @@
     DELETE FROM institution_collection_person
     WHERE
     institution_key = #{entityKey,jdbcType=OTHER} AND collection_person_key = #{personKey,jdbcType=INTEGER}
+  </delete>
+
+  <!-- new contacts model -->
+  <select id="listContactPersons" resultMap="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_MAP">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_READ_FIELDS"/>
+    FROM collection_contact INNER JOIN institution_collection_contact ON collection_contact_key = key
+    WHERE institution_key = #{key,jdbcType=OTHER}
+    ORDER BY created ASC
+  </select>
+
+  <insert id="addContactPerson">
+    INSERT INTO institution_collection_contact(institution_key,collection_contact_key)
+    VALUES(
+    #{entityKey,jdbcType=OTHER},
+    #{contactKey,jdbcType=INTEGER}
+    )
+  </insert>
+
+  <delete id="removeContactPerson">
+    DELETE FROM collection_contact USING institution_collection_contact
+    WHERE
+    collection_contact_key = collection_contact.key AND
+    institution_key = #{entityKey,jdbcType=OTHER} AND
+    collection_contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
   <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
