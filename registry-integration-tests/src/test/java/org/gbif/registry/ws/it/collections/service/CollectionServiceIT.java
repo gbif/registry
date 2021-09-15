@@ -18,8 +18,11 @@ package org.gbif.registry.ws.it.collections.service;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -56,9 +59,10 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionService}. */
 public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collection> {
@@ -622,6 +626,79 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
             .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+  }
+
+  @Test
+  public void contactsTest() {
+    Collection collection1 = testData.newEntity();
+    UUID collectionKey1 = collectionService.create(collection1);
+
+    Contact contact = new Contact();
+    contact.setFirstName("First name");
+    contact.setLastName("last");
+    contact.setCountry(Country.AFGHANISTAN);
+    contact.setAddress(Collections.singletonList("address"));
+    contact.setCity("City");
+    contact.setEmail(Collections.singletonList("aa@aa.com"));
+    contact.setFax(Collections.singletonList("fdsgds"));
+    contact.setPhone(Collections.singletonList("fdsgds"));
+    contact.setNotes("notes");
+
+    collectionService.addContactPerson(collectionKey1, contact);
+
+    List<Contact> contacts = collectionService.listContactPersons(collectionKey1);
+    assertEquals(1, contacts.size());
+
+    Contact contactCreated = contacts.get(0);
+    assertTrue(contactCreated.lenientEquals(contact));
+
+    contactCreated.setPosition(Collections.singletonList("position"));
+    contactCreated.setTaxonomicExpertise(Collections.singletonList("aves"));
+
+    UserId userId = new UserId();
+    userId.setId("id");
+    userId.setType(IdType.OTHER);
+    contactCreated.setUserIds(Collections.singletonList(userId));
+    collectionService.updateContactPerson(collectionKey1, contactCreated);
+
+    contacts = collectionService.listContactPersons(collectionKey1);
+    assertEquals(1, contacts.size());
+
+    Contact contactUpdated = contacts.get(0);
+    assertTrue(contactUpdated.lenientEquals(contactCreated));
+
+    UserId userId2 = new UserId();
+    userId2.setId("id");
+    userId2.setType(IdType.HUH);
+    contactUpdated.getUserIds().add(userId2);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> collectionService.updateContactPerson(collectionKey1, contactUpdated));
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("Another name");
+    contact2.setTaxonomicExpertise(Arrays.asList("aves", "funghi"));
+    contact2.setPosition(Collections.singletonList("Curator"));
+
+    UserId userId3 = new UserId();
+    userId3.setId("id");
+    userId3.setType(IdType.OTHER);
+
+    UserId userId4 = new UserId();
+    userId4.setId("12426");
+    userId4.setType(IdType.IH_IRN);
+    contact2.setUserIds(Arrays.asList(userId3, userId4));
+
+    collectionService.addContactPerson(collectionKey1, contact2);
+    contacts = collectionService.listContactPersons(collectionKey1);
+    assertEquals(2, contacts.size());
+
+    collectionService.removeContactPerson(collectionKey1, contactCreated.getKey());
+    contacts = collectionService.listContactPersons(collectionKey1);
+    assertEquals(1, contacts.size());
+
+    contact = contacts.get(0);
+    assertTrue(contact.lenientEquals(contact2));
   }
 
   @Test

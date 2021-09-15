@@ -30,6 +30,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
@@ -64,6 +65,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
       IdentifierMapper identifierMapper,
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
+      CollectionContactMapper contactMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
@@ -75,6 +77,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
         identifierMapper,
         commentMapper,
         occurrenceMappingMapper,
+        contactMapper,
         eventManager,
         withMyBatis);
     this.institutionMapper = institutionMapper;

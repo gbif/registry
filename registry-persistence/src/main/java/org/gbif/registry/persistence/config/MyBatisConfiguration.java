@@ -80,6 +80,7 @@ import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.SuggestedChangesTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.UserIdsTypeHandler;
 
 import java.net.URI;
 import java.util.UUID;
@@ -222,6 +223,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("SuggestedChangesTypeHandler", SuggestedChangesTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("UserIdsTypeHandler", UserIdsTypeHandler.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);

@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.persistence;
 
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Person;
 
 import java.util.List;
@@ -23,14 +24,24 @@ import java.util.UUID;
 import org.apache.ibatis.annotations.Param;
 
 /**
- * Generic mapper to work with collections-related contacts. It works with {@link Person} entities.
+ * Generic mapper to work with collections-related contacts. It works with {@link Person} and {@link
+ * Contact} entities.
  */
 // TODO: 29/08/2019 conflicts with existing one
 public interface ContactableMapper {
 
+  @Deprecated
   List<Person> listContacts(@Param("key") UUID key);
 
+  @Deprecated
   void addContact(@Param("entityKey") UUID entityKey, @Param("personKey") UUID contactKey);
 
+  @Deprecated
   void removeContact(@Param("entityKey") UUID entityKey, @Param("personKey") UUID contactKey);
+
+  List<Contact> listContactPersons(@Param("key") UUID key);
+
+  void addContactPerson(@Param("entityKey") UUID entityKey, @Param("contactKey") int contactKey);
+
+  void removeContactPerson(@Param("entityKey") UUID entityKey, @Param("contactKey") int contactKey);
 }

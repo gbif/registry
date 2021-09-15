@@ -16,12 +16,14 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
@@ -29,6 +31,7 @@ import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
+import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.EventType;
@@ -40,9 +43,11 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
 import org.gbif.registry.service.WithMyBatis;
+import org.gbif.registry.service.collections.utils.IdentifierValidatorFactory;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
@@ -74,6 +79,7 @@ public abstract class BasePrimaryCollectionEntityService<
   private final OccurrenceMappingMapper occurrenceMappingMapper;
   private final AddressMapper addressMapper;
   private final PrimaryEntityMapper<T> primaryEntityMapper;
+  private final CollectionContactMapper contactMapper;
 
   protected BasePrimaryCollectionEntityService(
       Class<T> objectClass,
@@ -84,6 +90,7 @@ public abstract class BasePrimaryCollectionEntityService<
       IdentifierMapper identifierMapper,
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
+      CollectionContactMapper contactMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
@@ -98,6 +105,7 @@ public abstract class BasePrimaryCollectionEntityService<
     this.addressMapper = addressMapper;
     this.occurrenceMappingMapper = occurrenceMappingMapper;
     this.primaryEntityMapper = primaryEntityMapper;
+    this.contactMapper = contactMapper;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -181,6 +189,7 @@ public abstract class BasePrimaryCollectionEntityService<
     }
   }
 
+  @Deprecated
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
@@ -198,6 +207,7 @@ public abstract class BasePrimaryCollectionEntityService<
             entityKey, objectClass, Person.class, personKey, EventType.LINK));
   }
 
+  @Deprecated
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
@@ -208,9 +218,77 @@ public abstract class BasePrimaryCollectionEntityService<
             entityKey, objectClass, Person.class, personKey, EventType.UNLINK));
   }
 
+  @Deprecated
   @Override
   public List<Person> listContacts(@PathVariable UUID key) {
     return primaryEntityMapper.listContacts(key);
+  }
+
+  @Override
+  public List<Contact> listContactPersons(@NotNull UUID entityKey) {
+    return primaryEntityMapper.listContactPersons(entityKey);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
+    checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    final String username = authentication.getName();
+    contact.setCreatedBy(username);
+    contact.setModifiedBy(username);
+
+    validateUserIds(contact);
+
+    contactMapper.createContact(contact);
+    primaryEntityMapper.addContactPerson(entityKey, contact.getKey());
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, Contact.class, contact.getKey(), EventType.CREATE));
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void updateContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
+    checkArgument(contact.getKey() != null, "Unable to update a contact with no key");
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    final String username = authentication.getName();
+    contact.setModifiedBy(username);
+
+    validateUserIds(contact);
+
+    contactMapper.updateContact(contact);
+
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, Contact.class, contact.getKey(), EventType.UPDATE));
+  }
+
+  private void validateUserIds(Contact contact) {
+    // validate userIds
+    if (contact.getUserIds() != null && !contact.getUserIds().isEmpty()) {
+      for (UserId userId : contact.getUserIds()) {
+        IdentifierSchemeValidator validator =
+          IdentifierValidatorFactory.getValidatorByIdType(userId.getType());
+
+        if (validator != null && !validator.isValid(userId.getId())) {
+          throw new IllegalArgumentException(
+            "Invalid user ID with type " + userId.getType() + " and ID " + userId.getId());
+        }
+      }
+    }
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void removeContactPerson(@NotNull UUID entityKey, @NotNull int contactKey) {
+    primaryEntityMapper.removeContactPerson(entityKey, contactKey);
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            entityKey, objectClass, Contact.class, contactKey, EventType.DELETE));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})

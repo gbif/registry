@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper">
+
+  <resultMap id="CONTACT_MAP" type="org.gbif.api.model.collections.Contact" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="position" column="position" typeHandler="StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
+    <result property="fax" column="fax" typeHandler="StringArrayTypeHandler"/>
+    <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
+    <result property="address" column="address" typeHandler="StringArrayTypeHandler"/>
+    <result property="taxonomicExpertise" column="taxonomic_expertise" typeHandler="StringArrayTypeHandler"/>
+    <result property="userIds" column="user_ids" typeHandler="UserIdsTypeHandler"/>
+  </resultMap>
+
+  <sql id="CONTACT_WRITE_FIELDS">
+    first_name,last_name,position,phone,fax,email,address,city,province,country,postal_code,taxonomic_expertise,notes,
+    user_ids,created,created_by,modified,modified_by
+  </sql>
+
+  <sql id="CONTACT_READ_FIELDS">
+    key,<include refid="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_WRITE_FIELDS"/>
+  </sql>
+
+  <sql id="CONTACT_PARAMS_CREATE">
+    #{firstName, jdbcType=VARCHAR},
+    #{lastName, jdbcType=VARCHAR},
+    #{position, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{phone, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{fax, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{email, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{address, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{city, jdbcType=VARCHAR},
+    #{province, jdbcType=VARCHAR},
+    #{country, jdbcType=CHAR},
+    #{postalCode, jdbcType=VARCHAR},
+    #{taxonomicExpertise, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    #{notes, jdbcType=VARCHAR},
+    #{userIds, jdbcType=OTHER, typeHandler=UserIdsTypeHandler}::jsonb,
+    now(), <!-- created -->
+    #{createdBy},
+    now(), <!-- modified -->
+    #{modifiedBy}
+  </sql>
+
+  <sql id="CONTACT_PARAMS_UPDATE">
+    first_name = #{firstName, jdbcType=VARCHAR},
+    last_name = #{lastName, jdbcType=VARCHAR},
+    position = #{position, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    phone = #{phone, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    fax = #{fax, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    email = #{email, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    address = #{address, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    city = #{city, jdbcType=VARCHAR},
+    province = #{province, jdbcType=VARCHAR},
+    country = #{country, jdbcType=CHAR},
+    postal_code = #{postalCode, jdbcType=VARCHAR},
+    taxonomic_expertise = #{taxonomicExpertise, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
+    notes = #{notes, jdbcType=VARCHAR},
+    user_ids = #{userIds, jdbcType=OTHER, typeHandler=UserIdsTypeHandler}::jsonb,
+    modified = now(),
+    modified_by = #{modifiedBy}
+  </sql>
+
+  <insert id="createContact" parameterType="org.gbif.api.model.collections.Contact" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO collection_contact(<include refid="CONTACT_WRITE_FIELDS"/>)
+    VALUES(<include refid="CONTACT_PARAMS_CREATE"/>)
+  </insert>
+
+  <update id="updateContact" parameterType="org.gbif.api.model.collections.Contact">
+    UPDATE collection_contact
+    SET <include refid="CONTACT_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=INTEGER}
+  </update>
+</mapper>
