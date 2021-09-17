@@ -4,13 +4,13 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Bonjour ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    L' email associé à votre compte GBIF
+    The email of your GBIF account
     <b>${name}</b>
-    a été changé pour
-    <a href="mailto:${newEmail}" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">${newEmail}</a>.
-    Si vous ne l'avez pas changé, veuillez contacter
-    <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a>
-    immédiatement.
+    was changed to
+    <a href="mailto:${newEmail}" style="margin: 0;padding: 0;line-height: 1.65;color: #509E2F;text-decoration: none;font-weight: bold;">${newEmail}</a>.
+    If you didn't change it, please contact
+    <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #509E2F;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a>
+    immediately.
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
