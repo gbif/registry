@@ -4,7 +4,7 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Bonjour ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Nous avons reçu une demande pour changer l'adresse e-mail associé à votre compte GBIF de <a href="mailto:${currentEmail}" style="color: #4ba2ce;text-decoration: none;">${currentEmail}</a> à <a href="mailto:${newEmail}" style="color: #4ba2ce;text-decoration: none;">${newEmail}</a>.
+    Nous avons reçu une demande pour changer l'adresse e-mail associé à votre compte GBIF de <a href="mailto:${currentEmail}" style="color: #509E2F;text-decoration: none;">${currentEmail}</a> à <a href="mailto:${newEmail}" style="color: #509E2F;text-decoration: none;">${newEmail}</a>.
     Veuillez cliquer sur le bouton ci-dessous pour confirmer le changement :
 </p>
 
@@ -19,7 +19,7 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Vous pouvez également copier l'URL suivante et la coller dans votre navigateur : <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
+    Vous pouvez également copier l'URL suivante et la coller dans votre navigateur : <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
 </p>
 
 
