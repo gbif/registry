@@ -17,7 +17,7 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
     maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
     ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
+    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">想看更多資訊？</a></p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">加入討論社群</h5>
 
