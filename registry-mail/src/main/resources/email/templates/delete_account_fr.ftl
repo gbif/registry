@@ -16,7 +16,7 @@
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>
     </#list>
 </ul>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si vous utilisez un téléchargement GBIF.org dans une publication, veuillez en informer <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si vous utilisez un téléchargement GBIF.org dans une publication, veuillez en informer <a href="mailto:communications@gbif.org" style="color: #509E2F;text-decoration: none;">communications@gbif.org</a>.</p>
 </#if>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Si vous souhaitez télécharger des données depuis GBIF.org dans le futur, vous devrez créer un nouveau compte.</p>
