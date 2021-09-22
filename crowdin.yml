@@ -2,6 +2,8 @@ files:
   - source: /registry-mail/src/main/resources/email/subjects/*.properties
     ignore:
       - /registry-mail/src/main/resources/email/subjects/*_??.properties
+      - /registry-mail/src/main/resources/email/subjects/*_???.properties
+      - /registry-mail/src/main/resources/email/subjects/*_??-??.properties
     translation: >-
       /registry-mail/src/main/resources/email/subjects/%file_name%_%two_letters_code%.properties
     languages_mapping:
@@ -14,6 +16,8 @@ files:
   - source: /registry-mail/src/main/resources/email/templates/*.ftl
     ignore:
       - /registry-mail/src/main/resources/email/templates/*_??.ftl
+      - /registry-mail/src/main/resources/email/templates/*_???.ftl
+      - /registry-mail/src/main/resources/email/templates/*_??-??.ftl
     translation: >-
       /registry-mail/src/main/resources/email/templates/%file_name%_%two_letters_code%.ftl
     type: html
