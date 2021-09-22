@@ -11,11 +11,12 @@
     <result property="address" column="address" typeHandler="StringArrayTypeHandler"/>
     <result property="taxonomicExpertise" column="taxonomic_expertise" typeHandler="StringArrayTypeHandler"/>
     <result property="userIds" column="user_ids" typeHandler="UserIdsTypeHandler"/>
+    <result property="primary" column="primary_contact" />
   </resultMap>
 
   <sql id="CONTACT_WRITE_FIELDS">
     first_name,last_name,position,phone,fax,email,address,city,province,country,postal_code,taxonomic_expertise,notes,
-    user_ids,created,created_by,modified,modified_by
+    user_ids,primary_contact,created,created_by,modified,modified_by
   </sql>
 
   <sql id="CONTACT_READ_FIELDS">
@@ -37,6 +38,7 @@
     #{taxonomicExpertise, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
     #{notes, jdbcType=VARCHAR},
     #{userIds, jdbcType=OTHER, typeHandler=UserIdsTypeHandler}::jsonb,
+    #{primary, jdbcType=BOOLEAN},
     now(), <!-- created -->
     #{createdBy},
     now(), <!-- modified -->
@@ -58,6 +60,7 @@
     taxonomic_expertise = #{taxonomicExpertise, jdbcType=ARRAY, typeHandler=StringArrayTypeHandler},
     notes = #{notes, jdbcType=VARCHAR},
     user_ids = #{userIds, jdbcType=OTHER, typeHandler=UserIdsTypeHandler}::jsonb,
+    primary_contact = #{primary, jdbcType=BOOLEAN},
     modified = now(),
     modified_by = #{modifiedBy}
   </sql>

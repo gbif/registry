@@ -629,7 +629,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
   }
 
   @Test
-  public void contactsTest() {
+  public void contactPersonsTest() {
     Collection collection1 = testData.newEntity();
     UUID collectionKey1 = collectionService.create(collection1);
 
@@ -642,6 +642,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     contact.setEmail(Collections.singletonList("aa@aa.com"));
     contact.setFax(Collections.singletonList("fdsgds"));
     contact.setPhone(Collections.singletonList("fdsgds"));
+    contact.setPrimary(true);
     contact.setNotes("notes");
 
     collectionService.addContactPerson(collectionKey1, contact);
@@ -689,7 +690,8 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     userId4.setType(IdType.IH_IRN);
     contact2.setUserIds(Arrays.asList(userId3, userId4));
 
-    collectionService.addContactPerson(collectionKey1, contact2);
+    int contactKey = collectionService.addContactPerson(collectionKey1, contact2);
+    assertTrue(contactKey > 0);
     contacts = collectionService.listContactPersons(collectionKey1);
     assertEquals(2, contacts.size());
 

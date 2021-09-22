@@ -70,13 +70,20 @@ public interface PrimaryCollectionEntityClient<
       method = RequestMethod.POST,
       value = "{key}/contactPerson",
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  void addContactPerson(@PathVariable("key") UUID entityKey, @RequestBody Contact contact);
+  int addContactPerson(@PathVariable("key") UUID entityKey, @RequestBody Contact contact);
 
   @RequestMapping(
       method = RequestMethod.PUT,
-      value = "{key}/contactPerson",
+      value = "{key}/contactPerson/{contactKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  void updateContactPerson(@PathVariable("key") UUID entityKey, @RequestBody Contact contact);
+  void updateContactPersonResource(
+      @PathVariable("key") UUID entityKey,
+      @PathVariable("contactKey") int contactKey,
+      @RequestBody Contact contact);
+
+  default void updateContactPerson(UUID entityKey, Contact contact) {
+    updateContactPersonResource(entityKey, contact.getKey(), contact);
+  }
 
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contactPerson/{contactKey}")
   void removeContactPerson(
