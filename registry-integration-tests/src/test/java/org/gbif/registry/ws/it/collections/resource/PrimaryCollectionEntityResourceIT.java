@@ -125,28 +125,30 @@ public abstract class PrimaryCollectionEntityResourceIT<
     contact2.setKey(2);
 
     // add contact
-    doNothing().when(getMockPrimaryEntityService()).addContactPerson(any(UUID.class), any(Contact.class));
+    doNothing()
+        .when(getMockPrimaryEntityService())
+        .addContactPerson(any(UUID.class), any(Contact.class));
     assertDoesNotThrow(
-      () -> getPrimaryCollectionEntityClient().addContactPerson(UUID.randomUUID(), contact));
+        () -> getPrimaryCollectionEntityClient().addContactPerson(UUID.randomUUID(), contact));
 
     // list contacts
     when(getMockPrimaryEntityService().listContactPersons(any(UUID.class)))
-      .thenReturn(Arrays.asList(contact, contact2));
+        .thenReturn(Arrays.asList(contact, contact2));
     List<Contact> contactsEntity1 =
-      getPrimaryCollectionEntityClient().listContactPersons(UUID.randomUUID());
+        getPrimaryCollectionEntityClient().listContactPersons(UUID.randomUUID());
     assertEquals(2, contactsEntity1.size());
 
     // update contact
-    doNothing().when(getMockPrimaryEntityService()).updateContactPerson(any(UUID.class), any(Contact.class));
+    doNothing()
+        .when(getMockPrimaryEntityService())
+        .updateContactPerson(any(UUID.class), any(Contact.class));
     assertDoesNotThrow(
-      () ->
-        getPrimaryCollectionEntityClient().updateContactPerson(UUID.randomUUID(), contact));
+        () -> getPrimaryCollectionEntityClient().updateContactPerson(UUID.randomUUID(), contact));
 
     // remove contacts
     doNothing().when(getMockPrimaryEntityService()).removeContactPerson(any(UUID.class), anyInt());
     assertDoesNotThrow(
-      () ->
-        getPrimaryCollectionEntityClient().removeContactPerson(UUID.randomUUID(), 1));
+        () -> getPrimaryCollectionEntityClient().removeContactPerson(UUID.randomUUID(), 1));
   }
 
   @Test

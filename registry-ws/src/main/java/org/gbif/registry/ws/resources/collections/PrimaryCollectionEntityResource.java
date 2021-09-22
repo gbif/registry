@@ -131,16 +131,21 @@ public abstract class PrimaryCollectionEntityResource<
   @PostMapping(
       value = "{key}/contactPerson",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  public void addContactPerson(
+  public int addContactPerson(
       @PathVariable("key") UUID entityKey, @RequestBody @Trim Contact contact) {
-    primaryCollectionEntityService.addContactPerson(entityKey, contact);
+    return primaryCollectionEntityService.addContactPerson(entityKey, contact);
   }
 
   @PutMapping(
-      value = "{key}/contactPerson",
+      value = "{key}/contactPerson/{contactKey}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   public void updateContactPerson(
-      @PathVariable("key") UUID entityKey, @RequestBody @Trim Contact contact) {
+      @PathVariable("key") UUID entityKey,
+      @PathVariable("contactKey") int contactKey,
+      @RequestBody @Trim Contact contact) {
+    checkArgument(
+        contactKey == contact.getKey(),
+        "The contact key in the path has to match the key in the body");
     primaryCollectionEntityService.updateContactPerson(entityKey, contact);
   }
 

@@ -22,6 +22,7 @@
           taxonomic_expertise text[],
           notes text,
           user_ids jsonb,
+          primary_contact boolean DEFAULT false,
           created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
           modified_by varchar NOT NULL CHECK (assert_min_length(modified_by, 3)),
           created timestamptz NOT NULL DEFAULT now(),

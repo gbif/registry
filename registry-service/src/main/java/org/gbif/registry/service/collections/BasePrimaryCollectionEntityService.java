@@ -232,7 +232,7 @@ public abstract class BasePrimaryCollectionEntityService<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public void addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
+  public int addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
     checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
@@ -246,6 +246,8 @@ public abstract class BasePrimaryCollectionEntityService<
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
             entityKey, objectClass, Contact.class, contact.getKey(), EventType.CREATE));
+
+    return contact.getKey();
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -271,11 +273,11 @@ public abstract class BasePrimaryCollectionEntityService<
     if (contact.getUserIds() != null && !contact.getUserIds().isEmpty()) {
       for (UserId userId : contact.getUserIds()) {
         IdentifierSchemeValidator validator =
-          IdentifierValidatorFactory.getValidatorByIdType(userId.getType());
+            IdentifierValidatorFactory.getValidatorByIdType(userId.getType());
 
         if (validator != null && !validator.isValid(userId.getId())) {
           throw new IllegalArgumentException(
-            "Invalid user ID with type " + userId.getType() + " and ID " + userId.getId());
+              "Invalid user ID with type " + userId.getType() + " and ID " + userId.getId());
         }
       }
     }

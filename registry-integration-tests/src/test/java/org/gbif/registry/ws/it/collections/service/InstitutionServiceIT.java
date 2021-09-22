@@ -445,7 +445,7 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
   }
 
   @Test
-  public void contactsTest() {
+  public void contactPersonsTest() {
     Institution institution1 = testData.newEntity();
     UUID institutionKey1 = institutionService.create(institution1);
 
