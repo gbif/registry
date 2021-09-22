@@ -73,14 +73,14 @@ public class CitationGeneratorTest {
     dataset.getContacts().add(createContact("John D.", "Doe", ContactType.ORIGINATOR));
 
     CitationGenerator.CitationData citation = CitationGenerator.generateCitation(dataset, org);
-    
-;
+
+    ;
     assertEquals(
         "Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                  citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
     assertEquals(citation.getContacts().size(), 1);
   }
 
@@ -99,10 +99,10 @@ public class CitationGeneratorTest {
 
     assertEquals(
         "Doe J D, Smith, Mendez (2009). Dataset to be cited. Version 2.1. Cited Organization. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                  citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
 
     assertEquals(citation.getContacts().size(), 3);
   }
@@ -120,16 +120,16 @@ public class CitationGeneratorTest {
                 null,
                 null,
                 "We are not using this field int the citation",
-                          ContactType.ORIGINATOR));
+                ContactType.ORIGINATOR));
 
     CitationGenerator.CitationData citation = CitationGenerator.generateCitation(dataset, org);
 
     assertEquals(
         "Cited Organization (2009). Dataset to be cited. Version 2.1. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                  citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
 
     assertEquals(citation.getContacts().size(), 0);
   }
@@ -147,10 +147,10 @@ public class CitationGeneratorTest {
 
     assertEquals(
         "Doe J. Dataset to be cited. Version 2.1. Cited Organization. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                  citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
 
     assertEquals(citation.getContacts().size(), 1);
   }
@@ -170,10 +170,10 @@ public class CitationGeneratorTest {
 
     assertEquals(
         "Doe J D (2009). Dataset to be cited. Version 2.1. Cited Organization. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                  citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
 
     assertEquals(citation.getContacts().size(), 1);
   }
@@ -190,10 +190,10 @@ public class CitationGeneratorTest {
 
     assertEquals(
         "Cited Organization (2009). Dataset to be cited. Version 2.1. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
     assertEquals(citation.getContacts().size(), 0);
   }
 
@@ -210,10 +210,10 @@ public class CitationGeneratorTest {
 
     assertEquals(
         "Cited Organization (2009). Dataset to be cited. Version 2.1. "
-                  + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
-                  + LocalDate.now(ZoneId.of("UTC")).toString()
-                  + ".",
-                  citation.getCitation().getText());
+            + "Sampling event dataset https://doi.org/10.21373/abcd accessed via GBIF.org on "
+            + LocalDate.now(ZoneId.of("UTC")).toString()
+            + ".",
+        citation.getCitation().getText());
 
     assertEquals(citation.getContacts().size(), 0);
   }
@@ -238,7 +238,6 @@ public class CitationGeneratorTest {
     // but, we can only generate the name for one of them
     assertEquals(
         1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
-
   }
 
   @Test
@@ -258,22 +257,25 @@ public class CitationGeneratorTest {
 
     List<CitationContact> authors = getAuthors(dataset.getContacts());
 
-    //Only one author added
+    // Only one author added
     assertEquals(1, authors.size());
 
-    //The authors keeps the 2 roles
-    assertTrue(authors.get(0).getRoles().containsAll(EnumSet.of(ContactType.ORIGINATOR, ContactType.METADATA_AUTHOR)));
+    // The authors keeps the 2 roles
+    assertTrue(
+        authors
+            .get(0)
+            .getRoles()
+            .containsAll(EnumSet.of(ContactType.ORIGINATOR, ContactType.METADATA_AUTHOR)));
 
-    //The author has 2 users
-    assertTrue(authors.get(0).getUserId().containsAll(Arrays.asList("user1","user2")));
+    // The author has 2 users
+    assertTrue(authors.get(0).getUserId().containsAll(Arrays.asList("user1", "user2")));
 
-    //Repeated user is not added twice
+    // Repeated user is not added twice
     assertEquals(authors.get(0).getUserId().size(), 2);
 
-    //we can only generate the name for one of them
+    // we can only generate the name for one of them
     assertEquals(
-      1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
-
+        1, CitationGenerator.generateAuthorsName(getAuthors(dataset.getContacts())).size());
   }
 
   private Dataset getTestDatasetObject() {

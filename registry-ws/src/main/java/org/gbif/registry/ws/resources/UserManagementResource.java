@@ -294,8 +294,10 @@ public class UserManagementResource {
       @Nullable @RequestParam(value = "q", required = false) String query,
       @Nullable @RequestParam(value = "role", required = false) Set<UserRole> roles,
       @Nullable @RequestParam(value = "editorRightsOn", required = false) Set<UUID> editorRightsOn,
-      @Nullable @RequestParam(value = "namespaceRightsOn", required = false) Set<String> namespaceRightsOn,
-      @Nullable @RequestParam(value = "countryRightsOn", required = false) Set<String> countryRightsOn,
+      @Nullable @RequestParam(value = "namespaceRightsOn", required = false)
+          Set<String> namespaceRightsOn,
+      @Nullable @RequestParam(value = "countryRightsOn", required = false)
+          Set<String> countryRightsOn,
       Pageable page) {
     page = page == null ? new PagingRequest() : page;
     String q =
@@ -463,7 +465,7 @@ public class UserManagementResource {
   @GetMapping("{username}/namespaceRight")
   @Secured({ADMIN_ROLE, USER_ROLE})
   public ResponseEntity<List<String>> namespaceRights(
-    @PathVariable String username, Authentication authentication) {
+      @PathVariable String username, Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
       String usernameInContext = authentication.getName();
@@ -528,7 +530,7 @@ public class UserManagementResource {
   @GetMapping("{username}/countryRight")
   @Secured({ADMIN_ROLE, USER_ROLE})
   public ResponseEntity<List<Country>> countryRights(
-    @PathVariable String username, Authentication authentication) {
+      @PathVariable String username, Authentication authentication) {
     // Non-admin users can only see their own entry.
     if (!SecurityContextCheck.checkUserInRole(authentication, ADMIN_ROLE)) {
       String usernameInContext = authentication.getName();

@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Component
 public class Datasets extends JsonBackedData<Dataset> {
 
-  private static DatasetService datasetService;
+  private final DatasetService datasetService;
 
   public static final String DATASET_ALIAS = "BGBM";
   public static final String DATASET_ABBREVIATION = "BGBM";
@@ -45,8 +45,10 @@ public class Datasets extends JsonBackedData<Dataset> {
   public static final String DATASET_RIGHTS = "The rights";
   public static final License DATASET_LICENSE = License.CC_BY_NC_4_0;
   public static final DOI DATASET_DOI = new DOI(DOI.TEST_PREFIX, "gbif.2014.XSD123");
-  public static final Citation DATASET_CITATION = new Citation("This is a citation text", "ABC", true);
-  public static final String DATASET_TITLE = "Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"";
+  public static final Citation DATASET_CITATION =
+      new Citation("This is a citation text", "ABC", true);
+  public static final String DATASET_TITLE =
+      "Pontaurus needs more than 255 characters for it's title. It is a very, very, very, very long title in the German language. Word by word and character by character it's exact title is: \"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"";
   public static final String DATASET_DESCRIPTION = "The Berlin Botanical...";
 
   @Autowired
@@ -72,7 +74,7 @@ public class Datasets extends JsonBackedData<Dataset> {
   }
 
   /**
-   * Persist a new Dataset associated to an publishing organization and installation for use in Unit
+   * Persist a new Dataset associated to a publishing organization and installation for use in Unit
    * Tests.
    *
    * @param doi dataset DOI
@@ -89,7 +91,25 @@ public class Datasets extends JsonBackedData<Dataset> {
   }
 
   /**
-   * Persist a new Dataset associated to an publishing organization and installation for use in Unit
+   * Persist a new deleted Dataset associated to a publishing organization and installation for use in Unit
+   * Tests.
+   *
+   * @param doi dataset DOI
+   * @param organizationKey publishing organization key
+   * @param installationKey installation key
+   * @return persisted deleted Dataset
+   */
+  public Dataset newPersistedDeletedInstance(DOI doi, UUID organizationKey, UUID installationKey) {
+    Dataset dataset = newInstance(organizationKey, installationKey);
+    dataset.setDoi(doi);
+    UUID key = datasetService.create(dataset);
+    datasetService.delete(key);
+    // some properties like created, modified are only set when the dataset is retrieved anew
+    return datasetService.get(key);
+  }
+
+  /**
+   * Persist a new Dataset associated to a publishing organization and installation for use in Unit
    * Tests.
    *
    * @param organizationKey publishing organization key
@@ -103,7 +123,8 @@ public class Datasets extends JsonBackedData<Dataset> {
     return datasetService.get(key);
   }
 
-  public static CitationGenerator.CitationData buildExpectedCitation(Dataset dataset, String organizationTitle) {
+  public static CitationGenerator.CitationData buildExpectedCitation(
+      Dataset dataset, String organizationTitle) {
     return CitationGenerator.generateCitation(dataset, organizationTitle);
   }
 
@@ -114,7 +135,8 @@ public class Datasets extends JsonBackedData<Dataset> {
    * @return a mutable mpa in case more properties shall be added.
    */
   public static Map<String, Object> buildExpectedProcessedProperties(Dataset dataset) {
-    CitationGenerator.CitationData expectedCitation = buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE);
+    CitationGenerator.CitationData expectedCitation =
+        buildExpectedCitation(dataset, Organizations.ORGANIZATION_TITLE);
     Map<String, Object> processedProperties = new HashMap<>();
     processedProperties.put("citation.text", expectedCitation.getCitation().getText());
     return processedProperties;

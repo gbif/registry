@@ -94,9 +94,12 @@ public class DerivedDatasetIT extends BaseItTest {
     occurrenceDownload = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload);
 
-    // create datasets
+    // create 4 datasets (two deleted ones)
     Dataset firstDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset1"));
     Dataset secondDataset = testDataFactory.newPersistedDataset(new DOI("10.21373/dataset2"));
+    Dataset thirdDataset = testDataFactory.newPersistedDeletedDataset(new DOI("10.21373/dataset2"));
+    Dataset fourthDataset =
+        testDataFactory.newPersistedDeletedDataset(new DOI("10.21373/dataset2"));
 
     // prepare request
     DerivedDatasetCreationRequest requestData = new DerivedDatasetCreationRequest();
@@ -106,6 +109,8 @@ public class DerivedDatasetIT extends BaseItTest {
     Map<String, Long> relatedDatasets = new HashMap<>();
     relatedDatasets.put(firstDataset.getKey().toString(), 1L);
     relatedDatasets.put(secondDataset.getDoi().getDoiName(), 2L);
+    relatedDatasets.put(thirdDataset.getKey().toString(), 3L);
+    relatedDatasets.put(fourthDataset.getDoi().getDoiName(), 4L);
     requestData.setRelatedDatasets(relatedDatasets);
     // create derivedDataset
     DerivedDataset derivedDataset = derivedDatasetResource.create(requestData);

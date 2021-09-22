@@ -37,7 +37,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -56,9 +55,6 @@ import freemarker.template.TemplateException;
 /** Manager responsible to generate {@link BaseEmailModel}. */
 @Service
 public class IdentityEmailManager {
-
-  // supported locales
-  private static final List<String> SUPPORTED_LOCALES = Arrays.asList("en", "ru");
 
   private final EmailTemplateProcessor emailTemplateProcessor;
   private final IdentitySuretyMailConfigurationProperties identityMailConfigProperties;
@@ -246,6 +242,8 @@ public class IdentityEmailManager {
   }
 
   private String findSuitableLocaleTagAmongAvailable(Locale locale) {
-    return Locale.lookupTag(Locale.LanguageRange.parse(locale.toLanguageTag()), SUPPORTED_LOCALES);
+    return Locale.lookupTag(
+        Locale.LanguageRange.parse(locale.toLanguageTag()),
+        identityMailConfigProperties.getSupportedLocales());
   }
 }

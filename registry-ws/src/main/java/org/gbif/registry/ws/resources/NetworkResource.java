@@ -128,8 +128,9 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    * Validates if a the requested dataset exists.
    */
   private void existDatasetCheck(UUID datasetKey) {
-    if(datasetMapper.get(datasetKey) == null) {
-      throw new WebApplicationException("Dataset " + datasetKey + " not found",HttpStatus.BAD_REQUEST);
+    if (datasetMapper.get(datasetKey) == null) {
+      throw new WebApplicationException(
+          "Dataset " + datasetKey + " not found", HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -137,8 +138,9 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    * Validates if a the requested network exists.
    */
   private void existNetworkCheck(UUID networkKey) {
-    if(networkMapper.get(networkKey) == null) {
-      throw new WebApplicationException("NetworkKey " +  networkKey + " not found", HttpStatus.BAD_REQUEST);
+    if (networkMapper.get(networkKey) == null) {
+      throw new WebApplicationException(
+          "NetworkKey " + networkKey + " not found", HttpStatus.BAD_REQUEST);
     }
   }
 

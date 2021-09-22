@@ -134,8 +134,13 @@ public class IdentityServiceMock implements IdentityService {
   }
 
   @Override
-  public PagingResponse<GbifUser> search(String query, @Nullable Set<UserRole> roles, @Nullable Set<UUID> editorRightsOn, Set<String> namespaceRightsOn,
-                                         @Nullable Set<Country> countryRightsOn, @Nullable Pageable page) {
+  public PagingResponse<GbifUser> search(
+      String query,
+      @Nullable Set<UserRole> roles,
+      @Nullable Set<UUID> editorRightsOn,
+      Set<String> namespaceRightsOn,
+      @Nullable Set<Country> countryRightsOn,
+      @Nullable Pageable page) {
     throw new UnsupportedOperationException();
   }
 

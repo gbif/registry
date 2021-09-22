@@ -55,7 +55,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
           .put(DatasetSearchParameter.ENDORSING_NODE_KEY, "endorsingNodeKey")
           .put(DatasetSearchParameter.YEAR, "year")
           .put(DatasetSearchParameter.DECADE, "decade")
-           .put(DatasetSearchParameter.INSTALLATION_KEY, "installationKey")
+          .put(DatasetSearchParameter.INSTALLATION_KEY, "installationKey")
           .put(DatasetSearchParameter.HOSTING_ORG, "hostingOrganizationKey")
           .put(DatasetSearchParameter.HOSTING_COUNTRY, "hostingCountry")
           .put(DatasetSearchParameter.KEYWORD, "keyword")

@@ -74,14 +74,12 @@ public class DatasetSearchResultConverter
         .ifPresent(d::setHostingOrganizationTitle);
     getCountryValue(fields, "hostingCountry").ifPresent(d::setHostingCountry);
 
-
     getLicenceValue(fields, "license").ifPresent(d::setLicense);
     getStringValue(fields, "projectId").ifPresent(d::setProjectIdentifier);
 
-    //Set counts
+    // Set counts
     getIntValue(fields, "nameUsagesCount").ifPresent(d::setNameUsagesCount);
     getIntValue(fields, "occurrenceCount").ifPresent(d::setRecordCount);
-
 
     getListValue(fields, "keyword").ifPresent(d::setKeywords);
 

@@ -415,6 +415,35 @@ public class OrganizationCreationIT extends BaseItTest {
         "User with editor rights must be allowed to endorse organization");
   }
 
+  @Test
+  public void testCreateEndorsedOrganization() {
+    // reset principal - use ADMIN role
+    setupPrincipal(TEST_ADMIN, REGISTRY_ADMIN);
+
+    Organization o =
+        testDataFactory.newOrganization(prepareNode(nodeResource, testDataFactory).getKey());
+    o.setEndorsementApproved(true);
+
+    UUID orgKey = organizationResource.create(o);
+
+    Organization organizationCreated = organizationResource.get(orgKey);
+    assertTrue(organizationCreated.isEndorsementApproved());
+    assertEquals(EndorsementStatus.ENDORSED, organizationCreated.getEndorsementStatus());
+    assertNotNull(organizationCreated.getEndorsed());
+
+    // check that this only happens when the endorsement approved is set to true
+    o = testDataFactory.newOrganization(prepareNode(nodeResource, testDataFactory).getKey());
+    o.setEndorsementApproved(false);
+
+    orgKey = organizationResource.create(o);
+
+    organizationCreated = organizationResource.get(orgKey);
+    assertFalse(organizationCreated.isEndorsementApproved());
+    assertEquals(
+        EndorsementStatus.WAITING_FOR_ENDORSEMENT, organizationCreated.getEndorsementStatus());
+    assertNull(organizationCreated.getEndorsed());
+  }
+
   private static Node prepareNode(NodeService nodeService, TestDataFactory testDataFactory) {
     // first create a Node (we need one for endorsement)
     Node node = testDataFactory.newNode();

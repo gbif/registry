@@ -60,7 +60,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class InstitutionResource
     extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
-  //Prefix for the export file format
+  // Prefix for the export file format
   private static final String EXPORT_FILE_NAME = "%sinstitutions.%s";
 
   // Page size to iterate over download stats export service
@@ -96,41 +96,48 @@ public class InstitutionResource
   }
 
   private String getExportFileHeader(InstitutionSearchRequest searchRequest, ExportFormat format) {
-    String preFileName = CsvWriter.notNullJoiner("-",
-                                                searchRequest.getCountry() != null? searchRequest.getCountry().getIso2LetterCode() : null,
-                                                searchRequest.getCity(),
-                                                searchRequest.getAlternativeCode(),
-                                                searchRequest.getCode(),
-                                                searchRequest.getName(),
-                                                searchRequest.getContact() != null? searchRequest.getContact().toString() : null,
-                                                searchRequest.getIdentifierType() != null? searchRequest.getIdentifierType().name() : null,
-                                                searchRequest.getIdentifier(),
-                                                searchRequest.getMachineTagNamespace(),
-                                                searchRequest.getMachineTagName(),
-                                                searchRequest.getMachineTagValue(),
-                                                searchRequest.getFuzzyName(),
-                                                searchRequest.getQ()
-                                                );
-    if(preFileName.length() > 0) {
+    String preFileName =
+        CsvWriter.notNullJoiner(
+            "-",
+            searchRequest.getCountry() != null
+                ? searchRequest.getCountry().getIso2LetterCode()
+                : null,
+            searchRequest.getCity(),
+            searchRequest.getAlternativeCode(),
+            searchRequest.getCode(),
+            searchRequest.getName(),
+            searchRequest.getContact() != null ? searchRequest.getContact().toString() : null,
+            searchRequest.getIdentifierType() != null
+                ? searchRequest.getIdentifierType().name()
+                : null,
+            searchRequest.getIdentifier(),
+            searchRequest.getMachineTagNamespace(),
+            searchRequest.getMachineTagName(),
+            searchRequest.getMachineTagValue(),
+            searchRequest.getFuzzyName(),
+            searchRequest.getQ());
+    if (preFileName.length() > 0) {
       preFileName += "-";
     }
 
-    return ContentDisposition
-            .builder("attachment")
-            .filename(String.format(EXPORT_FILE_NAME, preFileName, format.name().toLowerCase()))
-            .build()
-            .toString();
+    return ContentDisposition.builder("attachment")
+        .filename(String.format(EXPORT_FILE_NAME, preFileName, format.name().toLowerCase()))
+        .build()
+        .toString();
   }
 
   @GetMapping("export")
-  public void export(HttpServletResponse response,
-                     @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
-                     InstitutionSearchRequest searchRequest) throws IOException {
+  public void export(
+      HttpServletResponse response,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format,
+      InstitutionSearchRequest searchRequest)
+      throws IOException {
     response.setHeader(HttpHeaders.CONTENT_DISPOSITION, getExportFileHeader(searchRequest, format));
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(response.getOutputStream()))) {
-      CsvWriter.institutions(Iterables.institutions(searchRequest, institutionService, EXPORT_LIMIT), format)
-        .export(writer);
+      CsvWriter.institutions(
+              Iterables.institutions(searchRequest, institutionService, EXPORT_LIMIT), format)
+          .export(writer);
     }
   }
 
