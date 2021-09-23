@@ -30,10 +30,10 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -121,7 +121,7 @@ public class EMLWriter {
   }
 
   private void innerWrite(Dataset dataset, Writer writer) throws IOException {
-    Preconditions.checkNotNull(dataset, "Dataset can't be null");
+    Objects.requireNonNull(dataset, "Dataset can't be null");
 
     Map<String, Object> map =
         ImmutableMap.of(
@@ -262,7 +262,7 @@ public class EMLWriter {
   @Deprecated
   public static void write(Dataset dataset, Writer writer, boolean useDoiAsIdentifier)
       throws IOException {
-    Preconditions.checkNotNull(dataset, "Dataset can't be null");
+    Objects.requireNonNull(dataset, "Dataset can't be null");
 
     if (useDoiAsIdentifier) {
       LEGACY_METHOD_INSTANCE_WITH_DOI.writeTo(dataset, writer);

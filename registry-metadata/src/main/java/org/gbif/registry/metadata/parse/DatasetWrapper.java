@@ -46,6 +46,7 @@ import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.registry.metadata.CleanUtils;
+import org.gbif.utils.CommonStringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -55,9 +56,11 @@ import java.time.Year;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -65,12 +68,9 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 
 /**
  * A delegating wrapper to a Dataset that can be instructed to override existing content or not.
@@ -103,7 +103,7 @@ public class DatasetWrapper {
    *     Coverage calendarDate keyword</a>
    */
   private static Date calendarDate(String dateString) throws ParseException {
-    if (Strings.isNullOrEmpty(dateString)) {
+    if (StringUtils.isEmpty(dateString)) {
       return null;
     }
 
@@ -187,19 +187,20 @@ public class DatasetWrapper {
 
   /** Adds a comma or semicolon concatenated keyword string as keyword collection. */
   public void addSubjects(String subjects) {
-    Splitter keywordSplitter =
-        Splitter.on(Pattern.compile("[,;]")).trimResults().omitEmptyStrings();
-    if (!Strings.isNullOrEmpty(subjects)) {
+    if (StringUtils.isNotEmpty(subjects)) {
       KeywordCollection collection = new KeywordCollection();
-      for (String keyword : keywordSplitter.split(subjects)) {
-        collection.addKeyword(keyword);
-      }
+
+      Arrays.stream(subjects.split("[,;]"))
+          .map(CommonStringUtils::trim)
+          .filter(StringUtils::isNotEmpty)
+          .forEach(collection::addKeyword);
+
       target.getKeywordCollections().add(collection);
     }
   }
 
   public void addCreator(String creator) {
-    if (!Strings.isNullOrEmpty(creator)) {
+    if (StringUtils.isNotEmpty(creator)) {
       Contact contact = new Contact();
       contact.setLastName(creator);
       contact.setType(ContactType.ORIGINATOR);
@@ -208,7 +209,7 @@ public class DatasetWrapper {
   }
 
   public void addBibCitation(String citation) {
-    if (!Strings.isNullOrEmpty(citation)) {
+    if (StringUtils.isNotEmpty(citation)) {
       Citation c = new Citation();
       c.setText(citation);
       target.setCitation(c);
@@ -216,7 +217,7 @@ public class DatasetWrapper {
   }
 
   public void addIdentifier(String id) {
-    if (!Strings.isNullOrEmpty(id)) {
+    if (StringUtils.isNotEmpty(id)) {
       Identifier i = new Identifier();
       i.setIdentifier(id);
       i.setType(IdentifierType.UNKNOWN);
@@ -231,7 +232,7 @@ public class DatasetWrapper {
   }
 
   public void addAbstract(String para) {
-    if (!Strings.isNullOrEmpty(para)) {
+    if (StringUtils.isNotEmpty(para)) {
       description.appendParagraph(para.trim());
       target.setDescription(description.toString());
     }
@@ -399,7 +400,7 @@ public class DatasetWrapper {
 
     URI uri = null;
     try {
-      uri = Strings.isNullOrEmpty(uriString) ? null : URI.create(uriString);
+      uri = StringUtils.isEmpty(uriString) ? null : URI.create(uriString);
     } catch (IllegalArgumentException e) {
       LOG.error(
           "Bad URI found when parsing eml/dataset/intellectualRights/para/ulink@url attribute: {}",
@@ -574,7 +575,8 @@ public class DatasetWrapper {
   public void setTitle(String title) {
     // keep first true title in case we encounter several - just to be safe with this important
     // property
-    target.setTitle(Objects.firstNonNull(target.getTitle(), title));
+
+    target.setTitle(target.getTitle() != null ? target.getTitle() : Objects.requireNonNull(title));
   }
 
   public void setType(DatasetType type) {
@@ -618,7 +620,7 @@ public class DatasetWrapper {
         }
       }
       // at last also check the citation field
-      if (!Strings.isNullOrEmpty(target.getCitation().getIdentifier())) {
+      if (StringUtils.isNotEmpty(target.getCitation().getIdentifier())) {
         try {
           target.setDoi(new DOI(target.getCitation().getIdentifier()));
         } catch (IllegalArgumentException e) {

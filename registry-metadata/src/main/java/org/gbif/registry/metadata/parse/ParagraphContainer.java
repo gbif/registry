@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 /**
@@ -36,7 +34,6 @@ import com.google.common.collect.Lists;
  */
 public class ParagraphContainer {
 
-  private static final Joiner paraJoin = Joiner.on("\n");
   private final List<String> paragraphs = new ArrayList<>();
 
   public ParagraphContainer() {}
@@ -50,7 +47,7 @@ public class ParagraphContainer {
   }
 
   public void appendParagraph(String para) {
-    if (!Strings.isNullOrEmpty(para)) {
+    if (StringUtils.isNotEmpty(para)) {
       paragraphs.add(para.trim());
     }
   }
@@ -75,7 +72,7 @@ public class ParagraphContainer {
     for (String para : paragraphs) {
       wrappedParagraphs.add(wrapInHtmlParagraph(para));
     }
-    return paraJoin.join(wrappedParagraphs);
+    return String.join(StringUtils.LF, wrappedParagraphs);
   }
 
   private String wrapInHtmlParagraph(String para) {
