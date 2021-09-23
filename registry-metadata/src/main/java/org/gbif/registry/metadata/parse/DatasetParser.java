@@ -34,10 +34,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
-
 import static org.gbif.api.vocabulary.MetadataType.DC;
 import static org.gbif.api.vocabulary.MetadataType.EML;
 
@@ -60,7 +56,7 @@ public class DatasetParser {
   private static class ParserDetectionHandler extends DefaultHandler {
     private static final String DC_NAMESPACE = "http://purl.org/dc/terms/";
     private MetadataType parserType;
-    private LinkedList<String> path = Lists.newLinkedList();
+    private LinkedList<String> path = new LinkedList<>();
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
@@ -112,24 +108,8 @@ public class DatasetParser {
   }
 
   /**
-   * Build from stream on-top of a preexisting Dataset populating its fields from a source metadata
+   * Build from byte array on-top of a preexisting Dataset populating its fields from a source metadata
    * that's parsed.
-   *
-   * @param xml to read
-   * @return The Dataset populated, never null
-   * @throws java.io.IOException If the Stream cannot be read from
-   * @throws IllegalArgumentException If the XML is not well formed or is not understood
-   */
-  public static Dataset build(InputStream xml) throws IOException {
-    // buffer entire stream first. We need it several times
-    final byte[] data = ByteStreams.toByteArray(xml);
-    // detect the parser type
-    return parse(detectParserType(new ByteArrayInputStream(data)), new ByteArrayInputStream(data));
-  }
-
-  // TODO: 05/04/2020 remove another one
-  /**
-   * Analogue of {@link DatasetParser#build(InputStream)}.
    *
    * @param data to read
    * @return The Dataset populated, never null
@@ -171,7 +151,11 @@ public class DatasetParser {
       }
     } finally {
       delegator.postProcess();
-      Closeables.closeQuietly(xml);
+      try {
+        xml.close();
+      } catch (IOException e) {
+        LOG.warn("IOException thrown while closing stream.", e);
+      }
     }
 
     return delegator.getTarget();

@@ -20,8 +20,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.collect.Lists;
-
 /**
  * Class to temporarily keep paragraph strings before they are used as a single, concatenated string
  * argument in other rules, and to reverse this transformation.
@@ -68,7 +66,7 @@ public class ParagraphContainer {
     }
 
     // replace with StringJoiner when we move to Java 8
-    List<String> wrappedParagraphs = Lists.newArrayList();
+    List<String> wrappedParagraphs = new ArrayList<>();
     for (String para : paragraphs) {
       wrappedParagraphs.add(wrapInHtmlParagraph(para));
     }

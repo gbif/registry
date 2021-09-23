@@ -29,7 +29,11 @@ import org.gbif.registry.metadata.contact.ContactAdapter;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,11 +45,6 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -101,14 +100,14 @@ public class DublinCoreWriter {
       Writer writer)
       throws IOException {
     Objects.requireNonNull(dataset, "Dataset can't be null");
-    Map<String, Object> map = Maps.newHashMap();
+    Map<String, Object> map = new HashMap<>();
     map.put("dataset", dataset);
     map.put("dc", new DcDatasetWrapper(dataset, additionalProperties));
 
     if (organization != null) {
       map.put("organization", organization);
     }
-    map = ImmutableMap.copyOf(map);
+    map = Collections.unmodifiableMap(map);
     try {
       freemarkerConfig.getTemplate(DC_TEMPLATE).process(map, writer);
     } catch (TemplateException e) {
@@ -150,7 +149,7 @@ public class DublinCoreWriter {
      * @return set of formatted contact name ordered by ContactType
      */
     public Set<String> getCreators() {
-      Set<String> creators = Sets.newLinkedHashSet();
+      Set<String> creators = new LinkedHashSet<>();
       List<Contact> filteredContacts =
           contactAdapter.getFilteredContacts(
               ContactType.ADMINISTRATIVE_POINT_OF_CONTACT,
@@ -168,7 +167,7 @@ public class DublinCoreWriter {
      * @return never null
      */
     public List<String> getDescription() {
-      List<String> descriptions = Lists.newArrayList();
+      List<String> descriptions = new ArrayList<>();
       if (StringUtils.isNotBlank(dataset.getDescription())) {
         descriptions.add(dataset.getDescription());
       }
@@ -189,7 +188,7 @@ public class DublinCoreWriter {
      * @return never null
      */
     public List<String> getFormattedTemporalCoverage() {
-      List<String> coverage = Lists.newArrayList();
+      List<String> coverage = new ArrayList<>();
       if (dataset.getTemporalCoverages() != null) {
         for (TemporalCoverage tc : dataset.getTemporalCoverages()) {
           coverage.add(tc.acceptFormatter(TC_FORMATTER));

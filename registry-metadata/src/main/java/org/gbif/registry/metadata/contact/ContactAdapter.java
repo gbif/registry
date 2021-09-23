@@ -15,17 +15,17 @@
  */
 package org.gbif.registry.metadata.contact;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.ContactType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Adapt the {@link Dataset} {@link Contact} list for what metadata documents generally want.
@@ -48,7 +48,7 @@ public class ContactAdapter {
    * @return list of AssociatedParties or empty list if none found
    */
   public List<Contact> getAssociatedParties() {
-    List<Contact> contacts = Lists.newArrayList();
+    List<Contact> contacts = new ArrayList<>();
     for (Contact c : this.contactList) {
       if (!c.isPrimary() && !isPreferredContactType(c.getType())) {
         contacts.add(c);
@@ -109,7 +109,7 @@ public class ContactAdapter {
    * @return filtered contacts or an empty list if none matched
    */
   public List<Contact> getFilteredContacts(ContactType... types) {
-    List<Contact> contacts = Lists.newArrayList();
+    List<Contact> contacts = new ArrayList<>();
     Contact contact;
     for (ContactType type : types) {
       contact = getFirstPreferredType(type);
@@ -170,7 +170,7 @@ public class ContactAdapter {
    * @return all {@link Contact} for specified type or empty list if none found
    */
   public List<Contact> getAllType(ContactType type) {
-    List<Contact> primary = Lists.newArrayList();
+    List<Contact> primary = new ArrayList<>();
     for (Contact c : contactList) {
       if (type == c.getType()) {
         primary.add(c);

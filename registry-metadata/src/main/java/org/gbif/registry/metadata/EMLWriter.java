@@ -28,14 +28,14 @@ import org.gbif.registry.metadata.parse.ParagraphContainer;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.concurrent.ThreadSafe;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -123,19 +123,14 @@ public class EMLWriter {
   private void innerWrite(Dataset dataset, Writer writer) throws IOException {
     Objects.requireNonNull(dataset, "Dataset can't be null");
 
-    Map<String, Object> map =
-        ImmutableMap.of(
-            "dataset",
-            dataset,
-            "eml",
-            new EmlDatasetWrapper(dataset),
-            "useDoiAsIdentifier",
-            useDoiAsIdentifier,
-            "omitXmlDeclaration",
-            omitXmlDeclaration);
+    Map<String, Object> map = new HashMap<>();
+    map.put("dataset", dataset);
+    map.put("eml", new EmlDatasetWrapper(dataset));
+    map.put("useDoiAsIdentifier", useDoiAsIdentifier);
+    map.put("omitXmlDeclaration", omitXmlDeclaration);
 
     try {
-      freemarkerConfig.getTemplate(EML_TEMPLATE).process(map, writer);
+      freemarkerConfig.getTemplate(EML_TEMPLATE).process(Collections.unmodifiableMap(map), writer);
     } catch (TemplateException e) {
       throw new IOException(
           "Error while processing the EML Freemarker template for dataset " + dataset.getKey(), e);
@@ -210,7 +205,7 @@ public class EMLWriter {
 
     /** @return list of all {@link VerbatimTimePeriodType} of specified type */
     private List<VerbatimTimePeriod> getTimePeriods(VerbatimTimePeriodType type) {
-      List<VerbatimTimePeriod> periods = Lists.newArrayList();
+      List<VerbatimTimePeriod> periods = new ArrayList<>();
       for (TemporalCoverage tc : dataset.getTemporalCoverages()) {
         if (tc instanceof VerbatimTimePeriod) {
           VerbatimTimePeriod tp = (VerbatimTimePeriod) tc;
@@ -227,7 +222,7 @@ public class EMLWriter {
      *     empty list if none found
      */
     public List<TemporalCoverage> getSingleDateAndDateRangeCoverages() {
-      List<TemporalCoverage> periods = Lists.newArrayList();
+      List<TemporalCoverage> periods = new ArrayList<>();
       for (TemporalCoverage tc : dataset.getTemporalCoverages()) {
         if (tc instanceof DateRange || tc instanceof SingleDate) {
           periods.add(tc);
