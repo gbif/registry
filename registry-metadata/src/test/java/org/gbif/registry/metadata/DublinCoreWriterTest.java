@@ -26,6 +26,7 @@ import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Language;
+import org.gbif.utils.CommonStringUtils;
 
 import java.io.StringWriter;
 import java.net.URI;
@@ -39,7 +40,6 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -81,7 +81,7 @@ public class DublinCoreWriterTest {
 
     // try additional properties
     Map<String, Object> additionalProperties = Maps.newHashMap();
-    additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, 3l);
+    additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, 3L);
     additionalProperties.put(
         DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, "application/dwca+zip");
 
@@ -142,8 +142,8 @@ public class DublinCoreWriterTest {
             StandardCharsets.UTF_8);
 
     // compare without the whitespace characters
-    String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);
-    String actualFileContent = CharMatcher.WHITESPACE.removeFrom(writer.toString());
+    String expectedFileContent = CommonStringUtils.deleteWhitespace(expectedContent);
+    String actualFileContent = CommonStringUtils.deleteWhitespace(writer.toString());
 
     assertEquals(expectedFileContent, actualFileContent);
 

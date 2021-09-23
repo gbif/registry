@@ -15,13 +15,16 @@
  */
 package org.gbif.registry.metadata.contact;
 
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.ContactType;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
 /**
@@ -30,8 +33,6 @@ import com.google.common.collect.Lists;
  * @author cgendreau
  */
 public class ContactAdapter {
-
-  private static final Joiner JOINER = Joiner.on(" ").skipNulls();
 
   private List<Contact> contactList;
 
@@ -58,10 +59,9 @@ public class ContactAdapter {
 
   /** @return true if contact type is considered a preferred type, or false otherwise */
   private boolean isPreferredContactType(ContactType type) {
-    return (type != null
-        && (type == ContactType.ORIGINATOR
-            || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
-            || type == ContactType.METADATA_AUTHOR));
+    return type == ContactType.ORIGINATOR
+        || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
+        || type == ContactType.METADATA_AUTHOR;
   }
 
   /**
@@ -84,7 +84,10 @@ public class ContactAdapter {
     if (contact == null) {
       return "";
     }
-    return JOINER.join(contact.getFirstName(), contact.getLastName()).trim();
+    return Stream.of(contact.getFirstName(), contact.getLastName())
+        .filter(Objects::nonNull)
+        .map(String::trim)
+        .collect(Collectors.joining(StringUtils.SPACE));
   }
 
   /**
