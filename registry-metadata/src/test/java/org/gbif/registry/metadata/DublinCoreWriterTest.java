@@ -26,7 +26,6 @@ import org.gbif.api.model.registry.eml.temporal.DateRange;
 import org.gbif.api.model.registry.eml.temporal.TemporalCoverage;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.utils.CommonStringUtils;
 
 import java.io.StringWriter;
 import java.net.URI;
@@ -143,8 +142,8 @@ public class DublinCoreWriterTest {
             StandardCharsets.UTF_8);
 
     // compare without the whitespace characters
-    String expectedFileContent = CommonStringUtils.deleteWhitespace(expectedContent);
-    String actualFileContent = CommonStringUtils.deleteWhitespace(writer.toString());
+    String expectedFileContent = org.gbif.utils.text.StringUtils.deleteWhitespace(expectedContent);
+    String actualFileContent = org.gbif.utils.text.StringUtils.deleteWhitespace(writer.toString());
 
     assertEquals(expectedFileContent, actualFileContent);
 
