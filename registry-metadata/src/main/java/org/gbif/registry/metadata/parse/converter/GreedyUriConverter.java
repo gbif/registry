@@ -15,8 +15,6 @@
  */
 package org.gbif.registry.metadata.parse.converter;
 
-import org.gbif.utils.CommonStringUtils;
-
 import java.net.URI;
 import java.net.URL;
 import java.util.Objects;
@@ -61,7 +59,7 @@ public final class GreedyUriConverter extends AbstractConverter {
   protected Object convertToType(Class type, Object value) {
     Objects.requireNonNull(value, "Must provide a type to convert to null");
     String valueAsString =
-        StringUtils.trimToNull(CommonStringUtils.trim(String.valueOf(value)));
+        StringUtils.trimToNull(org.gbif.utils.text.StringUtils.trim(String.valueOf(value)));
 
     URI uri = null;
     if (StringUtils.isNotEmpty(valueAsString)) {

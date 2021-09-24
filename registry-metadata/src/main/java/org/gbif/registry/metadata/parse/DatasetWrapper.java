@@ -46,7 +46,6 @@ import org.gbif.common.parsers.RankParser;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.DateParsers;
 import org.gbif.registry.metadata.CleanUtils;
-import org.gbif.utils.CommonStringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -191,7 +190,7 @@ public class DatasetWrapper {
       KeywordCollection collection = new KeywordCollection();
 
       Arrays.stream(subjects.split("[,;]"))
-          .map(CommonStringUtils::trim)
+          .map(org.gbif.utils.text.StringUtils::trim)
           .filter(StringUtils::isNotEmpty)
           .forEach(collection::addKeyword);
 
