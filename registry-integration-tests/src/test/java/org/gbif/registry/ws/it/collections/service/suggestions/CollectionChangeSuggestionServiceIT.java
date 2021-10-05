@@ -17,6 +17,7 @@ package org.gbif.registry.ws.it.collections.service.suggestions;
 
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
@@ -47,6 +48,11 @@ public class CollectionChangeSuggestionServiceIT
     Collection c1 = new Collection();
     c1.setCode(UUID.randomUUID().toString());
     c1.setName(UUID.randomUUID().toString());
+
+    Contact contact = new Contact();
+    contact.setFirstName("firstName");
+    c1.getContactPersons().add(contact);
+
     return c1;
   }
 

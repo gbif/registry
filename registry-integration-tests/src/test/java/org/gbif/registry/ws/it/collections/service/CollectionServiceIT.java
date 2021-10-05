@@ -15,14 +15,8 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.IdType;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -45,12 +39,7 @@ import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchP
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
@@ -486,6 +475,53 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         collectionService.list(
             CollectionSearchRequest.builder()
                 .query("code2")
+                .institution(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    // list by contacts
+    Contact contact1 = new Contact();
+    contact1.setFirstName("Name1");
+    contact1.setEmail(Collections.singletonList("aa1@aa.com"));
+    contact1.setTaxonomicExpertise(Arrays.asList("aves", "fungi"));
+
+    UserId userId1 = new UserId(IdType.OTHER, "12345");
+    UserId userId2 = new UserId(IdType.OTHER, "abcde");
+    contact1.setUserIds(Arrays.asList(userId1, userId2));
+    collectionService.addContactPerson(collection1.getKey(), contact1);
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .query("Name1")
+                .institution(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .query("abcde")
+                .institution(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .query("aa1@aa.com")
+                .institution(institutionKey1)
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .query("aves")
                 .institution(institutionKey1)
                 .page(DEFAULT_PAGE)
                 .build());

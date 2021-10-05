@@ -17,7 +17,10 @@ package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -28,6 +31,7 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
@@ -36,6 +40,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -65,6 +70,7 @@ public class InstitutionMapperIT extends BaseItTest {
   private AddressMapper addressMapper;
   private MachineTagMapper machineTagMapper;
   private IdentifierMapper identifierMapper;
+  private CollectionContactMapper contactMapper;
 
   @Autowired
   public InstitutionMapperIT(
@@ -72,6 +78,7 @@ public class InstitutionMapperIT extends BaseItTest {
       AddressMapper addressMapper,
       MachineTagMapper machineTagMapper,
       IdentifierMapper identifierMapper,
+      CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer) {
     super(principalProvider, esServer);
@@ -79,6 +86,7 @@ public class InstitutionMapperIT extends BaseItTest {
     this.addressMapper = addressMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
+    this.contactMapper = contactMapper;
   }
 
   @Test
@@ -320,6 +328,28 @@ public class InstitutionMapperIT extends BaseItTest {
         page,
         1,
         inst1.getKey());
+
+    Contact contact1 = new Contact();
+    contact1.setFirstName("Name1");
+    contact1.setLastName("Surname1");
+    contact1.setEmail(Collections.singletonList("aa1@aa.com"));
+    contact1.setTaxonomicExpertise(Arrays.asList("aves", "fungi"));
+    contact1.setCreatedBy("test");
+    contact1.setModifiedBy("test");
+
+    UserId userId1 = new UserId(IdType.OTHER, "12345");
+    UserId userId2 = new UserId(IdType.OTHER, "abcde");
+    contact1.setUserIds(Arrays.asList(userId1, userId2));
+
+    contactMapper.createContact(contact1);
+    institutionMapper.addContactPerson(inst1.getKey(), contact1.getKey());
+    assertSearch(InstitutionSearchParams.builder().query("Name1").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("Name0").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().query("Surname1").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("aa1@aa.com").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("aves").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("12345").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("abcde").build(), page, 1);
   }
 
   @Test

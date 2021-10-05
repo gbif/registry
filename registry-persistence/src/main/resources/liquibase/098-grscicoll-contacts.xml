@@ -22,23 +22,63 @@
           taxonomic_expertise text[],
           notes text,
           user_ids jsonb,
-          primary_contact boolean DEFAULT false,
+          is_primary boolean DEFAULT false,
+          fulltext_search tsvector,
           created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
           modified_by varchar NOT NULL CHECK (assert_min_length(modified_by, 3)),
           created timestamptz NOT NULL DEFAULT now(),
           modified timestamptz NOT NULL DEFAULT now());
 
-          CREATE TABLE collection_collection_contact (
-            collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
-            collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
-            PRIMARY KEY (collection_contact_key, collection_key)
-          );
+        CREATE TABLE collection_collection_contact (
+          collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+          collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_contact_key, collection_key)
+        );
 
-          CREATE TABLE institution_collection_contact (
-            institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
-            collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
-            PRIMARY KEY (collection_contact_key, institution_key)
-          );
+        CREATE TABLE institution_collection_contact (
+          institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+          collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_contact_key, institution_key)
+        );
+
+        CREATE INDEX collection_contact_fulltext_search_idx ON collection_contact USING gin(fulltext_search);
+
+        CREATE OR REPLACE FUNCTION get_user_ids_values(input jsonb)
+          RETURNS text[] AS
+          $func$
+            DECLARE
+              v text;
+              res text[];
+            BEGIN
+                IF input IS NOT NULL THEN
+                  FOR v IN SELECT jsonb_array_elements(input)->>'id' LOOP
+                    res := array_append(res, cast(v as TEXT));
+                  END LOOP;
+                END IF;
+
+                RETURN res;
+            END
+          $func$
+          LANGUAGE plpgsql;
+
+        CREATE OR REPLACE FUNCTION collection_contact_change_trigger()
+          RETURNS TRIGGER AS
+          $collcontactchange$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.taxonomic_expertise, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.email, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.first_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.last_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(get_user_ids_values(NEW.user_ids), ' '),'')));
+                RETURN NEW;
+              END;
+          $collcontactchange$
+          LANGUAGE plpgsql;
+
+        CREATE TRIGGER collection_contact_fulltext_update
+          BEFORE INSERT OR UPDATE ON collection_contact
+          FOR EACH ROW EXECUTE PROCEDURE collection_contact_change_trigger();
       ]]>
     </sql>
   </changeSet>
