@@ -4,6 +4,7 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">您好 ${name}，</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">謝謝您在 GBIF.org 註冊，
+    請點選下面的按鈕來確認您的電子郵件地址：
     請點選下面的按鈕來確認您的電子郵件地址：</p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
