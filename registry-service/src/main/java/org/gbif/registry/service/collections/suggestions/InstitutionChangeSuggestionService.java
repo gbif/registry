@@ -67,6 +67,7 @@ public class InstitutionChangeSuggestionService
         changeSuggestionMapper,
         institutionMergeService,
         institutionService,
+        institutionService,
         Institution.class,
         objectMapper,
         emailSender,

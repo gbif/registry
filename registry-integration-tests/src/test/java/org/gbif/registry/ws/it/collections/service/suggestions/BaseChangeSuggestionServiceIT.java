@@ -17,9 +17,12 @@ package org.gbif.registry.ws.it.collections.service.suggestions;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
@@ -29,6 +32,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
@@ -64,14 +68,17 @@ public abstract class BaseChangeSuggestionServiceIT<
 
   private final ChangeSuggestionService<T, R> changeSuggestionService;
   private final CrudService<T> crudService;
+  private final ContactService contactService;
 
   protected BaseChangeSuggestionServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       ChangeSuggestionService<T, R> changeSuggestionService,
-      CrudService<T> crudService) {
+      CrudService<T> crudService,
+      ContactService contactService) {
     super(simplePrincipalProvider);
     this.changeSuggestionService = changeSuggestionService;
     this.crudService = crudService;
+    this.contactService = contactService;
   }
 
   @Test
@@ -82,6 +89,14 @@ public abstract class BaseChangeSuggestionServiceIT<
     Address address = new Address();
     address.setCountry(Country.DENMARK);
     entity.setAddress(address);
+
+    Contact contact1 = new Contact();
+    contact1.setFirstName("first");
+    contact1.setLastName("last");
+    contact1.setEmail(Collections.singletonList("aa@aa.com"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "12345"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "abcde"));
+    entity.getContactPersons().add(contact1);
 
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
@@ -128,6 +143,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     expected.setKey(suggestion.getEntityKey());
     expected.getAddress().setKey(appliedEntity.getAddress().getKey());
     assertTrue(appliedEntity.lenientEquals(expected));
+    assertEquals(1, appliedEntity.getContactPersons().size());
   }
 
   @Test
@@ -141,6 +157,22 @@ public abstract class BaseChangeSuggestionServiceIT<
 
     UUID entityKey = crudService.create(entity);
 
+    Contact contact1 = new Contact();
+    contact1.setFirstName("first");
+    contact1.setLastName("last");
+    contact1.setEmail(Collections.singletonList("aa@aa.com"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "12345"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "abcde"));
+    entity.getContactPersons().add(contact1);
+    contactService.addContactPerson(entityKey, contact1);
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("second");
+    contact2.setEmail(Collections.singletonList("aa@aa.com"));
+    contact2.getUserIds().add(new UserId(IdType.OTHER, "54321"));
+    entity.getContactPersons().add(contact2);
+    contactService.addContactPerson(entityKey, contact2);
+
     // suggested changes
     int numberChanges = updateEntity(entity);
     address.setCity("city");
@@ -151,6 +183,20 @@ public abstract class BaseChangeSuggestionServiceIT<
     suggestion.setEntityKey(entityKey);
     suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
+
+    // update a contact
+    contact1.setFirstName("first2");
+    numberChanges++;
+
+    // add another contact
+    Contact contact3 = new Contact();
+    contact3.setFirstName("third");
+    contact3.setEmail(Collections.singletonList("aa@aa.com"));
+    contact3.getUserIds().add(new UserId(IdType.OTHER, "54321"));
+    suggestion.getSuggestedEntity().getContactPersons().add(contact3);
+
+    // remove one contact
+    suggestion.getSuggestedEntity().getContactPersons().remove(contact2);
 
     // When
     int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
@@ -197,6 +243,19 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(Status.APPLIED, suggestion.getStatus());
     assertNotNull(suggestion.getApplied());
     assertNotNull(suggestion.getAppliedBy());
+
+    T applied = crudService.get(suggestion.getEntityKey());
+    assertEquals(2, applied.getContactPersons().size());
+    assertTrue(
+        applied.getContactPersons().stream()
+            .anyMatch(
+                c ->
+                    c.getKey().equals(contact1.getKey())
+                        && c.getFirstName().equals(contact1.getFirstName())));
+    assertTrue(
+        applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals(contact3.getFirstName())));
+    assertTrue(
+        applied.getContactPersons().stream().noneMatch(c -> c.getKey().equals(contact2.getKey())));
   }
 
   @Test
