@@ -20,16 +20,13 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.PersonSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PersonService;
 
 import java.util.UUID;
 
@@ -54,17 +51,13 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
 
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
-  private final PersonService personService;
 
   @Autowired
   public InstitutionMergeService(
-      InstitutionService institutionService,
-      CollectionService collectionService,
-      PersonService personService) {
+      InstitutionService institutionService, CollectionService collectionService) {
     super(institutionService);
     this.institutionService = institutionService;
     this.collectionService = collectionService;
-    this.personService = personService;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -166,8 +159,12 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
 
     // copy the contacts
     institutionToConvert
-        .getContacts()
-        .forEach(c -> collectionService.addContact(newCollection.getKey(), c.getKey()));
+        .getContactPersons()
+        .forEach(
+            c -> {
+              c.setKey(null);
+              collectionService.addContactPerson(newCollection.getKey(), c);
+            });
 
     return newCollection.getKey();
   }
@@ -205,18 +202,6 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
 
   @Override
   void additionalOperations(Institution entityToReplace, Institution replacement) {
-    // fix primary institution of contacts
-    PagingResponse<Person> persons =
-        personService.list(
-            PersonSearchRequest.builder().primaryInstitution(entityToReplace.getKey()).build());
-    persons
-        .getResults()
-        .forEach(
-            p -> {
-              p.setPrimaryInstitutionKey(replacement.getKey());
-              personService.update(p);
-            });
-
     moveCollectionsToAnotherInstitution(entityToReplace.getKey(), replacement.getKey());
   }
 
