@@ -1,1 +1,1 @@
-GET http://api.gbif-dev.org/v1/derivedDataset/dataset/10.21373/abcdef
+GET https://api.gbif-dev.org/v1/derivedDataset/dataset/10.21373/abcdef
