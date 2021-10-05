@@ -11,6 +11,9 @@
     変更していない場合は、すぐに
     <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a>
     までご連絡ください。
+    変更していない場合は、すぐに
+    <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a>
+    までご連絡ください。
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
