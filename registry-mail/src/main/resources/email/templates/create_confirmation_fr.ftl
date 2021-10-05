@@ -17,7 +17,7 @@
 </table>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Vous pouvez également copier l'URL suivante et la coller dans votre navigateur : <a href="${url}" style="color: #509E2F;text-decoration: none;">${url}</a>
+    Vous pouvez également copier l'URL suivante et la coller dans votre navigateur : <a href="${url}" style="color: #4ba2ce;text-decoration: none;">${url}</a>
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
