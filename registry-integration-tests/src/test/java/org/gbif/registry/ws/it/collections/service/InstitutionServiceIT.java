@@ -302,6 +302,45 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
             .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+
+    // list by contacts
+    Contact contact1 = new Contact();
+    contact1.setFirstName("Name1");
+    contact1.setEmail(Collections.singletonList("aa1@aa.com"));
+    contact1.setTaxonomicExpertise(Arrays.asList("aves", "fungi"));
+
+    UserId userId1 = new UserId(IdType.OTHER, "12345");
+    UserId userId2 = new UserId(IdType.OTHER, "abcde");
+    contact1.setUserIds(Arrays.asList(userId1, userId2));
+    institutionService.addContactPerson(institution1.getKey(), contact1);
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("Name1").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("aa1@aa.com").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("aves").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("abcde").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
   }
 
   @Test
@@ -488,8 +527,8 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     userId2.setType(IdType.HUH);
     contactUpdated.getUserIds().add(userId2);
     assertThrows(
-      IllegalArgumentException.class,
-      () -> institutionService.updateContactPerson(institutionKey1, contactUpdated));
+        IllegalArgumentException.class,
+        () -> institutionService.updateContactPerson(institutionKey1, contactUpdated));
 
     Contact contact2 = new Contact();
     contact2.setFirstName("Another name");

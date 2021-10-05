@@ -107,6 +107,11 @@
 
   <sql id="FULLTEXT_SEARCH">
     JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+    OR EXISTS(
+      SELECT collection_contact_key
+      FROM institution_collection_contact JOIN collection_contact cc ON cc.key = collection_contact_key
+      WHERE institution_key = i.key AND query @@ cc.fulltext_search
+    )
   </sql>
 
   <insert id="create" parameterType="Institution">
