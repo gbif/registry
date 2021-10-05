@@ -17,10 +17,12 @@ package org.gbif.registry.ws.it.collections.service.merge;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
@@ -34,7 +36,6 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
-import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.InstallationService;
@@ -52,6 +53,7 @@ import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -77,7 +79,6 @@ public abstract class BaseMergeServiceIT<
   protected final ContactService contactService;
   protected final MachineTagService machineTagService;
   protected final OccurrenceMappingService occurrenceMappingService;
-  protected final PersonService personService;
 
   @Autowired private DatasetService datasetService;
   @Autowired private NodeService nodeService;
@@ -91,8 +92,7 @@ public abstract class BaseMergeServiceIT<
       IdentifierService identifierService,
       ContactService contactService,
       MachineTagService machineTagService,
-      OccurrenceMappingService occurrenceMappingService,
-      PersonService personService) {
+      OccurrenceMappingService occurrenceMappingService) {
     super(simplePrincipalProvider);
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -100,7 +100,6 @@ public abstract class BaseMergeServiceIT<
     this.contactService = contactService;
     this.machineTagService = machineTagService;
     this.occurrenceMappingService = occurrenceMappingService;
-    this.personService = personService;
   }
 
   @Test
@@ -123,16 +122,18 @@ public abstract class BaseMergeServiceIT<
     identifierService.addIdentifier(toReplace.getKey(), identifier);
 
     // contacts
-    Person p1 = new Person();
-    p1.setFirstName("p1");
-    personService.create(p1);
+    Contact contact1 = new Contact();
+    contact1.setFirstName("contact1");
+    contact1.setEmail(Collections.singletonList("c1@test.com"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "12345"));
 
-    Person p2 = new Person();
-    p2.setFirstName("p2");
-    personService.create(p2);
+    Contact contact2 = new Contact();
+    contact2.setFirstName("contact2");
+    contact2.setEmail(Collections.singletonList("c2@test.com"));
+    contact2.getUserIds().add(new UserId(IdType.OTHER, "abcde"));
 
-    contactService.addContact(toReplace.getKey(), p1.getKey());
-    contactService.addContact(toReplace.getKey(), p2.getKey());
+    contactService.addContactPerson(toReplace.getKey(), contact1);
+    contactService.addContactPerson(toReplace.getKey(), contact2);
 
     // machine tags
     MachineTag mt1 = new MachineTag(IDIGBIO_NAMESPACE, "test", "test");
@@ -154,7 +155,8 @@ public abstract class BaseMergeServiceIT<
 
     crudService.create(replacement);
 
-    contactService.addContact(replacement.getKey(), p1.getKey());
+    contact1.setKey(null);
+    contactService.addContactPerson(replacement.getKey(), contact1);
 
     mergeService.merge(toReplace.getKey(), replacement.getKey());
 
@@ -168,7 +170,7 @@ public abstract class BaseMergeServiceIT<
     assertEquals(2, replacementUpdated.getIdentifiers().size());
     assertEquals(2, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
-    assertEquals(2, replacementUpdated.getContacts().size());
+    assertEquals(2, replacementUpdated.getContactPersons().size());
     assertTrue(a2.lenientEquals(replacementUpdated.getAddress()));
     assertTrue(ma1.lenientEquals(replacementUpdated.getMailingAddress()));
     assertEquals(replacement.getCreatedBy(), replacementUpdated.getCreatedBy());

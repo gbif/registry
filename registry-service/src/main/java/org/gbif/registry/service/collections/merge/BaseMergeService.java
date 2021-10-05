@@ -131,9 +131,13 @@ public abstract class BaseMergeService<
                     new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
     // merge contacts
-    entityToReplace.getContacts().stream()
-        .filter(c -> !replacement.getContacts().contains(c))
-        .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
+    entityToReplace.getContactPersons().stream()
+        .filter(c -> replacement.getContactPersons().stream().noneMatch(cp -> cp.lenientEquals(c)))
+        .forEach(
+            c -> {
+              c.setKey(null);
+              primaryEntityService.addContactPerson(replacementKey, c);
+            });
 
     // add the UUID key of the replaced entity as an identifier of the replacement
     Identifier keyIdentifier =
