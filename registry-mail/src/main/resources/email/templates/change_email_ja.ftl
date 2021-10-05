@@ -6,7 +6,6 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     GBIF アカウントのメールアドレスを <a href="mailto:${currentEmail}" style="color: #4ba2ce;text-decoration: none;">${currentEmail}</a> から <a href="mailto:${newEmail}" style="color: #4ba2ce;text-decoration: none;">${newEmail}</a> に変更する依頼がありました。
     下のボタンをクリックしてメールアドレスを変更してください。
-    下のボタンをクリックしてメールアドレスを変更してください。
 </p>
 
 <table style="margin: 0;padding: 0;line-height: 1.65;border-collapse: collapse;width: 100% !important;">
