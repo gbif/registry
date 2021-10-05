@@ -52,7 +52,11 @@ public class InstitutionChangeSuggestionServiceIT
       InstitutionChangeSuggestionService institutionChangeSuggestionService,
       InstitutionService institutionService,
       CollectionService collectionService) {
-    super(simplePrincipalProvider, institutionChangeSuggestionService, institutionService);
+    super(
+        simplePrincipalProvider,
+        institutionChangeSuggestionService,
+        institutionService,
+        institutionService);
     this.institutionChangeSuggestionService = institutionChangeSuggestionService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;

@@ -62,6 +62,7 @@ public class CollectionChangeSuggestionService
         changeSuggestionMapper,
         collectionMergeService,
         collectionService,
+        collectionService,
         Collection.class,
         objectMapper,
         emailSender,

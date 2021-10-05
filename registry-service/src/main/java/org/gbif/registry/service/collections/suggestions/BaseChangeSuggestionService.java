@@ -18,6 +18,7 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
@@ -34,6 +35,7 @@ import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.events.EventManager;
@@ -108,6 +110,7 @@ public abstract class BaseChangeSuggestionService<
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final MergeService<T> mergeService;
   private final CrudService<T> crudService;
+  private final ContactService contactService;
   private final Class<T> clazz;
   private final ObjectMapper objectMapper;
   private final EmailSender emailSender;
@@ -121,6 +124,7 @@ public abstract class BaseChangeSuggestionService<
       ChangeSuggestionMapper changeSuggestionMapper,
       MergeService<T> mergeService,
       CrudService<T> crudService,
+      ContactService contactService,
       Class<T> clazz,
       ObjectMapper objectMapper,
       EmailSender emailSender,
@@ -131,6 +135,7 @@ public abstract class BaseChangeSuggestionService<
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.mergeService = mergeService;
     this.crudService = crudService;
+    this.contactService = contactService;
     this.clazz = clazz;
     this.objectMapper = objectMapper;
     this.emailSender = emailSender;
@@ -308,9 +313,19 @@ public abstract class BaseChangeSuggestionService<
     UUID createdEntity = null;
     if (dto.getType() == Type.CREATE) {
       createdEntity = crudService.create(changeSuggestion.getSuggestedEntity());
+
+      // create contacts
+      createContacts(changeSuggestion, createdEntity);
+
       dto.setEntityKey(createdEntity);
     } else if (dto.getType() == Type.UPDATE) {
+      T originalEntity = crudService.get(changeSuggestion.getEntityKey());
+
+      // update the entity
       crudService.update(changeSuggestion.getSuggestedEntity());
+
+      // update contacts
+      updateContacts(changeSuggestion, originalEntity);
     } else if (dto.getType() == Type.DELETE) {
       crudService.delete(changeSuggestion.getEntityKey());
     } else if (dto.getType() == Type.MERGE) {
@@ -349,6 +364,42 @@ public abstract class BaseChangeSuggestionService<
     }
 
     return createdEntity;
+  }
+
+  private void updateContacts(R changeSuggestion, T originalEntity) {
+    if (changeSuggestion.getSuggestedEntity().getContactPersons() == null) {
+      return;
+    }
+
+    List<Contact> suggestedContacts = changeSuggestion.getSuggestedEntity().getContactPersons();
+    if (!suggestedContacts.isEmpty()) {
+      suggestedContacts.forEach(
+          c -> {
+            if (c.getKey() == null) {
+              // create new contact
+              contactService.addContactPerson(originalEntity.getKey(), c);
+            } else if (originalEntity.getContactPersons().stream()
+                .anyMatch(oc -> oc.getKey().equals(c.getKey()))) {
+              // update current contact
+              contactService.updateContactPerson(originalEntity.getKey(), c);
+            }
+          });
+    }
+
+    // remove the contacts that are not present in the suggestion
+    originalEntity.getContactPersons().stream()
+        .filter(c -> suggestedContacts.stream().noneMatch(cp -> cp.getKey().equals(c.getKey())))
+        .forEach(c -> contactService.removeContactPerson(originalEntity.getKey(), c.getKey()));
+  }
+
+  private void createContacts(R changeSuggestion, UUID createdEntity) {
+    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
+        && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
+      changeSuggestion
+          .getSuggestedEntity()
+          .getContactPersons()
+          .forEach(c -> contactService.addContactPerson(createdEntity, c));
+    }
   }
 
   @Override
