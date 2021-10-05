@@ -13,7 +13,7 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF を介してアクセスしたデータは、世界中の数百の組織に所属する科学者、研究者、キュレーター、データおよびIT専門家、その他の専門家の仕事を表しています。 ダウンロードした検索結果に割り当てられた <i>DOI</i> (Digital Object Identifier)
     を使用することで、上記の人々の尽力に対して十分な評価を与えることにつながります。</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">DOIはダウンロードの準備が整った際に受信する確認メールに含まれています。また、アカウントのプロファイルでもダウンロードDOIの記録を保持しています。 このようにデータを引用することで、研究における参考文献を簡略化することができます。
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">DOIはダウンロードの準備が整った際に受信する確認メールに含まれています。 また、アカウントのプロファイルでもダウンロードDOIの記録を保持しています。 このようにデータを引用することで、研究における参考文献を簡略化することができます。
 また、検索結果を繰り返したり、更新したりすることが可能になり、関連するデータセットに対してデータ利用を直接リンクさせることができます。
 これにより、出版者やユーザーへの利用報告を自動化することができます。 <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">詳細はこちら</a></p>
 
@@ -26,15 +26,18 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">データの利用方法を知る</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">GBIF を介したデータで何ができるでしょうか。 <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">最近のハイライト</a>をご覧ください！
+    <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">最近のハイライト</a>をご覧ください！
     オープンな生物多様性データの使用を追跡するための進行中のプログラムの一環として、 GBIF事務局は最近の研究を特集し、毎年 <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">サイエンスレビュー</a>としてまとめています。</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">質問やフィードバック</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">データの取得や利用に関する技術的な質問がある場合は、GBIF.orgまたはコミュニティフォーラムのFAQを参照してください。
+    データの取得や利用に関する技術的な質問がある場合は、GBIF.orgまたはコミュニティフォーラムのFAQを参照してください。
     質問への回答が見つからない場合は、 <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a> までお問い合わせください。</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">私たちは、GitHub上の公開リポジトリを管理し、文書化しています。
 ここでは、サイトの機能やコンテンツに関するバグや問題といったヘルプデスクへの依頼から、便利な追加機能や改善点に関する提案まで、あらゆることを記録、管理して対応しています。
+    各ページの上部にあるメニューバーのチャットボタンをクリックすることで、貢献できます。
     各ページの上部にあるメニューバーのチャットボタンをクリックすることで、貢献できます。</p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">報道に関する質問は、 <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a> へお知らせください。 その他、個人的な質問や技術以外の問い合わせは、<a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a> までお知らせください。</p>
