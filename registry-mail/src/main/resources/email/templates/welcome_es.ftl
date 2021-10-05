@@ -26,7 +26,8 @@
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">¿Qué puede hacer con los datos mediados por GBIF? ¡Conozca algunos de los <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">últimos acontecimientos</a>!
     Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #509E2F;text-decoration: none;">recent highlights</a>!
     As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #509E2F;text-decoration: none;">Science Review</a>.</p>
+    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #509E2F;text-decoration: none;">Science Review</a>.
+    Como parte del programa en curso para rastrear los usos de los datos abiertos sobre biodiversidad, la Secretaría de GBIF presenta las investigaciones recientes y las compila cada año en su <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
 
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Preguntas o sugerencias</h5>
 
