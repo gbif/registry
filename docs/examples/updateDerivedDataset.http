@@ -1,4 +1,4 @@
-PUT http://api.gbif-dev.org/v1/derivedDataset/10.21373/dd.vt2x99
+PUT https://api.gbif-dev.org/v1/derivedDataset/10.21373/dd.vt2x99
 Content-Type: application/json
 Authorization: Basic <>
 

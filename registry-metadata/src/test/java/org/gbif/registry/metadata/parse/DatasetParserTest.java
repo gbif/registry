@@ -15,6 +15,7 @@
  */
 package org.gbif.registry.metadata.parse;
 
+import org.apache.commons.io.IOUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -48,7 +49,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
@@ -101,7 +102,7 @@ public class DatasetParserTest {
     assertIllegalArg("dc/dc_broken.xml");
   }
 
-  private void assertIllegalArg(String classpathFile) throws IOException {
+  private void assertIllegalArg(String classpathFile) {
     assertThrows(
         IllegalArgumentException.class,
         () -> DatasetParser.detectParserType(FileUtils.classpathStream(classpathFile)));
@@ -109,7 +110,7 @@ public class DatasetParserTest {
 
   @Test
   public void testWikipediaContacts() throws Exception {
-    Dataset d = DatasetParser.build(FileUtils.classpathStream("eml/wikipedia.xml"));
+    Dataset d = DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("eml/wikipedia.xml")));
     assertNotNull(d);
     assertEquals(2, d.getContacts().size());
     for (Contact c : d.getContacts()) {
@@ -119,10 +120,10 @@ public class DatasetParserTest {
   }
 
   @Test
-  public void testBuildProtocol() throws Exception {
+  public void testBuildProtocol() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> DatasetParser.build(FileUtils.classpathStream("eml/eml-protocol.xml")));
+        () -> DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("eml/eml-protocol.xml"))));
   }
 
   private Contact contactByType(Dataset d, ContactType type) {
@@ -238,7 +239,7 @@ public class DatasetParserTest {
       final String eml = writer.toString();
       // validate new file, written in XML GBIF Metadata Profile v1.1
       EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1).validate(eml);
-      InputStream in = new ReaderInputStream(new StringReader(eml), Charset.forName("UTF8"));
+      InputStream in = new ReaderInputStream(new StringReader(eml), StandardCharsets.UTF_8);
       Dataset dataset2 = DatasetParser.parse(MetadataType.EML, in);
       // ensure new properties in v1.0.1 still properly set
       verifyV101(dataset2);
@@ -613,8 +614,7 @@ public class DatasetParserTest {
   private URI buildURI(String uri) {
     try {
       return new URL(uri).toURI();
-    } catch (URISyntaxException e) {
-    } catch (MalformedURLException e) {
+    } catch (URISyntaxException | MalformedURLException ignored) {
     }
     return null;
   }
@@ -720,7 +720,7 @@ public class DatasetParserTest {
       final String eml = writer.toString();
       // validate new file
       EmlValidator.newValidator(EMLProfileVersion.GBIF_1_1).validate(eml);
-      InputStream in = new ReaderInputStream(new StringReader(eml), Charset.forName("UTF8"));
+      InputStream in = new ReaderInputStream(new StringReader(eml), StandardCharsets.UTF_8);
       Dataset dataset2 = DatasetParser.parse(MetadataType.EML, in);
       // ensure new properties in v1.1 still properly set
       verifyV11(dataset2);
@@ -1049,7 +1049,7 @@ public class DatasetParserTest {
     StringWriter writer = new StringWriter();
     EMLWriter.write(dataset, writer);
     final String eml = writer.toString();
-    InputStream in = new ReaderInputStream(new StringReader(eml), Charset.forName("UTF8"));
+    InputStream in = new ReaderInputStream(new StringReader(eml), StandardCharsets.UTF_8);
     Dataset dataset2 = DatasetParser.parse(MetadataType.EML, in);
 
     // Check description is unchanged.
