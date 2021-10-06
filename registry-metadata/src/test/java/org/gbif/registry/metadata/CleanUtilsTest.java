@@ -20,7 +20,7 @@ import org.gbif.api.model.registry.Contact;
 
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.Lists;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,7 +34,7 @@ public class CleanUtilsTest {
     c.setFirstName("");
     c.setLastName("  ");
     c.setCity("Berlin");
-    c.setPhone(Lists.newArrayList("12345"));
+    c.setPhone(Collections.singletonList("12345"));
     c.addEmail("   ");
     c.addEmail("   my email");
     c.addEmail(null);

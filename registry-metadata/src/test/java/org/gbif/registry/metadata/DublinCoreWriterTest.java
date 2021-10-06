@@ -30,18 +30,18 @@ import org.gbif.api.vocabulary.Language;
 import java.io.StringWriter;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -72,7 +72,7 @@ public class DublinCoreWriterTest {
 
     d.setHomepage(URI.create("http://www.gbif.org"));
     d.setPurpose("Le but de ce dataset est de ...");
-    List<KeywordCollection> listKeyWordColl = Lists.newArrayList();
+    List<KeywordCollection> listKeyWordColl = new ArrayList<>();
     KeywordCollection keyword = new KeywordCollection();
     keyword.addKeyword("keyboard");
     keyword.addKeyword("qwerty");
@@ -80,12 +80,12 @@ public class DublinCoreWriterTest {
     d.setKeywordCollections(listKeyWordColl);
 
     // try additional properties
-    Map<String, Object> additionalProperties = Maps.newHashMap();
-    additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, 3l);
+    Map<String, Object> additionalProperties = new HashMap<>();
+    additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, 3L);
     additionalProperties.put(
         DublinCoreWriter.ADDITIONAL_PROPERTY_DC_FORMAT, "application/dwca+zip");
 
-    List<Citation> citationList = Lists.newArrayList();
+    List<Citation> citationList = new ArrayList<>();
     Citation citation = new Citation();
     citation.setText("Qwerty U (2015). The World Register of Keyboards. 2015-08-09");
     citationList.add(citation);
@@ -113,7 +113,7 @@ public class DublinCoreWriterTest {
     administrativeContact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
 
     d.setContacts(
-        Lists.newArrayList(originatorContact, metadataAuthorContact, administrativeContact));
+        Arrays.asList(originatorContact, metadataAuthorContact, administrativeContact));
 
     d.setGeographicCoverageDescription("Description de la portée");
     Date endDate = calendar.getTime();
@@ -121,13 +121,13 @@ public class DublinCoreWriterTest {
     calendar.roll(Calendar.DAY_OF_MONTH, false);
     Date startDate = calendar.getTime();
     TemporalCoverage tp = new DateRange(startDate, endDate);
-    d.setTemporalCoverages(Lists.newArrayList(tp));
+    d.setTemporalCoverages(Collections.singletonList(tp));
 
     d.setGeographicCoverageDescription("Plusieurs pays");
     GeospatialCoverage geospatialCoverage = new GeospatialCoverage();
     geospatialCoverage.setBoundingBox(new BoundingBox(-10, 10, 20, -20));
     geospatialCoverage.setDescription("Defined by bounding box");
-    d.setGeographicCoverages(Lists.newArrayList(geospatialCoverage));
+    d.setGeographicCoverages(Collections.singletonList(geospatialCoverage));
 
     Organization organization = new Organization();
     organization.setTitle("Qwerty U");
@@ -142,8 +142,8 @@ public class DublinCoreWriterTest {
             StandardCharsets.UTF_8);
 
     // compare without the whitespace characters
-    String expectedFileContent = CharMatcher.WHITESPACE.removeFrom(expectedContent);
-    String actualFileContent = CharMatcher.WHITESPACE.removeFrom(writer.toString());
+    String expectedFileContent = org.gbif.utils.text.StringUtils.deleteWhitespace(expectedContent);
+    String actualFileContent = org.gbif.utils.text.StringUtils.deleteWhitespace(writer.toString());
 
     assertEquals(expectedFileContent, actualFileContent);
 
