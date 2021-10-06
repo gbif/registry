@@ -17,10 +17,8 @@ package org.gbif.registry.ws.it.collections.service.merge;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
