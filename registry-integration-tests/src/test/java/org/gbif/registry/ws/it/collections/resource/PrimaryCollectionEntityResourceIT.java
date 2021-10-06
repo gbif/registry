@@ -125,9 +125,8 @@ public abstract class PrimaryCollectionEntityResourceIT<
     contact2.setKey(2);
 
     // add contact
-    doNothing()
-        .when(getMockPrimaryEntityService())
-        .addContactPerson(any(UUID.class), any(Contact.class));
+    when(getMockPrimaryEntityService().addContactPerson(any(UUID.class), any(Contact.class)))
+        .thenReturn(1);
     assertDoesNotThrow(
         () -> getPrimaryCollectionEntityClient().addContactPerson(UUID.randomUUID(), contact));
 
