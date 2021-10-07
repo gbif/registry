@@ -130,7 +130,13 @@ public abstract class BaseMergeService<
                     replacementKey,
                     new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
+    // FIXME: to be removed in the future, contacts are deprecated
     // merge contacts
+    entityToReplace.getContacts().stream()
+        .filter(c -> !replacement.getContacts().contains(c))
+        .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
+
+    // merge contact persons
     entityToReplace.getContactPersons().stream()
         .filter(c -> replacement.getContactPersons().stream().noneMatch(cp -> cp.lenientEquals(c)))
         .forEach(

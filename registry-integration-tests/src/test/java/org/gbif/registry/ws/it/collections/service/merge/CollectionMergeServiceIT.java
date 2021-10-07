@@ -17,8 +17,10 @@ package org.gbif.registry.ws.it.collections.service.merge;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -40,7 +42,8 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
       SimplePrincipalProvider simplePrincipalProvider,
       CollectionMergeService collectionMergeService,
       CollectionService collectionService,
-      InstitutionService institutionService) {
+      InstitutionService institutionService,
+      PersonService personService) {
     super(
         simplePrincipalProvider,
         collectionMergeService,
@@ -48,10 +51,31 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
         collectionService,
         collectionService,
         collectionService,
-        collectionService);
+        collectionService,
+        personService);
     this.collectionMergeService = collectionMergeService;
     this.collectionService = collectionService;
     this.institutionService = institutionService;
+  }
+
+  @Test
+  public void primaryCollectionInPersonsTests() {
+    Collection toReplace = createEntityToReplace();
+    collectionService.create(toReplace);
+
+    // contact that has the replaced collection as primary collection
+    Person p3 = new Person();
+    p3.setFirstName("p3");
+    p3.setPrimaryCollectionKey(toReplace.getKey());
+    personService.create(p3);
+
+    Collection replacement = createReplacement();
+    collectionService.create(replacement);
+
+    collectionMergeService.merge(toReplace.getKey(), replacement.getKey());
+
+    Person p3Updated = personService.get(p3.getKey());
+    assertEquals(replacement.getKey(), p3Updated.getPrimaryCollectionKey());
   }
 
   @Test

@@ -19,11 +19,13 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -51,7 +53,8 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
       SimplePrincipalProvider simplePrincipalProvider,
       InstitutionMergeService institutionMergeService,
       InstitutionService institutionService,
-      CollectionService collectionService) {
+      CollectionService collectionService,
+      PersonService personService) {
     super(
         simplePrincipalProvider,
         institutionMergeService,
@@ -59,16 +62,23 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
         institutionService,
         institutionService,
         institutionService,
-        institutionService);
+        institutionService,
+        personService);
     this.institutionMergeService = institutionMergeService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
   }
 
   @Test
-  public void mergeWithCollectionsTest() {
+  public void mergeWithCollectionsAndPrimaryInstitutionInContactsTest() {
     Institution toReplace = createEntityToReplace();
     institutionService.create(toReplace);
+
+    // contact that has the replaced collection as primary collection
+    Person p3 = new Person();
+    p3.setFirstName("p3");
+    p3.setPrimaryInstitutionKey(toReplace.getKey());
+    personService.create(p3);
 
     // collections
     Collection c1 = new Collection();
@@ -81,6 +91,9 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     institutionService.create(replacement);
 
     institutionMergeService.merge(toReplace.getKey(), replacement.getKey());
+
+    Person p3Updated = personService.get(p3.getKey());
+    assertEquals(replacement.getKey(), p3Updated.getPrimaryInstitutionKey());
 
     Collection c1Updated = collectionService.get(c1.getKey());
     assertEquals(replacement.getKey(), c1Updated.getInstitutionKey());
@@ -99,6 +112,12 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
         toConvert.getKey(), new Identifier(IdentifierType.LSID, "test"));
 
     // contacts
+    Person p1 = new Person();
+    p1.setFirstName("p1");
+    personService.create(p1);
+    contactService.addContact(toConvert.getKey(), p1.getKey());
+
+    // contact persons
     Contact contact1 = new Contact();
     contact1.setFirstName("contact1");
     contact1.setEmail(Collections.singletonList("c1@test.com"));
@@ -143,6 +162,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     assertEquals(1, newCollection.getIdentifiers().size());
     assertEquals(1, newCollection.getMachineTags().size());
     assertEquals(1, newCollection.getOccurrenceMappings().size());
+    assertEquals(1, newCollection.getContacts().size());
     assertEquals(1, newCollection.getContactPersons().size());
   }
 

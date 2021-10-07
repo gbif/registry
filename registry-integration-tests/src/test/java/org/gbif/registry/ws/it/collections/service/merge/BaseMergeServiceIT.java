@@ -22,6 +22,7 @@ import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
@@ -36,6 +37,7 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
+import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.InstallationService;
@@ -79,6 +81,7 @@ public abstract class BaseMergeServiceIT<
   protected final ContactService contactService;
   protected final MachineTagService machineTagService;
   protected final OccurrenceMappingService occurrenceMappingService;
+  protected final PersonService personService;
 
   @Autowired private DatasetService datasetService;
   @Autowired private NodeService nodeService;
@@ -92,7 +95,8 @@ public abstract class BaseMergeServiceIT<
       IdentifierService identifierService,
       ContactService contactService,
       MachineTagService machineTagService,
-      OccurrenceMappingService occurrenceMappingService) {
+      OccurrenceMappingService occurrenceMappingService,
+      PersonService personService) {
     super(simplePrincipalProvider);
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -100,6 +104,7 @@ public abstract class BaseMergeServiceIT<
     this.contactService = contactService;
     this.machineTagService = machineTagService;
     this.occurrenceMappingService = occurrenceMappingService;
+    this.personService = personService;
   }
 
   @Test
@@ -122,6 +127,18 @@ public abstract class BaseMergeServiceIT<
     identifierService.addIdentifier(toReplace.getKey(), identifier);
 
     // contacts
+    Person p1 = new Person();
+    p1.setFirstName("p1");
+    personService.create(p1);
+
+    Person p2 = new Person();
+    p2.setFirstName("p2");
+    personService.create(p2);
+
+    contactService.addContact(toReplace.getKey(), p1.getKey());
+    contactService.addContact(toReplace.getKey(), p2.getKey());
+
+    // contact persons
     Contact contact1 = new Contact();
     contact1.setFirstName("contact1");
     contact1.setEmail(Collections.singletonList("c1@test.com"));
@@ -155,6 +172,8 @@ public abstract class BaseMergeServiceIT<
 
     crudService.create(replacement);
 
+    contactService.addContact(replacement.getKey(), p1.getKey());
+
     contact1.setKey(null);
     contactService.addContactPerson(replacement.getKey(), contact1);
 
@@ -170,6 +189,7 @@ public abstract class BaseMergeServiceIT<
     assertEquals(2, replacementUpdated.getIdentifiers().size());
     assertEquals(2, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
+    assertEquals(2, replacementUpdated.getContacts().size());
     assertEquals(2, replacementUpdated.getContactPersons().size());
     assertTrue(a2.lenientEquals(replacementUpdated.getAddress()));
     assertTrue(ma1.lenientEquals(replacementUpdated.getMailingAddress()));
