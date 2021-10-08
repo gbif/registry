@@ -22,6 +22,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -164,7 +165,7 @@ public class RegistryOaipmhConfiguration {
   @Bean
   public CubeWsClient occurrenceMetricsClient(@Value("${api.root.url}") String url) {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withUrl(url);
+    clientBuilder.withUrl(url).withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapper());
     return clientBuilder.build(CubeWsClient.class);
   }
 
