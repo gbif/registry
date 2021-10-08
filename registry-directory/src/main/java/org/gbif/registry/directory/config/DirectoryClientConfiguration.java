@@ -38,7 +38,10 @@ public class DirectoryClientConfiguration {
       @Value("${directory.app.key}") String appKey,
       @Value("${directory.app.secret}") String secretKey) {
     this.clientBuilder = new ClientBuilder();
-    clientBuilder.withUrl(url).withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapper()).withAppKeyCredentials(appKey, appKey, secretKey);
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder
+        .withUrl(url)
+        .withAppKeyCredentials(appKey, appKey, secretKey);
   }
 
   @Bean

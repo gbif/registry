@@ -21,6 +21,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.sql.SQLException;
@@ -196,6 +197,7 @@ public class BaseItTest {
   protected <T> T prepareClient(
       String username, String appKey, int localServerPort, KeyStore keyStore, Class<T> cls) {
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
