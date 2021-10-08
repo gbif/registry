@@ -134,6 +134,8 @@ dbmigration:
       minimumIdle: 1
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   #RabbitMQ
   rabbitmq:
     enabled: false
