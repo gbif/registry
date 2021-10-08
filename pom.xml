@@ -89,7 +89,7 @@
     <gbif-api.version>0.156-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.52</gbif-common.version>
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
-    <gbif-common-ws.version>1.15</gbif-common-ws.version>
+    <gbif-common-ws.version>1.16-SNAPSHOT</gbif-common-ws.version>
     <gbif-directory.version>1.11</gbif-directory.version>
     <gbif-doi.version>2.14</gbif-doi.version>
     <gbif-doi.version>2.14</gbif-doi.version>
@@ -717,11 +717,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
       </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
+        <version>${maven-site-plugin.version}</version>
         <configuration>
           <topSiteURL>https://gbif.github.io/registry/</topSiteURL>
         </configuration>
@@ -730,6 +732,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless-maven-plugin.version}</version>
       </plugin>
     </plugins>
 

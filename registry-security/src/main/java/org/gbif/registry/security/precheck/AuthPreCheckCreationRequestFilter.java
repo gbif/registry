@@ -154,7 +154,8 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
           request =
               new GbifHttpServletRequestWrapper(
                   request,
-                  entity.isPresent() ? objectMapper.writeValueAsString(entity.get()) : "{}");
+                  entity.isPresent() ? objectMapper.writeValueAsString(entity.get()) : "{}",
+                  true);
         } catch (JsonProcessingException e) {
           LOG.warn("Error creating the auth pre check body");
         }
