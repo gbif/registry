@@ -165,7 +165,8 @@ public class RegistryOaipmhConfiguration {
   @Bean
   public CubeWsClient occurrenceMetricsClient(@Value("${api.root.url}") String url) {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withUrl(url).withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapper());
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withUrl(url);
     return clientBuilder.build(CubeWsClient.class);
   }
 

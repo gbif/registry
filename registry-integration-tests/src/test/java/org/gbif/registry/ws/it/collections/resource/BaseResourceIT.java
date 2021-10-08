@@ -23,6 +23,7 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthenticationManager;
 import org.gbif.ws.security.GbifAuthenticationManagerImpl;
@@ -132,6 +133,7 @@ public class BaseResourceIT {
   protected <T> T prepareClient(
       String username, String appKey, int localServerPort, KeyStore keyStore, Class<T> cls) {
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))
@@ -140,6 +142,7 @@ public class BaseResourceIT {
 
   protected <T> T prepareClient(String username, int localServerPort, Class<T> cls) {
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withCredentials(username, username)

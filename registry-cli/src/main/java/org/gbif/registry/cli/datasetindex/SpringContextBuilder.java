@@ -31,6 +31,7 @@ import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -177,6 +178,7 @@ public class SpringContextBuilder {
     @Bean
     public ClientBuilder clientBuilder(DatasetBatchIndexerConfiguration configuration) {
       ClientBuilder clientBuilder = new ClientBuilder();
+      clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
       clientBuilder.withUrl(
           configuration.getRegistryWsUrl() != null
               ? configuration.getRegistryWsUrl()
