@@ -291,6 +291,38 @@ public class LookupServiceIT extends BaseServiceIT {
   }
 
   @Test
+  public void lookupByAlternativeCodeAndIdTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i2.getAlternativeCodes().get(0).getCode());
+    params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
+    params.setCollectionCode(c2.getAlternativeCodes().get(0).getCode());
+    params.setCollectionId(c2.getIdentifiers().get(0).getIdentifier());
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.ALTERNATIVE_CODE_MATCH));
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(2, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.ALTERNATIVE_CODE_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+  }
+
+  @Test
   public void ownerInstitutionCodeTest() {
     // State
     LookupParams params = new LookupParams();
