@@ -1,0 +1,40 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="99" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE OR REPLACE FUNCTION collection_change_trigger()
+        RETURNS TRIGGER AS
+        $colchange$
+          DECLARE
+            addr RECORD;
+            mailing_addr RECORD;
+          BEGIN
+            SELECT * INTO addr FROM address a WHERE a.key = NEW.address_key;
+            SELECT * INTO mailing_addr FROM address a WHERE a.key = NEW.mailing_address_key;
+
+            NEW.fulltext_search :=
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.code,''))),'A') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.name,''))),'A') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.description,''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.taxonomic_coverage,''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(akeys(NEW.alternative_codes), ' '),''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.address,''))),'C') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.city,''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.province,''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(addr.country,''))),'B') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.address,''))),'D') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.city,''))),'C') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.province,''))),'C') ||
+              SETWEIGHT(TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(mailing_addr.country,''))),'C');
+            RETURN NEW;
+          END;
+        $colchange$
+        LANGUAGE plpgsql;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
