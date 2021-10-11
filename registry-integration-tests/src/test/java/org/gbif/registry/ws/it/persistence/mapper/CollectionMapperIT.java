@@ -310,6 +310,7 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setKey(UUID.randomUUID());
     col1.setCode("c1");
     col1.setName("n1");
+    col1.setTaxonomicCoverage("Insecta|Lepidoptera|Coleoptera|Hymenoptera");
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
 
@@ -334,6 +335,8 @@ public class CollectionMapperIT extends BaseItTest {
     assertSearch(CollectionSearchParams.builder().query("c2 c1").build(), page, 0);
     assertSearch(CollectionSearchParams.builder().query("c3").build(), page, 0);
     assertSearch(CollectionSearchParams.builder().query("n1").build(), page, 2);
+    assertSearch(CollectionSearchParams.builder().query("insecta").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("Hymenoptera").build(), page, 1);
 
     assertSearch(
         CollectionSearchParams.builder().query("dummy address fo ").build(),

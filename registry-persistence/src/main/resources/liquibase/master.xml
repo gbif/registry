@@ -104,4 +104,5 @@
   <include file="liquibase/096-country-rights.xml" />
   <include file="liquibase/097-ror-grid-identifiers.xml" />
   <include file="liquibase/098-grscicoll-contacts.xml" />
+  <include file="liquibase/099-grscicoll-collection-trigger-taxonomic-coverage.xml" />
 </databaseChangeLog>
