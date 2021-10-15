@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,8 +19,14 @@ import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.model.LoggedUser;
 import org.gbif.registry.identity.model.UserModelMutationResult;
 import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.security.jwt.GbifJwtException;
+import org.gbif.registry.security.jwt.JwtAuthenticateService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
+import org.gbif.registry.security.jwt.JwtUtils;
 
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.http.CacheControl;
@@ -50,10 +54,12 @@ public class UserResource {
 
   private final IdentityService identityService;
   private final JwtIssuanceService jwtIssuanceService;
+  private final JwtAuthenticateService jwtAuthenticateService;
 
-  public UserResource(IdentityService identityService, JwtIssuanceService jwtIssuanceService) {
+  public UserResource(IdentityService identityService, JwtIssuanceService jwtIssuanceService, JwtAuthenticateService jwtAuthenticateService) {
     this.identityService = identityService;
     this.jwtIssuanceService = jwtIssuanceService;
+    this.jwtAuthenticateService = jwtAuthenticateService;
   }
 
   /**
@@ -87,6 +93,27 @@ public class UserResource {
         ExtendedLoggedUser.from(user, token, identityService.listEditorRights(user.getUserName()));
 
     return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePrivate()).body(response);
+  }
+
+  @RequestMapping(
+    path = "login/jwt",
+    method = {RequestMethod.GET, RequestMethod.POST})
+  public ResponseEntity<?> jwtLogin(HttpServletRequest  httpServletRequest) {
+    //Gets the JWT
+    Optional<String> jwtToken = JwtUtils.findTokenInRequest(httpServletRequest);
+
+    if (jwtToken.isPresent()) { //Performs the authentication
+      try {
+        GbifUser user = jwtAuthenticateService.authenticate(jwtToken.get());
+        ExtendedLoggedUser extendedLoggedUser = ExtendedLoggedUser.from(user, jwtToken.get(), identityService.listEditorRights(user.getUserName()));
+        //Success authentication
+        return ResponseEntity.ok(extendedLoggedUser);
+      } catch (GbifJwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT Error " + ex.getErrorCode());
+      }
+    }
+    //Token not found
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT not found");
   }
 
   @PostMapping("whoami")
