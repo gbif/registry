@@ -70,6 +70,12 @@
     VALUES(<include refid="CONTACT_PARAMS_CREATE"/>)
   </insert>
 
+  <select id="getContact" resultMap="CONTACT_MAP">
+    SELECT <include refid="CONTACT_READ_FIELDS"/>
+    FROM collection_contact
+    WHERE key = #{key,jdbcType=INTEGER}
+  </select>
+
   <update id="updateContact" parameterType="org.gbif.api.model.collections.Contact">
     UPDATE collection_contact
     SET <include refid="CONTACT_PARAMS_UPDATE"/>

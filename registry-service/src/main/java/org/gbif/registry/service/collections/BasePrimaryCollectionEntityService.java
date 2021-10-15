@@ -243,7 +243,7 @@ public abstract class BasePrimaryCollectionEntityService<
     primaryEntityMapper.addContactPerson(entityKey, contact.getKey());
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
-            entityKey, objectClass, Contact.class, contact.getKey(), EventType.CREATE));
+            entityKey, objectClass, contact, contact.getKey(), EventType.CREATE));
 
     return contact.getKey();
   }
@@ -263,7 +263,7 @@ public abstract class BasePrimaryCollectionEntityService<
 
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
-            entityKey, objectClass, Contact.class, contact.getKey(), EventType.UPDATE));
+            entityKey, objectClass, contact, contact.getKey(), EventType.UPDATE));
   }
 
   private void validateUserIds(Contact contact) {
@@ -285,10 +285,13 @@ public abstract class BasePrimaryCollectionEntityService<
   @Transactional
   @Override
   public void removeContactPerson(@NotNull UUID entityKey, @NotNull int contactKey) {
+    Contact contactToRemove = contactMapper.getContact(contactKey);
+    checkArgument(contactToRemove != null, "Contact to delete doesn't exist");
+
     primaryEntityMapper.removeContactPerson(entityKey, contactKey);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
-            entityKey, objectClass, Contact.class, contactKey, EventType.DELETE));
+            entityKey, objectClass, contactToRemove, contactKey, EventType.DELETE));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})

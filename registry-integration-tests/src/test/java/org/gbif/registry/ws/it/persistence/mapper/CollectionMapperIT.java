@@ -355,6 +355,11 @@ public class CollectionMapperIT extends BaseItTest {
     contact1.setUserIds(Arrays.asList(userId1, userId2));
 
     contactMapper.createContact(contact1);
+
+    contact1 = contactMapper.getContact(contact1.getKey());
+    assertNotNull(contact1.getCreated());
+    assertNotNull(contact1.getModified());
+
     collectionMapper.addContactPerson(col1.getKey(), contact1.getKey());
     assertSearch(CollectionSearchParams.builder().query("Name1").build(), page, 1);
     assertSearch(CollectionSearchParams.builder().query("Name0").build(), page, 0);
