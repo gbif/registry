@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +13,6 @@
  */
 package org.gbif.registry.metadata;
 
-import org.apache.commons.io.IOUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -29,6 +26,7 @@ import java.util.UUID;
 
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 

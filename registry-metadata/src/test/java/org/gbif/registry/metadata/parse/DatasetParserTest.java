@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +13,6 @@
  */
 package org.gbif.registry.metadata.parse;
 
-import org.apache.commons.io.IOUtils;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
@@ -56,6 +53,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.ReaderInputStream;
 import org.junit.jupiter.api.Test;
 

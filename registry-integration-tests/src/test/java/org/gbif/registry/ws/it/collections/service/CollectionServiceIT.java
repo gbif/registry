@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +13,8 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
