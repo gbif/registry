@@ -131,7 +131,8 @@ public class UserResource {
   }
 
   @Secured({ADMIN_ROLE, APP_ROLE})
-  @GetMapping("{userName}")
+  @RequestMapping(value = "{userName}",
+                  method = {RequestMethod.GET, RequestMethod.POST})
   public ResponseEntity<ExtendedLoggedUser> getUserData(@PathVariable("userName") String userName) {
     // the user shall be authenticated using basic auth scheme
 
