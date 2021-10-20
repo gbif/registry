@@ -36,6 +36,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +46,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static org.gbif.registry.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
+import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
 @Validated
@@ -123,17 +126,26 @@ public class UserResource {
     ensureUserSetInSecurityContext(authentication);
 
     // get the user
-    final GbifUser user = identityService.get(authentication.getName());
+    return getUserData(authentication.getName());
+  }
+
+  @Secured({ADMIN_ROLE, APP_ROLE})
+  @GetMapping("{userName}")
+  public ResponseEntity<ExtendedLoggedUser> getUserData(String userName) {
+    // the user shall be authenticated using basic auth scheme
+
+    // get the user
+    GbifUser user = identityService.get(userName);
 
     if (user == null) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     return ResponseEntity.ok()
-        .cacheControl(CacheControl.noCache().cachePrivate())
-        .body(
-            ExtendedLoggedUser.from(
-                user, null, identityService.listEditorRights(user.getUserName())));
+      .cacheControl(CacheControl.noCache().cachePrivate())
+      .body(
+        ExtendedLoggedUser.from(
+          user, null, identityService.listEditorRights(user.getUserName())));
   }
 
   /** Allows a user to change its own password. */
