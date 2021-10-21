@@ -24,6 +24,7 @@ import java.util.UUID;
 /** Extended {@link LoggedUser} which additionally contains token, roles and editor scopes. */
 public class ExtendedLoggedUser extends LoggedUser {
 
+  protected Integer key;
   private String token;
   private Set<String> roles = new HashSet<>();
   private Set<String> editorRoleScopes = new HashSet<>();
@@ -34,6 +35,7 @@ public class ExtendedLoggedUser extends LoggedUser {
   private ExtendedLoggedUser(GbifUser user, String token, List<UUID> editorRights) {
     super(user);
     this.token = token;
+    this.key = user.getKey();
     Optional.ofNullable(user.getRoles())
         .ifPresent(userRoles -> userRoles.forEach(role -> this.roles.add(role.name())));
     Optional.ofNullable(editorRights)
