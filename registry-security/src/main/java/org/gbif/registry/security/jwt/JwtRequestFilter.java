@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
+import static org.springframework.http.HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS;
 
 /**
  * Filter to validate the JWT tokens.
@@ -85,6 +86,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // refresh the token and add it to the headers
         final String newToken = jwtIssuanceService.generateJwt(gbifUser.getUserName());
         response.addHeader(HEADER_TOKEN, newToken);
+        response.addHeader(ACCESS_CONTROL_EXPOSE_HEADERS, HEADER_TOKEN);
       } catch (GbifJwtException e) {
         LOG.warn("JWT validation failed: {}", e.getErrorCode());
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -93,5 +95,4 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     filterChain.doFilter(request, response);
   }
-
 }

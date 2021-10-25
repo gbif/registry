@@ -24,6 +24,7 @@ import org.gbif.registry.security.jwt.JwtAuthenticateService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
 import org.gbif.registry.security.jwt.JwtUtils;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +37,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.gbif.registry.security.SecurityContextCheck.ensureGbifScheme;
 import static org.gbif.registry.security.SecurityContextCheck.ensureNotGbifScheme;
 import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
@@ -60,7 +61,10 @@ public class UserResource {
   private final JwtIssuanceService jwtIssuanceService;
   private final JwtAuthenticateService jwtAuthenticateService;
 
-  public UserResource(IdentityService identityService, JwtIssuanceService jwtIssuanceService, JwtAuthenticateService jwtAuthenticateService) {
+  public UserResource(
+      IdentityService identityService,
+      JwtIssuanceService jwtIssuanceService,
+      JwtAuthenticateService jwtAuthenticateService) {
     this.identityService = identityService;
     this.jwtIssuanceService = jwtIssuanceService;
     this.jwtAuthenticateService = jwtAuthenticateService;
@@ -100,23 +104,75 @@ public class UserResource {
   }
 
   @RequestMapping(
-    path = "login/jwt",
-    method = {RequestMethod.GET, RequestMethod.POST})
-  public ResponseEntity<?> jwtLogin(HttpServletRequest  httpServletRequest) {
-    //Gets the JWT
+      path = "auth/basic",
+      method = {RequestMethod.GET, RequestMethod.POST})
+  public ResponseEntity<?> basicRemoteAuth(Authentication authentication) {
+    // the user shall be authenticated using basic auth. scheme only.
+    ensureNotGbifScheme(authentication);
+    ensureUserSetInSecurityContext(authentication);
+
+    String username = authentication.getName();
+    // get the user
+    GbifUser user = identityService.get(username);
+
+    if (user == null) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.noCache().cachePrivate())
+        .body(
+            ExtendedLoggedUser.from(
+                user, null, identityService.listEditorRights(user.getUserName())));
+  }
+
+  @RequestMapping(
+      path = "auth/app",
+      method = {RequestMethod.GET, RequestMethod.POST})
+  public ResponseEntity<?> appRemoteAuth(Authentication authentication) {
+    // the user shall be authenticated using basic auth. scheme only.
+    ensureGbifScheme(authentication);
+    ensureUserSetInSecurityContext(authentication);
+
+    String username = authentication.getName();
+    // get the user. It can be null
+    GbifUser user = identityService.get(username);
+
+    return ResponseEntity.ok()
+        .cacheControl(CacheControl.noCache().cachePrivate())
+        .body(
+            ExtendedLoggedUser.from(
+                user,
+                null,
+                user != null
+                    ? identityService.listEditorRights(user.getUserName())
+                    : Collections.emptyList()));
+  }
+
+  @RequestMapping(
+      path = "auth/jwt",
+      method = {RequestMethod.GET, RequestMethod.POST})
+  public ResponseEntity<?> jwtRemoteAuth(
+      HttpServletRequest httpServletRequest, Authentication authentication) {
+    ensureUserSetInSecurityContext(authentication);
+
+    // Gets the JWT
     Optional<String> jwtToken = JwtUtils.findTokenInRequest(httpServletRequest);
 
-    if (jwtToken.isPresent()) { //Performs the authentication
+    if (jwtToken.isPresent()) { // Performs the authentication
       try {
         GbifUser user = jwtAuthenticateService.authenticate(jwtToken.get());
-        ExtendedLoggedUser extendedLoggedUser = ExtendedLoggedUser.from(user, jwtToken.get(), identityService.listEditorRights(user.getUserName()));
-        //Success authentication
+        ExtendedLoggedUser extendedLoggedUser =
+            ExtendedLoggedUser.from(
+                user, jwtToken.get(), identityService.listEditorRights(user.getUserName()));
+        // Success authentication
         return ResponseEntity.ok(extendedLoggedUser);
       } catch (GbifJwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT Error " + ex.getErrorCode());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body("JWT Error " + ex.getErrorCode());
       }
     }
-    //Token not found
+    // Token not found
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT not found");
   }
 
