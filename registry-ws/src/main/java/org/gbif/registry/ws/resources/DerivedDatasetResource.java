@@ -225,7 +225,8 @@ public class DerivedDatasetResource {
   @GetMapping("user/{user}")
   public PagingResponse<DerivedDataset> listByUser(
       @PathVariable("user") String user, Pageable page) {
-    if (SecurityUtil.isAuthenticatedUser(user) || SecurityUtil.isAuthenticatedUserInRole(ADMIN_ROLE)) {
+    if (SecurityUtil.isAuthenticatedUser(user)
+        || SecurityUtil.isAuthenticatedUserInRole(ADMIN_ROLE)) {
       return derivedDatasetService.listByUser(user, page);
     }
     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Request denied to user");

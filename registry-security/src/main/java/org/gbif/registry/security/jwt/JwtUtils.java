@@ -20,11 +20,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpHeaders;
 
-
 public class JwtUtils {
 
   private JwtUtils() {
-    //DO NOTHING
+    // DO NOTHING
   }
 
   // Patterns that catches case insensitive versions of word 'bearer'
@@ -34,8 +33,8 @@ public class JwtUtils {
   public static Optional<String> findTokenInRequest(HttpServletRequest request) {
     // check header first
     return Optional.ofNullable(request.getHeader(HttpHeaders.AUTHORIZATION))
-      .filter(JwtUtils::containsBearer)
-      .map(JwtUtils::removeBearer);
+        .filter(JwtUtils::containsBearer)
+        .map(JwtUtils::removeBearer);
   }
 
   /**

@@ -176,7 +176,8 @@ public class SpringContextBuilder {
     @Bean
     public ClientBuilder clientBuilder(DatasetBatchIndexerConfiguration configuration) {
       ClientBuilder clientBuilder = new ClientBuilder();
-      clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+      clientBuilder.withObjectMapper(
+          JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
       clientBuilder.withUrl(
           configuration.getRegistryWsUrl() != null
               ? configuration.getRegistryWsUrl()

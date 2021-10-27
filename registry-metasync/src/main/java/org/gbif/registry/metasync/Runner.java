@@ -46,7 +46,8 @@ public final class Runner {
     HttpClientFactory clientFactory = new HttpClientFactory(10, TimeUnit.SECONDS);
 
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     clientBuilder
         .withUrl("http://localhost:8080")
         .withAppKeyCredentials("username", "username", "password");

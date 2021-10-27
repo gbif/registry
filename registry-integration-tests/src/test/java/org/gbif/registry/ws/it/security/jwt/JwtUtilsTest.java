@@ -100,7 +100,6 @@ public class JwtUtilsTest {
     return Hashing.sha256().hashString(string, StandardCharsets.UTF_8).toString();
   }
 
-
   @Test
   public void generateTokenTestRegistry() {
 
@@ -112,6 +111,5 @@ public class JwtUtilsTest {
     String token = JwtUtils.generateJwt("fmendez", config);
 
     System.out.println(token);
-
   }
 }
