@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,10 +18,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-
 /**
  * Class to temporarily keep paragraph strings before they are used as a single, concatenated string
  * argument in other rules, and to reverse this transformation.
@@ -36,7 +30,6 @@ import com.google.common.collect.Lists;
  */
 public class ParagraphContainer {
 
-  private static final Joiner paraJoin = Joiner.on("\n");
   private final List<String> paragraphs = new ArrayList<>();
 
   public ParagraphContainer() {}
@@ -50,7 +43,7 @@ public class ParagraphContainer {
   }
 
   public void appendParagraph(String para) {
-    if (!Strings.isNullOrEmpty(para)) {
+    if (StringUtils.isNotEmpty(para)) {
       paragraphs.add(para.trim());
     }
   }
@@ -71,11 +64,11 @@ public class ParagraphContainer {
     }
 
     // replace with StringJoiner when we move to Java 8
-    List<String> wrappedParagraphs = Lists.newArrayList();
+    List<String> wrappedParagraphs = new ArrayList<>();
     for (String para : paragraphs) {
       wrappedParagraphs.add(wrapInHtmlParagraph(para));
     }
-    return paraJoin.join(wrappedParagraphs);
+    return String.join(StringUtils.LF, wrappedParagraphs);
   }
 
   private String wrapInHtmlParagraph(String para) {

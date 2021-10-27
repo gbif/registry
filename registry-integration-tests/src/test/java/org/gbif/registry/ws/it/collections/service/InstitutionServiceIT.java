@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +15,11 @@ package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -38,6 +39,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import javax.validation.ConstraintViolationException;
@@ -49,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Institution> {
@@ -297,6 +300,45 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
             .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+
+    // list by contacts
+    Contact contact1 = new Contact();
+    contact1.setFirstName("Name1");
+    contact1.setEmail(Collections.singletonList("aa1@aa.com"));
+    contact1.setTaxonomicExpertise(Arrays.asList("aves", "fungi"));
+
+    UserId userId1 = new UserId(IdType.OTHER, "12345");
+    UserId userId2 = new UserId(IdType.OTHER, "abcde");
+    contact1.setUserIds(Arrays.asList(userId1, userId2));
+    institutionService.addContactPerson(institution1.getKey(), contact1);
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("Name1").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("aa1@aa.com").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("aves").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(InstitutionSearchRequest.builder().query("abcde").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
   }
 
   @Test
@@ -437,6 +479,79 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
             .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+  }
+
+  @Test
+  public void contactPersonsTest() {
+    Institution institution1 = testData.newEntity();
+    UUID institutionKey1 = institutionService.create(institution1);
+
+    Contact contact = new Contact();
+    contact.setFirstName("First name");
+    contact.setLastName("last");
+    contact.setCountry(Country.AFGHANISTAN);
+    contact.setAddress(Collections.singletonList("address"));
+    contact.setCity("City");
+    contact.setEmail(Collections.singletonList("aa@aa.com"));
+    contact.setFax(Collections.singletonList("fdsgds"));
+    contact.setPhone(Collections.singletonList("fdsgds"));
+    contact.setNotes("notes");
+
+    institutionService.addContactPerson(institutionKey1, contact);
+
+    List<Contact> contacts = institutionService.listContactPersons(institutionKey1);
+    assertEquals(1, contacts.size());
+
+    Contact contactCreated = contacts.get(0);
+    assertTrue(contactCreated.lenientEquals(contact));
+
+    contactCreated.setPosition(Collections.singletonList("position"));
+    contactCreated.setTaxonomicExpertise(Collections.singletonList("aves"));
+
+    UserId userId = new UserId();
+    userId.setId("id");
+    userId.setType(IdType.OTHER);
+    contactCreated.setUserIds(Collections.singletonList(userId));
+    institutionService.updateContactPerson(institutionKey1, contactCreated);
+
+    contacts = institutionService.listContactPersons(institutionKey1);
+    assertEquals(1, contacts.size());
+
+    Contact contactUpdated = contacts.get(0);
+    assertTrue(contactUpdated.lenientEquals(contactCreated));
+
+    UserId userId2 = new UserId();
+    userId2.setId("id");
+    userId2.setType(IdType.HUH);
+    contactUpdated.getUserIds().add(userId2);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.updateContactPerson(institutionKey1, contactUpdated));
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("Another name");
+    contact2.setTaxonomicExpertise(Arrays.asList("aves", "funghi"));
+    contact2.setPosition(Collections.singletonList("Curator"));
+
+    UserId userId3 = new UserId();
+    userId3.setId("id");
+    userId3.setType(IdType.OTHER);
+
+    UserId userId4 = new UserId();
+    userId4.setId("12426");
+    userId4.setType(IdType.IH_IRN);
+    contact2.setUserIds(Arrays.asList(userId3, userId4));
+
+    institutionService.addContactPerson(institutionKey1, contact2);
+    contacts = institutionService.listContactPersons(institutionKey1);
+    assertEquals(2, contacts.size());
+
+    institutionService.removeContactPerson(institutionKey1, contactCreated.getKey());
+    contacts = institutionService.listContactPersons(institutionKey1);
+    assertEquals(1, contacts.size());
+
+    contact = contacts.get(0);
+    assertTrue(contact.lenientEquals(contact2));
   }
 
   @Test

@@ -1,0 +1,85 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="98" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TABLE collection_contact(
+          key serial NOT NULL PRIMARY KEY,
+          first_name text NOT NULL CHECK (assert_min_length(first_name, 1)),
+          last_name text CHECK (assert_min_length(last_name, 1)),
+          position text[],
+          phone text[],
+          fax text[],
+          email text[],
+          address text[],
+          city text CHECK (assert_min_length(city, 1)),
+          province text CHECK (assert_min_length(province, 1)),
+          country char(2) CHECK (assert_min_length(country, 2)),
+          postal_code text CHECK (assert_min_length(postal_code, 1)),
+          taxonomic_expertise text[],
+          notes text,
+          user_ids jsonb,
+          is_primary boolean DEFAULT false,
+          fulltext_search tsvector,
+          created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
+          modified_by varchar NOT NULL CHECK (assert_min_length(modified_by, 3)),
+          created timestamptz NOT NULL DEFAULT now(),
+          modified timestamptz NOT NULL DEFAULT now());
+
+        CREATE TABLE collection_collection_contact (
+          collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+          collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_contact_key, collection_key)
+        );
+
+        CREATE TABLE institution_collection_contact (
+          institution_key uuid NOT NULL REFERENCES institution(key) ON DELETE CASCADE,
+          collection_contact_key integer NOT NULL REFERENCES collection_contact(key) ON DELETE CASCADE,
+          PRIMARY KEY (collection_contact_key, institution_key)
+        );
+
+        CREATE INDEX collection_contact_fulltext_search_idx ON collection_contact USING gin(fulltext_search);
+
+        CREATE OR REPLACE FUNCTION get_user_ids_values(input jsonb)
+          RETURNS text[] AS
+          $func$
+            DECLARE
+              v text;
+              res text[];
+            BEGIN
+                IF input IS NOT NULL THEN
+                  FOR v IN SELECT jsonb_array_elements(input)->>'id' LOOP
+                    res := array_append(res, cast(v as TEXT));
+                  END LOOP;
+                END IF;
+
+                RETURN res;
+            END
+          $func$
+          LANGUAGE plpgsql;
+
+        CREATE OR REPLACE FUNCTION collection_contact_change_trigger()
+          RETURNS TRIGGER AS
+          $collcontactchange$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.taxonomic_expertise, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.email, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.first_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.last_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(get_user_ids_values(NEW.user_ids), ' '),'')));
+                RETURN NEW;
+              END;
+          $collcontactchange$
+          LANGUAGE plpgsql;
+
+        CREATE TRIGGER collection_contact_fulltext_update
+          BEFORE INSERT OR UPDATE ON collection_contact
+          FOR EACH ROW EXECUTE PROCEDURE collection_contact_change_trigger();
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

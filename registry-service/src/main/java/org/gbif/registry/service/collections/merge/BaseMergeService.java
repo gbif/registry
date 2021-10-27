@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -130,10 +128,20 @@ public abstract class BaseMergeService<
                     replacementKey,
                     new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
 
+    // FIXME: to be removed in the future, contacts are deprecated
     // merge contacts
     entityToReplace.getContacts().stream()
         .filter(c -> !replacement.getContacts().contains(c))
         .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
+
+    // merge contact persons
+    entityToReplace.getContactPersons().stream()
+        .filter(c -> replacement.getContactPersons().stream().noneMatch(cp -> cp.lenientEquals(c)))
+        .forEach(
+            c -> {
+              c.setKey(null);
+              primaryEntityService.addContactPerson(replacementKey, c);
+            });
 
     // add the UUID key of the replaced entity as an identifier of the replacement
     Identifier keyIdentifier =

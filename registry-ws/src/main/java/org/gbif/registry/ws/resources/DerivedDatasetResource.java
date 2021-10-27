@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +27,7 @@ import org.gbif.registry.events.UpdateEvent;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.RegistryDerivedDatasetService;
 import org.gbif.registry.service.RegistryOccurrenceDownloadService;
+import org.gbif.registry.ws.util.SecurityUtil;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
@@ -61,6 +60,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
@@ -221,10 +221,14 @@ public class DerivedDatasetResource {
     return getDerivedDatasets(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
   }
 
+  @Secured({ADMIN_ROLE, USER_ROLE})
   @GetMapping("user/{user}")
   public PagingResponse<DerivedDataset> listByUser(
       @PathVariable("user") String user, Pageable page) {
-    return derivedDatasetService.listByUser(user, page);
+    if (SecurityUtil.isAuthenticatedUser(user) || SecurityUtil.isAuthenticatedUserInRole(ADMIN_ROLE)) {
+      return derivedDatasetService.listByUser(user, page);
+    }
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Request denied to user");
   }
 
   public PagingResponse<DerivedDataset> getDerivedDatasets(String datasetKeyOrDoi, Pageable page) {

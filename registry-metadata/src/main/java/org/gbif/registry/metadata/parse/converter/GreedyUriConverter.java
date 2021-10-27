@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,12 +15,10 @@ package org.gbif.registry.metadata.parse.converter;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.Objects;
 
 import org.apache.commons.beanutils.converters.AbstractConverter;
-
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Greedy String to URI converter. Greedy in the sense that it will try to add a default protocol
@@ -59,12 +55,12 @@ public final class GreedyUriConverter extends AbstractConverter {
    */
   @Override
   protected Object convertToType(Class type, Object value) {
-    Preconditions.checkNotNull(value, "Must provide a type to convert to null");
+    Objects.requireNonNull(value, "Must provide a type to convert to null");
     String valueAsString =
-        Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(String.valueOf(value)));
+        StringUtils.trimToNull(org.gbif.utils.text.StringUtils.trim(String.valueOf(value)));
 
     URI uri = null;
-    if (!Strings.isNullOrEmpty(valueAsString)) {
+    if (StringUtils.isNotEmpty(valueAsString)) {
       try {
         uri = URI.create(valueAsString);
         // try adding the default scheme if the URI is opaque or missing
@@ -75,7 +71,7 @@ public final class GreedyUriConverter extends AbstractConverter {
             // keep the previous scheme-less result
           }
         }
-      } catch (IllegalArgumentException e) {
+      } catch (IllegalArgumentException ignored) {
       }
     }
     return uri;

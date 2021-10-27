@@ -9,7 +9,6 @@
 
   <artifactId>registry-metadata</artifactId>
   <name>GBIF Registry Metadata</name>
-  <url>http://sites.gbif.org/registry/registry-metadata</url>
   <description>Support for parsing and writing EML and other metadata formats to our dataset class</description>
 
   <properties>
@@ -28,7 +27,17 @@
     </dependency>
     <dependency>
       <groupId>org.gbif</groupId>
+      <artifactId>gbif-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
       <artifactId>gbif-parsers</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif</groupId>
+          <artifactId>name-parser-v1</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Third party dependencies -->
@@ -44,15 +53,16 @@
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
 
     <!-- Test dependencies-->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

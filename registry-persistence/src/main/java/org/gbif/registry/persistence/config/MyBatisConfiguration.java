@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -80,6 +78,7 @@ import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.SuggestedChangesTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.UserIdsTypeHandler;
 
 import java.net.URI;
 import java.util.UUID;
@@ -222,6 +221,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("SuggestedChangesTypeHandler", SuggestedChangesTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("UserIdsTypeHandler", UserIdsTypeHandler.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);
