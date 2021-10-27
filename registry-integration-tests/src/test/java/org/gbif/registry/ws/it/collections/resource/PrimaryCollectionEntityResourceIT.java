@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
@@ -110,6 +109,43 @@ public abstract class PrimaryCollectionEntityResourceIT<
     assertDoesNotThrow(
         () ->
             getPrimaryCollectionEntityClient().removeContact(UUID.randomUUID(), UUID.randomUUID()));
+  }
+
+  @Test
+  public void contactPersonsTest() {
+    // contacts
+    Contact contact = new Contact();
+    contact.setFirstName("name1");
+    contact.setKey(1);
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("name2");
+    contact2.setKey(2);
+
+    // add contact
+    when(getMockPrimaryEntityService().addContactPerson(any(UUID.class), any(Contact.class)))
+        .thenReturn(1);
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().addContactPerson(UUID.randomUUID(), contact));
+
+    // list contacts
+    when(getMockPrimaryEntityService().listContactPersons(any(UUID.class)))
+        .thenReturn(Arrays.asList(contact, contact2));
+    List<Contact> contactsEntity1 =
+        getPrimaryCollectionEntityClient().listContactPersons(UUID.randomUUID());
+    assertEquals(2, contactsEntity1.size());
+
+    // update contact
+    doNothing()
+        .when(getMockPrimaryEntityService())
+        .updateContactPerson(any(UUID.class), any(Contact.class));
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().updateContactPerson(UUID.randomUUID(), contact));
+
+    // remove contacts
+    doNothing().when(getMockPrimaryEntityService()).removeContactPerson(any(UUID.class), anyInt());
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().removeContactPerson(UUID.randomUUID(), 1));
   }
 
   @Test

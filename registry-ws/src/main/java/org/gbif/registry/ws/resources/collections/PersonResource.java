@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Deprecated
 @RestController
 @RequestMapping(value = "grscicoll/person", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PersonResource extends BaseCollectionEntityResource<Person> {

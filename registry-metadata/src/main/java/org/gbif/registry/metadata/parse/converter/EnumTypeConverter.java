@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,11 +15,10 @@ package org.gbif.registry.metadata.parse.converter;
 
 import org.gbif.api.util.VocabularyUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.beanutils.converters.AbstractConverter;
-
-import com.google.common.collect.Maps;
 
 /**
  * {@link org.apache.commons.beanutils.Converter} implementation that handles conversion to and from
@@ -32,7 +29,7 @@ public class EnumTypeConverter<T extends Enum<?>> extends AbstractConverter {
   private final Class<T> clazz;
   private final T defaultValue;
 
-  private final Map<String, T> lookup = Maps.newHashMap();
+  private final Map<String, T> lookup = new HashMap<>();
 
   public EnumTypeConverter(Class<T> clazz, T defaultValue) {
     this.clazz = clazz;

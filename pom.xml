@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>54</version>
+    <version>56</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -86,16 +86,16 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>0.154</gbif-api.version>
-    <gbif-common.version>0.50</gbif-common.version>
+    <gbif-api.version>0.156</gbif-api.version>
+    <gbif-common.version>0.52</gbif-common.version>
     <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
-    <gbif-common-ws.version>1.15</gbif-common-ws.version>
+    <gbif-common-ws.version>1.16</gbif-common-ws.version>
     <gbif-directory.version>1.11</gbif-directory.version>
     <gbif-doi.version>2.14</gbif-doi.version>
-    <gbif-download-query-tools.version>1.42</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.44</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metrics.version>1.2</gbif-metrics.version>
-    <gbif-parsers.version>0.36</gbif-parsers.version>
+    <gbif-parsers.version>0.55</gbif-parsers.version>
     <gbif-postal-service.version>1.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
 
@@ -716,11 +716,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
+        <version>${maven-enforcer-plugin.version}</version>
       </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
+        <version>${maven-site-plugin.version}</version>
         <configuration>
           <topSiteURL>https://gbif.github.io/registry/</topSiteURL>
         </configuration>
@@ -729,6 +731,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
+        <version>${spotless-maven-plugin.version}</version>
       </plugin>
     </plugins>
 

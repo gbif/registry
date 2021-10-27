@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -196,12 +194,15 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       T dto,
       String codeParam) {
     Match<R> match = null;
-    if ((dto.isCodeMatch() || Strings.isNullOrEmpty(codeParam))
+    if ((dto.isCodeMatch() || dto.isAlternativeCodeMatch() || Strings.isNullOrEmpty(codeParam))
         && (dto.isIdentifierMatch() || dto.isKeyMatch())) {
       // exact if both code and id match or code is not provided and id matches
       match = exact(toEntityMatched(dto));
       if (dto.isCodeMatch()) {
         match.getReasons().add(CODE_MATCH);
+      }
+      if (dto.isAlternativeCodeMatch()) {
+        match.getReasons().add(ALTERNATIVE_CODE_MATCH);
       }
       if (dto.isIdentifierMatch()) {
         match.getReasons().add(IDENTIFIER_MATCH);

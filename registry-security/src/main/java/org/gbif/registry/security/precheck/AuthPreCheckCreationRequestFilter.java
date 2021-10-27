@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -154,7 +152,8 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
           request =
               new GbifHttpServletRequestWrapper(
                   request,
-                  entity.isPresent() ? objectMapper.writeValueAsString(entity.get()) : "{}");
+                  entity.isPresent() ? objectMapper.writeValueAsString(entity.get()) : "{}",
+                  true);
         } catch (JsonProcessingException e) {
           LOG.warn("Error creating the auth pre check body");
         }

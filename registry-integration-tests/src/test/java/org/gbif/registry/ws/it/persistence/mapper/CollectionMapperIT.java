@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +16,9 @@ package org.gbif.registry.ws.it.persistence.mapper;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.IdType;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -29,6 +30,7 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
@@ -62,6 +64,7 @@ public class CollectionMapperIT extends BaseItTest {
   private AddressMapper addressMapper;
   private MachineTagMapper machineTagMapper;
   private IdentifierMapper identifierMapper;
+  private CollectionContactMapper contactMapper;
 
   @Autowired
   public CollectionMapperIT(
@@ -69,6 +72,7 @@ public class CollectionMapperIT extends BaseItTest {
       AddressMapper addressMapper,
       MachineTagMapper machineTagMapper,
       IdentifierMapper identifierMapper,
+      CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer) {
     super(principalProvider, esServer);
@@ -76,6 +80,7 @@ public class CollectionMapperIT extends BaseItTest {
     this.addressMapper = addressMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
+    this.contactMapper = contactMapper;
   }
 
   @Test
@@ -303,6 +308,7 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setKey(UUID.randomUUID());
     col1.setCode("c1");
     col1.setName("n1");
+    col1.setTaxonomicCoverage("Insecta|Lepidoptera|Coleoptera|Hymenoptera");
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
 
@@ -327,12 +333,41 @@ public class CollectionMapperIT extends BaseItTest {
     assertSearch(CollectionSearchParams.builder().query("c2 c1").build(), page, 0);
     assertSearch(CollectionSearchParams.builder().query("c3").build(), page, 0);
     assertSearch(CollectionSearchParams.builder().query("n1").build(), page, 2);
+    assertSearch(CollectionSearchParams.builder().query("insecta").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("Hymenoptera").build(), page, 1);
 
     assertSearch(
         CollectionSearchParams.builder().query("dummy address fo ").build(),
         page,
         1,
         col1.getKey());
+
+    Contact contact1 = new Contact();
+    contact1.setFirstName("Name1");
+    contact1.setLastName("Surname1");
+    contact1.setEmail(Collections.singletonList("aa1@aa.com"));
+    contact1.setTaxonomicExpertise(Arrays.asList("aves", "fungi"));
+    contact1.setCreatedBy("test");
+    contact1.setModifiedBy("test");
+
+    UserId userId1 = new UserId(IdType.OTHER, "12345");
+    UserId userId2 = new UserId(IdType.OTHER, "abcde");
+    contact1.setUserIds(Arrays.asList(userId1, userId2));
+
+    contactMapper.createContact(contact1);
+
+    contact1 = contactMapper.getContact(contact1.getKey());
+    assertNotNull(contact1.getCreated());
+    assertNotNull(contact1.getModified());
+
+    collectionMapper.addContactPerson(col1.getKey(), contact1.getKey());
+    assertSearch(CollectionSearchParams.builder().query("Name1").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("Name0").build(), page, 0);
+    assertSearch(CollectionSearchParams.builder().query("Surname1").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("aa1@aa.com").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("aves").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("12345").build(), page, 1);
+    assertSearch(CollectionSearchParams.builder().query("abcde").build(), page, 1);
   }
 
   @Test

@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +17,13 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.ContactType;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Adapt the {@link Dataset} {@link Contact} list for what metadata documents generally want.
@@ -30,8 +31,6 @@ import com.google.common.collect.Lists;
  * @author cgendreau
  */
 public class ContactAdapter {
-
-  private static final Joiner JOINER = Joiner.on(" ").skipNulls();
 
   private List<Contact> contactList;
 
@@ -47,7 +46,7 @@ public class ContactAdapter {
    * @return list of AssociatedParties or empty list if none found
    */
   public List<Contact> getAssociatedParties() {
-    List<Contact> contacts = Lists.newArrayList();
+    List<Contact> contacts = new ArrayList<>();
     for (Contact c : this.contactList) {
       if (!c.isPrimary() && !isPreferredContactType(c.getType())) {
         contacts.add(c);
@@ -58,10 +57,9 @@ public class ContactAdapter {
 
   /** @return true if contact type is considered a preferred type, or false otherwise */
   private boolean isPreferredContactType(ContactType type) {
-    return (type != null
-        && (type == ContactType.ORIGINATOR
-            || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
-            || type == ContactType.METADATA_AUTHOR));
+    return type == ContactType.ORIGINATOR
+        || type == ContactType.ADMINISTRATIVE_POINT_OF_CONTACT
+        || type == ContactType.METADATA_AUTHOR;
   }
 
   /**
@@ -84,7 +82,10 @@ public class ContactAdapter {
     if (contact == null) {
       return "";
     }
-    return JOINER.join(contact.getFirstName(), contact.getLastName()).trim();
+    return Stream.of(contact.getFirstName(), contact.getLastName())
+        .filter(Objects::nonNull)
+        .map(String::trim)
+        .collect(Collectors.joining(StringUtils.SPACE));
   }
 
   /**
@@ -106,7 +107,7 @@ public class ContactAdapter {
    * @return filtered contacts or an empty list if none matched
    */
   public List<Contact> getFilteredContacts(ContactType... types) {
-    List<Contact> contacts = Lists.newArrayList();
+    List<Contact> contacts = new ArrayList<>();
     Contact contact;
     for (ContactType type : types) {
       contact = getFirstPreferredType(type);
@@ -167,7 +168,7 @@ public class ContactAdapter {
    * @return all {@link Contact} for specified type or empty list if none found
    */
   public List<Contact> getAllType(ContactType type) {
-    List<Contact> primary = Lists.newArrayList();
+    List<Contact> primary = new ArrayList<>();
     for (Contact c : contactList) {
       if (type == c.getType()) {
         primary.add(c);

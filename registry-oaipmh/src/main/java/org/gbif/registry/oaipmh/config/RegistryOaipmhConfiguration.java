@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +20,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -164,6 +163,7 @@ public class RegistryOaipmhConfiguration {
   @Bean
   public CubeWsClient occurrenceMetricsClient(@Value("${api.root.url}") String url) {
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     clientBuilder.withUrl(url);
     return clientBuilder.build(CubeWsClient.class);
   }

@@ -1,3 +1,6 @@
+[![Build status](https://builds.gbif.org/job/registry/badge/icon)](https://builds.gbif.org/job/registry/lastBuild/console)
+[![Crowdin](https://badges.crowdin.net/gbif-registry/localized.svg)](https://crowdin.com/project/gbif-registry)
+
 # GBIF Registry
 
 The GBIF Registry is a core component of the architecture responsible for providing the authoritative source of information on GBIF participants (Nodes), institutions (e.g. data publishers), datasets, networks their interrelationships and the means to identify and access them.

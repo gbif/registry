@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,9 +16,9 @@ package org.gbif.registry.metadata;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 
-import org.junit.jupiter.api.Test;
+import java.util.Collections;
 
-import com.google.common.collect.Lists;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,7 +32,7 @@ public class CleanUtilsTest {
     c.setFirstName("");
     c.setLastName("  ");
     c.setCity("Berlin");
-    c.setPhone(Lists.newArrayList("12345"));
+    c.setPhone(Collections.singletonList("12345"));
     c.addEmail("   ");
     c.addEmail("   my email");
     c.addEmail(null);

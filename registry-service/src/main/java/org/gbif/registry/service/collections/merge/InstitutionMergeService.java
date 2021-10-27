@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,10 +39,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
-import static org.gbif.common.shaded.com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
@@ -164,19 +161,29 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
                   new OccurrenceMapping(om.getCode(), om.getIdentifier(), om.getDatasetKey()));
             });
 
+    // FIXME: to be removed in the future, contacts are deprecated
     // copy the contacts
     institutionToConvert
         .getContacts()
         .forEach(c -> collectionService.addContact(newCollection.getKey(), c.getKey()));
+
+    // copy the contact persons
+    institutionToConvert
+        .getContactPersons()
+        .forEach(
+            c -> {
+              c.setKey(null);
+              collectionService.addContactPerson(newCollection.getKey(), c);
+            });
 
     return newCollection.getKey();
   }
 
   @Override
   void checkMergeExtraPreconditions(Institution entityToReplace, Institution replacement) {
-    Preconditions.checkArgument(
+    checkArgument(
         entityToReplace.getReplacedBy() == null, "Cannot merge an entity that was replaced");
-    Preconditions.checkArgument(
+    checkArgument(
         replacement.getReplacedBy() == null, "Cannot do a merge with an entity that was replaced");
   }
 
@@ -205,6 +212,7 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
 
   @Override
   void additionalOperations(Institution entityToReplace, Institution replacement) {
+    // FIXME: to be removed in the future, contacts are deprecated
     // fix primary institution of contacts
     PagingResponse<Person> persons =
         personService.list(

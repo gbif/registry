@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +37,11 @@ public class CollectionChangeSuggestionServiceIT
       SimplePrincipalProvider simplePrincipalProvider,
       CollectionChangeSuggestionService collectionChangeSuggestionService,
       CollectionService collectionService) {
-    super(simplePrincipalProvider, collectionChangeSuggestionService, collectionService);
+    super(
+        simplePrincipalProvider,
+        collectionChangeSuggestionService,
+        collectionService,
+        collectionService);
   }
 
   @Override

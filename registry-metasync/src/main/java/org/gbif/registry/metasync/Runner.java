@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +26,7 @@ import org.gbif.registry.metasync.util.HttpClientFactory;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -47,6 +46,7 @@ public final class Runner {
     HttpClientFactory clientFactory = new HttpClientFactory(10, TimeUnit.SECONDS);
 
     ClientBuilder clientBuilder = new ClientBuilder();
+    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     clientBuilder
         .withUrl("http://localhost:8080")
         .withAppKeyCredentials("username", "username", "password");

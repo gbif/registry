@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +16,7 @@ package org.gbif.registry.ws.resources.collections;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
@@ -106,6 +105,7 @@ public abstract class PrimaryCollectionEntityResource<
     primaryCollectionEntityService.update(entity);
   }
 
+  @Deprecated
   @PostMapping(
       value = "{key}/contact",
       consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
@@ -113,15 +113,50 @@ public abstract class PrimaryCollectionEntityResource<
     primaryCollectionEntityService.addContact(entityKey, personKey);
   }
 
+  @Deprecated
   @DeleteMapping("{key}/contact/{personKey}")
   public void removeContact(@PathVariable("key") UUID entityKey, @PathVariable UUID personKey) {
     primaryCollectionEntityService.removeContact(entityKey, personKey);
   }
 
+  @Deprecated
   @GetMapping("{key}/contact")
   @Nullable
   public List<Person> listContacts(@PathVariable UUID key) {
     return primaryCollectionEntityService.listContacts(key);
+  }
+
+  @PostMapping(
+      value = "{key}/contactPerson",
+      consumes = {MediaType.APPLICATION_JSON_VALUE})
+  public int addContactPerson(
+      @PathVariable("key") UUID entityKey, @RequestBody @Trim Contact contact) {
+    return primaryCollectionEntityService.addContactPerson(entityKey, contact);
+  }
+
+  @PutMapping(
+      value = "{key}/contactPerson/{contactKey}",
+      consumes = {MediaType.APPLICATION_JSON_VALUE})
+  public void updateContactPerson(
+      @PathVariable("key") UUID entityKey,
+      @PathVariable("contactKey") int contactKey,
+      @RequestBody @Trim Contact contact) {
+    checkArgument(
+        contactKey == contact.getKey(),
+        "The contact key in the path has to match the key in the body");
+    primaryCollectionEntityService.updateContactPerson(entityKey, contact);
+  }
+
+  @DeleteMapping("{key}/contactPerson/{contactKey}")
+  public void removeContactPerson(
+      @PathVariable("key") UUID entityKey, @PathVariable int contactKey) {
+    primaryCollectionEntityService.removeContactPerson(entityKey, contactKey);
+  }
+
+  @GetMapping("{key}/contactPerson")
+  @Nullable
+  public List<Contact> listContactPersons(@PathVariable UUID key) {
+    return primaryCollectionEntityService.listContactPersons(key);
   }
 
   @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)

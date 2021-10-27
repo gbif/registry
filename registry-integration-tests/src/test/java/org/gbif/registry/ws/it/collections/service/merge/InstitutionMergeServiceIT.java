@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.service.merge;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -29,6 +28,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Collections;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -115,6 +115,12 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     personService.create(p1);
     contactService.addContact(toConvert.getKey(), p1.getKey());
 
+    // contact persons
+    Contact contact1 = new Contact();
+    contact1.setFirstName("contact1");
+    contact1.setEmail(Collections.singletonList("c1@test.com"));
+    contactService.addContactPerson(toConvert.getKey(), contact1);
+
     // machine tags
     machineTagService.addMachineTag(toConvert.getKey(), new MachineTag("test", "test", "test"));
 
@@ -155,6 +161,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     assertEquals(1, newCollection.getMachineTags().size());
     assertEquals(1, newCollection.getOccurrenceMappings().size());
     assertEquals(1, newCollection.getContacts().size());
+    assertEquals(1, newCollection.getContactPersons().size());
   }
 
   @Test

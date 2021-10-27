@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +14,7 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -64,6 +63,36 @@ public interface PrimaryCollectionEntityClient<
 
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contact/{personKey}")
   void removeContact(@PathVariable("key") UUID key, @PathVariable("personKey") UUID personKey);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/contactPerson",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int addContactPerson(@PathVariable("key") UUID entityKey, @RequestBody Contact contact);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "{key}/contactPerson/{contactKey}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateContactPersonResource(
+      @PathVariable("key") UUID entityKey,
+      @PathVariable("contactKey") int contactKey,
+      @RequestBody Contact contact);
+
+  default void updateContactPerson(UUID entityKey, Contact contact) {
+    updateContactPersonResource(entityKey, contact.getKey(), contact);
+  }
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contactPerson/{contactKey}")
+  void removeContactPerson(
+      @PathVariable("key") UUID entityKey, @PathVariable("contactKey") int contactKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/contactPerson",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  List<Contact> listContactPersons(@PathVariable("key") UUID key);
 
   @RequestMapping(
       method = RequestMethod.POST,
