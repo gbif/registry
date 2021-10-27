@@ -38,11 +38,11 @@ public class SecurityUtil {
   public static GbifUserPrincipal getPrincipal() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication != null && authentication.isAuthenticated()) {
-        if (authentication.getPrincipal() instanceof GbifUserPrincipal) {
-          return (GbifUserPrincipal) authentication.getPrincipal();
-        } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
-          return toGbifUserPrincipal((UsernamePasswordAuthenticationToken) authentication);
-        }
+      if (authentication.getPrincipal() instanceof GbifUserPrincipal) {
+        return (GbifUserPrincipal) authentication.getPrincipal();
+      } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
+        return toGbifUserPrincipal((UsernamePasswordAuthenticationToken) authentication);
+      }
     }
     throw new SecurityException("User credentials not found");
   }
@@ -50,11 +50,14 @@ public class SecurityUtil {
   /**
    * Mostly used for tests, it transforms a UsernamePasswordAuthenticationToken into a GBIF principal.
    */
-  private GbifUserPrincipal toGbifUserPrincipal(UsernamePasswordAuthenticationToken  usernamePasswordAuthenticationToken) {
+  private GbifUserPrincipal toGbifUserPrincipal(
+      UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken) {
     GbifUser gbifUser = new GbifUser();
     gbifUser.setUserName(usernamePasswordAuthenticationToken.getName());
-    gbifUser.setRoles(usernamePasswordAuthenticationToken.getAuthorities().stream().map(ga -> UserRole.valueOf(ga.getAuthority())).collect(
-      Collectors.toSet()));
+    gbifUser.setRoles(
+        usernamePasswordAuthenticationToken.getAuthorities().stream()
+            .map(ga -> UserRole.valueOf(ga.getAuthority()))
+            .collect(Collectors.toSet()));
     return new GbifUserPrincipal(gbifUser);
   }
 
@@ -70,6 +73,7 @@ public class SecurityUtil {
    */
   public static boolean isAuthenticatedUserInRole(String... roles) {
     Set<String> userRoles = Sets.newHashSet(roles);
-    return getPrincipal().getAuthorities().stream().anyMatch(grantedAuthority ->  userRoles.contains(grantedAuthority.getAuthority()));
+    return getPrincipal().getAuthorities().stream()
+        .anyMatch(grantedAuthority -> userRoles.contains(grantedAuthority.getAuthority()));
   }
 }

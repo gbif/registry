@@ -195,7 +195,8 @@ public class BaseItTest {
   protected <T> T prepareClient(
       String username, String appKey, int localServerPort, KeyStore keyStore, Class<T> cls) {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withAppKeyCredentials(username, appKey, keyStore.getPrivateKey(appKey))

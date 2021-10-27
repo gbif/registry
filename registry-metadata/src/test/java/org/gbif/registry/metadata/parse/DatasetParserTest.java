@@ -108,7 +108,8 @@ public class DatasetParserTest {
 
   @Test
   public void testWikipediaContacts() throws Exception {
-    Dataset d = DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("eml/wikipedia.xml")));
+    Dataset d =
+        DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("eml/wikipedia.xml")));
     assertNotNull(d);
     assertEquals(2, d.getContacts().size());
     for (Contact c : d.getContacts()) {
@@ -121,7 +122,9 @@ public class DatasetParserTest {
   public void testBuildProtocol() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("eml/eml-protocol.xml"))));
+        () ->
+            DatasetParser.build(
+                IOUtils.toByteArray(FileUtils.classpathStream("eml/eml-protocol.xml"))));
   }
 
   private Contact contactByType(Dataset d, ContactType type) {

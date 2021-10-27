@@ -110,8 +110,7 @@ public class DublinCoreWriterTest {
     administrativeContact.setLastName("Roy");
     administrativeContact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
 
-    d.setContacts(
-        Arrays.asList(originatorContact, metadataAuthorContact, administrativeContact));
+    d.setContacts(Arrays.asList(originatorContact, metadataAuthorContact, administrativeContact));
 
     d.setGeographicCoverageDescription("Description de la portée");
     Date endDate = calendar.getTime();

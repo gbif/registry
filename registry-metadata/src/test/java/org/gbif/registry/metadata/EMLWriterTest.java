@@ -115,7 +115,8 @@ public class EMLWriterTest {
 
   @Test
   public void testWriteDC() throws Exception {
-    Dataset d = DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("dc/worms_dc.xml")));
+    Dataset d =
+        DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("dc/worms_dc.xml")));
     d.setKey(UUID.randomUUID());
     StringWriter writer = new StringWriter();
     emlWriter.writeTo(d, writer);
@@ -123,7 +124,8 @@ public class EMLWriterTest {
 
   @Test
   public void testWriteDoiAsPrimaryId() throws Exception {
-    Dataset d = DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("dc/worms_dc.xml")));
+    Dataset d =
+        DatasetParser.build(IOUtils.toByteArray(FileUtils.classpathStream("dc/worms_dc.xml")));
     d.setKey(UUID.randomUUID());
     d.setDoi(new DOI("10.1234/5679"));
     StringWriter writer = new StringWriter();
