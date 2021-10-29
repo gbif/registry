@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +16,7 @@ package org.gbif.registry.ws.it.collections;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
@@ -468,8 +467,36 @@ public class AuditLogIT extends BaseItTest {
             entityKey, traceId, contactKey, Person.class.getSimpleName(), EventType.LINK.name());
 
     client.removeContact(entityKey, contactKey);
+    traceId =
+        assertSubEntityCreation(
+            entityKey, traceId, contactKey, Person.class.getSimpleName(), EventType.UNLINK.name());
+
+    // new contacts model
+    Contact contact = new Contact();
+    contact.setFirstName("test");
+    int newContactKey = client.addContactPerson(entityKey, contact);
+    traceId =
+        assertSubEntityCreation(
+            entityKey,
+            traceId,
+            newContactKey,
+            Contact.class.getSimpleName(),
+            EventType.CREATE.name());
+
+    contact.setKey(newContactKey);
+    contact.setFirstName("test2");
+    client.updateContactPerson(entityKey, contact);
+    traceId =
+        assertSubEntityCreation(
+            entityKey,
+            traceId,
+            newContactKey,
+            Contact.class.getSimpleName(),
+            EventType.UPDATE.name());
+
+    client.removeContactPerson(entityKey, newContactKey);
     assertSubEntityCreation(
-        entityKey, traceId, contactKey, Person.class.getSimpleName(), EventType.UNLINK.name());
+        entityKey, traceId, newContactKey, Contact.class.getSimpleName(), EventType.DELETE.name());
   }
 
   private void assertDeletionCollectionEntity(UUID collectionEntityKey) {

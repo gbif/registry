@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>3.69-SNAPSHOT</version>
+    <version>3.70-SNAPSHOT</version>
   </parent>
 
   <artifactId>registry-cli</artifactId>
@@ -14,7 +14,7 @@
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <url>http://gbif.github.io/registry/${project.artifactId}/</url>
+      <url>https://gbif.github.io/registry/${project.artifactId}/</url>
     </site>
   </distributionManagement>
 
@@ -150,11 +150,11 @@
   <repositories>
     <repository>
       <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
+      <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
     <repository>
       <id>gbif-thirdparty</id>
-      <url>http://repository.gbif.org/content/repositories/thirdparty/</url>
+      <url>https://repository.gbif.org/content/repositories/thirdparty/</url>
     </repository>
   </repositories>
 

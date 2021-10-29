@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -100,5 +98,18 @@ public class JwtUtilsTest {
   @SuppressWarnings("UnstableApiUsage")
   private String generateTestSigningKey(String string) {
     return Hashing.sha256().hashString(string, StandardCharsets.UTF_8).toString();
+  }
+
+  @Test
+  public void generateTokenTestRegistry() {
+
+    JwtConfiguration config = new JwtConfiguration();
+    config.setSigningKey("ec9f0b6949e2d229828179ceddf5257429c2ca05e3426836f30fef836788067a");
+    config.setExpiryTimeInMs(60000 * 1000L);
+    config.setIssuer("GBIF-REGISTRY");
+
+    String token = JwtUtils.generateJwt("fmendez", config);
+
+    System.out.println(token);
   }
 }

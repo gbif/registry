@@ -1,6 +1,4 @@
 /*
- * Copyright 2020-2021 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -227,7 +225,8 @@ public class DerivedDatasetResource {
   @GetMapping("user/{user}")
   public PagingResponse<DerivedDataset> listByUser(
       @PathVariable("user") String user, Pageable page) {
-    if (SecurityUtil.isAuthenticatedUser(user) || SecurityUtil.isAuthenticatedUserInRole(ADMIN_ROLE)) {
+    if (SecurityUtil.isAuthenticatedUser(user)
+        || SecurityUtil.isAuthenticatedUserInRole(ADMIN_ROLE)) {
       return derivedDatasetService.listByUser(user, page);
     }
     throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Request denied to user");

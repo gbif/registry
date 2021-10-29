@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +24,7 @@ import java.util.UUID;
 /** Extended {@link LoggedUser} which additionally contains token, roles and editor scopes. */
 public class ExtendedLoggedUser extends LoggedUser {
 
+  protected Integer key;
   private String token;
   private Set<String> roles = new HashSet<>();
   private Set<String> editorRoleScopes = new HashSet<>();
@@ -36,6 +35,7 @@ public class ExtendedLoggedUser extends LoggedUser {
   private ExtendedLoggedUser(GbifUser user, String token, List<UUID> editorRights) {
     super(user);
     this.token = token;
+    this.key = user.getKey();
     Optional.ofNullable(user.getRoles())
         .ifPresent(userRoles -> userRoles.forEach(role -> this.roles.add(role.name())));
     Optional.ofNullable(editorRights)
