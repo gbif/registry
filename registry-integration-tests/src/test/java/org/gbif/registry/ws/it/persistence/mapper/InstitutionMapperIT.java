@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -342,6 +340,11 @@ public class InstitutionMapperIT extends BaseItTest {
     contact1.setUserIds(Arrays.asList(userId1, userId2));
 
     contactMapper.createContact(contact1);
+
+    contact1 = contactMapper.getContact(contact1.getKey());
+    assertNotNull(contact1.getCreated());
+    assertNotNull(contact1.getModified());
+
     institutionMapper.addContactPerson(inst1.getKey(), contact1.getKey());
     assertSearch(InstitutionSearchParams.builder().query("Name1").build(), page, 1);
     assertSearch(InstitutionSearchParams.builder().query("Name0").build(), page, 0);

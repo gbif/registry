@@ -3,12 +3,12 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>3.69-SNAPSHOT</version>
+    <version>3.70-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-examples</artifactId>
-  <version>3.69-SNAPSHOT</version>
+  <version>3.70-SNAPSHOT</version>
 
   <packaging>jar</packaging>
 
@@ -18,14 +18,14 @@
   <distributionManagement>
     <site>
       <id>gh-pages</id>
-      <url>http://gbif.github.io/registry/${project.artifactId}/</url>
+      <url>https://gbif.github.io/registry/${project.artifactId}/</url>
     </site>
   </distributionManagement>
 
   <repositories>
     <repository>
       <id>gbif-all</id>
-      <url>http://repository.gbif.org/content/groups/gbif</url>
+      <url>https://repository.gbif.org/content/groups/gbif</url>
     </repository>
   </repositories>
 

@@ -11,50 +11,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.jwt;
+package org.gbif.registry.security.jwt;
 
-import org.gbif.registry.security.jwt.JwtConfiguration;
-
-import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.http.HttpHeaders;
 
 public class JwtUtils {
 
+  private JwtUtils() {
+    // DO NOTHING
+  }
+
   // Patterns that catches case insensitive versions of word 'bearer'
   private static final Pattern BEARER_PATTERN = Pattern.compile("(?i)bearer");
-
-  private JwtUtils() {}
-
-  /**
-   * Generates a JWT with the configuration specified.
-   *
-   * <p>It always sets the following fields:
-   *
-   * <ul>
-   *   <li>expiration: takes the time from the {@link JwtConfiguration}
-   *   <li>Issued time: sets the current time when the token is issued
-   *   <li>Issuer: takes the issuer from the {@link JwtConfiguration}
-   *   <li>Username claim: custom claim to store the username received as a parameter
-   *   <li>signature: signs the token using {@link SignatureAlgorithm#HS256} and the key specified
-   *       in the {@link JwtConfiguration}
-   * </ul>
-   */
-  public static String generateJwt(String username, JwtConfiguration config) {
-    return Jwts.builder()
-        .setExpiration(new Date(System.currentTimeMillis() + config.getExpiryTimeInMs()))
-        .setIssuedAt(new Date(System.currentTimeMillis()))
-        .setIssuer(config.getIssuer())
-        .claim("userName", username)
-        .signWith(SignatureAlgorithm.HS256, config.getSigningKey())
-        .compact();
-  }
 
   /** Tries to find the token in the {@link HttpHeaders#AUTHORIZATION} header. */
   public static Optional<String> findTokenInRequest(HttpServletRequest request) {

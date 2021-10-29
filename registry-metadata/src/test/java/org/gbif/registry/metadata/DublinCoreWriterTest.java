@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -112,8 +110,7 @@ public class DublinCoreWriterTest {
     administrativeContact.setLastName("Roy");
     administrativeContact.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
 
-    d.setContacts(
-        Arrays.asList(originatorContact, metadataAuthorContact, administrativeContact));
+    d.setContacts(Arrays.asList(originatorContact, metadataAuthorContact, administrativeContact));
 
     d.setGeographicCoverageDescription("Description de la portée");
     Date endDate = calendar.getTime();

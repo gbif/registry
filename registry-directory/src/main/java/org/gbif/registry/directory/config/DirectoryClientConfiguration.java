@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,10 +36,9 @@ public class DirectoryClientConfiguration {
       @Value("${directory.app.key}") String appKey,
       @Value("${directory.app.secret}") String secretKey) {
     this.clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
-    clientBuilder
-        .withUrl(url)
-        .withAppKeyCredentials(appKey, appKey, secretKey);
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withUrl(url).withAppKeyCredentials(appKey, appKey, secretKey);
   }
 
   @Bean

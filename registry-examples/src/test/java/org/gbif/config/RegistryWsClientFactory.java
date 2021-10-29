@@ -1,6 +1,4 @@
 /*
- * Copyright 2020 Global Biodiversity Information Facility (GBIF)
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,10 +41,9 @@ public class RegistryWsClientFactory {
   /** @return read-only DatasetService */
   public static synchronized DatasetService datasetServiceReadOnly() {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
-    clientBuilder
-        .withUrl(REGISTRY_API_BASE_URL)
-        .withConnectionPoolConfig(CONNECTION_POOL_CONFIG);
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withUrl(REGISTRY_API_BASE_URL).withConnectionPoolConfig(CONNECTION_POOL_CONFIG);
 
     if (datasetServiceReadOnly == null) {
       datasetServiceReadOnly = clientBuilder.build(DatasetClient.class);
@@ -57,7 +54,8 @@ public class RegistryWsClientFactory {
   /** @return DatasetService with authentication */
   public static synchronized DatasetService datasetService() {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     clientBuilder
         .withUrl(REGISTRY_API_BASE_URL)
         .withConnectionPoolConfig(CONNECTION_POOL_CONFIG)
@@ -72,7 +70,8 @@ public class RegistryWsClientFactory {
   /** @return InstallationService with authentication */
   public static synchronized InstallationService installationService() {
     ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+    clientBuilder.withObjectMapper(
+        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
     clientBuilder
         .withUrl(REGISTRY_API_BASE_URL)
         .withConnectionPoolConfig(CONNECTION_POOL_CONFIG)
