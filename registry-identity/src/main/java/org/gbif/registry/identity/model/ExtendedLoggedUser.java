@@ -13,7 +13,9 @@
  */
 package org.gbif.registry.identity.model;
 
+import org.gbif.api.model.common.AppPrincipal;
 import org.gbif.api.model.common.GbifUser;
+import org.gbif.api.vocabulary.AppRole;
 
 import java.util.HashSet;
 import java.util.List;
@@ -42,11 +44,26 @@ public class ExtendedLoggedUser extends LoggedUser {
         .ifPresent(rights -> rights.forEach(v -> this.editorRoleScopes.add(v.toString())));
   }
 
+  private ExtendedLoggedUser(AppPrincipal appPrincipal) {
+    super(appPrincipal.getName());
+    this.roles.add(AppRole.APP.name());
+  }
+
   public static ExtendedLoggedUser from(GbifUser user, String token, List<UUID> editorRights) {
     if (user == null) {
       return null;
     }
     return new ExtendedLoggedUser(user, token, editorRights);
+  }
+
+  public static ExtendedLoggedUser fromApp(AppPrincipal appPrincipal) {
+    if (appPrincipal == null
+        || appPrincipal.getName() == null
+        || appPrincipal.getName().isEmpty()) {
+      return null;
+    }
+
+    return new ExtendedLoggedUser(appPrincipal);
   }
 
   public String getToken() {

@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.gbif.api.model.common.AppPrincipal;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
@@ -24,7 +25,6 @@ import org.gbif.registry.security.jwt.JwtAuthenticateService;
 import org.gbif.registry.security.jwt.JwtIssuanceService;
 import org.gbif.registry.security.jwt.JwtUtils;
 
-import java.util.Collections;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
@@ -139,15 +139,20 @@ public class UserResource {
     // get the user. It can be null
     GbifUser user = identityService.get(username);
 
+    ExtendedLoggedUser extendedLoggedUser = null;
+    if (user != null) {
+      // user impersonation using appKey
+      extendedLoggedUser =
+          ExtendedLoggedUser.from(user, null, identityService.listEditorRights(user.getUserName()));
+    } else if (authentication.getPrincipal() instanceof AppPrincipal) {
+      // application
+      AppPrincipal appPrincipal = (AppPrincipal) authentication.getPrincipal();
+      extendedLoggedUser = ExtendedLoggedUser.fromApp(appPrincipal);
+    }
+
     return ResponseEntity.ok()
         .cacheControl(CacheControl.noCache().cachePrivate())
-        .body(
-            ExtendedLoggedUser.from(
-                user,
-                null,
-                user != null
-                    ? identityService.listEditorRights(user.getUserName())
-                    : Collections.emptyList()));
+        .body(extendedLoggedUser);
   }
 
   @RequestMapping(

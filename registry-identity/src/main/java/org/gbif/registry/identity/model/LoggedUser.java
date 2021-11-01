@@ -48,6 +48,11 @@ public class LoggedUser {
     settings.putAll(user.getSettings());
   }
 
+  // needed for APP
+  protected LoggedUser(String username) {
+    userName = username;
+  }
+
   public String getUserName() {
     return userName;
   }
