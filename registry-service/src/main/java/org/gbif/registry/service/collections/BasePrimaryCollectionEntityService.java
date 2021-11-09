@@ -17,6 +17,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -24,6 +25,7 @@ import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
@@ -45,7 +47,7 @@ import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
 import org.gbif.registry.service.WithMyBatis;
-import org.gbif.registry.service.collections.utils.IdentifierValidatorFactory;
+import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.List;
@@ -66,6 +68,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.service.collections.utils.GrscicollConstants.DATASET_SOURCE;
+import static org.gbif.registry.service.collections.utils.GrscicollConstants.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
+import static org.gbif.registry.service.collections.utils.GrscicollConstants.ORGANIZATION_SOURCE;
 
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
@@ -122,6 +128,7 @@ public abstract class BasePrimaryCollectionEntityService<
       addressMapper.create(entity.getMailingAddress());
     }
 
+    entity.setMasterSource(MasterSourceType.GRSCICOLL);
     entity.setKey(UUID.randomUUID());
     baseMapper.create(entity);
 
@@ -271,7 +278,7 @@ public abstract class BasePrimaryCollectionEntityService<
     if (contact.getUserIds() != null && !contact.getUserIds().isEmpty()) {
       for (UserId userId : contact.getUserIds()) {
         IdentifierSchemeValidator validator =
-            IdentifierValidatorFactory.getValidatorByIdType(userId.getType());
+            IdentifierValidatorUtils.getValidatorByIdType(userId.getType());
 
         if (validator != null && !validator.isValid(userId.getId())) {
           throw new IllegalArgumentException(
@@ -348,6 +355,51 @@ public abstract class BasePrimaryCollectionEntityService<
     eventManager.post(
         ReplaceEntityEvent.newInstance(
             objectClass, targetEntityKey, replacementKey, EventType.REPLACE));
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
+    if (machineTag.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)) {
+      T entity = baseMapper.get(targetEntityKey);
+
+      // there can be only one master source
+      if (entity.getMachineTags().stream()
+          .anyMatch(mt -> mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE))) {
+        throw new IllegalArgumentException(
+            "Another master source already exists for entity " + targetEntityKey);
+      }
+
+      if (machineTag.getName().equals(IH_SOURCE)) {
+        entity.setMasterSource(MasterSourceType.IH);
+      } else if (machineTag.getName().equals(DATASET_SOURCE)
+          || machineTag.getName().equals(ORGANIZATION_SOURCE)) {
+        entity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+      }
+
+      // update the master source type in the entity
+      update(entity);
+    }
+
+    return super.addMachineTag(targetEntityKey, machineTag);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
+    MachineTag machineTagToDelete = machineTagMapper.get(machineTagKey);
+    checkArgument(machineTagToDelete != null, "Machine Tag to delete doesn't exist");
+
+    if (machineTagToDelete.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)) {
+      T entity = baseMapper.get(targetEntityKey);
+      // if the machine tag is deleted the master source becomes GRSCICOLL which is the default
+      entity.setMasterSource(MasterSourceType.GRSCICOLL);
+      update(entity);
+    }
+
+    super.deleteMachineTag(targetEntityKey, machineTagKey);
   }
 
   /**

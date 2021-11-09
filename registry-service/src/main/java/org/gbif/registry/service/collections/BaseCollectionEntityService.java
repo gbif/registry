@@ -262,13 +262,15 @@ public abstract class BaseCollectionEntityService<
             .filter(mt -> mt.getNamespace().equals(namespace))
             .collect(Collectors.toList());
 
-    baseMapper.deleteMachineTags(targetEntityKey, namespace, null);
-
+    // we delete the machine tags one by one to make it easier for children classes to override the
+    // deletion of machine tags behaviour
     machineTagsToDelete.forEach(
-        mt ->
-            eventManager.post(
-                SubEntityCollectionEvent.newInstance(
-                    targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
+        mt -> {
+          deleteMachineTag(targetEntityKey, mt.getKey());
+          eventManager.post(
+              SubEntityCollectionEvent.newInstance(
+                  targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE));
+        });
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -289,13 +291,15 @@ public abstract class BaseCollectionEntityService<
             .filter(mt -> mt.getNamespace().equals(namespace) && mt.getName().equals(name))
             .collect(Collectors.toList());
 
-    baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
-
+    // we delete the machine tags one by one to make it easier for children classes to override the
+    // deletion of machine tags behaviour
     machineTagsToDelete.forEach(
-        mt ->
-            eventManager.post(
-                SubEntityCollectionEvent.newInstance(
-                    targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
+        mt -> {
+          deleteMachineTag(targetEntityKey, mt.getKey());
+          eventManager.post(
+              SubEntityCollectionEvent.newInstance(
+                  targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE));
+        });
   }
 
   @Override

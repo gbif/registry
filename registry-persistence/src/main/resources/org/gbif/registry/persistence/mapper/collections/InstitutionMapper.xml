@@ -30,7 +30,7 @@
     key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
     taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
-    created_by, modified_by, created, modified, alternative_codes
+    created_by, modified_by, created, modified, alternative_codes, master_source
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
@@ -38,7 +38,7 @@
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
-    i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection
+    i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source
   </sql>
 
   <sql id="INSTITUTION_PARAMS_CREATE">
@@ -71,7 +71,8 @@
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
     now(), <!-- modified -->
-    #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
+    #{masterSource,jdbcType=OTHER}
   </sql>
 
   <sql id="INSTITUTION_PARAMS_UPDATE">
@@ -102,7 +103,8 @@
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
-    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
+    master_source = #{masterSource,jdbcType=OTHER}
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
