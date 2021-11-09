@@ -18,6 +18,7 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.IdType;
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
@@ -135,6 +136,7 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setDescription("dummy description");
     preservationTypes.add(PreservationType.SAMPLE_DRIED);
     collection.setPreservationTypes(preservationTypes);
+    collection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     collectionMapper.update(collection);
     collectionStored = collectionMapper.get(key);
     assertTrue(collection.lenientEquals(collectionStored));

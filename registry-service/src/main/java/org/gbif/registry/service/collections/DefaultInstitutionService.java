@@ -14,18 +14,24 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.ReplaceEntityEvent;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
@@ -33,19 +39,29 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
+import org.gbif.registry.service.collections.converters.InstitutionConverter;
+import org.gbif.registry.service.collections.utils.GrscicollConstants;
 
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.groups.Default;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 @Validated
 @Service
@@ -53,6 +69,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     implements InstitutionService {
 
   private final InstitutionMapper institutionMapper;
+  private final OrganizationMapper organizationMapper;
 
   @Autowired
   protected DefaultInstitutionService(
@@ -64,6 +81,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
       CollectionContactMapper contactMapper,
+      OrganizationMapper organizationMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
@@ -79,6 +97,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
         eventManager,
         withMyBatis);
     this.institutionMapper = institutionMapper;
+    this.organizationMapper = organizationMapper;
   }
 
   @Override
@@ -135,5 +154,43 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     eventManager.post(
         ReplaceEntityEvent.newInstance(
             Institution.class, targetEntityKey, collectionKey, EventType.CONVERSION_TO_COLLECTION));
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Validated({PrePersist.class, Default.class})
+  @Override
+  public UUID createFromOrganization(UUID organizationKey, String institutionCode) {
+    checkArgument(organizationKey != null, "Organization key is required");
+    checkArgument(!Strings.isNullOrEmpty(institutionCode), "Institution code is required");
+
+    Organization organization = organizationMapper.get(organizationKey);
+    checkArgument(organization != null, "Organization not found");
+
+    Institution institution =
+        InstitutionConverter.convertFromOrganization(organization, institutionCode);
+
+    preCreate(institution);
+
+    institution.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+    institution.setKey(UUID.randomUUID());
+    baseMapper.create(institution);
+
+    UUID institutionKey = institution.getKey();
+
+    // create machine tag for source
+    MachineTag sourceTag =
+        new MachineTag(
+            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            GrscicollConstants.ORGANIZATION_SOURCE,
+            organizationKey.toString());
+    addMachineTag(institutionKey, sourceTag);
+
+    // create contacts
+    institution.getContactPersons().forEach(contact -> addContactPerson(institutionKey, contact));
+
+    eventManager.post(CreateCollectionEntityEvent.newInstance(institution));
+
+    return institutionKey;
   }
 }
