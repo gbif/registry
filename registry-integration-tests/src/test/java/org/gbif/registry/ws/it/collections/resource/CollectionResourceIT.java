@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
@@ -168,6 +169,17 @@ public class CollectionResourceIT
     changeSuggestion.setSuggestedEntity(c1);
 
     return changeSuggestion;
+  }
+
+  @Test
+  public void createFromDatasetTest() {
+    UUID institutionKey = UUID.randomUUID();
+    when(collectionService.createFromDataset(any(), any())).thenReturn(institutionKey);
+
+    CollectionImportParams params = new CollectionImportParams();
+    params.setDatasetKey(UUID.randomUUID());
+    params.setCollectionCode("code");
+    assertEquals(institutionKey, getClient().createFromDataset(params));
   }
 
   protected CollectionClient getClient() {

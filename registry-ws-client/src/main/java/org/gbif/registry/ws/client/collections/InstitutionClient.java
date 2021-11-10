@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
@@ -65,4 +66,12 @@ public interface InstitutionClient
   @ResponseBody
   UUID convertToCollection(
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "import",
+      produces = MediaType.APPLICATION_JSON_VALUE,
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  UUID createFromOrganization(@RequestBody InstitutionImportParams importParams);
 }
