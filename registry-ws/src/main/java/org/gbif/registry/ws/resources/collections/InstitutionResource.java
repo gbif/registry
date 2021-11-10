@@ -14,7 +14,9 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
@@ -155,5 +157,12 @@ public class InstitutionResource
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
     return institutionMergeService.convertToCollection(
         entityKey, params.getInstitutionForNewCollectionKey(), params.getNameForNewInstitution());
+  }
+
+  @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  public UUID createFromOrganization(@RequestBody @Trim InstitutionImportParams importParams) {
+    return institutionService.createFromOrganization(
+        importParams.getOrganizationKey(), importParams.getInstitutionCode());
   }
 }

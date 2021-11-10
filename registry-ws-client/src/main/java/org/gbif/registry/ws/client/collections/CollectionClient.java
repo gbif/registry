@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -27,6 +28,7 @@ import java.util.UUID;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,4 +70,11 @@ public interface CollectionClient
     CollectionView view = getCollectionView(key);
     return view != null ? view.getCollection() : null;
   }
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "import",
+      produces = MediaType.APPLICATION_JSON_VALUE,
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  UUID createFromDataset(@RequestBody CollectionImportParams importParams);
 }

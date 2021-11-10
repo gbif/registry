@@ -14,7 +14,9 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -43,6 +45,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -147,5 +151,12 @@ public class CollectionResource
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
+  }
+
+  @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  public UUID createFromDataset(@RequestBody @Trim CollectionImportParams importParams) {
+    return collectionService.createFromDataset(
+        importParams.getDatasetKey(), importParams.getCollectionCode());
   }
 }

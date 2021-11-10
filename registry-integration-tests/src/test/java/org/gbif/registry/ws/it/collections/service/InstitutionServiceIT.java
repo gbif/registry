@@ -18,11 +18,13 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
@@ -35,6 +37,7 @@ import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
+import org.gbif.registry.service.collections.utils.GrscicollConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.Arrays;
@@ -606,5 +609,31 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     institutionCreated.getEmail().add("asfs");
     assertThrows(
         ConstraintViolationException.class, () -> institutionService.update(institutionCreated));
+  }
+
+  @Test
+  public void createFromOrganizationTest() {
+    Organization organization = createOrganization();
+
+    org.gbif.api.model.registry.Contact orgContact = new org.gbif.api.model.registry.Contact();
+    orgContact.setFirstName("firstName");
+    orgContact.setLastName("lastName");
+    organizationService.addContact(organization.getKey(), orgContact);
+
+    String institutionCode = "CODE";
+    UUID institutionKey =
+        institutionService.createFromOrganization(organization.getKey(), institutionCode);
+    Institution institution = institutionService.get(institutionKey);
+
+    assertEquals(institutionCode, institution.getCode());
+    assertEquals(MasterSourceType.GBIF_REGISTRY, institution.getMasterSource());
+
+    assertTrue(
+        institution.getMachineTags().stream()
+            .anyMatch(
+                mt ->
+                    mt.getNamespace().equals(GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE)
+                        && mt.getName().equals(GrscicollConstants.ORGANIZATION_SOURCE)));
+    assertEquals(1, institution.getContactPersons().size());
   }
 }

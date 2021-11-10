@@ -13,14 +13,22 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.IdType;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceType;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -29,15 +37,22 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
+import org.gbif.registry.service.collections.utils.GrscicollConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
@@ -807,5 +822,37 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collectionCreated.getEmail().add("asfs");
     assertThrows(
         ConstraintViolationException.class, () -> collectionService.update(collectionCreated));
+  }
+
+  @Test
+  public void createFromDatasetTest() {
+    Dataset dataset = createDataset();
+
+    org.gbif.api.model.registry.Contact datasetContact = new org.gbif.api.model.registry.Contact();
+    datasetContact.setFirstName("firstName");
+    datasetContact.setLastName("lastName");
+    datasetService.addContact(dataset.getKey(), datasetContact);
+
+    String collectionCode = "CODE";
+    UUID collectionKey = collectionService.createFromDataset(dataset.getKey(), collectionCode);
+    Collection collection = collectionService.get(collectionKey);
+
+    assertEquals(collectionCode, collection.getCode());
+    assertEquals(MasterSourceType.GBIF_REGISTRY, collection.getMasterSource());
+
+    assertTrue(
+        collection.getMachineTags().stream()
+            .anyMatch(
+                mt ->
+                    mt.getNamespace().equals(GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE)
+                        && mt.getName().equals(GrscicollConstants.DATASET_SOURCE)));
+    assertTrue(
+        collection.getIdentifiers().stream()
+            .anyMatch(
+                i ->
+                    i.getType() == IdentifierType.DOI
+                        && i.getIdentifier().equals(dataset.getDoi().getDoiName())));
+
+    assertEquals(1, collection.getContactPersons().size());
   }
 }

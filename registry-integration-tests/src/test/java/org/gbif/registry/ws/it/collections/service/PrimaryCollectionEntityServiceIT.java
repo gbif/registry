@@ -21,6 +21,7 @@ import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
@@ -45,6 +46,7 @@ import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.security.authorization.OrganizationAuthorization;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -81,7 +83,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
   protected final PersonService personService;
   protected final DatasetService datasetService;
   private final NodeService nodeService;
-  private final OrganizationService organizationService;
+  protected final OrganizationService organizationService;
   private final InstallationService installationService;
   private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
   private final DuplicatesService duplicatesService;
@@ -265,7 +267,29 @@ public abstract class PrimaryCollectionEntityServiceIT<
     assertTrue(mappings.isEmpty());
   }
 
-  private Dataset createDataset() {
+  protected Dataset createDataset() {
+    Organization org = createOrganization();
+
+    Installation installation = new Installation();
+    installation.setTitle("title");
+    installation.setOrganizationKey(org.getKey());
+    installation.setType(InstallationType.BIOCASE_INSTALLATION);
+    installationService.create(installation);
+
+    Dataset dataset = new Dataset();
+    dataset.setDoi(new DOI("10.1594/pangaea.94668"));
+    dataset.setTitle("title");
+    dataset.setInstallationKey(installation.getKey());
+    dataset.setPublishingOrganizationKey(org.getKey());
+    dataset.setType(DatasetType.CHECKLIST);
+    dataset.setLanguage(Language.ABKHAZIAN);
+    dataset.setLicense(License.CC0_1_0);
+    datasetService.create(dataset);
+
+    return dataset;
+  }
+
+  protected Organization createOrganization() {
     Node node = new Node();
     node.setTitle("node");
     node.setType(NodeType.COUNTRY);
@@ -279,22 +303,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
     org.setPassword("testtttt");
     organizationService.create(org);
 
-    Installation installation = new Installation();
-    installation.setTitle("title");
-    installation.setOrganizationKey(org.getKey());
-    installation.setType(InstallationType.BIOCASE_INSTALLATION);
-    installationService.create(installation);
-
-    Dataset dataset = new Dataset();
-    dataset.setTitle("title");
-    dataset.setInstallationKey(installation.getKey());
-    dataset.setPublishingOrganizationKey(org.getKey());
-    dataset.setType(DatasetType.CHECKLIST);
-    dataset.setLanguage(Language.ABKHAZIAN);
-    dataset.setLicense(License.CC0_1_0);
-    datasetService.create(dataset);
-
-    return dataset;
+    return org;
   }
 
   protected void testDuplicatesCommonCases() {
