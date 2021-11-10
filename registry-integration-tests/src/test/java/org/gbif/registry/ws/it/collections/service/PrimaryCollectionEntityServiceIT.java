@@ -15,6 +15,7 @@ package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -27,6 +28,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
@@ -48,6 +50,7 @@ import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.security.authorization.OrganizationAuthorization;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.utils.GrscicollConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.sql.Connection;
