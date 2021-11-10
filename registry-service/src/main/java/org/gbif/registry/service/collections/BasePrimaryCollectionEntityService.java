@@ -14,6 +14,7 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
@@ -371,10 +372,28 @@ public abstract class BasePrimaryCollectionEntityService<
             "Another master source already exists for entity " + targetEntityKey);
       }
 
+      if (entity instanceof Institution && !machineTag.getName().equals(ORGANIZATION_SOURCE)) {
+        throw new IllegalArgumentException(
+            "Institutions can only have organizations as master source machine tags");
+      }
+
+      if (entity instanceof Collection && !machineTag.getName().equals(DATASET_SOURCE)) {
+        throw new IllegalArgumentException(
+            "Collections can only have datasets as master source machine tags");
+      }
+
       if (machineTag.getName().equals(IH_SOURCE)) {
         entity.setMasterSource(MasterSourceType.IH);
       } else if (machineTag.getName().equals(DATASET_SOURCE)
           || machineTag.getName().equals(ORGANIZATION_SOURCE)) {
+        // check that the value is a UUID
+        try {
+          UUID.fromString(machineTag.getValue());
+        } catch (Exception ex) {
+          throw new IllegalArgumentException(
+              "Dataset and organization master sources must be a UUID");
+        }
+
         entity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
       }
 

@@ -29,6 +29,7 @@ import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -854,5 +855,51 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
                         && i.getIdentifier().equals(dataset.getDoi().getDoiName())));
 
     assertEquals(1, collection.getContactPersons().size());
+  }
+
+  @Test
+  public void addMasterSourceMachineTagTest() {
+    Collection entity = testData.newEntity();
+    UUID entityKey = collectionService.create(entity);
+    Collection entityCreated = collectionService.get(entityKey);
+    assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
+
+    MachineTag mt =
+        new MachineTag(
+            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            GrscicollConstants.ORGANIZATION_SOURCE,
+            UUID.randomUUID().toString());
+    assertThrows(
+        IllegalArgumentException.class, () -> collectionService.addMachineTag(entityKey, mt));
+
+    MachineTag mt2 =
+        new MachineTag(
+            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            GrscicollConstants.ORGANIZATION_SOURCE,
+            "Not a UUID");
+    assertThrows(
+        IllegalArgumentException.class, () -> collectionService.addMachineTag(entityKey, mt2));
+
+    MachineTag mt3 =
+        new MachineTag(
+            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            GrscicollConstants.DATASET_SOURCE,
+            UUID.randomUUID().toString());
+    int mtKey = collectionService.addMachineTag(entityKey, mt3);
+    assertTrue(mtKey > 0);
+    entityCreated = collectionService.get(entityKey);
+    assertEquals(MasterSourceType.GBIF_REGISTRY, entityCreated.getMasterSource());
+
+    MachineTag mt4 =
+        new MachineTag(
+            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            GrscicollConstants.DATASET_SOURCE,
+            UUID.randomUUID().toString());
+    assertThrows(
+        IllegalArgumentException.class, () -> collectionService.addMachineTag(entityKey, mt4));
+
+    collectionService.deleteMachineTag(entityKey, mtKey);
+    entityCreated = collectionService.get(entityKey);
+    assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
   }
 }
