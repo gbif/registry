@@ -85,23 +85,30 @@ public class CollectionConverter {
 
   public static Collection convertFromDataset(
       Dataset dataset, Organization publisherOrganization, String collectionCode) {
-    Objects.requireNonNull(dataset);
-    Objects.requireNonNull(publisherOrganization);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(collectionCode));
 
     Collection collection = new Collection();
     collection.setCode(collectionCode);
-    collection.setName(dataset.getTitle());
-    collection.setDescription(dataset.getDescription());
-    collection.setHomepage(dataset.getHomepage());
-    collection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+    return convertFromDataset(dataset, publisherOrganization, collection);
+  }
+
+  public static Collection convertFromDataset(
+      Dataset dataset, Organization publisherOrganization, Collection existingCollection) {
+    Objects.requireNonNull(dataset);
+    Objects.requireNonNull(publisherOrganization);
+    Objects.requireNonNull(existingCollection);
+
+    existingCollection.setName(dataset.getTitle());
+    existingCollection.setDescription(dataset.getDescription());
+    existingCollection.setHomepage(dataset.getHomepage());
+    existingCollection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
 
     List<PreservationType> preservationTypes =
         dataset.getCollections().stream()
             .filter(c -> c.getSpecimenPreservationMethod() != null)
             .flatMap(c -> fromPreservationMethodType(c.getSpecimenPreservationMethod()).stream())
             .collect(Collectors.toList());
-    collection.setPreservationTypes(preservationTypes);
+    existingCollection.setPreservationTypes(preservationTypes);
 
     Function<TaxonomicCoverages, String> taxonomicCoveragesToString =
         tc -> {
@@ -138,35 +145,35 @@ public class CollectionConverter {
             .map(taxonomicCoveragesToString)
             .collect(Collectors.joining(";"));
     taxonomicCoverage = normalizePunctuationSigns(taxonomicCoverage).trim();
-    collection.setTaxonomicCoverage(taxonomicCoverage);
+    existingCollection.setTaxonomicCoverage(taxonomicCoverage);
 
     String geographicCoverage =
         dataset.getGeographicCoverages().stream()
             .map(g -> g.getDescription().trim())
             .collect(Collectors.joining("."));
     geographicCoverage = normalizePunctuationSigns(geographicCoverage).trim();
-    collection.setGeography(geographicCoverage);
+    existingCollection.setGeography(geographicCoverage);
 
-    collection.setIncorporatedCollections(
+    existingCollection.setIncorporatedCollections(
         dataset.getCollections().stream()
             .map(org.gbif.api.model.registry.eml.Collection::getName)
             .collect(Collectors.toList()));
 
-    collection.setActive(true);
+    existingCollection.setActive(true);
 
-    collection
+    existingCollection
         .getIdentifiers()
         .add(new Identifier(IdentifierType.DOI, dataset.getDoi().getDoiName()));
 
-    collection.setAddress(convertAddress(publisherOrganization));
+    existingCollection.setAddress(convertAddress(publisherOrganization));
 
     // contacts
     List<Contact> collectionContacts =
         dataset.getContacts().stream()
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
-    collection.setContactPersons(collectionContacts);
+    existingCollection.setContactPersons(collectionContacts);
 
-    return collection;
+    return existingCollection;
   }
 }

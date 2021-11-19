@@ -15,7 +15,6 @@ package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
@@ -25,6 +24,7 @@ import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.InstitutionService;
@@ -34,14 +34,16 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
-import org.gbif.registry.service.collections.utils.GrscicollConstants;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -53,8 +55,14 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.ORGANIZATION_SOURCE;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -634,8 +642,8 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         institution.getMachineTags().stream()
             .anyMatch(
                 mt ->
-                    mt.getNamespace().equals(GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE)
-                        && mt.getName().equals(GrscicollConstants.ORGANIZATION_SOURCE)));
+                    mt.getNamespace().equals(MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE)
+                        && mt.getName().equals(MasterSourceUtils.ORGANIZATION_SOURCE)));
     assertEquals(1, institution.getContactPersons().size());
   }
 
@@ -647,41 +655,132 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
 
     MachineTag mt =
-      new MachineTag(
-        GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-        GrscicollConstants.DATASET_SOURCE,
-        UUID.randomUUID().toString());
+        new MachineTag(
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.DATASET_SOURCE,
+            UUID.randomUUID().toString());
     assertThrows(
-      IllegalArgumentException.class, () -> institutionService.addMachineTag(entityKey, mt));
+        IllegalArgumentException.class, () -> institutionService.addMachineTag(entityKey, mt));
 
     MachineTag mt2 =
-      new MachineTag(
-        GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-        GrscicollConstants.ORGANIZATION_SOURCE,
-        "Not a UUID");
+        new MachineTag(
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.ORGANIZATION_SOURCE,
+            "Not a UUID");
     assertThrows(
-      IllegalArgumentException.class, () -> institutionService.addMachineTag(entityKey, mt2));
+        IllegalArgumentException.class, () -> institutionService.addMachineTag(entityKey, mt2));
 
     MachineTag mt3 =
-      new MachineTag(
-        GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-        GrscicollConstants.ORGANIZATION_SOURCE,
-        UUID.randomUUID().toString());
+        new MachineTag(
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.ORGANIZATION_SOURCE,
+            UUID.randomUUID().toString());
     int mtKey = institutionService.addMachineTag(entityKey, mt3);
     assertTrue(mtKey > 0);
     entityCreated = institutionService.get(entityKey);
     assertEquals(MasterSourceType.GBIF_REGISTRY, entityCreated.getMasterSource());
 
     MachineTag mt4 =
-      new MachineTag(
-        GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-        GrscicollConstants.ORGANIZATION_SOURCE,
-        UUID.randomUUID().toString());
+        new MachineTag(
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.ORGANIZATION_SOURCE,
+            UUID.randomUUID().toString());
     assertThrows(
-      IllegalArgumentException.class, () -> institutionService.addMachineTag(entityKey, mt4));
+        IllegalArgumentException.class, () -> institutionService.addMachineTag(entityKey, mt4));
 
     institutionService.deleteMachineTag(entityKey, mtKey);
     entityCreated = institutionService.get(entityKey);
     assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
+  }
+
+  @Test
+  public void lockMasterSourceFieldsTest() {
+    int numberSpecimensOriginal = 23;
+    String descriptionOriginal = "description";
+    URI homepageOriginal = URI.create("http://test.com");
+
+    Institution institution = new Institution();
+    institution.setCode("code");
+    institution.setName("name");
+    institution.setDescription(descriptionOriginal);
+    institution.setNumberSpecimens(numberSpecimensOriginal);
+    institution.setHomepage(homepageOriginal);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("safsf");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    institution.setMailingAddress(mailingAddress);
+
+    UUID institutionKey = institutionService.create(institution);
+
+    Contact myContact = new Contact();
+    myContact.setFirstName("myContact");
+    int contactKey = institutionService.addContactPerson(institutionKey, myContact);
+
+    int machineTagKey =
+        institutionService.addMachineTag(
+            institutionKey, new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "123"));
+
+    institution.setNumberSpecimens(12);
+    institution.setDescription("aaa");
+    institution.setHomepage(URI.create("http://aaaa.com"));
+
+    Address address = new Address();
+    address.setAddress("safsf");
+    address.setCountry(Country.AFGHANISTAN);
+    institution.setAddress(address);
+
+    institutionService.update(institution);
+
+    Institution updatedInstitution = institutionService.get(institutionKey);
+
+    assertNotEquals(numberSpecimensOriginal, updatedInstitution.getNumberSpecimens());
+    assertNotEquals(descriptionOriginal, updatedInstitution.getDescription());
+    assertEquals(homepageOriginal, updatedInstitution.getHomepage());
+    assertNotNull(updatedInstitution.getMailingAddress());
+    assertNull(updatedInstitution.getAddress());
+
+    Contact contact = new Contact();
+    contact.setFirstName("sfs");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.addContactPerson(institutionKey, contact));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.updateContactPerson(institutionKey, myContact));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.removeContactPerson(institutionKey, contactKey));
+
+    assertDoesNotThrow(
+        () ->
+            institutionService.addIdentifier(
+                institutionKey, new Identifier(IdentifierType.UNKNOWN, "sadf")));
+
+    assertThrows(IllegalArgumentException.class, () -> institutionService.delete(institutionKey));
+
+    // change the master source to GBIF_REGISTRY
+    institutionService.deleteMachineTag(institutionKey, machineTagKey);
+    machineTagKey =
+        institutionService.addMachineTag(
+            institutionKey,
+            new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, ORGANIZATION_SOURCE, "123"));
+
+    String currentDescription = updatedInstitution.getDescription();
+    updatedInstitution.setDescription("another one");
+    institutionService.update(updatedInstitution);
+    updatedInstitution = institutionService.get(institutionKey);
+    // the description must remain the same
+    assertEquals(currentDescription, updatedInstitution.getDescription());
+
+    // delete the master source
+    institutionService.deleteMachineTag(institutionKey, machineTagKey);
+
+    assertDoesNotThrow(() -> institutionService.addContactPerson(institutionKey, contact));
+    assertDoesNotThrow(() -> institutionService.updateContactPerson(institutionKey, myContact));
+    assertDoesNotThrow(() -> institutionService.removeContactPerson(institutionKey, contactKey));
+    assertDoesNotThrow(() -> institutionService.delete(institutionKey));
   }
 }

@@ -42,7 +42,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
-import org.gbif.registry.service.collections.utils.GrscicollConstants;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -204,9 +204,9 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
     // create machine tag for source
     MachineTag sourceTag =
         new MachineTag(
-            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            GrscicollConstants.DATASET_SOURCE,
-            datasetKey.toString());
+          MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+          MasterSourceUtils.DATASET_SOURCE,
+          datasetKey.toString());
     addMachineTag(collectionKey, sourceTag);
 
     // create contacts

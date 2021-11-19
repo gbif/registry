@@ -60,7 +60,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
-import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -203,12 +204,12 @@ public abstract class BaseMergeServiceIT<
   public void preconditionsTest() {
     T e1 = createEntityToReplace();
     crudService.create(e1);
-    MachineTag mt1 = new MachineTag(IDIGBIO_NAMESPACE, IRN_TAG, "test");
+    MachineTag mt1 = new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "test");
     machineTagService.addMachineTag(e1.getKey(), mt1);
 
     T e2 = createReplacement();
     crudService.create(e2);
-    MachineTag mt2 = new MachineTag(IDIGBIO_NAMESPACE, IRN_TAG, "test");
+    MachineTag mt2 = new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "test");
     machineTagService.addMachineTag(e2.getKey(), mt2);
 
     assertThrows(

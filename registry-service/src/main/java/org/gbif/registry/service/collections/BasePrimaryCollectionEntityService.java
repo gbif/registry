@@ -49,8 +49,10 @@ import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.ws.WebApplicationException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,10 +71,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.GrscicollConstants.DATASET_SOURCE;
-import static org.gbif.registry.service.collections.utils.GrscicollConstants.IH_SOURCE;
-import static org.gbif.registry.service.collections.utils.GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
-import static org.gbif.registry.service.collections.utils.GrscicollConstants.ORGANIZATION_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.CONTACTS_FIELD_NAME;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.DATASET_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.ORGANIZATION_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
 
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
@@ -159,6 +164,11 @@ public abstract class BasePrimaryCollectionEntityService<
       checkArgument(entity.getDeleted() == null, "Can't delete an entity when updating");
     }
 
+    // lock fields
+    if (hasExternalMasterSource(entityOld)) {
+      lockFields(entityOld, entity);
+    }
+
     // update mailing address
     updateAddress(entity.getMailingAddress(), entityOld.getMailingAddress());
 
@@ -183,6 +193,26 @@ public abstract class BasePrimaryCollectionEntityService<
     eventManager.post(UpdateCollectionEntityEvent.newInstance(newEntity, entityOld));
   }
 
+  public T lockFields(T entityOld, T entityNew) {
+    List<MasterSourceUtils.LockableField> fieldsToLock = new ArrayList<>();
+    if (entityOld instanceof Institution) {
+      fieldsToLock = MasterSourceUtils.INSTITUTION_LOCKABLE_FIELDS.get(entityOld.getMasterSource());
+    } else if (entityOld instanceof Collection) {
+      fieldsToLock = MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS.get(entityOld.getMasterSource());
+    }
+
+    fieldsToLock.forEach(
+        f -> {
+          try {
+            f.getSetter().invoke(entityNew, f.getGetter().invoke(entityOld));
+          } catch (Exception e) {
+            throw new IllegalStateException("Could not lock field", e);
+          }
+        });
+
+    return entityNew;
+  }
+
   private void updateAddress(Address newAddress, Address oldAddress) {
     if (newAddress != null) {
       if (oldAddress == null) {
@@ -193,6 +223,19 @@ public abstract class BasePrimaryCollectionEntityService<
         addressMapper.update(newAddress);
       }
     }
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void delete(UUID key) {
+    T entityToDelete = get(key);
+    if (hasExternalMasterSource(entityToDelete)) {
+      throw new IllegalArgumentException(
+          "Cannot delete an entity whose master source is not GRSciColl");
+    }
+
+    super.delete(entityToDelete);
   }
 
   @Deprecated
@@ -240,6 +283,13 @@ public abstract class BasePrimaryCollectionEntityService<
   @Override
   public int addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
     checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
+
+    T entity = get(entityKey);
+    if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
+      throw new IllegalArgumentException(
+          "Cannot add contacts to an entity whose master source is not GRSciColl");
+    }
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
     contact.setCreatedBy(username);
@@ -261,6 +311,13 @@ public abstract class BasePrimaryCollectionEntityService<
   @Override
   public void updateContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
     checkArgument(contact.getKey() != null, "Unable to update a contact with no key");
+
+    T entity = get(entityKey);
+    if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
+      throw new IllegalArgumentException(
+          "Cannot update contacts from an entity whose master source is not GRSciColl");
+    }
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
     contact.setModifiedBy(username);
@@ -295,6 +352,12 @@ public abstract class BasePrimaryCollectionEntityService<
   public void removeContactPerson(@NotNull UUID entityKey, @NotNull int contactKey) {
     Contact contactToRemove = contactMapper.getContact(contactKey);
     checkArgument(contactToRemove != null, "Contact to delete doesn't exist");
+
+    T entity = get(entityKey);
+    if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
+      throw new IllegalArgumentException(
+          "Cannot remove contacts from an entity whose master source is not GRSciColl");
+    }
 
     primaryEntityMapper.removeContactPerson(entityKey, contactKey);
     eventManager.post(
@@ -372,33 +435,25 @@ public abstract class BasePrimaryCollectionEntityService<
             "Another master source already exists for entity " + targetEntityKey);
       }
 
-      if (entity instanceof Institution && !machineTag.getName().equals(ORGANIZATION_SOURCE)) {
+      if (entity instanceof Institution
+          && !machineTag.getName().equals(ORGANIZATION_SOURCE)
+          && !machineTag.getName().equals(IH_SOURCE)) {
         throw new IllegalArgumentException(
             "Institutions can only have organizations as master source machine tags");
       }
 
-      if (entity instanceof Collection && !machineTag.getName().equals(DATASET_SOURCE)) {
+      if (entity instanceof Collection
+          && !machineTag.getName().equals(DATASET_SOURCE)
+          && !machineTag.getName().equals(IH_SOURCE)) {
         throw new IllegalArgumentException(
             "Collections can only have datasets as master source machine tags");
       }
 
       if (machineTag.getName().equals(IH_SOURCE)) {
-        entity.setMasterSource(MasterSourceType.IH);
-      } else if (machineTag.getName().equals(DATASET_SOURCE)
-          || machineTag.getName().equals(ORGANIZATION_SOURCE)) {
-        // check that the value is a UUID
-        try {
-          UUID.fromString(machineTag.getValue());
-        } catch (Exception ex) {
-          throw new IllegalArgumentException(
-              "Dataset and organization master sources must be a UUID");
-        }
-
-        entity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+        updateMasterSource(targetEntityKey, MasterSourceType.IH);
+      } else {
+        updateMasterSource(targetEntityKey, MasterSourceType.GBIF_REGISTRY);
       }
-
-      // update the master source type in the entity
-      update(entity);
     }
 
     return super.addMachineTag(targetEntityKey, machineTag);
@@ -412,13 +467,17 @@ public abstract class BasePrimaryCollectionEntityService<
     checkArgument(machineTagToDelete != null, "Machine Tag to delete doesn't exist");
 
     if (machineTagToDelete.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)) {
-      T entity = baseMapper.get(targetEntityKey);
       // if the machine tag is deleted the master source becomes GRSCICOLL which is the default
-      entity.setMasterSource(MasterSourceType.GRSCICOLL);
-      update(entity);
+      updateMasterSource(targetEntityKey, MasterSourceType.GRSCICOLL);
     }
 
     super.deleteMachineTag(targetEntityKey, machineTagKey);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Override
+  public void updateMasterSource(UUID key, MasterSourceType masterSourceType) {
+    primaryEntityMapper.updateMasterSource(key, masterSourceType);
   }
 
   /**

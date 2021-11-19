@@ -22,35 +22,41 @@ public class InstitutionConverter {
 
   public static Institution convertFromOrganization(
       Organization organization, String institutionCode) {
-    Objects.requireNonNull(organization);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(institutionCode));
-
     Institution institution = new Institution();
     institution.setCode(institutionCode);
-    institution.setName(organization.getTitle());
-    institution.setDescription(organization.getDescription());
-    institution.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+    return convertFromOrganization(organization, institution);
+  }
+
+  public static Institution convertFromOrganization(
+      Organization organization, Institution existingInstitution) {
+    Objects.requireNonNull(organization);
+    Objects.requireNonNull(existingInstitution);
+
+    existingInstitution.setName(organization.getTitle());
+    existingInstitution.setDescription(organization.getDescription());
+    existingInstitution.setMasterSource(MasterSourceType.GBIF_REGISTRY);
 
     if (organization.getHomepage() != null && !organization.getHomepage().isEmpty()) {
-      institution.setHomepage(organization.getHomepage().get(0));
+      existingInstitution.setHomepage(organization.getHomepage().get(0));
     }
 
-    institution.setPhone(organization.getPhone());
-    institution.setEmail(organization.getEmail());
-    institution.setLatitude(organization.getLatitude());
-    institution.setLongitude(organization.getLongitude());
-    institution.setLogoUrl(organization.getLogoUrl());
-    institution.setActive(true);
+    existingInstitution.setPhone(organization.getPhone());
+    existingInstitution.setEmail(organization.getEmail());
+    existingInstitution.setLatitude(organization.getLatitude());
+    existingInstitution.setLongitude(organization.getLongitude());
+    existingInstitution.setLogoUrl(organization.getLogoUrl());
+    existingInstitution.setActive(true);
 
-    institution.setAddress(convertAddress(organization));
+    existingInstitution.setAddress(convertAddress(organization));
 
     // contacts
     List<Contact> collectionContacts =
         organization.getContacts().stream()
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
-    institution.setContactPersons(collectionContacts);
+    existingInstitution.setContactPersons(collectionContacts);
 
-    return institution;
+    return existingInstitution;
   }
 }

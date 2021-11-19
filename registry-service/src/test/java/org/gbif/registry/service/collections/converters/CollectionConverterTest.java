@@ -16,9 +16,11 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,6 +29,108 @@ public class CollectionConverterTest {
 
   @Test
   public void convertFromDatasetTest() {
+    Dataset dataset = createDataset();
+
+    // publishing organization
+    Organization organization = createOrganization();
+
+    String collectionCode = "CODE";
+    Collection convertedCollection =
+        CollectionConverter.convertFromDataset(dataset, organization, collectionCode);
+
+    assertEquals(collectionCode, convertedCollection.getCode());
+    assertConvertedCollection(dataset, organization, convertedCollection);
+  }
+
+  @Test
+  public void convertExistingCollectionFromDatasetTest() {
+    Dataset dataset = createDataset();
+
+    // publishing organization
+    Organization organization = createOrganization();
+
+    String collectionCode = "CODE";
+    String originalCollectionName = "foo";
+
+    Collection collection = new Collection();
+    collection.setCode(collectionCode);
+    collection.setName(originalCollectionName);
+    collection.setNotes("testtttt");
+
+    Collection convertedCollection =
+        CollectionConverter.convertFromDataset(dataset, organization, collection);
+
+    assertEquals(collection.getCode(), convertedCollection.getCode());
+    assertNotEquals(originalCollectionName, convertedCollection.getName());
+    assertEquals(collection.getNotes(), convertedCollection.getNotes());
+    assertConvertedCollection(dataset, organization, convertedCollection);
+  }
+
+  private void assertConvertedCollection(
+      Dataset dataset, Organization organization, Collection convertedCollection) {
+    assertEquals(MasterSourceType.GBIF_REGISTRY, convertedCollection.getMasterSource());
+    assertEquals(dataset.getTitle(), convertedCollection.getName());
+    assertEquals(dataset.getDescription(), convertedCollection.getDescription());
+    assertEquals(dataset.getHomepage(), convertedCollection.getHomepage());
+    assertTrue(convertedCollection.isActive());
+    assertEquals(
+        dataset.getCollections().size(), convertedCollection.getPreservationTypes().size());
+    assertEquals(
+        dataset.getCollections().size(), convertedCollection.getIncorporatedCollections().size());
+    assertTrue(
+        convertedCollection
+            .getTaxonomicCoverage()
+            .startsWith(dataset.getTaxonomicCoverages().get(0).getDescription()));
+    assertTrue(
+        convertedCollection
+            .getGeography()
+            .startsWith(dataset.getGeographicCoverages().get(0).getDescription()));
+    assertTrue(
+        convertedCollection.getIdentifiers().stream()
+            .anyMatch(i -> i.getIdentifier().equals(dataset.getDoi().getDoiName())));
+
+    // assert organization fields
+    assertNotNull(convertedCollection.getAddress());
+    assertTrue(
+        convertedCollection.getAddress().getAddress().startsWith(organization.getAddress().get(0)));
+    assertEquals(organization.getCity(), convertedCollection.getAddress().getCity());
+    assertEquals(organization.getProvince(), convertedCollection.getAddress().getProvince());
+    assertEquals(organization.getPostalCode(), convertedCollection.getAddress().getPostalCode());
+    assertEquals(organization.getCountry(), convertedCollection.getAddress().getCountry());
+
+    // assert contacts
+    assertEquals(dataset.getContacts().size(), convertedCollection.getContactPersons().size());
+    convertedCollection
+        .getContactPersons()
+        .forEach(
+            c -> {
+              assertNotNull(c.getFirstName());
+              assertNotNull(c.getLastName());
+              assertEquals(1, c.getUserIds().size());
+              assertNotNull(c.getPosition());
+              assertNotNull(c.getEmail());
+              assertNotNull(c.getPhone());
+              assertNotNull(c.getAddress());
+              assertNotNull(c.getCity());
+              assertNotNull(c.getProvince());
+              assertNotNull(c.getCountry());
+              assertNotNull(c.getPostalCode());
+            });
+  }
+
+  @NotNull
+  private Organization createOrganization() {
+    Organization organization = new Organization();
+    organization.setAddress(Arrays.asList("addr1", "addr2"));
+    organization.setCity("city");
+    organization.setProvince("prov");
+    organization.setPostalCode("1234");
+    organization.setCountry(Country.AFGHANISTAN);
+    return organization;
+  }
+
+  @NotNull
+  private Dataset createDataset() {
     Dataset dataset = new Dataset();
     dataset.setTitle("title");
     dataset.setDescription("description");
@@ -102,67 +206,6 @@ public class CollectionConverterTest {
     datasetContact2.setCountry(Country.AFGHANISTAN);
     datasetContact2.setPostalCode("1234");
     dataset.getContacts().add(datasetContact2);
-
-    // publishing organization
-    Organization organization = new Organization();
-    organization.setAddress(Arrays.asList("addr1", "addr2"));
-    organization.setCity("city");
-    organization.setProvince("prov");
-    organization.setPostalCode("1234");
-    organization.setCountry(Country.AFGHANISTAN);
-
-    String collectionCode = "CODE";
-    Collection collectionConverted =
-        CollectionConverter.convertFromDataset(dataset, organization, collectionCode);
-
-    assertEquals(collectionCode, collectionConverted.getCode());
-    assertEquals(MasterSourceType.GBIF_REGISTRY, collectionConverted.getMasterSource());
-    assertEquals(dataset.getTitle(), collectionConverted.getName());
-    assertEquals(dataset.getDescription(), collectionConverted.getDescription());
-    assertEquals(dataset.getHomepage(), collectionConverted.getHomepage());
-    assertTrue(collectionConverted.isActive());
-    assertEquals(
-        dataset.getCollections().size(), collectionConverted.getPreservationTypes().size());
-    assertEquals(
-        dataset.getCollections().size(), collectionConverted.getIncorporatedCollections().size());
-    assertTrue(
-        collectionConverted
-            .getTaxonomicCoverage()
-            .startsWith(dataset.getTaxonomicCoverages().get(0).getDescription()));
-    assertTrue(
-        collectionConverted
-            .getGeography()
-            .startsWith(dataset.getGeographicCoverages().get(0).getDescription()));
-    assertTrue(
-        collectionConverted.getIdentifiers().stream()
-            .anyMatch(i -> i.getIdentifier().equals(dataset.getDoi().getDoiName())));
-
-    // assert organization fields
-    assertNotNull(collectionConverted.getAddress());
-    assertTrue(
-        collectionConverted.getAddress().getAddress().startsWith(organization.getAddress().get(0)));
-    assertEquals(organization.getCity(), collectionConverted.getAddress().getCity());
-    assertEquals(organization.getProvince(), collectionConverted.getAddress().getProvince());
-    assertEquals(organization.getPostalCode(), collectionConverted.getAddress().getPostalCode());
-    assertEquals(organization.getCountry(), collectionConverted.getAddress().getCountry());
-
-    // assert contacts
-    assertEquals(dataset.getContacts().size(), collectionConverted.getContactPersons().size());
-    collectionConverted
-        .getContactPersons()
-        .forEach(
-            c -> {
-              assertNotNull(c.getFirstName());
-              assertNotNull(c.getLastName());
-              assertEquals(1, c.getUserIds().size());
-              assertNotNull(c.getPosition());
-              assertNotNull(c.getEmail());
-              assertNotNull(c.getPhone());
-              assertNotNull(c.getAddress());
-              assertNotNull(c.getCity());
-              assertNotNull(c.getProvince());
-              assertNotNull(c.getCountry());
-              assertNotNull(c.getPostalCode());
-            });
+    return dataset;
   }
 }

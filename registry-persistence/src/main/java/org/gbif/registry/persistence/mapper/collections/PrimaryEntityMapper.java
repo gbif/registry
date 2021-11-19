@@ -13,12 +13,21 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.registry.persistence.ContactableMapper;
 
+import java.util.UUID;
+
+import org.apache.ibatis.annotations.Param;
+
 public interface PrimaryEntityMapper<
         T extends Taggable & Identifiable & MachineTaggable & Commentable>
-    extends BaseMapper<T>, ContactableMapper, OccurrenceMappeableMapper, ReplaceableMapper {}
+    extends BaseMapper<T>, ContactableMapper, OccurrenceMappeableMapper, ReplaceableMapper {
+
+  void updateMasterSource(
+      @Param("key") UUID key, @Param("masterSource") MasterSourceType masterSource);
+}

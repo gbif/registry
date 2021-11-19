@@ -30,11 +30,13 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.LenientEquals;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.ContactService;
-import org.gbif.api.service.collections.CrudService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -65,17 +67,17 @@ public abstract class BaseChangeSuggestionServiceIT<
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final ChangeSuggestionService<T, R> changeSuggestionService;
-  private final CrudService<T> crudService;
+  private final PrimaryCollectionEntityService<T> primaryCollectionEntityService;
   private final ContactService contactService;
 
   protected BaseChangeSuggestionServiceIT(
       SimplePrincipalProvider simplePrincipalProvider,
       ChangeSuggestionService<T, R> changeSuggestionService,
-      CrudService<T> crudService,
+      PrimaryCollectionEntityService<T> primaryCollectionEntityService,
       ContactService contactService) {
     super(simplePrincipalProvider);
     this.changeSuggestionService = changeSuggestionService;
-    this.crudService = crudService;
+    this.primaryCollectionEntityService = primaryCollectionEntityService;
     this.contactService = contactService;
   }
 
@@ -136,7 +138,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertNotNull(suggestion.getApplied());
     assertNotNull(suggestion.getAppliedBy());
 
-    T appliedEntity = crudService.get(suggestion.getEntityKey());
+    T appliedEntity = primaryCollectionEntityService.get(suggestion.getEntityKey());
     T expected = suggestion.getSuggestedEntity();
     expected.setKey(suggestion.getEntityKey());
     expected.getAddress().setKey(appliedEntity.getAddress().getKey());
@@ -153,7 +155,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     address.setCountry(Country.DENMARK);
     entity.setAddress(address);
 
-    UUID entityKey = crudService.create(entity);
+    UUID entityKey = primaryCollectionEntityService.create(entity);
 
     Contact contact1 = new Contact();
     contact1.setFirstName("first");
@@ -223,9 +225,9 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(1, suggestion.getChanges().stream().filter(Change::isOverwritten).count());
 
     // When - modify current entity with same change as suggestion
-    T currentEntity = crudService.get(entityKey);
+    T currentEntity = primaryCollectionEntityService.get(entityKey);
     currentEntity.setCode(entity.getCode());
-    crudService.update(currentEntity);
+    primaryCollectionEntityService.update(currentEntity);
 
     // Then
     suggestion = changeSuggestionService.getChangeSuggestion(suggKey);
@@ -242,7 +244,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertNotNull(suggestion.getApplied());
     assertNotNull(suggestion.getAppliedBy());
 
-    T applied = crudService.get(suggestion.getEntityKey());
+    T applied = primaryCollectionEntityService.get(suggestion.getEntityKey());
     assertEquals(2, applied.getContactPersons().size());
     assertTrue(
         applied.getContactPersons().stream()
@@ -257,6 +259,39 @@ public abstract class BaseChangeSuggestionServiceIT<
         applied.getContactPersons().stream().noneMatch(c -> c.getKey().equals(contact2.getKey())));
   }
 
+  // TODO: test master source not modified (contacts too).
+  // TODO: test deletions with master source not allowed
+  // TODO: test merge with master source (el test seria en el service de merge, no aqui)
+
+  @Test
+  public void masterSourceSuggestionsTest() {
+    // State
+    T entity = createEntity();
+    UUID entityKey = primaryCollectionEntityService.create(entity);
+
+    Contact contact1 = new Contact();
+    contact1.setFirstName("first");
+    entity.getContactPersons().add(contact1);
+    contactService.addContactPerson(entityKey, contact1);
+
+    primaryCollectionEntityService.addMachineTag(
+        entityKey,
+        new MachineTag(
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.IH_SOURCE,
+            "14"));
+
+    // update entity
+    entity.setName("another different name");
+
+    R suggestion = createEmptyChangeSuggestion();
+    suggestion.setSuggestedEntity(entity);
+    suggestion.setType(Type.UPDATE);
+    suggestion.setEntityKey(entityKey);
+    suggestion.setProposerEmail(PROPOSER);
+    suggestion.setComments(Collections.singletonList("comment"));
+  }
+
   @Test
   public void deleteInstitutionSuggestionTest() {
     // State
@@ -266,7 +301,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     address.setCountry(Country.DENMARK);
     entity.setAddress(address);
 
-    UUID entityKey = crudService.create(entity);
+    UUID entityKey = primaryCollectionEntityService.create(entity);
 
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
@@ -293,7 +328,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(Status.APPLIED, suggestion.getStatus());
     assertNotNull(suggestion.getApplied());
     assertNotNull(suggestion.getAppliedBy());
-    T appliedEntity = crudService.get(entityKey);
+    T appliedEntity = primaryCollectionEntityService.get(entityKey);
     assertNotNull(appliedEntity.getDeleted());
   }
 
@@ -306,10 +341,10 @@ public abstract class BaseChangeSuggestionServiceIT<
     address.setCountry(Country.DENMARK);
     entity.setAddress(address);
 
-    UUID entityKey = crudService.create(entity);
+    UUID entityKey = primaryCollectionEntityService.create(entity);
 
     T entity2 = createEntity();
-    UUID entity2Key = crudService.create(entity2);
+    UUID entity2Key = primaryCollectionEntityService.create(entity2);
 
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
@@ -338,7 +373,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertNotNull(suggestion.getApplied());
     assertNotNull(suggestion.getAppliedBy());
 
-    T appliedEntity = crudService.get(entityKey);
+    T appliedEntity = primaryCollectionEntityService.get(entityKey);
     assertEquals(entity2Key, getReplacedByValue(appliedEntity));
     assertNotNull(appliedEntity.getDeleted());
   }
@@ -385,7 +420,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     int suggKey1 = changeSuggestionService.createChangeSuggestion(suggestion);
 
     T entity2 = createEntity();
-    UUID entity2Key = crudService.create(entity2);
+    UUID entity2Key = primaryCollectionEntityService.create(entity2);
     R suggestion2 = createEmptyChangeSuggestion();
     suggestion2.setSuggestedEntity(entity2);
     suggestion2.setEntityKey(entity2Key);

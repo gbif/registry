@@ -40,7 +40,7 @@ import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
-import org.gbif.registry.service.collections.utils.GrscicollConstants;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -181,9 +181,9 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     // create machine tag for source
     MachineTag sourceTag =
         new MachineTag(
-            GrscicollConstants.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            GrscicollConstants.ORGANIZATION_SOURCE,
-            organizationKey.toString());
+          MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+          MasterSourceUtils.ORGANIZATION_SOURCE,
+          organizationKey.toString());
     addMachineTag(institutionKey, sourceTag);
 
     // create contacts

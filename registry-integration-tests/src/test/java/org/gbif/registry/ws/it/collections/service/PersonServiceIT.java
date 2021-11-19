@@ -27,7 +27,6 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -38,6 +37,8 @@ import javax.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
 import static org.gbif.registry.ws.it.collections.data.TestDataFactory.PersonTestData.LAST_NAME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -327,7 +328,7 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     person2.setPrimaryInstitutionKey(institutionKey1);
     UUID personKey2 = personService.create(person2);
 
-    MachineTag mt1 = new MachineTag(Constants.IH_NAMESPACE, Constants.IRN_TAG, "test");
+    MachineTag mt1 = new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "test");
     personService.addMachineTag(personKey2, mt1);
 
     PagingResponse<Person> response =

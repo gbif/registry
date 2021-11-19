@@ -37,8 +37,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
-import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
-import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -85,7 +85,7 @@ public class DuplicatesMapperIT extends BaseItTest {
     machineTagMapper.createMachineTag(mt);
     institutionMapper.addMachineTag(inst1.getKey(), mt.getKey());
 
-    MachineTag mtIh = new MachineTag(IH_NAMESPACE, IRN_TAG, "foo");
+    MachineTag mtIh = new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "foo");
     mtIh.setCreatedBy("test");
     machineTagMapper.createMachineTag(mtIh);
     institutionMapper.addMachineTag(inst1.getKey(), mtIh.getKey());
@@ -133,7 +133,7 @@ public class DuplicatesMapperIT extends BaseItTest {
     machineTagMapper.createMachineTag(mt);
     collectionMapper.addMachineTag(c1.getKey(), mt.getKey());
 
-    MachineTag mtIh = new MachineTag(IH_NAMESPACE, IRN_TAG, "foo");
+    MachineTag mtIh = new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "foo");
     mtIh.setCreatedBy("test");
     machineTagMapper.createMachineTag(mtIh);
     collectionMapper.addMachineTag(c1.getKey(), mtIh.getKey());
