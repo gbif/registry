@@ -77,6 +77,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -103,7 +104,8 @@ public abstract class BaseChangeSuggestionService<
               "modified",
               "deleted",
               "key",
-              "convertedToCollection"));
+              "convertedToCollection",
+              "masterSource"));
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final MergeService<T> mergeService;
@@ -215,6 +217,14 @@ public abstract class BaseChangeSuggestionService<
 
   protected ChangeSuggestionDto createDeleteSuggestionDto(R changeSuggestion) {
     checkArgument(changeSuggestion.getEntityKey() != null);
+
+    // if the entity has an external master source we don't allow delete suggestions
+    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
+    if (hasExternalMasterSource(currentEntity)) {
+      throw new IllegalArgumentException(
+          "Suggestions to delete entities whose master source is not GRSciColl are not allowed");
+    }
+
     return createBaseChangeSuggestionDto(changeSuggestion);
   }
 
@@ -366,6 +376,11 @@ public abstract class BaseChangeSuggestionService<
 
   private void updateContacts(R changeSuggestion, T originalEntity) {
     if (changeSuggestion.getSuggestedEntity().getContactPersons() == null) {
+      return;
+    }
+
+    if (hasExternalMasterSource(originalEntity)) {
+      // cannot modify the contacts of an entity whose master source is not GRSciColl
       return;
     }
 
