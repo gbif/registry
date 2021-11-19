@@ -112,8 +112,8 @@
     incorporated_collections = #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
-    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
-    master_source = #{masterSource,jdbcType=OTHER}
+    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    <!-- not allowed to change the masterSource in the update -->
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -133,6 +133,12 @@
   <update id="update" parameterType="SciCollection">
     UPDATE collection
     SET <include refid="COLLECTION_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <update id="updateMasterSource">
+    UPDATE collection
+    SET master_source = #{masterSource,jdbcType=OTHER}
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 

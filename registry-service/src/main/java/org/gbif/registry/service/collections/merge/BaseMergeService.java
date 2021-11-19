@@ -45,10 +45,11 @@ import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
-import static org.gbif.registry.domain.collections.Constants.IH_NAMESPACE;
-import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseMergeService<
         T extends
@@ -83,14 +84,15 @@ public abstract class BaseMergeService<
     checkArgument(
         replacement.getDeleted() == null, "Cannot merge an entity with a deleted replacement");
 
-    // check IH IRN machine tags. If both entities have them we don't allow to do the replacement
+    // we don't allow to merge 2 entities that have external master source.
+    // E.g.: for IH, if both entities have them we don't allow to do the replacement
     // because we wouldn't know how to sync them with IH: if we move it to the replacement this
     // entity will be synced with 2 IH entities and the second sync will overwrite the first one; if
     // we don't move it, then the next IH sync will create a new entity for that IRN, hence the
     // replacement would be useless.
-    if (containsIHMachineTag(entityToReplace) && containsIHMachineTag(replacement)) {
+    if (hasExternalMasterSource(entityToReplace) && hasExternalMasterSource(replacement)) {
       throw new IllegalArgumentException(
-          "Cannot do the replacement because both entities have an IH IRN machine tag");
+          "Cannot do the replacement because both entities have an external master source");
     }
 
     if (isIDigBioRecord(entityToReplace) && isIDigBioRecord(replacement)) {
@@ -120,7 +122,8 @@ public abstract class BaseMergeService<
         .filter(
             mt ->
                 mt.getNamespace().equals(IDIGBIO_NAMESPACE)
-                    || mt.getNamespace().equals(IH_NAMESPACE))
+                    || (mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)
+                        && mt.getName().equals(IH_SOURCE)))
         .filter(mt -> !containsMachineTag(replacement, mt))
         .forEach(
             mt ->
@@ -166,7 +169,10 @@ public abstract class BaseMergeService<
 
   protected boolean containsIHMachineTag(T entity) {
     return entity.getMachineTags().stream()
-        .anyMatch(mt -> mt.getNamespace().equals(IH_NAMESPACE) && mt.getName().equals(IRN_TAG));
+        .anyMatch(
+            mt ->
+                mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)
+                    && mt.getName().equals(IH_SOURCE));
   }
 
   protected boolean isIDigBioRecord(T entity) {

@@ -11,9 +11,11 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -21,6 +23,79 @@ public class InstitutionConverterTest {
 
   @Test
   public void convertFromOrganizationTest() {
+    Organization organization = createOrganization();
+
+    String institutionCode = "CODE";
+    Institution convertedInstitution =
+        InstitutionConverter.convertFromOrganization(organization, institutionCode);
+
+    assertEquals(institutionCode, convertedInstitution.getCode());
+    assertConvertedInstitution(organization, convertedInstitution);
+  }
+
+  @Test
+  public void convertExistingInstitutionFromOrganizationTest() {
+    Organization organization = createOrganization();
+
+    String institutionCode = "CODE";
+    String originalInstitutionName = "fooo";
+
+    Institution institution = new Institution();
+    institution.setCode(institutionCode);
+    institution.setName(originalInstitutionName);
+    institution.setNumberSpecimens(124);
+
+    Institution convertedInstitution =
+        InstitutionConverter.convertFromOrganization(organization, institution);
+
+    assertEquals(institutionCode, convertedInstitution.getCode());
+    assertNotEquals(originalInstitutionName, convertedInstitution.getName());
+    assertEquals(institution.getNumberSpecimens(), convertedInstitution.getNumberSpecimens());
+    assertConvertedInstitution(organization, convertedInstitution);
+  }
+
+  private void assertConvertedInstitution(
+      Organization organization, Institution convertedInstitution) {
+    assertEquals(MasterSourceType.GBIF_REGISTRY, convertedInstitution.getMasterSource());
+    assertEquals(organization.getTitle(), convertedInstitution.getName());
+    assertEquals(organization.getDescription(), convertedInstitution.getDescription());
+    assertEquals(organization.getHomepage().get(0), convertedInstitution.getHomepage());
+    assertTrue(convertedInstitution.isActive());
+
+    assertNotNull(convertedInstitution.getAddress());
+    assertTrue(
+        convertedInstitution
+            .getAddress()
+            .getAddress()
+            .startsWith(organization.getAddress().get(0)));
+    assertEquals(organization.getCity(), convertedInstitution.getAddress().getCity());
+    assertEquals(organization.getProvince(), convertedInstitution.getAddress().getProvince());
+    assertEquals(organization.getPostalCode(), convertedInstitution.getAddress().getPostalCode());
+    assertEquals(organization.getCountry(), convertedInstitution.getAddress().getCountry());
+
+    // assert contacts
+    assertEquals(
+        organization.getContacts().size(), convertedInstitution.getContactPersons().size());
+    convertedInstitution
+        .getContactPersons()
+        .forEach(
+            c -> {
+              assertNotNull(c.getFirstName());
+              assertNotNull(c.getLastName());
+              assertEquals(1, c.getUserIds().size());
+              assertNotNull(c.getPosition());
+              assertNotNull(c.getEmail());
+              assertNotNull(c.getPhone());
+              assertNotNull(c.getAddress());
+              assertNotNull(c.getCity());
+              assertNotNull(c.getProvince());
+              assertNotNull(c.getCountry());
+              assertNotNull(c.getPostalCode());
+            });
+  }
+
+  @NotNull
+  private Organization createOrganization() {
     Organization organization = new Organization();
     organization.setTitle("title");
     organization.setDescription("description");
@@ -66,47 +141,6 @@ public class InstitutionConverterTest {
     orgContact2.setCountry(Country.AFGHANISTAN);
     orgContact2.setPostalCode("1234");
     organization.getContacts().add(orgContact2);
-
-    String institutionCode = "CODE";
-    Institution institutionConverted =
-        InstitutionConverter.convertFromOrganization(organization, institutionCode);
-
-    assertEquals(institutionCode, institutionConverted.getCode());
-    assertEquals(MasterSourceType.GBIF_REGISTRY, institutionConverted.getMasterSource());
-    assertEquals(organization.getTitle(), institutionConverted.getName());
-    assertEquals(organization.getDescription(), institutionConverted.getDescription());
-    assertEquals(organization.getHomepage().get(0), institutionConverted.getHomepage());
-    assertTrue(institutionConverted.isActive());
-
-    assertNotNull(institutionConverted.getAddress());
-    assertTrue(
-        institutionConverted
-            .getAddress()
-            .getAddress()
-            .startsWith(organization.getAddress().get(0)));
-    assertEquals(organization.getCity(), institutionConverted.getAddress().getCity());
-    assertEquals(organization.getProvince(), institutionConverted.getAddress().getProvince());
-    assertEquals(organization.getPostalCode(), institutionConverted.getAddress().getPostalCode());
-    assertEquals(organization.getCountry(), institutionConverted.getAddress().getCountry());
-
-    // assert contacts
-    assertEquals(
-        organization.getContacts().size(), institutionConverted.getContactPersons().size());
-    institutionConverted
-        .getContactPersons()
-        .forEach(
-            c -> {
-              assertNotNull(c.getFirstName());
-              assertNotNull(c.getLastName());
-              assertEquals(1, c.getUserIds().size());
-              assertNotNull(c.getPosition());
-              assertNotNull(c.getEmail());
-              assertNotNull(c.getPhone());
-              assertNotNull(c.getAddress());
-              assertNotNull(c.getCity());
-              assertNotNull(c.getProvince());
-              assertNotNull(c.getCountry());
-              assertNotNull(c.getPostalCode());
-            });
+    return organization;
   }
 }

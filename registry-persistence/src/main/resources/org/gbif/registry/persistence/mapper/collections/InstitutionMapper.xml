@@ -103,8 +103,8 @@
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
-    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
-    master_source = #{masterSource,jdbcType=OTHER}
+    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    <!-- not allowed to update the master source here -->
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -124,6 +124,12 @@
   <update id="update" parameterType="Institution">
     UPDATE institution
     SET <include refid="INSTITUTION_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+  <update id="updateMasterSource">
+    UPDATE institution
+    SET master_source = #{masterSource,jdbcType=OTHER}
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 

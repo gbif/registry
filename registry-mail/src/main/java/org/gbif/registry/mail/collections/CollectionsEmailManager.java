@@ -16,6 +16,7 @@ package org.gbif.registry.mail.collections;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.registry.domain.mail.GrscicollChangeSuggestionDataModel;
+import org.gbif.registry.domain.mail.GrscicollMasterSourceDeletedDataModel;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailTemplateProcessor;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
@@ -35,7 +36,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Strings;
+
 import freemarker.template.TemplateException;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Service
 public class CollectionsEmailManager {
@@ -61,7 +66,7 @@ public class CollectionsEmailManager {
       @Nullable UUID entityKey,
       Type suggestionType)
       throws IOException {
-    return buildBaseEmailModel(
+    return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
         collectionEntityType,
         CollectionsEmailType.NEW_CHANGE_SUGGESTION,
@@ -77,7 +82,7 @@ public class CollectionsEmailManager {
       Type suggestionType,
       Set<String> recipients)
       throws IOException {
-    return buildBaseEmailModel(
+    return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
         collectionEntityType,
         CollectionsEmailType.APPLIED_CHANGE_SUGGESTION,
@@ -93,7 +98,7 @@ public class CollectionsEmailManager {
       Type suggestionType,
       Set<String> recipients)
       throws IOException {
-    return buildBaseEmailModel(
+    return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
         collectionEntityType,
         CollectionsEmailType.DISCARDED_CHANGE_SUGGESTION,
@@ -102,7 +107,54 @@ public class CollectionsEmailManager {
         recipients);
   }
 
-  private BaseEmailModel buildBaseEmailModel(
+  public BaseEmailModel generateMasterSourceDeletedEmailModel(
+      UUID collectionEntityKey,
+      String collectionEntityName,
+      CollectionEntityType collectionEntityType,
+      UUID masterSourceKey,
+      String masterSourceName,
+      String masterSourceType)
+      throws IOException {
+    Objects.requireNonNull(collectionEntityKey);
+    checkArgument(!Strings.isNullOrEmpty(collectionEntityName));
+    Objects.requireNonNull(collectionEntityType);
+    Objects.requireNonNull(masterSourceKey);
+    checkArgument(!Strings.isNullOrEmpty(masterSourceName));
+    Objects.requireNonNull(masterSourceType);
+
+    try {
+      URL collectionEntityLink =
+          new URL(
+              grscicollRegistryPortalUrl
+                  + collectionEntityType.name().toLowerCase()
+                  + "/"
+                  + collectionEntityKey);
+
+      URL masterSourceLink =
+          new URL(
+              grscicollRegistryPortalUrl + masterSourceType.toLowerCase() + "/" + masterSourceKey);
+
+      GrscicollMasterSourceDeletedDataModel templateDataModel =
+          new GrscicollMasterSourceDeletedDataModel();
+      templateDataModel.setCollectionEntityLink(collectionEntityLink);
+      templateDataModel.setCollectionEntityName(collectionEntityName);
+      templateDataModel.setMasterSourceLink(masterSourceLink);
+      templateDataModel.setMasterSourceName(masterSourceName);
+
+      return emailTemplateProcessors.buildEmail(
+          CollectionsEmailType.MASTER_SOURCE_DELETED,
+          Collections.singleton(collectionsMailConfigurationProperties.getRecipient()),
+          collectionsMailConfigurationProperties.getFrom(),
+          templateDataModel,
+          Locale.ENGLISH,
+          Collections.emptySet());
+
+    } catch (TemplateException e) {
+      throw new IOException(e);
+    }
+  }
+
+  private BaseEmailModel buildChangeSuggestionBaseEmailModel(
       int suggestionKey,
       CollectionEntityType entityType,
       CollectionsEmailType emailType,
