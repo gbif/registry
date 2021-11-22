@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.domain.ws.IptEntityResponse;
@@ -60,15 +61,18 @@ public class IptResource {
   private final InstallationService installationService;
   private final OrganizationService organizationService;
   private final DatasetService datasetService;
+  private final NetworkService networkService;
   private static final Long ONE = 1L;
 
   public IptResource(
       InstallationService installationService,
       OrganizationService organizationService,
-      DatasetService datasetService) {
+      DatasetService datasetService,
+      NetworkService networkService) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
+    this.networkService = networkService;
   }
 
   /**
@@ -462,5 +466,23 @@ public class IptResource {
     }
     LOG.error("The installation key could not be inferred from publishing organization!");
     return null;
+  }
+
+  @PostMapping(
+      value = "resource/network/{networkKey}/constituents/{key}")
+  public ResponseEntity<Void> addDatasetToNetwork(
+      @PathVariable("networkKey") UUID networkKey,
+      @PathVariable("key") UUID key) {
+    networkService.addConstituent(networkKey, key);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
+  }
+
+  @DeleteMapping(
+      value = "resource/network/{networkKey}/constituents/{key}")
+  public ResponseEntity<Void> removeDatasetFromNetwork(
+      @PathVariable("networkKey") UUID networkKey,
+      @PathVariable("key") UUID key) {
+    networkService.removeConstituent(networkKey, key);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
   }
 }
