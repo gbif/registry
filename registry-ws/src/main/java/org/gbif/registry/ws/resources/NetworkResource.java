@@ -53,6 +53,7 @@ import com.google.common.base.Strings;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @Validated
 @Primary
@@ -123,7 +124,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   /**
-   * Validates if a the requested dataset exists.
+   * Validates if the requested dataset exists.
    */
   private void existDatasetCheck(UUID datasetKey) {
     if (datasetMapper.get(datasetKey) == null) {
@@ -133,7 +134,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   /**
-   * Validates if a the requested network exists.
+   * Validates if the requested network exists.
    */
   private void existNetworkCheck(UUID networkKey) {
     if (networkMapper.get(networkKey) == null) {
@@ -143,7 +144,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @PostMapping("{key}/constituents/{datasetKey}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
     existDatasetCheck(datasetKey);
@@ -153,7 +154,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @DeleteMapping("{key}/constituents/{datasetKey}")
-  @Secured({ADMIN_ROLE, EDITOR_ROLE})
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
