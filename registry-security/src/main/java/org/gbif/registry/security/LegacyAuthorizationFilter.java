@@ -52,6 +52,7 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
   private static final String SERVICE_MAPPING = "/service";
   private static final String IPT_MAPPING = "/ipt";
   private static final String RESOURCE_BOTH_SIDE_SLASH_MAPPING = "/resource/";
+  private static final String NETWORK_MAPPING = "/network";
 
   private final LegacyAuthorizationService legacyAuthorizationService;
 
@@ -75,7 +76,7 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
         filterPostPutDeleteRequests(request, path);
       }
     }
-    // otherwise just do nothing (request unchanged)
+    // otherwise, just do nothing (request unchanged)
     filterChain.doFilter(request, response);
   }
 
@@ -106,6 +107,9 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
       // register dataset?
       if (path.endsWith(RESOURCE_MAPPING)) {
         authorizeOrganizationChange(httpRequest);
+      } else if (path.contains(NETWORK_MAPPING)) {
+        UUID datasetKey = retrieveKeyFromMiddleRequestPath(httpRequest);
+        authorizeOrganizationDatasetChange(httpRequest, datasetKey);
       }
       // update dataset, delete dataset?
       else if (path.contains(RESOURCE_BOTH_SIDE_SLASH_MAPPING)) {
@@ -220,6 +224,30 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
     if (key.contains(DOT)) {
       key = key.substring(0, key.lastIndexOf(DOT));
     }
+    try {
+      return UUID.fromString(key);
+    } catch (IllegalArgumentException e) {
+      throw new WebApplicationException(
+          "Key is not present it the request", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * Retrieve key from request path, where the key is in the middle segment, e.g.
+   * /registry/resource/{key}/network/{networkKey}
+   *
+   * @param request request
+   * @return dataset key
+   * @throws WebApplicationException if incoming string key isn't a valid UUID
+   */
+  private UUID retrieveKeyFromMiddleRequestPath(HttpServletRequest request) {
+    String path = request.getRequestURI();
+    String key = path.substring(path.lastIndexOf(RESOURCE_BOTH_SIDE_SLASH_MAPPING) + RESOURCE_BOTH_SIDE_SLASH_MAPPING.length());
+
+    if (key.contains(SLASH)) {
+      key = key.substring(0, key.indexOf(SLASH));
+    }
+
     try {
       return UUID.fromString(key);
     } catch (IllegalArgumentException e) {
