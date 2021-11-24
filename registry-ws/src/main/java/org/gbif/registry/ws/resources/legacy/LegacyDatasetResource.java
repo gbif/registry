@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
@@ -68,16 +69,19 @@ public class LegacyDatasetResource {
   private final DatasetService datasetService;
   private final InstallationService installationService;
   private final IptResource iptResource;
+  private final NetworkService networkService;
 
   public LegacyDatasetResource(
       OrganizationService organizationService,
       DatasetService datasetService,
       IptResource iptResource,
-      InstallationService installationService) {
+      InstallationService installationService,
+      NetworkService networkService) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.iptResource = iptResource;
     this.installationService = installationService;
+    this.networkService = networkService;
   }
 
   /**
@@ -322,5 +326,23 @@ public class LegacyDatasetResource {
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
+  }
+
+  @PostMapping(
+      value = "resource/{key}/network/{networkKey}")
+  public ResponseEntity<Void> addDatasetToNetwork(
+      @PathVariable("networkKey") UUID networkKey,
+      @PathVariable("key") UUID key) {
+    networkService.addConstituent(networkKey, key);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
+  }
+
+  @DeleteMapping(
+      value = "resource/{key}/network/{networkKey}")
+  public ResponseEntity<Void> removeDatasetFromNetwork(
+      @PathVariable("networkKey") UUID networkKey,
+      @PathVariable("key") UUID key) {
+    networkService.removeConstituent(networkKey, key);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
   }
 }
