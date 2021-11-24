@@ -147,6 +147,10 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+    if (networkMapper.constituentExists(networkKey, datasetKey)) {
+      throw new WebApplicationException(
+          "Dataset " + datasetKey + " is already connected to the network " + networkKey, HttpStatus.BAD_REQUEST);
+    }
     existDatasetCheck(datasetKey);
     existNetworkCheck(networkKey);
     networkMapper.addDatasetConstituent(networkKey, datasetKey);
@@ -158,8 +162,10 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Override
   public void removeConstituent(
       @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
-    existDatasetCheck(datasetKey);
-    existNetworkCheck(networkKey);
+    if (!networkMapper.constituentExists(networkKey, datasetKey)) {
+      throw new WebApplicationException(
+          "Dataset " + datasetKey + " is not connected to the network " + networkKey, HttpStatus.BAD_REQUEST);
+    }
     networkMapper.deleteDatasetConstituent(networkKey, datasetKey);
     eventManager.post(ChangedComponentEvent.newInstance(datasetKey, Network.class, Dataset.class));
   }
