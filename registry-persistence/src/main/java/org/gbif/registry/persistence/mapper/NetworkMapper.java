@@ -29,6 +29,9 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
 
   int countDatasetsInNetwork(@Param("networkKey") UUID networkKey);
 
+  boolean constituentExists(
+      @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
+
   void addDatasetConstituent(
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
 

@@ -370,6 +370,13 @@
           network_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
+  <select id="constituentExists" resultType="java.lang.Boolean">
+    SELECT EXISTS (
+               SELECT *
+               FROM dataset_network
+               WHERE dataset_key = #{datasetKey,jdbcType=OTHER} AND network_key = #{networkKey,jdbcType=OTHER}
+             )
+  </select>
 
   <!-- DATASET CONSTITUENTS -->
   <insert id="addDatasetConstituent">
