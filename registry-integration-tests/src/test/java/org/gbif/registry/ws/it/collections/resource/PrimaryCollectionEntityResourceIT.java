@@ -319,12 +319,6 @@ public abstract class PrimaryCollectionEntityResourceIT<
     assertDoesNotThrow(() -> getPrimaryCollectionEntityClient().discardChangeSuggestion(1));
   }
 
-  // TODO: test add or remove machine tag
-  @Test
-  public void addMasterSourceAsMachineTagTest() {
-
-  }
-
   protected abstract PrimaryCollectionEntityService<T> getMockPrimaryEntityService();
 
   protected abstract DuplicatesService getMockDuplicatesService();
