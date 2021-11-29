@@ -452,6 +452,12 @@ public abstract class BasePrimaryCollectionEntityService<
       if (machineTag.getName().equals(IH_SOURCE)) {
         updateMasterSource(targetEntityKey, MasterSourceType.IH);
       } else {
+        try {
+          UUID.fromString(machineTag.getValue());
+        } catch (Exception ex) {
+          throw new IllegalArgumentException("Invalid UUID");
+        }
+
         updateMasterSource(targetEntityKey, MasterSourceType.GBIF_REGISTRY);
       }
     }

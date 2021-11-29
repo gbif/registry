@@ -18,6 +18,7 @@ import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.IdType;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -60,8 +61,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.DATASET_SOURCE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.ORGANIZATION_SOURCE;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -225,8 +229,29 @@ public abstract class BaseMergeServiceIT<
     machineTagService.deleteMachineTag(e1.getKey(), mt1.getKey());
     machineTagService.deleteMachineTag(e2.getKey(), mt2.getKey());
 
-    machineTagService.addMachineTag(e1.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar"));
-    machineTagService.addMachineTag(e2.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2"));
+    MachineTag mt3 = new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar");
+    machineTagService.addMachineTag(e1.getKey(), mt3);
+    MachineTag mt4 = new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2");
+    machineTagService.addMachineTag(e2.getKey(), mt4);
+    assertThrows(
+        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
+
+    // test that we can't merge 2 entities that have a master source
+    machineTagService.deleteMachineTag(e1.getKey(), mt3.getKey());
+    machineTagService.deleteMachineTag(e2.getKey(), mt4.getKey());
+
+    String tagName = null;
+    if (e1 instanceof Institution) {
+      tagName = ORGANIZATION_SOURCE;
+    } else {
+      tagName = DATASET_SOURCE;
+    }
+    machineTagService.addMachineTag(
+        e1.getKey(),
+        new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, tagName, UUID.randomUUID().toString()));
+    machineTagService.addMachineTag(
+        e2.getKey(),
+        new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, tagName, UUID.randomUUID().toString()));
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
   }

@@ -19,6 +19,7 @@ import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.suggestions.Change;
@@ -259,10 +260,6 @@ public abstract class BaseChangeSuggestionServiceIT<
         applied.getContactPersons().stream().noneMatch(c -> c.getKey().equals(contact2.getKey())));
   }
 
-  // TODO: test master source not modified (contacts too).
-  // TODO: test deletions with master source not allowed
-  // TODO: test merge with master source (el test seria en el service de merge, no aqui)
-
   @Test
   public void masterSourceSuggestionsTest() {
     // State
@@ -284,12 +281,38 @@ public abstract class BaseChangeSuggestionServiceIT<
     // update entity
     entity.setName("another different name");
 
+    // this shouldn't change when the suggestion is applied
+    entity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+
+    // add one contact (shouldn't be added)
+    Contact newContact = new Contact();
+    newContact.setFirstName("second");
+    entity.getContactPersons().add(newContact);
+
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
     suggestion.setType(Type.UPDATE);
     suggestion.setEntityKey(entityKey);
     suggestion.setProposerEmail(PROPOSER);
     suggestion.setComments(Collections.singletonList("comment"));
+
+    // When
+    int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
+    changeSuggestionService.applyChangeSuggestion(suggKey);
+
+    // Then
+    T entityUpdated = primaryCollectionEntityService.get(entityKey);
+
+    assertEquals(MasterSourceType.IH, entityUpdated.getMasterSource());
+    assertEquals(1, entityUpdated.getContactPersons().size());
+
+    // When, Then
+    R deleteSuggestion = createEmptyChangeSuggestion();
+    deleteSuggestion.setEntityKey(entityKey);
+    deleteSuggestion.setType(Type.DELETE);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> changeSuggestionService.createChangeSuggestion(deleteSuggestion));
   }
 
   @Test
