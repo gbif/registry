@@ -28,7 +28,6 @@ import lombok.SneakyThrows;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MasterSourceUtils {
 
-  // TODO: Modify IH Sync!!
   public static final String MASTER_SOURCE_COLLECTIONS_NAMESPACE =
       "master-source.collections.gbif.org";
   public static final String IH_SOURCE = "ih_irn";
