@@ -328,20 +328,16 @@ public class LegacyDatasetResource {
     return iptResource.deleteDataset(datasetKey);
   }
 
-  @PostMapping(
-      value = "resource/{key}/network/{networkKey}")
+  @PostMapping(value = "resource/{key}/network/{networkKey}")
   public ResponseEntity<Void> addDatasetToNetwork(
-      @PathVariable("networkKey") UUID networkKey,
-      @PathVariable("key") UUID key) {
+      @PathVariable("networkKey") UUID networkKey, @PathVariable("key") UUID key) {
     networkService.addConstituent(networkKey, key);
     return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
   }
 
-  @DeleteMapping(
-      value = "resource/{key}/network/{networkKey}")
+  @DeleteMapping(value = "resource/{key}/network/{networkKey}")
   public ResponseEntity<Void> removeDatasetFromNetwork(
-      @PathVariable("networkKey") UUID networkKey,
-      @PathVariable("key") UUID key) {
+      @PathVariable("networkKey") UUID networkKey, @PathVariable("key") UUID key) {
     networkService.removeConstituent(networkKey, key);
     return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
   }
