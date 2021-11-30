@@ -86,6 +86,7 @@ public abstract class BaseChangeSuggestionServiceIT<
   public void newEntitySuggestionTest() {
     // State
     T entity = createEntity();
+    entity.setMasterSource(MasterSourceType.GRSCICOLL);
 
     Address address = new Address();
     address.setCountry(Country.DENMARK);

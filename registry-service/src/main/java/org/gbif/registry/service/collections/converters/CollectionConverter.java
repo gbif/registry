@@ -2,7 +2,6 @@ package org.gbif.registry.service.collections.converters;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
@@ -101,7 +100,6 @@ public class CollectionConverter {
     existingCollection.setName(dataset.getTitle());
     existingCollection.setDescription(dataset.getDescription());
     existingCollection.setHomepage(dataset.getHomepage());
-    existingCollection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
 
     List<PreservationType> preservationTypes =
         dataset.getCollections().stream()
@@ -161,9 +159,15 @@ public class CollectionConverter {
 
     existingCollection.setActive(true);
 
-    existingCollection
-        .getIdentifiers()
-        .add(new Identifier(IdentifierType.DOI, dataset.getDoi().getDoiName()));
+    if (existingCollection.getIdentifiers().stream()
+        .noneMatch(
+            i ->
+                i.getType() == IdentifierType.DOI
+                    && i.getIdentifier().equals(dataset.getDoi().getDoiName()))) {
+      existingCollection
+          .getIdentifiers()
+          .add(new Identifier(IdentifierType.DOI, dataset.getDoi().getDoiName()));
+    }
 
     existingCollection.setAddress(convertAddress(publisherOrganization));
 
@@ -172,7 +176,14 @@ public class CollectionConverter {
         dataset.getContacts().stream()
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
-    existingCollection.setContactPersons(collectionContacts);
+
+    collectionContacts.forEach(
+        c -> {
+          if (existingCollection.getContactPersons().stream()
+              .noneMatch(c2 -> c2.lenientEquals(c))) {
+            existingCollection.getContactPersons().add(c);
+          }
+        });
 
     return existingCollection;
   }

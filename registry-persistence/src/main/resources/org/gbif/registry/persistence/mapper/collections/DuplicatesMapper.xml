@@ -154,7 +154,7 @@
     LEFT JOIN LATERAL (
       SELECT imt.institution_key AS inst_key, mt.key AS mt_key
       FROM institution_machine_tag imt
-      INNER JOIN machine_tag mt ON mt.key = imt.machine_tag_key AND mt.namespace = 'ih.gbif.org' AND mt.name = 'irn'
+      INNER JOIN machine_tag mt ON mt.key = imt.machine_tag_key AND mt.namespace = 'master-source.collections.gbif.org' AND mt.name = 'ih_irn'
       WHERE imt.institution_key = i.key
       ) ih ON ih.inst_key = i.key
     WHERE i.key IN
@@ -176,7 +176,7 @@
     LEFT JOIN LATERAL (
       SELECT cmt.collection_key AS coll_key, mt.key AS mt_key
       FROM collection_machine_tag cmt
-      INNER JOIN machine_tag mt ON mt.key = cmt.machine_tag_key AND mt.namespace = 'ih.gbif.org' AND mt.name = 'irn'
+      INNER JOIN machine_tag mt ON mt.key = cmt.machine_tag_key AND mt.namespace = 'master-source.collections.gbif.org' AND mt.name = 'ih_irn'
       WHERE cmt.collection_key = c.key
       ) ih ON ih.coll_key = c.key
     WHERE c.key IN
