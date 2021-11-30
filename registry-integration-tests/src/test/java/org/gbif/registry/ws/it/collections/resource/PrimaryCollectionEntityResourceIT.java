@@ -57,6 +57,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -317,6 +318,11 @@ public abstract class PrimaryCollectionEntityResourceIT<
   public void discardChangeSuggestionTest() {
     doNothing().when(getMockChangeSuggestionService()).discardChangeSuggestion(anyInt());
     assertDoesNotThrow(() -> getPrimaryCollectionEntityClient().discardChangeSuggestion(1));
+  }
+
+  @Test
+  public void getSourceableFieldsTest() {
+    assertFalse(getPrimaryCollectionEntityClient().getSourceableFields().isEmpty());
   }
 
   protected abstract PrimaryCollectionEntityService<T> getMockPrimaryEntityService();

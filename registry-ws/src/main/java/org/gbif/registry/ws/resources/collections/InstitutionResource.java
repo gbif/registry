@@ -17,6 +17,7 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
+import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
@@ -29,6 +30,7 @@ import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 
 import java.io.BufferedWriter;
@@ -164,5 +166,10 @@ public class InstitutionResource
   public UUID createFromOrganization(@RequestBody @Trim InstitutionImportParams importParams) {
     return institutionService.createFromOrganization(
         importParams.getOrganizationKey(), importParams.getInstitutionCode());
+  }
+
+  @GetMapping("sourceableFields")
+  public List<SourceableField> getSourceableFields() {
+    return MasterSourceUtils.INSTITUTION_SOURCEABLE_FIELDS;
   }
 }
