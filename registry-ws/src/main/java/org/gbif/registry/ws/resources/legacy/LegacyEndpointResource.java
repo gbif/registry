@@ -71,10 +71,10 @@ public class LegacyEndpointResource {
   /**
    * Register Dataset Endpoint, handling incoming request with path /resource/service. The access
    * point URL, type, and dataset key are mandatory. Only after both the endpoint has been persisted
-   * is a ResponseEntity with HttpStatus.CREATED returned.
+   * is a response with {@link HttpStatus#CREATED} returned.
    *
    * @param endpoint LegacyEndpoint with HTTP form parameters
-   * @return ResponseEntity with HttpStatus.CREATED if successful
+   * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
    */
   @PostMapping(
       value = "service",
@@ -106,10 +106,10 @@ public class LegacyEndpointResource {
   /**
    * Delete all Endpoints for a Dataset, handling incoming request with path /resource/service and
    * query parameter resourceKey. Only credentials are mandatory. If deletion is successful, returns
-   * ResponseEntity with HttpStatus.OK.
+   * response with {@link HttpStatus#OK}.
    *
    * @param datasetKey dataset key (UUID) coming in as query param
-   * @return ResponseEntity with HttpStatus.OK if successful
+   * @return {@link ResponseEntity} with {@link HttpStatus#OK} if successful
    */
   @DeleteMapping(value = "service", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity deleteAllDatasetEndpoints(
@@ -146,7 +146,7 @@ public class LegacyEndpointResource {
    * incoming request with path /service.json and query parameter op=types
    *
    * @param datasetKey dataset key (UUID) coming in as query param
-   * @return ResponseEntity with list of Endpoints or empty list with error message if none found
+   * @return {@link ResponseEntity} with list of Endpoints or empty list with error message if none found
    */
   @GetMapping(
       value = {"service", "service{extension:\\.[a-z]+}"},

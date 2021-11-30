@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.ErrorResponse;
 import org.gbif.registry.domain.ws.IptEntityResponse;
@@ -68,25 +69,28 @@ public class LegacyDatasetResource {
   private final DatasetService datasetService;
   private final InstallationService installationService;
   private final IptResource iptResource;
+  private final NetworkService networkService;
 
   public LegacyDatasetResource(
       OrganizationService organizationService,
       DatasetService datasetService,
       IptResource iptResource,
-      InstallationService installationService) {
+      InstallationService installationService,
+      NetworkService networkService) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.iptResource = iptResource;
     this.installationService = installationService;
+    this.networkService = networkService;
   }
 
   /**
    * Register GBRDS dataset, handling incoming request with path /resource. The primary contact,
    * publishing organization key, and resource name are mandatory. Only after both the dataset and
-   * primary contact have been persisted is a ResponseEntity with HttpStatus.CREATED (201) returned.
+   * primary contact have been persisted is a response with {@link HttpStatus#CREATED} (201) returned.
    *
-   * @param dataset IptDataset with HTTP form parameters
-   * @return ResponseEntity
+   * @param dataset {@link LegacyDataset} with HTTP form parameters
+   * @return {@link ResponseEntity}
    * @see IptResource#registerDataset(LegacyDataset, Authentication)
    */
   @PostMapping(
@@ -104,12 +108,12 @@ public class LegacyDatasetResource {
    * organization key is mandatory (supplied in the credentials not the parameters). The primary
    * contact is not required, but if any of the primary contact parameters were included in the
    * request, it is required. This is the difference between this method and registerDataset. Only
-   * after both the dataset and optional primary contact have been updated is a ResponseEntity with
-   * HttpStatus.OK (201) returned.
+   * after both the dataset and optional primary contact have been updated is a response with
+   * {@link HttpStatus#OK} (201) returned.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @param dataset IptDataset with HTTP form parameters
-   * @return ResponseEntity with HttpStatus.CREATED (201) if successful
+   * @param dataset {@link LegacyDataset} with HTTP form parameters
+   * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} (201) if successful
    */
   @PostMapping(
       value = "resource/{key}",
@@ -210,11 +214,11 @@ public class LegacyDatasetResource {
   /**
    * Retrieve all Datasets owned by an organization, handling incoming request with path /resource.
    * The publishing organization query parameter is mandatory. Only after both the organizationKey
-   * is verified to correspond to an existing organization, is a Response including the list of
+   * is verified to correspond to an existing organization, is a response including the list of
    * Datasets returned.
    *
    * @param organizationKey organization key (UUID) coming in as query param
-   * @return ResponseEntity with list of Datasets or empty list with error message if none found
+   * @return {@link ResponseEntity} with list of Datasets or empty list with error message if none found
    */
   @GetMapping(
       value = {"resource", "resource{extension:\\.[a-z]+}"},
@@ -272,7 +276,7 @@ public class LegacyDatasetResource {
    * Read GBRDS Dataset, handling incoming request with path /resource/{key}.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return ResponseEntity with HttpStatus.OK (200) if dataset exists
+   * @return {@link ResponseEntity} with {@link HttpStatus#OK} (200) if dataset exists
    */
   @GetMapping(
       value = {"resource/{key:[a-zA-Z0-9-]+}", "resource/{key:[a-zA-Z0-9-]+}{extension:\\.[a-z]+}"},
@@ -311,10 +315,10 @@ public class LegacyDatasetResource {
 
   /**
    * Delete GBRDS Dataset, handling incoming request with path /resource/{key}. Only credentials are
-   * mandatory. If deletion is successful, returns ResponseEntity with HttpStatus.OK.
+   * mandatory. If deletion is successful, returns response with {@link HttpStatus#OK}.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return ResponseEntity with HttpStatus.OK if successful
+   * @return {@link ResponseEntity} with {@link HttpStatus#OK} if successful
    * @see IptResource#deleteDataset(java.util.UUID)
    */
   @SuppressWarnings("rawtypes")
@@ -322,5 +326,23 @@ public class LegacyDatasetResource {
   public ResponseEntity deleteDataset(@PathVariable("key") UUID datasetKey) {
     // reuse existing method
     return iptResource.deleteDataset(datasetKey);
+  }
+
+  @PostMapping(
+      value = "resource/{key}/network/{networkKey}")
+  public ResponseEntity<Void> addDatasetToNetwork(
+      @PathVariable("networkKey") UUID networkKey,
+      @PathVariable("key") UUID key) {
+    networkService.addConstituent(networkKey, key);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
+  }
+
+  @DeleteMapping(
+      value = "resource/{key}/network/{networkKey}")
+  public ResponseEntity<Void> removeDatasetFromNetwork(
+      @PathVariable("networkKey") UUID networkKey,
+      @PathVariable("key") UUID key) {
+    networkService.removeConstituent(networkKey, key);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
   }
 }

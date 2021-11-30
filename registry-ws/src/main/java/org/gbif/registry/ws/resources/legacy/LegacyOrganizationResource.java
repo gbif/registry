@@ -71,13 +71,19 @@ public class LegacyOrganizationResource {
   }
 
   /**
-   * This sub-resource can be called for various reasons: </br> 1. Get an Organization, handling
+   * This sub-resource can be called for various reasons:
+   * <br>
+   * 1. Get an Organization, handling
    * incoming request with path /registry/organization/{key}.json?callback=?, signifying that the
    * response must be JSONP. This request is made in order to verify that an organization exists. No
-   * authorization is required for this request. </br> 2. Validate the organization credentials sent
+   * authorization is required for this request.
+   * <br>
+   * 2. Validate the organization credentials sent
    * with incoming GET request. Handling request with path
    * /registry/organization/{key}.json?op=login. Only after the credentials have been verified, is
-   * the Response with Status.OK returned. 3. Trigger an email reminder for the organization, sent
+   * the response with {@link HttpStatus#OK} returned.
+   * <br>
+   * 3. Trigger an email reminder for the organization, sent
    * to the primary contact email. Handling request with path
    * /registry/organization/{key}.json?op=password. An HTML response indicating successful delivery
    * is included in 200 response.
@@ -87,9 +93,11 @@ public class LegacyOrganizationResource {
    * @param organisationKey organization key (UUID) coming in as path param
    * @param callback parameter
    * @return 1. Organization, wrapped with callback parameter in JSONP, or null if organization with
-   *     key does not exist. 2. (case: op=login) Response with Status.OK if credentials were
-   *     verified, or Response with Status.UNAUTHORIZED if they weren't 3. (case: op=password)
-   *     Response with Status.OK if email reminder was delivered successfully
+   *     key does not exist.
+   *     2. (case: op=login) response with {@link HttpStatus#OK} if credentials were
+   *     verified, or response with {@link HttpStatus#UNAUTHORIZED} if they weren't
+   *     3. (case: op=password)
+   *     response with {@link HttpStatus#OK} if email reminder was delivered successfully
    */
   @GetMapping(
       value = {
