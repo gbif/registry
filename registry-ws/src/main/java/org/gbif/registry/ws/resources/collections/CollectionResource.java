@@ -17,6 +17,7 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -29,6 +30,7 @@ import org.gbif.api.util.iterables.Iterables;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 
 import java.io.BufferedWriter;
@@ -158,5 +160,10 @@ public class CollectionResource
   public UUID createFromDataset(@RequestBody @Trim CollectionImportParams importParams) {
     return collectionService.createFromDataset(
         importParams.getDatasetKey(), importParams.getCollectionCode());
+  }
+
+  @GetMapping("sourceableFields")
+  public List<SourceableField> getSourceableFields() {
+    return MasterSourceUtils.COLLECTION_SOURCEABLE_FIELDS;
   }
 }

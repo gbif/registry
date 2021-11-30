@@ -18,6 +18,7 @@ import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
@@ -168,4 +169,10 @@ public interface PrimaryCollectionEntityClient<
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key);
+
+  @RequestMapping(
+    method = RequestMethod.GET,
+    value = "sourceableFields",
+    produces = MediaType.APPLICATION_JSON_VALUE)
+  List<SourceableField> getSourceableFields();
 }
