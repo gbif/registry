@@ -74,10 +74,10 @@ public class IptResource {
   /**
    * Register IPT installation, handling incoming request with path /ipt/register. The primary
    * contact and hosting organization key are mandatory. Only after both the installation and
-   * primary contact have been persisted is a ResponseEntity with HttpStatus.CREATED returned.
+   * primary contact have been persisted is a response with {@link HttpStatus#CREATED} returned.
    *
-   * @param installation IptInstallation with HTTP form parameters
-   * @return ResponseEntity with HttpStatus.CREATED if successful
+   * @param installation {@link LegacyInstallation} with HTTP form parameters
+   * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
    */
   @PostMapping(
       value = "register",
@@ -137,11 +137,11 @@ public class IptResource {
   /**
    * Update IPT installation, handling incoming request with path /ipt/update/{key}. The primary
    * contact and hosting organization key are mandatory. Only after both the installation and
-   * primary contact have been updated is a ResponseEntity with HttpStatus.CREATED returned.
+   * primary contact have been updated is a response with {@link HttpStatus#CREATED} returned.
    *
    * @param installationKey installation key (UUID) coming in as path param
-   * @param installation IptInstallation with HTTP form parameters
-   * @return ResponseEntity with HttpStatus.NO_CONTENT if successful
+   * @param installation {@link LegacyInstallation} with HTTP form parameters
+   * @return {@link ResponseEntity} with {@link HttpStatus#NO_CONTENT} if successful
    */
   @PostMapping(value = "update/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Void> updateIpt(
@@ -217,14 +217,14 @@ public class IptResource {
   /**
    * Register IPT dataset, handling incoming request with path /ipt/resource. The primary contact
    * and publishing organization key are mandatory. Only after both the dataset and primary contact
-   * have been persisted is a ResponseEntity with HttpStatus.CREATED returned. </br> Before being
+   * have been persisted is a response with {@link HttpStatus#CREATED} returned. </br> Before being
    * persisted, the dataset is the UNSPECIFIED license. This will be replaced (if possible) by the
    * publisher assigned license when the dataset gets crawled the first time. Since IPT 2.2, the IPT
-   * EML metadata document always includes a machine readable license. See discussion at
+   * EML metadata document always includes a machine-readable license. See discussion at
    * https://github.com/gbif/registry/issues/71
    *
    * @param dataset LegacyDataset with HTTP form parameters
-   * @return ResponseEntity with HttpStatus.CREATED if successful
+   * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
    */
   @PostMapping(
       value = "resource",
@@ -301,14 +301,14 @@ public class IptResource {
    * Update IPT Dataset, handling incoming request with path /ipt/resource/{key}. The publishing
    * organization key is mandatory (supplied in the credentials not the parameters). The contacts
    * are preserved from the existing dataset, careful not to duplicate contacts. Only after both the
-   * dataset and primary contact have been updated is a Response with Status.OK returned. </br> This
+   * dataset and primary contact have been updated is a response with {@link HttpStatus#OK} returned. </br> This
    * update does not change the IPT Dataset license. The license gets updated every time the dataset
    * is crawled using the publisher assigned license found in the EML metadata document. Since IPT
    * 2.2, the IPT EML metadata document always includes a machine readable license.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @param dataset LegacyDataset with HTTP form parameters
-   * @return ResponseEntity with HttpStatus.CREATED (201) if successful
+   * @param dataset {@link LegacyDataset} with HTTP form parameters
+   * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} (201) if successful
    */
   @PostMapping(value = "resource/{key}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
   public ResponseEntity<Void> updateDataset(
@@ -403,10 +403,10 @@ public class IptResource {
 
   /**
    * Delete IPT Dataset, handling incoming request with path /ipt/resource/{key}. Only credentials
-   * are mandatory. If deletion is successful, returns Response with Status.OK.
+   * are mandatory. If deletion is successful, returns response with {@link HttpStatus#OK}.
    *
    * @param datasetKey dataset key (UUID) coming in as path param
-   * @return ResponseEntity with HttpStatus.OK if successful
+   * @return {@link ResponseEntity} with {@link HttpStatus#OK} if successful
    */
   @SuppressWarnings("rawtypes")
   @DeleteMapping("resource/{key}")
@@ -439,7 +439,7 @@ public class IptResource {
    * this must be the installation that serves the dataset. Conversely, if the organization has more
    * or less than 1 installation, no inference can be made, and null is returned instead.
    *
-   * @param dataset LegacyDataset with HTTP form parameters
+   * @param dataset {@link LegacyDataset} with HTTP form parameters
    * @return inferred installation key, or null if none inferred
    */
   private UUID inferInstallationKey(LegacyDataset dataset) {
