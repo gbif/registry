@@ -136,7 +136,6 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setDescription("dummy description");
     preservationTypes.add(PreservationType.SAMPLE_DRIED);
     collection.setPreservationTypes(preservationTypes);
-    collection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     collectionMapper.update(collection);
     collectionStored = collectionMapper.get(key);
     assertTrue(collection.lenientEquals(collectionStored));

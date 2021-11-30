@@ -282,13 +282,19 @@ public abstract class BasePrimaryCollectionEntityService<
   @Transactional
   @Override
   public int addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
-    checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
-
     T entity = get(entityKey);
     if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
       throw new IllegalArgumentException(
           "Cannot add contacts to an entity whose master source is not GRSciColl");
     }
+
+    return addContactPersonToEntity(entityKey, contact);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  public int addContactPersonToEntity(@NotNull UUID entityKey, @NotNull Contact contact) {
+    checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();

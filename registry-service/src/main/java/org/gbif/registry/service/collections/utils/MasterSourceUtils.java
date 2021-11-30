@@ -69,7 +69,9 @@ public class MasterSourceUtils {
   }
 
   public static <T extends PrimaryCollectionEntity> boolean hasExternalMasterSource(T entity) {
-    return entity != null && entity.getMasterSource() != MasterSourceType.GRSCICOLL;
+    return entity != null
+        && entity.getMasterSource() != null
+        && entity.getMasterSource() != MasterSourceType.GRSCICOLL;
   }
 
   @SneakyThrows

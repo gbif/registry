@@ -2,7 +2,6 @@ package org.gbif.registry.service.collections.converters;
 
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.registry.Organization;
 
 import java.util.List;
@@ -35,7 +34,6 @@ public class InstitutionConverter {
 
     existingInstitution.setName(organization.getTitle());
     existingInstitution.setDescription(organization.getDescription());
-    existingInstitution.setMasterSource(MasterSourceType.GBIF_REGISTRY);
 
     if (organization.getHomepage() != null && !organization.getHomepage().isEmpty()) {
       existingInstitution.setHomepage(organization.getHomepage().get(0));
@@ -55,7 +53,14 @@ public class InstitutionConverter {
         organization.getContacts().stream()
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
-    existingInstitution.setContactPersons(collectionContacts);
+
+    collectionContacts.forEach(
+        c -> {
+          if (existingInstitution.getContactPersons().stream()
+              .noneMatch(c2 -> c2.lenientEquals(c))) {
+            existingInstitution.getContactPersons().add(c);
+          }
+        });
 
     return existingInstitution;
   }

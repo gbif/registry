@@ -719,7 +719,9 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
 
     int machineTagKey =
         institutionService.addMachineTag(
-            institutionKey, new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "123"));
+            institutionKey,
+            new MachineTag(
+                MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, UUID.randomUUID().toString()));
 
     institution.setNumberSpecimens(12);
     institution.setDescription("aaa");
@@ -766,7 +768,10 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     machineTagKey =
         institutionService.addMachineTag(
             institutionKey,
-            new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, ORGANIZATION_SOURCE, "123"));
+            new MachineTag(
+                MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+                ORGANIZATION_SOURCE,
+                UUID.randomUUID().toString()));
 
     String currentDescription = updatedInstitution.getDescription();
     updatedInstitution.setDescription("another one");

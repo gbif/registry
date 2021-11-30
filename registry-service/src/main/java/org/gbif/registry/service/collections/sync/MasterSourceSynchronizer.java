@@ -4,15 +4,12 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
@@ -23,6 +20,8 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.service.collections.DefaultCollectionService;
+import org.gbif.registry.service.collections.DefaultInstitutionService;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
@@ -43,8 +42,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Component
 public class MasterSourceSynchronizer {
 
-  private final CollectionService collectionService;
-  private final InstitutionService institutionService;
+  private final DefaultCollectionService collectionService;
+  private final DefaultInstitutionService institutionService;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
   private final CollectionsEmailManager emailManager;
@@ -52,8 +51,8 @@ public class MasterSourceSynchronizer {
 
   @Autowired
   public MasterSourceSynchronizer(
-      CollectionService collectionService,
-      InstitutionService institutionService,
+      DefaultCollectionService collectionService,
+      DefaultInstitutionService institutionService,
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
       CollectionsEmailManager emailManager,
@@ -81,10 +80,7 @@ public class MasterSourceSynchronizer {
         Organization publishingOrganization =
             organizationMapper.get(updatedDataset.getPublishingOrganizationKey());
 
-        Collection updatedCollection =
-            CollectionConverter.convertFromDataset(
-                updatedDataset, publishingOrganization, collectionFound.get());
-        collectionService.update(updatedCollection);
+        updateCollection(updatedDataset, publishingOrganization, collectionFound.get());
       }
     } else if (Organization.class.isAssignableFrom(event.getObjectClass())) {
       Organization updatedOrganization = (Organization) event.getNewObject();
@@ -93,13 +89,9 @@ public class MasterSourceSynchronizer {
       Optional<Institution> institutionFound =
           findInstitutionsSourcedFromOrganization(updatedOrganization);
 
-      if (institutionFound.isPresent()) {
-        // update the institution
-        Institution updatedInstitution =
-            InstitutionConverter.convertFromOrganization(
-                updatedOrganization, institutionFound.get());
-        institutionService.update(updatedInstitution);
-      }
+      // update the institution
+      institutionFound.ifPresent(
+          institution -> updateInstitution(updatedOrganization, institution));
     }
   }
 
@@ -123,9 +115,6 @@ public class MasterSourceSynchronizer {
                         && mt.getValue().equals(dataset.getKey().toString()))
             .forEach(mt -> collectionService.deleteMachineTag(collection.getKey(), mt.getKey()));
 
-        // set the master source to GRSciColl
-        collectionService.updateMasterSource(collection.getKey(), MasterSourceType.GRSCICOLL);
-
         // create comment
         Comment comment = new Comment();
         comment.setContent(
@@ -133,20 +122,13 @@ public class MasterSourceSynchronizer {
                 + dataset.getKey().toString());
         collectionService.addComment(collection.getKey(), comment);
 
-        // send email
-        try {
-          BaseEmailModel emailModel =
-              emailManager.generateMasterSourceDeletedEmailModel(
-                  collection.getKey(),
-                  collection.getName(),
-                  CollectionEntityType.COLLECTION,
-                  dataset.getKey(),
-                  dataset.getTitle(),
-                  "dataset");
-          emailSender.send(emailModel);
-        } catch (Exception e) {
-          log.error("Couldn't send email for GRSciColl master source dataset deleted", e);
-        }
+        sendEmail(
+            collection.getKey(),
+            collection.getName(),
+            CollectionEntityType.COLLECTION,
+            dataset.getKey(),
+            dataset.getTitle(),
+            "dataset");
       }
     } else if (Organization.class.isAssignableFrom(event.getObjectClass())) {
       Organization organization = (Organization) event.getOldObject();
@@ -167,9 +149,6 @@ public class MasterSourceSynchronizer {
                         && mt.getValue().equals(organization.getKey().toString()))
             .forEach(mt -> institutionService.deleteMachineTag(institution.getKey(), mt.getKey()));
 
-        // set the master source to GRSciColl
-        institutionService.updateMasterSource(institution.getKey(), MasterSourceType.GRSCICOLL);
-
         // create comment
         Comment comment = new Comment();
         comment.setContent(
@@ -178,28 +157,43 @@ public class MasterSourceSynchronizer {
         institutionService.addComment(institution.getKey(), comment);
 
         // send email
-        try {
-          BaseEmailModel emailModel =
-              emailManager.generateMasterSourceDeletedEmailModel(
-                  institution.getKey(),
-                  institution.getName(),
-                  CollectionEntityType.INSTITUTION,
-                  organization.getKey(),
-                  organization.getTitle(),
-                  "organization");
-          emailSender.send(emailModel);
-        } catch (Exception e) {
-          log.error("Couldn't send email for GRSciColl master source organization deleted", e);
-        }
+        sendEmail(
+            institution.getKey(),
+            institution.getName(),
+            CollectionEntityType.INSTITUTION,
+            organization.getKey(),
+            organization.getTitle(),
+            "organization");
       }
+    }
+  }
+
+  private void sendEmail(
+      UUID entityKey,
+      String name,
+      CollectionEntityType collectionEntityType,
+      UUID masterSourceEntityKey,
+      String masterSourceName,
+      String masterSourceType) {
+    // send email
+    try {
+      BaseEmailModel emailModel =
+          emailManager.generateMasterSourceDeletedEmailModel(
+              entityKey,
+              name,
+              collectionEntityType,
+              masterSourceEntityKey,
+              masterSourceName,
+              masterSourceType);
+      emailSender.send(emailModel);
+    } catch (Exception e) {
+      log.error("Couldn't send email for GRSciColl master source deleted", e);
     }
   }
 
   @Subscribe
   public <T extends CollectionEntity, R> void syncNewMasterSource(
       SubEntityCollectionEvent<T, R> event) {
-
-    // TODO: este va a saltar cuando haga un createFromDataset y add el tag
 
     // we only care about the creation of machine tags for master sources
     if (event.getEventType() == EventType.CREATE
@@ -220,17 +214,15 @@ public class MasterSourceSynchronizer {
         Dataset dataset = datasetMapper.get(UUID.fromString(machineTag.getValue()));
         Organization publishingOrganization =
             organizationMapper.get(dataset.getPublishingOrganizationKey());
-        collectionService.update(
-            CollectionConverter.convertFromDataset(dataset, publishingOrganization, collection));
+
+        updateCollection(dataset, publishingOrganization, collection);
       } else if (machineTag.getName().equals(MasterSourceUtils.ORGANIZATION_SOURCE)) {
         Institution institution = institutionService.get(event.getCollectionEntityKey());
         checkArgument(
             institution != null, "Institution not found for key " + event.getCollectionEntityKey());
 
         Organization organization = organizationMapper.get(UUID.fromString(machineTag.getValue()));
-
-        institutionService.update(
-            InstitutionConverter.convertFromOrganization(organization, institution));
+        updateInstitution(organization, institution);
       }
     }
   }
@@ -275,5 +267,49 @@ public class MasterSourceSynchronizer {
     }
 
     return Optional.empty();
+  }
+
+  private void updateCollection(
+      Dataset dataset, Organization publishingOrganization, Collection existingCollection) {
+    Collection convertedCollection =
+        CollectionConverter.convertFromDataset(dataset, publishingOrganization, existingCollection);
+
+    // create new identifiers
+    if (convertedCollection.getIdentifiers().stream().anyMatch(i -> i.getKey() == null)) {
+      convertedCollection.getIdentifiers().stream()
+          .filter(i -> i.getKey() == null)
+          .forEach(i -> collectionService.addIdentifier(existingCollection.getKey(), i));
+      // update the identifiers to pass the constraints validations when updating the entity
+      convertedCollection.setIdentifiers(
+          collectionService.listIdentifiers(existingCollection.getKey()));
+    }
+
+    // create new contacts
+    if (convertedCollection.getContactPersons().stream().anyMatch(c -> c.getKey() == null)) {
+      convertedCollection.getContactPersons().stream()
+          .filter(c -> c.getKey() == null)
+          .forEach(c -> collectionService.addContactPersonToEntity(existingCollection.getKey(), c));
+      convertedCollection.setContactPersons(
+          collectionService.listContactPersons(existingCollection.getKey()));
+    }
+
+    collectionService.update(convertedCollection);
+  }
+
+  private void updateInstitution(Organization organization, Institution existingInstitution) {
+    Institution convertedInstitution =
+        InstitutionConverter.convertFromOrganization(organization, existingInstitution);
+
+    // create new contacts
+    if (convertedInstitution.getContactPersons().stream().anyMatch(c -> c.getKey() == null)) {
+      convertedInstitution.getContactPersons().stream()
+          .filter(c -> c.getKey() == null)
+          .forEach(
+              c -> institutionService.addContactPersonToEntity(existingInstitution.getKey(), c));
+      convertedInstitution.setContactPersons(
+          institutionService.listContactPersons(existingInstitution.getKey()));
+    }
+
+    institutionService.update(convertedInstitution);
   }
 }

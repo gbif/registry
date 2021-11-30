@@ -329,11 +329,11 @@ public abstract class BaseChangeSuggestionService<
     } else if (dto.getType() == Type.UPDATE) {
       T originalEntity = crudService.get(changeSuggestion.getEntityKey());
 
-      // update the entity
-      crudService.update(changeSuggestion.getSuggestedEntity());
-
       // update contacts
       updateContacts(changeSuggestion, originalEntity);
+
+      // update the entity
+      crudService.update(changeSuggestion.getSuggestedEntity());
     } else if (dto.getType() == Type.DELETE) {
       crudService.delete(changeSuggestion.getEntityKey());
     } else if (dto.getType() == Type.MERGE) {
@@ -381,6 +381,7 @@ public abstract class BaseChangeSuggestionService<
 
     if (hasExternalMasterSource(originalEntity)) {
       // cannot modify the contacts of an entity whose master source is not GRSciColl
+      changeSuggestion.getSuggestedEntity().setContactPersons(originalEntity.getContactPersons());
       return;
     }
 

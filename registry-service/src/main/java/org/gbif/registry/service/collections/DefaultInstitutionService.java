@@ -172,11 +172,13 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
 
     preCreate(institution);
 
-    institution.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     institution.setKey(UUID.randomUUID());
     baseMapper.create(institution);
 
     UUID institutionKey = institution.getKey();
+
+    // create contacts
+    institution.getContactPersons().forEach(contact -> addContactPerson(institutionKey, contact));
 
     // create machine tag for source
     MachineTag sourceTag =
@@ -185,9 +187,6 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
           MasterSourceUtils.ORGANIZATION_SOURCE,
           organizationKey.toString());
     addMachineTag(institutionKey, sourceTag);
-
-    // create contacts
-    institution.getContactPersons().forEach(contact -> addContactPerson(institutionKey, contact));
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(institution));
 

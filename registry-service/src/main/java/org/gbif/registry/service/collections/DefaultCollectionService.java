@@ -195,25 +195,24 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
 
     preCreate(collection);
 
-    collection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     collection.setKey(UUID.randomUUID());
     baseMapper.create(collection);
 
     UUID collectionKey = collection.getKey();
-
-    // create machine tag for source
-    MachineTag sourceTag =
-        new MachineTag(
-          MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-          MasterSourceUtils.DATASET_SOURCE,
-          datasetKey.toString());
-    addMachineTag(collectionKey, sourceTag);
 
     // create contacts
     collection.getContactPersons().forEach(contact -> addContactPerson(collectionKey, contact));
 
     // create identifiers
     collection.getIdentifiers().forEach(identifier -> addIdentifier(collectionKey, identifier));
+
+    // create machine tag for source
+    MachineTag sourceTag =
+      new MachineTag(
+        MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+        MasterSourceUtils.DATASET_SOURCE,
+        datasetKey.toString());
+    addMachineTag(collectionKey, sourceTag);
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(collection));
 

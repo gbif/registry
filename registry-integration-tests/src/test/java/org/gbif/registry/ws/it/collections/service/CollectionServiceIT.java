@@ -974,7 +974,8 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     machineTagKey =
         collectionService.addMachineTag(
             collectionKey,
-            new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, DATASET_SOURCE, "123"));
+            new MachineTag(
+                MASTER_SOURCE_COLLECTIONS_NAMESPACE, DATASET_SOURCE, UUID.randomUUID().toString()));
     updatedCollection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     collectionService.update(updatedCollection);
 
