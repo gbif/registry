@@ -428,6 +428,13 @@
     collection_contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="removeAllContactPersons">
+    DELETE FROM collection_contact USING collection_collection_contact
+    WHERE
+    collection_contact_key = collection_contact.key AND
+    collection_key = #{entityKey,jdbcType=OTHER}
+  </delete>
+
   <!-- LOOKUP -->
   <sql id="LOOKUP_MATCH_FIELDS">
     c.key, c.name, c.code, c.institution_key, c.address_key, c.mailing_address_key, c.active

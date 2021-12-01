@@ -53,14 +53,7 @@ public class InstitutionConverter {
         organization.getContacts().stream()
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
-
-    collectionContacts.forEach(
-        c -> {
-          if (existingInstitution.getContactPersons().stream()
-              .noneMatch(c2 -> c2.lenientEquals(c))) {
-            existingInstitution.getContactPersons().add(c);
-          }
-        });
+    existingInstitution.setContactPersons(collectionContacts);
 
     return existingInstitution;
   }

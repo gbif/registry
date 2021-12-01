@@ -193,6 +193,13 @@
     collection_contact_key = #{contactKey,jdbcType=INTEGER}
   </delete>
 
+  <delete id="removeAllContactPersons">
+    DELETE FROM collection_contact USING institution_collection_contact
+    WHERE
+    collection_contact_key = collection_contact.key AND
+    institution_key = #{entityKey,jdbcType=OTHER}
+  </delete>
+
   <select id="listAddress" resultMap="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.AddressMapper.ADDRESS_READ_FIELDS"/>
     FROM address

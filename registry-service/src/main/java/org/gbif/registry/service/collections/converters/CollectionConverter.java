@@ -176,14 +176,7 @@ public class CollectionConverter {
         dataset.getContacts().stream()
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
-
-    collectionContacts.forEach(
-        c -> {
-          if (existingCollection.getContactPersons().stream()
-              .noneMatch(c2 -> c2.lenientEquals(c))) {
-            existingCollection.getContactPersons().add(c);
-          }
-        });
+    existingCollection.setContactPersons(collectionContacts);
 
     return existingCollection;
   }

@@ -10,6 +10,8 @@ import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
@@ -20,8 +22,6 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.service.collections.DefaultCollectionService;
-import org.gbif.registry.service.collections.DefaultInstitutionService;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
@@ -42,8 +42,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Component
 public class MasterSourceSynchronizer {
 
-  private final DefaultCollectionService collectionService;
-  private final DefaultInstitutionService institutionService;
+  private final CollectionService collectionService;
+  private final InstitutionService institutionService;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
   private final CollectionsEmailManager emailManager;
@@ -51,8 +51,8 @@ public class MasterSourceSynchronizer {
 
   @Autowired
   public MasterSourceSynchronizer(
-      DefaultCollectionService collectionService,
-      DefaultInstitutionService institutionService,
+      CollectionService collectionService,
+      InstitutionService institutionService,
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
       CollectionsEmailManager emailManager,
@@ -284,15 +284,11 @@ public class MasterSourceSynchronizer {
           collectionService.listIdentifiers(existingCollection.getKey()));
     }
 
-    // create new contacts
-    if (convertedCollection.getContactPersons().stream().anyMatch(c -> c.getKey() == null)) {
-      convertedCollection.getContactPersons().stream()
-          .filter(c -> c.getKey() == null)
-          .forEach(c -> collectionService.addContactPersonToEntity(existingCollection.getKey(), c));
-      convertedCollection.setContactPersons(
-          collectionService.listContactPersons(existingCollection.getKey()));
-    }
+    // replace contacts
+    collectionService.replaceContactPersons(
+        existingCollection.getKey(), convertedCollection.getContactPersons());
 
+    // update collection
     collectionService.update(convertedCollection);
   }
 
@@ -300,16 +296,11 @@ public class MasterSourceSynchronizer {
     Institution convertedInstitution =
         InstitutionConverter.convertFromOrganization(organization, existingInstitution);
 
-    // create new contacts
-    if (convertedInstitution.getContactPersons().stream().anyMatch(c -> c.getKey() == null)) {
-      convertedInstitution.getContactPersons().stream()
-          .filter(c -> c.getKey() == null)
-          .forEach(
-              c -> institutionService.addContactPersonToEntity(existingInstitution.getKey(), c));
-      convertedInstitution.setContactPersons(
-          institutionService.listContactPersons(existingInstitution.getKey()));
-    }
+    // replace contacts
+    institutionService.replaceContactPersons(
+        existingInstitution.getKey(), convertedInstitution.getContactPersons());
 
+    // update institution
     institutionService.update(convertedInstitution);
   }
 }

@@ -282,6 +282,8 @@ public abstract class BasePrimaryCollectionEntityService<
   @Transactional
   @Override
   public int addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
+    checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
+
     T entity = get(entityKey);
     if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
       throw new IllegalArgumentException(
@@ -293,7 +295,7 @@ public abstract class BasePrimaryCollectionEntityService<
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
-  public int addContactPersonToEntity(@NotNull UUID entityKey, @NotNull Contact contact) {
+  private int addContactPersonToEntity(@NotNull UUID entityKey, @NotNull Contact contact) {
     checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -369,6 +371,26 @@ public abstract class BasePrimaryCollectionEntityService<
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
             entityKey, objectClass, contactToRemove, contactKey, EventType.DELETE));
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void replaceContactPersons(@NotNull UUID entityKey, List<Contact> newContactPersons) {
+    checkArgument(entityKey != null);
+
+    List<Contact> contacts = primaryEntityMapper.listContactPersons(entityKey);
+    primaryEntityMapper.removeAllContactPersons(entityKey);
+
+    contacts.forEach(
+        c ->
+            eventManager.post(
+                SubEntityCollectionEvent.newInstance(
+                    entityKey, objectClass, c, c.getKey(), EventType.DELETE)));
+
+    if (newContactPersons != null) {
+      newContactPersons.forEach(c -> addContactPersonToEntity(entityKey, c));
+    }
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
