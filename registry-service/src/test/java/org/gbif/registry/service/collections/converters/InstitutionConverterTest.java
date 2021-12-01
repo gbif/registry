@@ -56,7 +56,6 @@ public class InstitutionConverterTest {
 
   private void assertConvertedInstitution(
       Organization organization, Institution convertedInstitution) {
-    assertEquals(MasterSourceType.GBIF_REGISTRY, convertedInstitution.getMasterSource());
     assertEquals(organization.getTitle(), convertedInstitution.getName());
     assertEquals(organization.getDescription(), convertedInstitution.getDescription());
     assertEquals(organization.getHomepage().get(0), convertedInstitution.getHomepage());

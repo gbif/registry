@@ -68,7 +68,6 @@ public class CollectionConverterTest {
 
   private void assertConvertedCollection(
       Dataset dataset, Organization organization, Collection convertedCollection) {
-    assertEquals(MasterSourceType.GBIF_REGISTRY, convertedCollection.getMasterSource());
     assertEquals(dataset.getTitle(), convertedCollection.getName());
     assertEquals(dataset.getDescription(), convertedCollection.getDescription());
     assertEquals(dataset.getHomepage(), convertedCollection.getHomepage());
