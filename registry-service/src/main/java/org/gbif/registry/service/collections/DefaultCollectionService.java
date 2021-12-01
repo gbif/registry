@@ -14,7 +14,6 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
@@ -208,10 +207,10 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
 
     // create machine tag for source
     MachineTag sourceTag =
-      new MachineTag(
-        MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-        MasterSourceUtils.DATASET_SOURCE,
-        datasetKey.toString());
+        new MachineTag(
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.DATASET_SOURCE,
+            datasetKey.toString());
     addMachineTag(collectionKey, sourceTag);
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(collection));
