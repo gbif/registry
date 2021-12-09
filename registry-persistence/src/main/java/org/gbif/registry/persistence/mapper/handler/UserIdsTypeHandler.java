@@ -13,8 +13,8 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.UserId;
+import org.gbif.api.vocabulary.collections.IdType;
 
 import java.io.IOException;
 import java.sql.CallableStatement;

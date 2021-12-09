@@ -13,11 +13,11 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.persistence.ContactableMapper;
 
 import java.util.UUID;
