@@ -14,7 +14,6 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -183,9 +182,9 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     // create machine tag for source
     MachineTag sourceTag =
         new MachineTag(
-          MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-          MasterSourceUtils.ORGANIZATION_SOURCE,
-          organizationKey.toString());
+            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
+            MasterSourceUtils.ORGANIZATION_SOURCE,
+            organizationKey.toString());
     addMachineTag(institutionKey, sourceTag);
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(institution));
