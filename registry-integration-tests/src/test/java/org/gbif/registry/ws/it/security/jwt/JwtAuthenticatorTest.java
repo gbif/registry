@@ -73,7 +73,7 @@ public class JwtAuthenticatorTest {
   public void expiredTokenTest() {
     JwtConfiguration config = new JwtConfiguration();
     config.setSigningKey(signingKey);
-    config.setExpiryTimeInMs(10L);
+    config.setExpiryTimeInMs(1L);
     config.setIssuer(ISSUER);
 
     String token = JwtUtils.generateJwt(user.getUserName(), config);
