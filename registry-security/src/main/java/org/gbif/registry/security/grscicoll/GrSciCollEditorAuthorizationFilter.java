@@ -154,7 +154,8 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       if (!authService.allowedToUpdateChangeSuggestion(key, entityType, authentication)) {
         throw new WebApplicationException(
             MessageFormat.format(
-                "User {0} is not allowed to update change suggestion {1}", authentication, key),
+                "User {0} is not allowed to update change suggestion {1}",
+                authentication.getName(), key),
             HttpStatus.FORBIDDEN);
       }
     }
@@ -244,7 +245,8 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       if (!allowed) {
         throw new WebApplicationException(
             MessageFormat.format(
-                "User {0} is not allowed to create entity {1}", authentication, entityType),
+                "User {0} is not allowed to create entity {1}",
+                authentication.getName(), entityType),
             HttpStatus.FORBIDDEN);
       }
     }
