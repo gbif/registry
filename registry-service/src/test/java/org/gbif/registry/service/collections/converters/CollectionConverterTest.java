@@ -1,7 +1,6 @@
 package org.gbif.registry.service.collections.converters;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;

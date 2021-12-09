@@ -1,7 +1,6 @@
 package org.gbif.registry.service.collections.converters;
 
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.Country;

@@ -17,7 +17,6 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
@@ -50,6 +49,7 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -65,7 +65,6 @@ import static org.gbif.registry.service.collections.utils.MasterSourceUtils.DATA
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.ORGANIZATION_SOURCE;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
