@@ -2,11 +2,11 @@ package org.gbif.registry.service.collections.utils;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceType;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.Sourceable;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.Sourceables;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

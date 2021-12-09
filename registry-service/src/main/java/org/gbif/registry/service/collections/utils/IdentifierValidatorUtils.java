@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.service.collections.utils;
 
-import org.gbif.api.model.collections.IdType;
 import org.gbif.api.util.validators.identifierschemes.HuhValidator;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
 import org.gbif.api.util.validators.identifierschemes.IhIrnValidator;
@@ -23,6 +22,7 @@ import org.gbif.api.util.validators.identifierschemes.OtherValidator;
 import org.gbif.api.util.validators.identifierschemes.ResearcherIdValidator;
 import org.gbif.api.util.validators.identifierschemes.ViafValidator;
 import org.gbif.api.util.validators.identifierschemes.WikidataValidator;
+import org.gbif.api.vocabulary.collections.IdType;
 
 import java.util.EnumMap;
 import java.util.Map;
