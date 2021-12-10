@@ -14,31 +14,15 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
-import org.gbif.api.model.collections.UserId;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
-import org.gbif.registry.events.collections.EventType;
-import org.gbif.registry.events.collections.ReplaceEntityEvent;
-import org.gbif.registry.events.collections.SubEntityCollectionEvent;
-import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
+import org.gbif.registry.events.collections.*;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -56,6 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
@@ -67,17 +52,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.CONTACTS_FIELD_NAME;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.DATASET_SOURCE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.ORGANIZATION_SOURCE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
@@ -278,10 +257,11 @@ public abstract class BasePrimaryCollectionEntityService<
     return primaryEntityMapper.listContactPersons(entityKey);
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public int addContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
+  public int addContactPerson(@NotNull UUID entityKey, @NotNull @Valid Contact contact) {
     checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
 
     T entity = get(entityKey);
@@ -314,10 +294,11 @@ public abstract class BasePrimaryCollectionEntityService<
     return contact.getKey();
   }
 
+  @Validated({PostPersist.class, Default.class})
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public void updateContactPerson(@NotNull UUID entityKey, @NotNull Contact contact) {
+  public void updateContactPerson(@NotNull UUID entityKey, @NotNull @Valid Contact contact) {
     checkArgument(contact.getKey() != null, "Unable to update a contact with no key");
 
     T entity = get(entityKey);
@@ -343,6 +324,10 @@ public abstract class BasePrimaryCollectionEntityService<
     // validate userIds
     if (contact.getUserIds() != null && !contact.getUserIds().isEmpty()) {
       for (UserId userId : contact.getUserIds()) {
+        if (userId.getType() == null) {
+          throw new IllegalArgumentException("UserId type cannot be null");
+        }
+
         IdentifierSchemeValidator validator =
             IdentifierValidatorUtils.getValidatorByIdType(userId.getType());
 
@@ -373,10 +358,11 @@ public abstract class BasePrimaryCollectionEntityService<
             entityKey, objectClass, contactToRemove, contactKey, EventType.DELETE));
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public void replaceContactPersons(@NotNull UUID entityKey, List<Contact> newContactPersons) {
+  public void replaceContactPersons(@NotNull UUID entityKey, List<@Valid Contact> newContactPersons) {
     checkArgument(entityKey != null);
 
     List<Contact> contacts = primaryEntityMapper.listContactPersons(entityKey);
