@@ -14,20 +14,22 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.ReplaceEntityEvent;
 import org.gbif.registry.persistence.mapper.CommentMapper;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -35,11 +37,11 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
-import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -79,6 +81,8 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
       IdentifierMapper identifierMapper,
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
+      MasterSourceSyncMetadataMapper metadataMapper,
+      DatasetMapper datasetMapper,
       CollectionContactMapper contactMapper,
       OrganizationMapper organizationMapper,
       EventManager eventManager,
@@ -93,6 +97,9 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
         commentMapper,
         occurrenceMappingMapper,
         contactMapper,
+        metadataMapper,
+        datasetMapper,
+        organizationMapper,
         eventManager,
         withMyBatis);
     this.institutionMapper = institutionMapper;
@@ -180,12 +187,8 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     institution.getContactPersons().forEach(contact -> addContactPerson(institutionKey, contact));
 
     // create machine tag for source
-    MachineTag sourceTag =
-        new MachineTag(
-            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            MasterSourceUtils.ORGANIZATION_SOURCE,
-            organizationKey.toString());
-    addMachineTag(institutionKey, sourceTag);
+    addMasterSourceMetadata(
+        institutionKey, new MasterSourceMetadata(Source.ORGANIZATION, organizationKey.toString()));
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(institution));
 

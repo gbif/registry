@@ -15,6 +15,7 @@ package org.gbif.registry.service.collections.merge;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
@@ -47,8 +48,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseMergeService<
@@ -119,17 +118,22 @@ public abstract class BaseMergeService<
 
     // copy iDigBio and IH machine tags
     entityToReplace.getMachineTags().stream()
-        .filter(
-            mt ->
-                mt.getNamespace().equals(IDIGBIO_NAMESPACE)
-                    || (mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)
-                        && mt.getName().equals(IH_SOURCE)))
+        .filter(mt -> mt.getNamespace().equals(IDIGBIO_NAMESPACE))
         .filter(mt -> !containsMachineTag(replacement, mt))
         .forEach(
             mt ->
                 primaryEntityService.addMachineTag(
                     replacementKey,
                     new MachineTag(mt.getNamespace(), mt.getName(), mt.getValue())));
+
+    // copy master source
+    if (entityToReplace.getMasterSourceMetadata() != null) {
+      primaryEntityService.addMasterSourceMetadata(
+          replacementKey,
+          new MasterSourceMetadata(
+              entityToReplace.getMasterSourceMetadata().getSource(),
+              entityToReplace.getMasterSourceMetadata().getSourceId()));
+    }
 
     // FIXME: to be removed in the future, contacts are deprecated
     // merge contacts
@@ -165,14 +169,6 @@ public abstract class BaseMergeService<
             });
 
     additionalOperations(entityToReplace, replacement);
-  }
-
-  protected boolean containsIHMachineTag(T entity) {
-    return entity.getMachineTags().stream()
-        .anyMatch(
-            mt ->
-                mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)
-                    && mt.getName().equals(IH_SOURCE));
   }
 
   protected boolean isIDigBioRecord(T entity) {

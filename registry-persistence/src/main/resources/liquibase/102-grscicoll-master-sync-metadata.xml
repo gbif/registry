@@ -1,0 +1,24 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="102" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TYPE enum_grscicoll_source AS ENUM ('DATASET', 'ORGANIZATION', 'IH_IRN');
+
+        CREATE TABLE master_sync_metadata (
+          key serial NOT NULL PRIMARY KEY,
+          source enum_grscicoll_source,
+          source_id text CHECK (assert_min_length(source_id, 1)),
+          created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
+	        created timestamptz NOT NULL DEFAULT now()
+        );
+
+        ALTER TABLE institution ADD COLUMN master_sync_metadata_key int4 REFERENCES master_sync_metadata(key);
+        ALTER TABLE collection ADD COLUMN master_sync_metadata_key int4 REFERENCES master_sync_metadata(key);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

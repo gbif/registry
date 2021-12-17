@@ -61,7 +61,8 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
         institutionService,
         institutionService,
         institutionService,
-        personService);
+        personService,
+        institutionService);
     this.institutionMergeService = institutionMergeService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;

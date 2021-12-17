@@ -119,8 +119,7 @@ public class BaseServiceIT {
 
       RegistryDatabaseInitializer.init(database.getDataSource());
 
-      TestPropertyValues.of(
-              Stream.of(dbTestPropertyPairs(database)).flatMap(Stream::of).toArray(String[]::new))
+      TestPropertyValues.of(Stream.of(dbTestPropertyPairs(database)).toArray(String[]::new))
           .applyTo(configurableApplicationContext.getEnvironment());
 
       TestPropertyValues.of("elasticsearch.mock=true")

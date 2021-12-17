@@ -18,6 +18,7 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.duplicates.Duplicate;
@@ -28,7 +29,6 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -43,6 +43,7 @@ import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
@@ -62,10 +63,6 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.DATASET_SOURCE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SOURCE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.ORGANIZATION_SOURCE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -773,12 +770,9 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     assertEquals(collectionCode, collection.getCode());
     assertEquals(MasterSourceType.GBIF_REGISTRY, collection.getMasterSource());
 
-    assertTrue(
-        collection.getMachineTags().stream()
-            .anyMatch(
-                mt ->
-                    mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)
-                        && mt.getName().equals(DATASET_SOURCE)));
+    assertEquals(Source.DATASET, collection.getMasterSourceMetadata().getSource());
+    assertEquals(dataset.getKey().toString(), collection.getMasterSourceMetadata().getSourceId());
+
     assertTrue(
         collection.getIdentifiers().stream()
             .anyMatch(
@@ -787,43 +781,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
                         && i.getIdentifier().equals(dataset.getDoi().getDoiName())));
 
     assertEquals(1, collection.getContactPersons().size());
-  }
-
-  @Test
-  public void addMasterSourceMachineTagTest() {
-    Collection entity = testData.newEntity();
-    UUID entityKey = collectionService.create(entity);
-    Collection entityCreated = collectionService.get(entityKey);
-    assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
-
-    MachineTag mt =
-        new MachineTag(
-            MASTER_SOURCE_COLLECTIONS_NAMESPACE, ORGANIZATION_SOURCE, UUID.randomUUID().toString());
-    assertThrows(
-        IllegalArgumentException.class, () -> collectionService.addMachineTag(entityKey, mt));
-
-    MachineTag mt2 =
-        new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, ORGANIZATION_SOURCE, "Not a UUID");
-    assertThrows(
-        IllegalArgumentException.class, () -> collectionService.addMachineTag(entityKey, mt2));
-
-    MachineTag mt3 =
-        new MachineTag(
-            MASTER_SOURCE_COLLECTIONS_NAMESPACE, DATASET_SOURCE, UUID.randomUUID().toString());
-    int mtKey = collectionService.addMachineTag(entityKey, mt3);
-    assertTrue(mtKey > 0);
-    entityCreated = collectionService.get(entityKey);
-    assertEquals(MasterSourceType.GBIF_REGISTRY, entityCreated.getMasterSource());
-
-    MachineTag mt4 =
-        new MachineTag(
-            MASTER_SOURCE_COLLECTIONS_NAMESPACE, DATASET_SOURCE, UUID.randomUUID().toString());
-    assertThrows(
-        IllegalArgumentException.class, () -> collectionService.addMachineTag(entityKey, mt4));
-
-    collectionService.deleteMachineTag(entityKey, mtKey);
-    entityCreated = collectionService.get(entityKey);
-    assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
   }
 
   @Test
@@ -850,9 +807,9 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     myContact.setFirstName("myContact");
     int contactKey = collectionService.addContactPerson(collectionKey, myContact);
 
-    int machineTagKey =
-        collectionService.addMachineTag(
-            collectionKey, new MachineTag(MASTER_SOURCE_COLLECTIONS_NAMESPACE, IH_SOURCE, "123"));
+    int metadataKey =
+        collectionService.addMasterSourceMetadata(
+            collectionKey, new MasterSourceMetadata(Source.IH_IRN, "123"));
 
     collection.setNumberSpecimens(12);
     collection.setTaxonomicCoverage("aaa");
@@ -894,15 +851,22 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
     assertThrows(IllegalArgumentException.class, () -> collectionService.delete(collectionKey));
 
+    // change the master source to GRSCICOLL
+    collectionService.deleteMasterSourceMetadata(collectionKey);
+    updatedCollection = collectionService.get(collectionKey);
+    assertEquals(MasterSourceType.GRSCICOLL, updatedCollection.getMasterSource());
+
+    assertDoesNotThrow(() -> collectionService.addContactPerson(collectionKey, contact));
+    assertDoesNotThrow(() -> collectionService.updateContactPerson(collectionKey, myContact));
+    assertDoesNotThrow(() -> collectionService.removeContactPerson(collectionKey, contactKey));
+
     // change the master source to GBIF_REGISTRY
-    collectionService.deleteMachineTag(collectionKey, machineTagKey);
-    machineTagKey =
-        collectionService.addMachineTag(
-            collectionKey,
-            new MachineTag(
-                MASTER_SOURCE_COLLECTIONS_NAMESPACE, DATASET_SOURCE, UUID.randomUUID().toString()));
-    updatedCollection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
-    collectionService.update(updatedCollection);
+    Dataset dataset = createDataset();
+    metadataKey =
+        collectionService.addMasterSourceMetadata(
+            collectionKey, new MasterSourceMetadata(Source.DATASET, dataset.getKey().toString()));
+    updatedCollection = collectionService.get(collectionKey);
+    assertEquals(MasterSourceType.GBIF_REGISTRY, updatedCollection.getMasterSource());
 
     String currentDescription = updatedCollection.getDescription();
     updatedCollection.setDescription("another one");
@@ -910,13 +874,10 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     updatedCollection = collectionService.get(collectionKey);
     // the description must remain the same
     assertEquals(currentDescription, updatedCollection.getDescription());
+    assertTrue(updatedCollection.getContactPersons().isEmpty());
 
     // delete the master source
-    collectionService.deleteMachineTag(collectionKey, machineTagKey);
-
-    assertDoesNotThrow(() -> collectionService.addContactPerson(collectionKey, contact));
-    assertDoesNotThrow(() -> collectionService.updateContactPerson(collectionKey, myContact));
-    assertDoesNotThrow(() -> collectionService.removeContactPerson(collectionKey, contactKey));
+    collectionService.deleteMasterSourceMetadata(collectionKey);
     assertDoesNotThrow(() -> collectionService.delete(collectionKey));
   }
 }

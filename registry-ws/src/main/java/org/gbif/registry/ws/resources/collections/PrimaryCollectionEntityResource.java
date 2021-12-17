@@ -18,6 +18,7 @@ import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -240,5 +241,24 @@ public abstract class PrimaryCollectionEntityResource<
     ApplySuggestionResult result = new ApplySuggestionResult();
     result.setEntityCreatedKey(entityCreatedKey);
     return result;
+  }
+
+  @PostMapping(value = "{key}/masterSourceMetadata", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Trim
+  public int addMasterSourceMetadata(
+      @PathVariable("key") UUID entityKey,
+      @RequestBody @Trim MasterSourceMetadata masterSourceMetadata) {
+    return primaryCollectionEntityService.addMasterSourceMetadata(entityKey, masterSourceMetadata);
+  }
+
+  @GetMapping("{key}/masterSourceMetadata")
+  @Nullable
+  public MasterSourceMetadata getMasterSourceMetadata(@PathVariable("key") UUID entityKey) {
+    return primaryCollectionEntityService.getMasterSourceMetadata(entityKey);
+  }
+
+  @DeleteMapping("{key}/masterSourceMetadata")
+  public void deleteMasterSourceMetadata(@PathVariable("key") UUID entityKey) {
+    primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey);
   }
 }

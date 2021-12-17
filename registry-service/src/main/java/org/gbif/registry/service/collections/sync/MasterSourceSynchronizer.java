@@ -1,22 +1,18 @@
 package org.gbif.registry.service.collections.sync;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.UpdateEvent;
-import org.gbif.registry.events.collections.EventType;
-import org.gbif.registry.events.collections.SubEntityCollectionEvent;
+import org.gbif.registry.events.collections.MasterSourceMetadataAddedEvent;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
@@ -24,7 +20,6 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
-import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -73,7 +68,8 @@ public class MasterSourceSynchronizer {
       Dataset updatedDataset = (Dataset) event.getNewObject();
 
       // find if there is any collection whose master source is this dataset
-      Optional<Collection> collectionFound = findCollectionsSourcedFromDataset(updatedDataset);
+      Optional<Collection> collectionFound =
+          collectionService.findByMasterSource(Source.DATASET, updatedDataset.getKey().toString());
 
       if (collectionFound.isPresent()) {
         // update the collection
@@ -87,7 +83,8 @@ public class MasterSourceSynchronizer {
 
       // find if there is any institution whose master source is this organization
       Optional<Institution> institutionFound =
-          findInstitutionsSourcedFromOrganization(updatedOrganization);
+          institutionService.findByMasterSource(
+              Source.ORGANIZATION, updatedOrganization.getKey().toString());
 
       // update the institution
       institutionFound.ifPresent(
@@ -101,19 +98,14 @@ public class MasterSourceSynchronizer {
       Dataset dataset = (Dataset) event.getOldObject();
 
       // find if there is any collection whose master source is this dataset
-      Optional<Collection> collectionFound = findCollectionsSourcedFromDataset(dataset);
+      Optional<Collection> collectionFound =
+          collectionService.findByMasterSource(Source.DATASET, dataset.getKey().toString());
 
       if (collectionFound.isPresent()) {
         Collection collection = collectionFound.get();
 
-        // remove the machine tag
-        collection.getMachineTags().stream()
-            .filter(
-                mt ->
-                    mt.getNamespace().equals(MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE)
-                        && mt.getName().equals(MasterSourceUtils.DATASET_SOURCE)
-                        && mt.getValue().equals(dataset.getKey().toString()))
-            .forEach(mt -> collectionService.deleteMachineTag(collection.getKey(), mt.getKey()));
+        // remove the metadata
+        collectionService.deleteMasterSourceMetadata(collection.getKey());
 
         // create comment
         Comment comment = new Comment();
@@ -135,19 +127,14 @@ public class MasterSourceSynchronizer {
 
       // find if there is any institution whose master source is this organization
       Optional<Institution> institutionFound =
-          findInstitutionsSourcedFromOrganization(organization);
+          institutionService.findByMasterSource(
+              Source.ORGANIZATION, organization.getKey().toString());
 
       if (institutionFound.isPresent()) {
         Institution institution = institutionFound.get();
 
-        // remove the machine tag
-        institution.getMachineTags().stream()
-            .filter(
-                mt ->
-                    mt.getNamespace().equals(MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE)
-                        && mt.getName().equals(MasterSourceUtils.ORGANIZATION_SOURCE)
-                        && mt.getValue().equals(organization.getKey().toString()))
-            .forEach(mt -> institutionService.deleteMachineTag(institution.getKey(), mt.getKey()));
+        // remove the metadata
+        institutionService.deleteMasterSourceMetadata(institution.getKey());
 
         // create comment
         Comment comment = new Comment();
@@ -192,81 +179,26 @@ public class MasterSourceSynchronizer {
   }
 
   @Subscribe
-  public <T extends CollectionEntity, R> void syncNewMasterSource(
-      SubEntityCollectionEvent<T, R> event) {
+  public void syncNewMasterSource(MasterSourceMetadataAddedEvent event) {
+    if (event.getMetadata().getSource() == Source.DATASET) {
+      Collection collection = collectionService.get(event.getCollectionEntityKey());
+      checkArgument(
+          collection != null, "Collection not found for key " + event.getCollectionEntityKey());
 
-    // we only care about the creation of machine tags for master sources
-    if (event.getEventType() == EventType.CREATE
-        && MachineTag.class.isAssignableFrom(event.getSubEntityClass())) {
-      MachineTag machineTag = (MachineTag) event.getSubEntity();
+      Dataset dataset = datasetMapper.get(UUID.fromString(event.getMetadata().getSourceId()));
+      Organization publishingOrganization =
+          organizationMapper.get(dataset.getPublishingOrganizationKey());
 
-      if (!machineTag
-          .getNamespace()
-          .equals(MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE)) {
-        return;
-      }
+      updateCollection(dataset, publishingOrganization, collection);
+    } else if (event.getMetadata().getSource() == Source.ORGANIZATION) {
+      Institution institution = institutionService.get(event.getCollectionEntityKey());
+      checkArgument(
+          institution != null, "Institution not found for key " + event.getCollectionEntityKey());
 
-      if (machineTag.getName().equals(MasterSourceUtils.DATASET_SOURCE)) {
-        Collection collection = collectionService.get(event.getCollectionEntityKey());
-        checkArgument(
-            collection != null, "Collection not found for key " + event.getCollectionEntityKey());
-
-        Dataset dataset = datasetMapper.get(UUID.fromString(machineTag.getValue()));
-        Organization publishingOrganization =
-            organizationMapper.get(dataset.getPublishingOrganizationKey());
-
-        updateCollection(dataset, publishingOrganization, collection);
-      } else if (machineTag.getName().equals(MasterSourceUtils.ORGANIZATION_SOURCE)) {
-        Institution institution = institutionService.get(event.getCollectionEntityKey());
-        checkArgument(
-            institution != null, "Institution not found for key " + event.getCollectionEntityKey());
-
-        Organization organization = organizationMapper.get(UUID.fromString(machineTag.getValue()));
-        updateInstitution(organization, institution);
-      }
+      Organization organization =
+          organizationMapper.get(UUID.fromString(event.getMetadata().getSourceId()));
+      updateInstitution(organization, institution);
     }
-  }
-
-  private Optional<Institution> findInstitutionsSourcedFromOrganization(
-      Organization updatedOrganization) {
-    PagingResponse<Institution> institutionsFound =
-        institutionService.listByMachineTag(
-            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            MasterSourceUtils.ORGANIZATION_SOURCE,
-            updatedOrganization.getKey().toString(),
-            new PagingRequest(0, 2));
-
-    if (institutionsFound.getCount() > 1) {
-      throw new IllegalArgumentException(
-          "Found more than 1 institution with master source organization "
-              + updatedOrganization.getKey());
-    }
-
-    if (institutionsFound.getCount() == 1) {
-      return Optional.of(institutionsFound.getResults().get(0));
-    }
-
-    return Optional.empty();
-  }
-
-  private Optional<Collection> findCollectionsSourcedFromDataset(Dataset updatedDataset) {
-    PagingResponse<Collection> collectionsFound =
-        collectionService.listByMachineTag(
-            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            MasterSourceUtils.DATASET_SOURCE,
-            updatedDataset.getKey().toString(),
-            new PagingRequest(0, 2));
-
-    if (collectionsFound.getCount() > 1) {
-      throw new IllegalArgumentException(
-          "Found more than 1 collection with master source dataset " + updatedDataset.getKey());
-    }
-
-    if (collectionsFound.getCount() == 1) {
-      return Optional.of(collectionsFound.getResults().get(0));
-    }
-
-    return Optional.empty();
   }
 
   private void updateCollection(

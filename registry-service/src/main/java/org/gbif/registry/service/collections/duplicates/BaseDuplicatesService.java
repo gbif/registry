@@ -168,6 +168,8 @@ abstract class BaseDuplicatesService implements DuplicatesService {
   }
 
   private boolean assumeTransitiveClusters(DuplicatesSearchParams params) {
+    // entity A with same code as entity B. Entity B with same code as entity C. We can assume A ==
+    // C. But for fuzzy name duplicates we cannot assume that - A != C
     if (Boolean.TRUE.equals(params.getSameCode()) || Boolean.TRUE.equals(params.getSameName())) {
       return true;
     } else {

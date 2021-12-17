@@ -50,7 +50,8 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
         collectionService,
         collectionService,
         collectionService,
-        personService);
+        personService,
+        collectionService);
     this.collectionMergeService = collectionMergeService;
     this.collectionService = collectionService;
     this.institutionService = institutionService;
