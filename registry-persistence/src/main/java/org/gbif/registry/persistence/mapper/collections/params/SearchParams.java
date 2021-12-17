@@ -15,6 +15,7 @@ package org.gbif.registry.persistence.mapper.collections.params;
 
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 
 import java.util.UUID;
 
@@ -41,4 +42,5 @@ public abstract class SearchParams {
   @Nullable String city;
   @Nullable String fuzzyName;
   @Nullable Boolean active;
+  @Nullable MasterSourceType masterSourceType;
 }

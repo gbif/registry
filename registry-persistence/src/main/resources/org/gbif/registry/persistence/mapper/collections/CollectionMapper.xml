@@ -260,6 +260,9 @@
     <if test="params.personalCollection != null" >
       AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
     </if>
+    <if test="params.masterSourceType != null" >
+      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
@@ -351,6 +354,9 @@
     </if>
     <if test="params.personalCollection != null" >
       AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
+    </if>
+    <if test="params.masterSourceType != null" >
+      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
     </if>
   </select>
 
