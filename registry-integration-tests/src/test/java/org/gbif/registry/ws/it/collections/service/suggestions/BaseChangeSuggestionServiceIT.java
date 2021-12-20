@@ -18,6 +18,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.suggestions.Change;
@@ -29,15 +30,14 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.LenientEquals;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -272,12 +272,8 @@ public abstract class BaseChangeSuggestionServiceIT<
     entity.getContactPersons().add(contact1);
     contactService.addContactPerson(entityKey, contact1);
 
-    primaryCollectionEntityService.addMachineTag(
-        entityKey,
-        new MachineTag(
-            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            MasterSourceUtils.IH_SOURCE,
-            "14"));
+    primaryCollectionEntityService.addMasterSourceMetadata(
+        entityKey, new MasterSourceMetadata(Source.IH_IRN, "14"));
 
     // update entity
     entity.setName("another different name");

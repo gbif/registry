@@ -28,12 +28,6 @@ import lombok.SneakyThrows;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MasterSourceUtils {
 
-  public static final String MASTER_SOURCE_COLLECTIONS_NAMESPACE =
-      "master-source.collections.gbif.org";
-  public static final String IH_SOURCE = "ih_irn";
-  public static final String DATASET_SOURCE = "dataset";
-  public static final String ORGANIZATION_SOURCE = "organization";
-
   public static final String CONTACTS_FIELD_NAME = "contactPersons";
 
   public static final Map<MasterSourceType, List<LockableField>> INSTITUTION_LOCKABLE_FIELDS =

@@ -25,6 +25,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
@@ -164,6 +165,7 @@ public class InstitutionMapperIT extends BaseItTest {
     inst1.setName("n1");
     inst1.setCreatedBy("test");
     inst1.setModifiedBy("test");
+    inst1.setMasterSource(MasterSourceType.IH);
 
     Address addressInst1 = new Address();
     addressInst1.setCountry(Country.DENMARK);
@@ -190,6 +192,7 @@ public class InstitutionMapperIT extends BaseItTest {
     inst2.setName("n2");
     inst2.setCreatedBy("test");
     inst2.setModifiedBy("test");
+    inst2.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     institutionMapper.create(inst2);
 
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
@@ -289,6 +292,23 @@ public class InstitutionMapperIT extends BaseItTest {
         page,
         1,
         inst2.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.IH).build(),
+        page,
+        1,
+        inst1.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.GBIF_REGISTRY).build(),
+        page,
+        1,
+        inst2.getKey());
+
+    assertSearch(
+        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.GRSCICOLL).build(),
+        page,
+        0);
   }
 
   @Test

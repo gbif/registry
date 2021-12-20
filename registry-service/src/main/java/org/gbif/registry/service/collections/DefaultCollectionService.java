@@ -14,17 +14,18 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.CommentMapper;
@@ -36,12 +37,12 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
-import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.util.List;
 import java.util.UUID;
@@ -84,6 +85,7 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
       CollectionContactMapper contactMapper,
+      MasterSourceSyncMetadataMapper metadataMapper,
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
       EventManager eventManager,
@@ -98,6 +100,9 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
         commentMapper,
         occurrenceMappingMapper,
         contactMapper,
+        metadataMapper,
+        datasetMapper,
+        organizationMapper,
         eventManager,
         withMyBatis);
     this.collectionMapper = collectionMapper;
@@ -205,13 +210,9 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
     // create identifiers
     collection.getIdentifiers().forEach(identifier -> addIdentifier(collectionKey, identifier));
 
-    // create machine tag for source
-    MachineTag sourceTag =
-        new MachineTag(
-            MasterSourceUtils.MASTER_SOURCE_COLLECTIONS_NAMESPACE,
-            MasterSourceUtils.DATASET_SOURCE,
-            datasetKey.toString());
-    addMachineTag(collectionKey, sourceTag);
+    // create master source sync metadata
+    addMasterSourceMetadata(
+        collectionKey, new MasterSourceMetadata(Source.DATASET, datasetKey.toString()));
 
     eventManager.post(CreateCollectionEntityEvent.newInstance(collection));
 

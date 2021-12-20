@@ -16,6 +16,7 @@ package org.gbif.registry.ws.client.collections;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.SourceableField;
@@ -171,8 +172,25 @@ public interface PrimaryCollectionEntityClient<
   ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key);
 
   @RequestMapping(
-    method = RequestMethod.GET,
-    value = "sourceableFields",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.GET,
+      value = "sourceableFields",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   List<SourceableField> getSourceableFields();
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/masterSourceMetadata",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int addMasterSourceMetadata(
+      @PathVariable("key") UUID entityKey, @RequestBody MasterSourceMetadata masterSourceMetadata);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/masterSourceMetadata",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  MasterSourceMetadata getMasterSourceMetadata(@PathVariable("key") UUID entityKey);
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/masterSourceMetadata")
+  void deleteMasterSourceMetadata(@PathVariable("key") UUID entityKey);
 }
