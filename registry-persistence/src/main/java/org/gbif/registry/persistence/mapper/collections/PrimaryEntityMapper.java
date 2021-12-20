@@ -22,6 +22,7 @@ import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.ContactableMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
@@ -40,5 +41,5 @@ public interface PrimaryEntityMapper<
   MasterSourceMetadata getEntityMasterSourceMetadata(
       @Param("targetEntityKey") UUID targetEntityKey);
 
-  T findByMasterSource(@Param("source") Source source, @Param("sourceId") String sourceId);
+  List<T> findByMasterSource(@Param("source") Source source, @Param("sourceId") String sourceId);
 }

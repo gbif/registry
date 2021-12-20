@@ -56,6 +56,7 @@ import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
+import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
@@ -63,7 +64,6 @@ import org.gbif.ws.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -531,6 +531,27 @@ public abstract class BasePrimaryCollectionEntityService<
   @Override
   public void deleteMasterSourceMetadata(UUID targetEntityKey) {
     checkArgument(targetEntityKey != null);
+
+    MasterSourceMetadata metadata =
+        primaryEntityMapper.getEntityMasterSourceMetadata(targetEntityKey);
+
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)
+        && metadata.getSource() == Source.IH_IRN) {
+      // non-admins cannot remove a IH metadata if this entity is the only one connected to IH - if
+      // it were deleted the next sync would create a new entity for this IH IRN
+      int activeEntities =
+          masterSourceSyncMetadataMapper.countActiveEntitiesForMasterSource(
+              Source.IH_IRN, metadata.getSourceId());
+
+      if (activeEntities <= 1) {
+        throw new IllegalArgumentException(
+            "This is the only entity connected to IH for the IRN "
+                + metadata.getSourceId()
+                + ". Only GRSciColl admins can perform this operation");
+      }
+    }
+
     primaryEntityMapper.removeMasterSourceMetadata(targetEntityKey);
   }
 
@@ -540,8 +561,8 @@ public abstract class BasePrimaryCollectionEntityService<
   }
 
   @Override
-  public Optional<T> findByMasterSource(Source source, String sourceId) {
-    return Optional.ofNullable(primaryEntityMapper.findByMasterSource(source, sourceId));
+  public List<T> findByMasterSource(Source source, String sourceId) {
+    return primaryEntityMapper.findByMasterSource(source, sourceId);
   }
 
   /**

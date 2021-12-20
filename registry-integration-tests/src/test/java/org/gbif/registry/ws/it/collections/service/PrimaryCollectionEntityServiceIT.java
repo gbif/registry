@@ -48,6 +48,7 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
@@ -61,7 +62,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -77,7 +77,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -536,13 +538,44 @@ public abstract class PrimaryCollectionEntityServiceIT<
         IllegalArgumentException.class,
         () -> primaryCollectionEntityService.addMasterSourceMetadata(entityKey, metadata5));
 
-    Optional<T> entityFound =
+    List<T> entitiesFound =
         primaryCollectionEntityService.findByMasterSource(rightSource, rightKey.toString());
-    assertTrue(entityFound.isPresent());
-    assertEquals(entityKey, entityFound.get().getKey());
+    assertFalse(entitiesFound.isEmpty());
+    assertEquals(entityKey, entitiesFound.get(0).getKey());
 
     primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey);
     entityCreated = primaryCollectionEntityService.get(entityKey);
     assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
+  }
+
+  @Test
+  public void removeLastIHEntityTest() {
+    T entity = testData.newEntity();
+    UUID entityKey = primaryCollectionEntityService.create(entity);
+
+    final String irn = "123";
+    primaryCollectionEntityService.addMasterSourceMetadata(
+        entityKey, new MasterSourceMetadata(Source.IH_IRN, irn));
+
+    resetSecurityContext("editor", UserRole.GRSCICOLL_EDITOR);
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey));
+
+    resetSecurityContext("admin", UserRole.GRSCICOLL_ADMIN);
+    assertDoesNotThrow(() -> primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey));
+
+    // we add the metadata again and create another entity
+    primaryCollectionEntityService.addMasterSourceMetadata(
+        entityKey, new MasterSourceMetadata(Source.IH_IRN, irn));
+
+    T entity2 = testData.newEntity();
+    UUID entityKey2 = primaryCollectionEntityService.create(entity2);
+    primaryCollectionEntityService.addMasterSourceMetadata(
+        entityKey2, new MasterSourceMetadata(Source.IH_IRN, irn));
+
+    resetSecurityContext("editor", UserRole.GRSCICOLL_EDITOR);
+    assertDoesNotThrow(() -> primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey));
   }
 }

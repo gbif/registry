@@ -32,4 +32,21 @@
     DELETE FROM master_sync_metadata WHERE key = #{key,jdbcType=INTEGER}
   </delete>
 
+  <select id="countActiveEntitiesForMasterSource" resultType="java.lang.Integer">
+    SELECT count(*) FROM
+    (
+      SELECT c.key
+      FROM collection c
+      INNER JOIN master_sync_metadata mc ON mc.key = c.master_sync_metadata_key
+      WHERE mc.source = #{source,jdbcType=OTHER} AND mc.source_id = #{sourceId,jdbcType=VARCHAR}
+        AND c.deleted IS NULL
+    UNION ALL
+      SELECT i.key
+      FROM institution i
+      INNER JOIN master_sync_metadata mc ON mc.key = i.master_sync_metadata_key
+      WHERE mc.source = #{source,jdbcType=OTHER} AND mc.source_id = #{sourceId,jdbcType=VARCHAR}
+        AND i.deleted IS NULL
+    ) AS keys
+  </select>
+
 </mapper>
