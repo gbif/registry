@@ -21,7 +21,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,27 +68,39 @@ public class MasterSourceSynchronizer {
       Dataset updatedDataset = (Dataset) event.getNewObject();
 
       // find if there is any collection whose master source is this dataset
-      Optional<Collection> collectionFound =
+      List<Collection> collectionFound =
           collectionService.findByMasterSource(Source.DATASET, updatedDataset.getKey().toString());
 
-      if (collectionFound.isPresent()) {
-        // update the collection
-        Organization publishingOrganization =
-            organizationMapper.get(updatedDataset.getPublishingOrganizationKey());
-
-        updateCollection(updatedDataset, publishingOrganization, collectionFound.get());
+      if (collectionFound.size() > 1) {
+        log.warn(
+            "Multiple collections found with master source dataset {}", updatedDataset.getKey());
       }
+
+      collectionFound.forEach(
+          collection -> {
+            // update the collection
+            Organization publishingOrganization =
+                organizationMapper.get(updatedDataset.getPublishingOrganizationKey());
+
+            updateCollection(updatedDataset, publishingOrganization, collectionFound.get(0));
+          });
     } else if (Organization.class.isAssignableFrom(event.getObjectClass())) {
       Organization updatedOrganization = (Organization) event.getNewObject();
 
       // find if there is any institution whose master source is this organization
-      Optional<Institution> institutionFound =
+      List<Institution> institutionFound =
           institutionService.findByMasterSource(
               Source.ORGANIZATION, updatedOrganization.getKey().toString());
 
+      if (institutionFound.size() > 1) {
+        log.warn(
+            "Multiple institutions found with master source organization {}",
+            updatedOrganization.getKey());
+      }
+
       // update the institution
-      institutionFound.ifPresent(
-          institution -> updateInstitution(updatedOrganization, institution));
+      institutionFound.forEach(
+          institution -> updateInstitution(updatedOrganization, institutionFound.get(0)));
     }
   }
 
@@ -98,60 +110,58 @@ public class MasterSourceSynchronizer {
       Dataset dataset = (Dataset) event.getOldObject();
 
       // find if there is any collection whose master source is this dataset
-      Optional<Collection> collectionFound =
+      List<Collection> collectionFound =
           collectionService.findByMasterSource(Source.DATASET, dataset.getKey().toString());
 
-      if (collectionFound.isPresent()) {
-        Collection collection = collectionFound.get();
+      collectionFound.forEach(
+          collection -> {
+            // remove the metadata
+            collectionService.deleteMasterSourceMetadata(collection.getKey());
 
-        // remove the metadata
-        collectionService.deleteMasterSourceMetadata(collection.getKey());
+            // create comment
+            Comment comment = new Comment();
+            comment.setContent(
+                "The master source of this collection used to be a dataset that was deleted: "
+                    + dataset.getKey().toString());
+            collectionService.addComment(collection.getKey(), comment);
 
-        // create comment
-        Comment comment = new Comment();
-        comment.setContent(
-            "The master source of this collection used to be a dataset that was deleted: "
-                + dataset.getKey().toString());
-        collectionService.addComment(collection.getKey(), comment);
-
-        sendEmail(
-            collection.getKey(),
-            collection.getName(),
-            CollectionEntityType.COLLECTION,
-            dataset.getKey(),
-            dataset.getTitle(),
-            "dataset");
-      }
+            sendEmail(
+                collection.getKey(),
+                collection.getName(),
+                CollectionEntityType.COLLECTION,
+                dataset.getKey(),
+                dataset.getTitle(),
+                "dataset");
+          });
     } else if (Organization.class.isAssignableFrom(event.getObjectClass())) {
       Organization organization = (Organization) event.getOldObject();
 
       // find if there is any institution whose master source is this organization
-      Optional<Institution> institutionFound =
+      List<Institution> institutionFound =
           institutionService.findByMasterSource(
               Source.ORGANIZATION, organization.getKey().toString());
 
-      if (institutionFound.isPresent()) {
-        Institution institution = institutionFound.get();
+      institutionFound.forEach(
+          institution -> {
+            // remove the metadata
+            institutionService.deleteMasterSourceMetadata(institution.getKey());
 
-        // remove the metadata
-        institutionService.deleteMasterSourceMetadata(institution.getKey());
+            // create comment
+            Comment comment = new Comment();
+            comment.setContent(
+                "The master source of this institution used to be an organization that was deleted: "
+                    + organization.getKey().toString());
+            institutionService.addComment(institution.getKey(), comment);
 
-        // create comment
-        Comment comment = new Comment();
-        comment.setContent(
-            "The master source of this institution used to be an organization that was deleted: "
-                + organization.getKey().toString());
-        institutionService.addComment(institution.getKey(), comment);
-
-        // send email
-        sendEmail(
-            institution.getKey(),
-            institution.getName(),
-            CollectionEntityType.INSTITUTION,
-            organization.getKey(),
-            organization.getTitle(),
-            "organization");
-      }
+            // send email
+            sendEmail(
+                institution.getKey(),
+                institution.getName(),
+                CollectionEntityType.INSTITUTION,
+                organization.getKey(),
+                organization.getTitle(),
+                "organization");
+          });
     }
   }
 
