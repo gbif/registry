@@ -19,6 +19,7 @@
     <collection property="machineTags" column="key" select="listMachineTags"/>
     <collection property="comments" column="key" select="listComments"/>
     <collection property="occurrenceMappings" column="key" select="listOccurrenceMappings"/>
+    <collection property="masterSourceMetadata" column="master_sync_metadata_key" select="getMasterSourceMetadata"/>
   </resultMap>
 
   <resultMap id="INSTITUTION_MATCHED_DTO_MAP" type="InstitutionMatchedDto" autoMapping="true">
@@ -38,7 +39,8 @@
     i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
-    i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source
+    i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source,
+    i.master_sync_metadata_key
   </sql>
 
   <sql id="INSTITUTION_PARAMS_CREATE">
@@ -104,7 +106,7 @@
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
-    <!-- not allowed to update the master source here -->
+    <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -124,12 +126,6 @@
   <update id="update" parameterType="Institution">
     UPDATE institution
     SET <include refid="INSTITUTION_PARAMS_UPDATE"/>
-    WHERE key = #{key,jdbcType=OTHER}
-  </update>
-
-  <update id="updateMasterSource">
-    UPDATE institution
-    SET master_source = #{masterSource,jdbcType=OTHER}
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 
@@ -284,6 +280,9 @@
     <if test="params.active != null" >
       AND i.active = #{params.active,jdbcType=OTHER}
     </if>
+    <if test="params.masterSourceType != null" >
+      AND i.master_source = #{params.masterSourceType,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              i.created DESC, i.key
@@ -366,6 +365,9 @@
     </if>
     <if test="params.active != null" >
       AND i.active = #{params.active,jdbcType=OTHER}
+    </if>
+    <if test="params.masterSourceType != null" >
+      AND i.master_source = #{params.masterSourceType,jdbcType=OTHER}
     </if>
   </select>
 
@@ -680,4 +682,40 @@
     WHERE key = #{institutionKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
+
+  <!-- MASTER SOURCE -->
+  <insert id="addMasterSourceMetadata">
+    UPDATE institution
+    SET master_sync_metadata_key = #{metadataKey,jdbcType=INTEGER},
+        master_source = #{masterSourceType,jdbcType=OTHER}
+    WHERE key = #{targetEntityKey,jdbcType=OTHER}
+  </insert>
+
+  <update id="removeMasterSourceMetadata">
+    UPDATE institution
+    SET master_sync_metadata_key = null,
+        master_source = 'GRSCICOLL'
+    WHERE key = #{targetEntityKey,jdbcType=OTHER}
+  </update>
+
+  <select id="getMasterSourceMetadata" resultType="org.gbif.api.model.collections.MasterSourceMetadata">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper.METADATA_READ_FIELDS"/>
+    FROM master_sync_metadata m
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getEntityMasterSourceMetadata" resultType="org.gbif.api.model.collections.MasterSourceMetadata">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper.METADATA_READ_FIELDS"/>
+    FROM master_sync_metadata m
+    INNER JOIN institution i ON i.master_sync_metadata_key = m.key
+    WHERE i.key = #{targetEntityKey,jdbcType=OTHER}
+  </select>
+
+  <select id="findByMasterSource" resultMap="INSTITUTION_MAP">
+    SELECT <include refid="INSTITUTION_READ_FIELDS"/>
+    FROM institution i
+    INNER JOIN master_sync_metadata m ON i.master_sync_metadata_key = m.key
+    WHERE m.source = #{source,jdbcType=OTHER} AND m.source_id = #{sourceId,jdbcType=VARCHAR}
+  </select>
+  <!-- END MASTER SOURCE -->
 </mapper>

@@ -13,11 +13,13 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.ContactableMapper;
 
 import java.util.UUID;
@@ -28,6 +30,15 @@ public interface PrimaryEntityMapper<
         T extends Taggable & Identifiable & MachineTaggable & Commentable>
     extends BaseMapper<T>, ContactableMapper, OccurrenceMappeableMapper, ReplaceableMapper {
 
-  void updateMasterSource(
-      @Param("key") UUID key, @Param("masterSource") MasterSourceType masterSource);
+  void addMasterSourceMetadata(
+      @Param("targetEntityKey") UUID targetEntityKey,
+      @Param("metadataKey") int metadataKey,
+      @Param("masterSourceType") MasterSourceType masterSourceType);
+
+  void removeMasterSourceMetadata(@Param("targetEntityKey") UUID targetEntityKey);
+
+  MasterSourceMetadata getEntityMasterSourceMetadata(
+      @Param("targetEntityKey") UUID targetEntityKey);
+
+  T findByMasterSource(@Param("source") Source source, @Param("sourceId") String sourceId);
 }

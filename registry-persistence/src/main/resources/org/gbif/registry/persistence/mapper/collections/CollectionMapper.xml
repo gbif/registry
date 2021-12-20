@@ -22,6 +22,7 @@
     <collection property="machineTags" column="key" select="listMachineTags"/>
     <collection property="comments" column="key" select="listComments"/>
     <collection property="occurrenceMappings" column="key" select="listOccurrenceMappings"/>
+    <collection property="masterSourceMetadata" column="master_sync_metadata_key" select="getMasterSourceMetadata"/>
   </resultMap>
 
   <resultMap id="COLLECTION_DTO_MAP" type="CollectionDto" autoMapping="true">
@@ -45,7 +46,7 @@
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
     c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
-    c.replaced_by, c.master_source
+    c.replaced_by, c.master_source, c.master_sync_metadata_key
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -113,7 +114,7 @@
     important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
-    <!-- not allowed to change the masterSource in the update -->
+    <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -133,12 +134,6 @@
   <update id="update" parameterType="SciCollection">
     UPDATE collection
     SET <include refid="COLLECTION_PARAMS_UPDATE"/>
-    WHERE key = #{key,jdbcType=OTHER}
-  </update>
-
-  <update id="updateMasterSource">
-    UPDATE collection
-    SET master_source = #{masterSource,jdbcType=OTHER}
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 
@@ -265,6 +260,9 @@
     <if test="params.personalCollection != null" >
       AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
     </if>
+    <if test="params.masterSourceType != null" >
+      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
@@ -356,6 +354,9 @@
     </if>
     <if test="params.personalCollection != null" >
       AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
+    </if>
+    <if test="params.masterSourceType != null" >
+      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
     </if>
   </select>
 
@@ -707,5 +708,41 @@
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
+
+  <!-- MASTER SOURCE -->
+  <insert id="addMasterSourceMetadata">
+    UPDATE collection
+    SET master_sync_metadata_key = #{metadataKey,jdbcType=INTEGER},
+        master_source = #{masterSourceType,jdbcType=OTHER}
+    WHERE key = #{targetEntityKey,jdbcType=OTHER}
+  </insert>
+
+  <update id="removeMasterSourceMetadata">
+    UPDATE collection
+    SET master_sync_metadata_key = null,
+        master_source = 'GRSCICOLL'
+    WHERE key = #{targetEntityKey,jdbcType=OTHER}
+  </update>
+
+  <select id="getMasterSourceMetadata" resultType="org.gbif.api.model.collections.MasterSourceMetadata">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper.METADATA_READ_FIELDS"/>
+    FROM master_sync_metadata m
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getEntityMasterSourceMetadata" resultType="org.gbif.api.model.collections.MasterSourceMetadata">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper.METADATA_READ_FIELDS"/>
+    FROM master_sync_metadata m
+    INNER JOIN collection c ON c.master_sync_metadata_key = m.key
+    WHERE c.key = #{targetEntityKey,jdbcType=OTHER}
+  </select>
+
+  <select id="findByMasterSource" resultMap="COLLECTION_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    INNER JOIN master_sync_metadata m ON c.master_sync_metadata_key = m.key
+    WHERE m.source = #{source,jdbcType=OTHER} AND m.source_id = #{sourceId,jdbcType=VARCHAR}
+  </select>
+  <!-- END MASTER SOURCE -->
 
 </mapper>

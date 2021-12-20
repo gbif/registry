@@ -14,21 +14,46 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.*;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
+import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.NetworkEntity;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
+import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.events.collections.*;
+import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
+import org.gbif.registry.events.collections.EventType;
+import org.gbif.registry.events.collections.MasterSourceMetadataAddedEvent;
+import org.gbif.registry.events.collections.ReplaceEntityEvent;
+import org.gbif.registry.events.collections.SubEntityCollectionEvent;
+import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
 import org.gbif.registry.persistence.mapper.CommentMapper;
+import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
+import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
+import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
+import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
 import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
 import org.gbif.registry.service.WithMyBatis;
@@ -38,6 +63,7 @@ import org.gbif.ws.WebApplicationException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -52,11 +78,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.CONTACTS_FIELD_NAME;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
 
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
@@ -69,6 +97,9 @@ public abstract class BasePrimaryCollectionEntityService<
   private final AddressMapper addressMapper;
   private final PrimaryEntityMapper<T> primaryEntityMapper;
   private final CollectionContactMapper contactMapper;
+  private final MasterSourceSyncMetadataMapper masterSourceSyncMetadataMapper;
+  private final DatasetMapper datasetMapper;
+  private final OrganizationMapper organizationMapper;
 
   protected BasePrimaryCollectionEntityService(
       Class<T> objectClass,
@@ -80,6 +111,9 @@ public abstract class BasePrimaryCollectionEntityService<
       CommentMapper commentMapper,
       OccurrenceMappingMapper occurrenceMappingMapper,
       CollectionContactMapper contactMapper,
+      MasterSourceSyncMetadataMapper masterSourceSyncMetadataMapper,
+      DatasetMapper datasetMapper,
+      OrganizationMapper organizationMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis) {
     super(
@@ -95,6 +129,9 @@ public abstract class BasePrimaryCollectionEntityService<
     this.occurrenceMappingMapper = occurrenceMappingMapper;
     this.primaryEntityMapper = primaryEntityMapper;
     this.contactMapper = contactMapper;
+    this.masterSourceSyncMetadataMapper = masterSourceSyncMetadataMapper;
+    this.datasetMapper = datasetMapper;
+    this.organizationMapper = organizationMapper;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -362,7 +399,8 @@ public abstract class BasePrimaryCollectionEntityService<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public void replaceContactPersons(@NotNull UUID entityKey, List<@Valid Contact> newContactPersons) {
+  public void replaceContactPersons(
+      @NotNull UUID entityKey, List<@Valid Contact> newContactPersons) {
     checkArgument(entityKey != null);
 
     List<Contact> contacts = primaryEntityMapper.listContactPersons(entityKey);
@@ -435,69 +473,75 @@ public abstract class BasePrimaryCollectionEntityService<
             objectClass, targetEntityKey, replacementKey, EventType.REPLACE));
   }
 
+  @Validated({PrePersist.class, Default.class})
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public int addMachineTag(UUID targetEntityKey, MachineTag machineTag) {
-    if (machineTag.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)) {
-      T entity = baseMapper.get(targetEntityKey);
+  public int addMasterSourceMetadata(
+      UUID targetEntityKey, MasterSourceMetadata masterSourceMetadata) {
+    checkArgument(targetEntityKey != null);
+    checkArgument(masterSourceMetadata != null);
+    checkArgument(
+        masterSourceMetadata.getKey() == null, "Cannot create a metadata that already has a key");
 
-      // there can be only one master source
-      if (entity.getMachineTags().stream()
-          .anyMatch(mt -> mt.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE))) {
-        throw new IllegalArgumentException(
-            "Another master source already exists for entity " + targetEntityKey);
-      }
+    T entity = primaryEntityMapper.get(targetEntityKey);
+    checkArgument(entity != null, "The entity doesn't exist");
 
-      if (entity instanceof Institution
-          && !machineTag.getName().equals(ORGANIZATION_SOURCE)
-          && !machineTag.getName().equals(IH_SOURCE)) {
-        throw new IllegalArgumentException(
-            "Institutions can only have organizations as master source machine tags");
-      }
-
-      if (entity instanceof Collection
-          && !machineTag.getName().equals(DATASET_SOURCE)
-          && !machineTag.getName().equals(IH_SOURCE)) {
-        throw new IllegalArgumentException(
-            "Collections can only have datasets as master source machine tags");
-      }
-
-      if (machineTag.getName().equals(IH_SOURCE)) {
-        updateMasterSource(targetEntityKey, MasterSourceType.IH);
-      } else {
-        try {
-          UUID.fromString(machineTag.getValue());
-        } catch (Exception ex) {
-          throw new IllegalArgumentException("Invalid UUID");
-        }
-
-        updateMasterSource(targetEntityKey, MasterSourceType.GBIF_REGISTRY);
-      }
+    if (entity.getMasterSourceMetadata() != null) {
+      throw new IllegalArgumentException(
+          "The entity already has a master source. You have to delete the existing one before adding a new one");
     }
 
-    return super.addMachineTag(targetEntityKey, machineTag);
-  }
-
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
-  @Transactional
-  @Override
-  public void deleteMachineTag(UUID targetEntityKey, int machineTagKey) {
-    MachineTag machineTagToDelete = machineTagMapper.get(machineTagKey);
-    checkArgument(machineTagToDelete != null, "Machine Tag to delete doesn't exist");
-
-    if (machineTagToDelete.getNamespace().equals(MASTER_SOURCE_COLLECTIONS_NAMESPACE)) {
-      // if the machine tag is deleted the master source becomes GRSCICOLL which is the default
-      updateMasterSource(targetEntityKey, MasterSourceType.GRSCICOLL);
+    // check preconditions for datasets
+    if (masterSourceMetadata.getSource() == Source.DATASET) {
+      if (!(entity instanceof Collection)) {
+        throw new IllegalArgumentException("Dataset sources can be set only to collections");
+      }
+      checkExistsNetworkEntity(datasetMapper, masterSourceMetadata.getSourceId(), Dataset.class);
     }
 
-    super.deleteMachineTag(targetEntityKey, machineTagKey);
+    // check preconditions for organizations
+    if (masterSourceMetadata.getSource() == Source.ORGANIZATION) {
+      if (!(entity instanceof Institution)) {
+        throw new IllegalArgumentException("Organization sources can be set only to institutions");
+      }
+      checkExistsNetworkEntity(
+          organizationMapper, masterSourceMetadata.getSourceId(), Organization.class);
+    }
+
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    masterSourceMetadata.setCreatedBy(authentication.getName());
+
+    masterSourceSyncMetadataMapper.create(masterSourceMetadata);
+    MasterSourceType masterSourceType =
+        masterSourceMetadata.getSource() == Source.IH_IRN
+            ? MasterSourceType.IH
+            : MasterSourceType.GBIF_REGISTRY;
+
+    primaryEntityMapper.addMasterSourceMetadata(
+        targetEntityKey, masterSourceMetadata.getKey(), masterSourceType);
+
+    // event to sync the entity
+    eventManager.post(
+        MasterSourceMetadataAddedEvent.newInstance(targetEntityKey, masterSourceMetadata));
+
+    return masterSourceMetadata.getKey();
   }
 
-  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
-  public void updateMasterSource(UUID key, MasterSourceType masterSourceType) {
-    primaryEntityMapper.updateMasterSource(key, masterSourceType);
+  public void deleteMasterSourceMetadata(UUID targetEntityKey) {
+    checkArgument(targetEntityKey != null);
+    primaryEntityMapper.removeMasterSourceMetadata(targetEntityKey);
+  }
+
+  @Override
+  public MasterSourceMetadata getMasterSourceMetadata(@NotNull UUID targetEntityKey) {
+    return primaryEntityMapper.getEntityMasterSourceMetadata(targetEntityKey);
+  }
+
+  @Override
+  public Optional<T> findByMasterSource(Source source, String sourceId) {
+    return Optional.ofNullable(primaryEntityMapper.findByMasterSource(source, sourceId));
   }
 
   /**
@@ -532,6 +576,19 @@ public abstract class BasePrimaryCollectionEntityService<
         throw new IllegalArgumentException(
             "Not allowed to replace or convert an institution while updating");
       }
+    }
+  }
+
+  private <N extends NetworkEntity> void checkExistsNetworkEntity(
+      NetworkEntityMapper<N> mapper, String key, Class<N> entityClass) {
+    N networkEntity = mapper.get(UUID.fromString(key));
+    if (networkEntity == null) {
+      throw new IllegalArgumentException(
+          entityClass.getSimpleName() + " not found with key " + key);
+    }
+    if (networkEntity.getDeleted() != null) {
+      throw new IllegalArgumentException(
+          "Cannot set a deleted " + entityClass.getSimpleName() + " as master source");
     }
   }
 }
