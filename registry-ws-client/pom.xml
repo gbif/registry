@@ -41,6 +41,12 @@
     <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-doi</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.gbif.registry</groupId>
+          <artifactId>registry-persistence</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Third party dependencies -->
