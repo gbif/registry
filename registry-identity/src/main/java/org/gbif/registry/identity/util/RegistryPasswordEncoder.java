@@ -66,7 +66,7 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
    * Reads the iteration count out of the encoded settings.
    */
   private static int passwordGetCountLog2(String settings) {
-    return PASSWORD_ITOA64.indexOf(settings.charAt(4));
+    return PASSWORD_ITOA64.indexOf(settings.charAt(3));
   }
 
   /**
