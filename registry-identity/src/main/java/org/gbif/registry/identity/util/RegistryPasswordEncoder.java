@@ -28,7 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * <p>A password is structured as:
  *
  * <pre>
- *   $S$<iterations><salt><encoded>
+ *   $S$&lt;iterations&gt;&lt;salt&gt;&lt;encoded&gt;
  * </pre>
  *
  * Where:
@@ -42,7 +42,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * </ul>
  *
  * Mostly this code is copied from
- * http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords
+ * <a href="http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords">here</a>
  */
 public class RegistryPasswordEncoder implements PasswordEncoder {
 
@@ -62,17 +62,23 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
     encodedHashLength = hashLength;
   }
 
-  /** Reads the iteration count out of the encoded settings. */
+  /**
+   * Reads the iteration count out of the encoded settings.
+   */
   private static int passwordGetCountLog2(String settings) {
-    return PASSWORD_ITOA64.indexOf(settings.charAt(3));
+    return PASSWORD_ITOA64.indexOf(settings.charAt(4));
   }
 
-  /** Encode using the algorithm. */
+  /**
+   * Encode using the algorithm.
+   */
   private static byte[] sha512(String input) {
     return sha512(input.getBytes());
   }
 
-  /** Encode using the algorithm. */
+  /**
+   * Encode using the algorithm.
+   */
   private static byte[] sha512(byte[] input) {
     try {
       return MessageDigest.getInstance(ALGORITHM).digest(input);
@@ -146,8 +152,7 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
    * Encodes the input using some smarts. Understanding those smarts is an exercise left to the
    * reader.
    *
-   * @see <a
-   *     href="http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords"/>
+   * @see <a href="http://stackoverflow.com/questions/11736555/java-autentication-of-drupal-passwords">here</a>
    */
   private static String base64Encode(byte[] input, int count) {
 
@@ -179,14 +184,18 @@ public class RegistryPasswordEncoder implements PasswordEncoder {
     return output.toString();
   }
 
-  /** Clears any sign bit on the given byte. */
+  /**
+   * Clears any sign bit on the given byte.
+   */
   private static long signedByteToUnsignedLong(byte b) {
     return b & 0xFF;
   }
 
-  /** Returns a random 8 character salt prefixed with "$S$D" (which is what Drupal 7 did). */
+  /**
+   * Returns a random 8 character salt prefixed with "$S$D" (which is what Drupal 7 did).
+   */
   private static String randomSalt() {
-    // drupal uses 8 character salts, prefixed with $S$D so we copy that
+    // drupal uses 8 character salts, prefixed with $S$D, so we copy that
     StringBuilder sb = new StringBuilder(11);
     sb.append("$S$D");
     for (int i = 0; i < 8; i++) {
