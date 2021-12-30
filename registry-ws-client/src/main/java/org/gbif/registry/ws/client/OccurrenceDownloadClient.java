@@ -69,16 +69,17 @@ public interface OccurrenceDownloadClient extends OccurrenceDownloadService {
       @RequestParam(value = "status", required = false) Set<Download.Status> status);
 
   @RequestMapping(
-    method = RequestMethod.GET,
-    value = "internal/eraseAfter",
-    produces = MediaType.APPLICATION_JSON_VALUE)
+      method = RequestMethod.GET,
+      value = "internal/eraseAfter",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   PagingResponse<Download> listByEraseAfter(
-    @SpringQueryMap Pageable page,
-    @RequestParam(value = "eraseAfter", required = false) String eraseAfterAsString,
-    @RequestParam(value = "size", required = false) Long size,
-    @RequestParam(value = "erasureNotification", required = false) String erasureNotificationAsString);
+      @SpringQueryMap Pageable page,
+      @RequestParam(value = "eraseAfter", required = false) String eraseAfterAsString,
+      @RequestParam(value = "size", required = false) Long size,
+      @RequestParam(value = "erasureNotification", required = false)
+          String erasureNotificationAsString);
 
   @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
