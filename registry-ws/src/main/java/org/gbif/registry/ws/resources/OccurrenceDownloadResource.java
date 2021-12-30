@@ -225,18 +225,18 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   @Secured(ADMIN_ROLE)
   @Override
   public PagingResponse<Download> listByEraseAfter(
-    Pageable page,
-    @RequestParam(value = "eraseAfter", required = false) String eraseAfterAsString,
-    @RequestParam(value = "size", required = false) Long size,
-    @RequestParam(value = "erasureNotification", required = false) String erasureNotificationAsString
-  ) {
+      Pageable page,
+      @RequestParam(value = "eraseAfter", required = false) String eraseAfterAsString,
+      @RequestParam(value = "size", required = false) Long size,
+      @RequestParam(value = "erasureNotification", required = false)
+          String erasureNotificationAsString) {
     Date eraseAfter = DateUtils.STRING_TO_DATE.apply(eraseAfterAsString);
     Date erasureNotification = DateUtils.STRING_TO_DATE.apply(erasureNotificationAsString);
 
     return new PagingResponse<>(
-      page,
-      (long) occurrenceDownloadMapper.countByEraseAfter(eraseAfter, size, erasureNotification),
-      occurrenceDownloadMapper.listByEraseAfter(page, eraseAfter, size, erasureNotification));
+        page,
+        (long) occurrenceDownloadMapper.countByEraseAfter(eraseAfter, size, erasureNotification),
+        occurrenceDownloadMapper.listByEraseAfter(page, eraseAfter, size, erasureNotification));
   }
 
   @SuppressWarnings("MVCPathVariableInspection")
