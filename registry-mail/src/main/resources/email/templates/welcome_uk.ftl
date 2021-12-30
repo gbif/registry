@@ -1,62 +1,51 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.BaseTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">Hello ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size:16px;line-height: 1.25;">Вітаємо, {name}!</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Thanks for registering at GBIF.org. You're ready now to download the results of your searches of the hundreds of millions
-    of free and open biodiversity records made available by the GBIF community of participants and publishers.
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Дякуємо, що зареєструвалися на GBIF.org. Тепер ви готові вільно завантажувати результати пошуку сотень мільйонів відкритих записів з біорізноманіття, які зробили доступними учасники та видавці даних спільноти GBIF.
 </p>
 
-<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Next steps</h4>
+<h4 style="margin: 0 0 20px;padding: 0;font-size:20px;line-height: 1.25;">Настуні кроки</h4>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Cite the data you download</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Цитуйте дані, які ви завантажуєте</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The data accessed through GBIF.org represents the work of scientists, researchers, curators, data and IT specialists,
-    and other professionals in hundreds of organizations around the world. When you use the <i>DOI</i> (Digital Object Identifier)
-    assigned to each search result you download, you help ensure that they get full credit for their efforts.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Дані, доступні через GBIF, є результатом роботи науковців, дослідників, кураторів, спеціалістів у даних та IT-фахівців, а також інших професіоналів із сотень організацій з усього світу. Коли ви використовуєте <i>DOI</i> (Digital Object Identifier, унікальний цифровий ідентифікатор об'єкту), що надаються кожному пошуковому вивантаженню, ви віддаєте їм належне за їхні зусилля.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The DOI is included in the confirmation email you receive when your download is ready, and your account profile also
-    maintains a record of all your download DOIs. By citing data in this way, you can simplify the references in your research,
-    ensure your ability to repeat or update search results, and link uses directly to relevant datasets,
-    enabling us to automate the reporting of those uses to publishers and users alike. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Want more details?</a></p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">DOI включений в лист з підтвердженням, який ви отримуєте, коли завантаження готове, і профіль вашого облікового запису також зберігає записи про DOI всіх ваших завантажень. Посилаючись на дані у такий спосіб, ви спрощуєте посилання на ваше дослідження, забезпечуєте собі можливість повторити або оновити результати пошуку в майбутньому, та пов'язуєте використання даних напряму з наборами даних, даючи нам змогу автоматично інформувати видавців та користувачів даних. <a href="https://www.gbif.org/citation-guidelines" style="color: #4ba2ce;text-decoration: none;">Хочете більше подробиць?</a></p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Join one of the communities</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Долучайтеся до однієї зі спільнот</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For questions and discussions about use of GBIF-mediated data, please join the <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Стосовно питань і дискусій про використання даних GBIF, будь ласка, приєднуйтесь до <a href="https://discourse.gbif.org/" style="color: #4ba2ce;text-decoration: none;">GBIF community forum</a>.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">The <a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> provides an active peer-to-peer discussion
-    group where you can post questions and stay informed on updates to the GBIF API and underlying infrastructure.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;"><a href="https://lists.gbif.org/mailman/listinfo/api-users" style="color: #4ba2ce;text-decoration: none;">GBIF API users list</a> є майданчиком для активної дискусії, де ви можете ставити запитання та бути поінформованим щодо оновлень GBIF API та супутньої інфраструктури.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Learn how others use the data</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Дізнайтеся, як інші використовують дані</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">What can you do with GBIF-mediated data? Have a look at some <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">recent highlights</a>!
-    As part of its ongoing programme to track the uses of open biodiversity data, the GBIF Secretariat features recent research and
-    compiles it each year in our <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Що ви можете зробити з даними GBIF? Погляньте на деякі <a href="https://www.gbif.org/resource/search?contentType=dataUse" style="color: #4ba2ce;text-decoration: none;">останні приклади</a>!
+    В рамках програми з моніторингу використання відкритих даних з біорізноманіття, Секретаріат GBIF представляє свіжі дослідження та збирає їх у своєму щорічному <a href="https://www.gbif.org/science-review" style="color: #4ba2ce;text-decoration: none;">Science Review</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Questions or feedback</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Питання чи зворотний зв'язок</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you have technical questions related to getting or using data, please refer to the FAQs on GBIF.org or the community forum.
-    If you don't find an answer to your question, you can reach out to <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Якщо ви маєте технічні питання, пов'язані з отриманням або використанням даних, будь ласка, зверніться до Частих запитань на GBIF.org або форумі спільноти.
+    Якщо ви не знайшли відповіді на ваше запитання, ви можете звернутися до <a href="mailto:helpdesk@gbif.org" style="color: #4ba2ce;text-decoration: none;">helpdesk@gbif.org</a>.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">We maintain public repositories on GitHub where we document,
-    manage and respond to everything from help desk requests to bugs and issues with the site's functionality and content to suggestions about useful additional features and improvements.
-    You can contribute to these by clicking on the chat button in the menu bar at the top of each page.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Ми підтримуємо публічні репозиторії на GitHub, де ми документуємо, керуємо й відповідаємо на всі питання, від повідомлень про помилки та проблеми щодо функціонала та змісту сайту, до пропозицій вдосконалень та впровадження додаткових функцій.
+    Ви можете долучитися, натиснувши на кнопку чату на панелі меню вгорі кожної сторінки.</p>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">For press inquiries, email <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. For all other private enquiries or
-    non-technical questions, email <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Для запитів від преси, напишіть на <a href="mailto:communication@gbif.org" style="color: #4ba2ce;text-decoration: none;">communication@gbif.org</a>. Для всіх інших приватних запитів або нетехнічних питань, пишіть на <a href="mailto:info@gbif.org" style="color: #4ba2ce;text-decoration: none;">info@gbif.org</a>.</p>
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Stay up to date with the GBIF network</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Залишайтеся в курсі з мережею GBIF</h5>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Follow us on social media or sign up for our email list. You'll hear from us (roughly in descending order of frequency)
-    via <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
-    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> and the <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">GBIF newsletter</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Слідкуйте за нами в соціальних мережах або підпишіться на нашу розсилку. Ви можете дізнаватися про нашу діяльність (приблизно у порядку спадання активності) у <a href="https://twitter.com/GBIF" style="color: #4ba2ce;text-decoration: none;">Twitter</a>, <a href="https://www.facebook.com/gbifnews" style="color: #4ba2ce;text-decoration: none;">Facebook</a>,
+    <a href="https://www.linkedin.com/groups/55171" style="color: #4ba2ce;text-decoration: none;">LinkedIn</a> та <a href="https://www.gbif.org/newsletters" style="color: #4ba2ce;text-decoration: none;">бюлетені GBIF</a>.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
-        Thanks, on behalf of the GBIF network,
+        Дякуємо, від імені мережі GBIF,
         <br>
-        The GBIF Secretariat
+        Секретаріат GBIF
     </em>
 </p>
 
