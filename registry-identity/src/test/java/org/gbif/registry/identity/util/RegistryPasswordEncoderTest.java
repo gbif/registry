@@ -15,7 +15,6 @@ package org.gbif.registry.identity.util;
 
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -36,7 +35,9 @@ public class RegistryPasswordEncoderTest {
         Arguments.of("password1", "$S$D1UoWp.wjyDqA1oxwy/MjuSuQnYWsRtSzJGF4vVzdKAN1eh9sIVd"));
   }
 
-  /** Verify that preencoded passwords can be encoded again (e.g. for auth). */
+  /**
+   * Verify that pre-encoded passwords can be encoded again (e.g. for auth).
+   */
   @ParameterizedTest
   @MethodSource("testData")
   public void testPreEncoded(String password, String hash) {
@@ -51,14 +52,11 @@ public class RegistryPasswordEncoderTest {
   @ParameterizedTest
   @MethodSource("testData")
   public void testWithSalting(String password, String hash) {
-    String encoded1 = encoder.encode(password); // encode it which will generate a random salt
-    String encoded2 =
-        encoder.encode(password, encoded1); // encode again reading the salt genarate above
-    assertEquals(encoded1, encoded2); // verify they
-  }
+    // encode it which will generate a random salt
+    String encoded1 = encoder.encode(password);
+    // encode again reading the salt generated above
+    String encoded2 = encoder.encode(password, encoded1);
 
-  @Test
-  public void test() {
-    System.out.println(encoder.encode("P1p3r!!"));
+    assertEquals(encoded1, encoded2);
   }
 }
