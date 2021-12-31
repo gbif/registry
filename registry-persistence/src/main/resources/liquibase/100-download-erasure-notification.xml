@@ -3,7 +3,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <changeSet id="101" author="mblissett" runInTransaction="false">
+  <changeSet id="100" author="mblissett" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
         ALTER TABLE occurrence_download ADD COLUMN erasure_notification timestamp with time zone;
