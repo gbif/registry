@@ -1,12 +1,12 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountDeleteDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Prezado ${name},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Your GBIF.org account
-    <b>${name}</b>
-    has been deleted, and your personal information has been erased.
+    Sua conta GBIF.org
+    <b>${name}</b>    
+    foi excluída e suas informações pessoais apagadas.
 </p>
 
 <#if downloadUrls?size != 0>
@@ -24,9 +24,9 @@
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <em>
-        Thanks, on behalf of the GBIF network,
+        Obrigado, em nome da rede GBIF,
         <br>
-        The GBIF Secretariat
+        Secretaria do GBIF
     </em>
 </p>
 
