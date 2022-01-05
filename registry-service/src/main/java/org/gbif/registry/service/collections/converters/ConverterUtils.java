@@ -71,6 +71,12 @@ public class ConverterUtils {
     collectionsAddress.setPostalCode(organization.getPostalCode());
     collectionsAddress.setCountry(organization.getCountry());
 
+    // if all fields are null we return null
+    Address emptyAddress = new Address();
+    if (collectionsAddress.lenientEquals(emptyAddress)) {
+      return null;
+    }
+
     return collectionsAddress;
   }
 }

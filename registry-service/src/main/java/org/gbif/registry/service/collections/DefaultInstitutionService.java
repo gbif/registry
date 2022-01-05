@@ -134,6 +134,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
             .type(searchRequest.getType())
             .institutionalGovernance(searchRequest.getInstitutionalGovernance())
             .disciplines(searchRequest.getDisciplines())
+            .masterSourceType(searchRequest.getMasterSourceType())
             .build();
 
     long total = institutionMapper.count(params);
