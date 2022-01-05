@@ -108,4 +108,5 @@
   <include file="liquibase/100-download-erasure-notification.xml" />
   <include file="liquibase/101-grscicoll-master-source.xml" />
   <include file="liquibase/102-grscicoll-master-sync-metadata.xml" />
+  <include file="liquibase/103-grscicoll-contact-first-name-optional.xml" />
 </databaseChangeLog>
