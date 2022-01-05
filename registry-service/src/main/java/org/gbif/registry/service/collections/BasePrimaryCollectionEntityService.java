@@ -164,6 +164,14 @@ public abstract class BasePrimaryCollectionEntityService<
   @Transactional
   @Override
   public void update(T entity) {
+    update(entity, true);
+  }
+
+  @Validated({PostPersist.class, Default.class})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void update(@NotNull @Valid T entity, boolean lockFields) {
     preUpdate(entity);
     T entityOld = get(entity.getKey());
     checkArgument(entityOld != null, "Entity doesn't exist");
@@ -181,7 +189,7 @@ public abstract class BasePrimaryCollectionEntityService<
     }
 
     // lock fields
-    if (hasExternalMasterSource(entityOld)) {
+    if (lockFields && hasExternalMasterSource(entityOld)) {
       lockFields(entityOld, entity);
     }
 

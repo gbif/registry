@@ -8,6 +8,7 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.PreservationMethodType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.util.Arrays;
@@ -97,6 +98,7 @@ public class CollectionConverter {
     Objects.requireNonNull(publisherOrganization);
     Objects.requireNonNull(existingCollection);
 
+    existingCollection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     existingCollection.setName(dataset.getTitle());
     existingCollection.setDescription(dataset.getDescription());
     existingCollection.setHomepage(dataset.getHomepage());

@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
@@ -54,6 +55,8 @@ import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.service.collections.converters.CollectionConverter;
+import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -64,6 +67,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
@@ -279,8 +283,10 @@ public abstract class PrimaryCollectionEntityServiceIT<
   }
 
   protected Dataset createDataset() {
-    Organization org = createOrganization();
+    return createDataset(createOrganization());
+  }
 
+  protected Dataset createDataset(Organization org) {
     Installation installation = new Installation();
     installation.setTitle("title");
     installation.setOrganizationKey(org.getKey());
@@ -290,6 +296,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
     Dataset dataset = new Dataset();
     dataset.setDoi(new DOI("10.1594/pangaea.94668"));
     dataset.setTitle("title");
+    dataset.setDescription("description dataset");
     dataset.setInstallationKey(installation.getKey());
     dataset.setPublishingOrganizationKey(org.getKey());
     dataset.setType(DatasetType.CHECKLIST);
@@ -310,8 +317,11 @@ public abstract class PrimaryCollectionEntityServiceIT<
     Organization org = new Organization();
     org.setEndorsingNodeKey(node.getKey());
     org.setTitle("organization");
+    org.setDescription("Description organization");
     org.setLanguage(Language.ABKHAZIAN);
     org.setPassword("testtttt");
+    org.setEmail(Collections.singletonList("aa@aa.com"));
+    org.setPhone(Collections.singletonList("123"));
     organizationService.create(org);
 
     return org;
@@ -488,18 +498,23 @@ public abstract class PrimaryCollectionEntityServiceIT<
     Source wrongSource = null;
     UUID rightKey = null;
     UUID wrongKey = null;
-    Dataset dataset = createDataset();
     Organization organization = createOrganization();
+    Dataset dataset = createDataset(organization);
+    Function<T, T> expectedSyncedEntityFn = null;
     if (entity instanceof Institution) {
       rightSource = Source.ORGANIZATION;
       wrongSource = Source.DATASET;
       rightKey = organization.getKey();
       wrongKey = dataset.getKey();
+      expectedSyncedEntityFn =
+          (e) -> (T) InstitutionConverter.convertFromOrganization(organization, (Institution) e);
     } else {
       rightSource = Source.DATASET;
       wrongSource = Source.ORGANIZATION;
       rightKey = dataset.getKey();
       wrongKey = organization.getKey();
+      expectedSyncedEntityFn =
+          (e) -> (T) CollectionConverter.convertFromDataset(dataset, organization, (Collection) e);
     }
 
     UUID entityKey = primaryCollectionEntityService.create(entity);
@@ -532,6 +547,12 @@ public abstract class PrimaryCollectionEntityServiceIT<
     assertEquals(rightSource, entityCreated.getMasterSourceMetadata().getSource());
     assertEquals(rightKey.toString(), entityCreated.getMasterSourceMetadata().getSourceId());
 
+    // assert that the fields from the master source were synced
+    T syncedEntity = primaryCollectionEntityService.get(entityKey);
+    T expectedSyncedEntity = expectedSyncedEntityFn.apply(entity);
+    expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
+    assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
+
     // cannot have more than 1 source
     MasterSourceMetadata metadata5 = new MasterSourceMetadata(rightSource, rightKey.toString());
     assertThrows(
@@ -546,6 +567,9 @@ public abstract class PrimaryCollectionEntityServiceIT<
     primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey);
     entityCreated = primaryCollectionEntityService.get(entityKey);
     assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
+    entitiesFound =
+      primaryCollectionEntityService.findByMasterSource(rightSource, rightKey.toString());
+    assertTrue(entitiesFound.isEmpty());
   }
 
   @Test

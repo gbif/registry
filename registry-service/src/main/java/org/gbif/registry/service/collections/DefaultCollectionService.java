@@ -151,6 +151,7 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
             .preservationTypes(searchRequest.getPreservationTypes())
             .accessionStatus(searchRequest.getAccessionStatus())
             .personalCollection(searchRequest.getPersonalCollection())
+            .masterSourceType(searchRequest.getMasterSourceType())
             .build();
 
     long total = collectionMapper.count(params);

@@ -231,7 +231,7 @@ public class MasterSourceSynchronizer {
         existingCollection.getKey(), convertedCollection.getContactPersons());
 
     // update collection
-    collectionService.update(convertedCollection);
+    collectionService.update(convertedCollection, false);
   }
 
   private void updateInstitution(Organization organization, Institution existingInstitution) {
@@ -243,6 +243,6 @@ public class MasterSourceSynchronizer {
         existingInstitution.getKey(), convertedInstitution.getContactPersons());
 
     // update institution
-    institutionService.update(convertedInstitution);
+    institutionService.update(convertedInstitution, false);
   }
 }
