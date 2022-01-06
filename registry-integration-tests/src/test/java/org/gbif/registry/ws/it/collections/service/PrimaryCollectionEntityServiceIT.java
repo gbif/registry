@@ -550,7 +550,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
 
     // assert that the fields from the master source were synced
     // sleep the thread a little so the master source synchronizer updates the entity
-    Thread.sleep(100);
+    Thread.sleep(300);
     T syncedEntity = primaryCollectionEntityService.get(entityKey);
     T expectedSyncedEntity = expectedSyncedEntityFn.apply(entity);
     expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
@@ -562,7 +562,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
       organizationService.update(organization);
 
       // sleep the thread a little so the master source synchronizer updates the entity
-      Thread.sleep(100);
+      Thread.sleep(300);
 
       T updatedEntity = primaryCollectionEntityService.get(entityKey);
       assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
@@ -573,7 +573,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
       datasetService.update(dataset);
 
       // sleep the thread a little so the master source synchronizer updates the entity
-      Thread.sleep(100);
+      Thread.sleep(300);
 
       T updatedEntity = primaryCollectionEntityService.get(entityKey);
       assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
