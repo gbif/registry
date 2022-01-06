@@ -548,39 +548,6 @@ public abstract class PrimaryCollectionEntityServiceIT<
     assertEquals(rightSource, entityCreated.getMasterSourceMetadata().getSource());
     assertEquals(rightKey.toString(), entityCreated.getMasterSourceMetadata().getSourceId());
 
-    // assert that the fields from the master source were synced
-    // sleep the thread a little so the master source synchronizer updates the entity
-    Thread.sleep(300);
-    T syncedEntity = primaryCollectionEntityService.get(entityKey);
-    T expectedSyncedEntity = expectedSyncedEntityFn.apply(entity);
-    expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
-    expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
-    assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
-
-    if (entity instanceof Institution) {
-      organization.setProvince("sfdsgdsg");
-      organizationService.update(organization);
-
-      // sleep the thread a little so the master source synchronizer updates the entity
-      Thread.sleep(300);
-
-      T updatedEntity = primaryCollectionEntityService.get(entityKey);
-      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
-    } else if (entity instanceof Collection) {
-      organization.setProvince("sfdsgdsg");
-      organizationService.update(organization);
-      dataset.setDescription("sfdsgdsg");
-      datasetService.update(dataset);
-
-      // sleep the thread a little so the master source synchronizer updates the entity
-      Thread.sleep(300);
-
-      T updatedEntity = primaryCollectionEntityService.get(entityKey);
-      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
-      assertEquals(dataset.getDescription(), updatedEntity.getDescription());
-    }
-
-
     // cannot have more than 1 source
     MasterSourceMetadata metadata5 = new MasterSourceMetadata(rightSource, rightKey.toString());
     assertThrows(
@@ -591,6 +558,31 @@ public abstract class PrimaryCollectionEntityServiceIT<
         primaryCollectionEntityService.findByMasterSource(rightSource, rightKey.toString());
     assertFalse(entitiesFound.isEmpty());
     assertEquals(entityKey, entitiesFound.get(0).getKey());
+
+    // assert that the fields from the master source were synced
+    T syncedEntity = primaryCollectionEntityService.get(entityKey);
+    T expectedSyncedEntity = expectedSyncedEntityFn.apply(entity);
+    expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+    expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
+    assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
+
+    if (entity instanceof Institution) {
+      organization.setProvince("sfdsgdsg");
+      organizationService.update(organization);
+
+      T updatedEntity = primaryCollectionEntityService.get(entityKey);
+      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
+    } else if (entity instanceof Collection) {
+      organization.setProvince("sfdsgdsg");
+      organizationService.update(organization);
+      dataset.setDescription("sfdsgdsg");
+      datasetService.update(dataset);
+
+      T updatedEntity = primaryCollectionEntityService.get(entityKey);
+      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
+      assertEquals(dataset.getDescription(), updatedEntity.getDescription());
+    }
+
 
     primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey);
     entityCreated = primaryCollectionEntityService.get(entityKey);
