@@ -59,24 +59,27 @@ public class ConverterUtils {
     return collectionContact;
   }
 
-  public static Address convertAddress(Organization organization) {
-    Address collectionsAddress = new Address();
+  public static Address convertAddress(Organization organization, Address existingAddress) {
+    if (existingAddress == null) {
+      existingAddress = new Address();
+    }
+
     if (organization.getAddress() != null && !organization.getAddress().isEmpty()) {
       String address = String.join(".", organization.getAddress());
       address = MULTIPLE_DOTS.matcher(address).replaceAll(".");
-      collectionsAddress.setAddress(address);
+      existingAddress.setAddress(address);
     }
-    collectionsAddress.setCity(organization.getCity());
-    collectionsAddress.setProvince(organization.getProvince());
-    collectionsAddress.setPostalCode(organization.getPostalCode());
-    collectionsAddress.setCountry(organization.getCountry());
+    existingAddress.setCity(organization.getCity());
+    existingAddress.setProvince(organization.getProvince());
+    existingAddress.setPostalCode(organization.getPostalCode());
+    existingAddress.setCountry(organization.getCountry());
 
     // if all fields are null we return null
     Address emptyAddress = new Address();
-    if (collectionsAddress.lenientEquals(emptyAddress)) {
+    if (existingAddress.lenientEquals(emptyAddress)) {
       return null;
     }
 
-    return collectionsAddress;
+    return existingAddress;
   }
 }

@@ -33,6 +33,8 @@
     <id property="key" column="key"/>
   </resultMap>
 
+  <resultMap id="MASTER_SOURCE_ORG_DTO_MAP" type="MasterSourceOrganizationDto" autoMapping="true" />
+
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
@@ -742,6 +744,15 @@
     FROM collection c
     INNER JOIN master_sync_metadata m ON c.master_sync_metadata_key = m.key
     WHERE m.source = #{source,jdbcType=OTHER} AND m.source_id = #{sourceId,jdbcType=VARCHAR}
+  </select>
+
+  <select id="findByDatasetOrganizationAsMasterSource" resultMap="MASTER_SOURCE_ORG_DTO_MAP">
+    SELECT c.key collectionKey, d.key datasetKey
+    FROM dataset d
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    INNER JOIN master_sync_metadata msm ON msm.source_id = cast(d.key as text)
+    INNER JOIN collection c ON c.master_sync_metadata_key = msm.key
+    WHERE o.key = #{organizationKey,jdbcType=OTHER} AND c.deleted IS NULL
   </select>
   <!-- END MASTER SOURCE -->
 

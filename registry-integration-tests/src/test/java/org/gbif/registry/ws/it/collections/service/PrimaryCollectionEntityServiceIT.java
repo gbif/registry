@@ -322,6 +322,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
     org.setPassword("testtttt");
     org.setEmail(Collections.singletonList("aa@aa.com"));
     org.setPhone(Collections.singletonList("123"));
+    org.setCountry(Country.AFGHANISTAN);
     organizationService.create(org);
 
     return org;
@@ -491,7 +492,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
   }
 
   @Test
-  public void addMasterSourceTest() {
+  public void addMasterSourceTest() throws InterruptedException {
     T entity = testData.newEntity();
 
     Source rightSource = null;
@@ -553,6 +554,24 @@ public abstract class PrimaryCollectionEntityServiceIT<
     expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
     assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
+
+    if (entity instanceof Institution) {
+      organization.setProvince("sfdsgdsg");
+      organizationService.update(organization);
+
+      T updatedEntity = primaryCollectionEntityService.get(entityKey);
+      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
+    } else if (entity instanceof Collection) {
+      organization.setProvince("sfdsgdsg");
+      organizationService.update(organization);
+      dataset.setDescription("sfdsgdsg");
+      datasetService.update(dataset);
+
+      T updatedEntity = primaryCollectionEntityService.get(entityKey);
+      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
+      assertEquals(dataset.getDescription(), updatedEntity.getDescription());
+    }
+
 
     // cannot have more than 1 source
     MasterSourceMetadata metadata5 = new MasterSourceMetadata(rightSource, rightKey.toString());
