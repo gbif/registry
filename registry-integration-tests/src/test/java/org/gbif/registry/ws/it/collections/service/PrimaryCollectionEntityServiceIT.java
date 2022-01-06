@@ -67,6 +67,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -559,36 +560,44 @@ public abstract class PrimaryCollectionEntityServiceIT<
     assertFalse(entitiesFound.isEmpty());
     assertEquals(entityKey, entitiesFound.get(0).getKey());
 
-    // assert that the fields from the master source were synced
-    T syncedEntity = primaryCollectionEntityService.get(entityKey);
-    T expectedSyncedEntity = expectedSyncedEntityFn.apply(entity);
-    expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
-    expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
-    assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
+    CompletableFuture.runAsync(
+        () -> {
+          // assert that the fields from the master source were synced
+          T syncedEntity = primaryCollectionEntityService.get(entityKey);
+          T expectedSyncedEntity = null;
+          if (entity instanceof Institution) {
+            expectedSyncedEntity = (T) InstitutionConverter.convertFromOrganization(organization, (Institution) entity);
+          } else {
+            expectedSyncedEntity = (T) CollectionConverter.convertFromDataset(dataset, organization, (Collection) entity);
+          }
 
-    if (entity instanceof Institution) {
-      organization.setProvince("sfdsgdsg");
-      organizationService.update(organization);
+          expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
+          expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
+          assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
 
-      T updatedEntity = primaryCollectionEntityService.get(entityKey);
-      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
-    } else if (entity instanceof Collection) {
-      organization.setProvince("sfdsgdsg");
-      organizationService.update(organization);
-      dataset.setDescription("sfdsgdsg");
-      datasetService.update(dataset);
+          if (entity instanceof Institution) {
+            organization.setProvince("sfdsgdsg");
+            organizationService.update(organization);
 
-      T updatedEntity = primaryCollectionEntityService.get(entityKey);
-      assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
-      assertEquals(dataset.getDescription(), updatedEntity.getDescription());
-    }
+            T updatedEntity = primaryCollectionEntityService.get(entityKey);
+            assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
+          } else if (entity instanceof Collection) {
+            organization.setProvince("sfdsgdsg");
+            organizationService.update(organization);
+            dataset.setDescription("sfdsgdsg");
+            datasetService.update(dataset);
 
+            T updatedEntity = primaryCollectionEntityService.get(entityKey);
+            assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
+            assertEquals(dataset.getDescription(), updatedEntity.getDescription());
+          }
+        });
 
     primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey);
     entityCreated = primaryCollectionEntityService.get(entityKey);
     assertEquals(MasterSourceType.GRSCICOLL, entityCreated.getMasterSource());
     entitiesFound =
-      primaryCollectionEntityService.findByMasterSource(rightSource, rightKey.toString());
+        primaryCollectionEntityService.findByMasterSource(rightSource, rightKey.toString());
     assertTrue(entitiesFound.isEmpty());
   }
 
