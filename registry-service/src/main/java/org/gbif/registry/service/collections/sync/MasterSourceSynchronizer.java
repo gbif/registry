@@ -78,6 +78,11 @@ public class MasterSourceSynchronizer {
 
       collectionFound.forEach(
           collection -> {
+            log.info(
+                "Updating collection {} with changes from dataset {}",
+                collection.getKey(),
+                updatedDataset.getKey());
+
             // update the collection
             Organization publishingOrganization =
                 organizationMapper.get(updatedDataset.getPublishingOrganizationKey());
@@ -100,7 +105,13 @@ public class MasterSourceSynchronizer {
 
       // update the institution
       institutionFound.forEach(
-          institution -> updateInstitution(updatedOrganization, institutionFound.get(0)));
+          institution -> {
+            log.info(
+                "Updating institution {} with changes from organization {}",
+                institution.getKey(),
+                updatedOrganization.getKey());
+            updateInstitution(updatedOrganization, institutionFound.get(0));
+          });
     }
   }
 
@@ -115,6 +126,11 @@ public class MasterSourceSynchronizer {
 
       collectionFound.forEach(
           collection -> {
+            log.info(
+                "Master source dataset {} of collection {} deleted",
+                dataset.getKey(),
+                collection.getKey());
+
             // remove the metadata
             collectionService.deleteMasterSourceMetadata(collection.getKey());
 
@@ -143,6 +159,11 @@ public class MasterSourceSynchronizer {
 
       institutionFound.forEach(
           institution -> {
+            log.info(
+                "Master source organization {} of institution {} deleted",
+                organization.getKey(),
+                institution.getKey());
+
             // remove the metadata
             institutionService.deleteMasterSourceMetadata(institution.getKey());
 
@@ -199,6 +220,11 @@ public class MasterSourceSynchronizer {
       Organization publishingOrganization =
           organizationMapper.get(dataset.getPublishingOrganizationKey());
 
+      log.info(
+          "Updating collection {} with new master source dataset {}",
+          collection.getKey(),
+          dataset.getKey());
+
       updateCollection(dataset, publishingOrganization, collection);
     } else if (event.getMetadata().getSource() == Source.ORGANIZATION) {
       Institution institution = institutionService.get(event.getCollectionEntityKey());
@@ -207,6 +233,12 @@ public class MasterSourceSynchronizer {
 
       Organization organization =
           organizationMapper.get(UUID.fromString(event.getMetadata().getSourceId()));
+
+      log.info(
+          "Updating institution {} with new master source organization {}",
+          institution.getKey(),
+          organization.getKey());
+
       updateInstitution(organization, institution);
     }
   }
