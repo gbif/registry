@@ -550,6 +550,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
     // assert that the fields from the master source were synced
     T syncedEntity = primaryCollectionEntityService.get(entityKey);
     T expectedSyncedEntity = expectedSyncedEntityFn.apply(entity);
+    expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
     assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
 
