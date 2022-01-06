@@ -8,7 +8,6 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.PreservationMethodType;
-import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.util.Arrays;
@@ -170,7 +169,8 @@ public class CollectionConverter {
           .add(new Identifier(IdentifierType.DOI, dataset.getDoi().getDoiName()));
     }
 
-    existingCollection.setAddress(convertAddress(publisherOrganization));
+    existingCollection.setAddress(
+        convertAddress(publisherOrganization, existingCollection.getAddress()));
 
     // contacts
     List<Contact> collectionContacts =

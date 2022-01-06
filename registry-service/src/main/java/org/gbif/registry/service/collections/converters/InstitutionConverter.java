@@ -3,7 +3,6 @@ package org.gbif.registry.service.collections.converters;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.vocabulary.collections.MasterSourceType;
 
 import java.util.List;
 import java.util.Objects;
@@ -47,7 +46,7 @@ public class InstitutionConverter {
     existingInstitution.setLogoUrl(organization.getLogoUrl());
     existingInstitution.setActive(true);
 
-    existingInstitution.setAddress(convertAddress(organization));
+    existingInstitution.setAddress(convertAddress(organization, existingInstitution.getAddress()));
 
     // contacts
     List<Contact> collectionContacts =

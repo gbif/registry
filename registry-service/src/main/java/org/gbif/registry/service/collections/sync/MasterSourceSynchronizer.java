@@ -18,6 +18,8 @@ import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 
@@ -41,6 +43,7 @@ public class MasterSourceSynchronizer {
   private final InstitutionService institutionService;
   private final OrganizationMapper organizationMapper;
   private final DatasetMapper datasetMapper;
+  private final CollectionMapper collectionMapper;
   private final CollectionsEmailManager emailManager;
   private final EmailSender emailSender;
 
@@ -50,6 +53,7 @@ public class MasterSourceSynchronizer {
       InstitutionService institutionService,
       OrganizationMapper organizationMapper,
       DatasetMapper datasetMapper,
+      CollectionMapper collectionMapper,
       CollectionsEmailManager emailManager,
       EmailSender emailSender,
       EventManager eventManager) {
@@ -57,6 +61,7 @@ public class MasterSourceSynchronizer {
     this.institutionService = institutionService;
     this.organizationMapper = organizationMapper;
     this.datasetMapper = datasetMapper;
+    this.collectionMapper = collectionMapper;
     this.emailManager = emailManager;
     this.emailSender = emailSender;
     eventManager.register(this);
@@ -89,6 +94,7 @@ public class MasterSourceSynchronizer {
 
             updateCollection(updatedDataset, publishingOrganization, collectionFound.get(0));
           });
+
     } else if (Organization.class.isAssignableFrom(event.getObjectClass())) {
       Organization updatedOrganization = (Organization) event.getNewObject();
 
@@ -103,7 +109,7 @@ public class MasterSourceSynchronizer {
             updatedOrganization.getKey());
       }
 
-      // update the institution
+      // update the institutions
       institutionFound.forEach(
           institution -> {
             log.info(
@@ -111,6 +117,26 @@ public class MasterSourceSynchronizer {
                 institution.getKey(),
                 updatedOrganization.getKey());
             updateInstitution(updatedOrganization, institutionFound.get(0));
+          });
+
+      // find if there are collections whose master source is a dataset with this organization as
+      // publisher since the collections get some info from the publishing organization
+      List<MasterSourceOrganizationDto> collectionsFound =
+          collectionMapper.findByDatasetOrganizationAsMasterSource(updatedOrganization.getKey());
+
+      // update the collections found
+      collectionsFound.forEach(
+          dto -> {
+            log.info(
+                "Updating collection {} with changes from organization {} and dataset {} as source",
+                dto.getCollectionKey(),
+                updatedOrganization.getKey(),
+                dto.getDatasetKey());
+
+            Dataset dataset = datasetMapper.get(dto.getDatasetKey());
+            Collection collection = collectionService.get(dto.getCollectionKey());
+
+            updateCollection(dataset, updatedOrganization, collection);
           });
     }
   }
