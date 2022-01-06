@@ -98,7 +98,6 @@ public class CollectionConverter {
     Objects.requireNonNull(publisherOrganization);
     Objects.requireNonNull(existingCollection);
 
-    existingCollection.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     existingCollection.setName(dataset.getTitle());
     existingCollection.setDescription(dataset.getDescription());
     existingCollection.setHomepage(dataset.getHomepage());

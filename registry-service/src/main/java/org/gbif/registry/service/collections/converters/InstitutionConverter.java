@@ -33,7 +33,6 @@ public class InstitutionConverter {
     Objects.requireNonNull(organization);
     Objects.requireNonNull(existingInstitution);
 
-    existingInstitution.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     existingInstitution.setName(organization.getTitle());
     existingInstitution.setDescription(organization.getDescription());
 
