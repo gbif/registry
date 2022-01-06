@@ -68,6 +68,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -493,7 +494,7 @@ public abstract class PrimaryCollectionEntityServiceIT<
   }
 
   @Test
-  public void addMasterSourceTest() throws InterruptedException {
+  public void addMasterSourceTest() throws InterruptedException, ExecutionException {
     T entity = testData.newEntity();
 
     Source rightSource = null;
@@ -502,21 +503,16 @@ public abstract class PrimaryCollectionEntityServiceIT<
     UUID wrongKey = null;
     Organization organization = createOrganization();
     Dataset dataset = createDataset(organization);
-    Function<T, T> expectedSyncedEntityFn = null;
     if (entity instanceof Institution) {
       rightSource = Source.ORGANIZATION;
       wrongSource = Source.DATASET;
       rightKey = organization.getKey();
       wrongKey = dataset.getKey();
-      expectedSyncedEntityFn =
-          (e) -> (T) InstitutionConverter.convertFromOrganization(organization, (Institution) e);
     } else {
       rightSource = Source.DATASET;
       wrongSource = Source.ORGANIZATION;
       rightKey = dataset.getKey();
       wrongKey = organization.getKey();
-      expectedSyncedEntityFn =
-          (e) -> (T) CollectionConverter.convertFromDataset(dataset, organization, (Collection) e);
     }
 
     UUID entityKey = primaryCollectionEntityService.create(entity);
@@ -559,39 +555,6 @@ public abstract class PrimaryCollectionEntityServiceIT<
         primaryCollectionEntityService.findByMasterSource(rightSource, rightKey.toString());
     assertFalse(entitiesFound.isEmpty());
     assertEquals(entityKey, entitiesFound.get(0).getKey());
-
-    CompletableFuture.runAsync(
-        () -> {
-          // assert that the fields from the master source were synced
-          T syncedEntity = primaryCollectionEntityService.get(entityKey);
-          T expectedSyncedEntity = null;
-          if (entity instanceof Institution) {
-            expectedSyncedEntity = (T) InstitutionConverter.convertFromOrganization(organization, (Institution) entity);
-          } else {
-            expectedSyncedEntity = (T) CollectionConverter.convertFromDataset(dataset, organization, (Collection) entity);
-          }
-
-          expectedSyncedEntity.setMasterSource(MasterSourceType.GBIF_REGISTRY);
-          expectedSyncedEntity.setMasterSourceMetadata(syncedEntity.getMasterSourceMetadata());
-          assertTrue(expectedSyncedEntity.lenientEquals(syncedEntity));
-
-          if (entity instanceof Institution) {
-            organization.setProvince("sfdsgdsg");
-            organizationService.update(organization);
-
-            T updatedEntity = primaryCollectionEntityService.get(entityKey);
-            assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
-          } else if (entity instanceof Collection) {
-            organization.setProvince("sfdsgdsg");
-            organizationService.update(organization);
-            dataset.setDescription("sfdsgdsg");
-            datasetService.update(dataset);
-
-            T updatedEntity = primaryCollectionEntityService.get(entityKey);
-            assertEquals(organization.getProvince(), updatedEntity.getAddress().getProvince());
-            assertEquals(dataset.getDescription(), updatedEntity.getDescription());
-          }
-        });
 
     primaryCollectionEntityService.deleteMasterSourceMetadata(entityKey);
     entityCreated = primaryCollectionEntityService.get(entityKey);
