@@ -14,7 +14,6 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
@@ -55,8 +54,6 @@ import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
-import org.gbif.registry.service.collections.converters.CollectionConverter;
-import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -67,9 +64,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
