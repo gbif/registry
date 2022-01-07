@@ -86,16 +86,16 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>0.161-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>0.161</gbif-api.version>
     <gbif-common.version>0.52</gbif-common.version>
-    <gbif-common-mybatis.version>1.2-SNAPSHOT</gbif-common-mybatis.version>
-    <gbif-common-ws.version>1.19-SNAPSHOT</gbif-common-ws.version>
+    <gbif-common-mybatis.version>1.1</gbif-common-mybatis.version>
+    <gbif-common-ws.version>1.19</gbif-common-ws.version>
     <gbif-directory.version>1.12</gbif-directory.version>
     <gbif-doi.version>2.16</gbif-doi.version>
-    <gbif-download-query-tools.version>1.45-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.44</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metrics.version>1.2</gbif-metrics.version>
-    <gbif-parsers.version>0.57-SNAPSHOT</gbif-parsers.version>
+    <gbif-parsers.version>0.56</gbif-parsers.version>
     <gbif-postal-service.version>1.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
 
