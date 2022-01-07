@@ -10,16 +10,16 @@
 </p>
 
 <#if downloadUrls?size != 0>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Occurrence download metadata is not deleted.  You can still cite any of the downloads you created:</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Os metadados do download de ocorrências não foram excluídos.  Você ainda pode citar qualquer um dos downloads que você criou:</p>
 <ul style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     <#list downloadUrls as downloadUrl>
     <li style="margin: 0 0 0 20px;padding: 0;line-height: 1.65;"><a href="${downloadUrl}" style="color: #4ba2ce;text-decoration: none;">${downloadUrl}</a></li>
     </#list>
 </ul>
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">If you use a GBIF.org download in a publication, please notify <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Se você usar um download de GBIG.org em uma publicação, por favor notifique <a href="mailto:communications@gbif.org" style="color: #4ba2ce;text-decoration: none;">communications@gbif.org</a>.</p>
 </#if>
 
-<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Should you wish to download data from GBIF.org in the future, you will need to create a new account.</p>
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">Caso deseje baixar dados do GBIF.org no futuro, você precisará criar uma nova conta.</p>
 
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
