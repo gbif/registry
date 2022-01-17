@@ -13,14 +13,22 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
@@ -29,15 +37,24 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolationException;
@@ -46,8 +63,11 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -663,81 +683,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
   }
 
   @Test
-  public void contactPersonsTest() {
-    Collection collection1 = testData.newEntity();
-    UUID collectionKey1 = collectionService.create(collection1);
-
-    Contact contact = new Contact();
-    contact.setFirstName("First name");
-    contact.setLastName("last");
-    contact.setCountry(Country.AFGHANISTAN);
-    contact.setAddress(Collections.singletonList("address"));
-    contact.setCity("City");
-    contact.setEmail(Collections.singletonList("aa@aa.com"));
-    contact.setFax(Collections.singletonList("fdsgds"));
-    contact.setPhone(Collections.singletonList("fdsgds"));
-    contact.setPrimary(true);
-    contact.setNotes("notes");
-
-    collectionService.addContactPerson(collectionKey1, contact);
-
-    List<Contact> contacts = collectionService.listContactPersons(collectionKey1);
-    assertEquals(1, contacts.size());
-
-    Contact contactCreated = contacts.get(0);
-    assertTrue(contactCreated.lenientEquals(contact));
-
-    contactCreated.setPosition(Collections.singletonList("position"));
-    contactCreated.setTaxonomicExpertise(Collections.singletonList("aves"));
-
-    UserId userId = new UserId();
-    userId.setId("id");
-    userId.setType(IdType.OTHER);
-    contactCreated.setUserIds(Collections.singletonList(userId));
-    collectionService.updateContactPerson(collectionKey1, contactCreated);
-
-    contacts = collectionService.listContactPersons(collectionKey1);
-    assertEquals(1, contacts.size());
-
-    Contact contactUpdated = contacts.get(0);
-    assertTrue(contactUpdated.lenientEquals(contactCreated));
-
-    UserId userId2 = new UserId();
-    userId2.setId("id");
-    userId2.setType(IdType.HUH);
-    contactUpdated.getUserIds().add(userId2);
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> collectionService.updateContactPerson(collectionKey1, contactUpdated));
-
-    Contact contact2 = new Contact();
-    contact2.setFirstName("Another name");
-    contact2.setTaxonomicExpertise(Arrays.asList("aves", "funghi"));
-    contact2.setPosition(Collections.singletonList("Curator"));
-
-    UserId userId3 = new UserId();
-    userId3.setId("id");
-    userId3.setType(IdType.OTHER);
-
-    UserId userId4 = new UserId();
-    userId4.setId("12426");
-    userId4.setType(IdType.IH_IRN);
-    contact2.setUserIds(Arrays.asList(userId3, userId4));
-
-    int contactKey = collectionService.addContactPerson(collectionKey1, contact2);
-    assertTrue(contactKey > 0);
-    contacts = collectionService.listContactPersons(collectionKey1);
-    assertEquals(2, contacts.size());
-
-    collectionService.removeContactPerson(collectionKey1, contactCreated.getKey());
-    contacts = collectionService.listContactPersons(collectionKey1);
-    assertEquals(1, contacts.size());
-
-    contact = contacts.get(0);
-    assertTrue(contact.lenientEquals(contact2));
-  }
-
-  @Test
   public void createCollectionWithoutCodeTest() {
     Collection c = testData.newEntity();
     c.setCode(null);
@@ -807,5 +752,132 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collectionCreated.getEmail().add("asfs");
     assertThrows(
         ConstraintViolationException.class, () -> collectionService.update(collectionCreated));
+  }
+
+  @Test
+  public void createFromDatasetTest() {
+    Dataset dataset = createDataset();
+
+    org.gbif.api.model.registry.Contact datasetContact = new org.gbif.api.model.registry.Contact();
+    datasetContact.setFirstName("firstName");
+    datasetContact.setLastName("lastName");
+    datasetService.addContact(dataset.getKey(), datasetContact);
+
+    String collectionCode = "CODE";
+    UUID collectionKey = collectionService.createFromDataset(dataset.getKey(), collectionCode);
+    Collection collection = collectionService.get(collectionKey);
+
+    assertEquals(collectionCode, collection.getCode());
+    assertEquals(MasterSourceType.GBIF_REGISTRY, collection.getMasterSource());
+
+    assertEquals(Source.DATASET, collection.getMasterSourceMetadata().getSource());
+    assertEquals(dataset.getKey().toString(), collection.getMasterSourceMetadata().getSourceId());
+
+    assertTrue(
+        collection.getIdentifiers().stream()
+            .anyMatch(
+                i ->
+                    i.getType() == IdentifierType.DOI
+                        && i.getIdentifier().equals(dataset.getDoi().getDoiName())));
+
+    assertEquals(1, collection.getContactPersons().size());
+  }
+
+  @Test
+  public void lockMasterSourceFieldsTest() {
+    int numberSpecimensOriginal = 23;
+    String descriptionOriginal = "description";
+    String taxonomicCoverageOriginal = "orig taxon cov";
+
+    Collection collection = new Collection();
+    collection.setCode("code");
+    collection.setName("name");
+    collection.setDescription(descriptionOriginal);
+    collection.setNumberSpecimens(numberSpecimensOriginal);
+    collection.setTaxonomicCoverage(taxonomicCoverageOriginal);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("safsf");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    collection.setMailingAddress(mailingAddress);
+
+    UUID collectionKey = collectionService.create(collection);
+
+    Contact myContact = new Contact();
+    myContact.setFirstName("myContact");
+    int contactKey = collectionService.addContactPerson(collectionKey, myContact);
+
+    int metadataKey =
+        collectionService.addMasterSourceMetadata(
+            collectionKey, new MasterSourceMetadata(Source.IH_IRN, "123"));
+
+    collection.setNumberSpecimens(12);
+    collection.setTaxonomicCoverage("aaa");
+    collection.setDescription("dsgd");
+
+    Address address = new Address();
+    address.setAddress("safsf");
+    address.setCountry(Country.AFGHANISTAN);
+    collection.setAddress(address);
+
+    collectionService.update(collection);
+
+    Collection updatedCollection = collectionService.get(collectionKey);
+
+    assertEquals(numberSpecimensOriginal, updatedCollection.getNumberSpecimens());
+    assertNotEquals(descriptionOriginal, updatedCollection.getDescription());
+    assertEquals(taxonomicCoverageOriginal, updatedCollection.getTaxonomicCoverage());
+    assertNotNull(updatedCollection.getMailingAddress());
+    assertNull(updatedCollection.getAddress());
+
+    Contact contact = new Contact();
+    contact.setFirstName("sfs");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> collectionService.addContactPerson(collectionKey, contact));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> collectionService.updateContactPerson(collectionKey, myContact));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> collectionService.removeContactPerson(collectionKey, contactKey));
+
+    assertDoesNotThrow(
+        () ->
+            collectionService.addIdentifier(
+                collectionKey, new Identifier(IdentifierType.UNKNOWN, "sadf")));
+
+    assertThrows(IllegalArgumentException.class, () -> collectionService.delete(collectionKey));
+
+    // change the master source to GRSCICOLL
+    collectionService.deleteMasterSourceMetadata(collectionKey);
+    updatedCollection = collectionService.get(collectionKey);
+    assertEquals(MasterSourceType.GRSCICOLL, updatedCollection.getMasterSource());
+
+    assertDoesNotThrow(() -> collectionService.addContactPerson(collectionKey, contact));
+    assertDoesNotThrow(() -> collectionService.updateContactPerson(collectionKey, myContact));
+    assertDoesNotThrow(() -> collectionService.removeContactPerson(collectionKey, contactKey));
+
+    // change the master source to GBIF_REGISTRY
+    Dataset dataset = createDataset();
+    metadataKey =
+        collectionService.addMasterSourceMetadata(
+            collectionKey, new MasterSourceMetadata(Source.DATASET, dataset.getKey().toString()));
+    updatedCollection = collectionService.get(collectionKey);
+    assertEquals(MasterSourceType.GBIF_REGISTRY, updatedCollection.getMasterSource());
+
+    String currentDescription = updatedCollection.getDescription();
+    updatedCollection.setDescription("another one");
+    collectionService.update(updatedCollection);
+    updatedCollection = collectionService.get(collectionKey);
+    // the description must remain the same
+    assertEquals(currentDescription, updatedCollection.getDescription());
+    assertTrue(updatedCollection.getContactPersons().isEmpty());
+
+    // delete the master source
+    collectionService.deleteMasterSourceMetadata(collectionKey);
+    assertDoesNotThrow(() -> collectionService.delete(collectionKey));
   }
 }

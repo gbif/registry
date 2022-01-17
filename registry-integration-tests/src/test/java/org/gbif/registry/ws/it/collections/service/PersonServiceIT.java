@@ -27,7 +27,6 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.domain.collections.Constants;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -327,7 +326,7 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     person2.setPrimaryInstitutionKey(institutionKey1);
     UUID personKey2 = personService.create(person2);
 
-    MachineTag mt1 = new MachineTag(Constants.IH_NAMESPACE, Constants.IRN_TAG, "test");
+    MachineTag mt1 = new MachineTag("test", "foo", "test");
     personService.addMachineTag(personKey2, mt1);
 
     PagingResponse<Person> response =

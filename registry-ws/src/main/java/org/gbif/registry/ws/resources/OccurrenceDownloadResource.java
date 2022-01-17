@@ -37,6 +37,7 @@ import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.provider.PartialDate;
+import org.gbif.registry.ws.util.DateUtils;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.BufferedWriter;
@@ -196,6 +197,10 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     }
   }
 
+  /**
+   * Lists all the downloads. Users will see only their own downloads; an admin user
+   * can see other users' downloads.
+   */
   @GetMapping("user/{user}")
   @Override
   public PagingResponse<Download> listByUser(
@@ -208,6 +213,30 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
         page,
         (long) occurrenceDownloadMapper.countByUser(user, status),
         occurrenceDownloadMapper.listByUser(user, page, status));
+  }
+
+  /**
+   * Lists downloads which may be eligible for erasure, based on age, size etc.
+   * This operation can be executed by role ADMIN only.
+   *
+   * Internal use only; this method may be changed without warning.
+   */
+  @GetMapping("internal/eraseAfter")
+  @Secured(ADMIN_ROLE)
+  @Override
+  public PagingResponse<Download> listByEraseAfter(
+      Pageable page,
+      @RequestParam(value = "eraseAfter", required = false) String eraseAfterAsString,
+      @RequestParam(value = "size", required = false) Long size,
+      @RequestParam(value = "erasureNotification", required = false)
+          String erasureNotificationAsString) {
+    Date eraseAfter = DateUtils.STRING_TO_DATE.apply(eraseAfterAsString);
+    Date erasureNotification = DateUtils.STRING_TO_DATE.apply(erasureNotificationAsString);
+
+    return new PagingResponse<>(
+        page,
+        (long) occurrenceDownloadMapper.countByEraseAfter(eraseAfter, size, erasureNotification),
+        occurrenceDownloadMapper.listByEraseAfter(page, eraseAfter, size, erasureNotification));
   }
 
   @SuppressWarnings("MVCPathVariableInspection")

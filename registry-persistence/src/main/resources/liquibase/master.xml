@@ -105,4 +105,8 @@
   <include file="liquibase/097-ror-grid-identifiers.xml" />
   <include file="liquibase/098-grscicoll-contacts.xml" />
   <include file="liquibase/099-grscicoll-collection-trigger-taxonomic-coverage.xml" />
+  <include file="liquibase/100-download-erasure-notification.xml" />
+  <include file="liquibase/101-grscicoll-master-source.xml" />
+  <include file="liquibase/102-grscicoll-master-sync-metadata.xml" />
+  <include file="liquibase/103-grscicoll-contact-first-name-optional.xml" />
 </databaseChangeLog>

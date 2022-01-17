@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper">
 
-  <!-- Maps an occurrence download  and handles the different types of downloads-->
+  <!-- Maps an occurrence download and handles the different types of downloads -->
   <resultMap id="OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.occurrence.Download" autoMapping="false">
     <id property="key" column="key"/>
     <result property="doi" column="doi" />
@@ -14,6 +14,7 @@
     <result property="created" column="created"/>
     <result property="modified" column="modified"/>
     <result property="eraseAfter" column="erase_after"/>
+    <result property="erasureNotification" column="erasure_notification"/>
 
     <association property="request" javaType="org.gbif.api.model.occurrence.DownloadRequest">
       <result property="notificationAddressesAsString" column="notification_addresses"/>
@@ -67,7 +68,7 @@
   <resultMap id="DOWNLOAD_STATISTICS" type="org.gbif.api.model.occurrence.DownloadStatistics" autoMapping="true"/>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after
+    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after,erasure_notification
   </sql>
 
 
@@ -76,15 +77,15 @@
   </select>
 
   <!--
-  Only the status,size,doi and total_records can be updated
- -->
+  Only the below fields can be updated
+  -->
   <sql id="OCCURRENCE_DOWNLOAD_UPDATE_NOTIFICATION_ADDRESSES">
     notification_addresses = #{notificationAddressesAsString,jdbcType=VARCHAR},
     created_by = #{newCreator,jdbcType=VARCHAR}
   </sql>
 
   <!--
-    Only the status,size,doi and total_records can be updated
+    Only the below fields can be updated
    -->
   <sql id="OCCURRENCE_DOWNLOAD_UPDATE_STATUS">
     status = #{status,jdbcType=OTHER},
@@ -93,6 +94,7 @@
     total_records = #{totalRecords,jdbcType=INTEGER},
     license = #{license,jdbcType=OTHER},
     erase_after = #{eraseAfter,jdbcType=TIMESTAMP},
+    erasure_notification = #{erasureNotification,jdbcType=TIMESTAMP},
     modified = now()
   </sql>
 
@@ -114,7 +116,8 @@
     #{request.format,jdbcType=OTHER},
     now(), <!-- created -->
     now(), <!-- modified -->
-    #{eraseAfter,jdbcType=TIMESTAMP}
+    #{eraseAfter,jdbcType=TIMESTAMP},
+    #{erasureNotification,jdbcType=TIMESTAMP}
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
@@ -216,6 +219,67 @@
              open="(" separator="," close=")">
       #{item}
     </foreach>
+  </select>
+
+  <select id="listByEraseAfter" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
+    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM occurrence_download
+    WHERE status = 'SUCCEEDED'
+    AND created_by NOT IN ('download.gbif.org')
+    <choose>
+      <when test="eraseAfter != null" >
+        AND <![CDATA[erase_after < #{eraseAfter,jdbcType=TIMESTAMP}]]>
+      </when>
+      <otherwise>
+        AND <![CDATA[erase_after < NOW()]]>
+      </otherwise>
+    </choose>
+
+    <if test="size != null" >
+      AND <![CDATA[size >= #{size,jdbcType=BIGINT}]]>
+    </if>
+
+    <choose>
+      <when test="erasureNotification != null" >
+        AND <![CDATA[erasure_notification < #{erasureNotification,jdbcType=TIMESTAMP}]]>
+      </when>
+      <otherwise>
+        AND erasure_notification IS NULL
+      </otherwise>
+    </choose>
+
+    ORDER BY created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countByEraseAfter" resultType="Integer">
+    SELECT COUNT(*)
+    FROM occurrence_download
+    WHERE status = 'SUCCEEDED'
+    AND created_by NOT IN ('download.gbif.org')
+    <choose>
+      <when test="eraseAfter != null" >
+        AND <![CDATA[erase_after < #{eraseAfter,jdbcType=TIMESTAMP}]]>
+      </when>
+      <otherwise>
+        AND <![CDATA[erase_after < NOW()]]>
+      </otherwise>
+    </choose>
+
+    <if test="size != null" >
+      AND <![CDATA[size >= #{size,jdbcType=BIGINT}]]>
+    </if>
+
+    <choose>
+      <when test="erasureNotification != null" >
+        AND <![CDATA[erasure_notification < #{erasureNotification,jdbcType=TIMESTAMP}]]>
+      </when>
+      <otherwise>
+        AND erasure_notification IS NULL
+      </otherwise>
+    </choose>
   </select>
 
   <select id="getDownloadsByUserCountry" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_COUNT_MAP" parameterType="map">

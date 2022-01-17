@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
+import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 
 import java.util.List;
@@ -64,4 +65,11 @@ public interface CollectionMapper
   UUID getInstitutionKey(@Param("collectionKey") UUID collectionKey);
 
   CollectionDto getCollectionDto(@Param("collectionKey") UUID collectionKey);
+
+  /**
+   * Finds collections whose master source is a dataset whose publishing organization is the one
+   * received as parameter.
+   */
+  List<MasterSourceOrganizationDto> findByDatasetOrganizationAsMasterSource(
+      @Param("organizationKey") UUID organizationKey);
 }

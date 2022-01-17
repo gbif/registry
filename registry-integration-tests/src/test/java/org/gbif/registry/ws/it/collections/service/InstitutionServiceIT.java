@@ -16,13 +16,15 @@ package org.gbif.registry.ws.it.collections.service;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
@@ -30,16 +32,20 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import javax.validation.ConstraintViolationException;
@@ -48,10 +54,12 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Institution> {
@@ -482,79 +490,6 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
   }
 
   @Test
-  public void contactPersonsTest() {
-    Institution institution1 = testData.newEntity();
-    UUID institutionKey1 = institutionService.create(institution1);
-
-    Contact contact = new Contact();
-    contact.setFirstName("First name");
-    contact.setLastName("last");
-    contact.setCountry(Country.AFGHANISTAN);
-    contact.setAddress(Collections.singletonList("address"));
-    contact.setCity("City");
-    contact.setEmail(Collections.singletonList("aa@aa.com"));
-    contact.setFax(Collections.singletonList("fdsgds"));
-    contact.setPhone(Collections.singletonList("fdsgds"));
-    contact.setNotes("notes");
-
-    institutionService.addContactPerson(institutionKey1, contact);
-
-    List<Contact> contacts = institutionService.listContactPersons(institutionKey1);
-    assertEquals(1, contacts.size());
-
-    Contact contactCreated = contacts.get(0);
-    assertTrue(contactCreated.lenientEquals(contact));
-
-    contactCreated.setPosition(Collections.singletonList("position"));
-    contactCreated.setTaxonomicExpertise(Collections.singletonList("aves"));
-
-    UserId userId = new UserId();
-    userId.setId("id");
-    userId.setType(IdType.OTHER);
-    contactCreated.setUserIds(Collections.singletonList(userId));
-    institutionService.updateContactPerson(institutionKey1, contactCreated);
-
-    contacts = institutionService.listContactPersons(institutionKey1);
-    assertEquals(1, contacts.size());
-
-    Contact contactUpdated = contacts.get(0);
-    assertTrue(contactUpdated.lenientEquals(contactCreated));
-
-    UserId userId2 = new UserId();
-    userId2.setId("id");
-    userId2.setType(IdType.HUH);
-    contactUpdated.getUserIds().add(userId2);
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> institutionService.updateContactPerson(institutionKey1, contactUpdated));
-
-    Contact contact2 = new Contact();
-    contact2.setFirstName("Another name");
-    contact2.setTaxonomicExpertise(Arrays.asList("aves", "funghi"));
-    contact2.setPosition(Collections.singletonList("Curator"));
-
-    UserId userId3 = new UserId();
-    userId3.setId("id");
-    userId3.setType(IdType.OTHER);
-
-    UserId userId4 = new UserId();
-    userId4.setId("12426");
-    userId4.setType(IdType.IH_IRN);
-    contact2.setUserIds(Arrays.asList(userId3, userId4));
-
-    institutionService.addContactPerson(institutionKey1, contact2);
-    contacts = institutionService.listContactPersons(institutionKey1);
-    assertEquals(2, contacts.size());
-
-    institutionService.removeContactPerson(institutionKey1, contactCreated.getKey());
-    contacts = institutionService.listContactPersons(institutionKey1);
-    assertEquals(1, contacts.size());
-
-    contact = contacts.get(0);
-    assertTrue(contact.lenientEquals(contact2));
-  }
-
-  @Test
   public void createInstitutionWithoutCodeTest() {
     Institution i = testData.newEntity();
     i.setCode(null);
@@ -606,5 +541,126 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     institutionCreated.getEmail().add("asfs");
     assertThrows(
         ConstraintViolationException.class, () -> institutionService.update(institutionCreated));
+  }
+
+  @Test
+  public void createFromOrganizationTest() {
+    Organization organization = createOrganization();
+
+    org.gbif.api.model.registry.Contact orgContact = new org.gbif.api.model.registry.Contact();
+    orgContact.setFirstName("firstName");
+    orgContact.setLastName("lastName");
+    organizationService.addContact(organization.getKey(), orgContact);
+
+    String institutionCode = "CODE";
+    UUID institutionKey =
+        institutionService.createFromOrganization(organization.getKey(), institutionCode);
+    Institution institution = institutionService.get(institutionKey);
+
+    assertEquals(institutionCode, institution.getCode());
+    assertEquals(MasterSourceType.GBIF_REGISTRY, institution.getMasterSource());
+
+    assertEquals(Source.ORGANIZATION, institution.getMasterSourceMetadata().getSource());
+    assertEquals(
+        organization.getKey().toString(), institution.getMasterSourceMetadata().getSourceId());
+    assertEquals(1, institution.getContactPersons().size());
+  }
+
+  @Test
+  public void lockMasterSourceFieldsTest() {
+    int numberSpecimensOriginal = 23;
+    String descriptionOriginal = "description";
+    URI homepageOriginal = URI.create("http://test.com");
+
+    Institution institution = new Institution();
+    institution.setCode("code");
+    institution.setName("name");
+    institution.setDescription(descriptionOriginal);
+    institution.setNumberSpecimens(numberSpecimensOriginal);
+    institution.setHomepage(homepageOriginal);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("safsf");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    institution.setMailingAddress(mailingAddress);
+
+    UUID institutionKey = institutionService.create(institution);
+
+    Contact myContact = new Contact();
+    myContact.setFirstName("myContact");
+    int contactKey = institutionService.addContactPerson(institutionKey, myContact);
+
+    int metadataKey =
+        institutionService.addMasterSourceMetadata(
+            institutionKey, new MasterSourceMetadata(Source.IH_IRN, UUID.randomUUID().toString()));
+
+    institution.setNumberSpecimens(12);
+    institution.setDescription("aaa");
+    institution.setHomepage(URI.create("http://aaaa.com"));
+
+    Address address = new Address();
+    address.setAddress("safsf");
+    address.setCountry(Country.AFGHANISTAN);
+    institution.setAddress(address);
+
+    institutionService.update(institution);
+
+    Institution updatedInstitution = institutionService.get(institutionKey);
+
+    assertNotEquals(numberSpecimensOriginal, updatedInstitution.getNumberSpecimens());
+    assertNotEquals(descriptionOriginal, updatedInstitution.getDescription());
+    assertEquals(homepageOriginal, updatedInstitution.getHomepage());
+    assertNotNull(updatedInstitution.getMailingAddress());
+    assertNull(updatedInstitution.getAddress());
+
+    Contact contact = new Contact();
+    contact.setFirstName("sfs");
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.addContactPerson(institutionKey, contact));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.updateContactPerson(institutionKey, myContact));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.removeContactPerson(institutionKey, contactKey));
+
+    assertDoesNotThrow(
+        () ->
+            institutionService.addIdentifier(
+                institutionKey, new Identifier(IdentifierType.UNKNOWN, "sadf")));
+
+    assertThrows(IllegalArgumentException.class, () -> institutionService.delete(institutionKey));
+
+    // change the master source to GRSCICOLL
+    institutionService.deleteMasterSourceMetadata(institutionKey);
+    updatedInstitution = institutionService.get(institutionKey);
+    assertEquals(MasterSourceType.GRSCICOLL, updatedInstitution.getMasterSource());
+
+    assertDoesNotThrow(() -> institutionService.addContactPerson(institutionKey, contact));
+    assertDoesNotThrow(() -> institutionService.updateContactPerson(institutionKey, myContact));
+    assertDoesNotThrow(() -> institutionService.removeContactPerson(institutionKey, contactKey));
+
+    // change the master source to GBIF_REGISTRY
+    Organization organization = createOrganization();
+    metadataKey =
+        institutionService.addMasterSourceMetadata(
+            institutionKey,
+            new MasterSourceMetadata(Source.ORGANIZATION, organization.getKey().toString()));
+    updatedInstitution = institutionService.get(institutionKey);
+    assertEquals(MasterSourceType.GBIF_REGISTRY, updatedInstitution.getMasterSource());
+
+    String currentDescription = updatedInstitution.getDescription();
+    updatedInstitution.setDescription("another one");
+    institutionService.update(updatedInstitution);
+    updatedInstitution = institutionService.get(institutionKey);
+    // the description must remain the same
+    assertEquals(currentDescription, updatedInstitution.getDescription());
+
+    // delete the master source
+    institutionService.deleteMasterSourceMetadata(institutionKey);
+    assertDoesNotThrow(() -> institutionService.delete(institutionKey));
   }
 }

@@ -16,6 +16,7 @@ package org.gbif.registry.ws.it.collections.resource;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -39,6 +40,7 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
@@ -57,6 +59,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -317,6 +320,35 @@ public abstract class PrimaryCollectionEntityResourceIT<
   public void discardChangeSuggestionTest() {
     doNothing().when(getMockChangeSuggestionService()).discardChangeSuggestion(anyInt());
     assertDoesNotThrow(() -> getPrimaryCollectionEntityClient().discardChangeSuggestion(1));
+  }
+
+  @Test
+  public void getSourceableFieldsTest() {
+    assertFalse(getPrimaryCollectionEntityClient().getSourceableFields().isEmpty());
+  }
+
+  @Test
+  public void masterSourceMetadataTest() {
+    MasterSourceMetadata metadata = new MasterSourceMetadata(Source.IH_IRN, "123");
+
+    int key = 1;
+    when(getMockPrimaryEntityService().addMasterSourceMetadata(any(UUID.class), eq(metadata)))
+        .thenReturn(key);
+    int metadataKey =
+        getPrimaryCollectionEntityClient().addMasterSourceMetadata(UUID.randomUUID(), metadata);
+    assertEquals(key, metadataKey);
+    metadata.setKey(metadataKey);
+
+    when(getMockPrimaryEntityService().getMasterSourceMetadata(any(UUID.class)))
+        .thenReturn(metadata);
+
+    MasterSourceMetadata masterSourceMetadata =
+        getPrimaryCollectionEntityClient().getMasterSourceMetadata(UUID.randomUUID());
+    assertEquals(metadata, masterSourceMetadata);
+
+    doNothing().when(getMockPrimaryEntityService()).deleteMasterSourceMetadata(any(UUID.class));
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().deleteMasterSourceMetadata(UUID.randomUUID()));
   }
 
   protected abstract PrimaryCollectionEntityService<T> getMockPrimaryEntityService();

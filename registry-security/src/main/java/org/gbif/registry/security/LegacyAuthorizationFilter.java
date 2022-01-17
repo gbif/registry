@@ -242,7 +242,10 @@ public class LegacyAuthorizationFilter extends OncePerRequestFilter {
    */
   private UUID retrieveKeyFromMiddleRequestPath(HttpServletRequest request) {
     String path = request.getRequestURI();
-    String key = path.substring(path.lastIndexOf(RESOURCE_BOTH_SIDE_SLASH_MAPPING) + RESOURCE_BOTH_SIDE_SLASH_MAPPING.length());
+    String key =
+        path.substring(
+            path.lastIndexOf(RESOURCE_BOTH_SIDE_SLASH_MAPPING)
+                + RESOURCE_BOTH_SIDE_SLASH_MAPPING.length());
 
     if (key.contains(SLASH)) {
       key = key.substring(0, key.indexOf(SLASH));

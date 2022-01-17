@@ -22,6 +22,7 @@
     <collection property="machineTags" column="key" select="listMachineTags"/>
     <collection property="comments" column="key" select="listComments"/>
     <collection property="occurrenceMappings" column="key" select="listOccurrenceMappings"/>
+    <collection property="masterSourceMetadata" column="master_sync_metadata_key" select="getMasterSourceMetadata"/>
   </resultMap>
 
   <resultMap id="COLLECTION_DTO_MAP" type="CollectionDto" autoMapping="true">
@@ -32,11 +33,14 @@
     <id property="key" column="key"/>
   </resultMap>
 
+  <resultMap id="MASTER_SOURCE_ORG_DTO_MAP" type="MasterSourceOrganizationDto" autoMapping="true" />
+
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
-    taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes
+    taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
+    master_source
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
@@ -44,7 +48,7 @@
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
     c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
-    c.replaced_by
+    c.replaced_by, c.master_source, c.master_sync_metadata_key
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -78,7 +82,8 @@
     #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
-    #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
+    #{masterSource,jdbcType=OTHER}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -111,6 +116,7 @@
     important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
   <sql id="FULLTEXT_SEARCH">
@@ -256,6 +262,9 @@
     <if test="params.personalCollection != null" >
       AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
     </if>
+    <if test="params.masterSourceType != null" >
+      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
@@ -348,6 +357,9 @@
     <if test="params.personalCollection != null" >
       AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
     </if>
+    <if test="params.masterSourceType != null" >
+      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
+    </if>
   </select>
 
   <select id="deleted" resultType="CollectionDto"  resultMap="COLLECTION_DTO_MAP">
@@ -417,6 +429,13 @@
     collection_contact_key = collection_contact.key AND
     collection_key = #{entityKey,jdbcType=OTHER} AND
     collection_contact_key = #{contactKey,jdbcType=INTEGER}
+  </delete>
+
+  <delete id="removeAllContactPersons">
+    DELETE FROM collection_contact USING collection_collection_contact
+    WHERE
+    collection_contact_key = collection_contact.key AND
+    collection_key = #{entityKey,jdbcType=OTHER}
   </delete>
 
   <!-- LOOKUP -->
@@ -691,5 +710,50 @@
     WHERE key = #{targetEntityKey,jdbcType=OTHER} AND deleted IS NULL
   </update>
   <!-- END MERGE -->
+
+  <!-- MASTER SOURCE -->
+  <insert id="addMasterSourceMetadata">
+    UPDATE collection
+    SET master_sync_metadata_key = #{metadataKey,jdbcType=INTEGER},
+        master_source = #{masterSourceType,jdbcType=OTHER}
+    WHERE key = #{targetEntityKey,jdbcType=OTHER}
+  </insert>
+
+  <update id="removeMasterSourceMetadata">
+    UPDATE collection
+    SET master_sync_metadata_key = null,
+        master_source = 'GRSCICOLL'
+    WHERE key = #{targetEntityKey,jdbcType=OTHER}
+  </update>
+
+  <select id="getMasterSourceMetadata" resultType="org.gbif.api.model.collections.MasterSourceMetadata">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper.METADATA_READ_FIELDS"/>
+    FROM master_sync_metadata m
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getEntityMasterSourceMetadata" resultType="org.gbif.api.model.collections.MasterSourceMetadata">
+    SELECT <include refid="org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper.METADATA_READ_FIELDS"/>
+    FROM master_sync_metadata m
+    INNER JOIN collection c ON c.master_sync_metadata_key = m.key
+    WHERE c.key = #{targetEntityKey,jdbcType=OTHER}
+  </select>
+
+  <select id="findByMasterSource" resultMap="COLLECTION_MAP">
+    SELECT <include refid="COLLECTION_READ_FIELDS"/>
+    FROM collection c
+    INNER JOIN master_sync_metadata m ON c.master_sync_metadata_key = m.key
+    WHERE m.source = #{source,jdbcType=OTHER} AND m.source_id = #{sourceId,jdbcType=VARCHAR}
+  </select>
+
+  <select id="findByDatasetOrganizationAsMasterSource" resultMap="MASTER_SOURCE_ORG_DTO_MAP">
+    SELECT c.key collectionKey, d.key datasetKey
+    FROM dataset d
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    INNER JOIN master_sync_metadata msm ON msm.source_id = cast(d.key as text)
+    INNER JOIN collection c ON c.master_sync_metadata_key = msm.key
+    WHERE o.key = #{organizationKey,jdbcType=OTHER} AND c.deleted IS NULL
+  </select>
+  <!-- END MASTER SOURCE -->
 
 </mapper>

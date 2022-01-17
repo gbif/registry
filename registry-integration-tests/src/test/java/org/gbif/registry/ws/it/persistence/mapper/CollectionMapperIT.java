@@ -17,7 +17,6 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.IdType;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
@@ -25,6 +24,8 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -163,6 +164,7 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setName("n1");
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
+    col1.setMasterSource(MasterSourceType.IH);
 
     Address addressCol1 = new Address();
     addressCol1.setCountry(Country.DENMARK);
@@ -189,6 +191,7 @@ public class CollectionMapperIT extends BaseItTest {
     col2.setName("n2");
     col2.setCreatedBy("test");
     col2.setModifiedBy("test");
+    col2.setMasterSource(MasterSourceType.GBIF_REGISTRY);
     collectionMapper.create(col2);
 
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
@@ -300,6 +303,23 @@ public class CollectionMapperIT extends BaseItTest {
         page,
         1,
         col2.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().masterSourceType(MasterSourceType.IH).build(),
+        page,
+        1,
+        col1.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().masterSourceType(MasterSourceType.GBIF_REGISTRY).build(),
+        page,
+        1,
+        col2.getKey());
+
+    assertSearch(
+        CollectionSearchParams.builder().masterSourceType(MasterSourceType.GRSCICOLL).build(),
+        page,
+        0);
   }
 
   @Test
