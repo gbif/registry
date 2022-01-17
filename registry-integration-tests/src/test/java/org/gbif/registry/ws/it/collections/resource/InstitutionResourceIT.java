@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
@@ -146,6 +147,17 @@ public class InstitutionResourceIT
 
     assertEquals(
         convertedCollectionKey, getClient().convertToCollection(UUID.randomUUID(), params));
+  }
+
+  @Test
+  public void createFromOrganizationTest() {
+    UUID collectionKey = UUID.randomUUID();
+    when(institutionService.createFromOrganization(any(), any())).thenReturn(collectionKey);
+
+    InstitutionImportParams params = new InstitutionImportParams();
+    params.setOrganizationKey(UUID.randomUUID());
+    params.setInstitutionCode("code");
+    assertEquals(collectionKey, getClient().createFromOrganization(params));
   }
 
   @Override

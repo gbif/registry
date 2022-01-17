@@ -42,4 +42,6 @@ public interface ContactableMapper {
   void addContactPerson(@Param("entityKey") UUID entityKey, @Param("contactKey") int contactKey);
 
   void removeContactPerson(@Param("entityKey") UUID entityKey, @Param("contactKey") int contactKey);
+
+  void removeAllContactPersons(@Param("entityKey") UUID entityKey);
 }

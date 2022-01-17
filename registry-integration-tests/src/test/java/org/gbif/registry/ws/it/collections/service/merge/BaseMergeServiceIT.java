@@ -17,7 +17,8 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.IdType;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -36,6 +37,7 @@ import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
 import org.gbif.api.service.collections.PersonService;
+import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.InstallationService;
@@ -49,6 +51,8 @@ import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -60,7 +64,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
-import static org.gbif.registry.domain.collections.Constants.IRN_TAG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -80,6 +83,7 @@ public abstract class BaseMergeServiceIT<
   protected final MachineTagService machineTagService;
   protected final OccurrenceMappingService occurrenceMappingService;
   protected final PersonService personService;
+  protected final PrimaryCollectionEntityService primaryCollectionEntityService;
 
   @Autowired private DatasetService datasetService;
   @Autowired private NodeService nodeService;
@@ -94,7 +98,8 @@ public abstract class BaseMergeServiceIT<
       ContactService contactService,
       MachineTagService machineTagService,
       OccurrenceMappingService occurrenceMappingService,
-      PersonService personService) {
+      PersonService personService,
+      PrimaryCollectionEntityService primaryCollectionEntityService) {
     super(simplePrincipalProvider);
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -103,6 +108,7 @@ public abstract class BaseMergeServiceIT<
     this.machineTagService = machineTagService;
     this.occurrenceMappingService = occurrenceMappingService;
     this.personService = personService;
+    this.primaryCollectionEntityService = primaryCollectionEntityService;
   }
 
   @Test
@@ -203,13 +209,13 @@ public abstract class BaseMergeServiceIT<
   public void preconditionsTest() {
     T e1 = createEntityToReplace();
     crudService.create(e1);
-    MachineTag mt1 = new MachineTag(IDIGBIO_NAMESPACE, IRN_TAG, "test");
-    machineTagService.addMachineTag(e1.getKey(), mt1);
+    MasterSourceMetadata metadata = new MasterSourceMetadata(Source.IH_IRN, "test");
+    primaryCollectionEntityService.addMasterSourceMetadata(e1.getKey(), metadata);
 
     T e2 = createReplacement();
     crudService.create(e2);
-    MachineTag mt2 = new MachineTag(IDIGBIO_NAMESPACE, IRN_TAG, "test");
-    machineTagService.addMachineTag(e2.getKey(), mt2);
+    MasterSourceMetadata metadata2 = new MasterSourceMetadata(Source.IH_IRN, "test");
+    primaryCollectionEntityService.addMasterSourceMetadata(e2.getKey(), metadata2);
 
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
@@ -220,18 +226,41 @@ public abstract class BaseMergeServiceIT<
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(UUID.randomUUID(), e2.getKey()));
 
-    // test that we can't merge 2 idigbio entities
-    machineTagService.deleteMachineTag(e1.getKey(), mt1.getKey());
-    machineTagService.deleteMachineTag(e2.getKey(), mt2.getKey());
+    // test that we can't merge 2 entities with master source
+    primaryCollectionEntityService.deleteMasterSourceMetadata(e1.getKey());
+    primaryCollectionEntityService.deleteMasterSourceMetadata(e2.getKey());
 
-    machineTagService.addMachineTag(e1.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar"));
-    machineTagService.addMachineTag(e2.getKey(), new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2"));
+    MachineTag mt3 = new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar");
+    machineTagService.addMachineTag(e1.getKey(), mt3);
+    MachineTag mt4 = new MachineTag(IDIGBIO_NAMESPACE, "foo2", "bar2");
+    machineTagService.addMachineTag(e2.getKey(), mt4);
+    assertThrows(
+        IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
+
+    // test that we can't merge 2 entities that have a master source
+    machineTagService.deleteMachineTag(e1.getKey(), mt3.getKey());
+    machineTagService.deleteMachineTag(e2.getKey(), mt4.getKey());
+
+    Source source = null;
+    String sourceId = null;
+    if (e1 instanceof Institution) {
+      source = Source.ORGANIZATION;
+      sourceId = createOrganization().getKey().toString();
+    } else {
+      source = Source.DATASET;
+      sourceId = createDataset().getKey().toString();
+    }
+    primaryCollectionEntityService.addMasterSourceMetadata(
+        e1.getKey(), new MasterSourceMetadata(source, sourceId));
+    primaryCollectionEntityService.addMasterSourceMetadata(
+        e2.getKey(), new MasterSourceMetadata(source, sourceId));
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
   }
 
   protected Dataset createDataset() {
     Node node = new Node();
+
     node.setTitle("node");
     node.setType(NodeType.COUNTRY);
     node.setParticipationStatus(ParticipationStatus.AFFILIATE);
@@ -260,6 +289,23 @@ public abstract class BaseMergeServiceIT<
     datasetService.create(dataset);
 
     return dataset;
+  }
+
+  protected Organization createOrganization() {
+    Node node = new Node();
+    node.setTitle("node");
+    node.setType(NodeType.COUNTRY);
+    node.setParticipationStatus(ParticipationStatus.AFFILIATE);
+    nodeService.create(node);
+
+    Organization org = new Organization();
+    org.setEndorsingNodeKey(node.getKey());
+    org.setTitle("organization");
+    org.setLanguage(Language.ABKHAZIAN);
+    org.setPassword("testtttt");
+    organizationService.create(org);
+
+    return org;
   }
 
   abstract T createEntityToReplace();

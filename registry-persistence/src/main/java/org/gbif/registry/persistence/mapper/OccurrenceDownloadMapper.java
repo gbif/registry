@@ -62,6 +62,17 @@ public interface OccurrenceDownloadMapper {
 
   int countByUser(@Param("creator") String creator, @Param("status") Set<Download.Status> status);
 
+  List<Download> listByEraseAfter(
+      @Nullable @Param("page") Pageable page,
+      @Param("eraseAfter") Date eraseAfter,
+      @Param("size") Long size,
+      @Param("erasureNotification") Date erasureNotification);
+
+  int countByEraseAfter(
+      @Param("eraseAfter") Date eraseAfter,
+      @Param("size") Long size,
+      @Param("erasureNotification") Date erasureNotification);
+
   List<Facet.Count> getDownloadsByUserCountry(
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,

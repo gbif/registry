@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.ws.server.provider.PageableProvider;
 
 import java.util.UUID;
@@ -80,6 +81,15 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
       }
 
       request.setCountry(country);
+    }
+
+    String masterSourceTypeParam = webRequest.getParameter("masterSourceType");
+    if (!Strings.isNullOrEmpty(masterSourceTypeParam)) {
+      try {
+        request.setMasterSourceType(MasterSourceType.valueOf(masterSourceTypeParam));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid master source type: " + masterSourceTypeParam);
+      }
     }
   }
 }

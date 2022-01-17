@@ -24,7 +24,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 public enum CollectionsEmailType implements EmailType {
   NEW_CHANGE_SUGGESTION("newChangeSuggestion", "grscicoll_suggestion_created.ftl"),
   APPLIED_CHANGE_SUGGESTION("appliedChangeSuggestion", "grscicoll_suggestion_applied.ftl"),
-  DISCARDED_CHANGE_SUGGESTION("discardedChangeSuggestion", "grscicoll_suggestion_discarded.ftl");
+  DISCARDED_CHANGE_SUGGESTION("discardedChangeSuggestion", "grscicoll_suggestion_discarded.ftl"),
+  MASTER_SOURCE_DELETED("masterSourceDeleted", "grscicoll_master_source_deleted.ftl");
 
   private static final ResourceBundleMessageSource MESSAGE_SOURCE;
 

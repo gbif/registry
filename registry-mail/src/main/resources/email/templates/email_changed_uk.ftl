@@ -1,20 +1,20 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.AccountEmailChangedTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Hello ${name},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Вітаємо, {name}!</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    The email of your GBIF account
+    Електронна пошта вашого облікового запису GBIF
     <b>${name}</b>
-    was changed to
+    була змінена на
     <a href="mailto:${newEmail}" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">${newEmail}</a>.
-    If you didn't change it, please contact
+    Якщо ви не змінювали її, будь ласка, зв'яжіться з
     <a href="mailto:helpdesk@gbif.org" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">helpdesk@gbif.org</a>
-    immediately.
+    негайно.
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>The GBIF Secretariat</em>
+    <em>Секретаріат GBIF</em>
 </p>
 
 <#include "footer.ftl">

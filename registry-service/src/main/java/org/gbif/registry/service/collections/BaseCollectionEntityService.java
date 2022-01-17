@@ -14,6 +14,9 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
@@ -43,6 +46,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.groups.Default;
 
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
@@ -103,14 +107,22 @@ public abstract class BaseCollectionEntityService<
   @Override
   public void delete(UUID key) {
     T entityToDelete = get(key);
+    delete(entityToDelete);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  protected void delete(T entityToDelete) {
     checkArgument(entityToDelete != null, "Entity to delete doesn't exist");
+    checkArgument(entityToDelete.getKey() != null, "Entity to delete doesn't have key");
 
     // updates audit fields like the modifiedBy
     update(entityToDelete);
 
-    baseMapper.delete(key);
+    baseMapper.delete(entityToDelete.getKey());
 
-    eventManager.post(DeleteCollectionEntityEvent.newInstance(entityToDelete, get(key)));
+    eventManager.post(
+        DeleteCollectionEntityEvent.newInstance(entityToDelete, get(entityToDelete.getKey())));
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -262,13 +274,15 @@ public abstract class BaseCollectionEntityService<
             .filter(mt -> mt.getNamespace().equals(namespace))
             .collect(Collectors.toList());
 
-    baseMapper.deleteMachineTags(targetEntityKey, namespace, null);
-
+    // we delete the machine tags one by one to make it easier for children classes to override the
+    // deletion of machine tags behaviour
     machineTagsToDelete.forEach(
-        mt ->
-            eventManager.post(
-                SubEntityCollectionEvent.newInstance(
-                    targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
+        mt -> {
+          deleteMachineTag(targetEntityKey, mt.getKey());
+          eventManager.post(
+              SubEntityCollectionEvent.newInstance(
+                  targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE));
+        });
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -289,18 +303,30 @@ public abstract class BaseCollectionEntityService<
             .filter(mt -> mt.getNamespace().equals(namespace) && mt.getName().equals(name))
             .collect(Collectors.toList());
 
-    baseMapper.deleteMachineTags(targetEntityKey, namespace, name);
-
+    // we delete the machine tags one by one to make it easier for children classes to override the
+    // deletion of machine tags behaviour
     machineTagsToDelete.forEach(
-        mt ->
-            eventManager.post(
-                SubEntityCollectionEvent.newInstance(
-                    targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE)));
+        mt -> {
+          deleteMachineTag(targetEntityKey, mt.getKey());
+          eventManager.post(
+              SubEntityCollectionEvent.newInstance(
+                  targetEntityKey, objectClass, mt, mt.getKey(), EventType.DELETE));
+        });
   }
 
   @Override
   public List<MachineTag> listMachineTags(UUID targetEntityKey) {
     return baseMapper.listMachineTags(targetEntityKey);
+  }
+
+  @Override
+  public PagingResponse<T> listByMachineTag(
+      String namespace,
+      @Nullable String name,
+      @Nullable String value,
+      @Nullable Pageable pageable) {
+    pageable = pageable == null ? new PagingRequest() : pageable;
+    return withMyBatis.listByMachineTag(baseMapper, namespace, name, value, pageable);
   }
 
   /**
