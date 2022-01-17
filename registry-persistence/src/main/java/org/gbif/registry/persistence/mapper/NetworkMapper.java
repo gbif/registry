@@ -15,6 +15,7 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.registry.domain.ws.IptNetworkBriefResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,4 +44,7 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
 
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
+
+  /** @return The list of networks, with only their key and title populated. */
+  List<IptNetworkBriefResponse> listNetworksBrief();
 }

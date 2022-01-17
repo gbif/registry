@@ -437,4 +437,12 @@
                             (SELECT key,title FROM network WHERE deleted IS NULL AND title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' ORDER BY title LIMIT 25)
                           ) t1 LIMIT 25
   </select>
+
+  <!-- Append ordering by title, omitting deleted entities. No paging, instead all networks included in response -->
+  <select id="listNetworksBrief" resultType="org.gbif.registry.domain.ws.IptNetworkBriefResponse">
+    SELECT n.key,n.title AS name
+    FROM network n
+    WHERE n.deleted IS NULL
+    ORDER BY lower(n.title)
+  </select>
 </mapper>
