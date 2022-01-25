@@ -9,8 +9,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.List;
 
-import org.junit.Ignore;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -40,8 +38,6 @@ public class IptNetworkResourceIT extends BaseItTest {
    * The test sends a get all networks (GET) request, the JSON response having a key and name
    * for each network in the list.
    */
-  @Ignore("Ignore to test API version")
-  @Test
   public void testGetNetworksJSON() throws Exception {
     // persist two new networks
     Network network1 = testDataFactory.newPersistedNetwork();
