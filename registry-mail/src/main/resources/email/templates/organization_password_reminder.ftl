@@ -4,7 +4,7 @@
 <h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear ${contact.firstName},</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    You, or someone else has requested the password for the organisation
+    You, or someone else has requested the shared token for the organisation
     <b>${organization.title}</b>
     to be sent to your e-mail address
     <a href="mailto:${email}" style="margin: 0;padding: 0;line-height: 1.65;color: #4ba2ce;text-decoration: none;font-weight: bold;">${email}</a>
@@ -17,7 +17,7 @@
         Username: ${organization.key}
     </li>
     <li style="margin: 0;padding: 0;line-height: 1.65;">
-        Password: ${organization.password}
+        Token: ${organization.password}
     </li>
 </ul>
 
