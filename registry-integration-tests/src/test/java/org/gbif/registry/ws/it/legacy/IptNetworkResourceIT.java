@@ -9,6 +9,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Ignore("Ignore to test API version")
 public class IptNetworkResourceIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
