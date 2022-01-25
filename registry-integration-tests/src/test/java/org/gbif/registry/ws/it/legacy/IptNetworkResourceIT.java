@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Ignore("Ignore to test API version")
 public class IptNetworkResourceIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
@@ -41,6 +40,7 @@ public class IptNetworkResourceIT extends BaseItTest {
    * The test sends a get all networks (GET) request, the JSON response having a key and name
    * for each network in the list.
    */
+  @Ignore("Ignore to test API version")
   @Test
   public void testGetNetworksJSON() throws Exception {
     // persist two new networks
