@@ -65,8 +65,14 @@ public final class ContactTypeConverter extends AbstractConverter {
    */
   @Override
   protected Object convertToType(Class type, Object value) throws Throwable {
+    ContactType infer;
 
-    ContactType infer = VocabularyUtils.lookupEnum(value.toString(), ContactType.class);
+    if ("metadataProvider".equalsIgnoreCase(value.toString())) {
+      infer = ContactType.METADATA_AUTHOR;
+    } else {
+      infer = VocabularyUtils.lookupEnum(value.toString(), ContactType.class);
+    }
+
     return infer == null ? DEFAULT_CONTACT_TYPE : infer;
   }
 }
