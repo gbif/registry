@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class IptNetworkResourceIT extends BaseItTest {
@@ -61,8 +62,8 @@ public class IptNetworkResourceIT extends BaseItTest {
 
     assertEquals(2, response.size());
     assertNotNull(response.get(0).getKey());
-    assertNotNull(response.get(0).getTitle());
+    assertNull(response.get(0).getTitle());
     assertNotNull(response.get(1).getKey());
-    assertNotNull(response.get(1).getTitle());
+    assertNull(response.get(1).getTitle());
   }
 }
