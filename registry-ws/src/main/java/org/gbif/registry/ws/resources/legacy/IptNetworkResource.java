@@ -70,7 +70,9 @@ public class IptNetworkResource {
         .body(networks);
   }
 
-  @GetMapping("resource/{key}/networks")
+  @GetMapping(
+      value = "resource/{key}/networks",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public List<Network> listResourceNetworks(@PathVariable("key") UUID datasetKey) {
     return networkMapper.listByDataset(datasetKey);
   }
