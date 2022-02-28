@@ -45,6 +45,7 @@ import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
 import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
 import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
+import static org.gbif.api.model.common.DoiStatus.DELETED;
 import static org.gbif.api.model.common.DoiStatus.FAILED;
 import static org.gbif.api.model.common.DoiStatus.NEW;
 import static org.gbif.api.model.common.DoiStatus.REGISTERED;
@@ -183,7 +184,7 @@ public class DoiUpdaterListenerIT {
 
     // then
     assertEquals(new DoiData(DoiStatus.DELETED, TEST_TARGET), getActualInDb(doi));
-    assertEquals(new DoiData(REGISTERED, TEST_TARGET), getActualInDataCite(doi));
+    assertEquals(new DoiData(DELETED, TEST_TARGET), getActualInDataCite(doi));
   }
 
   @Test
