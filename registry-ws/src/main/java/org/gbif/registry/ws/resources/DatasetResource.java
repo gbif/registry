@@ -310,6 +310,19 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return null;
   }
 
+  @DeleteMapping("{key}")
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
+  @Transactional
+  @Override
+  public void delete(@PathVariable UUID key) {
+    Dataset dataset = get(key);
+    super.delete(key);
+
+    if (dataset != null && dataset.getDoi() != null) {
+      doiDataCiteHandlingService.datasetDeleted(dataset.getDoi());
+    }
+  }
+
   @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(

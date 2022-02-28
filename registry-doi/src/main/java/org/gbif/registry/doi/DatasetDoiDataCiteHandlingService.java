@@ -37,6 +37,11 @@ public interface DatasetDoiDataCiteHandlingService {
   void datasetChanged(Dataset dataset, @Nullable final DOI previousDoi);
 
   /**
+   * Called when dataset to be deleted, tries to deactivate DOI.
+   */
+  void datasetDeleted(DOI doi);
+
+  /**
    * Directly schedule the registration of a Dataset DOI.
    */
   void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey);
