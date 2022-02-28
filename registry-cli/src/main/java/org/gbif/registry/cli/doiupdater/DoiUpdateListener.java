@@ -104,7 +104,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         if (HttpStatus.SC_REQUEST_TOO_LONG == e.getStatus()) {
           LOG.warn(
               DOI_SMTP,
-              "Metadata of length {} is exceeding max datacite limit in attempt #{} "
+              "Metadata of length {} is exceeding max DataCite limit in attempt #{} "
                   + "while updating {} to {} with target {}. "
                   + "Trying again {}",
               msg.getMetadata().length(),
@@ -206,14 +206,19 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * @param currState current state of the DOI in the database
    */
   private void delete(DOI doi, DoiData currState) throws DoiException {
+    // delete from DataCite
+    // findable DOIs will not be deleted
+    if (doiService.exists(doi)) {
+      doiService.delete(doi);
+    }
+
     if (currState.getStatus() == DoiStatus.REGISTERED) {
+      // if registered - mark as deleted
       DoiData newState = new DoiData(DoiStatus.DELETED, currState.getTarget());
       doiMapper.update(doi, newState, null);
       LOG.info("Marked registered doi {} as deleted", doi);
     } else {
-      if (doiService.exists(doi)) {
-        doiService.delete(doi);
-      }
+      // otherwise, erase it from database
       doiMapper.delete(doi);
       LOG.info("Deleted doi {}", doi);
     }
@@ -269,7 +274,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
    * to fix a RESERVED DOI that should be updated (will be rejected). As opposed to
    * registerOrUpdate, this method will ask the doiService for the status of the DOI since when the
    * status is FAILED we loose the 'real' status before the failure. If the DOI doesn't exist on the
-   * DOI Service (e.g. Datacite) it will register it. If the DOI already exist it will try an
+   * DOI Service (e.g. DataCite) it will register it. If the DOI already exist it will try an
    * update. If any error occurs it will be logged and the will method with false.
    *
    * @param doi Digital Object Identifier
@@ -288,7 +293,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         LOG.info("Updated doi {} with target {}", doi, target);
       } else {
         LOG.info(
-            "Failed to update doi {} with target {}. Only doi with state REGISTERED can be retried. Datacite status: {}. ",
+            "Failed to update doi {} with target {}. Only doi with state REGISTERED can be retried. DataCite status: {}. ",
             doi,
             target,
             doiServiceData.getStatus());
