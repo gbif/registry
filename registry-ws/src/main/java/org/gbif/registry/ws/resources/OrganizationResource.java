@@ -55,6 +55,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -99,13 +100,15 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       OrganizationEndorsementService<UUID> organizationEndorsementService,
       EventManager eventManager,
       EditorAuthorizationService userAuthService,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      RestrictionsHandler restrictionsHandler) {
     super(
         mapperServiceLocator.getOrganizationMapper(),
         mapperServiceLocator,
         Organization.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        restrictionsHandler);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
@@ -133,6 +136,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Trim
   @Override
   public UUID create(@RequestBody @Trim Organization organization) {
+
+    getRestrictionsHandler().checkCountryDenied(organization.getCountry());
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     organization.setPassword(generatePassword());
     UUID newOrganization = super.create(organization);
@@ -152,6 +158,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
       organizationEndorsementService.onNewOrganization(organization);
     }
     return newOrganization;
+  }
+
+  @Transactional
+  @Override
+  public void update(Organization entity) {
+    getRestrictionsHandler().checkCountryDenied(entity.getCountry());
+    super.update(entity);
   }
 
   /**
@@ -375,6 +388,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   public boolean confirmEndorsement(UUID organizationKey) {
     Organization organization = super.get(organizationKey);
     checkNotNull(organization, "Organization not found");
+    getRestrictionsHandler().checkCountryDenied(organization.getCountry());
     return organizationEndorsementService.confirmEndorsement(organizationKey);
   }
 

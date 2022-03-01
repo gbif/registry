@@ -152,6 +152,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final TagMapper tagMapper;
   private final NetworkMapper networkMapper;
   private final DatasetProcessStatusMapper datasetProcessStatusMapper;
+  private final RestrictionsHandler restrictionsHandler;
   private final DatasetDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DataCiteMetadataBuilderService metadataBuilderService;
   private final DoiIssuingService doiIssuingService;
@@ -169,13 +170,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       DataCiteMetadataBuilderService metadataBuilderService,
       DoiIssuingService doiIssuingService,
       WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+      @Autowired(required = false) MessagePublisher messagePublisher,
+      RestrictionsHandler restrictionsHandler) {
     super(
         mapperServiceLocator.getDatasetMapper(),
         mapperServiceLocator,
         Dataset.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        restrictionsHandler);
     this.registryDatasetService = registryDatasetService;
     this.searchService = searchService;
     this.metadataMapper = mapperServiceLocator.getMetadataMapper();
@@ -190,6 +193,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.doiIssuingService = doiIssuingService;
     this.messagePublisher = messagePublisher;
     this.withMyBatis = withMyBatis;
+    this.restrictionsHandler = restrictionsHandler;
   }
 
   @GetMapping("search")
@@ -457,6 +461,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   public void updateFromPreferredMetadata(UUID uuid, String user) {
     Dataset dataset = super.get(uuid);
+
+    restrictionsHandler.checkDenyPublisher(dataset.getPublishingOrganizationKey());
+
     if (dataset == null) {
       throw new NotFoundException(
           "Dataset " + uuid + " not existing", URI.create("/dataset/{key}/document"));
@@ -585,6 +592,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       dataset.setLicense(License.CC_BY_4_0);
     }
 
+    restrictionsHandler.checkDenyPublisher(dataset.getPublishingOrganizationKey());
+
     final UUID key = super.create(dataset);
     // now that we have a UUID schedule to scheduleRegistration the DOI
     // to get the latest timestamps we need to read a new copy of the dataset
@@ -599,6 +608,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     if (old == null) {
       throw new IllegalArgumentException("Dataset " + dataset.getKey() + " not existing");
     }
+
+    restrictionsHandler.checkDenyPublisher(dataset.getPublishingOrganizationKey());
+
     // replace current license? Only if dataset being updated has a supported license
     if (!replaceLicense(dataset.getLicense())) {
       LOG.warn(

@@ -26,6 +26,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.registry.domain.ws.IptEntityResponse;
 import org.gbif.registry.domain.ws.LegacyDataset;
 import org.gbif.registry.domain.ws.LegacyInstallation;
+import org.gbif.registry.ws.resources.RestrictionsHandler;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 
 import java.util.List;
@@ -60,15 +61,18 @@ public class IptResource {
   private final InstallationService installationService;
   private final OrganizationService organizationService;
   private final DatasetService datasetService;
+  private final RestrictionsHandler restrictionsHandler;
   private static final Long ONE = 1L;
 
   public IptResource(
       InstallationService installationService,
       OrganizationService organizationService,
-      DatasetService datasetService) {
+      DatasetService datasetService,
+      RestrictionsHandler restrictionsHandler) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
+    this.restrictionsHandler = restrictionsHandler;
   }
 
   /**
@@ -85,7 +89,9 @@ public class IptResource {
       produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity<IptEntityResponse> registerIpt(
       @RequestParam LegacyInstallation installation, Authentication authentication) {
+
     if (installation != null) {
+      restrictionsHandler.checkDenyPublisher(installation.getHostingOrganizationKey());
       // set required fields
       String user = authentication.getName();
       installation.setCreatedBy(user);
@@ -149,6 +155,7 @@ public class IptResource {
       @RequestParam LegacyInstallation installation,
       Authentication authentication) {
     if (installation != null && installationKey != null) {
+      restrictionsHandler.checkDenyPublisher(installation.getHostingOrganizationKey());
       // set required fields
       String user = authentication.getName();
       installation.setCreatedBy(user);
@@ -233,6 +240,7 @@ public class IptResource {
   public ResponseEntity<IptEntityResponse> registerDataset(
       @RequestParam LegacyDataset dataset, Authentication authentication) {
     if (dataset != null) {
+      restrictionsHandler.checkDenyPublisher(dataset.getPublishingOrganizationKey());
       // set required fields
       String user = authentication.getName();
       dataset.setCreatedBy(user);
@@ -316,6 +324,7 @@ public class IptResource {
       @RequestParam LegacyDataset dataset,
       Authentication authentication) {
     if (dataset != null) {
+      restrictionsHandler.checkDenyPublisher(dataset.getPublishingOrganizationKey());
       // set required fields
       String user = authentication.getName();
       dataset.setCreatedBy(user);
