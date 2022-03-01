@@ -33,6 +33,9 @@ public class DatasetDoiDataCiteHandlingServiceStub implements DatasetDoiDataCite
   public void datasetChanged(Dataset dataset, @Nullable DOI previousDoi) {}
 
   @Override
+  public void datasetDeleted(DOI doi) {}
+
+  @Override
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {}
 
   @Override

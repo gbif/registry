@@ -20,6 +20,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
@@ -45,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -72,6 +74,8 @@ import com.google.common.collect.Maps;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @Validated
 @Primary
@@ -91,16 +95,18 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   private final MessagePublisher messagePublisher;
 
   public InstallationResource(
-      MapperServiceLocator mapperServiceLocator,
-      EventManager eventManager,
-      WithMyBatis withMyBatis,
-      @Autowired(required = false) MessagePublisher messagePublisher) {
+    MapperServiceLocator mapperServiceLocator,
+    EventManager eventManager,
+    WithMyBatis withMyBatis,
+    @Autowired(required = false) MessagePublisher messagePublisher,
+    RestrictionsHandler restrictionsHandler) {
     super(
         mapperServiceLocator.getInstallationMapper(),
         mapperServiceLocator,
         Installation.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        restrictionsHandler);
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
@@ -286,5 +292,22 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   public PagingResponse<Installation> listByType(InstallationType type, Pageable page) {
     long total = installationMapper.countWithFilter(type);
     return pagingResponse(page, total, installationMapper.listWithFilter(type, page));
+  }
+
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
+  @Trim
+  @Transactional
+  @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
+  @Override
+  public UUID create(Installation entity) {
+    getRestrictionsHandler().checkDenyPublisher(entity.getOrganizationKey());
+    return super.create(entity);
+  }
+
+  @Override
+  public void update(Installation entity) {
+    getRestrictionsHandler().checkDenyPublisher(entity.getOrganizationKey());
+    super.update(entity);
   }
 }

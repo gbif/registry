@@ -383,7 +383,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       @RequestParam(value = "datasetKey", required = false) UUID datasetKey,
       @RequestParam(value = "publishingOrgKey", required = false) UUID publishingOrgKey) {
     return groupByYear(
-        occurrenceDownloadMapper.getDownloadsByDataset(
+        occurrenceDownloadMapper.getDownloadedRecordsByDataset(
             fromDate,
             toDate,
             Optional.ofNullable(publishingCountry).map(Country::getIso2LetterCode).orElse(null),

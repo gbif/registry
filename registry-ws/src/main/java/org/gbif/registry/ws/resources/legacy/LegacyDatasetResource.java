@@ -27,6 +27,7 @@ import org.gbif.registry.domain.ws.LegacyDataset;
 import org.gbif.registry.domain.ws.LegacyDatasetResponse;
 import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
+import org.gbif.registry.ws.resources.RestrictionsHandler;
 import org.gbif.registry.ws.util.LegacyResourceUtils;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.util.CommonWsUtils;
@@ -70,18 +71,21 @@ public class LegacyDatasetResource {
   private final InstallationService installationService;
   private final IptResource iptResource;
   private final NetworkService networkService;
+  private final RestrictionsHandler restrictionsHandler;
 
   public LegacyDatasetResource(
       OrganizationService organizationService,
       DatasetService datasetService,
       IptResource iptResource,
       InstallationService installationService,
-      NetworkService networkService) {
+      NetworkService networkService,
+      RestrictionsHandler restrictionsHandler) {
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.iptResource = iptResource;
     this.installationService = installationService;
     this.networkService = networkService;
+    this.restrictionsHandler = restrictionsHandler;
   }
 
   /**
@@ -100,6 +104,7 @@ public class LegacyDatasetResource {
   public ResponseEntity<IptEntityResponse> registerDataset(
       @RequestParam LegacyDataset dataset, Authentication authentication) {
     // reuse existing subresource
+    restrictionsHandler.checkDenyPublisher(dataset.getOrganizationKey());
     return iptResource.registerDataset(dataset, authentication);
   }
 
@@ -130,6 +135,7 @@ public class LegacyDatasetResource {
     dataset.setKey(datasetKey);
     // retrieve existing dataset
     Dataset existing = datasetService.get(datasetKey);
+    restrictionsHandler.checkDenyPublisher(dataset.getOrganizationKey());
     // populate dataset with existing primary contact so it gets updated, not duplicated
     dataset.setContacts(existing.getContacts());
     // if primary contact wasn't supplied, set existing one here so that it doesn't respond

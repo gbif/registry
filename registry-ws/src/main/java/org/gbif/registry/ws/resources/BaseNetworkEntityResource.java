@@ -113,12 +113,15 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   private final WithMyBatis withMyBatis;
   private final Class<T> objectClass;
 
+  private final RestrictionsHandler restrictionsHandler;
+
   protected BaseNetworkEntityResource(
-      BaseNetworkEntityMapper<T> mapper,
-      MapperServiceLocator mapperServiceLocator,
-      Class<T> objectClass,
-      EventManager eventManager,
-      WithMyBatis withMyBatis) {
+    BaseNetworkEntityMapper<T> mapper,
+    MapperServiceLocator mapperServiceLocator,
+    Class<T> objectClass,
+    EventManager eventManager,
+    WithMyBatis withMyBatis,
+    RestrictionsHandler restrictionsHandler) {
     this.mapper = mapper;
     this.commentMapper = mapperServiceLocator.getCommentMapper();
     this.machineTagMapper = mapperServiceLocator.getMachineTagMapper();
@@ -129,6 +132,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.objectClass = objectClass;
     this.eventManager = eventManager;
     this.withMyBatis = withMyBatis;
+    this.restrictionsHandler = restrictionsHandler;
   }
 
   /**
@@ -642,5 +646,9 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
       page = new PagingRequest();
     }
     return new PagingResponse<>(page, count, result);
+  }
+
+  public RestrictionsHandler getRestrictionsHandler() {
+    return restrictionsHandler;
   }
 }

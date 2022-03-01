@@ -67,15 +67,17 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   private final EventManager eventManager;
 
   public NetworkResource(
-      MapperServiceLocator mapperServiceLocator,
-      EventManager eventManager,
-      WithMyBatis withMyBatis) {
+    MapperServiceLocator mapperServiceLocator,
+    EventManager eventManager,
+    WithMyBatis withMyBatis,
+    RestrictionsHandler restrictionsHandler) {
     super(
         mapperServiceLocator.getNetworkMapper(),
         mapperServiceLocator,
         Network.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        restrictionsHandler);
     this.eventManager = eventManager;
     this.datasetMapper = mapperServiceLocator.getDatasetMapper();
     this.networkMapper = mapperServiceLocator.getNetworkMapper();

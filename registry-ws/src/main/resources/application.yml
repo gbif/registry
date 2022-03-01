@@ -117,6 +117,8 @@ indexing:
 
 # Database
 registry:
+  denyCountries: >
+    XX, YY
   datasource:
     url: @registry-it.db.url@
     password: @registry-it.db.password@

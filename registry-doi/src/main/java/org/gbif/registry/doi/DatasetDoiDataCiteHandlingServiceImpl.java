@@ -106,6 +106,11 @@ public class DatasetDoiDataCiteHandlingServiceImpl implements DatasetDoiDataCite
   }
 
   @Override
+  public void datasetDeleted(DOI doi) {
+    doiMessageManagingService.delete(doi);
+  }
+
+  @Override
   public void scheduleDatasetRegistration(DOI doi, DataCiteMetadata metadata, UUID datasetKey) {
     try {
       doiMessageManagingService.registerDataset(doi, metadata, datasetKey);

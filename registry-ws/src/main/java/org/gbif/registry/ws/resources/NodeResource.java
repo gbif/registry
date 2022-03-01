@@ -75,13 +75,15 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
       Augmenter nodeAugmenter,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      RestrictionsHandler restrictionsHandler) {
     super(
         mapperServiceLocator.getNodeMapper(),
         mapperServiceLocator,
         Node.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        restrictionsHandler);
     this.nodeMapper = mapperServiceLocator.getNodeMapper();
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
     this.nodeAugmenter = nodeAugmenter;
