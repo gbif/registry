@@ -244,8 +244,9 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
     LOG.info("registerOrUpdate DOI {} with state {}", doi, currState.getStatus());
     switch (doiStatus) {
       case REGISTERED:
-        // the DOI was already registered, so we only need to update the target url if changed and
-        // the metadata
+      case DELETED:
+        // the DOI was already registered
+        // we only need to update the target url if changed and the metadata
         if (!target.equals(currState.getTarget()) || !target.equals(dataciteDoiData.getTarget())) {
           doiService.update(doi, target);
         }
