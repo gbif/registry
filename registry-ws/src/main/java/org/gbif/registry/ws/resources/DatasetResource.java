@@ -620,7 +620,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       user = old.getModifiedBy();
     }
 
-    update(dataset, old.getIdentifiers(), old.getDoi(), user);
+    update(dataset, old, user);
   }
 
   /**
@@ -645,16 +645,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * <p>Also see http://dev.gbif.org/issues/browse/POR-2554 for a discussion.
    *
    * @param dataset the dataset to be used to update the dataset table in postgres
-   * @param existingIds the complete list of identifiers linked in postgres to the dataset before
-   *     the update
-   * @param oldDoi the doi as found in postgres for the dataset before this update
+   * @param oldDataset the current dataset before update
    * @param user the gbif user doing the update
    */
-  private void update(
-      Dataset dataset,
-      List<Identifier> existingIds,
-      @Nullable final DOI oldDoi,
-      final String user) {
+  private void update(Dataset dataset, Dataset oldDataset, String user) {
+    DOI oldDoi = oldDataset.getDoi();
+    List<Identifier> existingIds = oldDataset.getIdentifiers();
+
     // no need to parse EML for the DOI, just get the current mybatis dataset props
     if (dataset.getDoi() == null) {
       // a dataset must have a DOI. If it came in with none a GBIF DOI needs to exist
