@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.service.collections;
 
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
@@ -44,9 +45,13 @@ import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import javax.validation.groups.Default;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,6 +76,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
 
   private final InstitutionMapper institutionMapper;
   private final OrganizationMapper organizationMapper;
+  private Validator validator;
 
   @Autowired
   protected DefaultInstitutionService(
@@ -86,7 +92,8 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
       CollectionContactMapper contactMapper,
       OrganizationMapper organizationMapper,
       EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      Validator validator) {
     super(
         Institution.class,
         institutionMapper,
@@ -104,6 +111,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
         withMyBatis);
     this.institutionMapper = institutionMapper;
     this.organizationMapper = organizationMapper;
+    this.validator = validator;
   }
 
   @Override
@@ -185,7 +193,19 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
     UUID institutionKey = institution.getKey();
 
     // create contacts
-    institution.getContactPersons().forEach(contact -> addContactPerson(institutionKey, contact));
+    institution
+        .getContactPersons()
+        .forEach(
+            contact -> {
+              // the validation is done manually because the automatic one is not triggered when the
+              // calls are done within the same bean
+              Set<ConstraintViolation<Contact>> violations = validator.validate(contact);
+              if (!violations.isEmpty()) {
+                throw new ConstraintViolationException("Invalid contact", violations);
+              }
+
+              addContactPerson(institutionKey, contact);
+            });
 
     // create machine tag for source
     addMasterSourceMetadata(

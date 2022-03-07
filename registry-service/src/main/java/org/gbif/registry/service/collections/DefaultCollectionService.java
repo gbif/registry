@@ -14,6 +14,7 @@
 package org.gbif.registry.service.collections;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -45,10 +46,14 @@ import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validator;
 import javax.validation.groups.Default;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +79,7 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
   private final CollectionMapper collectionMapper;
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
+  private Validator validator;
 
   @Autowired
   protected DefaultCollectionService(
@@ -89,7 +95,8 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
       EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      Validator validator) {
     super(
         Collection.class,
         collectionMapper,
@@ -108,6 +115,7 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
     this.collectionMapper = collectionMapper;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
+    this.validator = validator;
   }
 
   @Override
@@ -206,7 +214,19 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
     UUID collectionKey = collection.getKey();
 
     // create contacts
-    collection.getContactPersons().forEach(contact -> addContactPerson(collectionKey, contact));
+    collection
+      .getContactPersons()
+      .forEach(
+        contact -> {
+          // the validation is done manually because the automatic one is not triggered when the
+          // calls are done within the same bean
+          Set<ConstraintViolation<Contact>> violations = validator.validate(contact);
+          if (!violations.isEmpty()) {
+            throw new ConstraintViolationException("Invalid contact", violations);
+          }
+
+          addContactPerson(collectionKey, contact);
+        });
 
     // create identifiers
     collection.getIdentifiers().forEach(identifier -> addIdentifier(collectionKey, identifier));
