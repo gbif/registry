@@ -15,6 +15,7 @@ package org.gbif.registry.ws.export;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.Person;
@@ -282,7 +283,7 @@ public class CsvWriter<T> {
               "collection.deleted",
               "collection.tags",
               "collection.identifiers",
-              "collection.contacts",
+              "collection.contactPersons",
               "collection.indexHerbariorumRecord",
               "collection.numberSpecimens",
               "collection.machineTags",
@@ -327,7 +328,7 @@ public class CsvWriter<T> {
               "deleted",
               "tags",
               "identifiers",
-              "contacts",
+              "contactPersons",
               "index_herbariorum_record",
               "number_specimens",
               "machine_tags",
@@ -373,7 +374,7 @@ public class CsvWriter<T> {
               new Optional(new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601)), // deleted: Date
               new ListTagsProcessor(), // tags: List
               new ListIdentifierProcessor(), // identifiers: List
-              new ListContactProcessor(), // contacts: List
+              new ListContactProcessor(), // contactPersons: List
               new Optional(new FmtBool("true", "false")), // indexHerbariorumRecord: boolean
               new Optional(new ParseInt()), // numberSpecimens: int
               new ListMachineTagProcessor(), // machineTags: List
@@ -435,7 +436,7 @@ public class CsvWriter<T> {
               "deleted",
               "tags",
               "identifiers",
-              "contacts",
+              "contactPersons",
               "machineTags",
               "alternativeCodes",
               "comments",
@@ -478,7 +479,7 @@ public class CsvWriter<T> {
               "deleted",
               "tags",
               "identifiers",
-              "contacts",
+              "contactPersons",
               "machine_tags",
               "alternative_codes",
               "comments",
@@ -525,7 +526,7 @@ public class CsvWriter<T> {
               new Optional(new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601)), // deleted: Date
               new ListTagsProcessor(), // tags: List<Tag>
               new ListIdentifierProcessor(), // identifiers: List<Identifier>
-              new ListContactProcessor(), // contacts: List<Person>
+              new ListContactProcessor(), // contactPersons: List<Contact>
               new ListMachineTagProcessor(), // machineTags: List<MachineTag>
               new ListAlternativeCodeProcessor(), // alternativeCodes: List<AlternativeCoe>
               new ListCommentProcessor(), // comments: List<Comment>
@@ -791,27 +792,27 @@ public class CsvWriter<T> {
    */
   public static class ListContactProcessor implements CellProcessor {
 
-    public static String toString(List<Person> value) {
+    public static String toString(List<Contact> value) {
       return value.stream()
           .map(ListContactProcessor::toString)
           .collect(Collectors.joining(ARRAY_DELIMITER));
     }
 
-    public static String toString(Person contact) {
+    public static String toString(Contact contact) {
       return CleanStringProcessor.cleanString(
           notNullJoiner(
               " ",
               contact.getFirstName(),
               contact.getLastName(),
-              contact.getPhone(),
-              contact.getEmail(),
-              contact.getPosition(),
-              contact.getAreaResponsibility()));
+              notNullJoiner(" ", contact.getPhone().toArray(new String[0])),
+              notNullJoiner(" ", contact.getEmail().toArray(new String[0])),
+              notNullJoiner(" ", contact.getPosition().toArray(new String[0])),
+              notNullJoiner(" ", contact.getTaxonomicExpertise().toArray(new String[0]))));
     }
 
     @Override
     public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<Person>) value) : "";
+      return value != null ? toString((List<Contact>) value) : "";
     }
   }
 
