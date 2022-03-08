@@ -403,7 +403,7 @@ public class CsvWriterTest {
         CsvWriter.ListIdentifierProcessor.toString(collectionView.getCollection().getIdentifiers()),
         line[27]);
     assertEquals(
-        CsvWriter.ListContactProcessor.toString(collectionView.getCollection().getContacts()),
+        CsvWriter.ListContactProcessor.toString(collectionView.getCollection().getContactPersons()),
         line[28]);
     assertEquals(
         collectionView.getCollection().isIndexHerbariorumRecord(), Boolean.parseBoolean(line[29]));
@@ -593,7 +593,7 @@ public class CsvWriterTest {
     assertEquals(CsvWriter.ListTagsProcessor.toString(institution.getTags()), line[31]);
     assertEquals(
         CsvWriter.ListIdentifierProcessor.toString(institution.getIdentifiers()), line[32]);
-    assertEquals(CsvWriter.ListContactProcessor.toString(institution.getContacts()), line[33]);
+    assertEquals(CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[33]);
     assertEquals(
         CsvWriter.ListMachineTagProcessor.toString(institution.getMachineTags()), line[34]);
     assertEquals(
