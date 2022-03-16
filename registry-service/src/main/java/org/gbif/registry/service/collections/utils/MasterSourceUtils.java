@@ -97,13 +97,16 @@ public class MasterSourceUtils {
     Method setter = clazz.getDeclaredMethod("set" + methodName, f.getType());
 
     Consumer<Sourceable> processAnnotation =
-        annotation ->
+        annotation -> {
+          if (!annotation.overridable() && annotation.sourceableParts().length == 0) {
             Arrays.stream(annotation.masterSources())
                 .forEach(
                     ms ->
                         fieldsMap
                             .computeIfAbsent(ms, v -> new ArrayList<>())
                             .add(new LockableField(getter, setter)));
+          }
+        };
 
     Optional.ofNullable(f.getDeclaredAnnotation(Sourceable.class)).ifPresent(processAnnotation);
     Optional.ofNullable(f.getDeclaredAnnotation(Sourceables.class))
