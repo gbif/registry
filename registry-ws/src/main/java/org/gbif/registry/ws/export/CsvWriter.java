@@ -18,7 +18,6 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;

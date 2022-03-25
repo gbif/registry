@@ -215,18 +215,18 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
 
     // create contacts
     collection
-      .getContactPersons()
-      .forEach(
-        contact -> {
-          // the validation is done manually because the automatic one is not triggered when the
-          // calls are done within the same bean
-          Set<ConstraintViolation<Contact>> violations = validator.validate(contact);
-          if (!violations.isEmpty()) {
-            throw new ConstraintViolationException("Invalid contact", violations);
-          }
+        .getContactPersons()
+        .forEach(
+            contact -> {
+              // the validation is done manually because the automatic one is not triggered when the
+              // calls are done within the same bean
+              Set<ConstraintViolation<Contact>> violations = validator.validate(contact);
+              if (!violations.isEmpty()) {
+                throw new ConstraintViolationException("Invalid contact", violations);
+              }
 
-          addContactPerson(collectionKey, contact);
-        });
+              addContactPerson(collectionKey, contact);
+            });
 
     // create identifiers
     collection.getIdentifiers().forEach(identifier -> addIdentifier(collectionKey, identifier));
