@@ -593,7 +593,8 @@ public class CsvWriterTest {
     assertEquals(CsvWriter.ListTagsProcessor.toString(institution.getTags()), line[31]);
     assertEquals(
         CsvWriter.ListIdentifierProcessor.toString(institution.getIdentifiers()), line[32]);
-    assertEquals(CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[33]);
+    assertEquals(
+        CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[33]);
     assertEquals(
         CsvWriter.ListMachineTagProcessor.toString(institution.getMachineTags()), line[34]);
     assertEquals(
