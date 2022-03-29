@@ -59,7 +59,6 @@ import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
-import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.ws.WebApplicationException;
 
 import java.util.ArrayList;
