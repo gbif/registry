@@ -32,6 +32,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,6 +45,7 @@ import lombok.SneakyThrows;
 public class MasterSourceUtils {
 
   public static final String CONTACTS_FIELD_NAME = "contactPersons";
+  public static final String IH_SYNC_USER = "ih-sync";
 
   public static final Map<MasterSourceType, List<LockableField>> INSTITUTION_LOCKABLE_FIELDS =
       new EnumMap<>(MasterSourceType.class);
@@ -79,6 +83,19 @@ public class MasterSourceUtils {
     return entity != null
         && entity.getMasterSource() != null
         && entity.getMasterSource() != MasterSourceType.GRSCICOLL;
+  }
+
+  public static <T extends PrimaryCollectionEntity> boolean isLockableEntity(T entity) {
+    boolean hasExternalMasterSource = hasExternalMasterSource(entity);
+
+    if (!hasExternalMasterSource) {
+      return false;
+    }
+
+    // if it's IH and is using the sync user it's allowed to modify the entiy
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    final String username = authentication.getName();
+    return entity.getMasterSource() != MasterSourceType.IH || !username.equals(IH_SYNC_USER);
   }
 
   @SneakyThrows
