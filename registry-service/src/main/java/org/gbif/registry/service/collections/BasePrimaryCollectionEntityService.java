@@ -82,6 +82,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.CONTACTS_FIELD_NAME;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
@@ -189,7 +190,7 @@ public abstract class BasePrimaryCollectionEntityService<
     }
 
     // lock fields
-    if (lockFields && hasExternalMasterSource(entityOld)) {
+    if (lockFields && isLockableEntity(entityOld)) {
       lockFields(entityOld, entity);
     }
 
@@ -218,11 +219,11 @@ public abstract class BasePrimaryCollectionEntityService<
   }
 
   public T lockFields(T entityOld, T entityNew) {
-    List<MasterSourceUtils.LockableField> fieldsToLock = new ArrayList<>();
+    List<LockableField> fieldsToLock = new ArrayList<>();
     if (entityOld instanceof Institution) {
-      fieldsToLock = MasterSourceUtils.INSTITUTION_LOCKABLE_FIELDS.get(entityOld.getMasterSource());
+      fieldsToLock = INSTITUTION_LOCKABLE_FIELDS.get(entityOld.getMasterSource());
     } else if (entityOld instanceof Collection) {
-      fieldsToLock = MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS.get(entityOld.getMasterSource());
+      fieldsToLock = COLLECTION_LOCKABLE_FIELDS.get(entityOld.getMasterSource());
     }
 
     fieldsToLock.forEach(
@@ -310,7 +311,7 @@ public abstract class BasePrimaryCollectionEntityService<
     checkArgument(contact.getKey() == null, "Cannot create a contact that already has a key");
 
     T entity = get(entityKey);
-    if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
+    if (isLockableEntity(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
       throw new IllegalArgumentException(
           "Cannot add contacts to an entity whose master source is not GRSciColl");
     }
@@ -347,7 +348,7 @@ public abstract class BasePrimaryCollectionEntityService<
     checkArgument(contact.getKey() != null, "Unable to update a contact with no key");
 
     T entity = get(entityKey);
-    if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
+    if (isLockableEntity(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
       throw new IllegalArgumentException(
           "Cannot update contacts from an entity whose master source is not GRSciColl");
     }
@@ -392,7 +393,7 @@ public abstract class BasePrimaryCollectionEntityService<
     checkArgument(contactToRemove != null, "Contact to delete doesn't exist");
 
     T entity = get(entityKey);
-    if (hasExternalMasterSource(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
+    if (isLockableEntity(entity) && isSourceableField(objectClass, CONTACTS_FIELD_NAME)) {
       throw new IllegalArgumentException(
           "Cannot remove contacts from an entity whose master source is not GRSciColl");
     }
