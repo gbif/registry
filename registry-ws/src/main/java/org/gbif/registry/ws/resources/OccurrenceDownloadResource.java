@@ -44,8 +44,10 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -118,6 +120,9 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private static final Logger LOG = LoggerFactory.getLogger(OccurrenceDownloadResource.class);
 
   private static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
+
+  // For short citation
+  private static final SimpleDateFormat LONG_UN = new SimpleDateFormat("%d %MMMMM %yyyy", Locale.UK);
 
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
@@ -355,7 +360,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       //  usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); }
       // );
 
-      return "GBIF Occurrence Download " + download.getDoi().getUrl().toString() + '\n';
+      return "GBIF.org (" + LONG_UN.format(download.getCreated()) +") GBIF Occurrence Download "
+        + download.getDoi().getUrl().toString() + '\n';
 
       // usages.forEach(
       //   usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); });
