@@ -13,19 +13,9 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
-import org.gbif.api.model.collections.suggestions.Change;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
-import org.gbif.api.model.collections.suggestions.Status;
-import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.suggestions.*;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -51,16 +41,11 @@ import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.elasticsearch.common.Strings;
 import org.jetbrains.annotations.Nullable;
@@ -70,14 +55,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -179,9 +161,15 @@ public abstract class BaseChangeSuggestionService<
     // send email
     if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
       try {
+        T suggestedEntity = readJson(dto.getSuggestedEntity(), clazz);
         BaseEmailModel emailModel =
             emailManager.generateNewChangeSuggestionEmailModel(
-                dto.getKey(), dto.getEntityType(), dto.getEntityKey(), dto.getType());
+                dto.getKey(),
+                dto.getEntityType(),
+                changeSuggestion.getEntityName(),
+                getCountry(suggestedEntity),
+                dto.getEntityKey(),
+                dto.getType());
         emailSender.send(emailModel);
       } catch (Exception e) {
         LOG.error("Couldn't send email for new change suggestion", e);
@@ -299,10 +287,13 @@ public abstract class BaseChangeSuggestionService<
     // send email
     if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
       try {
+        R changeSuggestion = dtoToChangeSuggestion(dto);
         BaseEmailModel emailModel =
             emailManager.generateDiscardedChangeSuggestionEmailModel(
                 dto.getKey(),
                 dto.getEntityType(),
+                changeSuggestion.getEntityName(),
+                changeSuggestion.getEntityCountry(),
                 dto.getEntityKey(),
                 dto.getType(),
                 Collections.singleton(dto.getProposerEmail()));
@@ -362,6 +353,8 @@ public abstract class BaseChangeSuggestionService<
             emailManager.generateAppliedChangeSuggestionEmailModel(
                 dto.getKey(),
                 dto.getEntityType(),
+                changeSuggestion.getEntityName(),
+                changeSuggestion.getEntityCountry(),
                 dto.getEntityKey(),
                 dto.getType(),
                 Collections.singleton(dto.getProposerEmail()));
