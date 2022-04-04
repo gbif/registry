@@ -27,6 +27,8 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CollectionEntityService;
+import org.gbif.api.util.IdentifierUtils;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.registry.events.EventManager;
@@ -130,6 +132,7 @@ public abstract class BaseCollectionEntityService<
   @Validated({PrePersist.class, Default.class})
   @Override
   public int addIdentifier(UUID entityKey, Identifier identifier) {
+    validateIdentifier(identifier);
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     identifier.setCreatedBy(authentication.getName());
     int identifierKey =
@@ -387,5 +390,12 @@ public abstract class BaseCollectionEntityService<
   protected void preUpdate(T entity) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     entity.setModifiedBy(authentication.getName());
+  }
+
+  private void validateIdentifier(Identifier identifier) {
+    if (identifier.getType() == IdentifierType.CITES
+        && !IdentifierUtils.isValidCitesIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid CITES identifier");
+    }
   }
 }
