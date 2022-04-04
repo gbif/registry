@@ -15,7 +15,6 @@ package org.gbif.registry.domain.mail;
 
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Type;
-import org.gbif.api.vocabulary.Country;
 
 import java.net.URL;
 
@@ -30,7 +29,7 @@ public class GrscicollChangeSuggestionDataModel {
   private Type suggestionType;
   private CollectionEntityType entityType;
   private String entityName;
-  private Country  entityCountry;
+  private String entityCountry;
 
   public URL getChangeSuggestionUrl() {
     return changeSuggestionUrl;
@@ -64,11 +63,11 @@ public class GrscicollChangeSuggestionDataModel {
     this.entityName = entityName;
   }
 
-  public Country getEntityCountry() {
+  public String getEntityCountry() {
     return entityCountry;
   }
 
-  public void setEntityCountry(Country entityCountry) {
+  public void setEntityCountry(String entityCountry) {
     this.entityCountry = entityCountry;
   }
 }
