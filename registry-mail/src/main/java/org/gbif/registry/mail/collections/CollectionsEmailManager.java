@@ -15,6 +15,7 @@ package org.gbif.registry.mail.collections;
 
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.mail.GrscicollChangeSuggestionDataModel;
 import org.gbif.registry.domain.mail.GrscicollMasterSourceDeletedDataModel;
 import org.gbif.registry.mail.BaseEmailModel;
@@ -63,12 +64,16 @@ public class CollectionsEmailManager {
   public BaseEmailModel generateNewChangeSuggestionEmailModel(
       int suggestionKey,
       CollectionEntityType collectionEntityType,
+      String entityName,
+      Country entityCountry,
       @Nullable UUID entityKey,
       Type suggestionType)
       throws IOException {
     return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
         collectionEntityType,
+        entityName,
+        entityCountry,
         CollectionsEmailType.NEW_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
@@ -78,6 +83,8 @@ public class CollectionsEmailManager {
   public BaseEmailModel generateAppliedChangeSuggestionEmailModel(
       int suggestionKey,
       CollectionEntityType collectionEntityType,
+      String entityName,
+      Country entityCountry,
       @Nullable UUID entityKey,
       Type suggestionType,
       Set<String> recipients)
@@ -85,6 +92,8 @@ public class CollectionsEmailManager {
     return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
         collectionEntityType,
+        entityName,
+        entityCountry,
         CollectionsEmailType.APPLIED_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
@@ -94,6 +103,8 @@ public class CollectionsEmailManager {
   public BaseEmailModel generateDiscardedChangeSuggestionEmailModel(
       int suggestionKey,
       CollectionEntityType collectionEntityType,
+      String entityName,
+      Country entityCountry,
       @Nullable UUID entityKey,
       Type suggestionType,
       Set<String> recipients)
@@ -101,6 +112,8 @@ public class CollectionsEmailManager {
     return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
         collectionEntityType,
+        entityName,
+        entityCountry,
         CollectionsEmailType.DISCARDED_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
@@ -157,6 +170,8 @@ public class CollectionsEmailManager {
   private BaseEmailModel buildChangeSuggestionBaseEmailModel(
       int suggestionKey,
       CollectionEntityType entityType,
+      String entityName,
+      Country entityCountry,
       CollectionsEmailType emailType,
       @Nullable UUID entityKey,
       Type suggestionType,
@@ -186,6 +201,10 @@ public class CollectionsEmailManager {
       GrscicollChangeSuggestionDataModel templateDataModel =
           new GrscicollChangeSuggestionDataModel();
       templateDataModel.setChangeSuggestionUrl(suggestionUrl);
+      templateDataModel.setSuggestionType(suggestionType);
+      templateDataModel.setEntityType(entityType);
+      templateDataModel.setEntityName(entityName);
+      templateDataModel.setEntityCountry(entityCountry);
 
       Set<String> allRecipients = new HashSet<>();
       allRecipients.add(collectionsMailConfigurationProperties.getRecipient());
