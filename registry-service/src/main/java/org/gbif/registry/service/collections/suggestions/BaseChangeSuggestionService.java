@@ -166,7 +166,7 @@ public abstract class BaseChangeSuggestionService<
             emailManager.generateNewChangeSuggestionEmailModel(
                 dto.getKey(),
                 dto.getEntityType(),
-                changeSuggestion.getEntityName(),
+                suggestedEntity.getName(),
                 getCountry(suggestedEntity),
                 dto.getEntityKey(),
                 dto.getType());
