@@ -204,7 +204,7 @@ public class CollectionsEmailManager {
       templateDataModel.setSuggestionType(suggestionType);
       templateDataModel.setEntityType(entityType);
       templateDataModel.setEntityName(entityName);
-      templateDataModel.setEntityCountry(entityCountry);
+      templateDataModel.setEntityCountry(entityCountry != null ? entityCountry.name() : "");
 
       Set<String> allRecipients = new HashSet<>();
       allRecipients.add(collectionsMailConfigurationProperties.getRecipient());
