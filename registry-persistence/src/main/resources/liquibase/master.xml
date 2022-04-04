@@ -109,4 +109,5 @@
   <include file="liquibase/101-grscicoll-master-source.xml" />
   <include file="liquibase/102-grscicoll-master-sync-metadata.xml" />
   <include file="liquibase/103-grscicoll-contact-first-name-optional.xml" />
+  <include file="liquibase/104-occurrence-download-total-records-bigint.xml" />
 </databaseChangeLog>
