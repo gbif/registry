@@ -37,5 +37,22 @@ public class MessagePublisherStub implements MessagePublisher {
       throws IOException {}
 
   @Override
+  public void replyToQueue(Object o, boolean b, String s, String s1) throws IOException {
+
+  }
+
+  @Override
+  public <T> T sendAndReceive(Message message, String s, boolean b, String s1)
+    throws IOException, InterruptedException {
+    return null;
+  }
+
+  @Override
+  public <T> T sendAndReceive(Object o, String s, String s1, boolean b, String s2)
+    throws IOException, InterruptedException {
+    return null;
+  }
+
+  @Override
   public void close() {}
 }
