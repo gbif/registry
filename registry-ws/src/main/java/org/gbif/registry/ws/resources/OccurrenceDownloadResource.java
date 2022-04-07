@@ -122,7 +122,8 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
 
   // For short citation
-  private static final SimpleDateFormat LONG_UN = new SimpleDateFormat("%d %MMMMM %yyyy", Locale.UK);
+  private static final SimpleDateFormat LONG_UN =
+      new SimpleDateFormat("%d %MMMMM %yyyy", Locale.UK);
 
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
@@ -360,8 +361,11 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
       //  usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); }
       // );
 
-      return "GBIF.org (" + LONG_UN.format(download.getCreated()) +") GBIF Occurrence Download "
-        + download.getDoi().getUrl().toString() + '\n';
+      return "GBIF.org ("
+          + LONG_UN.format(download.getCreated())
+          + ") GBIF Occurrence Download "
+          + download.getDoi().getUrl().toString()
+          + '\n';
 
       // usages.forEach(
       //   usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); });
