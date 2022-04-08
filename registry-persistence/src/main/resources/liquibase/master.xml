@@ -111,4 +111,5 @@
   <include file="liquibase/103-grscicoll-contact-first-name-optional.xml" />
   <include file="liquibase/104-occurrence-download-total-records-bigint.xml" />
   <include file="liquibase/105-cites-identifier-type.xml" />
+  <include file="liquibase/106-reviewer-contact-type.xml" />
 </databaseChangeLog>
