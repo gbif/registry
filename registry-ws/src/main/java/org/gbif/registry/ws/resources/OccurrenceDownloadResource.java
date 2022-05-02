@@ -123,7 +123,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
 
   // For short citation
   private static final SimpleDateFormat LONG_UN =
-      new SimpleDateFormat("%d %MMMMM %yyyy", Locale.UK);
+      new SimpleDateFormat("d MMMMM yyyy", Locale.UK);
 
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
