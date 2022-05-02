@@ -122,8 +122,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
   private static final Marker NOTIFY_ADMIN = MarkerFactory.getMarker("NOTIFY_ADMIN");
 
   // For short citation
-  private static final SimpleDateFormat LONG_UN =
-      new SimpleDateFormat("d MMMMM yyyy", Locale.UK);
+  private static final SimpleDateFormat LONG_UN = new SimpleDateFormat("d MMMMM yyyy", Locale.UK);
 
   public OccurrenceDownloadResource(
       OccurrenceDownloadMapper occurrenceDownloadMapper,
