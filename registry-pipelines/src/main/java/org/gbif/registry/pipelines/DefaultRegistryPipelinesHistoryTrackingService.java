@@ -411,6 +411,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         continue;
       }
 
+      // TODO: add number event records??
+
       PipelineStep step = latestStepOpt.get();
       try {
         PipelineBasedMessage message = null;
