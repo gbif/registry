@@ -16,7 +16,11 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -25,14 +29,33 @@ import org.gbif.api.util.comparators.EndpointCreatedComparator;
 import org.gbif.api.util.comparators.EndpointPriorityComparator;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.common.messaging.api.MessagePublisher;
-import org.gbif.common.messaging.api.messages.*;
+import org.gbif.common.messaging.api.messages.PipelineBasedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesAbcdMessage;
+import org.gbif.common.messaging.api.messages.PipelinesBalancerMessage;
+import org.gbif.common.messaging.api.messages.PipelinesDwcaMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
+import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
+import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
+import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.pipelines.util.PredicateUtils;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -239,6 +262,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       if (steps.contains(StepType.FRAGMENTER)) {
         newSteps.add(StepType.FRAGMENTER);
       }
+    } else if (steps.contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED)) {
+      newSteps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED);
+    } else if (steps.contains(StepType.EVENTS_INTERPRETED_TO_INDEX)) {
+      newSteps.add(StepType.EVENTS_INTERPRETED_TO_INDEX);
     }
     return newSteps;
   }
@@ -384,6 +411,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         continue;
       }
 
+      // TODO: add number event records??
+
       PipelineStep step = latestStepOpt.get();
       try {
         PipelineBasedMessage message = null;
@@ -400,6 +429,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           message = createMessage(step.getMessage(), PipelinesAbcdMessage.class);
         } else if (stepName == StepType.XML_TO_VERBATIM) {
           message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
+        } else if (stepName == StepType.EVENTS_VERBATIM_TO_INTERPRETED) {
+          message = createMessage(step.getMessage(), PipelinesEventsMessage.class);
+        } else if (stepName == StepType.EVENTS_INTERPRETED_TO_INDEX) {
+          message = createMessage(step.getMessage(), PipelinesEventsInterpretedMessage.class);
         }
 
         if (message != null) {
