@@ -511,6 +511,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                 StepType.HDFS_VIEW.name())));
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
+    } else {
+      message.getInterpretTypes().remove("IDENTIFIER_ABSENT");
     }
 
     return message;
