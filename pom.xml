@@ -58,7 +58,6 @@
     <module>registry-messaging</module>
     <module>registry-doi</module>
     <module>registry-metadata</module>
-    <module>registry-metasync</module>
     <module>registry-persistence</module>
     <module>registry-pipelines</module>
     <module>registry-surety</module>
@@ -100,7 +99,6 @@
     <xoai.version>4.1.0-gbif-4</xoai.version>
 
     <!-- Third party -->
-    <commons-beanutils.version>1.9.2</commons-beanutils.version>
     <commons-digester.version>3.2</commons-digester.version>
     <commons-validator.version>1.5.1</commons-validator.version>
     <commons-io.version>2.5</commons-io.version>
@@ -399,11 +397,6 @@
       </dependency>
 
       <!-- Third party dependencies -->
-      <dependency>
-        <groupId>commons-beanutils</groupId>
-        <artifactId>commons-beanutils</artifactId>
-        <version>${commons-beanutils.version}</version>
-      </dependency>
       <dependency>
         <groupId>org.codehaus.woodstox</groupId>
         <artifactId>woodstox-core-asl</artifactId>
