@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -259,6 +260,16 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         rerunReason,
         pipelinesVersion,
         page);
+  }
+
+  @Override
+  public void sendAbsentIndentifiersEmail(@NotNull UUID datasetKey, int attempt, String emailBody) {
+    // TODO: implement
+  }
+
+  @Override
+  public void allowAbsentIndentifiers(@NotNull UUID datasetKey, int attempt) {
+    // TODO: implement
   }
 
   @ExceptionHandler({
