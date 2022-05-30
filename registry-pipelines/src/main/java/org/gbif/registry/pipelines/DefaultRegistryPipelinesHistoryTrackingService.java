@@ -38,6 +38,9 @@ import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesInterpretedMessage;
 import org.gbif.common.messaging.api.messages.PipelinesVerbatimMessage;
 import org.gbif.common.messaging.api.messages.PipelinesXmlMessage;
+import org.gbif.registry.mail.BaseEmailModel;
+import org.gbif.registry.mail.EmailSender;
+import org.gbif.registry.mail.pipelines.PipelinesEmailManager;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.registry.pipelines.util.PredicateUtils;
 
@@ -79,6 +82,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
+import freemarker.template.TemplateException;
+
 /** Service that allows to re-run pipeline steps on an specific attempt. */
 @Service
 public class DefaultRegistryPipelinesHistoryTrackingService
@@ -103,17 +108,23 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   private final PipelineProcessMapper mapper;
   private final DatasetService datasetService;
   private final ExecutorService executorService;
+  private final EmailSender emailSender;
+  private final PipelinesEmailManager pipelinesEmailManager;
 
   public DefaultRegistryPipelinesHistoryTrackingService(
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       @Autowired(required = false) MessagePublisher publisher,
       PipelineProcessMapper mapper,
       @Lazy DatasetService datasetService,
+      @Autowired EmailSender emailSender,
+      @Autowired PipelinesEmailManager pipelinesEmailManager,
       @Value("${pipelines.doAllThreads}") Integer threadPoolSize) {
     this.objectMapper = objectMapper;
     this.publisher = publisher;
     this.mapper = mapper;
     this.datasetService = datasetService;
+    this.emailSender = emailSender;
+    this.pipelinesEmailManager = pipelinesEmailManager;
     this.executorService =
         Optional.ofNullable(threadPoolSize)
             .map(Executors::newFixedThreadPool)
@@ -660,6 +671,25 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     return new PagingResponse<>(page, count, results);
   }
+
+  @Override
+  public void sendAbsentIndentifiersEmail(UUID datasetKey, int attempt, String message) {
+
+    try {
+      String datasetName = datasetService.get(datasetKey).getTitle();
+
+      BaseEmailModel baseEmailModel =
+          pipelinesEmailManager.generateIdentifierIssueEmailModel(
+              datasetKey.toString(), attempt, datasetName, message);
+
+      emailSender.send(baseEmailModel);
+    } catch (IOException | TemplateException ex) {
+      LOG.error(ex.getMessage(), ex);
+    }
+  }
+
+  @Override
+  public void allowAbsentIndentifiers(UUID datasetKey, int attempt) {}
 
   public Long getNumberRecordsFromMetrics(
       List<PipelineStep.MetricInfo> metrics, StepType stepType) {

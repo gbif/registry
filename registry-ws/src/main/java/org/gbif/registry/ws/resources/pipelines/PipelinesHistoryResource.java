@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.validation.ConstraintViolationException;
-import javax.validation.constraints.NotNull;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -262,14 +261,22 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         page);
   }
 
+  @PostMapping("identifier/{datasetKey}/{attempt}/email")
+  @Secured(ADMIN_ROLE)
   @Override
-  public void sendAbsentIndentifiersEmail(@NotNull UUID datasetKey, int attempt, String emailBody) {
-    // TODO: implement
+  public void sendAbsentIndentifiersEmail(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @PathVariable("attempt") int attempt,
+      @RequestBody String message) {
+    historyTrackingService.sendAbsentIndentifiersEmail(datasetKey, attempt, message);
   }
 
+  @PostMapping("identifier/{datasetKey}/{attempt}/allow")
+  @Secured(ADMIN_ROLE)
   @Override
-  public void allowAbsentIndentifiers(@NotNull UUID datasetKey, int attempt) {
-    // TODO: implement
+  public void allowAbsentIndentifiers(
+      @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt) {
+    historyTrackingService.allowAbsentIndentifiers(datasetKey, attempt);
   }
 
   @ExceptionHandler({
