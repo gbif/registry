@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 /** Service to provide the history and re-execute previous attempts of Pipelines. */
 public interface RegistryPipelinesHistoryTrackingService {
@@ -204,4 +205,22 @@ public interface RegistryPipelinesHistoryTrackingService {
       @Nullable String rerunReason,
       @Nullable String pipelinesVersion,
       @Nullable Pageable page);
+
+  /**
+   * Sends email to data administrator about absent identifiers issue with a dataset
+   *
+   * @param datasetKey dataset key
+   * @param attempt attempt to run
+   * @param message with failed metrics and etc info
+   */
+  void sendAbsentIndentifiersEmail(@NotNull UUID datasetKey, int attempt, @NotNull String message);
+
+  /**
+   * Mark failed identifier stage as finished and continue interpretation process for datasets were identifier stage
+   * failed because of a threshold limit
+   *
+   * @param datasetKey dataset key
+   * @param attempt attempt to run
+   */
+  void allowAbsentIndentifiers(@NotNull UUID datasetKey, int attempt);
 }
