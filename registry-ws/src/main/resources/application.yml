@@ -71,6 +71,9 @@ pipelines:
   envPrefix: test
   esHost: https://test.com
   doAllThreads: 1
+  mail:
+    from: @mail.from@
+    cc: @mail.cc@
 
 # file with all application keys & secrets
 appkeys:

@@ -50,6 +50,10 @@ pipelines:
   envPrefix: test
   esHost: https://test.com
   doAllThreads: 1
+  registryUrl: https://registry.gbif-dev.org/
+  mail:
+    from: @mail.from@
+    cc: @mail.cc@
 
 organization:
   surety:
