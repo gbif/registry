@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -145,4 +146,16 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestParam(value = "markPreviousAttemptAsFailed", defaultValue = "false")
           boolean markPreviousAttemptAsFailed,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
+
+  @PostMapping("identifier/{datasetKey}/{attempt}/email")
+  @Override
+  void sendAbsentIndentifiersEmail(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @PathVariable("attempt") int attempt,
+      @RequestBody String message);
+
+  @PostMapping("identifier/{datasetKey}/{attempt}/allow")
+  @Override
+  void allowAbsentIndentifiers(
+      @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
 }
