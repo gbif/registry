@@ -55,10 +55,10 @@ public class PipelinesEmailManager {
   }
 
   /**
-   * @param datasetKey
-   * @param attempt
-   * @param datasetName
-   * @param message
+   * @param datasetKey registry dataset identifier
+   * @param attempt of crawler
+   * @param datasetName title of a dataset
+   * @param message info message from pipelines
    * @return the {@link BaseEmailModel} or null if the model can not be generated
    */
   public BaseEmailModel generateIdentifierIssueEmailModel(
