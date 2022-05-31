@@ -40,18 +40,18 @@ public class PipelinesEmailManager {
   private final EmailTemplateProcessor emailTemplateProcessors;
   private final String registryUrl;
   private final String mailFrom;
-  private final String mailTo;
+  private final String mailCc;
 
   public PipelinesEmailManager(
       @Qualifier("pipelinesEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors,
       @Value("${pipelines.registryUrl}") String registryUrl,
       @Value("${pipelines.mail.from}") String mailFrom,
-      @Value("${pipelines.mail.to}") String mailTo) {
+      @Value("${pipelines.mail.cc}") String mailCc) {
     Objects.requireNonNull(emailTemplateProcessors, "emailTemplateProcessors shall be provided");
     this.emailTemplateProcessors = emailTemplateProcessors;
     this.registryUrl = registryUrl;
     this.mailFrom = mailFrom;
-    this.mailTo = mailTo;
+    this.mailCc = mailCc;
   }
 
   /**
@@ -71,7 +71,7 @@ public class PipelinesEmailManager {
 
     return emailTemplateProcessors.buildEmail(
         PipelinesEmailType.IDENTIFIER_FAILED,
-        Collections.singleton(mailTo),
+        Collections.singleton(mailCc),
         mailFrom,
         templateDataModel,
         Locale.ENGLISH,
