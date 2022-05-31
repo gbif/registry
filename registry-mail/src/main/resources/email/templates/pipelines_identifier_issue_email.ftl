@@ -1,14 +1,12 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.PipelinesIdentifierIssueDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">GBIF identifiers validation failed for the dataset <em>${datasetName}</em></h5>
-
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    The dataset <em>${datasetName}</em>, crawler attempt: <em>${attempt}</em> identifier validation failed due to:
+    Identifier validation failed for the dataset <b>${datasetName}</b>, crawler attempt: <b>${attempt}</b> cause:
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-  ${message}
+  <em>${message}</em>
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
