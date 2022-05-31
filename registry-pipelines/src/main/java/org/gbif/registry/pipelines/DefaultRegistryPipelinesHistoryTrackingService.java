@@ -682,6 +682,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           pipelinesEmailManager.generateIdentifierIssueEmailModel(
               datasetKey.toString(), attempt, datasetName, message);
 
+      LOG.info(
+          "Send absent indentifiers email, datasetKey {}, attmept {}, message: {}",
+          datasetKey,
+          attempt,
+          message);
+
       emailSender.send(baseEmailModel);
     } catch (IOException | TemplateException ex) {
       LOG.error(ex.getMessage(), ex);
