@@ -75,6 +75,7 @@ public class PipelinesEmailManager {
         mailFrom,
         templateDataModel,
         Locale.ENGLISH,
-        Collections.singleton(datasetName));
+        Collections.emptySet(),
+        datasetName);
   }
 }
