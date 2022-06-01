@@ -19,6 +19,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.PipelineStep.Status;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
@@ -695,7 +696,48 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
-  public void allowAbsentIndentifiers(UUID datasetKey, int attempt) {}
+  public void allowAbsentIndentifiers(UUID datasetKey, int attempt) {
+    try {
+      // GET History messages
+      PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
+      Optional<PipelineExecution> execution =
+          process.getExecutions().stream().max(Comparator.comparingLong(PipelineExecution::getKey));
+
+      if (execution.isPresent()) {
+        Optional<PipelineStep> identifierStep =
+            execution.get().getSteps().stream()
+                .filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER)
+                .findAny();
+
+        if (identifierStep.isPresent()) {
+          // Update and mark identier as OK
+          PipelineStep pipelineStep = identifierStep.get();
+          pipelineStep.setState(Status.COMPLETED);
+          mapper.updatePipelineStep(pipelineStep);
+          LOG.info(
+              "Updated executionKey datasetKey {}, attempt{}, execution key {} identifier stage to completed",
+              pipelineStep.getKey(),
+              datasetKey,
+              attempt);
+
+          // Send message to interpretaton
+          PipelinesVerbatimMessage message =
+              objectMapper.readValue(pipelineStep.getMessage(), PipelinesVerbatimMessage.class);
+          message.getPipelineSteps().remove(StepType.VERBATIM_TO_IDENTIFIER.name());
+          String nextMessageClassName = message.getClass().getSimpleName();
+          String messagePayload = message.toString();
+          publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
+          LOG.info(
+              "Sent MQ message to interpret dataset, datasetKey {}, attempt{}, execution key {}",
+              pipelineStep.getKey(),
+              datasetKey,
+              attempt);
+        }
+      }
+    } catch (IOException ex) {
+      LOG.error(ex.getMessage(), ex);
+    }
+  }
 
   public Long getNumberRecordsFromMetrics(
       List<PipelineStep.MetricInfo> metrics, StepType stepType) {
