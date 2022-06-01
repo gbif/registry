@@ -158,4 +158,8 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   @Override
   void allowAbsentIndentifiers(
       @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
+
+  @PostMapping("identifier/{datasetKey}/allow")
+  @Override
+  void allowAbsentIndentifiers(@PathVariable("datasetKey") UUID datasetKey);
 }

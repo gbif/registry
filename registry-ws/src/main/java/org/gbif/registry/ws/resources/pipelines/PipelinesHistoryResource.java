@@ -279,6 +279,13 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
     historyTrackingService.allowAbsentIndentifiers(datasetKey, attempt);
   }
 
+  @PostMapping("identifier/{datasetKey}/allow")
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void allowAbsentIndentifiers(@PathVariable("datasetKey") UUID datasetKey) {
+    historyTrackingService.allowAbsentIndentifiers(datasetKey);
+  }
+
   @ExceptionHandler({
     ConstraintViolationException.class,
     MissingServletRequestParameterException.class
