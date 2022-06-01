@@ -697,9 +697,19 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   @Override
   public void allowAbsentIndentifiers(UUID datasetKey, int attempt) {
+    allowAbsentIndentifiersCommon(datasetKey, attempt);
+  }
+
+  @Override
+  public void allowAbsentIndentifiers(UUID datasetKey) {
+    allowAbsentIndentifiersCommon(datasetKey, null);
+  }
+
+  public void allowAbsentIndentifiersCommon(UUID datasetKey, Integer attempt) {
     try {
       // GET History messages
-      PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
+      Integer latestAttempt = Optional.ofNullable(attempt).orElse(mapper.getLastAttempt(datasetKey).get());
+      PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, latestAttempt);
       Optional<PipelineExecution> execution =
           process.getExecutions().stream().max(Comparator.comparingLong(PipelineExecution::getKey));
 

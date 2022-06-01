@@ -223,4 +223,12 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @param attempt attempt to run
    */
   void allowAbsentIndentifiers(@NotNull UUID datasetKey, int attempt);
+
+  /**
+   * Mark latest failed identifier stage as finished and continue interpretation process for datasets were identifier stage
+   * failed because of a threshold limit
+   *
+   * @param datasetKey dataset key
+   */
+  void allowAbsentIndentifiers(@NotNull UUID datasetKey);
 }
