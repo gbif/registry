@@ -723,6 +723,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           // Send message to interpretaton
           PipelinesVerbatimMessage message =
               objectMapper.readValue(pipelineStep.getMessage(), PipelinesVerbatimMessage.class);
+          message.getPipelineSteps().remove(StepType.ABCD_TO_VERBATIM.name());
+          message.getPipelineSteps().remove(StepType.XML_TO_VERBATIM.name());
+          message.getPipelineSteps().remove(StepType.DWCA_TO_VERBATIM.name());
           message.getPipelineSteps().remove(StepType.VERBATIM_TO_IDENTIFIER.name());
           String nextMessageClassName = message.getClass().getSimpleName();
           String messagePayload = message.toString();
