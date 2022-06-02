@@ -261,7 +261,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         page);
   }
 
-  @PostMapping("identifier/{datasetKey}/{attempt}/email")
+  @PostMapping(value = "identifier/{datasetKey}/{attempt}/email", consumes = MediaType.TEXT_PLAIN_VALUE)
   @Secured(ADMIN_ROLE)
   @Override
   public void sendAbsentIndentifiersEmail(

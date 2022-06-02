@@ -147,7 +147,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
           boolean markPreviousAttemptAsFailed,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
 
-  @PostMapping("identifier/{datasetKey}/{attempt}/email")
+  @PostMapping(value = "identifier/{datasetKey}/{attempt}/email", consumes = MediaType.TEXT_PLAIN_VALUE)
   @Override
   void sendAbsentIndentifiersEmail(
       @PathVariable("datasetKey") UUID datasetKey,
