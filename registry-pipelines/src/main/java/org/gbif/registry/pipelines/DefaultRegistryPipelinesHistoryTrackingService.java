@@ -725,7 +725,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           pipelineStep.setState(Status.COMPLETED);
           mapper.updatePipelineStep(pipelineStep);
           LOG.info(
-              "Updated executionKey datasetKey {}, attempt{}, execution key {} identifier stage to completed",
+              "Updated executionKey {}, datasetKey {}, attempt {} - identifier stage to completed",
               pipelineStep.getKey(),
               datasetKey,
               attempt);
@@ -741,7 +741,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           String messagePayload = message.toString();
           publisher.send(new PipelinesBalancerMessage(nextMessageClassName, messagePayload));
           LOG.info(
-              "Sent MQ message to interpret dataset, datasetKey {}, attempt{}, execution key {}",
+              "Sent MQ message to interpret dataset, executionKey {}, datasetKey {}, attempt {}",
               pipelineStep.getKey(),
               datasetKey,
               attempt);
