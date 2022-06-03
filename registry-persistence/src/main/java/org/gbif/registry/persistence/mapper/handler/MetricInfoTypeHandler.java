@@ -34,9 +34,6 @@ import static org.gbif.api.model.pipelines.PipelineStep.MetricInfo;
 /** Converts a {@link MetricInfo} to a hstore and viceversa. */
 public class MetricInfoTypeHandler extends BaseTypeHandler<Set<MetricInfo>> {
 
-  private static final String METRIC_INFO_DELIMITER = "=>";
-  private static final String LIST_DELIMITER = ",";
-
   @Override
   public void setNonNullParameter(
       PreparedStatement ps, int i, Set<MetricInfo> metrics, JdbcType jdbcType) throws SQLException {
