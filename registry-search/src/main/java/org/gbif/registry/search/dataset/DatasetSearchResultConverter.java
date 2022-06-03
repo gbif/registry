@@ -73,7 +73,7 @@ public class DatasetSearchResultConverter
     getCountryValue(fields, "hostingCountry").ifPresent(d::setHostingCountry);
 
     getLicenceValue(fields, "license").ifPresent(d::setLicense);
-    getStringValue(fields, "projectId").ifPresent(d::setProjectIdentifier);
+    getStringValue(fields, "project.identifier").ifPresent(d::setProjectIdentifier);
 
     // Set counts
     getIntValue(fields, "nameUsagesCount").ifPresent(d::setNameUsagesCount);
