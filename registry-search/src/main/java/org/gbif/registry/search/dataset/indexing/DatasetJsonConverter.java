@@ -174,7 +174,6 @@ public class DatasetJsonConverter {
     }
     addMachineTags(dataset, datasetAsJson);
     // addOccurrenceCoverage(dataset, datasetAsJson);
-    addProject(dataset, datasetAsJson);
     return datasetAsJson;
   }
 
@@ -190,12 +189,6 @@ public class DatasetJsonConverter {
           });
       datasetJsonNode.putArray("networkKeys").addAll(networkKeys);
       datasetJsonNode.putArray("networkTitles").addAll(networkTitles);
-    }
-  }
-
-  public void addProject(Dataset dataset, ObjectNode datasetJsonNode) {
-    if (dataset.getProject() != null && dataset.getProject().getIdentifier() != null) {
-      datasetJsonNode.put("projectId", dataset.getProject().getIdentifier());
     }
   }
 

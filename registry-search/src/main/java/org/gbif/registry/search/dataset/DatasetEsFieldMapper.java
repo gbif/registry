@@ -158,7 +158,7 @@ public class DatasetEsFieldMapper implements EsFieldMapper<DatasetSearchParamete
       "hostingOrganizationTitle",
       "hostingCountry",
       "license",
-      "projectId",
+      "project.identifier",
       "nameUsagesCount",
       "occurrenceCount",
       "keyword",
