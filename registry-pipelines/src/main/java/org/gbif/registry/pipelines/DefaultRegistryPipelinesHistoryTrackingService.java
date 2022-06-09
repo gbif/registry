@@ -49,7 +49,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -515,12 +514,20 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     PipelinesVerbatimMessage message =
         objectMapper.readValue(jsonMessage, PipelinesVerbatimMessage.class);
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    message.setPipelineSteps(
-        new HashSet<>(
-            Arrays.asList(
-                StepType.VERBATIM_TO_INTERPRETED.name(),
-                StepType.INTERPRETED_TO_INDEX.name(),
-                StepType.HDFS_VIEW.name())));
+    HashSet<String> steps = new HashSet<>();
+
+    if (message.getPipelineSteps().contains(StepType.VERBATIM_TO_INTERPRETED.name())) {
+      steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
+      steps.add(StepType.INTERPRETED_TO_INDEX.name());
+      steps.add(StepType.HDFS_VIEW.name());
+    }
+
+    if (message.getPipelineSteps().contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name())) {
+      steps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED.name());
+      steps.add(StepType.EVENTS_INTERPRETED_TO_INDEX.name());
+    }
+
+    message.setPipelineSteps(steps);
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
     } else {
