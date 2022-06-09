@@ -726,7 +726,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                 .filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER)
                 .findAny();
 
-        if (identifierStep.isPresent()) {
+        if (identifierStep.isPresent() && identifierStep.get().getState() == Status.FAILED) {
           // Update and mark identier as OK
           PipelineStep pipelineStep = identifierStep.get();
           pipelineStep.setState(Status.COMPLETED);
@@ -752,6 +752,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               pipelineStep.getKey(),
               datasetKey,
               attempt);
+        } else {
+          LOG.warn("Execution ID - {} doesn't contain failed identifier step", execution.get().getKey());
         }
       }
     } catch (IOException ex) {
