@@ -11,9 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.cli.datasetindex;
+package org.gbif.registry.cli.datasetindex.batchindexer;
 
 import org.gbif.registry.cli.common.DbConfiguration;
+import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.io.IOException;

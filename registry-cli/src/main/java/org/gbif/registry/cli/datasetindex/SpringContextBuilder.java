@@ -17,7 +17,11 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexer;
+import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexerConfiguration;
+import org.gbif.registry.cli.datasetindex.indexupdater.DatasetIndexUpdaterConfiguration;
 import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
+import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
@@ -30,6 +34,9 @@ import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
+
+import com.google.common.collect.ImmutableMap;
+import com.zaxxer.hikari.HikariDataSource;
 
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -46,9 +53,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.MapPropertySource;
 
-import com.google.common.collect.ImmutableMap;
-import com.zaxxer.hikari.HikariDataSource;
-
 public class SpringContextBuilder {
 
   private static EsClient.EsClientConfiguration toEsClientConfiguration(
@@ -64,11 +68,21 @@ public class SpringContextBuilder {
 
   public static ApplicationContext applicationContext(
       DatasetBatchIndexerConfiguration configuration) {
+    return commonContext(configuration);
+  }
+
+  public static ApplicationContext applicationContext(
+      DatasetIndexUpdaterConfiguration configuration) {
+    AnnotationConfigApplicationContext ctx = commonContext(configuration);
+    ctx.register(EsDatasetRealtimeIndexer.class);
+    return ctx;
+  }
+
+  private static AnnotationConfigApplicationContext commonContext(
+      DatasetIndexConfiguration configuration) {
     AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
     ctx.registerBean(
-        "DatasetBatchIndexerConfiguration",
-        DatasetBatchIndexerConfiguration.class,
-        () -> configuration);
+        "DatasetIndexConfiguration", DatasetIndexConfiguration.class, () -> configuration);
     ctx.register(DatasetBatchIndexer.class);
     ctx.register(GbifApiServiceConfig.class);
     ctx.register(GbifWsRetrofitClient.class);
@@ -145,8 +159,7 @@ public class SpringContextBuilder {
 
     @Bean
     @Primary
-    public DataSourceProperties clbDataSourceProperties(
-        DatasetBatchIndexerConfiguration configuration) {
+    public DataSourceProperties clbDataSourceProperties(DatasetIndexConfiguration configuration) {
       DataSourceProperties dataSourceProperties = new DataSourceProperties();
       dataSourceProperties.setPassword(configuration.getClbDb().getPassword());
       dataSourceProperties.setUsername(configuration.getClbDb().getUser());
@@ -162,7 +175,7 @@ public class SpringContextBuilder {
 
     @Bean(name = "clb_datasource")
     @Primary
-    public HikariDataSource clbDataSource(DatasetBatchIndexerConfiguration configuration) {
+    public HikariDataSource clbDataSource(DatasetIndexConfiguration configuration) {
       HikariDataSource hikariDataSource =
           clbDataSourceProperties(configuration)
               .initializeDataSourceBuilder()
@@ -174,7 +187,7 @@ public class SpringContextBuilder {
     }
 
     @Bean
-    public ClientBuilder clientBuilder(DatasetBatchIndexerConfiguration configuration) {
+    public ClientBuilder clientBuilder(DatasetIndexConfiguration configuration) {
       ClientBuilder clientBuilder = new ClientBuilder();
       clientBuilder.withObjectMapper(
           JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());

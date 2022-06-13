@@ -11,39 +11,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.cli.datasetindex;
+package org.gbif.registry.cli.datasetindex.batchindexer;
 
 import org.gbif.registry.cli.common.DbConfiguration;
+import org.gbif.registry.cli.datasetindex.DatasetIndexConfiguration;
+import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /** A configuration exclusively for DatasetUpdater. */
 @Data
-public class DatasetBatchIndexerConfiguration {
-
-  private String apiRootUrl;
-
-  private String registryWsUrl;
-
-  private DbConfiguration clbDb;
-
-  private ElasticsearchConfig datasetEs;
-
-  private ElasticsearchConfig occurrenceEs;
-
-  private Integer stopAfter = -1;
-
-  private Integer pageSize = 50;
+@EqualsAndHashCode(callSuper = true)
+public class DatasetBatchIndexerConfiguration extends DatasetIndexConfiguration {
 
   private Map<String, Object> indexingSettings =
       new HashMap<>(IndexingConstants.DEFAULT_INDEXING_SETTINGS);
 
   private Map<String, String> searchSettings =
       new HashMap<>(IndexingConstants.DEFAULT_SEARCH_SETTINGS);
-
-  private boolean indexClb = true;
 }

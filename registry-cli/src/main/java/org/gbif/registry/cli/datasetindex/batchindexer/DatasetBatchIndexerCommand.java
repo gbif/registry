@@ -11,10 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.cli.datasetindex;
+package org.gbif.registry.cli.datasetindex.batchindexer;
 
 import org.gbif.cli.BaseCommand;
 import org.gbif.cli.Command;
+import org.gbif.registry.cli.datasetindex.SpringContextBuilder;
 
 import org.kohsuke.MetaInfServices;
 
@@ -50,7 +51,7 @@ public class DatasetBatchIndexerCommand extends BaseCommand {
    * method exists.
    */
   @Override
-  protected void doRun() {
+  public void doRun() {
     batchIndexer =
         SpringContextBuilder.applicationContext(config).getBean(DatasetBatchIndexer.class);
     batchIndexer.run(config);
