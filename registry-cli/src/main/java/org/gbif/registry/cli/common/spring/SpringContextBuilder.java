@@ -25,7 +25,7 @@ import org.gbif.registry.cli.common.DataCiteConfiguration;
 import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.common.DirectoryConfiguration;
 import org.gbif.registry.cli.common.stubs.MessagePublisherStub;
-import org.gbif.registry.cli.datasetindex.DatasetBatchIndexer;
+import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexer;
 import org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfiguration;
 import org.gbif.registry.cli.doiupdater.DoiUpdaterConfiguration;
 import org.gbif.registry.directory.config.DirectoryClientConfiguration;
