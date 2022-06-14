@@ -3,7 +3,6 @@ package org.gbif.registry.cli.datasetindex.indexupdater;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.common.messaging.AbstractMessageCallback;
-import org.gbif.common.messaging.api.messages.PipelinesEventsMessage;
 import org.gbif.common.messaging.api.messages.PipelinesIndexedMessage;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 
@@ -12,7 +11,7 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Callback which is called when the {@link PipelinesEventsMessage} is received. */
+/** Callback which is called when the {@link PipelinesIndexedMessage} is received. */
 @Slf4j
 public class DatasetIndexUpdaterCallback extends AbstractMessageCallback<PipelinesIndexedMessage> {
 
