@@ -105,6 +105,14 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     o2.setTitle("The Tim");
     service.create(o2);
 
+    Organization o3 = testDataFactory.newOrganization(nodeKey);
+    o3.setTitle("The Tim 3");
+    UUID key3 = service.create(o3);
+
+    assertEquals(2, service.suggest("The").size(), "Should find only the 2 The Tim");
+    assertEquals(3, service.suggest("Tim").size(), "Should find all organizations");
+
+    service.delete(key3);
     assertEquals(1, service.suggest("The").size(), "Should find only The Tim");
     assertEquals(2, service.suggest("Tim").size(), "Should find both organizations");
   }

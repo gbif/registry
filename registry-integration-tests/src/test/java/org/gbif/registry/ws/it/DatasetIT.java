@@ -109,7 +109,6 @@ public class DatasetIT extends NetworkEntityIT<Dataset> {
   private final NodeService nodeClient;
   private final InstallationService installationResource;
   private final InstallationService installationClient;
-
   private final DatasetRealtimeIndexer datasetRealtimeIndexer;
   private final TestDataFactory testDataFactory;
 

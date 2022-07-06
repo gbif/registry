@@ -18,9 +18,11 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.NetworkService;
+import org.gbif.api.service.registry.NodeService;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -238,6 +240,30 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
     // Simple remove
     service.removeConstituent(network.getKey(), dataset.getKey());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testSuggest(ServiceType serviceType) {
+    NetworkService service = (NetworkService) getService(serviceType);
+    Network network1 = testDataFactory.newNetwork();
+    network1.setTitle("The Network");
+    service.create(network1);
+
+    Network network2 = testDataFactory.newNetwork();
+    network2.setTitle("The Great Network");
+    service.create(network2);
+
+    Network network3 = testDataFactory.newNetwork();
+    network3.setTitle("The Great Network 3");
+    UUID key3 = service.create(network3);
+
+    assertEquals(2, service.suggest("Great").size(), "Should find only the 2 The Great Network");
+    assertEquals(3, service.suggest("the").size(), "Should find all networks");
+
+    service.delete(key3);
+    assertEquals(1, service.suggest("Great").size(), "Should find only The Great Network");
+    assertEquals(2, service.suggest("the").size(), "Should find both networks");
   }
 
   @Override

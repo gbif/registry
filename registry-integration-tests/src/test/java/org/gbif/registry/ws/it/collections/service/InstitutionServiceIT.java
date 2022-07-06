@@ -361,6 +361,12 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     institution2.setName("Institution name2");
     institutionService.create(institution2);
 
+    Institution institution3 = testData.newEntity();
+    institution3.setCode("II3");
+    institution3.setName("Institution name3");
+    UUID key3 = institutionService.create(institution3);
+    institutionService.delete(key3);
+
     assertEquals(2, institutionService.suggest("institution").size());
     assertEquals(2, institutionService.suggest("II").size());
     assertEquals(1, institutionService.suggest("II2").size());

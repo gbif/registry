@@ -639,13 +639,13 @@
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">
     SELECT key,code,name FROM (
-    (SELECT key,code,name FROM collection WHERE code ilike #{q}||'%' ORDER BY code LIMIT 20)
+    (SELECT key,code,name FROM collection WHERE code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
     UNION ALL
-    (SELECT key,code,name FROM collection WHERE name ilike #{q}||'%' ORDER BY name LIMIT 20)
+    (SELECT key,code,name FROM collection WHERE name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
     UNION ALL
-    (SELECT key,code,name FROM collection WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' ORDER BY code LIMIT 20)
+    (SELECT key,code,name FROM collection WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
     UNION ALL
-    (SELECT key,code,name FROM collection WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' ORDER BY name LIMIT 20)
+    (SELECT key,code,name FROM collection WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
     ) t1 LIMIT 20
   </select>
 
