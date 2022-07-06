@@ -321,17 +321,18 @@
     SELECT key,first_name,last_name,email FROM (
     (SELECT key,first_name,last_name,email
     FROM collection_person
-    WHERE unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%' ORDER BY first_name,last_name LIMIT 20)
+    WHERE unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%' AND deleted IS NULL ORDER BY first_name,last_name LIMIT 20)
     UNION ALL
     (SELECT key,first_name,last_name,email
     FROM collection_person
-    WHERE unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%' ORDER BY last_name LIMIT 20)
+    WHERE unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%' AND deleted IS NULL ORDER BY last_name LIMIT 20)
     UNION ALL
     (SELECT key,first_name,last_name,email
     FROM collection_person
     WHERE unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike '%'||unaccent(#{q})||'%'
     AND NOT unaccent(COALESCE(first_name, ''))||' '||unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%'
     AND NOT unaccent(COALESCE(last_name, '')) ilike unaccent(#{q})||'%'
+    AND deleted IS NULL
     ORDER BY first_name,last_name LIMIT 20)
     ) t1 LIMIT 20
   </select>

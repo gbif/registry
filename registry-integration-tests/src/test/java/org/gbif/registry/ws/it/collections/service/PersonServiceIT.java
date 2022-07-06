@@ -465,6 +465,12 @@ public class PersonServiceIT extends BaseCollectionEntityServiceIT<Person> {
     person2.setLastName("second2");
     personService.create(person2);
 
+    Person person3 = testData.newEntity();
+    person3.setFirstName("first");
+    person3.setLastName("second2");
+    UUID key3 = personService.create(person3);
+    personService.delete(key3);
+
     assertEquals(2, personService.suggest("first").size());
     assertEquals(2, personService.suggest("sec").size());
     assertEquals(1, personService.suggest("second2").size());
