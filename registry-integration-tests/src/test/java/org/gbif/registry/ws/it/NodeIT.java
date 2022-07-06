@@ -379,6 +379,14 @@ public class NodeIT extends NetworkEntityIT<Node> {
     node2.setTitle("The Great Node");
     service.create(node2);
 
+    Node node3 = testDataFactory.newNode();
+    node3.setTitle("The Great Node 3");
+    UUID key3 = service.create(node3);
+
+    assertEquals(2, service.suggest("Great").size(), "Should find only the 2 The Great Node");
+    assertEquals(3, service.suggest("the").size(), "Should find all nodes");
+
+    service.delete(key3);
     assertEquals(1, service.suggest("Great").size(), "Should find only The Great Node");
     assertEquals(2, service.suggest("the").size(), "Should find both nodes");
   }

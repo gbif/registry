@@ -558,6 +558,12 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collection2.setName("Collection name2");
     collectionService.create(collection2);
 
+    Collection collection3 = testData.newEntity();
+    collection3.setCode("CC3");
+    collection3.setName("Collection name3");
+    UUID key3 = collectionService.create(collection3);
+    collectionService.delete(key3);
+
     assertEquals(2, collectionService.suggest("collection").size());
     assertEquals(2, collectionService.suggest("CC").size());
     assertEquals(1, collectionService.suggest("CC2").size());
