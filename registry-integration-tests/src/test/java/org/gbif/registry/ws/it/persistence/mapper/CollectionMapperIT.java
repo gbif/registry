@@ -109,6 +109,8 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setCollectionSummary(Collections.singletonMap("key", 0));
     collection.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode("CODE2", "another code")));
+    collection.setDivision("division");
+    collection.setDepartment("department");
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
