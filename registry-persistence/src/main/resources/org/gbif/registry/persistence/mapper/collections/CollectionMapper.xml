@@ -40,7 +40,7 @@
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
     taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
-    master_source
+    master_source, division, department
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
@@ -48,7 +48,7 @@
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
     c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
-    c.replaced_by, c.master_source, c.master_sync_metadata_key
+    c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -83,7 +83,9 @@
     #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
     #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
-    #{masterSource,jdbcType=OTHER}
+    #{masterSource,jdbcType=OTHER},
+    #{division,jdbcType=VARCHAR},
+    #{department,jdbcType=VARCHAR}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -115,7 +117,9 @@
     incorporated_collections = #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
-    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore
+    alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
+    division = #{division,jdbcType=VARCHAR},
+    department = #{department,jdbcType=VARCHAR}
     <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
