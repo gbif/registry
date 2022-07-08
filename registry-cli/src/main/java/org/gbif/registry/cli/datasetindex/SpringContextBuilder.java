@@ -35,9 +35,6 @@ import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
-import com.google.common.collect.ImmutableMap;
-import com.zaxxer.hikari.HikariDataSource;
-
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
@@ -52,6 +49,9 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.MapPropertySource;
+
+import com.google.common.collect.ImmutableMap;
+import com.zaxxer.hikari.HikariDataSource;
 
 public class SpringContextBuilder {
 
