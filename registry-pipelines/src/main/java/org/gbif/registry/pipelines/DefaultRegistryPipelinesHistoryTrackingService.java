@@ -715,7 +715,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   public void allowAbsentIndentifiersCommon(UUID datasetKey, Integer attempt) {
     try {
       // GET History messages
-      Integer latestAttempt = Optional.ofNullable(attempt).orElse(mapper.getLastAttempt(datasetKey).get());
+      Integer latestAttempt =
+          Optional.ofNullable(attempt).orElse(mapper.getLastAttempt(datasetKey).get());
       PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, latestAttempt);
       Optional<PipelineExecution> execution =
           process.getExecutions().stream().max(Comparator.comparingLong(PipelineExecution::getKey));
@@ -753,7 +754,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               datasetKey,
               attempt);
         } else {
-          LOG.warn("Execution ID - {} doesn't contain failed identifier step", execution.get().getKey());
+          LOG.warn(
+              "Execution ID - {} doesn't contain failed identifier step", execution.get().getKey());
         }
       }
     } catch (IOException ex) {

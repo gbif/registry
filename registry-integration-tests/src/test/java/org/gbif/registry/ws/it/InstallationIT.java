@@ -134,7 +134,8 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
     installation3.setTitle("The Great installation 3");
     UUID key3 = service.create(installation3);
 
-    assertEquals(2, service.suggest("Great").size(), "Should find only the 2 The Great installation");
+    assertEquals(
+        2, service.suggest("Great").size(), "Should find only the 2 The Great installation");
     assertEquals(3, service.suggest("the").size(), "Should find all installations");
 
     service.delete(key3);

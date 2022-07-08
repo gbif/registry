@@ -13,9 +13,7 @@
  */
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
-import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.datasetindex.DatasetIndexConfiguration;
-import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.util.HashMap;
