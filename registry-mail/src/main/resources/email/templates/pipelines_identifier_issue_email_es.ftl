@@ -2,7 +2,7 @@
 <#include "header.ftl">
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    Identifier validation failed for the dataset <b>${datasetName}</b>, crawler attempt: <b>${attempt}</b> cause:
+    La validación del identificador falló para el conjunto de datos <b>${datasetName}</b>, intento de rastreo: <b>${attempt}</b> causa:
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
@@ -10,11 +10,11 @@
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-	You can skip/fix identifier validation using <a href="${registryUrl}dataset/${datasetKey}/ingestion-history" style="color: #4ba2ce;text-decoration: none;">Registry UI</a>
+	Puedes omitir/corregir la validación de los identificadores mediante <a href="${registryUrl}dataset/${datasetKey}/ingestion-history" style="color: #4ba2ce;text-decoration: none;">Registry UI</a>
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-    <em>The GBIF Informatics</em>
+    <em>La Informática de GBIF</em>
 </p>
 
 <#include "footer.ftl">
