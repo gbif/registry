@@ -10,7 +10,7 @@
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
-	You can skip/fix identifier validation using <a href="${registryUrl}dataset/${datasetKey}/ingestion-history" style="color: #4ba2ce;text-decoration: none;">Registry UI</a>
+	Vous pouvez ignorer/corriger la validation de l'identifiant en utilisant <a href="${registryUrl}dataset/${datasetKey}/ingestion-history" style="color: #4ba2ce;text-decoration: none;">l'interface du Registre</a>
 </p>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
