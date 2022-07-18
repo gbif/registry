@@ -119,7 +119,7 @@
     SELECT <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
     FROM crawl_history
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
-    ORDER BY started_crawling DESC, attempt DESC
+    ORDER BY attempt DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
