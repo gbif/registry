@@ -277,7 +277,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       newSteps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED);
     } else if (steps.contains(StepType.EVENTS_INTERPRETED_TO_INDEX)) {
       newSteps.add(StepType.EVENTS_INTERPRETED_TO_INDEX);
+    } else if (steps.contains(StepType.EVENTS_HDFS_VIEW)) {
+      newSteps.add(StepType.EVENTS_HDFS_VIEW);
     }
+
     return newSteps;
   }
 
