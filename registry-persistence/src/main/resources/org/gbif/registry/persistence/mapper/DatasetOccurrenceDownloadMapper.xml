@@ -47,8 +47,8 @@
   </select>
 
   <select id="countByDataset" resultType="Integer">
-    SELECT COUNT(*)
-    FROM dataset_occurrence_download
+    SELECT COUNT(DISTINCT download_key)
+    FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
   </select>
 
