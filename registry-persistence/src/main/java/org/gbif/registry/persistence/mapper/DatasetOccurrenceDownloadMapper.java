@@ -41,7 +41,7 @@ public interface DatasetOccurrenceDownloadMapper {
   List<DatasetOccurrenceDownloadUsage> listByDownload(
       @Param("downloadKey") String downloadKey, @Nullable @Param("page") Pageable page);
 
-  void createUsages(
-      @Param("downloadKey") String downloadKey,
-      @Param("citationMap") Map<UUID, Long> downloadDataset);
+  void createOrUpdateUsages(
+    @Param("downloadKey") String downloadKey,
+    @Param("citationMap") Map<UUID, Long> downloadDataset);
 }
