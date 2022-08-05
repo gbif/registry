@@ -16,6 +16,7 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
@@ -32,6 +33,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -142,6 +144,18 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
             .size(),
         "List operation should return 1 record");
     Download occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
+    assertEquals(1, occDownload2.getNumberDatasets());
+
+    // we add it again to check that the usage is updated and doesn't create a new one
+    datasetCitation.put(testDataset.getKey(), 2000L);
+    occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
+    List<DatasetOccurrenceDownloadUsage> usages =
+        datasetOccurrenceDownloadUsageService
+            .listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
+            .getResults();
+    assertEquals(1, usages.size(), "List operation should return 1 record");
+    assertEquals(2000L, usages.get(0).getNumberRecords());
+    occDownload2 = occurrenceDownloadService.get(occurrenceDownload.getKey());
     assertEquals(1, occDownload2.getNumberDatasets());
   }
 

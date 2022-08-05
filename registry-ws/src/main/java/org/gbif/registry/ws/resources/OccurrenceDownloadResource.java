@@ -321,7 +321,7 @@ public class OccurrenceDownloadResource implements OccurrenceDownloadService {
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
         .forEachRemaining(
             batch ->
-                datasetOccurrenceDownloadMapper.createUsages(
+                datasetOccurrenceDownloadMapper.createOrUpdateUsages(
                     downloadKey,
                     batch.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue))));
   }
