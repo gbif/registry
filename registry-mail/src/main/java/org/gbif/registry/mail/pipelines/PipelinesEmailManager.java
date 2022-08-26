@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,13 +41,13 @@ public class PipelinesEmailManager {
   private final EmailTemplateProcessor emailTemplateProcessors;
   private final String registryUrl;
   private final String mailFrom;
-  private final String mailCc;
+  private final Set<String> mailCc;
 
   public PipelinesEmailManager(
       @Qualifier("pipelinesEmailTemplateProcessor") EmailTemplateProcessor emailTemplateProcessors,
       @Value("${pipelines.registryUrl}") String registryUrl,
       @Value("${pipelines.mail.from}") String mailFrom,
-      @Value("${pipelines.mail.cc}") String mailCc) {
+      @Value("${pipelines.mail.cc}") Set<String> mailCc) {
     Objects.requireNonNull(emailTemplateProcessors, "emailTemplateProcessors shall be provided");
     this.emailTemplateProcessors = emailTemplateProcessors;
     this.registryUrl = registryUrl;
@@ -71,7 +72,7 @@ public class PipelinesEmailManager {
 
     return emailTemplateProcessors.buildEmail(
         PipelinesEmailType.IDENTIFIER_FAILED,
-        Collections.singleton(mailCc),
+        mailCc,
         mailFrom,
         templateDataModel,
         Locale.ENGLISH,
