@@ -1,0 +1,19 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Adds download type enum and column.
+  -->
+  <changeSet id="111" author="fede">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      CREATE TYPE download_type AS ENUM ('OCCURRENCE', 'EVENT');
+      ALTER TABLE occurrence_download ADD COLUMN type download_type DEFAULT 'OCCURRENCE';
+      ALTER TABLE download_user_statistics ADD COLUMN type download_type DEFAULT 'OCCURRENCE';
+      ALTER TABLE download_statistics ADD COLUMN type download_type DEFAULT 'OCCURRENCE';
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

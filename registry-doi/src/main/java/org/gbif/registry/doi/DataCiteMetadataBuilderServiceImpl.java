@@ -36,6 +36,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
@@ -52,7 +53,7 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
 
   public DataCiteMetadataBuilderServiceImpl(
       OrganizationMapper organizationMapper,
-      OccurrenceDownloadService occurrenceDownloadService,
+      @Qualifier("occurrenceDownloadResource") OccurrenceDownloadService occurrenceDownloadService,
       TitleLookupService titleLookupService) {
     this.organizationMapper = organizationMapper;
     this.occurrenceDownloadService = occurrenceDownloadService;
