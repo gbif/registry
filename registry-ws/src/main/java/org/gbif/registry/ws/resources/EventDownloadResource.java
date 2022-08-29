@@ -27,19 +27,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Occurrence download resource/web service. */
+/** Event download resource/web service. */
 @Validated
-@RestController("occurrenceDownloadResource")
-@RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
-public class OccurrenceDownloadResource extends BaseDownloadResource {
+@RestController("eventDownloadResource")
+@RequestMapping(value = "event/download", produces = MediaType.APPLICATION_JSON_VALUE)
+public class EventDownloadResource extends BaseDownloadResource {
 
 
-  public OccurrenceDownloadResource(
+  public EventDownloadResource(
     OccurrenceDownloadMapper occurrenceDownloadMapper,
     DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
     DoiIssuingService doiIssuingService,
     @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
     @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
-    super(occurrenceDownloadMapper, datasetOccurrenceDownloadMapper, doiIssuingService, doiDataCiteHandlingService, identityService, DownloadType.OCCURRENCE);
+    super(occurrenceDownloadMapper, datasetOccurrenceDownloadMapper, doiIssuingService, doiDataCiteHandlingService, identityService, DownloadType.EVENT);
   }
 }

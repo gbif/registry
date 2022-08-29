@@ -36,7 +36,7 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
 /** Occurrence download resource/web service. */
 @Validated
 @RestController
-@RequestMapping(value = "occurrence/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = {"event/download/dataset", "occurrence/download/dataset"}, produces = MediaType.APPLICATION_JSON_VALUE)
 public class DatasetOccurrenceDownloadUsageResource
     implements DatasetOccurrenceDownloadUsageService {
 

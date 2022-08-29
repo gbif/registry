@@ -21,6 +21,7 @@
       <result property="sendNotification" column="send_notification"/>
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
+      <result property="type" column="type"/>
       <discriminator javaType="string" column="format">
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
@@ -68,7 +69,7 @@
   <resultMap id="DOWNLOAD_STATISTICS" type="org.gbif.api.model.occurrence.DownloadStatistics" autoMapping="true"/>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after,erasure_notification
+    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after,erasure_notification,type
   </sql>
 
 
@@ -162,6 +163,7 @@
         #{item}
       </foreach>
     </if>
+    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -179,12 +181,16 @@
         #{item}
       </foreach>
     </if>
+    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
   </select>
 
   <!-- Append safe ordering -->
   <select id="list" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
+    <where>
+      <if test="type != null">type = #{type,jdbcType=OTHER}</if>
+    </where>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -194,6 +200,9 @@
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
     FROM occurrence_download
+    <where>
+      <if test="type != null">type = #{type,jdbcType=OTHER}</if>
+    </where>
   </select>
 
   <!-- Append safe ordering -->
@@ -205,6 +214,7 @@
              open="(" separator="," close=")">
       #{item}
     </foreach>
+    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -219,6 +229,7 @@
              open="(" separator="," close=")">
       #{item}
     </foreach>
+    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
   </select>
 
   <select id="listByEraseAfter" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
@@ -287,6 +298,7 @@
     FROM download_user_statistics
     <where>
       <if test="userCountry != null">AND user_country = #{userCountry,jdbcType=OTHER}</if>
+      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
       <if test="fromDate != null" ><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
       <if test="toDate != null" ><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
@@ -303,6 +315,7 @@
     <where>
       <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
       <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
       <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
       <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
@@ -319,6 +332,7 @@
     <where>
       <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
       <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
       <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
       <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
@@ -335,6 +349,7 @@
     <where>
       <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
       <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
       <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
       <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
@@ -354,6 +369,7 @@
     <where>
       <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
       <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
       <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
       <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
