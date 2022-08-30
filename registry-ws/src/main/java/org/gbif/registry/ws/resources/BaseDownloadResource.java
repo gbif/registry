@@ -176,7 +176,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{key}")
-  @NullToNotFound(value = "{key}", prependResourceUrl = true)
+  @NullToNotFound(useUrlMapping = true)
   public Download getByKey(@NotNull @PathVariable("key") String key) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -188,7 +188,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{prefix}/{suffix}")
-  @NullToNotFound(value = "{prefix}/{suffix}", prependResourceUrl = true)
+  @NullToNotFound(useUrlMapping = true)
   public Download getByDoi(
       @NotNull @PathVariable String prefix, @NotNull @PathVariable String suffix) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -353,14 +353,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   @GetMapping("{key}/citation")
-  @NullToNotFound(value = "{key}/citation", prependResourceUrl = true)
+  @NullToNotFound(useUrlMapping = true)
   public String getCitationByKey(@NotNull @PathVariable("key") String key) {
     Download download = getByKey(key);
     return getCitationInternal(download);
   }
 
   @GetMapping("{prefix}/{suffix}/citation")
-  @NullToNotFound(value = "{prefix}/{suffix}/citation", prependResourceUrl = true)
+  @NullToNotFound(useUrlMapping = true)
   public String getCitationByDoi(
       @NotNull @PathVariable("prefix") String prefix,
       @NotNull @PathVariable("suffix") String suffix) {
@@ -371,23 +371,11 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   private String getCitationInternal(Download download) {
     if (download != null) {
       assertDownloadType(download);
-      // Citations are incorrect, see https://github.com/gbif/occurrence/issues/156.
-      // For the moment, just use the main citation.
-      // List<DatasetOccurrenceDownloadUsage> usages =
-      // datasetOccurrenceDownloadMapper.listByDownload(downloadKey, null);
-
-      // usages.forEach(
-      //  usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); }
-      // );
-
       return "GBIF.org ("
           + LONG_UN.format(download.getCreated())
           + ") GBIF Occurrence Download "
           + download.getDoi().getUrl().toString()
           + '\n';
-
-      // usages.forEach(
-      //   usage -> { if (usage != null) sb.append(usage.getDatasetCitation()).append('\n'); });
     }
     return null;
   }
