@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Occurrence download resource/web service. */
 @Validated
-@RestController
+@RestController("datasetOccurrenceDownloadUsageResource")
 @RequestMapping(value = "occurrence/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDatasetDownloadUsageResource
     extends DatasetDownloadUsageResourceBase {

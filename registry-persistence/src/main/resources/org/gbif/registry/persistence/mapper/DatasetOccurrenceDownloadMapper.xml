@@ -28,9 +28,9 @@
 
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,<include refid="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM dataset_occurrence_download JOIN occurrence_download od ON od.download_key = key
+    FROM dataset_occurrence_download JOIN occurrence_download od ON download_key = od.key
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
-    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
+    <if test="type != null"> AND od.type = #{type,jdbcType=OTHER}</if>
     ORDER BY created DESC, key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -49,9 +49,9 @@
 
   <select id="countByDataset" resultType="Integer" parameterType="map">
     SELECT COUNT(DISTINCT download_key)
-    FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
+    FROM dataset_occurrence_download JOIN occurrence_download od ON download_key = od.key
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
-    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
+    <if test="type != null"> AND od.type = #{type,jdbcType=OTHER}</if>
   </select>
 
   <insert id="createOrUpdateUsages" >

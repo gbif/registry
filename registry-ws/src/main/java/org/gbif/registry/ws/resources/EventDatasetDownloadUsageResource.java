@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Event download resource/web service. */
 @Validated
-@RestController
+@RestController("datasetEventDownloadUsageResource")
 @RequestMapping(value = "event/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EventDatasetDownloadUsageResource
     extends DatasetDownloadUsageResourceBase {
