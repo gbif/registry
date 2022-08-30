@@ -30,6 +30,7 @@ import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -91,6 +92,18 @@ public class EsClient implements Closeable {
                 new DeleteIndexRequest().indices(idxsToDelete.toArray(new String[0])),
                 RequestOptions.DEFAULT);
       }
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
+    }
+  }
+
+  /**
+   * Flush changes of an index.
+   * @param indexName to flush
+   */
+  public void flushIndex(String indexName) {
+    try {
+      restHighLevelClient.indices().flush(new FlushRequest().indices(indexName), RequestOptions.DEFAULT);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }

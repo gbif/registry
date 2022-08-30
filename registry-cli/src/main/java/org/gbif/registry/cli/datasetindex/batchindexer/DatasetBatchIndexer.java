@@ -110,6 +110,7 @@ public class DatasetBatchIndexer {
     executor.shutdown();
     esClient.updateSettings(indexName, config.getSearchSettings());
     esClient.swapAlias(config.getDatasetEs().getAlias(), indexName);
+    esClient.flushIndex(indexName);
     esClient.close();
     log.info("Finished building Dataset index in {} secs", stopwatch.elapsed(TimeUnit.SECONDS));
   }
