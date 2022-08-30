@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.DatasetOccurrenceDownloadUsageService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
@@ -22,29 +23,24 @@ import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
-/** Occurrence download resource/web service. */
-@Validated
-@RestController
-@RequestMapping(value = {"event/download/dataset", "occurrence/download/dataset"}, produces = MediaType.APPLICATION_JSON_VALUE)
-public class DatasetOccurrenceDownloadUsageResource
+/** Base download resource/web service. */
+public abstract class DatasetDownloadUsageResourceBase
     implements DatasetOccurrenceDownloadUsageService {
 
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
 
-  public DatasetOccurrenceDownloadUsageResource(
-      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
+  private final DownloadType downloadType;
+
+  public DatasetDownloadUsageResourceBase(DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper, DownloadType downloadType) {
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
+    this.downloadType = downloadType;
   }
 
   @GetMapping("{datasetKey}")
@@ -53,9 +49,9 @@ public class DatasetOccurrenceDownloadUsageResource
       @PathVariable UUID datasetKey, Pageable page) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     List<DatasetOccurrenceDownloadUsage> usages =
-        datasetOccurrenceDownloadMapper.listByDataset(datasetKey, page);
+      datasetOccurrenceDownloadMapper.listByDataset(datasetKey, downloadType, page);
     clearSensitiveData(authentication, usages);
     return new PagingResponse<>(
-        page, (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey), usages);
+        page, (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey, downloadType), usages);
   }
 }
