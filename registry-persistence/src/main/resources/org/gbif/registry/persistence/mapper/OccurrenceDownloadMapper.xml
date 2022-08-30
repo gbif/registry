@@ -118,7 +118,8 @@
     now(), <!-- created -->
     now(), <!-- modified -->
     #{eraseAfter,jdbcType=TIMESTAMP},
-    #{erasureNotification,jdbcType=TIMESTAMP}
+    #{erasureNotification,jdbcType=TIMESTAMP},
+    #{request.type,jdbcType=OTHER}
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
