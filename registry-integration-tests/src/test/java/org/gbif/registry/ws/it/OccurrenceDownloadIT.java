@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
+import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -107,11 +108,12 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download download = getTestInstanceDownload();
     download.setRequest(
         new PredicateDownloadRequest(
-            new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212", false),
-            TestConstants.TEST_ADMIN,
-            Collections.singleton("downloadtest@gbif.org"),
-            true,
-            DownloadFormat.DWCA));
+          new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212", false),
+          TestConstants.TEST_ADMIN,
+          Collections.singleton("downloadtest@gbif.org"),
+          true,
+          DownloadFormat.DWCA,
+          DownloadType.OCCURRENCE));
     return download;
   }
 
@@ -128,7 +130,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
             TestConstants.TEST_ADMIN,
             Collections.singleton("downloadtest@gbif.org"),
             true,
-            DownloadFormat.DWCA));
+            DownloadFormat.DWCA,
+            DownloadType.OCCURRENCE));
     return download;
   }
 
