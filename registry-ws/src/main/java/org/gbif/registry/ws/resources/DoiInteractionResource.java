@@ -17,6 +17,8 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
 import org.gbif.doi.service.InvalidMetadataException;
@@ -37,6 +39,7 @@ import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -62,14 +65,20 @@ public class DoiInteractionResource implements DoiInteractionService {
   private final DoiIssuingService doiIssuingService;
   private final DoiMessageManagingService doiMessageManagingService;
   private final DoiMapper doiMapper;
+  private final OccurrenceDownloadService occurrenceDownloadService;
+  private final OccurrenceDownloadService eventDownloadService;
 
   public DoiInteractionResource(
       DoiIssuingService doiIssuingService,
       DoiMessageManagingService doiMessageManagingService,
-      DoiMapper doiMapper) {
+      DoiMapper doiMapper,
+      @Qualifier("occurrenceDownloadResource") OccurrenceDownloadService occurrenceDownloadService,
+      @Qualifier("eventDownloadResource") OccurrenceDownloadService eventDownloadService) {
     this.doiIssuingService = doiIssuingService;
     this.doiMessageManagingService = doiMessageManagingService;
     this.doiMapper = doiMapper;
+    this.occurrenceDownloadService = occurrenceDownloadService;
+    this.eventDownloadService = eventDownloadService;
   }
 
   /** Generates a new DOI based on the DoiType. */
@@ -152,7 +161,8 @@ public class DoiInteractionResource implements DoiInteractionService {
       if (DoiType.DATA_PACKAGE == doiRegistration.getType()) {
         doiMessageManagingService.registerDataPackage(doi, metadata);
       } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
-        doiMessageManagingService.registerDownload(doi, metadata, doiRegistration.getKey());
+        Download download = getDownload(doiRegistration.getKey());
+        doiMessageManagingService.registerDownload(doi, metadata, doiRegistration.getKey(), download.getRequest().getType());
       } else if (DoiType.DATASET == doiRegistration.getType()) {
         doiMessageManagingService.registerDataset(
             doi, metadata, UUID.fromString(doiRegistration.getKey()));
@@ -164,6 +174,17 @@ public class DoiInteractionResource implements DoiInteractionService {
       LOG.info("Error registering/updating DOI", ex);
       throw new WebApplicationException(
           "Invalid metadata, error registering/updating DOI", HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * Tries to get a download from event and occurrence services.
+   */
+  private Download getDownload(String key) {
+    try {
+      return eventDownloadService.get(key);
+    } catch (Exception ex) {
+      return occurrenceDownloadService.get(key);
     }
   }
 

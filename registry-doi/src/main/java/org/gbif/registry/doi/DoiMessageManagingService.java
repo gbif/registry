@@ -14,6 +14,7 @@
 package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.service.InvalidMetadataException;
 
@@ -77,10 +78,11 @@ public interface DoiMessageManagingService {
    * @param doi the GBIF DOI to registerDataset
    * @param metadata the metadata to post to DataCite. Mandatory fields are validated immediately
    * @param downloadKey the download key to derive the target URL from
+   * @param downloadType the download type
    * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is
    *     not a GBIF one
    */
-  void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey)
+  void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey, DownloadType downloadType)
       throws InvalidMetadataException;
 
   /**

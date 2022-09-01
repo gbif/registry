@@ -64,7 +64,8 @@ public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCi
         doiMessageManagingService.registerDownload(
             download.getDoi(),
             metadataBuilderService.buildMetadata(download, user),
-            download.getKey());
+            download.getKey(),
+            download.getRequest().getType());
       } catch (Exception error) {
         LOG.error(
             DOI_SMTP,
