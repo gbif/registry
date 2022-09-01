@@ -15,6 +15,7 @@ package org.gbif.registry.doi;
 
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.common.messaging.api.Message;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
@@ -45,7 +46,8 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
   private final MessagePublisher messagePublisher;
 
   private final URI datasetTarget;
-  private final URI downloadTarget;
+  private final URI occurrenceDownloadTarget;
+  private final URI eventDownloadTarget;
   private final URI dataPackageTarget;
 
   public DoiMessageManagingServiceImpl(
@@ -53,7 +55,8 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
     checkNotNull(portal, "portal base URL can't be null");
     checkArgument(portal.isAbsolute(), "portal base URL must be absolute");
     this.datasetTarget = portal.resolve("dataset/");
-    this.downloadTarget = portal.resolve("occurrence/download/");
+    this.occurrenceDownloadTarget = portal.resolve("occurrence/download/");
+    this.eventDownloadTarget = portal.resolve("event/download/");
     this.dataPackageTarget = portal.resolve("data_package/");
     this.messagePublisher = messagePublisher;
   }
@@ -120,7 +123,7 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
   }
 
   @Override
-  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey)
+  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey, DownloadType downloadType)
       throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(downloadKey, "Download key required");
@@ -128,7 +131,7 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message =
-        new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, downloadTarget.resolve(downloadKey));
+        new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, DownloadType.EVENT == downloadType? eventDownloadTarget.resolve(downloadKey) : occurrenceDownloadTarget.resolve(downloadKey));
 
     try {
       messagePublisher.send(message);
