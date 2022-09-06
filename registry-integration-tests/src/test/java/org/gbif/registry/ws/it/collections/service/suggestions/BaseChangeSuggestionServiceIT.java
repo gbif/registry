@@ -13,19 +13,8 @@
  */
 package org.gbif.registry.ws.it.collections.service.suggestions;
 
-import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
-import org.gbif.api.model.collections.UserId;
-import org.gbif.api.model.collections.suggestions.Change;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
-import org.gbif.api.model.collections.suggestions.Status;
-import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.suggestions.*;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -49,11 +38,7 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link ChangeSuggestionService}. */
 public abstract class BaseChangeSuggestionServiceIT<
@@ -196,9 +181,11 @@ public abstract class BaseChangeSuggestionServiceIT<
     contact3.setEmail(Collections.singletonList("aa@aa.com"));
     contact3.getUserIds().add(new UserId(IdType.OTHER, "54321"));
     suggestion.getSuggestedEntity().getContactPersons().add(contact3);
+    numberChanges++;
 
     // remove one contact
     suggestion.getSuggestedEntity().getContactPersons().remove(contact2);
+    numberChanges++;
 
     // When
     int suggKey = changeSuggestionService.createChangeSuggestion(suggestion);
@@ -491,6 +478,99 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertThrows(
         ValidationException.class,
         () -> changeSuggestionService.createChangeSuggestion(suggestion));
+  }
+
+  @Test
+  public void updateContactsTest() {
+    // State
+    T entity = createEntity();
+
+    Address address = new Address();
+    address.setCountry(Country.DENMARK);
+    entity.setAddress(address);
+
+    UUID entityKey = primaryCollectionEntityService.create(entity);
+
+    Contact contact1 = new Contact();
+    contact1.setFirstName("first");
+    contact1.setLastName("last");
+    contact1.setEmail(Collections.singletonList("aa@aa.com"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "12345"));
+    contact1.getUserIds().add(new UserId(IdType.OTHER, "abcde"));
+    entity.getContactPersons().add(contact1);
+    contactService.addContactPerson(entityKey, contact1);
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("second");
+    contact2.setEmail(Collections.singletonList("aa@aa.com"));
+    contact2.getUserIds().add(new UserId(IdType.OTHER, "54321"));
+    entity.getContactPersons().add(contact2);
+    contactService.addContactPerson(entityKey, contact2);
+
+    entity = primaryCollectionEntityService.get(entityKey);
+
+    // suggestion to change contact1
+    entity.getContactPersons().stream()
+        .filter(c -> c.getKey().equals(contact1.getKey()))
+        .findFirst()
+        .get()
+        .setFirstName("11");
+
+    R suggestion1 = createEmptyChangeSuggestion();
+    suggestion1.setSuggestedEntity(entity);
+    suggestion1.setType(Type.UPDATE);
+    suggestion1.setEntityKey(entityKey);
+    suggestion1.setProposerEmail(PROPOSER);
+    suggestion1.setComments(Collections.singletonList("contact1"));
+
+    // When
+    int sugg1Key = changeSuggestionService.createChangeSuggestion(suggestion1);
+
+    // Then
+    suggestion1 = changeSuggestionService.getChangeSuggestion(sugg1Key);
+    assertEquals(1, suggestion1.getChanges().size());
+
+    // suggestion to change contact2
+    // it's done from the current entity since the suggestion1 hasn't been applied yet
+    entity = primaryCollectionEntityService.get(entityKey);
+    entity.getContactPersons().stream()
+        .filter(c -> c.getKey().equals(contact2.getKey()))
+        .findFirst()
+        .get()
+        .setFirstName("22");
+
+    R suggestion2 = createEmptyChangeSuggestion();
+    suggestion2.setSuggestedEntity(entity);
+    suggestion2.setType(Type.UPDATE);
+    suggestion2.setEntityKey(entityKey);
+    suggestion2.setProposerEmail(PROPOSER);
+    suggestion2.setComments(Collections.singletonList("contact2"));
+
+    // When
+    int sugg2Key = changeSuggestionService.createChangeSuggestion(suggestion2);
+
+    // Then
+    suggestion2 = changeSuggestionService.getChangeSuggestion(sugg2Key);
+    assertEquals(1, suggestion2.getChanges().size());
+
+    // When
+    changeSuggestionService.applyChangeSuggestion(sugg1Key);
+
+    // Then
+    T applied = primaryCollectionEntityService.get(suggestion1.getEntityKey());
+    assertEquals(2, applied.getContactPersons().size());
+    assertTrue(applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals("11")));
+    assertTrue(
+        applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals("second")));
+
+    // When
+    changeSuggestionService.applyChangeSuggestion(sugg2Key);
+
+    // Then
+    applied = primaryCollectionEntityService.get(suggestion2.getEntityKey());
+    assertEquals(2, applied.getContactPersons().size());
+    assertTrue(applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals("11")));
+    assertTrue(applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals("22")));
   }
 
   protected void assertCreatedSuggestion(R created) {
