@@ -20,7 +20,6 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
 import org.gbif.doi.metadata.datacite.RelationType;
@@ -30,6 +29,7 @@ import org.gbif.registry.doi.converter.DerivedDatasetConverter;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 
 import java.util.List;
@@ -47,15 +47,15 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
   private static final int USAGES_PAGE_SIZE = 400;
 
   private final OrganizationMapper organizationMapper;
-  private final OccurrenceDownloadService occurrenceDownloadService;
+  private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final TitleLookupService titleLookupService;
 
   public DataCiteMetadataBuilderServiceImpl(
       OrganizationMapper organizationMapper,
-      OccurrenceDownloadService occurrenceDownloadService,
+      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
       TitleLookupService titleLookupService) {
     this.organizationMapper = organizationMapper;
-    this.occurrenceDownloadService = occurrenceDownloadService;
+    this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.titleLookupService = titleLookupService;
   }
 
@@ -73,9 +73,7 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
 
     while (response == null || !response.isEmpty()) {
       response =
-          occurrenceDownloadService
-              .listDatasetUsages(download.getKey(), pagingRequest)
-              .getResults();
+        datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), pagingRequest);
       usages.addAll(response);
       pagingRequest.nextPage();
     }

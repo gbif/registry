@@ -40,6 +40,7 @@ import java.util.UUID;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,7 +77,7 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource,
+      @Qualifier("datasetOccurrenceDownloadUsageResource") DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
       @LocalServerPort int localServerPort,
