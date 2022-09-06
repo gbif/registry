@@ -13,8 +13,8 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.suggestions.*;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -44,7 +44,11 @@ import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.elasticsearch.common.Strings;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,14 +56,11 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
+import static com.google.common.base.Preconditions.checkArgument;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -88,6 +89,8 @@ public abstract class BaseChangeSuggestionService<
               "key",
               "convertedToCollection",
               "masterSource"));
+
+  private static final String CONTACTS_FIELD_NAME = "contactPersons";
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final MergeService<T> mergeService;
@@ -440,50 +443,84 @@ public abstract class BaseChangeSuggestionService<
       if (FIELDS_TO_IGNORE.contains(field.getName()) || field.isSynthetic()) {
         continue;
       }
-      try {
-        String methodPrefix = getGetterPrefix(field.getType());
-        Object suggestedValue =
-            clazz
-                .getMethod(
-                    methodPrefix
-                        + field.getName().substring(0, 1).toUpperCase()
-                        + field.getName().substring(1))
-                .invoke(suggestedEntity);
 
-        Object previousValue =
-            clazz
-                .getMethod(
-                    methodPrefix
-                        + field.getName().substring(0, 1).toUpperCase()
-                        + field.getName().substring(1))
-                .invoke(currentEntity);
+      if (field.getName().equals(CONTACTS_FIELD_NAME)) {
+        Map<Integer, Contact> currentContactsMap =
+            currentEntity.getContactPersons().stream()
+                .collect(Collectors.toMap(Contact::getKey, c -> c));
 
-        if (!Objects.equals(suggestedValue, previousValue)) {
-          ChangeDto changeDto = new ChangeDto();
-          changeDto.setFieldName(field.getName());
-          changeDto.setFieldType(field.getType());
+        suggestedEntity
+            .getContactPersons()
+            .forEach(
+                sugg -> {
+                  Contact current = currentContactsMap.get(sugg.getKey());
+                  if (!Objects.equals(current, sugg)) {
+                    // contact has changed
+                    changes.add(createChangeDto(field, sugg, current, Contact.class));
+                  }
+                  // remove from map
+                  if (current != null) {
+                    currentContactsMap.remove(current.getKey());
+                  }
+                });
 
-          if (field.getGenericType() instanceof ParameterizedType) {
-            changeDto.setFieldGenericTypeName(
-                ((ParameterizedType) field.getGenericType())
-                    .getActualTypeArguments()[0].getTypeName());
-          }
-
-          changeDto.setPrevious(previousValue);
-          changeDto.setSuggested(suggestedValue);
-
-          String username = getUsername();
-          if (!Strings.isNullOrEmpty(username)) {
-            changeDto.setAuthor(username);
-          }
-          changeDto.setCreated(new Date());
-          changes.add(changeDto);
+        // contacts deleted
+        if (!currentContactsMap.isEmpty()) {
+          currentContactsMap
+              .values()
+              .forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
         }
-      } catch (Exception e) {
-        throw new IllegalStateException("Error while comparing field values", e);
+      } else {
+        try {
+          String methodPrefix = getGetterPrefix(field.getType());
+          Object suggestedValue =
+              clazz
+                  .getMethod(
+                      methodPrefix
+                          + field.getName().substring(0, 1).toUpperCase()
+                          + field.getName().substring(1))
+                  .invoke(suggestedEntity);
+
+          Object previousValue =
+              clazz
+                  .getMethod(
+                      methodPrefix
+                          + field.getName().substring(0, 1).toUpperCase()
+                          + field.getName().substring(1))
+                  .invoke(currentEntity);
+
+          if (!Objects.equals(suggestedValue, previousValue)) {
+            changes.add(createChangeDto(field, suggestedValue, previousValue, field.getType()));
+          }
+        } catch (Exception e) {
+          throw new IllegalStateException("Error while comparing field values", e);
+        }
       }
     }
     return changes;
+  }
+
+  @NotNull
+  private ChangeDto createChangeDto(
+      Field field, Object suggested, Object previous, Class<?> fieldType) {
+    ChangeDto changeDto = new ChangeDto();
+    changeDto.setSuggested(suggested);
+    changeDto.setPrevious(previous);
+    changeDto.setFieldName(field.getName());
+    changeDto.setFieldType(fieldType);
+    changeDto.setCreated(new Date());
+
+    String username = getUsername();
+    if (!Strings.isNullOrEmpty(username)) {
+      changeDto.setAuthor(username);
+    }
+
+    if (field.getGenericType() instanceof ParameterizedType) {
+      changeDto.setFieldGenericTypeName(
+          ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0].getTypeName());
+    }
+
+    return changeDto;
   }
 
   protected ChangeSuggestionDto createBaseChangeSuggestionDto(R changeSuggestion) {
@@ -559,27 +596,51 @@ public abstract class BaseChangeSuggestionService<
         List<Change> changes = new ArrayList<>();
         suggestion.setChanges(changes);
         for (ChangeDto changeDto : dto.getChanges()) {
-          Change change = changeDtoToChange(changeDto);
-          Object currentValue =
+          // set suggested contacts in the current entity
+          if (changeDto.getFieldName().equals(CONTACTS_FIELD_NAME)) {
+            if (changeDto.getSuggested() == null) {
+              // deleted contact
+              int contactKey = ((Contact) changeDto.getPrevious()).getKey();
+              currentEntity
+                  .getContactPersons()
+                  .removeIf(c -> Objects.equals(c.getKey(), contactKey));
+            } else if (changeDto.getPrevious() == null) {
+              // new contact
+              currentEntity.getContactPersons().add((Contact) changeDto.getSuggested());
+            } else {
+              // update contact
+              int contactKey = ((Contact) changeDto.getSuggested()).getKey();
+              currentEntity
+                  .getContactPersons()
+                  .removeIf(c -> Objects.equals(c.getKey(), contactKey));
+              currentEntity.getContactPersons().add((Contact) changeDto.getSuggested());
+            }
+
+            changes.add(changeDtoToChange(changeDto));
+          } else {
+            // set changes in the current entity
+            Change change = changeDtoToChange(changeDto);
+            Object currentValue =
+                clazz
+                    .getMethod(
+                        getGetterPrefix(changeDto.getFieldType())
+                            + changeDto.getFieldName().substring(0, 1).toUpperCase()
+                            + changeDto.getFieldName().substring(1))
+                    .invoke(currentEntity);
+
+            // if it's the same as the current it's considered outdated
+            change.setOutdated(Objects.equals(currentValue, changeDto.getSuggested()));
+            changes.add(change);
+
+            if (!changeDto.isOverwritten()) {
               clazz
                   .getMethod(
-                      getGetterPrefix(changeDto.getFieldType())
+                      "set"
                           + changeDto.getFieldName().substring(0, 1).toUpperCase()
-                          + changeDto.getFieldName().substring(1))
-                  .invoke(currentEntity);
-
-          // if it's the same as the current it's considered outdated
-          change.setOutdated(Objects.equals(currentValue, changeDto.getSuggested()));
-          changes.add(change);
-
-          if (!changeDto.isOverwritten()) {
-            clazz
-                .getMethod(
-                    "set"
-                        + changeDto.getFieldName().substring(0, 1).toUpperCase()
-                        + changeDto.getFieldName().substring(1),
-                    changeDto.getFieldType())
-                .invoke(currentEntity, changeDto.getSuggested());
+                          + changeDto.getFieldName().substring(1),
+                      changeDto.getFieldType())
+                  .invoke(currentEntity, changeDto.getSuggested());
+            }
           }
         }
 
