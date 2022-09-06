@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadStatistics;
+import org.gbif.api.model.occurrence.DownloadType;
 
 import java.util.Date;
 import java.util.List;
@@ -41,14 +42,14 @@ public interface OccurrenceDownloadMapper {
 
   void create(Download entity);
 
-  List<Download> list(@Nullable @Param("page") Pageable page);
+  List<Download> list(@Nullable @Param("page") Pageable page, @Nullable @Param("type") DownloadType type);
 
-  int count();
+  int count(@Nullable @Param("type") DownloadType type);
 
   List<Download> listByStatus(
-      @Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status);
+      @Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status, @Nullable @Param("type") DownloadType type);
 
-  int countByStatus(@Param("status") Set<Download.Status> status);
+  int countByStatus(@Param("status") Set<Download.Status> status, @Nullable @Param("type") DownloadType type);
 
   void updateNotificationAddresses(
       @Param("oldCreator") String oldCreator,
@@ -58,9 +59,12 @@ public interface OccurrenceDownloadMapper {
   List<Download> listByUser(
       @Param("creator") String creator,
       @Nullable @Param("page") Pageable page,
-      @Param("status") Set<Download.Status> status);
+      @Param("status") Set<Download.Status> status,
+      @Nullable @Param("type") DownloadType type);
 
-  int countByUser(@Param("creator") String creator, @Param("status") Set<Download.Status> status);
+  int countByUser(@Param("creator") String creator,
+                  @Param("status") Set<Download.Status> status,
+                  @Nullable @Param("type") DownloadType type);
 
   List<Download> listByEraseAfter(
       @Nullable @Param("page") Pageable page,
@@ -76,21 +80,24 @@ public interface OccurrenceDownloadMapper {
   List<Facet.Count> getDownloadsByUserCountry(
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,
-      @Nullable @Param("userCountry") String userCountry);
+      @Nullable @Param("userCountry") String userCountry,
+      @Nullable @Param("type") DownloadType type);
 
   List<Facet.Count> getDownloadedRecordsByDataset(
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,
       @Nullable @Param("publishingCountry") String publishingCountry,
       @Nullable @Param("datasetKey") UUID datasetKey,
-      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey);
+      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey,
+      @Nullable @Param("type") DownloadType type);
 
   List<Facet.Count> getDownloadsByDataset(
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,
       @Nullable @Param("publishingCountry") String publishingCountry,
       @Nullable @Param("datasetKey") UUID datasetKey,
-      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey);
+      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey,
+      @Nullable @Param("type") DownloadType type);
 
   List<DownloadStatistics> getDownloadStatistics(
       @Nullable @Param("fromDate") Date fromDate,
@@ -98,12 +105,14 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("publishingCountry") String publishingCountry,
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("publishingOrgKey") UUID publishingOrgKey,
-      @Nullable @Param("page") Pageable page);
+      @Nullable @Param("page") Pageable page,
+      @Nullable @Param("type") DownloadType type);
 
   long countDownloadStatistics(
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,
       @Nullable @Param("publishingCountry") String publishingCountry,
       @Nullable @Param("datasetKey") UUID datasetKey,
-      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey);
+      @Nullable @Param("publishingOrgKey") UUID publishingOrgKey,
+      @Nullable @Param("type") DownloadType type);
 }
