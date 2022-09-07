@@ -1,0 +1,46 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Adds download type enum and column.
+  -->
+  <changeSet id="112" author="fede">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      CREATE TYPE extension AS ENUM ('AUDUBON',
+                                        'AMPLIFICATION',
+                                        'DESCRIPTION',
+                                        'DISTRIBUTION',
+                                        'EOL_MEDIA',
+                                        'EOL_REFERENCE',
+                                        'GERMPLASM_ACCESSION',
+                                        'GERMPLASM_MEASUREMENT_SCORE',
+                                        'GERMPLASM_MEASUREMENT_TRAIT',
+                                        'GERMPLASM_MEASUREMENT_TRIAL',
+                                        'IDENTIFICATION',
+                                        'IDENTIFIER',
+                                        'IMAGE',
+                                        'MEASUREMENT_OR_FACT',
+                                        'MULTIMEDIA',
+                                        'REFERENCE',
+                                        'RESOURCE_RELATIONSHIP',
+                                        'SPECIES_PROFILE',
+                                        'TYPES_AND_SPECIMEN',
+                                        'VERNACULAR_NAME',
+                                        'CLONING',
+                                        'GEL_IMAGE',
+                                        'LOAN',
+                                        'MATERIAL_SAMPLE',
+                                        'PERMIT',
+                                        'PREPARATION',
+                                        'PRESERVATION',
+                                        'EXTENDED_MEASUREMENT_OR_FACT',
+                                        'CHRONOMETRIC_AGE',
+                                        'CHRONOMETRIC_DATE');
+      ALTER TABLE occurrence_download ADD COLUMN extensions extension ARRAY DEFAULT array[]::extension[];
+       ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
