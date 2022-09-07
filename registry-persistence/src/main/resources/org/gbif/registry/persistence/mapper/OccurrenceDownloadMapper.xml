@@ -22,6 +22,7 @@
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <result property="type" column="type"/>
+      <result property="extensions" column="extensions" typeHandler="ExtensionArrayTypeHandler"/>
       <discriminator javaType="string" column="format">
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
@@ -69,7 +70,7 @@
   <resultMap id="DOWNLOAD_STATISTICS" type="org.gbif.api.model.occurrence.DownloadStatistics" autoMapping="true"/>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after,erasure_notification,type
+    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after,erasure_notification,type,extensions
   </sql>
 
 
@@ -119,7 +120,8 @@
     now(), <!-- modified -->
     #{eraseAfter,jdbcType=TIMESTAMP},
     #{erasureNotification,jdbcType=TIMESTAMP},
-    #{request.type,jdbcType=OTHER}
+    #{request.type,jdbcType=OTHER},
+    #{request.extensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler}
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">

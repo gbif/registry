@@ -23,6 +23,7 @@ import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
@@ -113,7 +114,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
           Collections.singleton("downloadtest@gbif.org"),
           true,
           DownloadFormat.DWCA,
-          DownloadType.OCCURRENCE));
+          DownloadType.OCCURRENCE,
+          Collections.singleton(Extension.AUDUBON)));
     return download;
   }
 
@@ -131,7 +133,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
             Collections.singleton("downloadtest@gbif.org"),
             true,
             DownloadFormat.DWCA,
-            DownloadType.OCCURRENCE));
+            DownloadType.OCCURRENCE,
+            Collections.singleton(Extension.AUDUBON)));
     return download;
   }
 
@@ -163,6 +166,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     service.create(occurrenceDownload);
     Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
+    assertEquals(occurrenceDownload.getRequest(), occurrenceDownload2.getRequest());
   }
 
   /** Tests the create and get(key) methods for null predicate. */
@@ -175,6 +179,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     service.create(occurrenceDownload);
     Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
+    assertEquals(occurrenceDownload.getRequest(), occurrenceDownload2.getRequest());
   }
 
   /** Tests the persistence of the DownloadRequest's DownloadFormat. */
@@ -189,6 +194,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
     assertEquals(format, occurrenceDownload2.getRequest().getFormat());
+    assertEquals(occurrenceDownload.getRequest(), occurrenceDownload2.getRequest());
   }
 
   /** Creates a {@link Download} with a null status which should trigger a validation exception. */
