@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.gbif.registry.search.dataset.service.collections.CollectionsSearchService.TypeParam;
+
 @RestController
 @RequestMapping(value = "grscicoll/search", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionsSearchResource {
@@ -37,8 +39,10 @@ public class CollectionsSearchResource {
   @GetMapping
   public List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "highlight", defaultValue = "false") boolean highlight,
+      @RequestParam(value = "type", required = false) TypeParam type,
+      @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
+      @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
-    return collectionsSearchService.search(query, highlight, limit);
+    return collectionsSearchService.search(query, highlight, type, displayOnNHCPortal, limit);
   }
 }

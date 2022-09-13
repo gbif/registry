@@ -63,7 +63,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     match.setSnippet("snippet");
     response.setMatches(Collections.singleton(match));
 
-    when(collectionsSearchService.search(q, highlight, limit))
+    when(collectionsSearchService.search(q, highlight, null, null, limit))
         .thenReturn(Collections.singletonList(response));
 
     List<CollectionsSearchResponse> responseReturned =

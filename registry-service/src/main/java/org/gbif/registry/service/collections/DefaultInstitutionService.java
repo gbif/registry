@@ -29,17 +29,8 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.ReplaceEntityEvent;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
@@ -143,6 +134,8 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
             .institutionalGovernance(searchRequest.getInstitutionalGovernance())
             .disciplines(searchRequest.getDisciplines())
             .masterSourceType(searchRequest.getMasterSourceType())
+            .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
+            .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
             .build();
 
     long total = institutionMapper.count(params);

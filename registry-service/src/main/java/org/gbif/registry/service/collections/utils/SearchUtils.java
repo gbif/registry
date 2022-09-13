@@ -11,21 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper.collections;
+package org.gbif.registry.service.collections.utils;
 
-import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
+import java.util.regex.Pattern;
 
-import java.util.List;
+public class SearchUtils {
 
-import javax.annotation.Nullable;
-
-import org.apache.ibatis.annotations.Param;
-
-public interface CollectionsSearchMapper {
-
-  List<SearchDto> search(
-      @Nullable @Param("q") String query,
-      @Param("highlight") boolean highlight,
-      @Param("type") String type,
-      @Param("displayOnNHCPortal") Boolean displayOnNHCPortal);
+  public static final Pattern NUMBER_SPECIMENS_RANGE =
+      Pattern.compile("^(\\d+|\\*)\\s*,\\s*(\\d+|\\*)$");
+  public static final String WILDCARD_SEARCH = "*";
 }
