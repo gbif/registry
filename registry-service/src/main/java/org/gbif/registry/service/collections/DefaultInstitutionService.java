@@ -45,9 +45,6 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -55,10 +52,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Validated
 @Service

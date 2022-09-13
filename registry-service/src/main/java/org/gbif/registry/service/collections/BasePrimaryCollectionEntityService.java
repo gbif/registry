@@ -13,10 +13,10 @@
  */
 package org.gbif.registry.service.collections;
 
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
@@ -41,8 +41,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.elasticsearch.common.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
@@ -52,13 +50,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
 import static org.gbif.registry.service.collections.utils.SearchUtils.NUMBER_SPECIMENS_RANGE;
 import static org.gbif.registry.service.collections.utils.SearchUtils.WILDCARD_SEARCH;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Validated
