@@ -160,6 +160,7 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
             .accessionStatus(searchRequest.getAccessionStatus())
             .personalCollection(searchRequest.getPersonalCollection())
             .masterSourceType(searchRequest.getMasterSourceType())
+            .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
             .build();
 
     long total = collectionMapper.count(params);
