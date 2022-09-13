@@ -419,11 +419,11 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
 
     collectionService.delete(key2);
     assertEquals(
-      0,
-      collectionService
-        .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
-        .getResults()
-        .size());
+        0,
+        collectionService
+            .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
   }
 
   @Test
