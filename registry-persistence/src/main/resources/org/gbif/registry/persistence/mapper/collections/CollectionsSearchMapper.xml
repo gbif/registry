@@ -15,68 +15,100 @@
       ,matches.similarity_match
     </if>
     FROM (
-      (
-        SELECT DISTINCT ON (<if test="q != null">ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
-          i.key, i.code, i.name, i.description, i.alternative_codes,
-          'institution' AS type, <if test="q != null" >ts_rank_cd(i.fulltext_search, query) score, query,</if> i.address_key, i.mailing_address_key,
-          null::uuid institution_key, null institution_name, null institution_code, false AS similarity_match
-        FROM institution i
-        <if test="q != null" >
-          INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
-        </if>
-        WHERE i.deleted IS NULL
-      )
-      UNION ALL
-      (
-        SELECT DISTINCT ON (i.key)
-        i.key, i.code, i.name, i.description, i.alternative_codes, 'institution' AS type,
-        <if test="q != null" >9 AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
-        i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code, false AS similarity_match
-        FROM institution i
-        WHERE i.deleted IS NULL AND i.code = trim(#{q})
-      )
-      UNION ALL
-      (
-        SELECT DISTINCT ON (i.key)
-        i.key, i.code, i.name, i.description, i.alternative_codes, 'institution' AS type,
-        <if test="q != null" >similarity(i.name, #{q}) AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
-        i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code, true AS similarity_match
-        FROM institution i
-        WHERE i.deleted IS NULL AND similarity(i.name, #{q}) >= 0.65
-      )
-      UNION ALL
-      (
-        SELECT DISTINCT ON (<if test="q != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
-        c.key, c.code, c.name, c.description, c.alternative_codes,
-        'collection' AS type, <if test="q != null" >ts_rank_cd(c.fulltext_search, query) score, query,</if> c.address_key, c.mailing_address_key,
-        i.key institution_key, i.name institution_name, i.code institution_code, false AS similarity_match
-        FROM collection c
-        <if test="q != null" >
-          INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
-        </if>
-        LEFT JOIN institution i ON i.key = c.institution_key
-        WHERE c.deleted IS NULL
-      )
-      UNION ALL
-      (
-        SELECT DISTINCT ON (c.key)
-        c.key, c.code, c.name, c.description, c.alternative_codes, 'collection' AS type,
-        <if test="q != null" >9 AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
-        c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code, false AS similarity_match
-        FROM collection c
-        LEFT JOIN institution i ON i.key = c.institution_key
-        WHERE c.deleted IS NULL AND c.code = trim(#{q})
-      )
-      UNION ALL
-      (
-        SELECT DISTINCT ON (c.key)
-        c.key, c.code, c.name, c.description, c.alternative_codes, 'collection' AS type,
-        <if test="q != null" >similarity(c.name, #{q}) AS score, to_tsquery('english', regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
-        c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code, true AS similarity_match
-        FROM collection c
-        LEFT JOIN institution i ON i.key = c.institution_key
-        WHERE c.deleted IS NULL AND similarity(c.name, #{q}) >= 0.65
-      )
+    <trim prefixOverrides="UNION ALL">
+      <if test="type == null or type.equals('INSTITUTION')">
+        (
+          SELECT DISTINCT ON (<if test="q != null">ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
+            i.key, i.code, i.name, i.description, i.alternative_codes,
+            'institution' AS type, <if test="q != null" >ts_rank_cd(i.fulltext_search, query) score, query,</if> i.address_key, i.mailing_address_key,
+            null::uuid institution_key, null institution_name, null institution_code, false AS similarity_match
+          FROM institution i
+          <if test="q != null" >
+            INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+          </if>
+          WHERE i.deleted IS NULL
+          <if test="displayOnNHCPortal != null">
+            AND i.display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+          </if>
+        )
+      </if>
+      <if test="type == null or type.equals('INSTITUTION')">
+        UNION ALL
+        (
+          SELECT DISTINCT ON (i.key)
+          i.key, i.code, i.name, i.description, i.alternative_codes, 'institution' AS type,
+          <if test="q != null" >9 AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
+          i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code, false AS similarity_match
+          FROM institution i
+          WHERE i.deleted IS NULL AND i.code = trim(#{q})
+          <if test="displayOnNHCPortal != null">
+            AND i.display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+          </if>
+        )
+      </if>
+      <if test="type == null or type.equals('INSTITUTION')">
+        UNION ALL
+        (
+          SELECT DISTINCT ON (i.key)
+          i.key, i.code, i.name, i.description, i.alternative_codes, 'institution' AS type,
+          <if test="q != null" >similarity(i.name, #{q}) AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
+          i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code, true AS similarity_match
+          FROM institution i
+          WHERE i.deleted IS NULL AND similarity(i.name, #{q}) >= 0.65
+          <if test="displayOnNHCPortal != null">
+            AND i.display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+          </if>
+        )
+      </if>
+      <if test="type == null or type.equals('COLLECTION')">
+        UNION ALL
+        (
+          SELECT DISTINCT ON (<if test="q != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
+          c.key, c.code, c.name, c.description, c.alternative_codes,
+          'collection' AS type, <if test="q != null" >ts_rank_cd(c.fulltext_search, query) score, query,</if> c.address_key, c.mailing_address_key,
+          i.key institution_key, i.name institution_name, i.code institution_code, false AS similarity_match
+          FROM collection c
+          <if test="q != null" >
+            INNER JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') AS query ON query @@ fulltext_search
+          </if>
+          LEFT JOIN institution i ON i.key = c.institution_key
+          WHERE c.deleted IS NULL
+          <if test="displayOnNHCPortal != null">
+            AND c.display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+          </if>
+        )
+      </if>
+      <if test="type == null or type.equals('COLLECTION')">
+        UNION ALL
+        (
+          SELECT DISTINCT ON (c.key)
+          c.key, c.code, c.name, c.description, c.alternative_codes, 'collection' AS type,
+          <if test="q != null" >9 AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
+          c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code, false AS similarity_match
+          FROM collection c
+          LEFT JOIN institution i ON i.key = c.institution_key
+          WHERE c.deleted IS NULL AND c.code = trim(#{q})
+          <if test="displayOnNHCPortal != null">
+            AND c.display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+          </if>
+        )
+      </if>
+      <if test="type == null or type.equals('COLLECTION')">
+        UNION ALL
+        (
+          SELECT DISTINCT ON (c.key)
+          c.key, c.code, c.name, c.description, c.alternative_codes, 'collection' AS type,
+          <if test="q != null" >similarity(c.name, #{q}) AS score, to_tsquery('english', regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
+          c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code, true AS similarity_match
+          FROM collection c
+          LEFT JOIN institution i ON i.key = c.institution_key
+          WHERE c.deleted IS NULL AND similarity(c.name, #{q}) >= 0.65
+          <if test="displayOnNHCPortal != null">
+            AND c.display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+          </if>
+        )
+      </if>
+    </trim>
     ) AS matches
     LEFT JOIN address ad ON ad.key = matches.address_key
     LEFT JOIN address mail ON mail.key = matches.mailing_address_key

@@ -35,8 +35,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.gbif.registry.search.dataset.service.collections.CollectionsSearchService.TypeParam.COLLECTION;
+import static org.gbif.registry.search.dataset.service.collections.CollectionsSearchService.TypeParam.INSTITUTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionsSearchService} * */
 public class CollectionsSearchIT extends BaseServiceIT {
@@ -74,6 +77,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     addressI1.setCountry(Country.AFGHANISTAN);
     addressI1.setAddress("foo street");
     i1.setAddress(addressI1);
+    i1.setDisplayOnNHCPortal(false);
     institutionService.create(i1);
 
     i11.setCode("I11");
@@ -96,6 +100,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     addressC1.setProvince("Asturias");
     addressC1.setAddress("fake street");
     c1.setAddress(addressC1);
+    c1.setDisplayOnNHCPortal(false);
     collectionService.create(c1);
 
     c2.setCode("C2");
@@ -108,12 +113,12 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
   @Test
   public void searchByCodeTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("I1", true, 10);
+    List<CollectionsSearchResponse> responses = searchService.search("I1", true, null, null, 10);
     assertEquals(3, responses.size());
     assertEquals(i1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getMatches().size());
 
-    responses = searchService.search("i1", true, 10);
+    responses = searchService.search("i1", true, null, null, 10);
     assertEquals(3, responses.size());
     assertEquals(i11.getKey(), responses.get(0).getKey());
     assertEquals(2, responses.get(0).getMatches().size());
@@ -121,15 +126,16 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
   @Test
   public void searchByNameTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("Collection", true, 10);
+    List<CollectionsSearchResponse> responses =
+        searchService.search("Collection", true, null, null, 10);
     assertEquals(2, responses.size());
 
-    responses = searchService.search("Collection 2", true, 10);
+    responses = searchService.search("Collection 2", true, null, null, 10);
     assertEquals(2, responses.size());
     assertEquals(1, responses.get(0).getMatches().size());
     assertEquals(1, responses.get(1).getMatches().size());
 
-    responses = searchService.search("Colllection 1", true, 10);
+    responses = searchService.search("Colllection 1", true, null, null, 10);
     assertEquals(2, responses.size());
     assertEquals(1, responses.get(0).getMatches().size());
     assertEquals(1, responses.get(1).getMatches().size());
@@ -137,30 +143,31 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
   @Test
   public void searchByAlternativeCodesTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("II2", true, 10);
+    List<CollectionsSearchResponse> responses = searchService.search("II2", true, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(i2.getKey(), responses.get(0).getKey());
 
-    responses = searchService.search("test", true, 10);
+    responses = searchService.search("test", true, null, null, 10);
     assertEquals(0, responses.size());
   }
 
   @Test
   public void searchByAddressFieldsTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("street", true, 10);
+    List<CollectionsSearchResponse> responses =
+        searchService.search("street", true, null, null, 10);
     assertEquals(2, responses.size());
 
-    responses = searchService.search(Country.SPAIN.getIso2LetterCode(), true, 10);
+    responses = searchService.search(Country.SPAIN.getIso2LetterCode(), true, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getMatches().size());
 
-    responses = searchService.search("oviedo", true, 10);
+    responses = searchService.search("oviedo", true, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getMatches().size());
 
-    responses = searchService.search("street asturias", true, 10);
+    responses = searchService.search("street asturias", true, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(2, responses.get(0).getMatches().size());
@@ -168,19 +175,45 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
   @Test
   public void searchWithoutHighlightTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("Collection", false, 10);
+    List<CollectionsSearchResponse> responses =
+        searchService.search("Collection", false, null, null, 10);
     assertNull(responses.get(0).getMatches());
   }
 
   @Test
   public void noMatchesTest() {
-    List<CollectionsSearchResponse> responses = searchService.search("nothing", false, 10);
+    List<CollectionsSearchResponse> responses =
+        searchService.search("nothing", false, null, null, 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search("collection made up", false, 10);
+    responses = searchService.search("collection made up", false, null, null, 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search("I1 made up", false, 10);
+    responses = searchService.search("I1 made up", false, null, null, 10);
     assertEquals(0, responses.size());
+  }
+
+  @Test
+  public void displayOnNHCPortalTest() {
+    List<CollectionsSearchResponse> responses = searchService.search(null, false, null, true, 10);
+    assertEquals(3, responses.size());
+
+    responses = searchService.search(null, false, null, false, 10);
+    assertEquals(2, responses.size());
+  }
+
+  @Test
+  public void typeParamTest() {
+    List<CollectionsSearchResponse> responses =
+        searchService.search(null, false, INSTITUTION, null, 10);
+    assertEquals(3, responses.size());
+    assertTrue(responses.stream().allMatch(d -> d.getType().equals("institution")));
+
+    responses = searchService.search(null, false, COLLECTION, null, 10);
+    assertEquals(2, responses.size());
+    assertTrue(responses.stream().allMatch(d -> d.getType().equals("collection")));
+
+    responses = searchService.search(null, false, null, null, 10);
+    assertEquals(5, responses.size());
   }
 }

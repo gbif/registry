@@ -109,5 +109,15 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
       }
       request.setNumberSpecimens(numberSpecimensParam);
     }
+
+    String displayOnNHCPortal = webRequest.getParameter("displayOnNHCPortal");
+    if (!Strings.isNullOrEmpty(displayOnNHCPortal)) {
+      try {
+        request.setDisplayOnNHCPortal(Boolean.parseBoolean(displayOnNHCPortal));
+      } catch (Exception e) {
+        throw new IllegalArgumentException(
+            "Invalid boolean for displayOnNHCPortal: " + displayOnNHCPortal);
+      }
+    }
   }
 }

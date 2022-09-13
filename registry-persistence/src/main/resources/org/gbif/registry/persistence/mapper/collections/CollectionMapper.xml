@@ -40,7 +40,7 @@
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
     taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
-    master_source, division, department
+    master_source, division, department, display_on_NHCPortal
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
@@ -48,7 +48,7 @@
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
     c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
-    c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department
+    c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -85,7 +85,8 @@
     #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
     #{masterSource,jdbcType=OTHER},
     #{division,jdbcType=VARCHAR},
-    #{department,jdbcType=VARCHAR}
+    #{department,jdbcType=VARCHAR},
+    #{displayOnNHCPortal,jdbcType=BOOLEAN}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -119,7 +120,8 @@
     collection_summary = #{collectionSummary,jdbcType=OTHER,typeHandler=CollectionSummaryTypeHandler}::hstore,
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
     division = #{division,jdbcType=VARCHAR},
-    department = #{department,jdbcType=VARCHAR}
+    department = #{department,jdbcType=VARCHAR},
+    display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
     <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
@@ -284,6 +286,9 @@
         </otherwise>
       </choose>
     </if>
+    <if test="params.displayOnNHCPortal != null" >
+      AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
@@ -393,6 +398,9 @@
           </if>
         </otherwise>
       </choose>
+    </if>
+    <if test="params.displayOnNHCPortal != null" >
+      AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
     </if>
   </select>
 

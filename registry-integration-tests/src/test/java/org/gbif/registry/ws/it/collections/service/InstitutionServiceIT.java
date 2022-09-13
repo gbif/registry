@@ -106,6 +106,7 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     address.setCountry(Country.DENMARK);
     institution1.setAddress(address);
     institution1.setNumberSpecimens(100);
+    institution1.setDisplayOnNHCPortal(true);
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = institutionService.create(institution1);
 
@@ -302,6 +303,17 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
             .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+
+    assertEquals(
+      1,
+      institutionService
+        .list(
+          InstitutionSearchRequest.builder()
+            .displayOnNHCPortal(true)
+            .page(DEFAULT_PAGE)
+            .build())
+        .getResults()
+        .size());
 
     // test numberSpecimens
     assertEquals(
