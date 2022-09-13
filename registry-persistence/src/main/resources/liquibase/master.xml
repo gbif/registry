@@ -118,4 +118,5 @@
   <include file="liquibase/110-pipelines-event-types-hdfs.xml" />
   <include file="liquibase/111-download-type.xml" />
   <include file="liquibase/112-download-extensions.xml" />
+  <include file="liquibase/113-grscicoll-display-on-nhc-portal-field.xml" />
 </databaseChangeLog>

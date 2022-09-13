@@ -105,6 +105,8 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     address.setCity("city");
     address.setCountry(Country.DENMARK);
     institution1.setAddress(address);
+    institution1.setNumberSpecimens(100);
+    institution1.setDisplayOnNHCPortal(true);
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = institutionService.create(institution1);
 
@@ -113,6 +115,7 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     institution2.setName("n2");
     institution2.setActive(false);
     institution2.setDisciplines(Arrays.asList(Discipline.OCEAN, Discipline.AGRICULTURAL));
+    institution2.setNumberSpecimens(200);
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
@@ -298,6 +301,59 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         1,
         institutionService
             .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .displayOnNHCPortal(true)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+
+    // test numberSpecimens
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .numberSpecimens("100")
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder().numberSpecimens("98").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .numberSpecimens("* , 100")
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        2,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .numberSpecimens("97,300")
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 

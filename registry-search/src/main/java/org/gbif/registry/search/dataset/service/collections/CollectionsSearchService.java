@@ -17,14 +17,7 @@ import org.gbif.api.model.collections.search.CollectionsSearchResponse;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -40,13 +33,21 @@ public class CollectionsSearchService {
 
   private final CollectionsSearchMapper searchMapper;
 
+  public enum TypeParam {
+    INSTITUTION,
+    COLLECTION;
+  }
+
   @Autowired
   public CollectionsSearchService(CollectionsSearchMapper searchMapper) {
     this.searchMapper = searchMapper;
   }
 
-  public List<CollectionsSearchResponse> search(String query, boolean highlight, int limit) {
-    List<SearchDto> dtos = searchMapper.search(query, highlight);
+  public List<CollectionsSearchResponse> search(
+      String query, boolean highlight, TypeParam type, Boolean displayOnNHCPortal, int limit) {
+    List<SearchDto> dtos =
+        searchMapper.search(
+            query, highlight, type != null ? type.name() : null, displayOnNHCPortal);
 
     // the query can return duplicates so we need an auxiliary map to filter duplicates
     Map<UUID, CollectionsSearchResponse> responsesMap = new HashMap<>();

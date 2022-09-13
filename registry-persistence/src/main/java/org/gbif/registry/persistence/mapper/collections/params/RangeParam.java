@@ -11,21 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.persistence.mapper.collections;
+package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
+import lombok.Data;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import org.apache.ibatis.annotations.Param;
-
-public interface CollectionsSearchMapper {
-
-  List<SearchDto> search(
-      @Nullable @Param("q") String query,
-      @Param("highlight") boolean highlight,
-      @Param("type") String type,
-      @Param("displayOnNHCPortal") Boolean displayOnNHCPortal);
+@Data
+public class RangeParam {
+  Integer lowerBound;
+  Integer higherBound;
+  Integer exactValue;
 }

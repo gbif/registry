@@ -13,49 +13,20 @@
  */
 package org.gbif.registry.service.collections;
 
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
-import org.gbif.api.model.collections.UserId;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
-import org.gbif.registry.events.collections.EventType;
-import org.gbif.registry.events.collections.MasterSourceMetadataAddedEvent;
-import org.gbif.registry.events.collections.ReplaceEntityEvent;
-import org.gbif.registry.events.collections.SubEntityCollectionEvent;
-import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
-import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
-import org.gbif.registry.persistence.mapper.collections.PrimaryEntityMapper;
+import org.gbif.registry.events.collections.*;
+import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.collections.*;
+import org.gbif.registry.persistence.mapper.collections.params.RangeParam;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
@@ -64,11 +35,13 @@ import org.gbif.ws.WebApplicationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
+import org.elasticsearch.common.Strings;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
@@ -77,15 +50,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.CONTACTS_FIELD_NAME;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
+import static org.gbif.registry.service.collections.utils.SearchUtils.NUMBER_SPECIMENS_RANGE;
+import static org.gbif.registry.service.collections.utils.SearchUtils.WILDCARD_SEARCH;
 
+@Slf4j
 @Validated
 public abstract class BasePrimaryCollectionEntityService<
         T extends
@@ -148,6 +123,10 @@ public abstract class BasePrimaryCollectionEntityService<
 
     if (entity.getMailingAddress() != null) {
       addressMapper.create(entity.getMailingAddress());
+    }
+
+    if (entity.getDisplayOnNHCPortal() == null) {
+      entity.setDisplayOnNHCPortal(true);
     }
 
     entity.setMasterSource(MasterSourceType.GRSCICOLL);
@@ -619,5 +598,33 @@ public abstract class BasePrimaryCollectionEntityService<
       throw new IllegalArgumentException(
           "Cannot set a deleted " + entityClass.getSimpleName() + " as master source");
     }
+  }
+
+  protected RangeParam parseNumberSpecimensParameter(String numberSpecimens) {
+    if (Strings.isNullOrEmpty(numberSpecimens)) {
+      return null;
+    }
+
+    RangeParam rangeParam = new RangeParam();
+    Matcher matcher = NUMBER_SPECIMENS_RANGE.matcher(numberSpecimens);
+    if (matcher.matches()) {
+      String lowerString = matcher.group(1);
+      if (!lowerString.equals(WILDCARD_SEARCH)) {
+        rangeParam.setLowerBound(Integer.valueOf(lowerString));
+      }
+
+      String higherString = matcher.group(2);
+      if (!higherString.equals(WILDCARD_SEARCH)) {
+        rangeParam.setHigherBound(Integer.valueOf(higherString));
+      }
+    } else {
+      try {
+        rangeParam.setExactValue(Integer.valueOf(numberSpecimens));
+      } catch (Exception ex) {
+        log.info("Invalid numberSpecimens range {}", numberSpecimens, ex);
+      }
+    }
+
+    return rangeParam;
   }
 }
