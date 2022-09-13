@@ -305,15 +305,15 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
             .size());
 
     assertEquals(
-      1,
-      institutionService
-        .list(
-          InstitutionSearchRequest.builder()
-            .displayOnNHCPortal(true)
-            .page(DEFAULT_PAGE)
-            .build())
-        .getResults()
-        .size());
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .displayOnNHCPortal(true)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
 
     // test numberSpecimens
     assertEquals(
