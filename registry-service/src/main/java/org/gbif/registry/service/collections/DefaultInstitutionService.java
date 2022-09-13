@@ -135,6 +135,7 @@ public class DefaultInstitutionService extends BasePrimaryCollectionEntityServic
             .disciplines(searchRequest.getDisciplines())
             .masterSourceType(searchRequest.getMasterSourceType())
             .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
+            .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
             .build();
 
     long total = institutionMapper.count(params);

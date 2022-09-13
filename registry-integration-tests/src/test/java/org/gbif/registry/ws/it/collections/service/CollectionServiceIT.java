@@ -127,6 +127,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collection1.setAddress(address);
     collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     collection1.setNumberSpecimens(100);
+    collection1.setDisplayOnNHCPortal(true);
     UUID key1 = collectionService.create(collection1);
 
     Collection collection2 = testData.newEntity();
@@ -375,6 +376,17 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         1,
         collectionService
             .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .displayOnNHCPortal(true)
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults()
             .size());
 

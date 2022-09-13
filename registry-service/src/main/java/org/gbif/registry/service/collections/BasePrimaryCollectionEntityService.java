@@ -125,6 +125,10 @@ public abstract class BasePrimaryCollectionEntityService<
       addressMapper.create(entity.getMailingAddress());
     }
 
+    if (entity.getDisplayOnNHCPortal() == null) {
+      entity.setDisplayOnNHCPortal(true);
+    }
+
     entity.setMasterSource(MasterSourceType.GRSCICOLL);
     entity.setKey(UUID.randomUUID());
     baseMapper.create(entity);

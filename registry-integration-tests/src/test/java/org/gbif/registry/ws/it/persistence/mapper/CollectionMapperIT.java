@@ -111,6 +111,7 @@ public class CollectionMapperIT extends BaseItTest {
         Collections.singletonList(new AlternativeCode("CODE2", "another code")));
     collection.setDivision("division");
     collection.setDepartment("department");
+    collection.setDisplayOnNHCPortal(true);
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);

@@ -110,6 +110,7 @@ public class InstitutionMapperIT extends BaseItTest {
     institution.setPhone(Collections.singletonList("1234"));
     institution.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode("CODE2", "another code")));
+    institution.setDisplayOnNHCPortal(true);
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");

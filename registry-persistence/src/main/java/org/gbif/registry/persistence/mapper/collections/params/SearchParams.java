@@ -44,4 +44,5 @@ public abstract class SearchParams {
   @Nullable Boolean active;
   @Nullable MasterSourceType masterSourceType;
   @Nullable RangeParam numberSpecimens;
+  @Nullable Boolean displayOnNHCPortal;
 }

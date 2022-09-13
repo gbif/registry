@@ -115,4 +115,5 @@
   <include file="liquibase/107-pipelines-identifier-type.xml" />
   <include file="liquibase/108-pipelines-event-types.xml" />
   <include file="liquibase/109-grscicoll-division-department.xml" />
+  <include file="liquibase/110-grscicoll-display-on-nhc-portal-field.xml" />
 </databaseChangeLog>
