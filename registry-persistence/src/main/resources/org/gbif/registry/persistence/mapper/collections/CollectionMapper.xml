@@ -269,6 +269,21 @@
     <if test="params.masterSourceType != null" >
       AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
     </if>
+    <if test="params.numberSpecimens != null" >
+      <choose>
+        <when test="params.numberSpecimens.exactValue != null">
+          AND c.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
+        </when>
+        <otherwise>
+          <if test="params.numberSpecimens.lowerBound != null" >
+            AND c.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
+          </if>
+          <if test="params.numberSpecimens.higherBound != null" >
+            AND c.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
+          </if>
+        </otherwise>
+      </choose>
+    </if>
     ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
@@ -363,6 +378,21 @@
     </if>
     <if test="params.masterSourceType != null" >
       AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
+    </if>
+    <if test="params.numberSpecimens != null" >
+      <choose>
+        <when test="params.numberSpecimens.exactValue != null">
+          AND c.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
+        </when>
+        <otherwise>
+          <if test="params.numberSpecimens.lowerBound != null" >
+            AND c.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
+          </if>
+          <if test="params.numberSpecimens.higherBound != null" >
+            AND c.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
+          </if>
+        </otherwise>
+      </choose>
     </if>
   </select>
 

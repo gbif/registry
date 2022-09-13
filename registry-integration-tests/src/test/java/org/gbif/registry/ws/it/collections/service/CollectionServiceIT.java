@@ -126,6 +126,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     address.setCountry(Country.DENMARK);
     collection1.setAddress(address);
     collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
+    collection1.setNumberSpecimens(100);
     UUID key1 = collectionService.create(collection1);
 
     Collection collection2 = testData.newEntity();
@@ -137,6 +138,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collection2.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
     collection2.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
     collection2.setPersonalCollection(false);
+    collection2.setNumberSpecimens(200);
     Address address2 = new Address();
     address2.setAddress("dummy address2");
     address2.setCity("city2");
@@ -376,13 +378,52 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
             .getResults()
             .size());
 
-    collectionService.delete(key2);
+    // test numberSpecimens
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder().numberSpecimens("100").page(DEFAULT_PAGE).build())
+            .getResults()
+            .size());
+
     assertEquals(
         0,
         collectionService
-            .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder().numberSpecimens("98").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
+
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .numberSpecimens("* , 100")
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .numberSpecimens("97,300")
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+
+    collectionService.delete(key2);
+    assertEquals(
+      0,
+      collectionService
+        .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+        .getResults()
+        .size());
   }
 
   @Test

@@ -19,6 +19,7 @@ import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
 
 import java.util.UUID;
@@ -90,6 +91,23 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
       } catch (Exception e) {
         throw new IllegalArgumentException("Invalid master source type: " + masterSourceTypeParam);
       }
+    }
+
+    String numberSpecimensParam = webRequest.getParameter("numberSpecimens");
+    if (!Strings.isNullOrEmpty(numberSpecimensParam)) {
+      boolean rangeMatch = SearchUtils.NUMBER_SPECIMENS_RANGE.matcher(numberSpecimensParam).find();
+      boolean numberMatch = true;
+      try {
+        Integer.parseInt(numberSpecimensParam);
+      } catch (NumberFormatException ex) {
+        numberMatch = false;
+      }
+      if (!rangeMatch && !numberMatch) {
+        throw new IllegalArgumentException(
+            "Invalid numberSpecimens parameter. Only a number or a range is accepted: "
+                + numberSpecimensParam);
+      }
+      request.setNumberSpecimens(numberSpecimensParam);
     }
   }
 }
