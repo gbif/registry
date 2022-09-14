@@ -18,6 +18,7 @@ import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,9 +41,8 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import liquibase.integration.spring.SpringLiquibase;
 
-/**
- * Runs the liquibase change logs against an external database.
- */
+/** Runs the liquibase change logs against an external database. */
+@Disabled
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {DbMigrationTest.Configuration.class})
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
