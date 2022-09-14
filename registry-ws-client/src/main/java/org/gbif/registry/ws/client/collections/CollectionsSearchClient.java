@@ -30,7 +30,7 @@ public interface CollectionsSearchClient {
   List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
-      @RequestParam(value = "type", required = false) TypeParam type,
+      @RequestParam(value = "entityType", required = false) TypeParam type,
       @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
       @RequestParam(value = "limit", defaultValue = "20") int limit);
 }
