@@ -6,7 +6,7 @@
   <!--
     Adds download type enum and column.
   -->
-  <changeSet id="112" author="fede">
+  <changeSet id="113" author="fede">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
       CREATE TYPE extension AS ENUM ('AUDUBON',
