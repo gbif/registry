@@ -72,6 +72,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     // State
     T entity = createEntity();
     entity.setMasterSource(MasterSourceType.GRSCICOLL);
+    entity.setDisplayOnNHCPortal(true);
 
     Address address = new Address();
     address.setCountry(Country.DENMARK);

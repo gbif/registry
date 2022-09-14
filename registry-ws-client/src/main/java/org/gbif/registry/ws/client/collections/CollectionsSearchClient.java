@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.registry.domain.collections.TypeParam;
 
 import java.util.List;
 
@@ -28,6 +29,8 @@ public interface CollectionsSearchClient {
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
-      @RequestParam(value = "highlight", defaultValue = "false") boolean highlight,
+      @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
+      @RequestParam(value = "type", required = false) TypeParam type,
+      @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
       @RequestParam(value = "limit", defaultValue = "20") int limit);
 }

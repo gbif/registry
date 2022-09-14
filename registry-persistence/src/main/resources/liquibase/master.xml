@@ -115,8 +115,8 @@
   <include file="liquibase/107-pipelines-identifier-type.xml" />
   <include file="liquibase/108-pipelines-event-types.xml" />
   <include file="liquibase/109-grscicoll-division-department.xml" />
-  <include file="liquibase/110-pipelines-event-types-hdfs.xml" />
-  <include file="liquibase/111-download-type.xml" />
-  <include file="liquibase/112-download-extensions.xml" />
-  <include file="liquibase/113-grscicoll-display-on-nhc-portal-field.xml" />
+  <include file="liquibase/110-grscicoll-display-on-nhc-portal-field.xml" />
+  <include file="liquibase/111-pipelines-event-types-hdfs.xml" />
+  <include file="liquibase/112-download-type.xml" />
+  <include file="liquibase/113-download-extensions.xml" />
 </databaseChangeLog>
