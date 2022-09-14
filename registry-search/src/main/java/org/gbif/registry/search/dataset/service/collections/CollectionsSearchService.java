@@ -14,6 +14,7 @@
 package org.gbif.registry.search.dataset.service.collections;
 
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 
@@ -33,18 +34,13 @@ public class CollectionsSearchService {
 
   private final CollectionsSearchMapper searchMapper;
 
-  public enum TypeParam {
-    INSTITUTION,
-    COLLECTION;
-  }
-
   @Autowired
   public CollectionsSearchService(CollectionsSearchMapper searchMapper) {
     this.searchMapper = searchMapper;
   }
 
   public List<CollectionsSearchResponse> search(
-      String query, boolean highlight, TypeParam type, Boolean displayOnNHCPortal, int limit) {
+    String query, boolean highlight, TypeParam type, Boolean displayOnNHCPortal, int limit) {
     List<SearchDto> dtos =
         searchMapper.search(
             query, highlight, type != null ? type.name() : null, displayOnNHCPortal);

@@ -35,8 +35,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.gbif.registry.search.dataset.service.collections.CollectionsSearchService.TypeParam.COLLECTION;
-import static org.gbif.registry.search.dataset.service.collections.CollectionsSearchService.TypeParam.INSTITUTION;
+import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
+import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
