@@ -127,7 +127,7 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
     collection1.setAddress(address);
     collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     collection1.setNumberSpecimens(100);
-    collection1.setDisplayOnNHCPortal(true);
+    collection1.setDisplayOnNHCPortal(false);
     UUID key1 = collectionService.create(collection1);
 
     Collection collection2 = testData.newEntity();

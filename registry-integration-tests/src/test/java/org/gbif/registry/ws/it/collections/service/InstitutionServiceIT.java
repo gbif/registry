@@ -106,7 +106,7 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
     address.setCountry(Country.DENMARK);
     institution1.setAddress(address);
     institution1.setNumberSpecimens(100);
-    institution1.setDisplayOnNHCPortal(true);
+    institution1.setDisplayOnNHCPortal(false);
     institution1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
     UUID key1 = institutionService.create(institution1);
 

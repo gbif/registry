@@ -67,7 +67,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
         .thenReturn(Collections.singletonList(response));
 
     List<CollectionsSearchResponse> responseReturned =
-        collectionsSearchClient.searchCollections(q, highlight, limit);
+        collectionsSearchClient.searchCollections(q, highlight, null, null, limit);
     assertEquals(1, responseReturned.size());
     assertEquals(response, responseReturned.get(0));
   }
