@@ -40,7 +40,7 @@ public class CollectionsSearchService {
   }
 
   public List<CollectionsSearchResponse> search(
-    String query, boolean highlight, TypeParam type, Boolean displayOnNHCPortal, int limit) {
+      String query, boolean highlight, TypeParam type, Boolean displayOnNHCPortal, int limit) {
     List<SearchDto> dtos =
         searchMapper.search(
             query, highlight, type != null ? type.name() : null, displayOnNHCPortal);
