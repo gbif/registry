@@ -617,7 +617,8 @@ public abstract class BaseChangeSuggestionService<
         suggestion.setChanges(changes);
         for (ChangeDto changeDto : dto.getChanges()) {
           // set suggested contacts in the current entity
-          if (changeDto.getFieldName().equals(CONTACTS_FIELD_NAME)) {
+          if (changeDto.getFieldName().equals(CONTACTS_FIELD_NAME)
+              && isContactPersonIndividualChange(changeDto)) {
             if (changeDto.getSuggested() == null) {
               // deleted contact
               int contactKey = ((Contact) changeDto.getPrevious()).getKey();
@@ -689,6 +690,15 @@ public abstract class BaseChangeSuggestionService<
     }
 
     return suggestion;
+  }
+
+  /**
+   * The way of handling changes in contacts changed and we need to differentiate between the old
+   * and the new way.
+   */
+  private boolean isContactPersonIndividualChange(ChangeDto changeDto) {
+    return (changeDto.getPrevious() != null && changeDto.getPrevious() instanceof Contact)
+        || (changeDto.getSuggested() != null && changeDto.getSuggested() instanceof Contact);
   }
 
   private Change changeDtoToChange(ChangeDto dto) {
