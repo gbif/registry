@@ -41,7 +41,9 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import liquibase.integration.spring.SpringLiquibase;
 
-/** Runs the liquibase change logs against an external database. */
+/**
+ * Runs the liquibase change logs against an external database.
+ */
 @Disabled
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = {DbMigrationTest.Configuration.class})
