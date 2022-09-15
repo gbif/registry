@@ -13,9 +13,19 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.suggestions.*;
+import org.gbif.api.model.collections.CollectionEntityType;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.PrimaryCollectionEntity;
+import org.gbif.api.model.collections.suggestions.Change;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -41,7 +51,16 @@ import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.common.Strings;
@@ -597,7 +616,8 @@ public abstract class BaseChangeSuggestionService<
         suggestion.setChanges(changes);
         for (ChangeDto changeDto : dto.getChanges()) {
           // set suggested contacts in the current entity
-          if (changeDto.getFieldName().equals(CONTACTS_FIELD_NAME)) {
+          if (changeDto.getFieldName().equals(CONTACTS_FIELD_NAME)
+              && isContactPersonIndividualChange(changeDto)) {
             if (changeDto.getSuggested() == null) {
               // deleted contact
               int contactKey = ((Contact) changeDto.getPrevious()).getKey();
@@ -669,6 +689,15 @@ public abstract class BaseChangeSuggestionService<
     }
 
     return suggestion;
+  }
+
+  /**
+   * The way of handling changes in contacts changed and we need to differentiate between the old
+   * and the new way.
+   */
+  private boolean isContactPersonIndividualChange(ChangeDto changeDto) {
+    return (changeDto.getPrevious() != null && changeDto.getPrevious() instanceof Contact)
+        || (changeDto.getSuggested() != null && changeDto.getSuggested() instanceof Contact);
   }
 
   private Change changeDtoToChange(ChangeDto dto) {
