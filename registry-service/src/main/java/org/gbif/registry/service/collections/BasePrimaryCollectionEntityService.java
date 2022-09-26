@@ -125,10 +125,6 @@ public abstract class BasePrimaryCollectionEntityService<
       addressMapper.create(entity.getMailingAddress());
     }
 
-    if (entity.getDisplayOnNHCPortal() == null) {
-      entity.setDisplayOnNHCPortal(true);
-    }
-
     entity.setMasterSource(MasterSourceType.GRSCICOLL);
     entity.setKey(UUID.randomUUID());
     baseMapper.create(entity);
@@ -559,6 +555,24 @@ public abstract class BasePrimaryCollectionEntityService<
   protected void checkCodeUpdate(T newEntity, T oldEntity) {
     if (newEntity.getCode() == null && oldEntity.getCode() != null) {
       throw new IllegalArgumentException("Not allowed to delete the code of a primary entity");
+    }
+  }
+
+  @Override
+  protected void preCreate(T entity) {
+    super.preCreate(entity);
+
+    if (entity.getDisplayOnNHCPortal() == null) {
+      entity.setDisplayOnNHCPortal(true);
+    }
+  }
+
+  @Override
+  protected void preUpdate(T entity) {
+    super.preUpdate(entity);
+
+    if (entity.getDisplayOnNHCPortal() == null) {
+      entity.setDisplayOnNHCPortal(true);
     }
   }
 
