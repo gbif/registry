@@ -104,9 +104,7 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
   }
 
   private boolean isMatchWithInstitutions(CollectionMatchedDto dto, Set<UUID> institutionMatches) {
-    return institutionMatches.isEmpty()
-        || dto.getInstitutionKey() == null
-        || institutionMatches.contains(dto.getInstitutionKey());
+    return institutionMatches.isEmpty() || institutionMatches.contains(dto.getInstitutionKey());
   }
 
   @Override

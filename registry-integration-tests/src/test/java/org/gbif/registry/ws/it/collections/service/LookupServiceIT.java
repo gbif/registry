@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -56,6 +57,7 @@ public class LookupServiceIT extends BaseServiceIT {
   private Collection c2 = new Collection();
   private Collection c3 = new Collection();
   private Collection c4 = new Collection();
+  private Collection c5 = new Collection();
 
   private final LookupService lookupService;
   private final InstitutionService institutionService;
@@ -132,6 +134,7 @@ public class LookupServiceIT extends BaseServiceIT {
     c3.setCode("ACT");
     c3.setName("Collection 3");
     c3.setActive(true);
+    c3.setInstitutionKey(i3.getKey());
     key = collectionService.create(c3);
     c3 = collectionService.get(key);
 
@@ -139,6 +142,11 @@ public class LookupServiceIT extends BaseServiceIT {
     c4.setName("Collection 4");
     key = collectionService.create(c4);
     c4 = collectionService.get(key);
+
+    c5.setCode("C5");
+    c5.setName("Collection 5");
+    key = collectionService.create(c5);
+    c5 = collectionService.get(key);
   }
 
   @Test
@@ -683,6 +691,40 @@ public class LookupServiceIT extends BaseServiceIT {
         result.getAlternativeMatches().getCollectionMatches();
     assertEquals(1, altCollections.size());
     assertEquals(c4.getKey(), altCollections.get(0).getEntityMatched().getKey());
+  }
+
+  @Test
+  public void instCollMismatchTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i3.getCode());
+    params.setCollectionCode(c5.getCode());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i3.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertTrue(institutionMatch.getEntityMatched().isActive());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.NONE, collectionMatch.getMatchType());
+    assertEquals(Match.Status.AMBIGUOUS_INSTITUTION_MISMATCH, collectionMatch.getStatus());
+
+    List<Match<CollectionMatched>> altCollections =
+      result.getAlternativeMatches().getCollectionMatches();
+    assertEquals(1, altCollections.size());
+    assertEquals(c5.getKey(), altCollections.get(0).getEntityMatched().getKey());
+    assertTrue(altCollections.get(0).getReasons().contains(Match.Reason.INST_COLL_MISMATCH));
+    assertTrue(altCollections.get(0).getReasons().contains(Match.Reason.CODE_MATCH));
   }
 
   private Dataset createDataset() {
