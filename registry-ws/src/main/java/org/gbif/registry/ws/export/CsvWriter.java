@@ -510,8 +510,7 @@ public class CsvWriter<T> {
               new AddressProcessor(), // mailingAddress: Address
               new AddressProcessor(), // address: Address
               new ListStringProcessor(), // additionalNames: List<String>
-              new Optional(
-                  new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601)), // foundingDate: Date
+              new Optional(new ParseInt()), // foundingDate: Date
               new CleanStringProcessor(), // geographicDescription: String
               new CleanStringProcessor(), // taxonomicDescription: String
               new Optional(new ParseInt()), // numberSpecimens: int

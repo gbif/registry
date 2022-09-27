@@ -64,16 +64,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CsvWriterTest {
 
-  /**
-   * Functional interface to test a single line.
-   */
+  /** Functional interface to test a single line. */
   private interface AssertElement<T> {
     void assertElement(T element, String[] line);
   }
 
-  /**
-   * Tests a report against a source list fo elements.
-   */
+  /** Tests a report against a source list fo elements. */
   private <T> void assertExport(
       List<T> source, StringWriter writer, CsvWriter csvWriter, AssertElement<T> assertElement) {
     String export = writer.toString();
@@ -94,9 +90,7 @@ public class CsvWriterTest {
                     lines[idx + 1].split(csvWriter.getPreference().getDelimiter().toString())));
   }
 
-  /**
-   * Test one DownloadStatistic against its expected exported data.
-   */
+  /** Test one DownloadStatistic against its expected exported data. */
   private void assertDownloadStatistics(DownloadStatistics downloadStatistics, String line[]) {
     assertEquals(downloadStatistics.getDatasetKey().toString(), line[0]);
     assertEquals(downloadStatistics.getTotalRecords(), Integer.parseInt(line[1]));
@@ -150,9 +144,7 @@ public class CsvWriterTest {
     return datasetSearchResult;
   }
 
-  /**
-   * Test one DatasetSearchResult against its expected exported data.
-   */
+  /** Test one DatasetSearchResult against its expected exported data. */
   private void assertDatasetSearchResult(DatasetSearchResult datasetSearchResult, String[] line) {
     assertEquals(datasetSearchResult.getKey().toString(), line[0]);
     assertEquals(datasetSearchResult.getTitle(), line[1]);
@@ -199,9 +191,7 @@ public class CsvWriterTest {
     assertExport(datasets, writer, csvWriter, this::assertDatasetSearchResult);
   }
 
-  /**
-   * Test one DatasetOccurrenceDownloadUsage against its expected exported data.
-   */
+  /** Test one DatasetOccurrenceDownloadUsage against its expected exported data. */
   private void assertDatasetOccurrenceDownloadUsage(
       DatasetOccurrenceDownloadUsage downloadUsage, String[] line) {
     assertEquals(downloadUsage.getDatasetDOI().toString(), line[0]);
@@ -211,9 +201,7 @@ public class CsvWriterTest {
     assertEquals(downloadUsage.getNumberRecords(), Long.parseLong(line[4].replace("\r", "")));
   }
 
-  /**
-   * Generates test instances of DatasetOccurrenceDownloadUsage.
-   */
+  /** Generates test instances of DatasetOccurrenceDownloadUsage. */
   private static DatasetOccurrenceDownloadUsage newDatasetOccurrenceDownloadUsageTest(
       int consecutive) {
     DatasetOccurrenceDownloadUsage downloadUsage = new DatasetOccurrenceDownloadUsage();
@@ -244,9 +232,7 @@ public class CsvWriterTest {
     assertExport(downloadUsages, writer, csvWriter, this::assertDatasetOccurrenceDownloadUsage);
   }
 
-  /**
-   * Generates test instances of CollectionView.
-   */
+  /** Generates test instances of CollectionView. */
   @SneakyThrows
   private static CollectionView newCollectionView(int consecutive) {
     CollectionView collectionView = new CollectionView();
@@ -348,9 +334,7 @@ public class CsvWriterTest {
     assertExport(collections, writer, csvWriter, this::assertCollection);
   }
 
-  /**
-   * Test one CollectionView against its expected exported data.
-   */
+  /** Test one CollectionView against its expected exported data. */
   private void assertCollection(CollectionView collectionView, String[] line) {
     SimpleDateFormat dateFormat = new SimpleDateFormat(StdDateFormat.DATE_FORMAT_STR_ISO8601);
     assertEquals(collectionView.getCollection().getKey().toString(), line[0]);
@@ -441,9 +425,7 @@ public class CsvWriterTest {
         collectionView.getCollection().getReplacedBy().toString(), line[41].replace("\r", ""));
   }
 
-  /**
-   * Generates test instances of Institution.
-   */
+  /** Generates test instances of Institution. */
   @SneakyThrows
   private static Institution newInstitution(int consecutive) {
     Institution institution = new Institution();
@@ -485,7 +467,7 @@ public class CsvWriterTest {
     institution.setDescription("Institution description" + consecutive);
     institution.setGeographicDescription("Geo description" + consecutive);
     institution.setHomepage(new URI("http://coll" + consecutive + ".org"));
-    institution.setFoundingDate(new Date());
+    institution.setFoundingDate(2010);
 
     Address mailingAddress = new Address();
     mailingAddress.setAddress("Universitetsparken 15");
@@ -548,9 +530,7 @@ public class CsvWriterTest {
     assertExport(institutions, writer, csvWriter, this::assertInstitution);
   }
 
-  /**
-   * Test one Institution against its expected exported data.
-   */
+  /** Test one Institution against its expected exported data. */
   private void assertInstitution(Institution institution, String[] line) {
     SimpleDateFormat dateFormat = new SimpleDateFormat(StdDateFormat.DATE_FORMAT_STR_ISO8601);
 
@@ -575,9 +555,7 @@ public class CsvWriterTest {
     assertEquals(CsvWriter.AddressProcessor.toString(institution.getAddress()), line[17]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(institution.getAdditionalNames()), line[18]);
-    assertEquals(
-        Optional.ofNullable(institution.getFoundingDate()).map(dateFormat::format).orElse(""),
-        line[19]);
+    assertEquals(Integer.toString(institution.getFoundingDate()), line[19]);
     assertEquals(institution.getGeographicDescription(), line[20]);
     assertEquals(institution.getTaxonomicDescription(), line[21]);
     assertEquals(Integer.toString(institution.getNumberSpecimens()), line[22]);

@@ -151,10 +151,6 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         && (dto.getAddressCountry() == country || dto.getMailingAddressCountry() == country);
   }
 
-  protected boolean isEnoughMatches(LookupParams params, Matches<R> matches) {
-    return !matches.isEmpty() && !params.isVerbose();
-  }
-
   protected Set<Match<R>> filterMatches(
       Set<Match<R>> matches, Predicate<Match<R>> filterCondition) {
     return filterCondition != null
