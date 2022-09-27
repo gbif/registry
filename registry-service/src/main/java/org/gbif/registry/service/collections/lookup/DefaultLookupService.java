@@ -13,15 +13,11 @@
  */
 package org.gbif.registry.service.collections.lookup;
 
-import org.gbif.api.model.collections.lookup.AlternativeMatches;
-import org.gbif.api.model.collections.lookup.CollectionMatched;
-import org.gbif.api.model.collections.lookup.InstitutionMatched;
-import org.gbif.api.model.collections.lookup.LookupParams;
-import org.gbif.api.model.collections.lookup.LookupResult;
-import org.gbif.api.model.collections.lookup.Match;
+import org.gbif.api.model.collections.lookup.*;
 import org.gbif.registry.service.collections.lookup.matchers.CollectionMatcher;
 import org.gbif.registry.service.collections.lookup.matchers.InstitutionMatcher;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.UUID;
@@ -76,6 +72,13 @@ public class DefaultLookupService implements LookupService {
   }
 
   private Set<UUID> getInstitutionsMatched(Matches<InstitutionMatched> institutionMatches) {
+    if (institutionMatches.getAcceptedMatch() != null
+        && institutionMatches.getAcceptedMatch().getMatchType() != Match.MatchType.NONE) {
+      // if there is an accepted match we only use this one
+      return Collections.singleton(
+          institutionMatches.getAcceptedMatch().getEntityMatched().getKey());
+    }
+
     return institutionMatches.getAllMatches().stream()
         .map(m -> m.getEntityMatched().getKey())
         .collect(Collectors.toSet());
