@@ -37,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -720,7 +719,7 @@ public class LookupServiceIT extends BaseServiceIT {
     assertEquals(Match.Status.AMBIGUOUS_INSTITUTION_MISMATCH, collectionMatch.getStatus());
 
     List<Match<CollectionMatched>> altCollections =
-      result.getAlternativeMatches().getCollectionMatches();
+        result.getAlternativeMatches().getCollectionMatches();
     assertEquals(1, altCollections.size());
     assertEquals(c5.getKey(), altCollections.get(0).getEntityMatched().getKey());
     assertTrue(altCollections.get(0).getReasons().contains(Match.Reason.INST_COLL_MISMATCH));
