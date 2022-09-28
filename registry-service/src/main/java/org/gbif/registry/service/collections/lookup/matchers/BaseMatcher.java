@@ -14,13 +14,11 @@
 package org.gbif.registry.service.collections.lookup.matchers;
 
 import org.gbif.api.model.collections.lookup.EntityMatched;
-import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.BaseEntityMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
-import org.gbif.registry.service.collections.lookup.Matches;
 
 import java.util.Arrays;
 import java.util.Collections;
