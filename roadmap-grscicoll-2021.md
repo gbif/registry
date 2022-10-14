@@ -49,3 +49,13 @@ There are potentially multiple sources of truth for the metadata in the catalogu
     *   Capability for any user to “suggest a change”
 *   Explore citation tracking based on data mediated through GBIF for GRSciColl institutions and collections. For more information, follow the discussion here [[REG-323](https://github.com/gbif/registry/issues/323)].
 *   Launch the new site considering aspects of branding/naming with a call for institutions to review their data and clear instructions on how to suggest edits.
+
+
+## Areas not covered in this the current roadmap
+
+This is a non exhaustive list of items that are not part of our immediate priorities in 2021 but that we aim to address in the longer term (possibly starting end 2021):
+
+*   Explore adding DOIs or similar to institutions and collections [[REG-320](https://github.com/gbif/registry/issues/320)]
+*   Explore synchronization with the NCBI BioCollections [[REG-307](https://github.com/gbif/registry/issues/307)] 
+*   Explore synchronization with CETAF [[REG-322](https://github.com/gbif/registry/issues/322)] 
+*   Explore integration of external identifiers [[REG-274]](https://github.com/gbif/registry/issues/274)
