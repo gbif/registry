@@ -341,7 +341,7 @@ public class DatasetJsonConverter {
     String datasetKey = datasetJsonNode.get("key").textValue();
     Long count = gbifWsClient.getDatasetRecordCount(datasetKey);
     if (count == null) {
-      log.warn("Datatset {} with 0 count", datasetKey);
+      log.warn("Dataset {} with 0 count", datasetKey);
     }
     addRecordCounts(datasetJsonNode, count);
   }
