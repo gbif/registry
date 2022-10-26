@@ -6,7 +6,7 @@
   <changeSet id="115" author="fmendez" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-        ALTER TYPE enum_endpoint_type ADD VALUE 'CAMTRAP_DP_v_beta_0_1';
+        ALTER TYPE enum_endpoint_type ADD VALUE 'CAMTRAP_DP_v_0_4';
       ]]>
     </sql>
   </changeSet>
