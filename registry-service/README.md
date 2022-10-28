@@ -50,10 +50,11 @@ A fuzzy match happens when some fields match but not the `code` and the `identif
 - The `identifier` param matches with the `name` of an entity. E.g.: `institutionId=University of Copenhagen`
 
 Additionally, if there is more than 1 fuzzy match we try to check if one of the matches is better than the others
-and we can set it as the accepted one. This works as follows:
+and we can set it as the accepted one. It checks these conditions in this order:
 1. If there is only 1 entity where the `identifier` matches we take it
-2. If there is only 1 entity where either the `code` or the `identifier` matches **and** another field matches we take it.
+2. If there is only 1 entity where either the `code` or the `identifier` matches **and** another field matches we take it
 3. If the `country` param was provided and there is only 1 entity where the `country` matches we take it
+4. If there is only one match that is set as `active` we take it
 
 Furthermore, there are some specific conditions based on the type of the entities:
 - Institutions: if the `ownerInstitutionCode` is different than the institutions matched we discard them and
