@@ -6,7 +6,7 @@
   <!--
     Change founding_date from timestamp to integer to store only the year
   -->
-  <changeSet id="115" author="mlopez">
+  <changeSet id="116" author="mlopez">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
         DROP TABLE collection_collection_person;
