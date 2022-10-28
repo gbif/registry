@@ -14,6 +14,19 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.SourceableField;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
@@ -27,6 +40,7 @@ import org.gbif.api.vocabulary.TagNamespace;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,7 +50,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 public interface BaseCollectionEntityClient<
-        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
+        T extends CollectionEntity & Taggable & Identifiable & MachineTaggable,
+        R extends ChangeSuggestion<T>>
     extends CrudClient<T> {
 
   @RequestMapping(
@@ -142,4 +157,141 @@ public interface BaseCollectionEntityClient<
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   List<Comment> listComments(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/contact",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void addContact(@PathVariable("key") UUID key, @RequestBody UUID personKey);
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contact/{personKey}")
+  void removeContact(@PathVariable("key") UUID key, @PathVariable("personKey") UUID personKey);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/contactPerson",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int addContactPerson(@PathVariable("key") UUID entityKey, @RequestBody Contact contact);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "{key}/contactPerson/{contactKey}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateContactPersonResource(
+      @PathVariable("key") UUID entityKey,
+      @PathVariable("contactKey") int contactKey,
+      @RequestBody Contact contact);
+
+  default void updateContactPerson(UUID entityKey, Contact contact) {
+    updateContactPersonResource(entityKey, contact.getKey(), contact);
+  }
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/contactPerson/{contactKey}")
+  void removeContactPerson(
+      @PathVariable("key") UUID entityKey, @PathVariable("contactKey") int contactKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/contactPerson",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  List<Contact> listContactPersons(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/occurrenceMapping",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int addOccurrenceMapping(
+      @PathVariable("key") UUID key, @RequestBody OccurrenceMapping occurrenceMapping);
+
+  @RequestMapping(
+      method = RequestMethod.DELETE,
+      value = "{key}/occurrenceMapping/{occurrenceMappingKey}")
+  void deleteOccurrenceMapping(
+      @PathVariable("key") UUID key,
+      @PathVariable("occurrenceMappingKey") int occurrenceMappingKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/occurrenceMapping",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "possibleDuplicates",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  DuplicatesResult findPossibleDuplicates(@SpringQueryMap DuplicatesRequest request);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/merge",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "changeSuggestion",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int createChangeSuggestion(@RequestBody R createSuggestion);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "changeSuggestion/{key}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateChangeSuggestion(@PathVariable("key") int key, @RequestBody R suggestion);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "changeSuggestion/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  R getChangeSuggestion(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "changeSuggestion",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  PagingResponse<R> listChangeSuggestion(
+      @RequestParam(value = "status", required = false) Status status,
+      @RequestParam(value = "type", required = false) Type type,
+      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      @RequestParam(value = "entityKey", required = false) UUID entityKey,
+      @SpringQueryMap Pageable page);
+
+  @RequestMapping(method = RequestMethod.PUT, value = "changeSuggestion/{key}/discard")
+  void discardChangeSuggestion(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "changeSuggestion/{key}/apply",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "sourceableFields",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  List<SourceableField> getSourceableFields();
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "{key}/masterSourceMetadata",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  int addMasterSourceMetadata(
+      @PathVariable("key") UUID entityKey, @RequestBody MasterSourceMetadata masterSourceMetadata);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/masterSourceMetadata",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  MasterSourceMetadata getMasterSourceMetadata(@PathVariable("key") UUID entityKey);
+
+  @RequestMapping(method = RequestMethod.DELETE, value = "{key}/masterSourceMetadata")
+  void deleteMasterSourceMetadata(@PathVariable("key") UUID entityKey);
 }

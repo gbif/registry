@@ -16,7 +16,6 @@ package org.gbif.registry.security.grscicoll;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.Type;
@@ -28,7 +27,6 @@ import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
@@ -66,12 +64,10 @@ public class GrSciCollEditorAuthorizationFilterTest {
 
   private static final UUID INST_KEY = UUID.randomUUID();
   private static final UUID COLL_KEY = UUID.randomUUID();
-  private static final UUID PERSON_KEY = UUID.randomUUID();
   private static final int IH_IDENTIFIER_KEY = 1;
   private static final int LSID_IDENTIFIER_KEY = 2;
   private static final Institution INSTITUTION = new Institution();
   private static final Collection COLLECTION = new Collection();
-  private static final Person PERSON = new Person();
   private static final Country COUNTRY = Country.SPAIN;
   private static final String NAMESPACE = "ns.gbif.org";
   private static final MachineTag MACHINE_TAG = new MachineTag(NAMESPACE, "test", "value");
@@ -109,8 +105,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
     INSTITUTION.setCode(UUID.randomUUID().toString());
     INSTITUTION.setName(UUID.randomUUID().toString());
     INSTITUTION.setAddress(address);
-    PERSON.setKey(PERSON_KEY);
-    PERSON.setFirstName("Test name");
   }
 
   private final GbifHttpServletRequestWrapper mockRequest =
@@ -123,7 +117,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
   private final UserRightsMapper mockUserRightsMapper = Mockito.mock(UserRightsMapper.class);
   private final CollectionMapper mockCollectionMapper = Mockito.mock(CollectionMapper.class);
   private final InstitutionMapper mockInstitutionMapper = Mockito.mock(InstitutionMapper.class);
-  private final PersonMapper mockPersonMapper = Mockito.mock(PersonMapper.class);
   private final ChangeSuggestionMapper changeSuggestionMapper =
       Mockito.mock(ChangeSuggestionMapper.class);
   private final Authentication mockAuthentication = Mockito.mock(Authentication.class);
@@ -133,7 +126,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
           mockUserRightsMapper,
           mockCollectionMapper,
           mockInstitutionMapper,
-          mockPersonMapper,
           changeSuggestionMapper,
           objectMapper);
 
@@ -736,47 +728,6 @@ public class GrSciCollEditorAuthorizationFilterTest {
     when(mockRequest.getRequestURI()).thenReturn("/grscicoll/person/");
     when(mockRequest.getMethod()).thenReturn("POST");
     when(mockRequest.getContent()).thenReturn("{\"key\": " + UUID.randomUUID() + "}");
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-
-    // WHEN, THEN
-    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
-  }
-
-  @Test
-  public void updatePersonAsEditorTest() throws JsonProcessingException {
-    // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/person/" + PERSON_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(PERSON));
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
-
-    // WHEN, THEN
-    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
-  }
-
-  @Test
-  public void updatePersonAsMediatorTest() throws JsonProcessingException {
-    // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/person/" + PERSON_KEY);
-    when(mockRequest.getMethod()).thenReturn("PUT");
-    when(mockRequest.getContent()).thenReturn(objectMapper.writeValueAsString(PERSON));
-    when(mockAuthentication.getName()).thenReturn(USERNAME);
-    doReturn(ROLES_GRSCICOLL_MEDIATOR_ONLY).when(mockAuthentication).getAuthorities();
-
-    // WHEN, THEN
-    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
-  }
-
-  @Test
-  public void deletePersonAsEditorTest() throws JsonProcessingException {
-    // GIVEN
-    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
-    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/person/" + PERSON_KEY);
-    when(mockRequest.getMethod()).thenReturn("DELETE");
     when(mockAuthentication.getName()).thenReturn(USERNAME);
     doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
 

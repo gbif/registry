@@ -14,18 +14,18 @@
 package org.gbif.registry.service.collections.merge;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
-import org.gbif.api.service.collections.PrimaryCollectionEntityService;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 
 import java.lang.reflect.InvocationTargetException;
@@ -52,13 +52,13 @@ import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasE
 
 public abstract class BaseMergeService<
         T extends
-            PrimaryCollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable
-                & Contactable & Taggable & Commentable>
+            CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
+                & Taggable & Commentable>
     implements MergeService<T> {
 
-  protected final PrimaryCollectionEntityService<T> primaryEntityService;
+  protected final CollectionEntityService<T> primaryEntityService;
 
-  protected BaseMergeService(PrimaryCollectionEntityService<T> primaryEntityService) {
+  protected BaseMergeService(CollectionEntityService<T> primaryEntityService) {
     this.primaryEntityService = primaryEntityService;
   }
 
@@ -134,12 +134,6 @@ public abstract class BaseMergeService<
               entityToReplace.getMasterSourceMetadata().getSource(),
               entityToReplace.getMasterSourceMetadata().getSourceId()));
     }
-
-    // FIXME: to be removed in the future, contacts are deprecated
-    // merge contacts
-    entityToReplace.getContacts().stream()
-        .filter(c -> !replacement.getContacts().contains(c))
-        .forEach(c -> primaryEntityService.addContact(replacementKey, c.getKey()));
 
     // merge contact persons
     entityToReplace.getContactPersons().stream()

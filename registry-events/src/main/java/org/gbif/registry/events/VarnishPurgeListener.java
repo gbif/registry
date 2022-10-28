@@ -14,17 +14,12 @@
 package org.gbif.registry.events;
 
 import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
@@ -147,7 +142,6 @@ public class VarnishPurgeListener {
   private final DatasetService datasetService;
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
-  private final PersonService personService;
   private final VarnishPurger purger;
   private static final Joiner PATH_JOINER = Joiner.on("/").skipNulls();
 
@@ -159,14 +153,12 @@ public class VarnishPurgeListener {
       InstallationService installationService,
       DatasetService datasetService,
       InstitutionService institutionService,
-      CollectionService collectionService,
-      PersonService personService) {
+      CollectionService collectionService) {
     this.organizationService = organizationService;
     this.installationService = installationService;
     this.datasetService = datasetService;
     this.institutionService = institutionService;
     this.collectionService = collectionService;
-    this.personService = personService;
     eventManager.register(this);
 
     purger = new VarnishPurger(client, apiBaseUrl);
@@ -234,11 +226,6 @@ public class VarnishPurgeListener {
     purgeEntityAndBanLists(
         path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
         event.getNewObject().getKey());
-
-    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
-      cascadePersonChange((Person) event.getNewObject());
-    }
-
     purger.ban("grscicoll/search");
   }
 
@@ -248,11 +235,6 @@ public class VarnishPurgeListener {
     purgeEntityAndBanLists(
         path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
         event.getOldObject().getKey());
-
-    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
-      cascadePersonChange((Person) event.getOldObject());
-    }
-
     purger.ban("grscicoll/search");
   }
 
@@ -262,11 +244,6 @@ public class VarnishPurgeListener {
     purgeEntityAndBanLists(
         path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
         event.getOldObject().getKey());
-
-    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
-      cascadePersonChange((Person) event.getOldObject());
-    }
-
     purger.ban("grscicoll/search");
   }
 
@@ -285,11 +262,6 @@ public class VarnishPurgeListener {
           path("grscicoll", event.getCollectionEntityType().name().toLowerCase()),
           event.getCollectionEntityKey());
     }
-
-    if (event.getCollectionEntityType() == CollectionEntityType.PERSON) {
-      cascadePersonChange(personService.get(event.getCollectionEntityKey()));
-    }
-
     purger.ban("grscicoll/search");
   }
 
@@ -365,27 +337,6 @@ public class VarnishPurgeListener {
       nodekeys.add(o.getEndorsingNodeKey());
     }
     purger.ban(String.format("%node/%s/organization", purger.anyKey(nodekeys)));
-  }
-
-  private void cascadePersonChange(Person... persons) {
-    Set<UUID> collectionKeys = new UUIDHashSet();
-    Set<UUID> institutionKeys = new UUIDHashSet();
-    for (Person p : persons) {
-      collectionService
-          .list(CollectionSearchRequest.builder().contact(p.getKey()).build())
-          .getResults()
-          .forEach(c -> collectionKeys.add(c.getCollection().getKey()));
-
-      institutionService
-          .list(InstitutionSearchRequest.builder().contact(p.getKey()).build())
-          .getResults()
-          .forEach(i -> institutionKeys.add(i.getKey()));
-    }
-
-    // /collection/{collectionKey}/contact BAN
-    purger.ban(String.format("grscicoll/collection/%s/contact", purger.anyKey(collectionKeys)));
-    // /institution/{institutionKey}/contact BAN
-    purger.ban(String.format("grscicoll/institution/%s/contact", purger.anyKey(institutionKeys)));
   }
 
   private void cascadeDerivedDatasetChange(DerivedDataset derivedDataset) {

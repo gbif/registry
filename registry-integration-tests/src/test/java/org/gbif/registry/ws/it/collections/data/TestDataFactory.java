@@ -16,15 +16,12 @@ package org.gbif.registry.ws.it.collections.data;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.net.URI;
 import java.util.Collections;
 import java.util.UUID;
-
-import static org.gbif.registry.ws.it.fixtures.TestConstants.WS_TEST;
 
 public class TestDataFactory {
 
@@ -35,8 +32,6 @@ public class TestDataFactory {
       return (TestData<T>) new InstitutionTestData();
     } else if (clazz.isAssignableFrom(Collection.class)) {
       return (TestData<T>) new CollectionTestData();
-    } else if (clazz.isAssignableFrom(Person.class)) {
-      return (TestData<T>) new PersonTestData();
     }
     throw new UnsupportedOperationException();
   }
@@ -116,47 +111,6 @@ public class TestDataFactory {
     @Override
     public Institution newInvalidEntity() {
       return new Institution();
-    }
-  }
-
-  public static class PersonTestData implements TestData<Person> {
-
-    public static final String FIRST_NAME = "first name";
-    public static final String LAST_NAME = "last name";
-    public static final String POSITION = "position";
-    public static final String PHONE = "134235435";
-    public static final String EMAIL = "dummy@dummy.com";
-
-    public static final String FIRST_NAME_UPDATED = "first name updated";
-    public static final String POSITION_UPDATED = "new position";
-    public static final String PHONE_UPDATED = "134235433";
-
-    private PersonTestData() {}
-
-    @Override
-    public Person newEntity() {
-      Person person = new Person();
-      person.setFirstName(FIRST_NAME);
-      person.setLastName(LAST_NAME);
-      person.setPosition(POSITION);
-      person.setPhone(PHONE);
-      person.setEmail(EMAIL);
-      person.setCreatedBy(WS_TEST);
-      person.setModifiedBy(WS_TEST);
-      return person;
-    }
-
-    @Override
-    public Person updateEntity(Person person) {
-      person.setFirstName(FIRST_NAME_UPDATED);
-      person.setPosition(POSITION_UPDATED);
-      person.setPhone(PHONE_UPDATED);
-      return person;
-    }
-
-    @Override
-    public Person newInvalidEntity() {
-      return new Person();
     }
   }
 }

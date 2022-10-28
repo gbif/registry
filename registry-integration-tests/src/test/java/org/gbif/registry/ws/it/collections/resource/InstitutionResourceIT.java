@@ -26,7 +26,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
@@ -55,7 +54,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class InstitutionResourceIT
-    extends PrimaryCollectionEntityResourceIT<Institution, InstitutionChangeSuggestion> {
+    extends BaseCollectionEntityResourceIT<Institution, InstitutionChangeSuggestion> {
 
   @MockBean private InstitutionService institutionService;
 
@@ -161,11 +160,6 @@ public class InstitutionResourceIT
   }
 
   @Override
-  protected PrimaryCollectionEntityService<Institution> getMockPrimaryEntityService() {
-    return institutionService;
-  }
-
-  @Override
   protected DuplicatesService getMockDuplicatesService() {
     return institutionDuplicatesService;
   }
@@ -202,7 +196,7 @@ public class InstitutionResourceIT
   }
 
   @Override
-  protected CollectionEntityService<Institution> getMockBaseService() {
+  protected CollectionEntityService<Institution> getMockCollectionEntityService() {
     return institutionService;
   }
 }

@@ -26,7 +26,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
@@ -56,7 +55,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class CollectionResourceIT
-    extends PrimaryCollectionEntityResourceIT<Collection, CollectionChangeSuggestion> {
+    extends BaseCollectionEntityResourceIT<Collection, CollectionChangeSuggestion> {
 
   @MockBean private CollectionService collectionService;
 
@@ -135,11 +134,6 @@ public class CollectionResourceIT
   }
 
   @Override
-  protected PrimaryCollectionEntityService<Collection> getMockPrimaryEntityService() {
-    return collectionService;
-  }
-
-  @Override
   protected DuplicatesService getMockDuplicatesService() {
     return collectionDuplicatesService;
   }
@@ -192,7 +186,7 @@ public class CollectionResourceIT
   }
 
   @Override
-  protected CollectionEntityService<Collection> getMockBaseService() {
+  protected CollectionEntityService<Collection> getMockCollectionEntityService() {
     return collectionService;
   }
 }

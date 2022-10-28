@@ -13,7 +13,23 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.duplicates.Duplicate;
+import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
+import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
@@ -24,7 +40,12 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CollectionEntityService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.service.collections.duplicates.DuplicatesService;
+import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.it.collections.data.TestData;
 import org.gbif.registry.ws.it.collections.data.TestDataFactory;
@@ -32,6 +53,8 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -45,7 +68,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -54,10 +83,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 abstract class BaseCollectionEntityResourceIT<
         T extends
             CollectionEntity & Identifiable & Taggable & MachineTaggable & Commentable
-                & LenientEquals<T>>
+                & LenientEquals<T>,
+        R extends ChangeSuggestion<T>>
     extends BaseResourceIT {
 
-  protected final BaseCollectionEntityClient<T> baseClient;
+  protected final BaseCollectionEntityClient<T, R> baseClient;
   protected final TestData<T> testData;
   protected final Class<T> paramType;
 
@@ -65,7 +95,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Autowired protected MockMvc mockMvc;
 
   public BaseCollectionEntityResourceIT(
-      Class<? extends BaseCollectionEntityClient<T>> cls,
+      Class<? extends BaseCollectionEntityClient<T, R>> cls,
       SimplePrincipalProvider simplePrincipalProvider,
       RequestTestFixture requestTestFixture,
       Class<T> paramType,
@@ -82,7 +112,7 @@ abstract class BaseCollectionEntityResourceIT<
     T entity = testData.newEntity();
     UUID entityKey = UUID.randomUUID();
 
-    when(getMockBaseService().create(entity)).thenReturn(entityKey);
+    when(getMockCollectionEntityService().create(entity)).thenReturn(entityKey);
     UUID key = baseClient.create(entity);
     assertEquals(entityKey, key);
 
@@ -93,7 +123,7 @@ abstract class BaseCollectionEntityResourceIT<
 
     // update
     entity = testData.updateEntity(entitySaved);
-    doNothing().when(getMockBaseService()).update(entity);
+    doNothing().when(getMockCollectionEntityService()).update(entity);
     baseClient.update(entity);
 
     mockGetEntity(entityKey, entity);
@@ -101,7 +131,7 @@ abstract class BaseCollectionEntityResourceIT<
     assertTrue(entity.lenientEquals(entitySaved));
 
     // delete
-    doNothing().when(getMockBaseService()).delete(key);
+    doNothing().when(getMockCollectionEntityService()).delete(key);
     baseClient.delete(key);
 
     entity.setDeleted(new Date());
@@ -186,19 +216,20 @@ abstract class BaseCollectionEntityResourceIT<
     tag.setValue("value");
 
     int tagKey = 1;
-    when(getMockBaseService().addTag(key, tag)).thenReturn(tagKey);
+    when(getMockCollectionEntityService().addTag(key, tag)).thenReturn(tagKey);
     int returnedKey = baseClient.addTag(key, tag);
     assertEquals(tagKey, returnedKey);
     tag.setKey(returnedKey);
 
-    when(getMockBaseService().listTags(key, null)).thenReturn(Collections.singletonList(tag));
+    when(getMockCollectionEntityService().listTags(key, null))
+        .thenReturn(Collections.singletonList(tag));
 
     List<Tag> tagsReturned = baseClient.listTags(key, null);
     assertEquals(1, tagsReturned.size());
     assertEquals(tagKey, tagsReturned.get(0).getKey());
     assertEquals("value", tagsReturned.get(0).getValue());
 
-    doNothing().when(getMockBaseService()).deleteTag(key, tagKey);
+    doNothing().when(getMockCollectionEntityService()).deleteTag(key, tagKey);
     assertDoesNotThrow(() -> baseClient.deleteTag(key, tagKey));
   }
 
@@ -207,20 +238,21 @@ abstract class BaseCollectionEntityResourceIT<
     UUID entityKey = UUID.randomUUID();
     MachineTag machineTag = new MachineTag("ns", "name", "value");
     int machineTagKey = 1;
-    when(getMockBaseService().addMachineTag(entityKey, machineTag)).thenReturn(machineTagKey);
+    when(getMockCollectionEntityService().addMachineTag(entityKey, machineTag))
+        .thenReturn(machineTagKey);
 
     int machineTagKeyReturned = baseClient.addMachineTag(entityKey, machineTag);
     assertEquals(machineTagKey, machineTagKeyReturned);
     machineTag.setKey(machineTagKeyReturned);
 
-    when(getMockBaseService().listMachineTags(entityKey))
+    when(getMockCollectionEntityService().listMachineTags(entityKey))
         .thenReturn(Collections.singletonList(machineTag));
     List<MachineTag> machineTags = baseClient.listMachineTags(entityKey);
     assertEquals(1, machineTags.size());
     assertEquals(machineTagKey, machineTags.get(0).getKey());
     assertEquals("value", machineTags.get(0).getValue());
 
-    doNothing().when(getMockBaseService()).deleteMachineTag(entityKey, machineTagKey);
+    doNothing().when(getMockCollectionEntityService()).deleteMachineTag(entityKey, machineTagKey);
     assertDoesNotThrow(() -> baseClient.deleteMachineTag(entityKey, machineTagKey));
   }
 
@@ -233,12 +265,13 @@ abstract class BaseCollectionEntityResourceIT<
     identifier.setType(IdentifierType.LSID);
 
     int identifierKey = 1;
-    when(getMockBaseService().addIdentifier(entityKey, identifier)).thenReturn(identifierKey);
+    when(getMockCollectionEntityService().addIdentifier(entityKey, identifier))
+        .thenReturn(identifierKey);
     int identifierKeyReturned = baseClient.addIdentifier(entityKey, identifier);
     assertEquals(identifierKey, identifierKeyReturned);
     identifier.setKey(identifierKeyReturned);
 
-    when(getMockBaseService().listIdentifiers(entityKey))
+    when(getMockCollectionEntityService().listIdentifiers(entityKey))
         .thenReturn(Collections.singletonList(identifier));
     List<Identifier> identifiers = baseClient.listIdentifiers(entityKey);
     assertEquals(1, identifiers.size());
@@ -246,7 +279,7 @@ abstract class BaseCollectionEntityResourceIT<
     assertEquals("identifier", identifiers.get(0).getIdentifier());
     assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
 
-    doNothing().when(getMockBaseService()).deleteIdentifier(entityKey, identifierKey);
+    doNothing().when(getMockCollectionEntityService()).deleteIdentifier(entityKey, identifierKey);
     assertDoesNotThrow(() -> baseClient.deleteIdentifier(entityKey, identifierKey));
   }
 
@@ -257,25 +290,273 @@ abstract class BaseCollectionEntityResourceIT<
     Comment comment = new Comment();
     comment.setContent("test comment");
     int commentKey = 1;
-    when(getMockBaseService().addComment(entityKey, comment)).thenReturn(commentKey);
+    when(getMockCollectionEntityService().addComment(entityKey, comment)).thenReturn(commentKey);
     int commentKeyReturned = baseClient.addComment(entityKey, comment);
     assertEquals(commentKey, commentKeyReturned);
     comment.setKey(commentKey);
 
-    when(getMockBaseService().listComments(entityKey))
+    when(getMockCollectionEntityService().listComments(entityKey))
         .thenReturn(Collections.singletonList(comment));
     List<Comment> comments = baseClient.listComments(entityKey);
     assertEquals(1, comments.size());
     assertEquals(commentKey, comments.get(0).getKey());
     assertEquals(comment.getContent(), comments.get(0).getContent());
 
-    doNothing().when(getMockBaseService()).deleteComment(entityKey, commentKey);
+    doNothing().when(getMockCollectionEntityService()).deleteComment(entityKey, commentKey);
     assertDoesNotThrow(() -> baseClient.deleteComment(entityKey, commentKey));
   }
 
-  void mockGetEntity(UUID key, T entityToReturn) {
-    when(getMockBaseService().get(key)).thenReturn(entityToReturn);
+  @Test
+  public void contactPersonsTest() {
+    // contacts
+    Contact contact = new Contact();
+    contact.setFirstName("name1");
+    contact.setKey(1);
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("name2");
+    contact2.setKey(2);
+
+    // add contact
+    when(getMockCollectionEntityService().addContactPerson(any(UUID.class), any(Contact.class)))
+        .thenReturn(1);
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().addContactPerson(UUID.randomUUID(), contact));
+
+    // list contacts
+    when(getMockCollectionEntityService().listContactPersons(any(UUID.class)))
+        .thenReturn(Arrays.asList(contact, contact2));
+    List<Contact> contactsEntity1 =
+        getPrimaryCollectionEntityClient().listContactPersons(UUID.randomUUID());
+    assertEquals(2, contactsEntity1.size());
+
+    // update contact
+    doNothing()
+        .when(getMockCollectionEntityService())
+        .updateContactPerson(any(UUID.class), any(Contact.class));
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().updateContactPerson(UUID.randomUUID(), contact));
+
+    // remove contacts
+    doNothing()
+        .when(getMockCollectionEntityService())
+        .removeContactPerson(any(UUID.class), anyInt());
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().removeContactPerson(UUID.randomUUID(), 1));
   }
 
-  protected abstract CollectionEntityService<T> getMockBaseService();
+  @Test
+  public void getWithAddressTest() {
+    // entities
+    T entity = testData.newEntity();
+    entity.setKey(UUID.randomUUID());
+
+    // update adding address
+    Address address = new Address();
+    address.setAddress("address");
+    address.setCountry(Country.AFGHANISTAN);
+    address.setCity("city");
+    entity.setAddress(address);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setAddress("mailing address");
+    mailingAddress.setCountry(Country.AFGHANISTAN);
+    mailingAddress.setCity("city mailing");
+    entity.setMailingAddress(mailingAddress);
+
+    mockGetEntity(entity.getKey(), entity);
+    T entityReturned = getPrimaryCollectionEntityClient().get(entity.getKey());
+
+    assertNotNull(entityReturned.getAddress());
+    assertEquals("address", entityReturned.getAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entityReturned.getAddress().getCountry());
+    assertEquals("city", entityReturned.getAddress().getCity());
+    assertNotNull(entityReturned.getMailingAddress());
+    assertEquals("mailing address", entityReturned.getMailingAddress().getAddress());
+    assertEquals(Country.AFGHANISTAN, entityReturned.getMailingAddress().getCountry());
+    assertEquals("city mailing", entityReturned.getMailingAddress().getCity());
+  }
+
+  @Test
+  public void occurrenceMappingsTest() {
+    OccurrenceMapping occurrenceMapping = new OccurrenceMapping();
+    occurrenceMapping.setCode("code");
+    occurrenceMapping.setDatasetKey(UUID.randomUUID());
+
+    int key = 1;
+    when(getMockCollectionEntityService()
+            .addOccurrenceMapping(any(UUID.class), eq(occurrenceMapping)))
+        .thenReturn(key);
+    int occurrenceMappingKey =
+        getPrimaryCollectionEntityClient()
+            .addOccurrenceMapping(UUID.randomUUID(), occurrenceMapping);
+    assertEquals(key, occurrenceMappingKey);
+    occurrenceMapping.setKey(occurrenceMappingKey);
+
+    when(getMockCollectionEntityService().listOccurrenceMappings(any(UUID.class)))
+        .thenReturn(Collections.singletonList(occurrenceMapping));
+
+    List<OccurrenceMapping> mappings =
+        getPrimaryCollectionEntityClient().listOccurrenceMappings(UUID.randomUUID());
+    assertEquals(1, mappings.size());
+
+    doNothing()
+        .when(getMockCollectionEntityService())
+        .deleteOccurrenceMapping(any(UUID.class), eq(occurrenceMappingKey));
+    assertDoesNotThrow(
+        () ->
+            getPrimaryCollectionEntityClient()
+                .deleteOccurrenceMapping(UUID.randomUUID(), occurrenceMappingKey));
+  }
+
+  @Test
+  public void possibleDuplicatesTest() {
+    DuplicatesResult result = new DuplicatesResult();
+
+    Duplicate duplicate = new Duplicate();
+    duplicate.setActive(true);
+    duplicate.setInstitutionKey(UUID.randomUUID());
+    duplicate.setMailingCountry(Country.DENMARK);
+    result.setDuplicates(Collections.singletonList(Collections.singleton(duplicate)));
+    result.setGenerationDate(LocalDateTime.now());
+
+    when(getMockDuplicatesService().findPossibleDuplicates(any(DuplicatesSearchParams.class)))
+        .thenReturn(result);
+
+    DuplicatesRequest req = new DuplicatesRequest();
+    req.setInInstitutions(Collections.singletonList(UUID.randomUUID()));
+    req.setInCountries(
+        Arrays.asList(Country.DENMARK.getIso2LetterCode(), Country.SPAIN.getIso2LetterCode()));
+    req.setSameCode(true);
+    DuplicatesResult clientResult = getPrimaryCollectionEntityClient().findPossibleDuplicates(req);
+    assertEquals(result.getDuplicates().size(), clientResult.getDuplicates().size());
+  }
+
+  @Test
+  public void mergeTest() {
+    doNothing().when(getMockMergeService()).merge(any(UUID.class), any(UUID.class));
+
+    MergeParams mergeParams = new MergeParams();
+    mergeParams.setReplacementEntityKey(UUID.randomUUID());
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().merge(UUID.randomUUID(), mergeParams));
+  }
+
+  @Test
+  public void createChangeSuggestionTest() {
+    int key = 1;
+    when(getMockChangeSuggestionService().createChangeSuggestion(any())).thenReturn(key);
+
+    assertEquals(
+        key, getPrimaryCollectionEntityClient().createChangeSuggestion(newChangeSuggestion()));
+  }
+
+  @Test
+  public void updateChangeSuggestionTest() {
+    doNothing().when(getMockChangeSuggestionService()).updateChangeSuggestion(any());
+
+    R changeSuggestion = newChangeSuggestion();
+    changeSuggestion.setKey(1);
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().updateChangeSuggestion(1, changeSuggestion));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> getPrimaryCollectionEntityClient().updateChangeSuggestion(2, changeSuggestion));
+  }
+
+  protected BaseCollectionEntityClient<T, R> getPrimaryCollectionEntityClient() {
+    return (BaseCollectionEntityClient<T, R>) baseClient;
+  }
+
+  @Test
+  public void getChangeSuggestionTest() {
+    R changeSuggestion = newChangeSuggestion();
+    changeSuggestion.setKey(1);
+    when(getMockChangeSuggestionService().getChangeSuggestion(anyInt()))
+        .thenReturn(changeSuggestion);
+
+    R changeSuggestionFetch =
+        getPrimaryCollectionEntityClient().getChangeSuggestion(changeSuggestion.getKey());
+    assertEquals(changeSuggestion, changeSuggestionFetch);
+  }
+
+  @Test
+  public void listChangeSuggestionTest() {
+    R changeSuggestion = newChangeSuggestion();
+    changeSuggestion.setKey(1);
+    Status status = Status.PENDING;
+    Type type = Type.CREATE;
+    String proposerEmail = "aa@aa.com";
+    UUID entityKey = UUID.randomUUID();
+    Pageable page = new PagingRequest();
+
+    when(getMockChangeSuggestionService().list(status, type, proposerEmail, entityKey, page))
+        .thenReturn(
+            new PagingResponse<>(
+                new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));
+
+    PagingResponse<R> result =
+        getPrimaryCollectionEntityClient()
+            .listChangeSuggestion(status, type, proposerEmail, entityKey, page);
+    assertEquals(1, result.getResults().size());
+  }
+
+  @Test
+  public void applyChangeSuggestionTest() {
+    UUID createdKey = UUID.randomUUID();
+    when(getMockChangeSuggestionService().applyChangeSuggestion(anyInt())).thenReturn(createdKey);
+
+    ApplySuggestionResult result = getPrimaryCollectionEntityClient().applyChangeSuggestion(1);
+    assertEquals(createdKey, result.getEntityCreatedKey());
+  }
+
+  @Test
+  public void discardChangeSuggestionTest() {
+    doNothing().when(getMockChangeSuggestionService()).discardChangeSuggestion(anyInt());
+    assertDoesNotThrow(() -> getPrimaryCollectionEntityClient().discardChangeSuggestion(1));
+  }
+
+  @Test
+  public void getSourceableFieldsTest() {
+    assertFalse(getPrimaryCollectionEntityClient().getSourceableFields().isEmpty());
+  }
+
+  @Test
+  public void masterSourceMetadataTest() {
+    MasterSourceMetadata metadata = new MasterSourceMetadata(Source.IH_IRN, "123");
+
+    int key = 1;
+    when(getMockCollectionEntityService().addMasterSourceMetadata(any(UUID.class), eq(metadata)))
+        .thenReturn(key);
+    int metadataKey =
+        getPrimaryCollectionEntityClient().addMasterSourceMetadata(UUID.randomUUID(), metadata);
+    assertEquals(key, metadataKey);
+    metadata.setKey(metadataKey);
+
+    when(getMockCollectionEntityService().getMasterSourceMetadata(any(UUID.class)))
+        .thenReturn(metadata);
+
+    MasterSourceMetadata masterSourceMetadata =
+        getPrimaryCollectionEntityClient().getMasterSourceMetadata(UUID.randomUUID());
+    assertEquals(metadata, masterSourceMetadata);
+
+    doNothing().when(getMockCollectionEntityService()).deleteMasterSourceMetadata(any(UUID.class));
+    assertDoesNotThrow(
+        () -> getPrimaryCollectionEntityClient().deleteMasterSourceMetadata(UUID.randomUUID()));
+  }
+
+  void mockGetEntity(UUID key, T entityToReturn) {
+    when(getMockCollectionEntityService().get(key)).thenReturn(entityToReturn);
+  }
+
+  protected abstract CollectionEntityService<T> getMockCollectionEntityService();
+
+  protected abstract DuplicatesService getMockDuplicatesService();
+
+  protected abstract MergeService<T> getMockMergeService();
+
+  protected abstract ChangeSuggestionService<T, R> getMockChangeSuggestionService();
+
+  protected abstract R newChangeSuggestion();
 }

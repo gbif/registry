@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/institution")
 public interface InstitutionClient
-    extends PrimaryCollectionEntityClient<Institution, InstitutionChangeSuggestion> {
+    extends BaseCollectionEntityClient<Institution, InstitutionChangeSuggestion> {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody

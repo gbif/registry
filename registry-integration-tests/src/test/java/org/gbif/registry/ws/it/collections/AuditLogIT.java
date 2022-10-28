@@ -20,8 +20,6 @@ import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
@@ -55,15 +53,12 @@ import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
-import org.gbif.registry.ws.client.collections.PersonClient;
-import org.gbif.registry.ws.client.collections.PrimaryCollectionEntityClient;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.collections.service.CollectionsDatabaseInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -90,11 +85,9 @@ public class AuditLogIT extends BaseItTest {
   private final AuditLogMapper auditLogMapper;
 
   private static UUID datasetKey;
-  private static UUID contactKey;
 
   private final InstitutionClient institutionClient;
   private final CollectionClient collectionClient;
-  private final PersonClient personClient;
 
   @RegisterExtension protected CollectionsDatabaseInitializer collectionsDatabaseInitializer;
 
@@ -111,7 +104,6 @@ public class AuditLogIT extends BaseItTest {
     collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
     this.collectionClient = prepareClient(localServerPort, keyStore, CollectionClient.class);
-    this.personClient = prepareClient(localServerPort, keyStore, PersonClient.class);
   }
 
   @BeforeAll
@@ -119,8 +111,7 @@ public class AuditLogIT extends BaseItTest {
       @Autowired NodeService nodeService,
       @Autowired OrganizationService organizationService,
       @Autowired InstallationService installationService,
-      @Autowired DatasetService datasetService,
-      @Autowired PersonMapper personMapper) {
+      @Autowired DatasetService datasetService) {
     Node node = new Node();
     node.setTitle("node");
     node.setType(NodeType.COUNTRY);
@@ -148,15 +139,6 @@ public class AuditLogIT extends BaseItTest {
     dataset.setLanguage(Language.ABKHAZIAN);
     dataset.setLicense(License.CC0_1_0);
     datasetKey = datasetService.create(dataset);
-
-    Person person = new Person();
-    person.setKey(UUID.randomUUID());
-    person.setFirstName("first name");
-    person.setEmail("aa@aa.com");
-    person.setCreatedBy("test");
-    person.setModifiedBy("test");
-    personMapper.create(person);
-    contactKey = person.getKey();
   }
 
   @Test
@@ -284,33 +266,11 @@ public class AuditLogIT extends BaseItTest {
     assertDeletionCollectionEntity(key3);
   }
 
-  @Test
-  public void personLogsTest() {
-    Person p = new Person();
-    p.setFirstName("fn");
-    p.setEmail("aa@aa.com");
-    UUID key = personClient.create(p);
-    long traceId = assertCreationCollectionEntity(key, CollectionEntityType.PERSON);
-
-    p = personClient.get(key);
-    p.setFirstName("fn2");
-    personClient.update(p);
-
-    traceId = assertUpdateCollectionEntity(key, traceId);
-    testSubEntities(key, traceId, personClient);
-
-    // delete
-    Person p2 = new Person();
-    p2.setFirstName("fn2");
-    p2.setEmail("aa@aa.com");
-    UUID key2 = personClient.create(p2);
-    personClient.delete(key2);
-    assertDeletionCollectionEntity(key2);
-  }
-
-  private <T extends CollectionEntity & Taggable & Identifiable & MachineTaggable>
+  private <
+          T extends CollectionEntity & Taggable & Identifiable & MachineTaggable,
+          R extends ChangeSuggestion<T>>
       void testSubEntities(
-          UUID entityKey, long previousTraceId, BaseCollectionEntityClient<T> client) {
+          UUID entityKey, long previousTraceId, BaseCollectionEntityClient<T, R> client) {
     int identifierKey = client.addIdentifier(entityKey, new Identifier(IdentifierType.LSID, "foo"));
     long traceId =
         assertSubEntityCreation(
@@ -362,11 +322,10 @@ public class AuditLogIT extends BaseItTest {
   }
 
   private <
-          T extends
-              PrimaryCollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable,
+          T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable,
           R extends ChangeSuggestion<T>>
       void testChangeSuggestions(
-          T entity, R changeSuggestion, PrimaryCollectionEntityClient<T, R> client) {
+          T entity, R changeSuggestion, BaseCollectionEntityClient<T, R> client) {
 
     // create change suggestion
     int suggKey = client.createChangeSuggestion(changeSuggestion);
@@ -442,7 +401,7 @@ public class AuditLogIT extends BaseItTest {
           T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable,
           R extends ChangeSuggestion<T>>
       void testPrimaryEntityOperations(
-          UUID entityKey, long previousTraceId, PrimaryCollectionEntityClient<T, R> client) {
+          UUID entityKey, long previousTraceId, BaseCollectionEntityClient<T, R> client) {
     int omKey = client.addOccurrenceMapping(entityKey, new OccurrenceMapping("c", "i", datasetKey));
     long traceId =
         assertSubEntityCreation(
@@ -460,16 +419,6 @@ public class AuditLogIT extends BaseItTest {
             omKey,
             OccurrenceMapping.class.getSimpleName(),
             EventType.DELETE.name());
-
-    client.addContact(entityKey, contactKey);
-    traceId =
-        assertSubEntityCreation(
-            entityKey, traceId, contactKey, Person.class.getSimpleName(), EventType.LINK.name());
-
-    client.removeContact(entityKey, contactKey);
-    traceId =
-        assertSubEntityCreation(
-            entityKey, traceId, contactKey, Person.class.getSimpleName(), EventType.UNLINK.name());
 
     // new contacts model
     Contact contact = new Contact();

@@ -15,12 +15,12 @@ package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
@@ -80,12 +80,11 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
-import org.gbif.api.model.collections.*;
 
 public abstract class BaseChangeSuggestionService<
         T extends
-            PrimaryCollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable
-                & Contactable & OccurrenceMappeable,
+            CollectionEntity & Taggable & Identifiable & MachineTaggable & Commentable & Contactable
+                & OccurrenceMappeable,
         R extends ChangeSuggestion<T>>
     implements ChangeSuggestionService<T, R> {
 

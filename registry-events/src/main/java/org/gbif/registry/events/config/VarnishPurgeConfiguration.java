@@ -15,7 +15,6 @@ package org.gbif.registry.events.config;
 
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.OrganizationService;
@@ -51,8 +50,7 @@ public class VarnishPurgeConfiguration {
       InstallationService installationService,
       DatasetService datasetService,
       InstitutionService institutionService,
-      CollectionService collectionService,
-      PersonService personService) {
+      CollectionService collectionService) {
     return new VarnishPurgeListener(
         HttpUtil.newMultithreadedClient(DEFAULT_HTTP_TIMEOUT_MSECS, purgingThreads, purgingThreads),
         eventManager,
@@ -61,7 +59,6 @@ public class VarnishPurgeConfiguration {
         installationService,
         datasetService,
         institutionService,
-        collectionService,
-        personService);
+        collectionService);
   }
 }

@@ -14,8 +14,8 @@
 package org.gbif.registry.service.collections.utils;
 
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.PrimaryCollectionEntity;
 import org.gbif.api.model.collections.Sourceable;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.Sourceables;
@@ -79,13 +79,13 @@ public class MasterSourceUtils {
         .forEach(f -> createSourceableField(f).ifPresent(COLLECTION_SOURCEABLE_FIELDS::add));
   }
 
-  public static <T extends PrimaryCollectionEntity> boolean hasExternalMasterSource(T entity) {
+  public static <T extends CollectionEntity> boolean hasExternalMasterSource(T entity) {
     return entity != null
         && entity.getMasterSource() != null
         && entity.getMasterSource() != MasterSourceType.GRSCICOLL;
   }
 
-  public static <T extends PrimaryCollectionEntity> boolean isLockableEntity(T entity) {
+  public static <T extends CollectionEntity> boolean isLockableEntity(T entity) {
     boolean hasExternalMasterSource = hasExternalMasterSource(entity);
 
     if (!hasExternalMasterSource) {

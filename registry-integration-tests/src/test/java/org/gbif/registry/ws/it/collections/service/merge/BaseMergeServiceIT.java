@@ -21,7 +21,6 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
@@ -33,11 +32,10 @@ import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
-import org.gbif.api.service.collections.PersonService;
-import org.gbif.api.service.collections.PrimaryCollectionEntityService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.IdentifierService;
 import org.gbif.api.service.registry.InstallationService;
@@ -82,8 +80,7 @@ public abstract class BaseMergeServiceIT<
   protected final ContactService contactService;
   protected final MachineTagService machineTagService;
   protected final OccurrenceMappingService occurrenceMappingService;
-  protected final PersonService personService;
-  protected final PrimaryCollectionEntityService primaryCollectionEntityService;
+  protected final CollectionEntityService collectionEntityService;
 
   @Autowired private DatasetService datasetService;
   @Autowired private NodeService nodeService;
@@ -98,8 +95,7 @@ public abstract class BaseMergeServiceIT<
       ContactService contactService,
       MachineTagService machineTagService,
       OccurrenceMappingService occurrenceMappingService,
-      PersonService personService,
-      PrimaryCollectionEntityService primaryCollectionEntityService) {
+      CollectionEntityService collectionEntityService) {
     super(simplePrincipalProvider);
     this.mergeService = mergeService;
     this.crudService = crudService;
@@ -107,8 +103,7 @@ public abstract class BaseMergeServiceIT<
     this.contactService = contactService;
     this.machineTagService = machineTagService;
     this.occurrenceMappingService = occurrenceMappingService;
-    this.personService = personService;
-    this.primaryCollectionEntityService = primaryCollectionEntityService;
+    this.collectionEntityService = collectionEntityService;
   }
 
   @Test
@@ -129,18 +124,6 @@ public abstract class BaseMergeServiceIT<
     // identifiers
     Identifier identifier = new Identifier(IdentifierType.LSID, "test");
     identifierService.addIdentifier(toReplace.getKey(), identifier);
-
-    // contacts
-    Person p1 = new Person();
-    p1.setFirstName("p1");
-    personService.create(p1);
-
-    Person p2 = new Person();
-    p2.setFirstName("p2");
-    personService.create(p2);
-
-    contactService.addContact(toReplace.getKey(), p1.getKey());
-    contactService.addContact(toReplace.getKey(), p2.getKey());
 
     // contact persons
     Contact contact1 = new Contact();
@@ -176,8 +159,6 @@ public abstract class BaseMergeServiceIT<
 
     crudService.create(replacement);
 
-    contactService.addContact(replacement.getKey(), p1.getKey());
-
     contact1.setKey(null);
     contactService.addContactPerson(replacement.getKey(), contact1);
 
@@ -193,7 +174,6 @@ public abstract class BaseMergeServiceIT<
     assertEquals(2, replacementUpdated.getIdentifiers().size());
     assertEquals(2, replaced.getMachineTags().size());
     assertEquals(1, replacementUpdated.getMachineTags().size());
-    assertEquals(2, replacementUpdated.getContacts().size());
     assertEquals(2, replacementUpdated.getContactPersons().size());
     assertTrue(a2.lenientEquals(replacementUpdated.getAddress()));
     assertTrue(ma1.lenientEquals(replacementUpdated.getMailingAddress()));
@@ -210,12 +190,12 @@ public abstract class BaseMergeServiceIT<
     T e1 = createEntityToReplace();
     crudService.create(e1);
     MasterSourceMetadata metadata = new MasterSourceMetadata(Source.IH_IRN, "test");
-    primaryCollectionEntityService.addMasterSourceMetadata(e1.getKey(), metadata);
+    collectionEntityService.addMasterSourceMetadata(e1.getKey(), metadata);
 
     T e2 = createReplacement();
     crudService.create(e2);
     MasterSourceMetadata metadata2 = new MasterSourceMetadata(Source.IH_IRN, "test");
-    primaryCollectionEntityService.addMasterSourceMetadata(e2.getKey(), metadata2);
+    collectionEntityService.addMasterSourceMetadata(e2.getKey(), metadata2);
 
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));
@@ -227,8 +207,8 @@ public abstract class BaseMergeServiceIT<
         IllegalArgumentException.class, () -> mergeService.merge(UUID.randomUUID(), e2.getKey()));
 
     // test that we can't merge 2 entities with master source
-    primaryCollectionEntityService.deleteMasterSourceMetadata(e1.getKey());
-    primaryCollectionEntityService.deleteMasterSourceMetadata(e2.getKey());
+    collectionEntityService.deleteMasterSourceMetadata(e1.getKey());
+    collectionEntityService.deleteMasterSourceMetadata(e2.getKey());
 
     MachineTag mt3 = new MachineTag(IDIGBIO_NAMESPACE, "foo", "bar");
     machineTagService.addMachineTag(e1.getKey(), mt3);
@@ -250,9 +230,9 @@ public abstract class BaseMergeServiceIT<
       source = Source.DATASET;
       sourceId = createDataset().getKey().toString();
     }
-    primaryCollectionEntityService.addMasterSourceMetadata(
+    collectionEntityService.addMasterSourceMetadata(
         e1.getKey(), new MasterSourceMetadata(source, sourceId));
-    primaryCollectionEntityService.addMasterSourceMetadata(
+    collectionEntityService.addMasterSourceMetadata(
         e2.getKey(), new MasterSourceMetadata(source, sourceId));
     assertThrows(
         IllegalArgumentException.class, () -> mergeService.merge(e1.getKey(), e2.getKey()));

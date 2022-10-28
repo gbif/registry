@@ -13,22 +13,33 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.registry.persistence.ContactableMapper;
 import org.gbif.registry.persistence.mapper.CommentableMapper;
 import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
 
 /** Generic mapper for CRUD operations. Initially implemented for collections. */
 public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable & Commentable>
-    extends TaggableMapper, IdentifiableMapper, MachineTaggableMapper<T>, CommentableMapper {
+    extends TaggableMapper,
+        IdentifiableMapper,
+        MachineTaggableMapper<T>,
+        CommentableMapper,
+        ContactableMapper,
+        OccurrenceMappeableMapper,
+        ReplaceableMapper {
 
   T get(@Param("key") UUID key);
 
@@ -37,4 +48,16 @@ public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable 
   void delete(@Param("key") UUID key);
 
   void update(T entity);
+
+  void addMasterSourceMetadata(
+      @Param("targetEntityKey") UUID targetEntityKey,
+      @Param("metadataKey") int metadataKey,
+      @Param("masterSourceType") MasterSourceType masterSourceType);
+
+  void removeMasterSourceMetadata(@Param("targetEntityKey") UUID targetEntityKey);
+
+  MasterSourceMetadata getEntityMasterSourceMetadata(
+      @Param("targetEntityKey") UUID targetEntityKey);
+
+  List<T> findByMasterSource(@Param("source") Source source, @Param("sourceId") String sourceId);
 }

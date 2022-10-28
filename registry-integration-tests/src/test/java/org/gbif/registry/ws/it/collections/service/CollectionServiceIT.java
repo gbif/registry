@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
@@ -31,7 +30,6 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
@@ -72,7 +70,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionService}. */
-public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collection> {
+public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collection> {
 
   private final CollectionService collectionService;
   private final CollectionDuplicatesService duplicatesService;
@@ -82,7 +80,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
   public CollectionServiceIT(
       InstitutionService institutionService,
       CollectionService collectionService,
-      PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -92,7 +89,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
       CollectionDuplicatesService duplicatesService) {
     super(
         collectionService,
-        personService,
         datasetService,
         nodeService,
         organizationService,
@@ -684,61 +680,6 @@ public class CollectionServiceIT extends PrimaryCollectionEntityServiceIT<Collec
         collectionService.list(
             CollectionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
-  }
-
-  @Test
-  public void listByContactTest() {
-    // persons
-    Person person1 = new Person();
-    person1.setFirstName("first name");
-    UUID personKey1 = personService.create(person1);
-
-    Person person2 = new Person();
-    person2.setFirstName("first name2");
-    UUID personKey2 = personService.create(person2);
-
-    // collections
-    Collection collection1 = testData.newEntity();
-    UUID collectionKey1 = collectionService.create(collection1);
-
-    Collection collection2 = testData.newEntity();
-    UUID collectionKey2 = collectionService.create(collection2);
-
-    // add contacts
-    collectionService.addContact(collectionKey1, personKey1);
-    collectionService.addContact(collectionKey1, personKey2);
-    collectionService.addContact(collectionKey2, personKey2);
-
-    assertEquals(
-        1,
-        collectionService
-            .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
-    assertEquals(
-        2,
-        collectionService
-            .list(CollectionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
-    assertEquals(
-        0,
-        collectionService
-            .list(
-                CollectionSearchRequest.builder()
-                    .contact(UUID.randomUUID())
-                    .page(DEFAULT_PAGE)
-                    .build())
-            .getResults()
-            .size());
-
-    collectionService.removeContact(collectionKey1, personKey2);
-    assertEquals(
-        1,
-        collectionService
-            .list(CollectionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
   }
 
   @Test
