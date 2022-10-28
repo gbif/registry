@@ -91,7 +91,7 @@
     <gbif-common-ws.version>1.22-SNAPSHOT</gbif-common-ws.version>
     <gbif-directory.version>1.12</gbif-directory.version>
     <gbif-doi.version>2.17</gbif-doi.version>
-    <gbif-download-query-tools.version>1.46</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.47-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metrics.version>1.2</gbif-metrics.version>
     <gbif-parsers.version>0.59</gbif-parsers.version>
