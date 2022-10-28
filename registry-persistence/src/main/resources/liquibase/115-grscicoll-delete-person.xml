@@ -1,0 +1,19 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!--
+    Change founding_date from timestamp to integer to store only the year
+  -->
+  <changeSet id="115" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        DROP TABLE collection_person;
+        DROP FUNCTION colperson_change_trigger;
+        DROP TABLE collection_collection_person;
+        DROP TABLE institution_collection_person;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
