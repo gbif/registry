@@ -59,7 +59,6 @@ public class InstitutionMapperIT extends BaseItTest {
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer(
-          "institution_collection_person",
           "institution_identifier",
           "institution_tag",
           "institution_occurrence_mapping",
