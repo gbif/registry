@@ -26,6 +26,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -35,7 +36,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -118,5 +122,31 @@ public class InstitutionChangeSuggestionService
   @Override
   protected InstitutionChangeSuggestion newEmptyChangeSuggestion() {
     return new InstitutionChangeSuggestion();
+  }
+
+  public void fix() {
+    ChangeSuggestionDto dto = changeSuggestionMapper.get(1);
+
+    ObjectMapper om = new ObjectMapper();
+
+    try {
+      JsonNode rootSugg = om.readTree(dto.getSuggestedEntity());
+      if (rootSugg.has("foundingDate")) {
+        LocalDateTime date = LocalDateTime.parse(rootSugg.path("foundingDate").asText());
+        ((ObjectNode) rootSugg).put("foundingDate", date.getYear());
+        dto.setSuggestedEntity(om.writeValueAsString(rootSugg));
+
+        dto.getChanges().stream()
+          .filter(c -> c.getFieldName().equals("foundingDate"))
+          .forEach(c -> {
+            c.setFieldType(Integer.class);
+            c.setSuggested(date.getYear());
+          });
+      }
+
+      changeSuggestionMapper.update(dto);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

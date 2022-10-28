@@ -17,7 +17,6 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
 
 abstract class CollectionsBaseEvent<T extends CollectionEntity> {
 
@@ -42,8 +41,6 @@ abstract class CollectionsBaseEvent<T extends CollectionEntity> {
       return CollectionEntityType.INSTITUTION;
     } else if (collectionEntityClass.equals(Collection.class)) {
       return CollectionEntityType.COLLECTION;
-    } else if (collectionEntityClass.equals(Person.class)) {
-      return CollectionEntityType.PERSON;
     }
 
     throw new IllegalArgumentException(

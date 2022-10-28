@@ -73,7 +73,7 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 @Validated
 @Service
-public class DefaultCollectionService extends BasePrimaryCollectionEntityService<Collection>
+public class DefaultCollectionService extends BaseCollectionEntityService<Collection>
     implements CollectionService {
 
   private final CollectionMapper collectionMapper;
@@ -98,18 +98,18 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
       WithMyBatis withMyBatis,
       Validator validator) {
     super(
-        Collection.class,
         collectionMapper,
         addressMapper,
-        machineTagMapper,
-        tagMapper,
-        identifierMapper,
-        commentMapper,
-        occurrenceMappingMapper,
         contactMapper,
+        tagMapper,
+        machineTagMapper,
+        identifierMapper,
+        occurrenceMappingMapper,
         metadataMapper,
         datasetMapper,
         organizationMapper,
+        commentMapper,
+        Collection.class,
         eventManager,
         withMyBatis);
     this.collectionMapper = collectionMapper;
@@ -141,7 +141,6 @@ public class DefaultCollectionService extends BasePrimaryCollectionEntityService
     CollectionSearchParams params =
         CollectionSearchParams.builder()
             .institutionKey(searchRequest.getInstitution())
-            .contactKey(searchRequest.getContact())
             .query(query)
             .code(searchRequest.getCode())
             .name(searchRequest.getName())

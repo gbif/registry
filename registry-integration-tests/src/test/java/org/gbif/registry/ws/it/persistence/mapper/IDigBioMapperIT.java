@@ -29,7 +29,6 @@ import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioMapper;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
@@ -64,7 +63,6 @@ public class IDigBioMapperIT extends BaseItTest {
   private InstitutionMapper institutionMapper;
   private MachineTagMapper machineTagMapper;
   private IdentifierMapper identifierMapper;
-  private PersonMapper personMapper;
   private AddressMapper addressMapper;
   private CollectionContactMapper contactMapper;
 
@@ -75,7 +73,6 @@ public class IDigBioMapperIT extends BaseItTest {
       CollectionMapper collectionMapper,
       IdentifierMapper identifierMapper,
       InstitutionMapper institutionMapper,
-      PersonMapper personMapper,
       AddressMapper addressMapper,
       CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
@@ -86,7 +83,6 @@ public class IDigBioMapperIT extends BaseItTest {
     this.collectionMapper = collectionMapper;
     this.identifierMapper = identifierMapper;
     this.institutionMapper = institutionMapper;
-    this.personMapper = personMapper;
     this.addressMapper = addressMapper;
     this.contactMapper = contactMapper;
   }

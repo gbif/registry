@@ -18,7 +18,6 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -26,7 +25,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.collections.PersonService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
@@ -62,14 +60,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Tests the {@link InstitutionService}. */
-public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Institution> {
+public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
 
   private final InstitutionService institutionService;
 
   @Autowired
   public InstitutionServiceIT(
       InstitutionService institutionService,
-      PersonService personService,
       DatasetService datasetService,
       NodeService nodeService,
       OrganizationService organizationService,
@@ -79,7 +76,6 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
       InstitutionDuplicatesService duplicatesService) {
     super(
         institutionService,
-        personService,
         datasetService,
         nodeService,
         organizationService,
@@ -494,61 +490,6 @@ public class InstitutionServiceIT extends PrimaryCollectionEntityServiceIT<Insti
         institutionService.list(
             InstitutionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
     assertEquals(0, response.getResults().size());
-  }
-
-  @Test
-  public void listByContactTest() {
-    // persons
-    Person person1 = new Person();
-    person1.setFirstName("first name");
-    UUID personKey1 = personService.create(person1);
-
-    Person person2 = new Person();
-    person2.setFirstName("first name2");
-    UUID personKey2 = personService.create(person2);
-
-    // institutions
-    Institution institution1 = testData.newEntity();
-    UUID instutionKey1 = institutionService.create(institution1);
-
-    Institution institution2 = testData.newEntity();
-    UUID instutionKey2 = institutionService.create(institution2);
-
-    // add contacts
-    institutionService.addContact(instutionKey1, personKey1);
-    institutionService.addContact(instutionKey1, personKey2);
-    institutionService.addContact(instutionKey2, personKey2);
-
-    assertEquals(
-        1,
-        institutionService
-            .list(InstitutionSearchRequest.builder().contact(personKey1).page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
-    assertEquals(
-        2,
-        institutionService
-            .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
-    assertEquals(
-        0,
-        institutionService
-            .list(
-                InstitutionSearchRequest.builder()
-                    .contact(UUID.randomUUID())
-                    .page(DEFAULT_PAGE)
-                    .build())
-            .getResults()
-            .size());
-
-    institutionService.removeContact(instutionKey1, personKey2);
-    assertEquals(
-        1,
-        institutionService
-            .list(InstitutionSearchRequest.builder().contact(personKey2).page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
   }
 
   @Test

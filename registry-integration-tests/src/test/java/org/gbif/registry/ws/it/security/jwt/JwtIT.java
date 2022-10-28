@@ -13,7 +13,7 @@
  */
 package org.gbif.registry.ws.it.security.jwt;
 
-import org.gbif.api.model.collections.Person;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class JwtIT extends BaseItTest {
 
-  private static final String PATH = "/grscicoll/person";
+  private static final String PATH = "/grscicoll/institution";
 
   private JwtConfiguration jwtConfiguration;
   private final RequestTestFixture requestTestFixture;
@@ -69,7 +69,9 @@ public class JwtIT extends BaseItTest {
     Thread.sleep(1000);
 
     ResultActions actions =
-        requestTestFixture.postRequest(token, createPerson(), PATH).andExpect(status().isCreated());
+        requestTestFixture
+            .postRequest(token, createInstitution(), PATH)
+            .andExpect(status().isCreated());
 
     String newToken = requestTestFixture.getHeader(actions, HEADER_TOKEN);
 
@@ -83,7 +85,9 @@ public class JwtIT extends BaseItTest {
     HttpHeaders headers = new HttpHeaders();
     headers.add("beare ", token);
 
-    requestTestFixture.postRequest(headers, createPerson(), PATH).andExpect(status().isForbidden());
+    requestTestFixture
+        .postRequest(headers, createInstitution(), PATH)
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -94,7 +98,7 @@ public class JwtIT extends BaseItTest {
 
     ResultActions actions =
         requestTestFixture
-            .postRequest(token, createPerson(), PATH)
+            .postRequest(token, createInstitution(), PATH)
             .andExpect(status().isForbidden());
 
     String newToken = requestTestFixture.getHeader(actions, HEADER_TOKEN);
@@ -106,25 +110,29 @@ public class JwtIT extends BaseItTest {
   public void insufficientRolesTest() throws Exception {
     String token = login(TEST_USER);
 
-    requestTestFixture.postRequest(token, createPerson(), PATH).andExpect(status().isForbidden());
+    requestTestFixture
+        .postRequest(token, createInstitution(), PATH)
+        .andExpect(status().isForbidden());
   }
 
   @Test
   public void fakeUserTest() throws Exception {
     String token = JwtUtils.generateJwt("fake", jwtConfiguration);
 
-    requestTestFixture.postRequest(token, createPerson(), PATH).andExpect(status().isForbidden());
+    requestTestFixture
+        .postRequest(token, createInstitution(), PATH)
+        .andExpect(status().isForbidden());
   }
 
   @Test
   public void noJwtAndNoBasicAuthTest() throws Exception {
-    requestTestFixture.postRequest(createPerson(), PATH).andExpect(status().isForbidden());
+    requestTestFixture.postRequest(createInstitution(), PATH).andExpect(status().isForbidden());
   }
 
   @Test
   public void noJwtWithBasicAuthTest() throws Exception {
     requestTestFixture
-        .postRequest(GRSCICOLL_ADMIN, GRSCICOLL_ADMIN, createPerson(), PATH)
+        .postRequest(GRSCICOLL_ADMIN, GRSCICOLL_ADMIN, createInstitution(), PATH)
         .andExpect(status().isCreated());
   }
 
@@ -142,11 +150,12 @@ public class JwtIT extends BaseItTest {
     return response.getToken();
   }
 
-  private Person createPerson() {
-    Person newPerson = new Person();
-    newPerson.setFirstName("first name");
-    newPerson.setCreatedBy("Test");
-    newPerson.setModifiedBy("Test");
-    return newPerson;
+  private Institution createInstitution() {
+    Institution newInstitution = new Institution();
+    newInstitution.setCode("code");
+    newInstitution.setName("name");
+    newInstitution.setCreatedBy("Test");
+    newInstitution.setModifiedBy("Test");
+    return newInstitution;
   }
 }

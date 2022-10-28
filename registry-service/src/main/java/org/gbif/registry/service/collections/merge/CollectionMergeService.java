@@ -15,11 +15,7 @@ package org.gbif.registry.service.collections.merge;
 
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Person;
-import org.gbif.api.model.collections.request.PersonSearchRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.PersonService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,13 +26,9 @@ import com.google.common.base.Preconditions;
 @Service
 public class CollectionMergeService extends BaseMergeService<Collection> {
 
-  private final PersonService personService;
-
   @Autowired
-  protected CollectionMergeService(
-      CollectionService collectionService, PersonService personService) {
+  protected CollectionMergeService(CollectionService collectionService) {
     super(collectionService);
-    this.personService = personService;
   }
 
   @Override
@@ -81,18 +73,5 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
   }
 
   @Override
-  void additionalOperations(Collection entityToReplace, Collection replacement) {
-    // FIXME: to be removed in the future, contacts are deprecated
-    // fix primary collection of contacts
-    PagingResponse<Person> persons =
-        personService.list(
-            PersonSearchRequest.builder().primaryCollection(entityToReplace.getKey()).build());
-    persons
-        .getResults()
-        .forEach(
-            p -> {
-              p.setPrimaryCollectionKey(replacement.getKey());
-              personService.update(p);
-            });
-  }
+  void additionalOperations(Collection entityToReplace, Collection replacement) {}
 }

@@ -24,7 +24,6 @@ import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.PersonMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.security.UserRoles;
@@ -56,7 +55,6 @@ public class GrSciCollAuthorizationService {
   private final UserRightsMapper userRightsMapper;
   private final CollectionMapper collectionMapper;
   private final InstitutionMapper institutionMapper;
-  private final PersonMapper personMapper;
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final ObjectMapper objectMapper;
 
@@ -64,13 +62,11 @@ public class GrSciCollAuthorizationService {
       UserRightsMapper userRightsMapper,
       CollectionMapper collectionMapper,
       InstitutionMapper institutionMapper,
-      PersonMapper personMapper,
       ChangeSuggestionMapper changeSuggestionMapper,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper) {
     this.userRightsMapper = userRightsMapper;
     this.collectionMapper = collectionMapper;
     this.institutionMapper = institutionMapper;
-    this.personMapper = personMapper;
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.objectMapper = objectMapper;
   }

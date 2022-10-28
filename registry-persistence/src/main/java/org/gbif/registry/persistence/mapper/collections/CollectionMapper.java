@@ -32,7 +32,7 @@ import org.springframework.stereotype.Repository;
 /** Mapper for {@link Collection} entities. */
 @Repository
 public interface CollectionMapper
-    extends PrimaryEntityMapper<Collection>, LookupMapper<CollectionMatchedDto> {
+    extends BaseMapper<Collection>, LookupMapper<CollectionMatchedDto> {
 
   List<CollectionDto> list(
       @Param("params") CollectionSearchParams searchParams, @Nullable @Param("page") Pageable page);

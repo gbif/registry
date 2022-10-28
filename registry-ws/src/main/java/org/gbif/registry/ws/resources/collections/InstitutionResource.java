@@ -60,7 +60,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
-    extends PrimaryCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
+    extends BaseCollectionEntityResource<Institution, InstitutionChangeSuggestion> {
 
   // Prefix for the export file format
   private static final String EXPORT_FILE_NAME = "%sinstitutions.%s";

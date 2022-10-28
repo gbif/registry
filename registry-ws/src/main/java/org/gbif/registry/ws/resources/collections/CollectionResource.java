@@ -60,7 +60,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionResource
-    extends PrimaryCollectionEntityResource<Collection, CollectionChangeSuggestion> {
+    extends BaseCollectionEntityResource<Collection, CollectionChangeSuggestion> {
 
   public final CollectionService collectionService;
 

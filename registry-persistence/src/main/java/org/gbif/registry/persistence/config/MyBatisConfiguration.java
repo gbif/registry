@@ -16,7 +16,6 @@ package org.gbif.registry.persistence.config;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.Person;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -146,7 +145,6 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Count", Facet.Count.class);
       configuration.getTypeAliasRegistry().registerAlias("Institution", Institution.class);
       configuration.getTypeAliasRegistry().registerAlias("SciCollection", Collection.class);
-      configuration.getTypeAliasRegistry().registerAlias("CollectionPerson", Person.class);
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
@@ -210,8 +208,8 @@ public class MyBatisConfiguration {
           .getTypeAliasRegistry()
           .registerAlias("LocaleTypeHandler", LocaleTypeHandler.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
+          .getTypeAliasRegistry()
+          .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);

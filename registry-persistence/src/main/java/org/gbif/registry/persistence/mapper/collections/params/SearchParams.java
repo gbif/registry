@@ -28,7 +28,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public abstract class SearchParams {
 
-  @Nullable UUID contactKey;
   @Nullable String query;
   @Nullable String code;
   @Nullable String name;
