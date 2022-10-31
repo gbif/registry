@@ -128,6 +128,11 @@ public class DerivedDatasetResource {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String nameFromContext = authentication != null ? authentication.getName() : null;
 
+    if (relatedDatasets == null || relatedDatasets.isEmpty()) {
+      LOG.error("No related datasets found");
+      throw new WebApplicationException("Related datasets are required", HttpStatus.BAD_REQUEST);
+    }
+
     if (request.getOriginalDownloadDOI() != null
         && !occurrenceDownloadService.checkOccurrenceDownloadExists(
             request.getOriginalDownloadDOI())) {
