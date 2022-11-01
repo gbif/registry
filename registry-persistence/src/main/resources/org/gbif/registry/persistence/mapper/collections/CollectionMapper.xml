@@ -180,10 +180,10 @@
   <!-- Basic paging search functionality -->
   <select id="list" resultType="CollectionDto" resultMap="COLLECTION_DTO_MAP" parameterType="Pageable">
     SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(c.fulltext_search, query), </if>
-                        <if test="params.fuzzyName != null" >similarity_score, </if>
+                        <if test="params.fuzzyName != null">similarity_score, </if>
                         c.created, c.key)
-          <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode,
-          similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
+          <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
+          <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
     FROM collection c
     LEFT JOIN institution inst ON inst.key = c.institution_key
     <if test="params.query != null" >
