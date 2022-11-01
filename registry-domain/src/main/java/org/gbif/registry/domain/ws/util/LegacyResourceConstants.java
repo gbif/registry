@@ -58,6 +58,7 @@ public class LegacyResourceConstants {
   public static final String OCCURRENCE_SERVICE_TYPE_1 = "DWC-ARCHIVE-OCCURRENCE";
   public static final String OCCURRENCE_SERVICE_TYPE_2 = "DWC_ARCHIVE_OCCURRENCE";
   public static final String SAMPLING_EVENT_SERVICE_TYPE = "DWC-ARCHIVE-SAMPLING-EVENT";
+  public static final String CAMTRAP_DP_SERVICE_TYPE = "CAMTRAP_DP";
 
   // web service paging request size
   public static final int WS_PAGE_SIZE = 100;

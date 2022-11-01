@@ -78,6 +78,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   private Contact primaryContact;
   private Endpoint emlEndpoint;
   private Endpoint archiveEndpoint;
+  private Endpoint dataPackageEndpoint;
 
   // Dataset constants
   private static final String IPT_EML_SERVICE_TYPE = "EML";
@@ -88,6 +89,10 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
           LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
           LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
+  private static final Set<String> DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES =
+      ImmutableSet.of(
+          EndpointType.CAMTRAP_DP_v_0_4.name(),
+          LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE);
 
   /** Default constructor. */
   public LegacyDataset() {
@@ -562,6 +567,16 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
+   * Get the endpoint of type DATA PACKAGE.
+   *
+   * @return the endpoint of type DATA PACKAGE
+   */
+  @XmlTransient
+  public Endpoint getDataPackageEndpoint() {
+    return archiveEndpoint;
+  }
+
+  /**
    * Set the endpoint of type ARCHIVE. This endpoint will have been created via addEndpoint() that
    * creates the endpoint from the injected HTTP Form parameters.
    *
@@ -569,6 +584,10 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
    */
   public void setArchiveEndpoint(Endpoint archiveEndpoint) {
     this.archiveEndpoint = archiveEndpoint;
+  }
+
+  public void setDataPackageEndpoint(Endpoint dataPackageEndpoint) {
+    this.dataPackageEndpoint = dataPackageEndpoint;
   }
 
   /**
@@ -612,6 +631,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     addPrimaryContact();
     addEmlEndpoint();
     addArchiveEndpoint();
+    addDataPackageEndpoint();
     setType(resolveType());
   }
 
@@ -708,6 +728,33 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
+   * Generates an Endpoint of data package type (CAMTRAP_DP), and adds it to the dataset. This method must be called
+   * after all endpoint related parameters have been set.
+   */
+  private void addDataPackageEndpoint() {
+    if (!Strings.isNullOrEmpty(serviceUrls) && !Strings.isNullOrEmpty(serviceTypes)) {
+      // create tokenizers
+      StringTokenizer serviceTypesTokenizer = new StringTokenizer(serviceTypes, "|");
+      StringTokenizer serviceUrlsTokenizer = new StringTokenizer(serviceUrls, "|");
+
+      while (serviceTypesTokenizer.hasMoreTokens() && serviceUrlsTokenizer.hasMoreTokens()) {
+        String type = serviceTypesTokenizer.nextToken();
+        String url = serviceUrlsTokenizer.nextToken();
+        if (type != null && url != null && DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES.contains(type)) {
+          // create endpoint
+          Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP_v_0_4);
+          if (endpoint != null) {
+            // set it
+            dataPackageEndpoint = endpoint;
+          }
+          // only 1 is expected
+          break;
+        }
+      }
+    }
+  }
+
+  /**
    * Creates a new Endpoint, or retrieves an existing Endpoint from the dataset. This method assumes
    * that the dataset only has 1 endpoint for each type: EML and DWC_ARCHIVE.
    *
@@ -750,7 +797,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           || serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
         return DatasetType.CHECKLIST;
       } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
-          || serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)) {
+          || serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
+          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE)) {
         return DatasetType.OCCURRENCE;
       } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         return DatasetType.SAMPLING_EVENT;
@@ -800,7 +848,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         && Objects.equal(datasetDoi, that.datasetDoi)
         && Objects.equal(primaryContact, that.primaryContact)
         && Objects.equal(emlEndpoint, that.emlEndpoint)
-        && Objects.equal(archiveEndpoint, that.archiveEndpoint);
+        && Objects.equal(archiveEndpoint, that.archiveEndpoint)
+        && Objects.equal(dataPackageEndpoint, that.dataPackageEndpoint);
   }
 
   @Generated
@@ -819,7 +868,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         datasetDoi,
         primaryContact,
         emlEndpoint,
-        archiveEndpoint);
+        archiveEndpoint,
+        dataPackageEndpoint);
   }
 
   @Generated
@@ -838,6 +888,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         .add("primaryContact", primaryContact)
         .add("emlEndpoint", emlEndpoint)
         .add("archiveEndpoint", archiveEndpoint)
+        .add("dataPackageEndpoint", dataPackageEndpoint)
         .toString();
   }
 }
