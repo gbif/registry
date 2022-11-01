@@ -276,6 +276,13 @@ public class IptResource {
             archiveEndpoint.setModifiedBy(user);
             datasetService.addEndpoint(key, archiveEndpoint);
           }
+          Endpoint dpEndpoint = dataset.getDataPackageEndpoint();
+          if (dpEndpoint != null) {
+            // set endpoint's required fields
+            archiveEndpoint.setCreatedBy(user);
+            archiveEndpoint.setModifiedBy(user);
+            datasetService.addEndpoint(key, dpEndpoint);
+          }
           LOG.info("Dataset registered successfully, key={}", key);
           // construct response object expected by IPT
           IptEntityResponse entity = new IptEntityResponse(key.toString());
