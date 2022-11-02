@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
 
@@ -41,7 +42,9 @@ public class CollectionsSearchResource {
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
       @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
+      Country country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
-    return collectionsSearchService.search(query, highlight, type, displayOnNHCPortal, limit);
+    return collectionsSearchService.search(
+        query, highlight, type, displayOnNHCPortal, country, limit);
   }
 }
