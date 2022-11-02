@@ -573,7 +573,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
    */
   @XmlTransient
   public Endpoint getDataPackageEndpoint() {
-    return archiveEndpoint;
+    return dataPackageEndpoint;
   }
 
   /**
