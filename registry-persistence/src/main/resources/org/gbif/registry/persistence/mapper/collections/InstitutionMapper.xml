@@ -185,7 +185,8 @@
     SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(i.fulltext_search, query), </if>
                         <if test="params.fuzzyName != null" >similarity_score, </if>
                         i.created, i.key)
-    <include refid="INSTITUTION_READ_FIELDS"/>, similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
+    <include refid="INSTITUTION_READ_FIELDS"/>
+    <if test="params.fuzzyName != null" >,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
     FROM institution i
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
