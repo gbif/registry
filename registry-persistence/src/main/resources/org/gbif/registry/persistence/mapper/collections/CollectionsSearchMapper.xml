@@ -6,12 +6,16 @@
   <resultMap id="SEARCH_DTO_MAP" type="SearchDto" autoMapping="true" />
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
-    SELECT <if test="q != null">matches.score,</if> matches.type, matches.key, matches.code, matches.name, matches.institution_key, matches.institution_code, matches.institution_name
+    SELECT <if test="q != null">matches.score,</if> matches.type, matches.key, matches.code, matches.name, matches.institution_key,
+      matches.institution_code, matches.institution_name, matches.display_on_NHCPortal, ad.country country, mail.country mail_country
     <if test="q != null &amp;&amp; highlight" >
-      ,ts_headline(matches.code, query) code_highlight, ts_headline(matches.name, query) name_highlight, ts_headline(matches.description, query) description_highlight
+      ,ts_headline(matches.code, query) code_highlight, ts_headline(matches.name, query) name_highlight
+      ,ts_headline(matches.description, query) description_highlight
       ,ts_headline(array_to_string(akeys(matches.alternative_codes), ' '), query) alternative_codes_highlight
-      ,ts_headline(ad.address, query) address_highlight,ts_headline(ad.city, query) city_highlight,ts_headline(ad.province, query) province_highlight,ts_headline(ad.country, query) country_highlight
-      ,ts_headline(mail.address, query) mail_address_highlight,ts_headline(mail.city, query) mail_city_highlight,ts_headline(mail.province, query) mail_province_highlight, ts_headline(mail.country, query) mail_country_highlight
+      ,ts_headline(ad.address, query) address_highlight,ts_headline(ad.city, query) city_highlight
+      ,ts_headline(ad.province, query) province_highlight,ts_headline(ad.country, query) country_highlight
+      ,ts_headline(mail.address, query) mail_address_highlight,ts_headline(mail.city, query) mail_city_highlight
+      ,ts_headline(mail.province, query) mail_province_highlight, ts_headline(mail.country, query) mail_country_highlight
       ,matches.similarity_match
     </if>
     FROM (
@@ -19,7 +23,7 @@
       <if test="type == null or type.equals('INSTITUTION')">
         (
           SELECT DISTINCT ON (<if test="q != null">ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
-            i.key, i.code, i.name, i.description, i.alternative_codes,
+            i.key, i.code, i.name, i.description, i.alternative_codes, i.display_on_NHCPortal,
             'institution' AS type, <if test="q != null" >ts_rank_cd(i.fulltext_search, query) score, query,</if> i.address_key, i.mailing_address_key,
             null::uuid institution_key, null institution_name, null institution_code, false AS similarity_match
           FROM institution i
@@ -36,7 +40,7 @@
         UNION ALL
         (
           SELECT DISTINCT ON (i.key)
-          i.key, i.code, i.name, i.description, i.alternative_codes, 'institution' AS type,
+          i.key, i.code, i.name, i.description, i.alternative_codes, i.display_on_NHCPortal, 'institution' AS type,
           <if test="q != null" >9 AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
           i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code, false AS similarity_match
           FROM institution i
@@ -50,7 +54,7 @@
         UNION ALL
         (
           SELECT DISTINCT ON (i.key)
-          i.key, i.code, i.name, i.description, i.alternative_codes, 'institution' AS type,
+          i.key, i.code, i.name, i.description, i.alternative_codes, i.display_on_NHCPortal AS displayOnNHCPortal, 'institution' AS type≈,
           <if test="q != null" >similarity(i.name, #{q}) AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
           i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code, true AS similarity_match
           FROM institution i
@@ -64,7 +68,7 @@
         UNION ALL
         (
           SELECT DISTINCT ON (<if test="q != null" >ts_rank_cd(c.fulltext_search, query), </if>c.created, c.key)
-          c.key, c.code, c.name, c.description, c.alternative_codes,
+          c.key, c.code, c.name, c.description, c.alternative_codes, c.display_on_NHCPortal,
           'collection' AS type, <if test="q != null" >ts_rank_cd(c.fulltext_search, query) score, query,</if> c.address_key, c.mailing_address_key,
           i.key institution_key, i.name institution_name, i.code institution_code, false AS similarity_match
           FROM collection c
@@ -82,7 +86,7 @@
         UNION ALL
         (
           SELECT DISTINCT ON (c.key)
-          c.key, c.code, c.name, c.description, c.alternative_codes, 'collection' AS type,
+          c.key, c.code, c.name, c.description, c.alternative_codes, c.display_on_NHCPortal, 'collection' AS type,
           <if test="q != null" >9 AS score, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
           c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code, false AS similarity_match
           FROM collection c
@@ -97,7 +101,7 @@
         UNION ALL
         (
           SELECT DISTINCT ON (c.key)
-          c.key, c.code, c.name, c.description, c.alternative_codes, 'collection' AS type,
+          c.key, c.code, c.name, c.description, c.alternative_codes, c.display_on_NHCPortal, 'collection' AS type,
           <if test="q != null" >similarity(c.name, #{q}) AS score, to_tsquery('english', regexp_replace(quote_literal(unaccent(trim(#{q}))),'\s+',':*&amp;','g')||':*') query,</if>
           c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code, true AS similarity_match
           FROM collection c
@@ -112,10 +116,17 @@
     ) AS matches
     LEFT JOIN address ad ON ad.key = matches.address_key
     LEFT JOIN address mail ON mail.key = matches.mailing_address_key
+    <where>
+      <if test="country != null">
+        ad.country = #{country,jdbcType=OTHER} OR mail.country = #{country,jdbcType=OTHER}
+      </if>
+    </where>
     <if test="q != null" >
       ORDER BY matches.score desc
     </if>
-    LIMIT 50
+    <if test="limit != null" >
+      LIMIT #{limit}
+    </if>
   </select>
 
 </mapper>

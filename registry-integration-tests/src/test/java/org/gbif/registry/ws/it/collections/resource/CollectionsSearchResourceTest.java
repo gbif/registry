@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
 import org.gbif.registry.ws.client.collections.CollectionsSearchClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -63,11 +64,11 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     match.setSnippet("snippet");
     response.setMatches(Collections.singleton(match));
 
-    when(collectionsSearchService.search(q, highlight, null, null, limit))
+    when(collectionsSearchService.search(q, highlight, null, null, Country.SPAIN, limit))
         .thenReturn(Collections.singletonList(response));
 
     List<CollectionsSearchResponse> responseReturned =
-        collectionsSearchClient.searchCollections(q, highlight, null, null, limit);
+        collectionsSearchClient.searchCollections(q, highlight, null, null, Country.SPAIN, limit);
     assertEquals(1, responseReturned.size());
     assertEquals(response, responseReturned.get(0));
   }

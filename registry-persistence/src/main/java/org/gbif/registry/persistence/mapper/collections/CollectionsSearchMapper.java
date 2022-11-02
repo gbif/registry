@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 
 import java.util.List;
@@ -26,6 +27,8 @@ public interface CollectionsSearchMapper {
   List<SearchDto> search(
       @Nullable @Param("q") String query,
       @Param("highlight") boolean highlight,
-      @Param("type") String type,
-      @Param("displayOnNHCPortal") Boolean displayOnNHCPortal);
+      @Nullable @Param("type") String type,
+      @Nullable @Param("displayOnNHCPortal") Boolean displayOnNHCPortal,
+      @Nullable @Param("country") Country country,
+      @Param("limit") int limit);
 }
