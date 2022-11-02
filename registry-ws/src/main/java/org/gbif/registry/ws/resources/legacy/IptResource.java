@@ -279,8 +279,8 @@ public class IptResource {
           Endpoint dpEndpoint = dataset.getDataPackageEndpoint();
           if (dpEndpoint != null) {
             // set endpoint's required fields
-            archiveEndpoint.setCreatedBy(user);
-            archiveEndpoint.setModifiedBy(user);
+            dpEndpoint.setCreatedBy(user);
+            dpEndpoint.setModifiedBy(user);
             datasetService.addEndpoint(key, dpEndpoint);
           }
           LOG.info("Dataset registered successfully, key={}", key);
@@ -394,6 +394,13 @@ public class IptResource {
           archiveEndpoint.setCreatedBy(user);
           archiveEndpoint.setModifiedBy(user);
           datasetService.addEndpoint(datasetKey, archiveEndpoint);
+        }
+        Endpoint dpEndpoint = dataset.getDataPackageEndpoint();
+        if (dpEndpoint != null) {
+          // set endpoint's required fields
+          dpEndpoint.setCreatedBy(user);
+          dpEndpoint.setModifiedBy(user);
+          datasetService.addEndpoint(datasetKey, dpEndpoint);
         }
 
         LOG.info("Dataset updated successfully, key={}", datasetKey);
