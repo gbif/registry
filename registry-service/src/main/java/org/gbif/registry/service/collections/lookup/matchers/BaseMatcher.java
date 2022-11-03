@@ -191,27 +191,14 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     if ((dto.isCodeMatch() || dto.isAlternativeCodeMatch() || Strings.isNullOrEmpty(codeParam))
         && (dto.isIdentifierMatch() || dto.isKeyMatch())) {
       // exact if both code and id match or code is not provided and id matches
-      match = exact(toEntityMatched(dto));
-      if (dto.isCodeMatch()) {
-        match.getReasons().add(CODE_MATCH);
-      }
-      if (dto.isAlternativeCodeMatch()) {
-        match.getReasons().add(ALTERNATIVE_CODE_MATCH);
-      }
-      if (dto.isIdentifierMatch()) {
-        match.getReasons().add(IDENTIFIER_MATCH);
-      }
-      if (dto.isKeyMatch()) {
-        match.getReasons().add(KEY_MATCH);
-      }
+      match = exact(toEntityMatched(dto), getMatchReasons(dto));
       exactMatches.add(match);
     } else if (dto.isExplicitMapping()) {
       match = explicitMapping(toEntityMatched(dto));
       explicitMatches.add(match);
     } else {
-      match = fuzzy(toEntityMatched(dto));
+      match = fuzzy(toEntityMatched(dto), getMatchReasons(dto));
       fuzzyMatches.add(match);
-      match.setReasons(getMatchReasons(dto));
     }
     return match;
   }
