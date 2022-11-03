@@ -14,6 +14,7 @@
 package org.gbif.registry.service.collections.lookup.matchers;
 
 import org.gbif.api.model.collections.lookup.CollectionMatched;
+import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
@@ -48,7 +49,7 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
   }
 
   public Matches<CollectionMatched> matchCollections(
-      LookupParams params, Set<UUID> institutionMatches) {
+      LookupParams params, Set<Match<InstitutionMatched>> institutionMatches) {
     Matches<CollectionMatched> matches = new Matches<>();
 
     List<CollectionMatchedDto> dbMatches =
@@ -73,8 +74,13 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
         .forEach(
             dto -> {
               Match<CollectionMatched> match =
-                  createMatch(
-                      exactMatches, fuzzyMatches, explicitMatches, dto, params.getCollectionCode());
+                  createCollectionMatch(
+                      exactMatches,
+                      fuzzyMatches,
+                      explicitMatches,
+                      institutionMatches,
+                      dto,
+                      params.getCollectionCode());
 
               if (matchesCountry(dto, params.getCountry())) {
                 match.addReason(Match.Reason.COUNTRY_MATCH);
@@ -91,6 +97,29 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
     return setAccepted(matches);
   }
 
+  protected Match<CollectionMatched> createCollectionMatch(
+      Set<Match<CollectionMatched>> exactMatches,
+      Set<Match<CollectionMatched>> fuzzyMatches,
+      Set<Match<CollectionMatched>> explicitMatches,
+      Set<Match<InstitutionMatched>> institutionMatches,
+      CollectionMatchedDto dto,
+      String codeParam) {
+
+    if (dto.getInstitutionKey() != null && institutionMatches.size() == 1) {
+      Match<InstitutionMatched> institutionMatched = institutionMatches.iterator().next();
+      if (institutionMatched.getEntityMatched().getKey().equals(dto.getInstitutionKey())
+              && institutionMatched.getMatchType() == Match.MatchType.EXACT
+          || institutionMatched.getMatchType() == Match.MatchType.EXPLICIT_MAPPING) {
+        Match<CollectionMatched> match = Match.exact(toEntityMatched(dto), getMatchReasons(dto));
+        match.addReason(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED);
+        exactMatches.add(match);
+        return match;
+      }
+    }
+
+    return createMatch(exactMatches, fuzzyMatches, explicitMatches, dto, codeParam);
+  }
+
   private Matches<CollectionMatched> setAccepted(Matches<CollectionMatched> matches) {
     matches.setAcceptedMatch(
         chooseAccepted(
@@ -103,8 +132,11 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
     return matches;
   }
 
-  private boolean isMatchWithInstitutions(CollectionMatchedDto dto, Set<UUID> institutionMatches) {
-    return institutionMatches.isEmpty() || institutionMatches.contains(dto.getInstitutionKey());
+  private boolean isMatchWithInstitutions(
+      CollectionMatchedDto dto, Set<Match<InstitutionMatched>> institutionMatches) {
+    return institutionMatches.isEmpty()
+        || institutionMatches.stream()
+            .anyMatch(m -> m.getEntityMatched().getKey().equals(dto.getInstitutionKey()));
   }
 
   @Override

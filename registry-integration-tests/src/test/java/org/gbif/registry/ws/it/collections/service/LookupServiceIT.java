@@ -13,17 +13,35 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.lookup.*;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.lookup.CollectionMatched;
+import org.gbif.api.model.collections.lookup.InstitutionMatched;
+import org.gbif.api.model.collections.lookup.LookupParams;
+import org.gbif.api.model.collections.lookup.LookupResult;
+import org.gbif.api.model.collections.lookup.Match;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Node;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.InstallationType;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.NodeType;
+import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -227,8 +245,9 @@ public class LookupServiceIT extends BaseServiceIT {
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
-    assertEquals(1, collectionMatch.getReasons().size());
-    assertEquals(Match.Reason.IDENTIFIER_MATCH, collectionMatch.getReasons().iterator().next());
+    assertEquals(2, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
@@ -289,9 +308,10 @@ public class LookupServiceIT extends BaseServiceIT {
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
-    assertEquals(2, collectionMatch.getReasons().size());
+    assertEquals(3, collectionMatch.getReasons().size());
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
@@ -321,9 +341,10 @@ public class LookupServiceIT extends BaseServiceIT {
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
     assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
-    assertEquals(2, collectionMatch.getReasons().size());
+    assertEquals(3, collectionMatch.getReasons().size());
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.ALTERNATIVE_CODE_MATCH));
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
@@ -420,15 +441,15 @@ public class LookupServiceIT extends BaseServiceIT {
     occMappingI1.setDatasetKey(d1.getKey());
     institutionService.addOccurrenceMapping(i1.getKey(), occMappingI1);
 
-    OccurrenceMapping occMappingC1 = new OccurrenceMapping();
-    occMappingC1.setDatasetKey(d1.getKey());
-    occMappingC1.setCode(c1.getCode());
-    collectionService.addOccurrenceMapping(c1.getKey(), occMappingC1);
+    OccurrenceMapping occMappingC5 = new OccurrenceMapping();
+    occMappingC5.setDatasetKey(d1.getKey());
+    occMappingC5.setCode(c5.getCode());
+    collectionService.addOccurrenceMapping(c5.getKey(), occMappingC5);
 
     LookupParams params = new LookupParams();
     params.setDatasetKey(d1.getKey());
     params.setInstitutionCode(i1.getCode());
-    params.setCollectionCode(c1.getCode());
+    params.setCollectionCode(c5.getCode());
     params.setDatasetKey(d1.getKey());
 
     // When
@@ -445,8 +466,7 @@ public class LookupServiceIT extends BaseServiceIT {
     assertNotNull(result.getCollectionMatch());
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.EXPLICIT_MAPPING, collectionMatch.getMatchType());
-    assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
-    assertEquals(0, collectionMatch.getReasons().size());
+    assertEquals(c5.getKey(), collectionMatch.getEntityMatched().getKey());
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
@@ -724,6 +744,38 @@ public class LookupServiceIT extends BaseServiceIT {
     assertEquals(c5.getKey(), altCollections.get(0).getEntityMatched().getKey());
     assertTrue(altCollections.get(0).getReasons().contains(Match.Reason.INST_COLL_MISMATCH));
     assertTrue(altCollections.get(0).getReasons().contains(Match.Reason.CODE_MATCH));
+  }
+
+  @Test
+  public void exactCollectionMatchByInstitutionBelongingTest() {
+    // State
+    Dataset d1 = createDataset();
+
+    LookupParams params = new LookupParams();
+    params.setDatasetKey(d1.getKey());
+    params.setInstitutionCode(i2.getCode());
+    params.setInstitutionId(i2.getIdentifiers().get(0).getIdentifier());
+    params.setCollectionCode(c2.getCode());
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
+    assertEquals(i2.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
+    assertEquals(c2.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(2, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
   private Dataset createDataset() {

@@ -14,23 +14,43 @@
 package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
 
 import java.util.List;
 
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import lombok.AllArgsConstructor;
+
 @RequestMapping("grscicoll/search")
 public interface CollectionsSearchClient {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  List<CollectionsSearchResponse> searchCollections(
+  List<CollectionsSearchResponse> searchCollections(@SpringQueryMap SearchRequest searchRequest);
+
+  default List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
       @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      @RequestParam(value = "limit", defaultValue = "20") int limit);
+      @SpringQueryMap Country country,
+      @RequestParam(value = "limit", defaultValue = "20") int limit) {
+    return searchCollections(
+        SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
+  }
+
+  @AllArgsConstructor(staticName = "of")
+  class SearchRequest {
+    String q;
+    boolean hl;
+    TypeParam entityType;
+    Boolean displayOnNHCPortal;
+    Country country;
+    int limit;
+  }
 }
