@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
+import org.gbif.api.vocabulary.Country;
+
 import java.util.UUID;
 
 public class SearchDto {
@@ -25,6 +27,9 @@ public class SearchDto {
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
+  private boolean displayOnNHCPortal;
+  private Country country;
+  private Country mailCountry;
 
   private String codeHighlight;
   private String nameHighlight;
@@ -103,6 +108,30 @@ public class SearchDto {
 
   public void setInstitutionName(String institutionName) {
     this.institutionName = institutionName;
+  }
+
+  public boolean getDisplayOnNHCPortal() {
+    return displayOnNHCPortal;
+  }
+
+  public void setDisplayOnNHCPortal(boolean displayOnNHCPortal) {
+    this.displayOnNHCPortal = displayOnNHCPortal;
+  }
+
+  public Country getCountry() {
+    return country;
+  }
+
+  public void setCountry(Country country) {
+    this.country = country;
+  }
+
+  public Country getMailCountry() {
+    return mailCountry;
+  }
+
+  public void setMailCountry(Country mailCountry) {
+    this.mailCountry = mailCountry;
   }
 
   public String getCodeHighlight() {

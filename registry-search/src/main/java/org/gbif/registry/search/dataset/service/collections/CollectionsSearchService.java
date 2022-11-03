@@ -14,13 +14,20 @@
 package org.gbif.registry.search.dataset.service.collections;
 
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.elasticsearch.common.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +47,20 @@ public class CollectionsSearchService {
   }
 
   public List<CollectionsSearchResponse> search(
-    String query, boolean highlight, TypeParam type, Boolean displayOnNHCPortal, int limit) {
+      String query,
+      boolean highlight,
+      TypeParam type,
+      Boolean displayOnNHCPortal,
+      Country country,
+      int limit) {
     List<SearchDto> dtos =
         searchMapper.search(
-            query, highlight, type != null ? type.name() : null, displayOnNHCPortal);
+            query,
+            highlight,
+            type != null ? type.name() : null,
+            displayOnNHCPortal,
+            country,
+            limit);
 
     // the query can return duplicates so we need an auxiliary map to filter duplicates
     Map<UUID, CollectionsSearchResponse> responsesMap = new HashMap<>();
@@ -63,6 +80,9 @@ public class CollectionsSearchService {
           response.setCode(dto.getCode());
           response.setKey(dto.getKey());
           response.setName(dto.getName());
+          response.setDisplayOnNHCPortal(dto.getDisplayOnNHCPortal());
+          response.setCountry(dto.getCountry());
+          response.setMailingCountry(dto.getMailCountry());
 
           if (dto.getType().equals("collection")) {
             response.setInstitutionKey(dto.getInstitutionKey());
@@ -78,7 +98,7 @@ public class CollectionsSearchService {
           responsesMap.put(dto.getKey(), response);
         });
 
-    return responses.stream().limit(limit).collect(Collectors.toList());
+    return responses;
   }
 
   private void addMatches(CollectionsSearchResponse response, SearchDto dto) {
