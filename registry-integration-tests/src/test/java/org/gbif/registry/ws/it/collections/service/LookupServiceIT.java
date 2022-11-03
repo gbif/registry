@@ -70,11 +70,15 @@ public class LookupServiceIT extends BaseServiceIT {
   private Institution i2 = new Institution();
   private Institution i3 = new Institution();
   private Institution i4 = new Institution();
+  private Institution i5 = new Institution();
+  private Institution i6 = new Institution();
   private Collection c1 = new Collection();
   private Collection c2 = new Collection();
   private Collection c3 = new Collection();
   private Collection c4 = new Collection();
   private Collection c5 = new Collection();
+  private Collection c6 = new Collection();
+  private Collection c7 = new Collection();
 
   private final LookupService lookupService;
   private final InstitutionService institutionService;
@@ -133,6 +137,17 @@ public class LookupServiceIT extends BaseServiceIT {
     key = institutionService.create(i4);
     i4 = institutionService.get(key);
 
+    i5.setCode("I5");
+    i5.setName("Institution 5");
+    key = institutionService.create(i5);
+    i5 = institutionService.get(key);
+
+    i6.setCode("I6");
+    i6.setName("Institution 6");
+    i6.setAlternativeCodes(Collections.singletonList(new AlternativeCode(i5.getCode(), "test")));
+    key = institutionService.create(i6);
+    i6 = institutionService.get(key);
+
     c1.setCode("C1");
     c1.setName("Collection 1");
     c1.setInstitutionKey(i1.getKey());
@@ -164,6 +179,19 @@ public class LookupServiceIT extends BaseServiceIT {
     c5.setName("Collection 5");
     key = collectionService.create(c5);
     c5 = collectionService.get(key);
+
+    c6.setCode("C6");
+    c6.setName("Collection 6");
+    c6.setInstitutionKey(i5.getKey());
+    key = collectionService.create(c6);
+    c6 = collectionService.get(key);
+
+    c7.setCode("C7");
+    c7.setName("Collection 7");
+    c7.setInstitutionKey(i5.getKey());
+    c7.setAlternativeCodes(Collections.singletonList(new AlternativeCode(c6.getCode(), "test")));
+    key = collectionService.create(c7);
+    c7 = collectionService.get(key);
   }
 
   @Test
@@ -776,6 +804,47 @@ public class LookupServiceIT extends BaseServiceIT {
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+  }
+
+  @Test
+  public void codeOverAlternativeCodeTest() {
+    // State
+    Dataset d1 = createDataset();
+
+    LookupParams params = new LookupParams();
+    params.setDatasetKey(d1.getKey());
+    params.setInstitutionCode(i5.getCode());
+    params.setCollectionCode(c6.getCode());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.FUZZY, institutionMatch.getMatchType());
+    assertEquals(i5.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(1, institutionMatch.getReasons().size());
+    assertEquals(Match.Status.DOUBTFUL, institutionMatch.getStatus());
+    assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
+    List<Match<InstitutionMatched>> altInstMatches =
+        result.getAlternativeMatches().getInstitutionMatches();
+    assertEquals(i6.getKey(), altInstMatches.get(0).getEntityMatched().getKey());
+    assertTrue(altInstMatches.get(0).getReasons().contains(Match.Reason.ALTERNATIVE_CODE_MATCH));
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.FUZZY, collectionMatch.getMatchType());
+    assertEquals(c6.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(1, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.DOUBTFUL, collectionMatch.getStatus());
+    assertEquals(1, result.getAlternativeMatches().getCollectionMatches().size());
+    List<Match<CollectionMatched>> altCollMatches =
+        result.getAlternativeMatches().getCollectionMatches();
+    assertEquals(c7.getKey(), altCollMatches.get(0).getEntityMatched().getKey());
+    assertTrue(altCollMatches.get(0).getReasons().contains(Match.Reason.ALTERNATIVE_CODE_MATCH));
   }
 
   private Dataset createDataset() {

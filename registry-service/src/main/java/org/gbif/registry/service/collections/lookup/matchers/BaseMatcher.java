@@ -91,7 +91,11 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
           findUniqueMatch(
               filteredMatched,
               Arrays.asList(
-                  isIdentifierMatch(), isMultipleFieldsMatch(), isCountryMatch(), isActiveMatch()));
+                  isIdentifierMatch(),
+                  isMultipleFieldsMatch(),
+                  isCountryMatch(),
+                  isActiveMatch(),
+                  isCodeMatch()));
       if (uniqueMatch.isPresent()) {
         Match<R> acceptedMatch = uniqueMatch.get();
         acceptedMatch.setStatus(Match.Status.DOUBTFUL);
@@ -138,6 +142,10 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
                 || match.getReasons().contains(KEY_MATCH))
             && (match.getReasons().contains(NAME_MATCH)
                 || match.getReasons().contains(ALTERNATIVE_CODE_MATCH));
+  }
+
+  private Predicate<Match<R>> isCodeMatch() {
+    return match -> match.getReasons().contains(CODE_MATCH);
   }
 
   private Predicate<Match<R>> isCountryMatch() {

@@ -57,6 +57,7 @@ and we can set it as the accepted one. It checks these conditions in this order:
 2. If there is only 1 entity where either the `code` or the `identifier` matches **and** another field matches we take it
 3. If the `country` param was provided and there is only 1 entity where the `country` matches we take it
 4. If there is only one match that is set as `active` we take it
+5. If there is only one match where the `code` matches we take it
 
 Furthermore, there are some specific conditions based on the type of the entities:
 - Institutions: if the `ownerInstitutionCode` is different than the institutions matched we discard them and
