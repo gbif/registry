@@ -212,6 +212,45 @@ public class LegacyDatasetResource {
   }
 
   /**
+   * Checks whether dataset belongs to the organization.
+   *
+   * @param datasetKey dataset key (UUID) coming in as path variable
+   * @param organizationKey organization key (UUID) coming in as query param
+   * @return {@link ResponseEntity} with true or false value
+   */
+  @GetMapping(
+      value = {"resource/{key:[a-zA-Z0-9-]+}"},
+      consumes = {MediaType.ALL_VALUE},
+      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+  public ResponseEntity<?> datasetBelongsToOrganisation(
+      @PathVariable("key") UUID datasetKey,
+      @RequestParam(value = "organisationKey") UUID organizationKey) {
+    LOG.debug("Check dataset belongs to organization, datasetKey={}, organizationKey={}", datasetKey, organizationKey);
+    try {
+      // verify organization with key exists, otherwise NotFoundException gets thrown
+      organizationService.get(organizationKey);
+    } catch (NotFoundException e) {
+      LOG.error(
+          "The organization with key {} specified by query parameter does not exist",
+          organizationKey);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ErrorResponse("No organisation matches the key provided"));
+    }
+
+    try {
+      Dataset dataset = datasetService.get(datasetKey);
+      // true - if belongs, false - otherwise
+      return ResponseEntity.ok(organizationKey.equals(dataset.getPublishingOrganizationKey()));
+    } catch (NotFoundException e) {
+      LOG.error(
+          "The dataset with key {} specified by parameter does not exist",
+          datasetKey);
+      return ResponseEntity.status(HttpStatus.NOT_FOUND)
+          .body(new ErrorResponse("No dataset matches the key provided"));
+    }
+  }
+
+  /**
    * Retrieve all Datasets owned by an organization, handling incoming request with path /resource.
    * The publishing organization query parameter is mandatory. Only after both the organizationKey
    * is verified to correspond to an existing organization, is a response including the list of
