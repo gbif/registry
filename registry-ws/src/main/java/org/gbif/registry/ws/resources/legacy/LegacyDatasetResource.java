@@ -215,16 +215,16 @@ public class LegacyDatasetResource {
    * Checks whether dataset belongs to the organization.
    *
    * @param datasetKey dataset key (UUID) coming in as path variable
-   * @param organizationKey organization key (UUID) coming in as query param
+   * @param organizationKey organization key (UUID) coming in as path variable
    * @return {@link ResponseEntity} with true or false value
    */
   @GetMapping(
-      value = {"resource/{key:[a-zA-Z0-9-]+}"},
+      value = {"resource/{key}/belongs/organisation/{organisationKey}"},
       consumes = {MediaType.ALL_VALUE},
-      produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+      produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<?> datasetBelongsToOrganisation(
       @PathVariable("key") UUID datasetKey,
-      @RequestParam(value = "organisationKey") UUID organizationKey) {
+      @PathVariable("organisationKey") UUID organizationKey) {
     LOG.debug("Check dataset belongs to organization, datasetKey={}, organizationKey={}", datasetKey, organizationKey);
     try {
       // verify organization with key exists, otherwise NotFoundException gets thrown
