@@ -44,7 +44,7 @@ DO
 BEGIN
 IF NOT EXISTS (SELECT year_month FROM download_statistics WHERE year_month = '$year-$month-01') THEN
   INSERT INTO download_statistics (year_month, publishing_organization_country, dataset_key, total_records, number_downloads) (
-    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(o.country,'ZZ') AS publishing_organization_country, dod.dataset_key, SUM(dod.number_records) AS total_records, COUNT(dod.download_key) AS number_downloads, oc.type AS type
+    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(o.country,'ZZ') AS publishing_organization_country, dod.dataset_key, SUM(dod.number_records) AS total_records, COUNT(dod.download_key) AS number_downloads
       FROM dataset_occurrence_download dod
       JOIN occurrence_download oc ON oc.key = dod.download_key AND oc.status IN ('SUCCEEDED','FILE_ERASED')
       AND oc.created >= '$year-$month-01' AND oc.created < '$nextYear-$nextMonth-01'
@@ -65,7 +65,7 @@ DO
 BEGIN
 IF NOT EXISTS (SELECT year_month FROM download_user_statistics WHERE year_month = '$year-$month-01') THEN
   INSERT INTO download_user_statistics (year_month, user_country, total_records, number_downloads) (
-    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(u.settings->'country','ZZ') AS user_country, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
+    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(u.settings->'country','ZZ') AS user_country, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads
       FROM occurrence_download oc
       JOIN "user" u ON oc.created_by = u.username
       WHERE oc.status IN ('SUCCEEDED','FILE_ERASED')
