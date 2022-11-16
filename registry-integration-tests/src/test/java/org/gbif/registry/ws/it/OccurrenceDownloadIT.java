@@ -37,6 +37,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.UUID;
 
 import javax.validation.ValidationException;
@@ -64,6 +65,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </ol>
  */
 public class OccurrenceDownloadIT extends BaseItTest {
+
+  private static final String DEFAULT_SOURCE = "testSource";
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
@@ -96,6 +99,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     download.setDoi(new DOI("doi:10.1234/1ASCDU"));
     download.setDownloadLink("testUrl");
     download.setEraseAfter(Date.from(OffsetDateTime.now(ZoneOffset.UTC).plusMonths(6).toInstant()));
+    download.setSource(DEFAULT_SOURCE);
 
     return download;
   }
@@ -195,6 +199,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     assertNotNull(occurrenceDownload2);
     assertEquals(format, occurrenceDownload2.getRequest().getFormat());
     assertEquals(occurrenceDownload.getRequest(), occurrenceDownload2.getRequest());
+    assertEquals(occurrenceDownload.getSource(), occurrenceDownload2.getSource());
   }
 
   /** Creates a {@link Download} with a null status which should trigger a validation exception. */
@@ -222,7 +227,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
       service.create(getTestInstancePredicateDownload());
     }
 
-    PagingResponse<Download> downloads = service.list(new PagingRequest(0, 20), null);
+    PagingResponse<Download> downloads = service.list(new PagingRequest(0, 20), null, null);
     int resultSize = downloads.getResults().size();
     long numberOfPredicateDownloads =
         downloads.getResults().stream()
@@ -298,11 +303,80 @@ public class OccurrenceDownloadIT extends BaseItTest {
     }
     assertTrue(
         service
-                .list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES)
+                .list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES, null)
                 .getResults()
                 .size()
             > 0,
-        "List by user operation should return 5 records");
+        "List by status operation should return 5 records");
+  }
+
+  /**
+   * Creates several occurrence download with running status and retrieves the downloads done by
+   * source.
+   */
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListBySource(ServiceType serviceType) {
+    OccurrenceDownloadService service =
+        getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+    for (int i = 1; i <= 5; i++) {
+      service.create(getTestInstancePredicateDownload());
+    }
+    assertEquals(
+        5,
+        service
+            .list(new PagingRequest(0, 5), null, DEFAULT_SOURCE)
+            .getResults()
+            .size(),
+        "List by source operation should return 5 records");
+
+    assertEquals(
+        0,
+        service
+            .list(new PagingRequest(0, 5), new HashSet<>(), "foo")
+            .getResults()
+            .size(),
+        "List by source operation should return 0 records");
+  }
+
+  /**
+   * Creates several occurrence download with running status and retrieves the downloads done by
+   * source.
+   */
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListBySourceAndStatus(ServiceType serviceType) {
+    OccurrenceDownloadService service =
+        getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+    for (int i = 1; i <= 5; i++) {
+      service.create(getTestInstancePredicateDownload());
+    }
+    assertEquals(
+        5,
+        service
+            .list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES, DEFAULT_SOURCE)
+            .getResults()
+            .size(),
+        "List by source and status operation should return 5 records");
+
+    assertEquals(
+        0,
+        service
+            .list(new PagingRequest(0, 5), Download.Status.EXECUTING_STATUSES, "foo")
+            .getResults()
+            .size(),
+        "List by source and status operation should return 0 records");
+
+    assertEquals(
+        0,
+        service
+            .list(
+                new PagingRequest(0, 5),
+                Collections.singleton(Download.Status.CANCELLED),
+                DEFAULT_SOURCE)
+            .getResults()
+            .size(),
+        "List by source and status operation should return 0 records");
   }
 
   /**
