@@ -82,5 +82,6 @@ public class UpdateDownloadStatsService {
   public void updateDownloadStats(Date fromDate, Date toDate) {
     occurrenceDownloadMapper.updateDownloadStats(fromDate, toDate);
     occurrenceDownloadMapper.updateDownloadUserStats(fromDate, toDate);
+    occurrenceDownloadMapper.updateDownloadSourceStats(fromDate, toDate);
   }
 }

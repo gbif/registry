@@ -1,0 +1,20 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="118" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+      CREATE TABLE download_source_statistics (
+        year_month timestamp with time zone NOT NULL,
+        source text NOT NULL,
+        type download_type DEFAULT 'OCCURRENCE',
+        total_records bigint NOT NULL,
+        number_downloads integer NOT NULL,
+        PRIMARY KEY (year_month, source)
+      );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

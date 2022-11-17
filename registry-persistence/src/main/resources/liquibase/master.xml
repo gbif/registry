@@ -123,5 +123,6 @@
   <include file="liquibase/115-camtrap-dp-endpoint-type.xml" />
   <include file="liquibase/116-grscicoll-delete-person.xml" />
   <include file="liquibase/117-download-source.xml" />
+  <include file="liquibase/118-add-download-source-statistics.xml" />
 
 </databaseChangeLog>

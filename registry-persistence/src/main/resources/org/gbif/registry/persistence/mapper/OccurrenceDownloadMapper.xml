@@ -299,6 +299,19 @@
     ORDER BY year_month DESC;
   </select>
 
+  <select id="getDownloadsBySource" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_COUNT_MAP" parameterType="map">
+    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(number_downloads) AS number_downloads
+    FROM download_source_statistics
+    <where>
+      <if test="source != null">AND source = #{source,jdbcType=OTHER}</if>
+      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
+      <if test="fromDate != null" ><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null" ><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+    </where>
+    GROUP BY year_month
+    ORDER BY year_month DESC;
+  </select>
+
   <select id="getDownloadedRecordsByDataset" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_TOTAL_RECORDS_MAP" parameterType="map">
     SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(total_records) AS total_records
     FROM download_statistics
@@ -394,5 +407,17 @@
     ) ON CONFLICT ON CONSTRAINT download_user_statistics_pkey
     DO UPDATE SET (year_month, user_country, total_records, number_downloads, type) =
     (EXCLUDED.year_month, EXCLUDED.user_country, EXCLUDED.total_records, EXCLUDED.number_downloads, EXCLUDED.type)
+  </insert>
+
+  <insert id="updateDownloadSourceStats" parameterType="map">
+    INSERT INTO download_source_statistics (year_month, source, total_records, number_downloads, type) (
+    SELECT date_trunc('month', oc.created) AS year_month, oc.source, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
+    FROM occurrence_download oc
+    WHERE oc.status IN ('SUCCEEDED','FILE_ERASED')
+    AND <![CDATA[oc.created >= #{fromDate,jdbcType=TIMESTAMP} AND oc.created < #{toDate,jdbcType=TIMESTAMP}]]>
+    GROUP BY year_month, oc.source, oc.type ORDER BY year_month, oc.source
+    ) ON CONFLICT ON CONSTRAINT download_source_statistics_pkey
+    DO UPDATE SET (year_month, source, total_records, number_downloads, type) =
+    (EXCLUDED.year_month, EXCLUDED.source, EXCLUDED.total_records, EXCLUDED.number_downloads, EXCLUDED.type)
   </insert>
 </mapper>

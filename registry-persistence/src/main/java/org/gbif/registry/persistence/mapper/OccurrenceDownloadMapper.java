@@ -85,6 +85,12 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("userCountry") String userCountry,
       @Nullable @Param("type") DownloadType type);
 
+  List<Facet.Count> getDownloadsBySource(
+    @Nullable @Param("fromDate") Date fromDate,
+    @Nullable @Param("toDate") Date toDate,
+    @Nullable @Param("source") String source,
+    @Nullable @Param("type") DownloadType type);
+
   List<Facet.Count> getDownloadedRecordsByDataset(
       @Nullable @Param("fromDate") Date fromDate,
       @Nullable @Param("toDate") Date toDate,
@@ -121,4 +127,6 @@ public interface OccurrenceDownloadMapper {
   void updateDownloadStats(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 
   void updateDownloadUserStats(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+
+  void updateDownloadSourceStats(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 }
