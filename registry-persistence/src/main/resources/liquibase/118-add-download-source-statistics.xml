@@ -8,7 +8,7 @@
       <![CDATA[
       CREATE TABLE download_source_statistics (
         year_month timestamp with time zone NOT NULL,
-        source text NOT NULL,
+        source text,
         type download_type DEFAULT 'OCCURRENCE',
         total_records bigint NOT NULL,
         number_downloads integer NOT NULL,
