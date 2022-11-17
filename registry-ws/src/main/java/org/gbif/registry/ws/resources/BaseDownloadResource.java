@@ -212,16 +212,12 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Override
   public PagingResponse<Download> list(
       Pageable page,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status) {
-    if (status == null || status.isEmpty()) {
-      return new PagingResponse<>(
-          page, (long) occurrenceDownloadMapper.count(downloadType), occurrenceDownloadMapper.list(page, downloadType));
-    } else {
-      return new PagingResponse<>(
-          page,
-          (long) occurrenceDownloadMapper.countByStatus(status, downloadType),
-          occurrenceDownloadMapper.listByStatus(page, status, downloadType));
-    }
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "source", required = false) String source) {
+    return new PagingResponse<>(
+        page,
+        (long) occurrenceDownloadMapper.count(status, downloadType, source),
+        occurrenceDownloadMapper.list(page, status, downloadType, source));
   }
 
   /**

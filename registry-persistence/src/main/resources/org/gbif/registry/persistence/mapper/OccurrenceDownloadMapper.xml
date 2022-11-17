@@ -15,6 +15,7 @@
     <result property="modified" column="modified"/>
     <result property="eraseAfter" column="erase_after"/>
     <result property="erasureNotification" column="erasure_notification"/>
+    <result property="source" column="source"/>
 
     <association property="request" javaType="org.gbif.api.model.occurrence.DownloadRequest">
       <result property="notificationAddressesAsString" column="notification_addresses"/>
@@ -70,7 +71,8 @@
   <resultMap id="DOWNLOAD_STATISTICS" type="org.gbif.api.model.occurrence.DownloadStatistics" autoMapping="true"/>
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
-    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,format,created,modified,erase_after,erasure_notification,type,extensions
+    key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,
+    format,created,modified,erase_after,erasure_notification,type,extensions,source
   </sql>
 
 
@@ -121,7 +123,8 @@
     #{eraseAfter,jdbcType=TIMESTAMP},
     #{erasureNotification,jdbcType=TIMESTAMP},
     #{request.type,jdbcType=OTHER},
-    #{request.extensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler}
+    #{request.extensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},
+    #{source,jdbcType=VARCHAR}
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
@@ -192,7 +195,14 @@
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     <where>
-      <if test="type != null">type = #{type,jdbcType=OTHER}</if>
+      <if test="status != null and status.size > 0">
+        status IN
+        <foreach item="item" index="index" collection="status" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      </if>
+      <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
+      <if test="source != null"> AND source = #{source,jdbcType=OTHER}</if>
     </where>
     ORDER BY created DESC, key
     <if test="page != null" >
@@ -204,35 +214,15 @@
     SELECT COUNT(*)
     FROM occurrence_download
     <where>
-      <if test="type != null">type = #{type,jdbcType=OTHER}</if>
+      <if test="status != null and status.size > 0">
+        status IN
+        <foreach item="item" index="index" collection="status" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      </if>
+      <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
+      <if test="source != null"> AND source = #{source,jdbcType=OTHER}</if>
     </where>
-  </select>
-
-  <!-- Append safe ordering -->
-  <select id="listByStatus" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
-    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM occurrence_download
-    WHERE status IN
-    <foreach item="item" index="index" collection="status"
-             open="(" separator="," close=")">
-      #{item}
-    </foreach>
-    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
-    ORDER BY created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countByStatus" resultType="Integer">
-    SELECT COUNT(*)
-    FROM occurrence_download
-    WHERE status IN
-    <foreach item="item" index="index" collection="status"
-             open="(" separator="," close=")">
-      #{item}
-    </foreach>
-    <if test="type != null"> AND type = #{type,jdbcType=OTHER}</if>
   </select>
 
   <select id="listByEraseAfter" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">

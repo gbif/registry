@@ -122,5 +122,6 @@
   <include file="liquibase/114-grscicoll-founding-date-integer.xml" />
   <include file="liquibase/115-camtrap-dp-endpoint-type.xml" />
   <include file="liquibase/116-grscicoll-delete-person.xml" />
+  <include file="liquibase/117-download-source.xml" />
 
 </databaseChangeLog>

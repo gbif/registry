@@ -42,14 +42,16 @@ public interface OccurrenceDownloadMapper {
 
   void create(Download entity);
 
-  List<Download> list(@Nullable @Param("page") Pageable page, @Nullable @Param("type") DownloadType type);
+  List<Download> list(
+      @Nullable @Param("page") Pageable page,
+      @Param("status") Set<Download.Status> status,
+      @Nullable @Param("type") DownloadType type,
+      @Nullable @Param("source") String source);
 
-  int count(@Nullable @Param("type") DownloadType type);
-
-  List<Download> listByStatus(
-      @Nullable @Param("page") Pageable page, @Param("status") Set<Download.Status> status, @Nullable @Param("type") DownloadType type);
-
-  int countByStatus(@Param("status") Set<Download.Status> status, @Nullable @Param("type") DownloadType type);
+  int count(
+      @Param("status") Set<Download.Status> status,
+      @Nullable @Param("type") DownloadType type,
+      @Nullable @Param("source") String source);
 
   void updateNotificationAddresses(
       @Param("oldCreator") String oldCreator,
