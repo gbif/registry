@@ -115,4 +115,8 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("datasetKey") UUID datasetKey,
       @Nullable @Param("publishingOrgKey") UUID publishingOrgKey,
       @Nullable @Param("type") DownloadType type);
+
+  void updateDownloadStats(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
+
+  void updateDownloadUserStats(@Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 }

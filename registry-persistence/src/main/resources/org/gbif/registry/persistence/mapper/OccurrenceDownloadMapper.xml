@@ -377,4 +377,32 @@
       <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
   </select>
+
+
+  <insert id="updateDownloadStats" parameterType="map">
+    <![CDATA[INSERT INTO download_statistics (year_month, publishing_organization_country, dataset_key, total_records, number_downloads, type) (
+    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(o.country,'ZZ') AS publishing_organization_country, dod.dataset_key, SUM(dod.number_records) AS total_records, COUNT(dod.download_key) AS number_downloads, oc.type AS type
+    FROM dataset_occurrence_download dod
+    JOIN occurrence_download oc ON oc.key = dod.download_key AND oc.status IN ('SUCCEEDED','FILE_ERASED')
+    AND oc.created >= #{fromDate,jdbcType=TIMESTAMP} AND oc.created < #{toDate,jdbcType=TIMESTAMP}
+    JOIN dataset d ON dod.dataset_key = d.key
+    JOIN organization o ON d.publishing_organization_key = o.key
+    GROUP BY year_month, dod.dataset_key, o.country, oc.type ORDER BY dataset_key, publishing_organization_country
+    ) ON CONFLICT ON CONSTRAINT download_statistics_pkey
+    DO UPDATE SET (year_month, publishing_organization_country, dataset_key, total_records, number_downloads, type) =
+    (EXCLUDED.year_month, EXCLUDED.publishing_organization_country, EXCLUDED.dataset_key, EXCLUDED.total_records, EXCLUDED.number_downloads, EXCLUDED.type)]]>
+  </insert>
+
+  <insert id="updateDownloadUserStats" parameterType="map">
+    <![CDATA[INSERT INTO download_user_statistics (year_month, user_country, total_records, number_downloads, type) (
+    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(u.settings->'country','ZZ') AS user_country, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
+    FROM occurrence_download oc
+    JOIN "user" u ON oc.created_by = u.username
+    WHERE oc.status IN ('SUCCEEDED','FILE_ERASED')
+    AND oc.created >= #{fromDate,jdbcType=TIMESTAMP} AND oc.created < #{toDate,jdbcType=TIMESTAMP}
+    GROUP BY year_month, user_country, oc.type ORDER BY year_month, user_country
+    ) ON CONFLICT ON CONSTRAINT download_user_statistics_pkey
+    DO UPDATE (year_month, user_country, total_records, number_downloads, type) =
+    (EXCLUDED.year_month, EXCLUDED.user_country, EXCLUDED.total_records, EXCLUDED.number_downloads, EXCLUDED.type)]]>
+  </insert>
 </mapper>
