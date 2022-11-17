@@ -54,7 +54,8 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   @Override
   PagingResponse<Download> list(
       @SpringQueryMap Pageable pageable,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status);
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "source", required = false) String source);
 
   @RequestMapping(
       method = RequestMethod.GET,

@@ -3,9 +3,6 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <!--
-    Change founding_date from timestamp to integer to store only the year
-  -->
   <changeSet id="116" author="mlopez">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
