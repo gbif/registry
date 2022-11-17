@@ -46,11 +46,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -60,7 +55,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
@@ -105,6 +99,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   private final DoiIssuingService doiIssuingService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DownloadType downloadType;
+  private final UpdateDownloadStatsService updateDownloadStats;
 
   // Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
@@ -134,13 +129,15 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       DoiIssuingService doiIssuingService,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
-      DownloadType downloadType) {
+      DownloadType downloadType,
+      UpdateDownloadStatsService updateDownloadStats) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiIssuingService = doiIssuingService;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.identityService = identityService;
     this.downloadType = downloadType;
+    this.updateDownloadStats = updateDownloadStats;
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -281,29 +278,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     GbifUser user = identityService.get(authentication.getName());
     doiDataCiteHandlingService.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
-    updateDownloadStats(download);
-  }
-
-  private void updateDownloadStats(Download download) {
-    CompletableFuture.runAsync(() -> {
-      try {
-        if (Download.Status.SUCCEEDED == download.getStatus() || Download.Status.FILE_ERASED == download.getStatus()) {
-          LocalDateTime createdDate = download.getCreated().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-          Date fromDate =Date.from(createdDate.with(TemporalAdjusters.firstDayOfMonth())
-                                     .atZone(ZoneId.systemDefault()).toInstant());
-          Date toDate = Date.from(createdDate.with(TemporalAdjusters.firstDayOfNextMonth())
-                                    .atZone(ZoneId.systemDefault()).toInstant());
-          updateDownloadStats(fromDate, toDate);
-        }
-      } catch (Exception ex) {
-        LOG.error("Error updating download statistics", ex);
-      }
-    });
-  }
-
-  private void updateDownloadStats(Date fromDate, Date toDate) {
-    occurrenceDownloadMapper.updateDownloadStats(fromDate, toDate);
-    occurrenceDownloadMapper.updateDownloadUserStats(fromDate, toDate);
+    updateDownloadStats.updateDownloadStatsAsync(download);
   }
 
   @Override

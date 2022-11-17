@@ -39,7 +39,8 @@ public class OccurrenceDownloadResource extends BaseDownloadResource {
     DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
     DoiIssuingService doiIssuingService,
     @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
-    @Qualifier("baseIdentityAccessService") IdentityAccessService identityService) {
-    super(occurrenceDownloadMapper, datasetOccurrenceDownloadMapper, doiIssuingService, doiDataCiteHandlingService, identityService, DownloadType.OCCURRENCE);
+    @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
+    UpdateDownloadStatsService updateDownloadStatsService) {
+    super(occurrenceDownloadMapper, datasetOccurrenceDownloadMapper, doiIssuingService, doiDataCiteHandlingService, identityService, DownloadType.OCCURRENCE, updateDownloadStatsService);
   }
 }

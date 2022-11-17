@@ -17,8 +17,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import lombok.Getter;
