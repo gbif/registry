@@ -79,6 +79,25 @@ SQL
 		sleep 2
 		echo
 
+		cat <<SQL
+DO
+\$do\$
+BEGIN
+IF NOT EXISTS (SELECT year_month FROM download_source_statistics WHERE year_month = '$year-$month-01') THEN
+  INSERT INTO download_source_statistics (year_month, source, total_records, number_downloads, type) (
+    SELECT date_trunc('month', oc.created) AS year_month, oc.source, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
+      FROM occurrence_download oc
+      WHERE oc.status IN ('SUCCEEDED','FILE_ERASED')
+      AND oc.created >= '$year-$month-01' AND oc.created < '$nextYear-$nextMonth-01'
+      GROUP BY year_month, oc.source, oc.type ORDER BY year_month, oc.source
+  );
+END IF;
+END
+\$do\$;
+SQL
+		sleep 2
+		echo
+
 		month=$(($month + 1))
 	done
 	year=$(($year + 1))

@@ -111,6 +111,17 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(
       method = RequestMethod.GET,
+      value = "statistics/downloadsBySource",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  Map<Integer, Map<Integer, Long>> getDownloadsBySource(
+      @PartialDate("fromDate") Date fromDate,
+      @PartialDate("toDate") Date toDate,
+      @RequestParam(value = "source", required = false) String source);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
       value = "statistics/downloadedRecordsByDataset",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody

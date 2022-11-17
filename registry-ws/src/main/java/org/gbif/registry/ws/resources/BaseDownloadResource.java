@@ -392,6 +392,17 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             downloadType));
   }
 
+  @GetMapping("statistics/downloadsBySource")
+  @Override
+  public Map<Integer, Map<Integer, Long>> getDownloadsBySource(
+    @PartialDate Date fromDate, @PartialDate Date toDate, String source) {
+    return groupByYear(
+      occurrenceDownloadMapper.getDownloadsBySource(
+        fromDate,
+        toDate, source,
+        downloadType));
+  }
+
   @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset(
