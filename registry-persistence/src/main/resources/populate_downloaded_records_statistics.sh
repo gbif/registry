@@ -85,7 +85,7 @@ DO
 BEGIN
 IF NOT EXISTS (SELECT year_month FROM download_source_statistics WHERE year_month = '$year-$month-01') THEN
   INSERT INTO download_source_statistics (year_month, source, total_records, number_downloads, type) (
-    SELECT date_trunc('month', oc.created) AS year_month, oc.source, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
+    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(oc.source,'UNKNOWN') AS source, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
       FROM occurrence_download oc
       WHERE oc.status IN ('SUCCEEDED','FILE_ERASED')
       AND oc.created >= '$year-$month-01' AND oc.created < '$nextYear-$nextMonth-01'
