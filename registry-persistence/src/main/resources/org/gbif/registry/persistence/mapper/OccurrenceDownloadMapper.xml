@@ -411,7 +411,7 @@
 
   <insert id="updateDownloadSourceStats" parameterType="map">
     INSERT INTO download_source_statistics (year_month, source, total_records, number_downloads, type) (
-    SELECT date_trunc('month', oc.created) AS year_month, oc.source, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
+    SELECT date_trunc('month', oc.created) AS year_month, COALESCE(oc.source,'UNKNOWN') AS source, SUM(oc.total_records) AS total_records, COUNT(oc.key) AS number_downloads, oc.type AS type
     FROM occurrence_download oc
     WHERE oc.status IN ('SUCCEEDED','FILE_ERASED')
     AND <![CDATA[oc.created >= #{fromDate,jdbcType=TIMESTAMP} AND oc.created < #{toDate,jdbcType=TIMESTAMP}]]>
