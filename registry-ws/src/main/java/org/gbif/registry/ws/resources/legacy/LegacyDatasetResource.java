@@ -223,9 +223,11 @@ public class LegacyDatasetResource {
       consumes = {MediaType.ALL_VALUE},
       produces = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<?> datasetBelongsToOrganisation(
-      @PathVariable("key") UUID datasetKey,
-      @PathVariable("organisationKey") UUID organizationKey) {
-    LOG.debug("Check dataset belongs to organization, datasetKey={}, organizationKey={}", datasetKey, organizationKey);
+      @PathVariable("key") UUID datasetKey, @PathVariable("organisationKey") UUID organizationKey) {
+    LOG.debug(
+        "Check dataset belongs to organization, datasetKey={}, organizationKey={}",
+        datasetKey,
+        organizationKey);
     try {
       // verify organization with key exists, otherwise NotFoundException gets thrown
       organizationService.get(organizationKey);
@@ -242,9 +244,7 @@ public class LegacyDatasetResource {
       // true - if belongs, false - otherwise
       return ResponseEntity.ok(organizationKey.equals(dataset.getPublishingOrganizationKey()));
     } catch (NotFoundException e) {
-      LOG.error(
-          "The dataset with key {} specified by parameter does not exist",
-          datasetKey);
+      LOG.error("The dataset with key {} specified by parameter does not exist", datasetKey);
       return ResponseEntity.status(HttpStatus.NOT_FOUND)
           .body(new ErrorResponse("No dataset matches the key provided"));
     }
