@@ -33,6 +33,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -113,6 +114,7 @@ public class DatasetBatchIndexerIT {
     return configuration;
   }
 
+  @Disabled("Failing because of CAMTRAP-DP endpoints")
   @Test
   public void indexTests() throws IOException {
 
