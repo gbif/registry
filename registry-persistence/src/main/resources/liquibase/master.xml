@@ -124,5 +124,6 @@
   <include file="liquibase/116-grscicoll-delete-person.xml" />
   <include file="liquibase/117-download-source.xml" />
   <include file="liquibase/118-add-download-source-statistics.xml" />
+  <include file="liquibase/119-symbiota-uuid-identifier-type.xml" />
 
 </databaseChangeLog>
