@@ -14,15 +14,18 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetCreationRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUpdateRequest;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
+import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -33,9 +36,11 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
@@ -44,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,6 +72,7 @@ public class DerivedDatasetIT extends BaseItTest {
   private final DerivedDatasetMapper derivedDatasetMapper;
   private final TestDataFactory testDataFactory;
   private final OccurrenceDownloadResource occurrenceDownloadService;
+  private final IdentityService identityService;
 
   @Autowired
   public DerivedDatasetIT(
@@ -75,13 +82,15 @@ public class DerivedDatasetIT extends BaseItTest {
       RequestTestFixture requestTestFixture,
       DerivedDatasetMapper derivedDatasetMapper,
       TestDataFactory testDataFactory,
-      OccurrenceDownloadResource occurrenceDownloadService) {
+      OccurrenceDownloadResource occurrenceDownloadService,
+      IdentityService identityService) {
     super(simplePrincipalProvider, esServer);
     this.derivedDatasetResource = derivedDatasetResource;
     this.requestTestFixture = requestTestFixture;
     this.derivedDatasetMapper = derivedDatasetMapper;
     this.testDataFactory = testDataFactory;
     this.occurrenceDownloadService = occurrenceDownloadService;
+    this.identityService = identityService;
   }
 
   @Test
@@ -260,6 +269,20 @@ public class DerivedDatasetIT extends BaseItTest {
     assertEquals(new DOI("10.21373/dd.abcd1"), response.getDoi());
   }
 
+  @WithMockUser
+  @Test
+  public void testDerivedDatasetWithoutRelatedDatasets() throws Exception {
+    final String username = "testuser";
+    prepareUser(username, Collections.singleton(UserRole.REGISTRY_ADMIN));
+
+    DerivedDatasetCreationRequest request =
+        newDerivedDatasetCreationRequest(new DOI("10.21373/dd.abcdef"), new HashMap<>());
+
+    requestTestFixture
+        .postRequest(username, username, request, "/derivedDataset/")
+        .andExpect(status().isBadRequest());
+  }
+
   public void prepareDerivedDataset(String doi, String creator) {
     DerivedDataset derivedDataset = new DerivedDataset();
     derivedDataset.setOriginalDownloadDOI(new DOI("10.21373/dl.abcdef"));
@@ -286,5 +309,22 @@ public class DerivedDatasetIT extends BaseItTest {
     creationRequest.setRelatedDatasets(relatedDatasets);
 
     return creationRequest;
+  }
+
+  private void prepareUser(String username, Set<UserRole> roles) {
+    GbifUser user = new GbifUser();
+    user.setUserName(username);
+    user.setFirstName(username);
+    user.setLastName(username);
+    user.setEmail(username + "@test.com");
+    user.getSettings().put("language", "en");
+    user.getSettings().put("country", "dk");
+    user.setRoles(roles);
+
+    // password equals to username
+    identityService.create(user, username);
+
+    Integer key = identityService.get(username).getKey();
+    identityService.updateLastLogin(key);
   }
 }
