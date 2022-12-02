@@ -337,6 +337,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Override
   public void createUsages(
       @PathVariable("key") String downloadKey, @RequestBody Map<UUID, Long> datasetCitations) {
+    LOG.debug("Dataset citations for download key {}:", downloadKey);
+    datasetCitations.forEach((key, value) -> LOG.debug("{} - {}", key, value));
+
     Iterators.partition(datasetCitations.entrySet().iterator(), BATCH_SIZE)
         .forEachRemaining(
             batch ->
