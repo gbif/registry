@@ -61,16 +61,12 @@
         <foreach item="value" index="key" collection="citationMap" open="(" separator="),(" close=")">
           cast(#{key} as uuid),#{value}
         </foreach>
-      )),
-      updated AS (UPDATE dataset_occurrence_download SET number_records = du.number_records
-                  FROM dataset_occurrence_download dod JOIN dataset_usages du ON du.dataset_key = dod.dataset_key
-                  WHERE dod.download_key =#{downloadKey} RETURNING dataset_occurrence_download.dataset_key)
+      ))
     INSERT INTO dataset_occurrence_download (
       SELECT #{downloadKey} as download_key, d.key, dus.number_records, d.title, d.doi, d.citation
       FROM dataset d
-      JOIN dataset_usages dus ON d.key = dus.dataset_key
-      LEFT JOIN updated u ON u.dataset_key = d.key
-      WHERE u.dataset_key is NULL)
+      JOIN dataset_usages dus ON d.key = dus.dataset_key)
+    ON CONFLICT(download_key,dataset_key) DO UPDATE SET number_records = EXCLUDED.number_records
   </insert>
 
 </mapper>
