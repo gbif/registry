@@ -23,7 +23,7 @@
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <result property="type" column="type"/>
-      <result property="extensions" column="extensions" typeHandler="ExtensionArrayTypeHandler"/>
+      <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
       <discriminator javaType="string" column="format">
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
@@ -72,7 +72,7 @@
 
   <sql id="OCCURRENCE_DOWNLOAD_FIELDS">
     key,doi,license,filter,status,download_link,size,total_records,notification_addresses,created_by,send_notification,
-    format,created,modified,erase_after,erasure_notification,type,extensions,source
+    format,created,modified,erase_after,erasure_notification,type,verbatim_extensions,source
   </sql>
 
 
@@ -123,7 +123,7 @@
     #{eraseAfter,jdbcType=TIMESTAMP},
     #{erasureNotification,jdbcType=TIMESTAMP},
     #{request.type,jdbcType=OTHER},
-    #{request.extensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},
+    #{request.verbatimExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},
     #{source,jdbcType=VARCHAR}
   </sql>
 
