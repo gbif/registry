@@ -39,7 +39,7 @@
                                         'EXTENDED_MEASUREMENT_OR_FACT',
                                         'CHRONOMETRIC_AGE',
                                         'CHRONOMETRIC_DATE');
-      ALTER TABLE occurrence_download ADD COLUMN extensions extension ARRAY DEFAULT array[]::extension[];
+      ALTER TABLE occurrence_download ADD COLUMN verbatim_extensions extension ARRAY DEFAULT array[]::extension[];
        ]]>
     </sql>
   </changeSet>
