@@ -18,6 +18,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
+import org.gbif.api.util.ContactAdapter;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.doi.metadata.datacite.Affiliation;
@@ -48,7 +49,6 @@ import org.gbif.doi.metadata.datacite.DateType;
 import org.gbif.doi.metadata.datacite.DescriptionType;
 import org.gbif.doi.metadata.datacite.NameIdentifier;
 import org.gbif.doi.metadata.datacite.ResourceType;
-import org.gbif.registry.metadata.contact.ContactAdapter;
 
 import java.util.Date;
 import java.util.List;
