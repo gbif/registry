@@ -17,9 +17,9 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.util.CitationGenerator;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.metadata.CitationGenerator;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.HashMap;
