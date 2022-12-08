@@ -21,6 +21,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.DeleteEvent;
 import org.gbif.registry.events.EventManager;
@@ -33,6 +34,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
+import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 
@@ -54,8 +56,8 @@ public class MasterSourceSynchronizer {
 
   private final CollectionService collectionService;
   private final InstitutionService institutionService;
-  private final OrganizationMapper organizationMapper;
-  private final DatasetMapper datasetMapper;
+  private final OrganizationService organizationService;
+  private final RegistryDatasetService registryDatasetService;
   private final CollectionMapper collectionMapper;
   private final CollectionsEmailManager emailManager;
   private final EmailSender emailSender;
@@ -64,16 +66,16 @@ public class MasterSourceSynchronizer {
   public MasterSourceSynchronizer(
       CollectionService collectionService,
       InstitutionService institutionService,
-      OrganizationMapper organizationMapper,
-      DatasetMapper datasetMapper,
+      OrganizationService organizationService,
+      RegistryDatasetService registryDatasetService,
       CollectionMapper collectionMapper,
       CollectionsEmailManager emailManager,
       EmailSender emailSender,
       EventManager eventManager) {
     this.collectionService = collectionService;
     this.institutionService = institutionService;
-    this.organizationMapper = organizationMapper;
-    this.datasetMapper = datasetMapper;
+    this.organizationService = organizationService;
+    this.registryDatasetService = registryDatasetService;
     this.collectionMapper = collectionMapper;
     this.emailManager = emailManager;
     this.emailSender = emailSender;
@@ -103,7 +105,7 @@ public class MasterSourceSynchronizer {
 
             // update the collection
             Organization publishingOrganization =
-                organizationMapper.get(updatedDataset.getPublishingOrganizationKey());
+              organizationService.get(updatedDataset.getPublishingOrganizationKey());
 
             updateCollection(updatedDataset, publishingOrganization, collectionFound.get(0));
           });
@@ -146,7 +148,7 @@ public class MasterSourceSynchronizer {
                 updatedOrganization.getKey(),
                 dto.getDatasetKey());
 
-            Dataset dataset = datasetMapper.get(dto.getDatasetKey());
+            Dataset dataset = registryDatasetService.get(dto.getDatasetKey());
             Collection collection = collectionService.get(dto.getCollectionKey());
 
             updateCollection(dataset, updatedOrganization, collection);
@@ -255,9 +257,9 @@ public class MasterSourceSynchronizer {
       checkArgument(
           collection != null, "Collection not found for key " + event.getCollectionEntityKey());
 
-      Dataset dataset = datasetMapper.get(UUID.fromString(event.getMetadata().getSourceId()));
+      Dataset dataset = registryDatasetService.get(UUID.fromString(event.getMetadata().getSourceId()));
       Organization publishingOrganization =
-          organizationMapper.get(dataset.getPublishingOrganizationKey());
+        organizationService.get(dataset.getPublishingOrganizationKey());
 
       log.info(
           "Updating collection {} with new master source dataset {}",
@@ -271,7 +273,7 @@ public class MasterSourceSynchronizer {
           institution != null, "Institution not found for key " + event.getCollectionEntityKey());
 
       Organization organization =
-          organizationMapper.get(UUID.fromString(event.getMetadata().getSourceId()));
+        organizationService.get(UUID.fromString(event.getMetadata().getSourceId()));
 
       log.info(
           "Updating institution {} with new master source organization {}",
