@@ -33,10 +33,6 @@
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-metadata</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-persistence</artifactId>
     </dependency>
     <dependency>
@@ -84,6 +80,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco-maven-plugin.version}</version>
       </plugin>
     </plugins>
   </build>
