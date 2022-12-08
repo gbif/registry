@@ -28,10 +28,6 @@
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif.registry</groupId>
-      <artifactId>registry-metadata</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.gbif.registry</groupId>
       <artifactId>registry-persistence</artifactId>
     </dependency>
     <dependency>
@@ -45,6 +41,14 @@
     <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-metadata-profile-eml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.gbif</groupId>
+      <artifactId>gbif-metadata-profile-dc</artifactId>
     </dependency>
 
     <!-- Third-party dependencies -->

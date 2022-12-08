@@ -54,8 +54,8 @@ import org.gbif.registry.doi.DatasetDoiDataCiteHandlingService;
 import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.metadata.EMLWriter;
-import org.gbif.registry.metadata.parse.DatasetParser;
+import org.gbif.metadata.common.util.MetadataUtils;
+import org.gbif.metadata.eml.EMLWriter;
 import org.gbif.registry.persistence.mapper.ContactMapper;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
@@ -156,6 +156,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   private final DataCiteMetadataBuilderService metadataBuilderService;
   private final DoiIssuingService doiIssuingService;
   private final WithMyBatis withMyBatis;
+  private final EMLWriter emlWriter;
 
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
@@ -190,6 +191,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.doiIssuingService = doiIssuingService;
     this.messagePublisher = messagePublisher;
     this.withMyBatis = withMyBatis;
+    this.emlWriter = EMLWriter.newInstance(false);
   }
 
   @GetMapping("search")
@@ -301,7 +303,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       // generate new EML
       try {
         StringWriter eml = new StringWriter();
-        EMLWriter.write(dataset, eml);
+        emlWriter.writeTo(dataset, eml);
         return eml.toString().getBytes(StandardCharsets.UTF_8);
       } catch (Exception e) {
         throw new ServiceUnavailableException("Failed to serialize dataset " + datasetKey, e);
@@ -353,7 +355,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     // now detect type and create a new metadata record
     MetadataType type;
     try (InputStream in = new ByteArrayInputStream(data)) {
-      type = DatasetParser.detectParserType(in);
+      type = MetadataUtils.detectParserType(in);
       // TODO: should we not also validate the EML/DC document ???
     } catch (IOException e) {
       throw new IllegalArgumentException("Unreadable document", e);
