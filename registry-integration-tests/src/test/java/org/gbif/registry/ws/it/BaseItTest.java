@@ -83,7 +83,7 @@ public class BaseItTest {
     private final PreparedDbProvider provider;
     private final ConnectionInfo connectionInfo;
     private final List<Consumer<EmbeddedPostgres.Builder>> builderCustomizers =
-        new CopyOnWriteArrayList();
+        new CopyOnWriteArrayList<>();
 
     public EmbeddedDataBaseInitializer(DatabasePreparer preparer) {
       try {
