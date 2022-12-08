@@ -22,11 +22,11 @@ import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.util.CitationGenerator;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
-import org.gbif.registry.metadata.CitationGenerator;
-import org.gbif.registry.metadata.parse.DatasetParser;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
@@ -221,14 +221,14 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
 
   /**
    * Set the generated GBIF citation on the provided Dataset object.
-   *
-   * https://github.com/gbif/registry/issues/4
-   *
+   * <p>
+   * <a href="https://github.com/gbif/registry/issues/4">https://github.com/gbif/registry/issues/4</a>
+   * <p>
    * Where the provider is in particular networks (OBIS), or part of CoL, we use the provided citation and check
    * for a DOI.
-   *
-   * https://github.com/gbif/registry/issues/43 (OBIS)
-   * https://github.com/gbif/portal-feedback/issues/1819 (CoL)
+   * <p>
+   * <a href="https://github.com/gbif/registry/issues/43">OBIS</a>
+   * <a href="https://github.com/gbif/portal-feedback/issues/1819">CoL</a>
    */
   private Dataset setGeneratedCitation(Dataset dataset) {
     if (dataset == null
@@ -290,7 +290,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
       Integer metadataKey = docs.get(0).getKey();
       byte[] metadataDocument = getMetadataDocument(metadataKey);
       try {
-        result = DatasetParser.build(metadataDocument);
+        result = DatasetEmlParser.build(metadataDocument);
       } catch (IOException | IllegalArgumentException e) {
         // Not sure if we should not propagate an Exception to return a 500 instead
         LOG.error("Stored metadata document {} cannot be read", metadataKey, e);
