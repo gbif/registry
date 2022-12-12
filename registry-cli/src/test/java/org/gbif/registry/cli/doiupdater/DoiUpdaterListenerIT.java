@@ -23,6 +23,7 @@ import org.gbif.doi.service.DoiHttpException;
 import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
+import org.gbif.registry.cli.util.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.domain.doi.DoiType;
@@ -40,10 +41,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.api.model.common.DoiStatus.DELETED;
 import static org.gbif.api.model.common.DoiStatus.FAILED;
@@ -81,16 +78,15 @@ public class DoiUpdaterListenerIT {
   private static ObjectMapper objectMapper = new ObjectMapper();
 
   @RegisterExtension
-  public static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
+  static PostgresDBExtension database =
+      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
 
   @BeforeAll
   public static void setup() throws Exception {
     DoiUpdaterConfiguration doiUpdaterConfiguration =
         RegistryCliUtils.loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
 
-    doiUpdaterConfiguration.registry = toDbConfig(database);
+    doiUpdaterConfiguration.registry = toDbConfig(database.getPostgresContainer());
 
     ApplicationContext context =
         SpringContextBuilder.create().withDbConfiguration(doiUpdaterConfiguration.registry).build();

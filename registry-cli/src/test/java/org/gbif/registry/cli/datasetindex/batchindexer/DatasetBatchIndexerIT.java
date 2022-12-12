@@ -13,8 +13,9 @@
  */
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
-import org.gbif.registry.cli.common.DbConfiguration;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
+import org.gbif.registry.cli.util.EmbeddedPostgresTestUtils;
+import org.gbif.registry.cli.util.PostgresDBExtension;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.io.IOException;
@@ -39,8 +40,7 @@ import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.SingleInstancePostgresExtension;
+import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 
 @DisabledIfSystemProperty(named = "test.indexer", matches = "false")
 public class DatasetBatchIndexerIT {
@@ -56,8 +56,8 @@ public class DatasetBatchIndexerIT {
   private static final String INDEX_ALIAS = INDEX_NAME + "_a";
 
   @RegisterExtension
-  public static SingleInstancePostgresExtension database =
-      EmbeddedPostgresExtension.singleInstance();
+  static PostgresDBExtension database =
+      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
 
   private static ElasticsearchContainer embeddedElastic;
 
@@ -101,13 +101,7 @@ public class DatasetBatchIndexerIT {
 
     configuration.setIndexClb(false);
 
-    DbConfiguration dbConfiguration = new DbConfiguration();
-    dbConfiguration.serverName = "localhost:" + database.getEmbeddedPostgres().getPort();
-    dbConfiguration.databaseName = "postgres";
-    dbConfiguration.user = "postgres";
-    dbConfiguration.password = "";
-
-    configuration.setClbDb(dbConfiguration);
+    configuration.setClbDb(EmbeddedPostgresTestUtils.toDbConfig(database.getPostgresContainer()));
 
     // Only 10 dataset must be indexed
     configuration.setStopAfter(DATASETS_TO_INDEX);

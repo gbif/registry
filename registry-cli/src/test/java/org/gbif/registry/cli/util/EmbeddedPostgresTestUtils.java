@@ -15,7 +15,7 @@ package org.gbif.registry.cli.util;
 
 import org.gbif.registry.cli.common.DbConfiguration;
 
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
  * Utility class to manage configurations and constants related to the embedded postgres database.
@@ -27,12 +27,12 @@ public class EmbeddedPostgresTestUtils {
   public static final String LIQUIBASE_MASTER_FILE = "liquibase/master.xml";
 
   /** Extracts the connection information to create a {@link DbConfiguration} instance. */
-  public static DbConfiguration toDbConfig(PreparedDbExtension database) {
+  public static DbConfiguration toDbConfig(PostgreSQLContainer database) {
     DbConfiguration db = new DbConfiguration();
-    db.serverName = "localhost:" + database.getConnectionInfo().getPort();
-    db.databaseName = database.getConnectionInfo().getDbName();
-    db.user = database.getConnectionInfo().getUser();
-    db.password = "";
+    db.serverName = "localhost:" + database.getFirstMappedPort();
+    db.databaseName = database.getDatabaseName();
+    db.user = database.getUsername();
+    db.password = database.getPassword();
     return db;
   }
 }
