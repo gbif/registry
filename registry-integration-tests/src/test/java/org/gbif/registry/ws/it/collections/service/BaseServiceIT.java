@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.database.PostgresDBExtension;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.events.collections.AuditLogger;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
@@ -21,11 +22,8 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +31,7 @@ import javax.sql.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -48,11 +47,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import io.zonky.test.db.postgres.embedded.ConnectionInfo;
-import io.zonky.test.db.postgres.embedded.DatabasePreparer;
-import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.embedded.PreparedDbProvider;
+import liquibase.Contexts;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import lombok.SneakyThrows;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -69,6 +70,8 @@ public class BaseServiceIT {
   // the audit log is tested in the AuditLogIT
   @MockBean private AuditLogger auditLogger;
 
+  @RegisterExtension static PostgresDBExtension database = new PostgresDBExtension();
+
   public static class EsContainerContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
@@ -79,47 +82,28 @@ public class BaseServiceIT {
     }
   }
 
-  /** Prepares a Tests database using an embedded Postgres instance. */
-  public static class EmbeddedDataBaseInitializer {
-    private final DataSource dataSource;
-    private final PreparedDbProvider provider;
-    private final ConnectionInfo connectionInfo;
-    private final List<Consumer<EmbeddedPostgres.Builder>> builderCustomizers =
-        new CopyOnWriteArrayList();
-
-    public EmbeddedDataBaseInitializer(DatabasePreparer preparer) {
-      try {
-        this.provider = PreparedDbProvider.forPreparer(preparer, this.builderCustomizers);
-        this.connectionInfo = provider.createNewDatabase();
-        this.dataSource = provider.createDataSourceFromConnectionInfo(this.connectionInfo);
-      } catch (SQLException ex) {
-        throw new RuntimeException(ex);
-      }
-    }
-
-    public DataSource getDataSource() {
-      return dataSource;
-    }
-
-    public ConnectionInfo getConnectionInfo() {
-      return connectionInfo;
-    }
-  }
-
   /** Custom ContextInitializer to expose the registry DB data source and search flags. */
   public static class ContextInitializer
       implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
+    @SneakyThrows
     @Override
     public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+      DataSource dataSource = database.getDatasoruce();
 
-      EmbeddedDataBaseInitializer database =
-          new EmbeddedDataBaseInitializer(
-              LiquibasePreparer.forClasspathLocation(TestConstants.LIQUIBASE_MASTER_FILE));
+      Database databaseLiquibase =
+          DatabaseFactory.getInstance()
+              .findCorrectDatabaseImplementation(new JdbcConnection(dataSource.getConnection()));
+      Liquibase liquibase =
+          new Liquibase(
+              TestConstants.LIQUIBASE_MASTER_FILE,
+              new ClassLoaderResourceAccessor(),
+              databaseLiquibase);
+      liquibase.update(new Contexts());
 
-      RegistryDatabaseInitializer.init(database.getDataSource());
+      RegistryDatabaseInitializer.init(dataSource);
 
-      TestPropertyValues.of(Stream.of(dbTestPropertyPairs(database)).toArray(String[]::new))
+      TestPropertyValues.of(Stream.of(dbTestPropertyPairs()).toArray(String[]::new))
           .applyTo(configurableApplicationContext.getEnvironment());
 
       TestPropertyValues.of("elasticsearch.mock=true")
@@ -127,14 +111,11 @@ public class BaseServiceIT {
     }
 
     /** Creates the registry datasource settings from the embedded database. */
-    String[] dbTestPropertyPairs(EmbeddedDataBaseInitializer database) {
+    String[] dbTestPropertyPairs() {
       return new String[] {
-        "registry.datasource.url=jdbc:postgresql://localhost:"
-            + database.getConnectionInfo().getPort()
-            + "/"
-            + database.getConnectionInfo().getDbName(),
-        "registry.datasource.username=" + database.getConnectionInfo().getUser(),
-        "registry.datasource.password="
+        "registry.datasource.url=" + database.getPostgresContainer().getJdbcUrl(),
+        "registry.datasource.username=" + database.getPostgresContainer().getUsername(),
+        "registry.datasource.password=" + database.getPostgresContainer().getPassword()
       };
     }
   }

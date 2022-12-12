@@ -19,6 +19,7 @@ import java.io.Reader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -35,6 +36,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 import org.springframework.util.FileCopyUtils;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import lombok.SneakyThrows;
@@ -89,7 +91,9 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     embeddedElastic =
         new ElasticsearchContainer(
             "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-    embeddedElastic.withReuse(true);
+    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "a06d7a87-7d7d-472e-a047-e6c81f61d2a5");
+    embeddedElastic.setWaitStrategy(
+        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
     embeddedElastic.start();
     restClient = buildRestClient();
 
