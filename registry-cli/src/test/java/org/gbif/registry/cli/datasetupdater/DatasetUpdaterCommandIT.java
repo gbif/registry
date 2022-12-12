@@ -15,6 +15,7 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.License;
+import org.gbif.registry.cli.util.PostgresDBExtension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,10 +26,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
@@ -42,19 +39,18 @@ public class DatasetUpdaterCommandIT {
   private static final UUID DATASET_KEY = UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a");
 
   @RegisterExtension
-  public static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
+  static PostgresDBExtension database =
+      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
 
   private DatasetUpdaterConfiguration getConfig(String configFile) {
     DatasetUpdaterConfiguration cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
-    cfg.db = toDbConfig(database);
+    cfg.db = toDbConfig(database.getPostgresContainer());
     return cfg;
   }
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = database.getTestDatabase().getConnection();
+    Connection con = database.getDatasoruce().getConnection();
     String sql = getFileData("datasetupdater/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -64,7 +60,7 @@ public class DatasetUpdaterCommandIT {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = database.getTestDatabase().getConnection();
+    Connection con = database.getDatasoruce().getConnection();
     String sql = getFileData("datasetupdater/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

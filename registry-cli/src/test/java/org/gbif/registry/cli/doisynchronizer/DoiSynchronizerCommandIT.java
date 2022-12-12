@@ -21,6 +21,7 @@ import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
 import org.gbif.doi.service.DoiService;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.cli.common.CommonBuilder;
+import org.gbif.registry.cli.util.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 
 import java.net.URI;
@@ -35,10 +36,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import io.zonky.test.db.postgres.embedded.LiquibasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
 
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
@@ -57,9 +54,8 @@ public class DoiSynchronizerCommandIT {
   private static String metadataXml;
 
   @RegisterExtension
-  public static PreparedDbExtension database =
-      EmbeddedPostgresExtension.preparedDatabase(
-          LiquibasePreparer.forClasspathLocation(LIQUIBASE_MASTER_FILE));
+  static PostgresDBExtension database =
+      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
 
   @BeforeAll
   public static void beforeAll() throws Exception {
@@ -75,7 +71,7 @@ public class DoiSynchronizerCommandIT {
     doiSynchronizerConfig =
         RegistryCliUtils.loadConfig(
             "doisynchronizer/doi-synchronizer.yaml", DoiSynchronizerConfiguration.class);
-    doiSynchronizerConfig.registry = toDbConfig(database);
+    doiSynchronizerConfig.registry = toDbConfig(database.getPostgresContainer());
     command = new DoiSynchronizerCommand(doiSynchronizerConfig);
 
     prepareDataCiteData();
@@ -96,7 +92,7 @@ public class DoiSynchronizerCommandIT {
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = database.getTestDatabase().getConnection();
+    Connection con = database.getDatasoruce().getConnection();
     String sql = getFileData("doisynchronizer/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -106,7 +102,7 @@ public class DoiSynchronizerCommandIT {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = database.getTestDatabase().getConnection();
+    Connection con = database.getDatasoruce().getConnection();
     String sql = getFileData("doisynchronizer/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
