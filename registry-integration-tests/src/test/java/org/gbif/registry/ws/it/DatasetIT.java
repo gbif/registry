@@ -67,6 +67,7 @@ import javax.validation.ValidationException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -100,7 +101,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class DatasetIT extends NetworkEntityIT<Dataset> {
+class DatasetIT extends NetworkEntityIT<Dataset> {
 
   private final DatasetSearchService searchService;
   private final OrganizationService organizationResource;
