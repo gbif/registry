@@ -14,7 +14,8 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.PostgresDBExtension;
+import org.gbif.common.tests.database.DbConstants;
+import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -28,9 +29,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -49,6 +47,7 @@ public class BaseResourceMockIT {
       PostgresDBExtension.builder()
           .liquibaseChangeLogFile(TestConstants.LIQUIBASE_MASTER_FILE)
           .initializer(new RegistryDatabaseInitializer())
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
           .build();
 
   private final SimplePrincipalProvider simplePrincipalProvider;

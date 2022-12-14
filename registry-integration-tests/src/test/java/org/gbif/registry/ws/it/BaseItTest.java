@@ -14,7 +14,8 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.PostgresDBExtension;
+import org.gbif.common.tests.database.DbConstants;
+import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
@@ -58,6 +59,7 @@ public class BaseItTest {
       PostgresDBExtension.builder()
           .liquibaseChangeLogFile(TestConstants.LIQUIBASE_MASTER_FILE)
           .initializer(new RegistryDatabaseInitializer())
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
           .build();
 
   private final SimplePrincipalProvider simplePrincipalProvider;

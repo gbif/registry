@@ -16,6 +16,7 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
@@ -55,7 +56,10 @@ public class DoiSynchronizerCommandIT {
 
   @RegisterExtension
   static PostgresDBExtension database =
-      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
+      PostgresDBExtension.builder()
+          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+          .build();
 
   @BeforeAll
   public static void beforeAll() throws Exception {
@@ -92,7 +96,7 @@ public class DoiSynchronizerCommandIT {
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = database.getDatasoruce().getConnection();
+    Connection con = database.getPostgresContainer().createConnection("");
     String sql = getFileData("doisynchronizer/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -102,7 +106,7 @@ public class DoiSynchronizerCommandIT {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = database.getDatasoruce().getConnection();
+    Connection con = database.getPostgresContainer().createConnection("");
     String sql = getFileData("doisynchronizer/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

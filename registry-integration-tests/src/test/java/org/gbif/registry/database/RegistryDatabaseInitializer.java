@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.database;
 
+import org.gbif.common.tests.database.DBInitializer;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 

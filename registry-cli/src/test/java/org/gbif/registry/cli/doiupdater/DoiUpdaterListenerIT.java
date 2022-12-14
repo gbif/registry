@@ -17,6 +17,7 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
+import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.datacite.rest.client.configuration.ClientConfiguration;
 import org.gbif.doi.service.DoiException;
@@ -79,7 +80,10 @@ public class DoiUpdaterListenerIT {
 
   @RegisterExtension
   static PostgresDBExtension database =
-      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
+      PostgresDBExtension.builder()
+          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+          .build();
 
   @BeforeAll
   public static void setup() throws Exception {

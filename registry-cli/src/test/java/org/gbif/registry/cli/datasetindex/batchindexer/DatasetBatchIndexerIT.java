@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
+import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.cli.util.EmbeddedPostgresTestUtils;
@@ -57,7 +58,10 @@ public class DatasetBatchIndexerIT {
 
   @RegisterExtension
   static PostgresDBExtension database =
-      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
+      PostgresDBExtension.builder()
+          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+          .build();
 
   private static ElasticsearchContainer embeddedElastic;
 

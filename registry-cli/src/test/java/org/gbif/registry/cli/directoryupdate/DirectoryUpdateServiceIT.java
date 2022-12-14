@@ -15,6 +15,7 @@ package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.persistence.mapper.NodeMapper;
@@ -32,7 +33,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -48,7 +48,10 @@ public class DirectoryUpdateServiceIT {
 
   @RegisterExtension
   static PostgresDBExtension database =
-      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
+      PostgresDBExtension.builder()
+          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+          .build();
 
   @BeforeAll
   public static void beforeAll() throws Exception {
@@ -57,7 +60,7 @@ public class DirectoryUpdateServiceIT {
             "directoryupdate/directory-update.yaml", DirectoryUpdateConfiguration.class);
     directoryUpdateConfig.db = toDbConfig(database.getPostgresContainer());
 
-    registryDbConnection = database.getDatasoruce().getConnection();
+    registryDbConnection = database.getPostgresContainer().createConnection("");
   }
 
   @AfterAll
