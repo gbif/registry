@@ -28,8 +28,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import lombok.SneakyThrows;
 
-import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
-
 /** DB initialization needed for JWT tests. */
 public class JwtDatabaseInitializer implements BeforeAllCallback {
 
@@ -67,19 +65,18 @@ public class JwtDatabaseInitializer implements BeforeAllCallback {
         .prepareStatement(
             createInsertUserQuery(
                 ADMIN_USER,
-                TEST_PASSWORD,
+                ADMIN_USER,
                 Arrays.asList(UserRole.USER, UserRole.REGISTRY_ADMIN, UserRole.REGISTRY_EDITOR)))
         .executeUpdate();
     connection
         .prepareStatement(
-            createInsertUserQuery(
-                TEST_USER, TEST_PASSWORD, Collections.singletonList(UserRole.USER)))
+            createInsertUserQuery(TEST_USER, TEST_USER, Collections.singletonList(UserRole.USER)))
         .executeUpdate();
     connection
         .prepareStatement(
             createInsertUserQuery(
                 GRSCICOLL_ADMIN,
-                TEST_PASSWORD,
+                GRSCICOLL_ADMIN,
                 Collections.singletonList(UserRole.GRSCICOLL_ADMIN)))
         .executeUpdate();
     connection.close();

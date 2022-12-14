@@ -34,6 +34,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -86,5 +88,15 @@ public class BaseResourceMockIT {
 
   public SimplePrincipalProvider getSimplePrincipalProvider() {
     return simplePrincipalProvider;
+  }
+
+  @DynamicPropertySource
+  static void properties(DynamicPropertyRegistry registry) {
+    registry.add("registry.datasource.url", () -> database.getPostgresContainer().getJdbcUrl());
+    registry.add(
+      "registry.datasource.username", () -> database.getPostgresContainer().getUsername());
+    registry.add(
+      "registry.datasource.password", () -> database.getPostgresContainer().getPassword());
+    registry.add("elasticsearch.mock", () -> "true");
   }
 }
