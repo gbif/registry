@@ -110,7 +110,7 @@ public abstract class BaseCollectionEntityServiceIT<
       new CollectionsDatabaseInitializer(database.getPostgresContainer());
 
   @RegisterExtension
-  protected CollectionsMaterializedViewsInitializer mvInitializer =
+  protected static CollectionsMaterializedViewsInitializer mvInitializer =
       new CollectionsMaterializedViewsInitializer(database.getPostgresContainer());
 
   @RegisterExtension

@@ -59,8 +59,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
-      DataSource dataSource) {
+      EsManageServer esServer) {
     super(
         principalProvider,
         environment,
@@ -69,8 +68,7 @@ public class OaipmhListMetadataFormatsIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer,
-        dataSource);
+        esServer);
   }
 
   @Test

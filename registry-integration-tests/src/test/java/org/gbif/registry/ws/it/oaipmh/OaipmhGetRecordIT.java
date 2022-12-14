@@ -63,8 +63,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
-      DataSource dataSource) {
+      EsManageServer esServer) {
     super(
         principalProvider,
         environment,
@@ -73,8 +72,7 @@ public class OaipmhGetRecordIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer,
-        dataSource);
+        esServer);
   }
 
   @Test
