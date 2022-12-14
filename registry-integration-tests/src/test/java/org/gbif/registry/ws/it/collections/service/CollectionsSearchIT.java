@@ -45,7 +45,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CollectionsSearchIT extends BaseServiceIT {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer(database.getPostgresContainer());
 
   private final CollectionsSearchService searchService;
   private final InstitutionService institutionService;

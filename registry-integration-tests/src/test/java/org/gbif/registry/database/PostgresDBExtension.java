@@ -14,11 +14,7 @@
 package org.gbif.registry.database;
 
 import java.time.Duration;
-
-import javax.sql.DataSource;
-
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import java.util.List;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -26,6 +22,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+import liquibase.Contexts;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import lombok.Builder;
+import lombok.Singular;
+import lombok.SneakyThrows;
+
+@Builder
 public class PostgresDBExtension implements BeforeAllCallback, AfterAllCallback {
 
   private static final String DB = "registry";
@@ -33,22 +40,30 @@ public class PostgresDBExtension implements BeforeAllCallback, AfterAllCallback 
 
   protected static final PostgreSQLContainer CONTAINER;
 
+  private String liquibaseChangeLogFile;
+  @Singular private List<DBInitializer> initializers;
+
   static {
-    CONTAINER =
-        (PostgreSQLContainer)
-            new PostgreSQLContainer(POSTGRES_IMAGE)
-                .withDatabaseName(DB)
-                .withEnv("POSTGRESQL_DATABASE", DB);
+    CONTAINER = new PostgreSQLContainer(POSTGRES_IMAGE).withDatabaseName(DB);
     CONTAINER.withReuse(true).withLabel("reuse.UUID", "e06d7a87-7d7d-472e-a047-e6c81f61d2a4");
     CONTAINER.setWaitStrategy(
         Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-
-    CONTAINER.start();
   }
 
+  @SneakyThrows
   @Override
   public void beforeAll(ExtensionContext context) {
     CONTAINER.start();
+
+    if (liquibaseChangeLogFile != null) {
+      updateLiquibase();
+    }
+
+    if (initializers != null) {
+      for (DBInitializer initializer : initializers) {
+        initializer.init(CONTAINER.createConnection(""));
+      }
+    }
   }
 
   @Override
@@ -60,12 +75,13 @@ public class PostgresDBExtension implements BeforeAllCallback, AfterAllCallback 
     return CONTAINER;
   }
 
-  public DataSource getDatasoruce() {
-    HikariConfig hikariConfig = new HikariConfig();
-    hikariConfig.setJdbcUrl(CONTAINER.getJdbcUrl());
-    hikariConfig.setUsername(CONTAINER.getUsername());
-    hikariConfig.setPassword(CONTAINER.getPassword());
-    hikariConfig.setDriverClassName(CONTAINER.getDriverClassName());
-    return new HikariDataSource(hikariConfig);
+  @SneakyThrows
+  private void updateLiquibase() {
+    Database databaseLiquibase =
+        DatabaseFactory.getInstance()
+            .findCorrectDatabaseImplementation(new JdbcConnection(CONTAINER.createConnection("")));
+    Liquibase liquibase =
+        new Liquibase(liquibaseChangeLogFile, new ClassLoaderResourceAccessor(), databaseLiquibase);
+    liquibase.update(new Contexts());
   }
 }

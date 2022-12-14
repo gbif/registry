@@ -37,7 +37,7 @@ public class AuditLogMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer("grscicoll_audit_log");
+      new TestCaseDatabaseInitializer(database.getPostgresContainer(), "grscicoll_audit_log");
 
   private final AuditLogMapper auditLogMapper;
 

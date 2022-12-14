@@ -16,12 +16,12 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
+import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
 import org.gbif.doi.service.DoiService;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.cli.common.CommonBuilder;
-import org.gbif.registry.cli.util.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 
 import java.net.URI;

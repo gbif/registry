@@ -19,13 +19,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.google.common.base.Throwables;
 
@@ -104,15 +102,25 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "change_suggestion",
           "grscicoll_audit_log");
 
-  public TestCaseDatabaseInitializer() {}
+  private final PostgreSQLContainer container;
 
-  public TestCaseDatabaseInitializer(String... tables) {
+  public TestCaseDatabaseInitializer(PostgreSQLContainer container) {
+    this.container = container;
+  }
+
+  public TestCaseDatabaseInitializer(PostgreSQLContainer container, String... tables) {
+    this.container = container;
     this.tables = Arrays.asList(tables);
   }
 
-  private void truncateTables(DataSource dataSource) throws Exception {
+  @Override
+  public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    truncateTables();
+  }
+
+  private void truncateTables() throws Exception {
     LOG.info("Truncating registry tables");
-    try (Connection connection = dataSource.getConnection()) {
+    try (Connection connection = container.createConnection("")) {
       connection.setAutoCommit(false);
       List<String> tablesNotChallengeCode = new ArrayList<>(tables);
       if (tables.contains("challenge_code") && tables.contains("public.user")) {
@@ -152,11 +160,5 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
       Throwables.propagate(e);
     }
     LOG.info("Registry tables truncated");
-  }
-
-  @Override
-  public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    truncateTables(
-        SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class));
   }
 }

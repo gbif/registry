@@ -16,14 +16,10 @@ package org.gbif.registry.database;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
-
-import lombok.experimental.UtilityClass;
 
 /**
  * A Rule that initializes a database for All test cases in a Test class or in test suite.
@@ -32,15 +28,21 @@ import lombok.experimental.UtilityClass;
  *  RegistryDatabaseInitializer().init();
  * </pre>
  */
-@UtilityClass
-public class RegistryDatabaseInitializer {
+public class RegistryDatabaseInitializer implements DBInitializer {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryDatabaseInitializer.class);
 
-  public static void init(DataSource dataSource) {
+  @Override
+  public void init(Connection connection) {
     LOG.info("Create test users");
-    try (Connection connection = dataSource.getConnection()) {
+    try {
       connection.setAutoCommit(false);
+
+      connection
+          .prepareStatement(
+              "DELETE FROM public.\"user\" WHERE username IN('gbif.app.it2','editor')")
+          .executeUpdate();
+      connection.commit();
 
       connection
           .prepareStatement(
@@ -49,11 +51,16 @@ public class RegistryDatabaseInitializer {
                   + "(-1, 'gbif.app.it2', 'gbif.app.it2@mailinator.com', '$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp', null, null, '{GRSCICOLL_ADMIN,REGISTRY_ADMIN}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null),"
                   + "(-2, 'editor', 'editor2@mailinator.com', '$S$DIU6YGMU7aKb0rISEEqtePk.PwJPU.z.f5G0Au426gIJVd5RS8xs', null, null, '{USER,REGISTRY_EDITOR}', 'country => DK', '', '2019-05-08 13:30:04.833025', '2020-04-04 23:20:30.330778', null, null)")
           .executeUpdate();
-
       connection.commit();
 
     } catch (SQLException e) {
       Throwables.propagate(e);
+    } finally {
+      try {
+        connection.close();
+      } catch (SQLException e) {
+        Throwables.propagate(e);
+      }
     }
     LOG.info("Initial test data loaded");
   }

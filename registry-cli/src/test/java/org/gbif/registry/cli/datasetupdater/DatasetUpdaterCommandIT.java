@@ -15,7 +15,7 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.License;
-import org.gbif.registry.cli.util.PostgresDBExtension;
+import org.gbif.common.tests.database.PostgresDBExtension;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

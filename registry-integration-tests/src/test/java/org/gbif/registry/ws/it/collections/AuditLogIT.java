@@ -89,19 +89,19 @@ public class AuditLogIT extends BaseItTest {
   private final InstitutionClient institutionClient;
   private final CollectionClient collectionClient;
 
-  @RegisterExtension protected CollectionsDatabaseInitializer collectionsDatabaseInitializer;
+  @RegisterExtension
+  protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
+      new CollectionsDatabaseInitializer(database.getPostgresContainer());
 
   @Autowired
   public AuditLogIT(
       AuditLogMapper auditLogMapper,
-      IdentityService identityService,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       KeyStore keyStore,
       @LocalServerPort int localServerPort) {
     super(simplePrincipalProvider, esServer);
     this.auditLogMapper = auditLogMapper;
-    collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
     this.institutionClient = prepareClient(localServerPort, keyStore, InstitutionClient.class);
     this.collectionClient = prepareClient(localServerPort, keyStore, CollectionClient.class);
   }

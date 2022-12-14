@@ -37,7 +37,6 @@ import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
-import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -72,7 +71,6 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      IdentityService identityService,
       InstitutionDuplicatesService duplicatesService) {
     super(
         institutionService,
@@ -81,7 +79,6 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         organizationService,
         installationService,
         principalProvider,
-        identityService,
         duplicatesService,
         Institution.class);
     this.institutionService = institutionService;
