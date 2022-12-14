@@ -66,6 +66,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -752,5 +755,10 @@ public abstract class NetworkEntityIT<
             simplePrincipalProvider.get().getName(),
             "",
             Collections.singleton(new SimpleGrantedAuthority(userRole.name()))));
+  }
+
+  @DynamicPropertySource
+  static void properties(DynamicPropertyRegistry registry) {
+    registry.add("elasticsearch.mock", () -> "false");
   }
 }

@@ -91,7 +91,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     embeddedElastic =
         new ElasticsearchContainer(
             "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "a06d7a87-7d7d-472e-a047-e6c81f61d2a5");
+    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
     embeddedElastic.setWaitStrategy(
         Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
     embeddedElastic.start();
