@@ -62,8 +62,7 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
       InstallationService installationService,
       DatasetService datasetService,
       TestDataFactory testDataFactory,
-      EsManageServer esServer,
-      DataSource dataSource) {
+      EsManageServer esServer) {
     super(
         principalProvider,
         environment,
@@ -72,8 +71,7 @@ public class OaipmhListSetsIT extends AbstractOaipmhEndpointIT {
         installationService,
         datasetService,
         testDataFactory,
-        esServer,
-        dataSource);
+        esServer);
   }
 
   @Test
