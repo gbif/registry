@@ -49,7 +49,7 @@ import org.springframework.core.env.Environment;
 public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(database.getPostgresContainer());
 
   private final TestDataFactory testDataFactory;
 
