@@ -15,6 +15,7 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.License;
+import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 
 import java.sql.Connection;
@@ -40,7 +41,10 @@ public class DatasetUpdaterCommandIT {
 
   @RegisterExtension
   static PostgresDBExtension database =
-      PostgresDBExtension.builder().liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE).build();
+      PostgresDBExtension.builder()
+          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+          .build();
 
   private DatasetUpdaterConfiguration getConfig(String configFile) {
     DatasetUpdaterConfiguration cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
@@ -50,7 +54,7 @@ public class DatasetUpdaterCommandIT {
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = database.getDatasoruce().getConnection();
+    Connection con = database.getPostgresContainer().createConnection("");
     String sql = getFileData("datasetupdater/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -60,7 +64,7 @@ public class DatasetUpdaterCommandIT {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = database.getDatasoruce().getConnection();
+    Connection con = database.getPostgresContainer().createConnection("");
     String sql = getFileData("datasetupdater/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

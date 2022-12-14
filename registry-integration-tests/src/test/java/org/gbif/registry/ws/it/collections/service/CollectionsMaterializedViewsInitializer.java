@@ -1,6 +1,6 @@
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.registry.database.DBInitializer;
+import org.gbif.common.tests.database.DBInitializer;
 
 import java.sql.Connection;
 
