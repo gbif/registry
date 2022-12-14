@@ -14,6 +14,7 @@
 package org.gbif.registry.database;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -28,11 +29,8 @@ import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
-import lombok.Builder;
-import lombok.Singular;
 import lombok.SneakyThrows;
 
-@Builder
 public class PostgresDBExtension implements BeforeAllCallback, AfterAllCallback {
 
   private static final String DB = "registry";
@@ -40,14 +38,19 @@ public class PostgresDBExtension implements BeforeAllCallback, AfterAllCallback 
 
   protected static final PostgreSQLContainer CONTAINER;
 
-  private String liquibaseChangeLogFile;
-  @Singular private List<DBInitializer> initializers;
+  private final String liquibaseChangeLogFile;
+  private final List<DBInitializer> initializers;
 
   static {
     CONTAINER = new PostgreSQLContainer(POSTGRES_IMAGE).withDatabaseName(DB);
     CONTAINER.withReuse(true).withLabel("reuse.UUID", "e06d7a87-7d7d-472e-a047-e6c81f61d2a4");
     CONTAINER.setWaitStrategy(
         Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+  }
+
+  private PostgresDBExtension(String liquibaseChangeLogFile, List<DBInitializer> initializers) {
+    this.liquibaseChangeLogFile = liquibaseChangeLogFile;
+    this.initializers = initializers;
   }
 
   @SneakyThrows
@@ -83,5 +86,30 @@ public class PostgresDBExtension implements BeforeAllCallback, AfterAllCallback 
     Liquibase liquibase =
         new Liquibase(liquibaseChangeLogFile, new ClassLoaderResourceAccessor(), databaseLiquibase);
     liquibase.update(new Contexts());
+  }
+
+  public static PostgresDBExtensionBuilder builder() {
+    return new PostgresDBExtensionBuilder();
+  }
+
+  public static class PostgresDBExtensionBuilder {
+    private String liquibaseChangeLogFile;
+    private List<DBInitializer> dbInitializers = new ArrayList<>();
+
+    PostgresDBExtensionBuilder() {}
+
+    public PostgresDBExtensionBuilder liquibaseChangeLogFile(String liquibaseChangeLogFile) {
+      this.liquibaseChangeLogFile = liquibaseChangeLogFile;
+      return this;
+    }
+
+    public PostgresDBExtensionBuilder initializer(DBInitializer dbInitializer) {
+      this.dbInitializers.add(dbInitializer);
+      return this;
+    }
+
+    public PostgresDBExtension build() {
+      return new PostgresDBExtension(this.liquibaseChangeLogFile, dbInitializers);
+    }
   }
 }
