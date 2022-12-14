@@ -44,7 +44,7 @@ public class DerivedDatasetMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer("derived_dataset", "dataset");
+      new TestCaseDatabaseInitializer(database.getPostgresContainer(), "derived_dataset", "dataset");
 
   private final DerivedDatasetMapper mapper;
   private final TestDataFactory testDataFactory;

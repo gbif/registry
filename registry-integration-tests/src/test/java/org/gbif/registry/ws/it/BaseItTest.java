@@ -25,34 +25,21 @@ import org.gbif.ws.security.KeyStore;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Stream;
-
-import javax.sql.DataSource;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import liquibase.Contexts;
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
-import lombok.SneakyThrows;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
@@ -61,63 +48,20 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @DirtiesContext
 public class BaseItTest {
 
-  @RegisterExtension static PostgresDBExtension database = new PostgresDBExtension();
-
-  public static class EsContainerContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      TestPropertyValues.of("elasticsearch.mock=false")
-          .applyTo(configurableApplicationContext.getEnvironment());
-    }
-  }
-
-  /** Custom ContextInitializer to expose the registry DB data source and search flags. */
-  public static class ContextInitializer
-      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-    @SneakyThrows
-    @Override
-    public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
-      DataSource dataSource = database.getDatasoruce();
-
-      Database databaseLiquibase =
-          DatabaseFactory.getInstance()
-              .findCorrectDatabaseImplementation(new JdbcConnection(dataSource.getConnection()));
-      Liquibase liquibase =
-          new Liquibase(
-              TestConstants.LIQUIBASE_MASTER_FILE,
-              new ClassLoaderResourceAccessor(),
-              databaseLiquibase);
-      liquibase.update(new Contexts());
-
-      RegistryDatabaseInitializer.init(dataSource);
-
-      TestPropertyValues.of(Stream.of(dbTestPropertyPairs()).toArray(String[]::new))
-          .applyTo(configurableApplicationContext.getEnvironment());
-
-      TestPropertyValues.of("elasticsearch.mock=true")
-          .applyTo(configurableApplicationContext.getEnvironment());
-    }
-
-    /** Creates the registry datasource settings from the embedded database. */
-    String[] dbTestPropertyPairs() {
-      return new String[] {
-        "registry.datasource.url=" + database.getPostgresContainer().getJdbcUrl(),
-        "registry.datasource.username=" + database.getPostgresContainer().getUsername(),
-        "registry.datasource.password=" + database.getPostgresContainer().getPassword()
-      };
-    }
-  }
+  @RegisterExtension
+  protected static PostgresDBExtension database =
+      PostgresDBExtension.builder()
+          .liquibaseChangeLogFile(TestConstants.LIQUIBASE_MASTER_FILE)
+          .initializer(new RegistryDatabaseInitializer())
+          .build();
 
   private final SimplePrincipalProvider simplePrincipalProvider;
+
   protected static EsManageServer esServer;
 
   public BaseItTest(SimplePrincipalProvider simplePrincipalProvider, EsManageServer esServer) {
@@ -191,5 +135,15 @@ public class BaseItTest {
       default:
         throw new IllegalStateException("Must be resource or client");
     }
+  }
+
+  @DynamicPropertySource
+  static void properties(DynamicPropertyRegistry registry) {
+    registry.add("registry.datasource.url", () -> database.getPostgresContainer().getJdbcUrl());
+    registry.add(
+        "registry.datasource.username", () -> database.getPostgresContainer().getUsername());
+    registry.add(
+        "registry.datasource.password", () -> database.getPostgresContainer().getPassword());
+    registry.add("elasticsearch.mock", () -> "true");
   }
 }

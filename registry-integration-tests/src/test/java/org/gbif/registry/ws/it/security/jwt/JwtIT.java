@@ -15,7 +15,6 @@ package org.gbif.registry.ws.it.security.jwt;
 
 import org.gbif.api.model.collections.Institution;
 import org.gbif.registry.identity.model.ExtendedLoggedUser;
-import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.security.jwt.JwtConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -46,19 +45,19 @@ public class JwtIT extends BaseItTest {
   private JwtConfiguration jwtConfiguration;
   private final RequestTestFixture requestTestFixture;
 
-  @RegisterExtension public JwtDatabaseInitializer databaseRule;
+  @RegisterExtension
+  public static JwtDatabaseInitializer databaseRule =
+      new JwtDatabaseInitializer(database.getPostgresContainer());
 
   @Autowired
   public JwtIT(
       JwtConfiguration jwtConfiguration,
       RequestTestFixture requestTestFixture,
-      IdentityService identityService,
       SimplePrincipalProvider principalProvider,
       EsManageServer esServer) {
     super(principalProvider, esServer);
     this.jwtConfiguration = jwtConfiguration;
     this.requestTestFixture = requestTestFixture;
-    databaseRule = new JwtDatabaseInitializer(identityService);
   }
 
   @Test

@@ -61,7 +61,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.ContextConfiguration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -78,11 +77,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * A generic test for all network entities that implement all interfaces required by the
  * BaseNetworkEntityResource.
  */
-@ContextConfiguration(
-    initializers = {
-      BaseItTest.ContextInitializer.class,
-      BaseItTest.EsContainerContextInitializer.class
-    })
 public abstract class NetworkEntityIT<
         T extends
             NetworkEntity & Contactable & Taggable & MachineTaggable & Commentable & Endpointable
@@ -97,7 +91,8 @@ public abstract class NetworkEntityIT<
   @Autowired private DataSource dataSource;
 
   @RegisterExtension
-  public TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  public TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer(database.getPostgresContainer());
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,

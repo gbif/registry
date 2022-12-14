@@ -97,7 +97,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-@ContextConfiguration(initializers = {BaseItTest.ContextInitializer.class})
 @SpringBootTest(
     classes = RegistryIntegrationTestsConfiguration.class,
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)

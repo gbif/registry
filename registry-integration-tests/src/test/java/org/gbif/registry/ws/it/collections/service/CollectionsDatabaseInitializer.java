@@ -13,42 +13,58 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.common.GbifUser;
-import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.database.DBInitializer;
+import org.gbif.registry.identity.util.RegistryPasswordEncoder;
+
+import java.sql.Connection;
 
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.testcontainers.containers.PostgreSQLContainer;
 
-import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_GRSCICOLL_ADMIN;
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 
 /** DB initialization needed for collections tests. */
-public class CollectionsDatabaseInitializer implements BeforeAllCallback {
+public class CollectionsDatabaseInitializer implements BeforeAllCallback, DBInitializer {
 
-  private final IdentityService identityService;
+  private static final RegistryPasswordEncoder ENCODER = new RegistryPasswordEncoder();
 
-  public CollectionsDatabaseInitializer(IdentityService identityService) {
-    this.identityService = identityService;
+  private PostgreSQLContainer postgreSQLContainer;
+
+  public CollectionsDatabaseInitializer() {}
+
+  public CollectionsDatabaseInitializer(PostgreSQLContainer postgreSQLContainer) {
+    this.postgreSQLContainer = postgreSQLContainer;
+  }
+
+  @SneakyThrows
+  @Override
+  public void init(Connection connection) {
+    connection
+        .prepareStatement(
+            "DELETE FROM public.\"user\" WHERE username = '" + TEST_GRSCICOLL_ADMIN + "'")
+        .executeUpdate();
+    connection
+        .prepareStatement(
+            "INSERT INTO public.\"user\" (username, email, password, first_name, last_name, roles, settings, system_settings, created, last_login, deleted, challenge_code_key) "
+                + "VALUES ('"
+                + TEST_GRSCICOLL_ADMIN
+                + "', '"
+                + TEST_GRSCICOLL_ADMIN
+                + "@test.com', '"
+                + ENCODER.encode(TEST_PASSWORD)
+                + "', '"
+                + TEST_GRSCICOLL_ADMIN
+                + "', null, '{GRSCICOLL_ADMIN}', 'country => DK', '', '2022-05-08 13:30:04.833025', '2022-08-04 23:20:30.330778', null, null)")
+        .executeUpdate();
+    connection.close();
   }
 
   @Override
-  public void beforeAll(ExtensionContext extensionContext) {
-    GbifUser user = new GbifUser();
-    user.setUserName(TEST_GRSCICOLL_ADMIN);
-    user.setFirstName(TEST_GRSCICOLL_ADMIN);
-    user.setLastName(TEST_GRSCICOLL_ADMIN);
-    user.setEmail(TEST_GRSCICOLL_ADMIN + "@test.com");
-    user.getSettings().put("language", "en");
-    user.getSettings().put("country", "dk");
-    user.setRoles(Sets.newHashSet(UserRole.GRSCICOLL_ADMIN));
-
-    // password equals to username
-    identityService.create(user, TEST_PASSWORD);
-
-    Integer key = identityService.get(TEST_GRSCICOLL_ADMIN).getKey();
-    identityService.updateLastLogin(key);
+  public void beforeAll(ExtensionContext extensionContext) throws Exception {
+    init(postgreSQLContainer.createConnection(""));
   }
 }

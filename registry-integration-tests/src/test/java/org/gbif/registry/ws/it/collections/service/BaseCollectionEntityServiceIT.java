@@ -56,7 +56,6 @@ import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
-import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.ws.it.collections.data.TestData;
@@ -64,7 +63,6 @@ import org.gbif.registry.ws.it.collections.data.TestDataFactory;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,17 +72,11 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import javax.sql.DataSource;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -113,29 +105,17 @@ public abstract class BaseCollectionEntityServiceIT<
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
-  @RegisterExtension protected CollectionsDatabaseInitializer collectionsDatabaseInitializer;
+  @RegisterExtension
+  protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
+      new CollectionsDatabaseInitializer(database.getPostgresContainer());
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
-
-  public static class MaterializedViewInitializer implements BeforeAllCallback {
-
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) throws Exception {
-      Connection connection =
-          SpringExtension.getApplicationContext(extensionContext)
-              .getBean(DataSource.class)
-              .getConnection();
-      // create materialized view for testing
-      ScriptUtils.executeSqlScript(
-          connection, new ClassPathResource("/scripts/create_duplicates_views.sql"));
-      connection.close();
-    }
-  }
+  protected CollectionsMaterializedViewsInitializer mvInitializer =
+      new CollectionsMaterializedViewsInitializer(database.getPostgresContainer());
 
   @RegisterExtension
-  static MaterializedViewInitializer materializedViewInitializer =
-      new MaterializedViewInitializer();
+  protected TestCaseDatabaseInitializer databaseRule =
+      new TestCaseDatabaseInitializer(database.getPostgresContainer());
 
   public BaseCollectionEntityServiceIT(
       CollectionEntityService<T> collectionEntityService,
@@ -144,7 +124,6 @@ public abstract class BaseCollectionEntityServiceIT<
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      IdentityService identityService,
       DuplicatesService duplicatesService,
       Class<T> paramType) {
     super(principalProvider);
@@ -156,7 +135,6 @@ public abstract class BaseCollectionEntityServiceIT<
     this.duplicatesService = duplicatesService;
     this.paramType = paramType;
     this.testData = TestDataFactory.create(paramType);
-    collectionsDatabaseInitializer = new CollectionsDatabaseInitializer(identityService);
   }
 
   @Test

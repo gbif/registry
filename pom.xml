@@ -137,6 +137,7 @@
     <embedded-database-spring-test.version>1.6.2</embedded-database-spring-test.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.9.12</reflections.version>
+    <common-tests.version>1.0-SNAPSHOT</common-tests.version>
 
     <!-- Configurable -->
     <datacite.api.base.url />
@@ -699,6 +700,13 @@
         <groupId>org.testcontainers</groupId>
         <artifactId>postgresql</artifactId>
         <version>${postgresql-testcontainers.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif</groupId>
+        <artifactId>common-tests</artifactId>
+        <version>${common-tests.version}</version>
+        <type>test-jar</type>
         <scope>test</scope>
       </dependency>
 

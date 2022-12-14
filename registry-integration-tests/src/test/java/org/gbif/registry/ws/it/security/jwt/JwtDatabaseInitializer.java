@@ -13,54 +13,90 @@
  */
 package org.gbif.registry.ws.it.security.jwt;
 
-import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.identity.service.IdentityService;
+import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 
-import java.util.Set;
+import java.sql.Connection;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.testcontainers.containers.PostgreSQLContainer;
 
-import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
+
+import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 
 /** DB initialization needed for JWT tests. */
-public class JwtDatabaseInitializer implements BeforeEachCallback {
+public class JwtDatabaseInitializer implements BeforeAllCallback {
 
+  private static final RegistryPasswordEncoder ENCODER = new RegistryPasswordEncoder();
   static final String ADMIN_USER = "administrator";
   static final String TEST_USER = "testuser";
   static final String GRSCICOLL_ADMIN = "grscicolladmin";
 
-  private final IdentityService identityService;
+  private final PostgreSQLContainer postgreSQLContainer;
 
-  public JwtDatabaseInitializer(IdentityService identityService) {
-    this.identityService = identityService;
+  public JwtDatabaseInitializer(PostgreSQLContainer postgreSQLContainer) {
+    this.postgreSQLContainer = postgreSQLContainer;
   }
 
+  @SneakyThrows
   @Override
-  public void beforeEach(ExtensionContext extensionContext) {
+  public void beforeAll(ExtensionContext extensionContext) {
     // add users
-    createUser(
-        ADMIN_USER,
-        Sets.newHashSet(UserRole.USER, UserRole.REGISTRY_ADMIN, UserRole.REGISTRY_EDITOR));
-    createUser(TEST_USER, Sets.newHashSet(UserRole.USER));
-    createUser(GRSCICOLL_ADMIN, Sets.newHashSet(UserRole.GRSCICOLL_ADMIN));
+    addUsers(postgreSQLContainer.createConnection(""));
   }
 
-  private void createUser(String username, Set<UserRole> roles) {
-    GbifUser user = new GbifUser();
-    user.setUserName(username);
-    user.setFirstName(username);
-    user.setLastName(username);
-    user.setEmail(username + "@test.com");
-    user.getSettings().put("language", "en");
-    user.getSettings().put("country", "dk");
-    user.setRoles(roles);
+  @SneakyThrows
+  private void addUsers(Connection connection) {
+    connection
+        .prepareStatement(
+            "DELETE FROM public.\"user\" WHERE username IN ('"
+                + ADMIN_USER
+                + "','"
+                + TEST_USER
+                + "','"
+                + GRSCICOLL_ADMIN
+                + "')")
+        .executeUpdate();
+    connection
+        .prepareStatement(
+            createInsertUserQuery(
+                ADMIN_USER,
+                TEST_PASSWORD,
+                Arrays.asList(UserRole.USER, UserRole.REGISTRY_ADMIN, UserRole.REGISTRY_EDITOR)))
+        .executeUpdate();
+    connection
+        .prepareStatement(
+            createInsertUserQuery(
+                TEST_USER, TEST_PASSWORD, Collections.singletonList(UserRole.USER)))
+        .executeUpdate();
+    connection
+        .prepareStatement(
+            createInsertUserQuery(
+                GRSCICOLL_ADMIN,
+                TEST_PASSWORD,
+                Collections.singletonList(UserRole.GRSCICOLL_ADMIN)))
+        .executeUpdate();
+    connection.close();
+  }
 
-    // password equals to username
-    identityService.create(user, username);
-
-    Integer key = identityService.get(username).getKey();
-    identityService.updateLastLogin(key);
+  private String createInsertUserQuery(String user, String password, List<UserRole> roles) {
+    return "INSERT INTO public.\"user\" (username, email, password, first_name, last_name, roles, settings, system_settings, created, last_login, deleted, challenge_code_key) "
+        + "VALUES ('"
+        + user
+        + "', '"
+        + user
+        + "@test.com', '"
+        + ENCODER.encode(password)
+        + "', '"
+        + user
+        + "', null, '{"
+        + roles.stream().map(UserRole::name).collect(Collectors.joining(","))
+        + "}', 'country => DK', '', '2022-05-08 13:30:04.833025', '2022-08-04 23:20:30.330778', null, null)";
   }
 }

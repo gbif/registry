@@ -15,7 +15,7 @@ package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.cli.util.PostgresDBExtension;
+import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 

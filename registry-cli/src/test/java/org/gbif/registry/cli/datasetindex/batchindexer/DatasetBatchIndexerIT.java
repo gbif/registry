@@ -13,9 +13,9 @@
  */
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
+import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.cli.util.EmbeddedPostgresTestUtils;
-import org.gbif.registry.cli.util.PostgresDBExtension;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.io.IOException;

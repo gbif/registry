@@ -42,7 +42,6 @@ import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.api.vocabulary.collections.Source;
-import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -85,7 +84,6 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
       OrganizationService organizationService,
       InstallationService installationService,
       SimplePrincipalProvider principalProvider,
-      IdentityService identityService,
       CollectionDuplicatesService duplicatesService) {
     super(
         collectionService,
@@ -94,7 +92,6 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         organizationService,
         installationService,
         principalProvider,
-        identityService,
         duplicatesService,
         Collection.class);
     this.collectionService = collectionService;
