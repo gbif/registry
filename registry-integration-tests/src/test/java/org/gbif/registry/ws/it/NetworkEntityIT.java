@@ -759,6 +759,11 @@ public abstract class NetworkEntityIT<
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
+    registry.add("registry.datasource.url", () -> database.getPostgresContainer().getJdbcUrl());
+    registry.add(
+      "registry.datasource.username", () -> database.getPostgresContainer().getUsername());
+    registry.add(
+      "registry.datasource.password", () -> database.getPostgresContainer().getPassword());
     registry.add("elasticsearch.mock", () -> "false");
   }
 }
