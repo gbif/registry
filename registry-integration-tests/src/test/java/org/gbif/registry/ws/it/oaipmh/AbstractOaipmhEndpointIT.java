@@ -48,7 +48,7 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer());
+      new TestCaseDatabaseInitializer(CONTAINER);
 
   private final TestDataFactory testDataFactory;
 
@@ -157,7 +157,7 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   /** This method is used to change the modified date of a dataset in order to test date queries. */
   protected void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
-    try (Connection connection = database.getPostgresContainer().createConnection("")) {
+    try (Connection connection = CONTAINER.createConnection("")) {
       connection.setAutoCommit(false);
 
       PreparedStatement p =

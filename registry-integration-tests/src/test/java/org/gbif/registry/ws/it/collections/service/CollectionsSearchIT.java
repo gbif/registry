@@ -46,7 +46,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer());
+      new TestCaseDatabaseInitializer(CONTAINER);
 
   private final CollectionsSearchService searchService;
   private final InstitutionService institutionService;

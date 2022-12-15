@@ -95,7 +95,7 @@ public abstract class NetworkEntityIT<
 
   @RegisterExtension
   public TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer());
+      new TestCaseDatabaseInitializer(CONTAINER);
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,
@@ -759,11 +759,11 @@ public abstract class NetworkEntityIT<
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
-    registry.add("registry.datasource.url", () -> database.getPostgresContainer().getJdbcUrl());
+    registry.add("registry.datasource.url", () -> CONTAINER.getJdbcUrl());
     registry.add(
-      "registry.datasource.username", () -> database.getPostgresContainer().getUsername());
+      "registry.datasource.username", () -> CONTAINER.getUsername());
     registry.add(
-      "registry.datasource.password", () -> database.getPostgresContainer().getPassword());
+      "registry.datasource.password", () -> CONTAINER.getPassword());
     registry.add("elasticsearch.mock", () -> "false");
   }
 }

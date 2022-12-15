@@ -30,7 +30,7 @@ public class MachineTagMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer(), "machine_tag");
+      new TestCaseDatabaseInitializer(CONTAINER, "machine_tag");
 
   private final MachineTagMapper mapper;
 

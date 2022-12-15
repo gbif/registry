@@ -65,7 +65,7 @@ public abstract class BaseChangeSuggestionServiceIT<
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer());
+      new TestCaseDatabaseInitializer(CONTAINER);
 
   private final ChangeSuggestionService<T, R> changeSuggestionService;
   private final CollectionEntityService<T> collectionEntityService;

@@ -91,7 +91,7 @@ public class AuditLogIT extends BaseItTest {
 
   @RegisterExtension
   protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
-      new CollectionsDatabaseInitializer(database.getPostgresContainer());
+      new CollectionsDatabaseInitializer(CONTAINER);
 
   @Autowired
   public AuditLogIT(
