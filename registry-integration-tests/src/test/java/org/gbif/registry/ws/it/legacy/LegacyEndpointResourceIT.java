@@ -49,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LegacyEndpointResourceIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(database.getPostgresContainer());
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER);
 
   public static final String ENDPOINT_DESCRIPTION = "Description of Test Endpoint";
   public static final String ENDPOINT_TYPE = "EML";

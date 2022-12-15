@@ -107,15 +107,15 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @RegisterExtension
   protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
-      new CollectionsDatabaseInitializer(database.getPostgresContainer());
+      new CollectionsDatabaseInitializer(CONTAINER);
 
   @RegisterExtension
   protected static CollectionsMaterializedViewsInitializer mvInitializer =
-      new CollectionsMaterializedViewsInitializer(database.getPostgresContainer());
+      new CollectionsMaterializedViewsInitializer(CONTAINER);
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer());
+      new TestCaseDatabaseInitializer(CONTAINER);
 
   public BaseCollectionEntityServiceIT(
       CollectionEntityService<T> collectionEntityService,

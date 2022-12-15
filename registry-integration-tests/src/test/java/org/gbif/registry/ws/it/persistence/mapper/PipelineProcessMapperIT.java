@@ -59,7 +59,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer(),
+      new TestCaseDatabaseInitializer(CONTAINER,
           "pipeline_process", "dataset", "installation", "organization", "node");
 
   private static final String TEST_USER = "test";

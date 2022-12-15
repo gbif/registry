@@ -74,7 +74,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class OrganizationCreationIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(database.getPostgresContainer());
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER);
 
   private final OrganizationResource organizationResource;
   private final OrganizationService organizationClient;

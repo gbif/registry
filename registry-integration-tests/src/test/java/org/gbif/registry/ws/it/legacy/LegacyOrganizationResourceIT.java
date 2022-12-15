@@ -43,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class LegacyOrganizationResourceIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(database.getPostgresContainer());
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER);
 
   private final OrganizationService organizationService;
   private final NodeService nodeService;

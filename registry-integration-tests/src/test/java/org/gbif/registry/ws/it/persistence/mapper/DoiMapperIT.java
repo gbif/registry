@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class DoiMapperIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(database.getPostgresContainer(), "gbif_doi");
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER, "gbif_doi");
 
   private DoiMapper mapper;
 

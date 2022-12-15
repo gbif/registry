@@ -47,7 +47,7 @@ public class JwtIT extends BaseItTest {
 
   @RegisterExtension
   public static JwtDatabaseInitializer databaseRule =
-      new JwtDatabaseInitializer(database.getPostgresContainer());
+      new JwtDatabaseInitializer(CONTAINER);
 
   @Autowired
   public JwtIT(

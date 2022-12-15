@@ -65,7 +65,7 @@ public class LookupServiceIT extends BaseServiceIT {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(database.getPostgresContainer());
+      new TestCaseDatabaseInitializer(CONTAINER);
 
   private Institution i1 = new Institution();
   private Institution i2 = new Institution();
