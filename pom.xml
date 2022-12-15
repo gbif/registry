@@ -92,7 +92,7 @@
     <gbif-doi.version>2.17</gbif-doi.version>
     <gbif-download-query-tools.version>1.47-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
-    <gbif-metadata-profile.version>2.0-SNAPSHOT</gbif-metadata-profile.version>
+    <gbif-metadata-profile.version>2.1-SNAPSHOT</gbif-metadata-profile.version>
     <gbif-metrics.version>1.2</gbif-metrics.version>
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <gbif-postal-service.version>1.4</gbif-postal-service.version>

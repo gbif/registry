@@ -103,7 +103,7 @@ public class RegistryOaipmhConfiguration {
             new MetadataFormat()
                 .withPrefix("eml")
                 .withNamespace("eml://ecoinformatics.org/eml-2.1.1")
-                .withSchemaLocation("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd")
+                .withSchemaLocation("http://rs.gbif.org/schema/eml-gbif-profile/1.2/eml.xsd")
                 .withTransformer(xsltTransformer("eml.xslt")));
   }
 
