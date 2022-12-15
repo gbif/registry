@@ -91,14 +91,15 @@ public class BaseServiceIT {
       Liquibase liquibase =
         new Liquibase(TestConstants.LIQUIBASE_MASTER_FILE, new ClassLoaderResourceAccessor(), databaseLiquibase);
       liquibase.update(new Contexts());
-
-      new RegistryDatabaseInitializer().init(CONTAINER.createConnection(""));
     } catch (DatabaseException e) {
       throw new RuntimeException(e);
     } catch (SQLException | LiquibaseException e) {
       throw new RuntimeException(e);
     }
   }
+
+  @RegisterExtension
+  public static RegistryDatabaseInitializer registryDatabaseInitializer = new RegistryDatabaseInitializer(CONTAINER);
 
   private final SimplePrincipalProvider simplePrincipalProvider;
 
