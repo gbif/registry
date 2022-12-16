@@ -14,7 +14,7 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.RegistryDatabaseInitializer;
+import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.ClientBuilder;
@@ -22,14 +22,11 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.security.KeyStore;
 
-import java.sql.SQLException;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,17 +38,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import liquibase.Contexts;
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.DatabaseException;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
@@ -63,7 +49,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @DirtiesContext
-public class BaseItTest {
+public class BaseItTest extends BaseDBTest {
 
 //  @RegisterExtension
 //  protected static PostgresDBExtension database =
@@ -73,32 +59,32 @@ public class BaseItTest {
 //          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
 //          .build();
 
-  public static PostgreSQLContainer CONTAINER;
-  static {
-    CONTAINER = new PostgreSQLContainer("postgres:11.1").withDatabaseName("registry");
-    CONTAINER.withReuse(true).withLabel("reuse.tag", "registry_its_pg_container");
-    CONTAINER.setWaitStrategy(
-      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-    CONTAINER.start();
-
-    Database databaseLiquibase = null;
-    try {
-      databaseLiquibase = DatabaseFactory.getInstance()
-        .findCorrectDatabaseImplementation(new JdbcConnection(CONTAINER.createConnection("")));
-      Liquibase liquibase =
-        new Liquibase(TestConstants.LIQUIBASE_MASTER_FILE, new ClassLoaderResourceAccessor(), databaseLiquibase);
-      liquibase.update(new Contexts());
-
-//      new RegistryDatabaseInitializer().init(CONTAINER.createConnection(""));
-    } catch (DatabaseException e) {
-      throw new RuntimeException(e);
-    } catch (SQLException | LiquibaseException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @RegisterExtension
-  public static RegistryDatabaseInitializer registryDatabaseInitializer = new RegistryDatabaseInitializer(CONTAINER);
+//  public static PostgreSQLContainer CONTAINER;
+//  static {
+//    CONTAINER = new PostgreSQLContainer("postgres:11.1").withDatabaseName("registry");
+//    CONTAINER.withReuse(true).withLabel("reuse.tag", "registry_its_pg_container");
+//    CONTAINER.setWaitStrategy(
+//      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+//    CONTAINER.start();
+//
+//    Database databaseLiquibase = null;
+//    try {
+//      databaseLiquibase = DatabaseFactory.getInstance()
+//        .findCorrectDatabaseImplementation(new JdbcConnection(CONTAINER.createConnection("")));
+//      Liquibase liquibase =
+//        new Liquibase(TestConstants.LIQUIBASE_MASTER_FILE, new ClassLoaderResourceAccessor(), databaseLiquibase);
+//      liquibase.update(new Contexts());
+//
+////      new RegistryDatabaseInitializer().init(CONTAINER.createConnection(""));
+//    } catch (DatabaseException e) {
+//      throw new RuntimeException(e);
+//    } catch (SQLException | LiquibaseException e) {
+//      throw new RuntimeException(e);
+//    }
+//  }
+//
+//  @RegisterExtension
+//  public static RegistryDatabaseInitializer registryDatabaseInitializer = new RegistryDatabaseInitializer(CONTAINER);
 
   private final SimplePrincipalProvider simplePrincipalProvider;
 
