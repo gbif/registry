@@ -43,7 +43,18 @@ import lombok.SneakyThrows;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
-  private ElasticsearchContainer embeddedElastic;
+  private static ElasticsearchContainer embeddedElastic;
+
+  static {
+    embeddedElastic =
+      new ElasticsearchContainer(
+        "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
+    embeddedElastic.setWaitStrategy(
+      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+    embeddedElastic.start();
+    restClient = buildRestClient();
+  }
 
   private final Resource mappingFile;
 
@@ -52,7 +63,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   private final String indexName;
 
   // needed to assert results against ES server directly
-  private RestHighLevelClient restClient;
+  private static RestHighLevelClient restClient;
 
   public EsManageServer(Resource mappingFile, Resource settingsFile, String indexName) {
     this.mappingFile = mappingFile;
@@ -62,9 +73,9 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   @Override
   public void destroy() throws Exception {
-    if (embeddedElastic != null && !embeddedElastic.isShouldBeReused()) {
-      embeddedElastic.stop();
-    }
+//    if (embeddedElastic != null && !embeddedElastic.isShouldBeReused()) {
+//      embeddedElastic.stop();
+//    }
   }
 
   @Override
@@ -88,14 +99,14 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void start() throws Exception {
-    embeddedElastic =
-        new ElasticsearchContainer(
-            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
-    embeddedElastic.setWaitStrategy(
-        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-    embeddedElastic.start();
-    restClient = buildRestClient();
+//    embeddedElastic =
+//        new ElasticsearchContainer(
+//            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+//    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
+//    embeddedElastic.setWaitStrategy(
+//        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+//    embeddedElastic.start();
+//    restClient = buildRestClient();
 
     createIndex();
   }
@@ -145,7 +156,7 @@ public class EsManageServer implements InitializingBean, DisposableBean {
     }
   }
 
-  private RestHighLevelClient buildRestClient() {
+  private static RestHighLevelClient buildRestClient() {
     HttpHost host = new HttpHost("localhost", embeddedElastic.getMappedPort(9200));
     return new RestHighLevelClient(RestClient.builder(host));
   }
