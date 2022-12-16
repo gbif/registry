@@ -138,9 +138,11 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
         }
       }
 
-      connection
-          .prepareStatement("TRUNCATE " + String.join(",", tablesNotChallengeCode) + " CASCADE")
-          .execute();
+      if (!tablesNotChallengeCode.isEmpty()) {
+        connection
+            .prepareStatement("TRUNCATE " + String.join(",", tablesNotChallengeCode) + " CASCADE")
+            .execute();
+      }
 
       connection.commit();
 
