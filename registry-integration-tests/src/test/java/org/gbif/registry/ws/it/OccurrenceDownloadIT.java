@@ -69,7 +69,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
   private static final String DEFAULT_SOURCE = "testSource";
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER);
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final OccurrenceDownloadService occurrenceDownloadResource;
   private final OccurrenceDownloadClient occurrenceDownloadClient;

@@ -73,7 +73,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class IptResourceIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER);
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final InstallationService installationService;
   private final DatasetService datasetService;

@@ -63,7 +63,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class DerivedDatasetIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer(CONTAINER);
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private static final PagingRequest REGULAR_PAGE = new PagingRequest();
 

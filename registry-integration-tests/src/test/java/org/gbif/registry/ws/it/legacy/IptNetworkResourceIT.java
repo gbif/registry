@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.legacy;
 
 import org.gbif.api.model.registry.Network;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -37,6 +38,8 @@ public class IptNetworkResourceIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
   private final RequestTestFixture requestTestFixture;
+
+  private TestCaseDatabaseInitializer databaseInitializer = new TestCaseDatabaseInitializer();
 
   @Autowired
   public IptNetworkResourceIT(

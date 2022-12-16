@@ -55,7 +55,7 @@ public class IDigBioMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER, "collection", "institution", "address", "identifier");
+      new TestCaseDatabaseInitializer( "collection", "institution", "address", "identifier");
 
   private IDigBioMapper iDigBioMapper;
   private CollectionMapper collectionMapper;

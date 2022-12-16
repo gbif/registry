@@ -51,7 +51,7 @@ public class UserIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER, "public.user");
+      new TestCaseDatabaseInitializer( "public.user");
 
   private final UserTestFixture userTestFixture;
   private final RequestTestFixture requestTestFixture;

@@ -49,7 +49,7 @@ public class DuplicatesMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER, "collection", "institution");
+      new TestCaseDatabaseInitializer( "collection", "institution");
 
   private DuplicatesMapper duplicatesMapper;
   private InstitutionMapper institutionMapper;

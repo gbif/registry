@@ -65,7 +65,7 @@ public class UserManagementIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER, "public.user");
+      new TestCaseDatabaseInitializer( "public.user");
 
   private static final String CHANGED_PASSWORD = "123456";
 
