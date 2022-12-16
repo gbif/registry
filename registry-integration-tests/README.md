@@ -1,9 +1,9 @@
 # GBIF Registry Integration Tests
 
 This module includes integration tests for all the registry modules.
-Internally using [JUnit](https://junit.org/junit4/),
+Internally using [JUnit](https://junit.org/junit5/),
 [Mockito](https://site.mockito.org/) and
-[Cucumber](https://docs.cucumber.io/).
+testcontainers.
 
  ## Run tests by maven
 

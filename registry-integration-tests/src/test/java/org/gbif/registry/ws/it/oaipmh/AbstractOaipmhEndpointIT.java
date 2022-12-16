@@ -62,7 +62,7 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
       new MetadataFormat()
           .withMetadataPrefix("eml")
           .withMetadataNamespace("eml://ecoinformatics.org/eml-2.1.1")
-          .withSchema("http://rs.gbif.org/schema/eml-gbif-profile/1.0.2/eml.xsd");
+          .withSchema("http://rs.gbif.org/schema/eml-gbif-profile/1.2/eml.xsd");
 
   private final NodeService nodeService;
   private final OrganizationService organizationService;
