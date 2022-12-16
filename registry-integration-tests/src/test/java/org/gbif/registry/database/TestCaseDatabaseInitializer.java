@@ -125,7 +125,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
       List<String> tablesNotChallengeCode = new ArrayList<>(tables);
       if (tables.contains("public.user")) {
         tablesNotChallengeCode.remove("public.user");
-        connection.prepareStatement("DELETE FROM user WHERE username KEY >= 0").execute();
+        connection.prepareStatement("DELETE FROM public.user WHERE key >= 0").execute();
         if (tables.contains("challenge_code")) {
           tablesNotChallengeCode.remove("challenge_code");
           // Only challenge codes created for organization are deleted
