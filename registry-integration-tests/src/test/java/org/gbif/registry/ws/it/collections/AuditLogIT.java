@@ -59,7 +59,6 @@ import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.registry.ws.it.BaseItTest;
-import org.gbif.registry.ws.it.collections.service.CollectionsDatabaseInitializer;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
@@ -69,7 +68,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
@@ -87,10 +85,6 @@ public class AuditLogIT extends BaseItTest {
 
   private final InstitutionClient institutionClient;
   private final CollectionClient collectionClient;
-
-  @RegisterExtension
-  protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
-      new CollectionsDatabaseInitializer(PG_CONTAINER);
 
   @Autowired
   public AuditLogIT(
