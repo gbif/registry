@@ -1,6 +1,4 @@
-drop materialized view if exists institution_duplicates_mv;
-
-create materialized view institution_duplicates_mv as
+create materialized view if not exists institution_duplicates_mv as
 SELECT * FROM (
 VALUES
 ('2ae51c20-a824-49ca-9c8e-1ebef68660c0'::uuid,'AAA','Triple A University','DK','Copenhagen','DK','Copenhagen',
@@ -31,9 +29,7 @@ false,true,false,false,false,'2021-02-24 10:55:23.687')
 key2, code2, name2, physical_country2, physical_city2, mailing_country2, mailing_city2,
 code_match, fuzzy_name_match, name_match, city_match,country_match, generated_date);
 
-drop materialized view if exists collection_duplicates_mv;
-
-create materialized view collection_duplicates_mv as
+create materialized view if not exists collection_duplicates_mv as
 SELECT * FROM (
 VALUES
 ('2ae51c20-a824-49ca-9c8e-1ebef68660c0'::uuid,'AAA','Triple A University','bae51c20-a824-49ca-9c8e-1ebef68660c0'::uuid,'DK','Copenhagen','DK','Copenhagen',
