@@ -64,8 +64,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class LookupServiceIT extends BaseServiceIT {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER);
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer()
+       ;
 
   private Institution i1 = new Institution();
   private Institution i2 = new Institution();

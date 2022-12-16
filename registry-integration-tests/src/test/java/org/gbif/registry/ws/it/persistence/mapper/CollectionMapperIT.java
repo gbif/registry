@@ -59,7 +59,7 @@ public class CollectionMapperIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER, "collection");
+      new TestCaseDatabaseInitializer( "collection");
 
   private CollectionMapper collectionMapper;
   private AddressMapper addressMapper;

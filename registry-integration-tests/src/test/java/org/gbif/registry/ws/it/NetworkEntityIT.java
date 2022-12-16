@@ -94,8 +94,7 @@ public abstract class NetworkEntityIT<
   @Autowired private DataSource dataSource;
 
   @RegisterExtension
-  public TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER);
+  public TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,

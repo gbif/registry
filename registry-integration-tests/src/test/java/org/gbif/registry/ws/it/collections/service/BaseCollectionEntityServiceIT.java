@@ -114,8 +114,8 @@ public abstract class BaseCollectionEntityServiceIT<
       new CollectionsMaterializedViewsInitializer(CONTAINER);
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer(CONTAINER);
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer()
+       ;
 
   public BaseCollectionEntityServiceIT(
       CollectionEntityService<T> collectionEntityService,

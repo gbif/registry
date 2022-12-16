@@ -19,10 +19,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.google.common.base.Throwables;
@@ -102,25 +105,29 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "change_suggestion",
           "grscicoll_audit_log");
 
-  private final PostgreSQLContainer container;
+//  private final DataSource dataSource;
 
-  public TestCaseDatabaseInitializer(PostgreSQLContainer container) {
-    this.container = container;
+//  public TestCaseDatabaseInitializer(DataSource dataSource) {
+//    this.dataSource = dataSource;
+//  }
+
+  public TestCaseDatabaseInitializer() {
   }
 
-  public TestCaseDatabaseInitializer(PostgreSQLContainer container, String... tables) {
-    this.container = container;
+  public TestCaseDatabaseInitializer(String... tables) {
+//    this.dataSource = dataSource;
+    if (tables.length > 0)
     this.tables = Arrays.asList(tables);
   }
 
   @Override
   public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    truncateTables();
+    truncateTables(SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class));
   }
 
-  private void truncateTables() throws Exception {
+  private void truncateTables(DataSource dataSource) throws Exception {
     LOG.info("Truncating registry tables");
-    try (Connection connection = container.createConnection("")) {
+    try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
       List<String> tablesNotChallengeCode = new ArrayList<>(tables);
       if (tables.contains("challenge_code") && tables.contains("public.user")) {
