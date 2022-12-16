@@ -19,16 +19,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.base.Throwables;
-
-import lombok.Data;
-
 import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
+
+import com.google.common.base.Throwables;
+
+import lombok.Data;
 
 /**
  * A Rule that will truncate the tables ready for a new test. It is expected to do this before each
@@ -124,15 +123,19 @@ public class DatabaseCleaner implements BeforeAllCallback {
     try (Connection connection = container.createConnection("")) {
       connection.setAutoCommit(false);
       List<String> tablesNotChallengeCode = new ArrayList<>(tables);
-      if (tables.contains("challenge_code") && tables.contains("public.user")) {
-        tablesNotChallengeCode.remove("challenge_code");
-        // Only challenge codes created for organization are deleted
-        connection
-            .prepareStatement(
-                "DELETE FROM challenge_code WHERE key IN "
-                    + "(SELECT challenge_code_key FROM organization"
-                    + " WHERE challenge_code_key IS NOT NULL)")
-            .execute();
+      if (tables.contains("public.user")) {
+        tablesNotChallengeCode.remove("public.user");
+        connection.prepareStatement("DELETE FROM public.user WHERE key >= 0").execute();
+        if (tables.contains("challenge_code")) {
+          tablesNotChallengeCode.remove("challenge_code");
+          // Only challenge codes created for organization are deleted
+          connection
+              .prepareStatement(
+                  "DELETE FROM challenge_code WHERE key IN "
+                      + "(SELECT challenge_code_key FROM organization"
+                      + " WHERE challenge_code_key IS NOT NULL)")
+              .execute();
+        }
       }
       connection
           .prepareStatement("TRUNCATE " + String.join(",", tablesNotChallengeCode) + " CASCADE")
