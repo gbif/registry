@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.database.RegistryDatabaseInitializer;
 import org.gbif.registry.events.collections.AuditLogger;
 import org.gbif.registry.ws.it.RegistryIntegrationTestsConfiguration;
@@ -61,7 +62,7 @@ import liquibase.resource.ClassLoaderResourceAccessor;
     classes = {RegistryIntegrationTestsConfiguration.class, BaseServiceIT.MockConfig.class})
 @ActiveProfiles({"test", "mock"})
 @DirtiesContext
-public class BaseServiceIT {
+public class BaseServiceIT extends BaseDBTest {
 
   // the audit log is tested in the AuditLogIT
   @MockBean private AuditLogger auditLogger;
@@ -73,31 +74,31 @@ public class BaseServiceIT {
 //          .initializer(new RegistryDatabaseInitializer())
 //          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
 //          .build();
-
-  public static PostgreSQLContainer CONTAINER;
-  static {
-    CONTAINER = new PostgreSQLContainer("postgres:11.1").withDatabaseName("registry");
-    CONTAINER.withReuse(true).withLabel("reuse.tag", "registry_its_pg_container");
-    CONTAINER.setWaitStrategy(
-      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-    CONTAINER.start();
-
-    Database databaseLiquibase = null;
-    try {
-      databaseLiquibase = DatabaseFactory.getInstance()
-        .findCorrectDatabaseImplementation(new JdbcConnection(CONTAINER.createConnection("")));
-      Liquibase liquibase =
-        new Liquibase(TestConstants.LIQUIBASE_MASTER_FILE, new ClassLoaderResourceAccessor(), databaseLiquibase);
-      liquibase.update(new Contexts());
-    } catch (DatabaseException e) {
-      throw new RuntimeException(e);
-    } catch (SQLException | LiquibaseException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @RegisterExtension
-  public static RegistryDatabaseInitializer registryDatabaseInitializer = new RegistryDatabaseInitializer(CONTAINER);
+//
+//  public static PostgreSQLContainer CONTAINER;
+//  static {
+//    CONTAINER = new PostgreSQLContainer("postgres:11.1").withDatabaseName("registry");
+//    CONTAINER.withReuse(true).withLabel("reuse.tag", "registry_its_pg_container");
+//    CONTAINER.setWaitStrategy(
+//      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+//    CONTAINER.start();
+//
+//    Database databaseLiquibase = null;
+//    try {
+//      databaseLiquibase = DatabaseFactory.getInstance()
+//        .findCorrectDatabaseImplementation(new JdbcConnection(CONTAINER.createConnection("")));
+//      Liquibase liquibase =
+//        new Liquibase(TestConstants.LIQUIBASE_MASTER_FILE, new ClassLoaderResourceAccessor(), databaseLiquibase);
+//      liquibase.update(new Contexts());
+//    } catch (DatabaseException e) {
+//      throw new RuntimeException(e);
+//    } catch (SQLException | LiquibaseException e) {
+//      throw new RuntimeException(e);
+//    }
+//  }
+//
+//  @RegisterExtension
+//  public static RegistryDatabaseInitializer registryDatabaseInitializer = new RegistryDatabaseInitializer(CONTAINER);
 
   private final SimplePrincipalProvider simplePrincipalProvider;
 
