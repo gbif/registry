@@ -113,13 +113,13 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download download = getTestInstanceDownload();
     download.setRequest(
         new PredicateDownloadRequest(
-          new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212", false),
-          TestConstants.TEST_ADMIN,
-          Collections.singleton("downloadtest@gbif.org"),
-          true,
-          DownloadFormat.DWCA,
-          DownloadType.OCCURRENCE,
-          Collections.singleton(Extension.AUDUBON)));
+            new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "212", false),
+            TestConstants.TEST_ADMIN,
+            Collections.singleton("downloadtest@gbif.org"),
+            true,
+            DownloadFormat.DWCA,
+            DownloadType.OCCURRENCE,
+            Collections.singleton(Extension.AUDUBON)));
     return download;
   }
 
@@ -324,18 +324,12 @@ public class OccurrenceDownloadIT extends BaseItTest {
     }
     assertEquals(
         5,
-        service
-            .list(new PagingRequest(0, 5), null, DEFAULT_SOURCE)
-            .getResults()
-            .size(),
+        service.list(new PagingRequest(0, 5), null, DEFAULT_SOURCE).getResults().size(),
         "List by source operation should return 5 records");
 
     assertEquals(
         0,
-        service
-            .list(new PagingRequest(0, 5), new HashSet<>(), "foo")
-            .getResults()
-            .size(),
+        service.list(new PagingRequest(0, 5), new HashSet<>(), "foo").getResults().size(),
         "List by source operation should return 0 records");
   }
 

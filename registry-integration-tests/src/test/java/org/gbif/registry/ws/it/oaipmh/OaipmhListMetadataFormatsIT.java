@@ -29,8 +29,6 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.Date;
 import java.util.List;
 
-import javax.sql.DataSource;
-
 import org.dspace.xoai.model.oaipmh.MetadataFormat;
 import org.dspace.xoai.serviceprovider.exceptions.IdDoesNotExistException;
 import org.dspace.xoai.serviceprovider.parameters.ListMetadataParameters;

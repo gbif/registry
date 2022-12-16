@@ -36,22 +36,15 @@ public class DatasetUpdaterCommandIT extends BaseDBTest {
 
   private static final UUID DATASET_KEY = UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a");
 
-  //  @RegisterExtension
-  //  static PostgresDBExtension database =
-  //      PostgresDBExtension.builder()
-  //          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-  //          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-  //          .build();
-
   private DatasetUpdaterConfiguration getConfig(String configFile) {
     DatasetUpdaterConfiguration cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
-    cfg.db = toDbConfig(CONTAINER);
+    cfg.db = toDbConfig(PG_CONTAINER);
     return cfg;
   }
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = CONTAINER.createConnection("");
+    Connection con = PG_CONTAINER.createConnection("");
     String sql = getFileData("datasetupdater/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -61,7 +54,7 @@ public class DatasetUpdaterCommandIT extends BaseDBTest {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = CONTAINER.createConnection("");
+    Connection con = PG_CONTAINER.createConnection("");
     String sql = getFileData("datasetupdater/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

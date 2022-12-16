@@ -15,8 +15,6 @@ package org.gbif.registry.cli.directoryupdate;
 
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.common.tests.database.DbConstants;
-import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.persistence.mapper.NodeMapper;
@@ -30,9 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -47,21 +43,14 @@ public class DirectoryUpdateServiceIT extends BaseDBTest {
   private static DirectoryUpdateConfiguration directoryUpdateConfig;
   private static Connection registryDbConnection;
 
-//  @RegisterExtension
-//  static PostgresDBExtension database =
-//      PostgresDBExtension.builder()
-//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-//          .build();
-
   @BeforeAll
   public static void beforeAll() throws Exception {
     directoryUpdateConfig =
         RegistryCliUtils.loadConfig(
             "directoryupdate/directory-update.yaml", DirectoryUpdateConfiguration.class);
-    directoryUpdateConfig.db = toDbConfig(CONTAINER);
+    directoryUpdateConfig.db = toDbConfig(PG_CONTAINER);
 
-    registryDbConnection = CONTAINER.createConnection("");
+    registryDbConnection = PG_CONTAINER.createConnection("");
   }
 
   @AfterAll

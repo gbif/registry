@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.common.tests.database.DBInitializer;
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 
 import java.sql.Connection;
@@ -28,7 +27,7 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_GRSCICOLL_ADMI
 import static org.gbif.registry.ws.it.fixtures.TestConstants.TEST_PASSWORD;
 
 /** DB initialization needed for collections tests. */
-public class CollectionsDatabaseInitializer implements BeforeAllCallback, DBInitializer {
+public class CollectionsDatabaseInitializer implements BeforeAllCallback {
 
   private static final RegistryPasswordEncoder ENCODER = new RegistryPasswordEncoder();
 
@@ -41,7 +40,6 @@ public class CollectionsDatabaseInitializer implements BeforeAllCallback, DBInit
   }
 
   @SneakyThrows
-  @Override
   public void init(Connection connection) {
     connection
         .prepareStatement(

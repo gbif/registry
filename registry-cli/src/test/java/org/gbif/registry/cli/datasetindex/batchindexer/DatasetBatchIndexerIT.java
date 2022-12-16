@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.cli.datasetindex.batchindexer;
 
-import org.gbif.common.tests.database.DbConstants;
-import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.cli.util.EmbeddedPostgresTestUtils;
 import org.gbif.registry.database.BaseDBTest;
@@ -39,10 +37,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
-
-import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 
 @DisabledIfSystemProperty(named = "test.indexer", matches = "false")
 public class DatasetBatchIndexerIT extends BaseDBTest {
@@ -56,13 +51,6 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
   private static final String INDEX_NAME = IndexingConstants.ALIAS + '_' + new Date().getTime();
 
   private static final String INDEX_ALIAS = INDEX_NAME + "_a";
-
-//  @RegisterExtension
-//  static PostgresDBExtension database =
-//      PostgresDBExtension.builder()
-//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-//          .build();
 
   private static ElasticsearchContainer embeddedElastic;
 
@@ -83,7 +71,7 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
     embeddedElastic =
         new ElasticsearchContainer(
             "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-    embeddedElastic.withReuse(true);
+    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
     embeddedElastic.start();
   }
 
@@ -106,7 +94,7 @@ public class DatasetBatchIndexerIT extends BaseDBTest {
 
     configuration.setIndexClb(false);
 
-    configuration.setClbDb(EmbeddedPostgresTestUtils.toDbConfig(CONTAINER));
+    configuration.setClbDb(EmbeddedPostgresTestUtils.toDbConfig(PG_CONTAINER));
 
     // Only 10 dataset must be indexed
     configuration.setStopAfter(DATASETS_TO_INDEX);

@@ -61,13 +61,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -758,11 +757,9 @@ public abstract class NetworkEntityIT<
 
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
-    registry.add("registry.datasource.url", () -> CONTAINER.getJdbcUrl());
-    registry.add(
-      "registry.datasource.username", () -> CONTAINER.getUsername());
-    registry.add(
-      "registry.datasource.password", () -> CONTAINER.getPassword());
+    registry.add("registry.datasource.url", PG_CONTAINER::getJdbcUrl);
+    registry.add("registry.datasource.username", PG_CONTAINER::getUsername);
+    registry.add("registry.datasource.password", PG_CONTAINER::getPassword);
     registry.add("elasticsearch.mock", () -> "false");
   }
 }

@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.database;
 
-import org.gbif.common.tests.database.DBInitializer;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -22,10 +20,9 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.google.common.base.Throwables;
-
-import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
  * A Rule that initializes a database for All test cases in a Test class or in test suite.
@@ -34,7 +31,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
  *  RegistryDatabaseInitializer().init();
  * </pre>
  */
-public class RegistryDatabaseInitializer implements DBInitializer, BeforeAllCallback {
+public class RegistryDatabaseInitializer implements BeforeAllCallback {
 
   private static final Logger LOG = LoggerFactory.getLogger(RegistryDatabaseInitializer.class);
 
@@ -44,7 +41,6 @@ public class RegistryDatabaseInitializer implements DBInitializer, BeforeAllCall
     this.container = container;
   }
 
-  @Override
   public void init(Connection connection) {
     LOG.info("Create test users");
     try {
