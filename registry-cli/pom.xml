@@ -415,12 +415,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.gbif</groupId>
-      <artifactId>common-tests</artifactId>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.gbif.registry</groupId>
       <artifactId>registry-integration-tests</artifactId>
       <scope>test</scope>

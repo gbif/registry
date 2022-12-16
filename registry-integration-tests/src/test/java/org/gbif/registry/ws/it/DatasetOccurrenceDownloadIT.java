@@ -77,7 +77,8 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
       NodeService nodeService,
       InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
-      @Qualifier("datasetOccurrenceDownloadUsageResource") DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource,
+      @Qualifier("datasetOccurrenceDownloadUsageResource")
+          DatasetOccurrenceDownloadUsageService datasetOccurrenceDownloadUsageResource,
       TestDataFactory testDataFactory,
       EsManageServer esServer,
       @LocalServerPort int localServerPort,

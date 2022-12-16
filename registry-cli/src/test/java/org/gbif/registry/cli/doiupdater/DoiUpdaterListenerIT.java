@@ -17,8 +17,6 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
 import org.gbif.common.messaging.api.messages.ChangeDoiMessage;
-import org.gbif.common.tests.database.DbConstants;
-import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.datacite.rest.client.configuration.ClientConfiguration;
 import org.gbif.doi.service.DoiException;
 import org.gbif.doi.service.DoiHttpException;
@@ -38,7 +36,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 
@@ -48,7 +45,6 @@ import static org.gbif.api.model.common.DoiStatus.DELETED;
 import static org.gbif.api.model.common.DoiStatus.FAILED;
 import static org.gbif.api.model.common.DoiStatus.NEW;
 import static org.gbif.api.model.common.DoiStatus.REGISTERED;
-import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -79,19 +75,12 @@ public class DoiUpdaterListenerIT extends BaseDBTest {
 
   private static ObjectMapper objectMapper = new ObjectMapper();
 
-//  @RegisterExtension
-//  static PostgresDBExtension database =
-//      PostgresDBExtension.builder()
-//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-//          .build();
-
   @BeforeAll
   public static void setup() throws Exception {
     DoiUpdaterConfiguration doiUpdaterConfiguration =
         RegistryCliUtils.loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
 
-    doiUpdaterConfiguration.registry = toDbConfig(CONTAINER);
+    doiUpdaterConfiguration.registry = toDbConfig(PG_CONTAINER);
 
     ApplicationContext context =
         SpringContextBuilder.create().withDbConfiguration(doiUpdaterConfiguration.registry).build();

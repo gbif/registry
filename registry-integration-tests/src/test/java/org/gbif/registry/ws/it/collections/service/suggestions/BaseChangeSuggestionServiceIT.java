@@ -64,8 +64,7 @@ public abstract class BaseChangeSuggestionServiceIT<
   protected static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer()
-       ;
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final ChangeSuggestionService<T, R> changeSuggestionService;
   private final CollectionEntityService<T> collectionEntityService;

@@ -47,8 +47,7 @@ import org.springframework.core.env.Environment;
 public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer()
-       ;
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   private final TestDataFactory testDataFactory;
 
@@ -157,7 +156,7 @@ public abstract class AbstractOaipmhEndpointIT extends BaseItTest {
 
   /** This method is used to change the modified date of a dataset in order to test date queries. */
   protected void changeDatasetModifiedDate(UUID key, Date modifiedDate) throws Exception {
-    try (Connection connection = CONTAINER.createConnection("")) {
+    try (Connection connection = PG_CONTAINER.createConnection("")) {
       connection.setAutoCommit(false);
 
       PreparedStatement p =

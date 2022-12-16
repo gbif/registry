@@ -105,19 +105,13 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "change_suggestion",
           "grscicoll_audit_log");
 
-//  private final DataSource dataSource;
-
-//  public TestCaseDatabaseInitializer(DataSource dataSource) {
-//    this.dataSource = dataSource;
-//  }
-
   public TestCaseDatabaseInitializer() {
   }
 
   public TestCaseDatabaseInitializer(String... tables) {
-//    this.dataSource = dataSource;
-    if (tables.length > 0)
-    this.tables = Arrays.asList(tables);
+    if (tables.length > 0) {
+      this.tables = Arrays.asList(tables);
+    }
   }
 
   @Override

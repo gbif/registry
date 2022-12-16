@@ -107,15 +107,14 @@ public abstract class BaseCollectionEntityServiceIT<
 
   @RegisterExtension
   protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
-      new CollectionsDatabaseInitializer(CONTAINER);
+      new CollectionsDatabaseInitializer(PG_CONTAINER);
 
   @RegisterExtension
   protected static CollectionsMaterializedViewsInitializer mvInitializer =
-      new CollectionsMaterializedViewsInitializer(CONTAINER);
+      new CollectionsMaterializedViewsInitializer(PG_CONTAINER);
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer()
-       ;
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
   public BaseCollectionEntityServiceIT(
       CollectionEntityService<T> collectionEntityService,

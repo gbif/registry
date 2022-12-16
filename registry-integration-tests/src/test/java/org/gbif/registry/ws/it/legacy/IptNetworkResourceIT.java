@@ -24,6 +24,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -39,7 +40,8 @@ public class IptNetworkResourceIT extends BaseItTest {
   private final TestDataFactory testDataFactory;
   private final RequestTestFixture requestTestFixture;
 
-  private TestCaseDatabaseInitializer databaseInitializer = new TestCaseDatabaseInitializer();
+  @RegisterExtension
+  public TestCaseDatabaseInitializer databaseInitializer = new TestCaseDatabaseInitializer();
 
   @Autowired
   public IptNetworkResourceIT(
@@ -53,8 +55,8 @@ public class IptNetworkResourceIT extends BaseItTest {
   }
 
   /**
-   * The test sends a get all networks (GET) request, the JSON response having a key and name
-   * for each network in the list.
+   * The test sends a get all networks (GET) request, the JSON response having a key and name for
+   * each network in the list.
    */
   @Test
   public void testGetNetworksJSON() throws Exception {

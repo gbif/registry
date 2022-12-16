@@ -51,7 +51,6 @@ import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.events.collections.EventType;
-import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
@@ -91,7 +90,7 @@ public class AuditLogIT extends BaseItTest {
 
   @RegisterExtension
   protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
-      new CollectionsDatabaseInitializer(CONTAINER);
+      new CollectionsDatabaseInitializer(PG_CONTAINER);
 
   @Autowired
   public AuditLogIT(

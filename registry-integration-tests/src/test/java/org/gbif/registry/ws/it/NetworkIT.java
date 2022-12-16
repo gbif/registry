@@ -269,9 +269,7 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     return testDataFactory.newNetwork();
   }
 
-  /**
-   * Test doesn't make sense for a network.
-   */
+  /** Test doesn't make sense for a network. */
   @Override
   public void testCreateAsEditor(ServiceType serviceType) {}
 

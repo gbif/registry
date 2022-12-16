@@ -111,8 +111,7 @@ public class AuthPreCheckIT extends BaseItTest {
 
   @RegisterExtension
   public static DatabaseCleaner databaseCleaner =
-      new DatabaseCleaner(
-          CONTAINER, "public.user", "editor_rights", "namespace_rights", "country_rights");
+      new DatabaseCleaner(PG_CONTAINER, "public.user", "editor_rights", "namespace_rights", "country_rights");
 
   @SneakyThrows
   @BeforeAll

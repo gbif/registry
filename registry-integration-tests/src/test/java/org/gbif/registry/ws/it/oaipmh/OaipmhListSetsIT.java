@@ -31,8 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.sql.DataSource;
-
 import org.dspace.xoai.model.oaipmh.Set;
 import org.dspace.xoai.serviceprovider.exceptions.NoSetHierarchyException;
 import org.junit.jupiter.api.Test;

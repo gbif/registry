@@ -16,8 +16,6 @@ package org.gbif.registry.cli.doisynchronizer;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.DoiStatus;
-import org.gbif.common.tests.database.DbConstants;
-import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
 import org.gbif.doi.service.DoiService;
@@ -37,9 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
 
@@ -55,13 +51,6 @@ public class DoiSynchronizerCommandIT extends BaseDBTest {
   private static DoiSynchronizerConfiguration doiSynchronizerConfig;
   private static String metadataXml;
 
-//  @RegisterExtension
-//  static PostgresDBExtension database =
-//      PostgresDBExtension.builder()
-//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-//          .build();
-
   @BeforeAll
   public static void beforeAll() throws Exception {
     byte[] bytes =
@@ -76,7 +65,7 @@ public class DoiSynchronizerCommandIT extends BaseDBTest {
     doiSynchronizerConfig =
         RegistryCliUtils.loadConfig(
             "doisynchronizer/doi-synchronizer.yaml", DoiSynchronizerConfiguration.class);
-    doiSynchronizerConfig.registry = toDbConfig(CONTAINER);
+    doiSynchronizerConfig.registry = toDbConfig(PG_CONTAINER);
     command = new DoiSynchronizerCommand(doiSynchronizerConfig);
 
     prepareDataCiteData();
@@ -97,7 +86,7 @@ public class DoiSynchronizerCommandIT extends BaseDBTest {
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = CONTAINER.createConnection("");
+    Connection con = PG_CONTAINER.createConnection("");
     String sql = getFileData("doisynchronizer/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -107,7 +96,7 @@ public class DoiSynchronizerCommandIT extends BaseDBTest {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = CONTAINER.createConnection("");
+    Connection con = PG_CONTAINER.createConnection("");
     String sql = getFileData("doisynchronizer/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

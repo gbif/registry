@@ -56,31 +56,37 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 @AutoConfigureMockMvc
 public class BaseResourceMockIT {
 
-//  @RegisterExtension
-//  static PostgresDBExtension database =
-//      PostgresDBExtension.builder()
-//          .liquibaseChangeLogFile(TestConstants.LIQUIBASE_MASTER_FILE)
-//          .initializer(new RegistryDatabaseInitializer())
-//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-//          .build();
+  //  @RegisterExtension
+  //  static PostgresDBExtension database =
+  //      PostgresDBExtension.builder()
+  //          .liquibaseChangeLogFile(TestConstants.LIQUIBASE_MASTER_FILE)
+  //          .initializer(new RegistryDatabaseInitializer())
+  //          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+  //          .build();
 
   public static PostgreSQLContainer CONTAINER;
+
   static {
     CONTAINER = new PostgreSQLContainer("postgres:11.1").withDatabaseName("registry");
     CONTAINER.withReuse(true).withLabel("reuse.tag", "registry_its_pg_container");
     CONTAINER.setWaitStrategy(
-      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
     CONTAINER.start();
 
     Database databaseLiquibase = null;
     try {
-      databaseLiquibase = DatabaseFactory.getInstance()
-        .findCorrectDatabaseImplementation(new JdbcConnection(CONTAINER.createConnection("")));
+      databaseLiquibase =
+          DatabaseFactory.getInstance()
+              .findCorrectDatabaseImplementation(
+                  new JdbcConnection(CONTAINER.createConnection("")));
       Liquibase liquibase =
-        new Liquibase(TestConstants.LIQUIBASE_MASTER_FILE, new ClassLoaderResourceAccessor(), databaseLiquibase);
+          new Liquibase(
+              TestConstants.LIQUIBASE_MASTER_FILE,
+              new ClassLoaderResourceAccessor(),
+              databaseLiquibase);
       liquibase.update(new Contexts());
 
-//      new RegistryDatabaseInitializer().init(CONTAINER.createConnection(""));
+      //      new RegistryDatabaseInitializer().init(CONTAINER.createConnection(""));
     } catch (DatabaseException e) {
       throw new RuntimeException(e);
     } catch (SQLException | LiquibaseException e) {
@@ -89,7 +95,8 @@ public class BaseResourceMockIT {
   }
 
   @RegisterExtension
-  public static RegistryDatabaseInitializer registryDatabaseInitializer = new RegistryDatabaseInitializer(CONTAINER);
+  public static RegistryDatabaseInitializer registryDatabaseInitializer =
+      new RegistryDatabaseInitializer(CONTAINER);
 
   private final SimplePrincipalProvider simplePrincipalProvider;
 
@@ -132,10 +139,8 @@ public class BaseResourceMockIT {
   @DynamicPropertySource
   static void properties(DynamicPropertyRegistry registry) {
     registry.add("registry.datasource.url", () -> CONTAINER.getJdbcUrl());
-    registry.add(
-      "registry.datasource.username", () -> CONTAINER.getUsername());
-    registry.add(
-      "registry.datasource.password", () -> CONTAINER.getPassword());
+    registry.add("registry.datasource.username", () -> CONTAINER.getUsername());
+    registry.add("registry.datasource.password", () -> CONTAINER.getPassword());
     registry.add("elasticsearch.mock", () -> "true");
   }
 }

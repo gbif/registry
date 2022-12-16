@@ -43,7 +43,7 @@ import lombok.SneakyThrows;
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
-  private static ElasticsearchContainer embeddedElastic;
+  public static final ElasticsearchContainer embeddedElastic;
 
   static {
     embeddedElastic =

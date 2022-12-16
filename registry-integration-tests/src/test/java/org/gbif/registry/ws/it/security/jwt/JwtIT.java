@@ -46,8 +46,7 @@ public class JwtIT extends BaseItTest {
   private final RequestTestFixture requestTestFixture;
 
   @RegisterExtension
-  public static JwtDatabaseInitializer databaseRule =
-      new JwtDatabaseInitializer(CONTAINER);
+  public static JwtDatabaseInitializer databaseRule = new JwtDatabaseInitializer(PG_CONTAINER);
 
   @Autowired
   public JwtIT(

@@ -1,7 +1,5 @@
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.common.tests.database.DBInitializer;
-
 import java.sql.Connection;
 
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -12,7 +10,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import lombok.SneakyThrows;
 
-public class CollectionsMaterializedViewsInitializer implements BeforeAllCallback, DBInitializer {
+public class CollectionsMaterializedViewsInitializer implements BeforeAllCallback {
 
   private PostgreSQLContainer postgreSQLContainer;
 
@@ -23,7 +21,6 @@ public class CollectionsMaterializedViewsInitializer implements BeforeAllCallbac
   }
 
   @SneakyThrows
-  @Override
   public void init(Connection connection) {
     // create materialized view for testing
     ScriptUtils.executeSqlScript(
