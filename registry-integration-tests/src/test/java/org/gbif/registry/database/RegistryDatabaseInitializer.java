@@ -72,7 +72,7 @@ public class RegistryDatabaseInitializer implements BeforeAllCallback {
               createInsertUserQuery(
                   -1,
                   IT_APP_KEY2,
-                  TEST_PASSWORD,
+                  "$S$DSLeulP5GbaEzGpqDSJJVG8mFUisQP.Bmy/S15VVbG9aadZQ6KNp",
                   Arrays.asList(UserRole.REGISTRY_ADMIN, GRSCICOLL_ADMIN)))
           .executeUpdate();
       connection
@@ -80,7 +80,7 @@ public class RegistryDatabaseInitializer implements BeforeAllCallback {
               createInsertUserQuery(
                   -2,
                   TestConstants.TEST_EDITOR,
-                  TEST_PASSWORD,
+                  "$S$DIU6YGMU7aKb0rISEEqtePk.PwJPU.z.f5G0Au426gIJVd5RS8xs",
                   Arrays.asList(UserRole.USER, REGISTRY_EDITOR)))
           .executeUpdate();
       connection
@@ -88,20 +88,23 @@ public class RegistryDatabaseInitializer implements BeforeAllCallback {
               createInsertUserQuery(
                   -3,
                   TEST_ADMIN,
-                  TEST_PASSWORD,
+                  ENCODER.encode(TEST_PASSWORD),
                   Arrays.asList(UserRole.USER, UserRole.REGISTRY_ADMIN, UserRole.REGISTRY_EDITOR)))
           .executeUpdate();
       connection
           .prepareStatement(
               createInsertUserQuery(
-                  -4, TEST_USER, TEST_PASSWORD, Collections.singletonList(UserRole.USER)))
+                  -4,
+                  TEST_USER,
+                  ENCODER.encode(TEST_PASSWORD),
+                  Collections.singletonList(UserRole.USER)))
           .executeUpdate();
       connection
           .prepareStatement(
               createInsertUserQuery(
                   -5,
                   TEST_GRSCICOLL_ADMIN,
-                  TEST_PASSWORD,
+                  ENCODER.encode(TEST_PASSWORD),
                   Collections.singletonList(GRSCICOLL_ADMIN)))
           .executeUpdate();
       connection.commit();
@@ -127,7 +130,7 @@ public class RegistryDatabaseInitializer implements BeforeAllCallback {
         + "', '"
         + user
         + "@test.com', '"
-        + ENCODER.encode(password)
+        + password
         + "', '"
         + user
         + "', null, '{"
