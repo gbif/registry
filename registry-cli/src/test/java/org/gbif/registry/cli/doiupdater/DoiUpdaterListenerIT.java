@@ -26,6 +26,7 @@ import org.gbif.doi.service.DoiService;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.common.spring.SpringContextBuilder;
 import org.gbif.registry.cli.util.RegistryCliUtils;
+import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.doi.converter.DownloadConverter;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DoiMapper;
@@ -61,7 +62,7 @@ import static org.mockito.Mockito.verify;
 /** Test DoiUpdateListener for different cases. */
 @ExtendWith(MockitoExtension.class)
 @DisabledIfSystemProperty(named = "test.doi.update", matches = "false")
-public class DoiUpdaterListenerIT {
+public class DoiUpdaterListenerIT extends BaseDBTest {
 
   private static final String PREFIX = "10.21373";
   private static final String SHOULDER = "gbif.";
@@ -78,19 +79,19 @@ public class DoiUpdaterListenerIT {
 
   private static ObjectMapper objectMapper = new ObjectMapper();
 
-  @RegisterExtension
-  static PostgresDBExtension database =
-      PostgresDBExtension.builder()
-          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-          .build();
+//  @RegisterExtension
+//  static PostgresDBExtension database =
+//      PostgresDBExtension.builder()
+//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+//          .build();
 
   @BeforeAll
   public static void setup() throws Exception {
     DoiUpdaterConfiguration doiUpdaterConfiguration =
         RegistryCliUtils.loadConfig("doiupdater/doi-updater.yaml", DoiUpdaterConfiguration.class);
 
-    doiUpdaterConfiguration.registry = toDbConfig(database.getPostgresContainer());
+    doiUpdaterConfiguration.registry = toDbConfig(CONTAINER);
 
     ApplicationContext context =
         SpringContextBuilder.create().withDbConfiguration(doiUpdaterConfiguration.registry).build();
