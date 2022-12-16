@@ -106,10 +106,6 @@ public abstract class BaseCollectionEntityServiceIT<
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
 
   @RegisterExtension
-  protected static CollectionsDatabaseInitializer collectionsDatabaseInitializer =
-      new CollectionsDatabaseInitializer(PG_CONTAINER);
-
-  @RegisterExtension
   protected static CollectionsMaterializedViewsInitializer mvInitializer =
       new CollectionsMaterializedViewsInitializer(PG_CONTAINER);
 

@@ -26,7 +26,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.PostgreSQLContainer;
 
 import com.google.common.base.Throwables;
 
@@ -105,8 +104,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "change_suggestion",
           "grscicoll_audit_log");
 
-  public TestCaseDatabaseInitializer() {
-  }
+  public TestCaseDatabaseInitializer() {}
 
   public TestCaseDatabaseInitializer(String... tables) {
     if (tables.length > 0) {
@@ -116,7 +114,8 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
 
   @Override
   public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    truncateTables(SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class));
+    truncateTables(
+        SpringExtension.getApplicationContext(extensionContext).getBean(DataSource.class));
   }
 
   private void truncateTables(DataSource dataSource) throws Exception {
@@ -124,16 +123,21 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
     try (Connection connection = dataSource.getConnection()) {
       connection.setAutoCommit(false);
       List<String> tablesNotChallengeCode = new ArrayList<>(tables);
-      if (tables.contains("challenge_code") && tables.contains("public.user")) {
-        tablesNotChallengeCode.remove("challenge_code");
-        // Only challenge codes created for organization are deleted
-        connection
-            .prepareStatement(
-                "DELETE FROM challenge_code WHERE key IN "
-                    + "(SELECT challenge_code_key FROM organization"
-                    + " WHERE challenge_code_key IS NOT NULL)")
-            .execute();
+      if (tables.contains("public.user")) {
+        tablesNotChallengeCode.remove("public.user");
+        connection.prepareStatement("DELETE FROM user WHERE username KEY >= 0").execute();
+        if (tables.contains("challenge_code")) {
+          tablesNotChallengeCode.remove("challenge_code");
+          // Only challenge codes created for organization are deleted
+          connection
+              .prepareStatement(
+                  "DELETE FROM challenge_code WHERE key IN "
+                      + "(SELECT challenge_code_key FROM organization"
+                      + " WHERE challenge_code_key IS NOT NULL)")
+              .execute();
+        }
       }
+
       connection
           .prepareStatement("TRUNCATE " + String.join(",", tablesNotChallengeCode) + " CASCADE")
           .execute();

@@ -19,18 +19,15 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.security.jwt.JwtConfiguration;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.registry.ws.jwt.JwtUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.ResultActions;
 
-import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.ADMIN_USER;
-import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.GRSCICOLL_ADMIN;
-import static org.gbif.registry.ws.it.security.jwt.JwtDatabaseInitializer.TEST_USER;
 import static org.gbif.ws.util.SecurityConstants.HEADER_TOKEN;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -45,9 +42,6 @@ public class JwtIT extends BaseItTest {
   private JwtConfiguration jwtConfiguration;
   private final RequestTestFixture requestTestFixture;
 
-  @RegisterExtension
-  public static JwtDatabaseInitializer databaseRule = new JwtDatabaseInitializer(PG_CONTAINER);
-
   @Autowired
   public JwtIT(
       JwtConfiguration jwtConfiguration,
@@ -61,7 +55,7 @@ public class JwtIT extends BaseItTest {
 
   @Test
   public void validTokenTest() throws Exception {
-    String token = login(GRSCICOLL_ADMIN);
+    String token = login(TestConstants.TEST_GRSCICOLL_ADMIN);
 
     // otherwise the service may issue the same token because of the same time (seconds)
     Thread.sleep(1000);
@@ -79,7 +73,7 @@ public class JwtIT extends BaseItTest {
 
   @Test
   public void invalidHeaderTest() throws Exception {
-    String token = login(ADMIN_USER);
+    String token = login(TestConstants.TEST_ADMIN);
     HttpHeaders headers = new HttpHeaders();
     headers.add("beare ", token);
 
@@ -92,7 +86,7 @@ public class JwtIT extends BaseItTest {
   public void invalidTokenTest() throws Exception {
     JwtConfiguration config = new JwtConfiguration();
     config.setSigningKey("fake");
-    String token = JwtUtils.generateJwt(ADMIN_USER, config);
+    String token = JwtUtils.generateJwt(TestConstants.TEST_ADMIN, config);
 
     ResultActions actions =
         requestTestFixture
@@ -106,7 +100,7 @@ public class JwtIT extends BaseItTest {
 
   @Test
   public void insufficientRolesTest() throws Exception {
-    String token = login(TEST_USER);
+    String token = login(TestConstants.TEST_USER);
 
     requestTestFixture
         .postRequest(token, createInstitution(), PATH)
@@ -130,14 +124,20 @@ public class JwtIT extends BaseItTest {
   @Test
   public void noJwtWithBasicAuthTest() throws Exception {
     requestTestFixture
-        .postRequest(GRSCICOLL_ADMIN, GRSCICOLL_ADMIN, createInstitution(), PATH)
+        .postRequest(
+            TestConstants.TEST_GRSCICOLL_ADMIN,
+            TestConstants.TEST_PASSWORD,
+            createInstitution(),
+            PATH)
         .andExpect(status().isCreated());
   }
 
   /** Logs in a user and returns the JWT token. */
   private String login(String user) throws Exception {
     ResultActions actions =
-        requestTestFixture.postRequest(user, user, "/user/login").andExpect(status().isCreated());
+        requestTestFixture
+            .postRequest(user, TestConstants.TEST_PASSWORD, "/user/login")
+            .andExpect(status().isCreated());
 
     ExtendedLoggedUser response =
         requestTestFixture.extractJsonResponse(actions, ExtendedLoggedUser.class);
