@@ -18,6 +18,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.util.RegistryCliUtils;
+import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 
 import java.sql.Connection;
@@ -38,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /** Test Registry updates from the Directory */
 @SuppressWarnings("UnstableApiUsage")
-public class DirectoryUpdateServiceIT {
+public class DirectoryUpdateServiceIT extends BaseDBTest {
 
   private static final UUID TOGO_NODE_UUID =
       UUID.fromString("c9659a3e-07e9-4fcb-83c6-de8b9009a02e");
@@ -46,21 +47,21 @@ public class DirectoryUpdateServiceIT {
   private static DirectoryUpdateConfiguration directoryUpdateConfig;
   private static Connection registryDbConnection;
 
-  @RegisterExtension
-  static PostgresDBExtension database =
-      PostgresDBExtension.builder()
-          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-          .build();
+//  @RegisterExtension
+//  static PostgresDBExtension database =
+//      PostgresDBExtension.builder()
+//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+//          .build();
 
   @BeforeAll
   public static void beforeAll() throws Exception {
     directoryUpdateConfig =
         RegistryCliUtils.loadConfig(
             "directoryupdate/directory-update.yaml", DirectoryUpdateConfiguration.class);
-    directoryUpdateConfig.db = toDbConfig(database.getPostgresContainer());
+    directoryUpdateConfig.db = toDbConfig(CONTAINER);
 
-    registryDbConnection = database.getPostgresContainer().createConnection("");
+    registryDbConnection = CONTAINER.createConnection("");
   }
 
   @AfterAll

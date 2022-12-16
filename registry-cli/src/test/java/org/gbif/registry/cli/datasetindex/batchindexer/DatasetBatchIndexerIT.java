@@ -17,6 +17,7 @@ import org.gbif.common.tests.database.DbConstants;
 import org.gbif.common.tests.database.PostgresDBExtension;
 import org.gbif.registry.cli.datasetindex.ElasticsearchConfig;
 import org.gbif.registry.cli.util.EmbeddedPostgresTestUtils;
+import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.search.dataset.indexing.es.IndexingConstants;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 
 @DisabledIfSystemProperty(named = "test.indexer", matches = "false")
-public class DatasetBatchIndexerIT {
+public class DatasetBatchIndexerIT extends BaseDBTest {
 
   private static final int DATASETS_TO_INDEX = 5;
 
@@ -56,12 +57,12 @@ public class DatasetBatchIndexerIT {
 
   private static final String INDEX_ALIAS = INDEX_NAME + "_a";
 
-  @RegisterExtension
-  static PostgresDBExtension database =
-      PostgresDBExtension.builder()
-          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-          .build();
+//  @RegisterExtension
+//  static PostgresDBExtension database =
+//      PostgresDBExtension.builder()
+//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+//          .build();
 
   private static ElasticsearchContainer embeddedElastic;
 
@@ -105,7 +106,7 @@ public class DatasetBatchIndexerIT {
 
     configuration.setIndexClb(false);
 
-    configuration.setClbDb(EmbeddedPostgresTestUtils.toDbConfig(database.getPostgresContainer()));
+    configuration.setClbDb(EmbeddedPostgresTestUtils.toDbConfig(CONTAINER));
 
     // Only 10 dataset must be indexed
     configuration.setStopAfter(DATASETS_TO_INDEX);

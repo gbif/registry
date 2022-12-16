@@ -319,6 +319,13 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.gbif.registry</groupId>
+        <artifactId>registry-integration-tests</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
         <groupId>org.gbif</groupId>
         <artifactId>gbif-api</artifactId>
         <version>${gbif-api.version}</version>

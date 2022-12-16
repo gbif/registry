@@ -24,6 +24,7 @@ import org.gbif.doi.service.DoiService;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.registry.cli.common.CommonBuilder;
 import org.gbif.registry.cli.util.RegistryCliUtils;
+import org.gbif.registry.database.BaseDBTest;
 
 import java.net.URI;
 import java.nio.file.Files;
@@ -44,7 +45,7 @@ import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
 
 @SuppressWarnings("ConstantConditions")
 @DisabledIfSystemProperty(named = "test.doi.sync", matches = "false")
-public class DoiSynchronizerCommandIT {
+public class DoiSynchronizerCommandIT extends BaseDBTest {
 
   private static final DOI DOI1 = new DOI("10.21373/gbif.1584932725458");
   private static final URI DOI_TARGET =
@@ -54,12 +55,12 @@ public class DoiSynchronizerCommandIT {
   private static DoiSynchronizerConfiguration doiSynchronizerConfig;
   private static String metadataXml;
 
-  @RegisterExtension
-  static PostgresDBExtension database =
-      PostgresDBExtension.builder()
-          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-          .build();
+//  @RegisterExtension
+//  static PostgresDBExtension database =
+//      PostgresDBExtension.builder()
+//          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+//          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+//          .build();
 
   @BeforeAll
   public static void beforeAll() throws Exception {
@@ -75,7 +76,7 @@ public class DoiSynchronizerCommandIT {
     doiSynchronizerConfig =
         RegistryCliUtils.loadConfig(
             "doisynchronizer/doi-synchronizer.yaml", DoiSynchronizerConfiguration.class);
-    doiSynchronizerConfig.registry = toDbConfig(database.getPostgresContainer());
+    doiSynchronizerConfig.registry = toDbConfig(CONTAINER);
     command = new DoiSynchronizerCommand(doiSynchronizerConfig);
 
     prepareDataCiteData();
@@ -96,7 +97,7 @@ public class DoiSynchronizerCommandIT {
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = database.getPostgresContainer().createConnection("");
+    Connection con = CONTAINER.createConnection("");
     String sql = getFileData("doisynchronizer/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -106,7 +107,7 @@ public class DoiSynchronizerCommandIT {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = database.getPostgresContainer().createConnection("");
+    Connection con = CONTAINER.createConnection("");
     String sql = getFileData("doisynchronizer/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

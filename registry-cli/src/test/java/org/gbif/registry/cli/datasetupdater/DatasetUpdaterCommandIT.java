@@ -15,8 +15,7 @@ package org.gbif.registry.cli.datasetupdater;
 
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.License;
-import org.gbif.common.tests.database.DbConstants;
-import org.gbif.common.tests.database.PostgresDBExtension;
+import org.gbif.registry.database.BaseDBTest;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,37 +23,35 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.LIQUIBASE_MASTER_FILE;
 import static org.gbif.registry.cli.util.EmbeddedPostgresTestUtils.toDbConfig;
 import static org.gbif.registry.cli.util.RegistryCliUtils.getFileData;
 import static org.gbif.registry.cli.util.RegistryCliUtils.loadConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class DatasetUpdaterCommandIT {
+public class DatasetUpdaterCommandIT extends BaseDBTest {
 
   private static final UUID DATASET_KEY = UUID.fromString("38f06820-08c5-42b2-94f6-47cc3e83a54a");
 
-  @RegisterExtension
-  static PostgresDBExtension database =
-      PostgresDBExtension.builder()
-          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
-          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
-          .build();
+  //  @RegisterExtension
+  //  static PostgresDBExtension database =
+  //      PostgresDBExtension.builder()
+  //          .liquibaseChangeLogFile(LIQUIBASE_MASTER_FILE)
+  //          .reuseLabel(DbConstants.REGISTRY_PG_CONTAINER_LABEL)
+  //          .build();
 
   private DatasetUpdaterConfiguration getConfig(String configFile) {
     DatasetUpdaterConfiguration cfg = loadConfig(configFile, DatasetUpdaterConfiguration.class);
-    cfg.db = toDbConfig(database.getPostgresContainer());
+    cfg.db = toDbConfig(CONTAINER);
     return cfg;
   }
 
   @BeforeEach
   public void prepareDatabase() throws Exception {
-    Connection con = database.getPostgresContainer().createConnection("");
+    Connection con = CONTAINER.createConnection("");
     String sql = getFileData("datasetupdater/prepare_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);
@@ -64,7 +61,7 @@ public class DatasetUpdaterCommandIT {
 
   @AfterEach
   public void after() throws Exception {
-    Connection con = database.getPostgresContainer().createConnection("");
+    Connection con = CONTAINER.createConnection("");
     String sql = getFileData("datasetupdater/clean_dataset.sql");
 
     PreparedStatement stmt = con.prepareStatement(sql);

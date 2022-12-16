@@ -49,9 +49,9 @@ public class MachineTagMapperIT extends BaseItTest {
     machineTag.setNamespace("test-namespace.gbif.org");
     machineTag.setValue("tagValue");
 
-    int machineTagKey = mapper.createMachineTag(machineTag);
+    mapper.createMachineTag(machineTag);
 
-    MachineTag machineTagStored = mapper.get(machineTagKey);
+    MachineTag machineTagStored = mapper.get(machineTag.getKey());
     assertTrue(machineTag.lenientEquals(machineTagStored));
   }
 }
