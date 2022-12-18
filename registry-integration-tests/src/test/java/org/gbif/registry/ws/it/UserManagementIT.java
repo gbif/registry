@@ -65,7 +65,8 @@ public class UserManagementIT extends BaseItTest {
 
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule =
-      new TestCaseDatabaseInitializer("public.user");
+      new TestCaseDatabaseInitializer(
+          "public.user", "editor_rights", "country_rights", "namespace_rights");
 
   private static final String CHANGED_PASSWORD = "123456";
 
@@ -128,7 +129,11 @@ public class UserManagementIT extends BaseItTest {
     PagingResponse<UserAdminView> adminUsers =
         requestTestFixture.extractJsonResponse(
             result, new TypeReference<PagingResponse<UserAdminView>>() {});
-    assertTrue(adminUsers.getCount() == 2);
+    assertEquals(
+        1L,
+        adminUsers.getResults().stream()
+            .filter(u -> u.getUser().getUserName().equals(ALTERNATE_USERNAME))
+            .count());
   }
 
   @Test
@@ -233,7 +238,11 @@ public class UserManagementIT extends BaseItTest {
     PagingResponse<UserAdminView> adminUsers =
         requestTestFixture.extractJsonResponse(
             result, new TypeReference<PagingResponse<UserAdminView>>() {});
-    assertTrue(adminUsers.getCount() == 2);
+    assertEquals(
+        1L,
+        adminUsers.getResults().stream()
+            .filter(u -> u.getUser().getUserName().equals(createdUser.getUserName()))
+            .count());
   }
 
   @Test
