@@ -134,7 +134,6 @@
     <postgresql-testcontainers.version>1.17.6</postgresql-testcontainers.version>
     <testcontainers-elasticsearch.version>1.17.6</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
-    <embedded-database-spring-test.version>1.6.2</embedded-database-spring-test.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.9.12</reflections.version>
 
