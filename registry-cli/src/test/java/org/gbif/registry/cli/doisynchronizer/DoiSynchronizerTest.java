@@ -39,6 +39,7 @@ import org.springframework.context.ApplicationContext;
 import com.google.common.collect.ImmutableMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -111,6 +112,6 @@ public class DoiSynchronizerTest {
 
     // then
     verify(doiMapperMock, atLeastOnce()).list(DoiStatus.FAILED, null, null);
-    assertEquals("10.21373/1000 (DATASET)\n" + "10.21373/1001 (DOWNLOAD)\n", outContent.toString());
+    assertTrue(outContent.toString().endsWith("10.21373/1000 (DATASET)\n" + "10.21373/1001 (DOWNLOAD)\n"));
   }
 }
