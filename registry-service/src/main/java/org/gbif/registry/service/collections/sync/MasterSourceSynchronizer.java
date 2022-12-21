@@ -30,8 +30,6 @@ import org.gbif.registry.events.collections.MasterSourceMetadataAddedEvent;
 import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
 import org.gbif.registry.service.RegistryDatasetService;
@@ -41,9 +39,12 @@ import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.ConstraintViolationException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.common.base.Throwables;
 import com.google.common.eventbus.Subscribe;
 
 import lombok.extern.slf4j.Slf4j;
@@ -105,7 +106,7 @@ public class MasterSourceSynchronizer {
 
             // update the collection
             Organization publishingOrganization =
-              organizationService.get(updatedDataset.getPublishingOrganizationKey());
+                organizationService.get(updatedDataset.getPublishingOrganizationKey());
 
             updateCollection(updatedDataset, publishingOrganization, collectionFound.get(0));
           });
@@ -257,9 +258,10 @@ public class MasterSourceSynchronizer {
       checkArgument(
           collection != null, "Collection not found for key " + event.getCollectionEntityKey());
 
-      Dataset dataset = registryDatasetService.get(UUID.fromString(event.getMetadata().getSourceId()));
+      Dataset dataset =
+          registryDatasetService.get(UUID.fromString(event.getMetadata().getSourceId()));
       Organization publishingOrganization =
-        organizationService.get(dataset.getPublishingOrganizationKey());
+          organizationService.get(dataset.getPublishingOrganizationKey());
 
       log.info(
           "Updating collection {} with new master source dataset {}",
@@ -273,7 +275,7 @@ public class MasterSourceSynchronizer {
           institution != null, "Institution not found for key " + event.getCollectionEntityKey());
 
       Organization organization =
-        organizationService.get(UUID.fromString(event.getMetadata().getSourceId()));
+          organizationService.get(UUID.fromString(event.getMetadata().getSourceId()));
 
       log.info(
           "Updating institution {} with new master source organization {}",
@@ -300,8 +302,17 @@ public class MasterSourceSynchronizer {
     }
 
     // replace contacts
-    collectionService.replaceContactPersons(
-        existingCollection.getKey(), convertedCollection.getContactPersons());
+    try {
+      collectionService.replaceContactPersons(
+          existingCollection.getKey(), convertedCollection.getContactPersons());
+    } catch (ConstraintViolationException e) {
+      log.error(
+          "Invalid contacts updating collection {} with dataset {}",
+          convertedCollection.getKey(),
+          dataset.getKey(),
+          e);
+      Throwables.propagate(e);
+    }
 
     // update collection
     collectionService.update(convertedCollection, false);
