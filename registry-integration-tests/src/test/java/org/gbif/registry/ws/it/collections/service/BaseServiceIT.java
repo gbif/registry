@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.events.collections.AuditLogger;

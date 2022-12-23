@@ -23,8 +23,6 @@ import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
@@ -55,7 +53,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
-import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.database.DatabaseCleaner;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.ws.it.collections.data.TestData;
@@ -77,6 +75,8 @@ import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,14 +103,12 @@ public abstract class BaseCollectionEntityServiceIT<
   protected final Class<T> paramType;
   protected final TestData<T> testData;
 
-  public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
-
   @RegisterExtension
   protected static CollectionsMaterializedViewsInitializer mvInitializer =
       new CollectionsMaterializedViewsInitializer(PG_CONTAINER);
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  protected static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
 
   public BaseCollectionEntityServiceIT(
       CollectionEntityService<T> collectionEntityService,
@@ -133,6 +131,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void crudTest() {
     // create
     T entity = testData.newEntity();
@@ -163,6 +162,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void createInvalidEntityTest() {
     assertThrows(
         ValidationException.class,
@@ -170,12 +170,14 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void deleteMissingEntityTest() {
     assertThrows(
         IllegalArgumentException.class, () -> collectionEntityService.delete(UUID.randomUUID()));
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void updateDeletedEntityTest() {
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
@@ -188,6 +190,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void restoreDeletedEntityTest() {
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
@@ -204,6 +207,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void updateInvalidEntityTest() {
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
@@ -214,6 +218,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void getMissingEntity() {
     try {
       T entity = collectionEntityService.get(UUID.randomUUID());
@@ -224,6 +229,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void tagsTest() {
     UUID key = collectionEntityService.create(testData.newEntity());
 
@@ -241,6 +247,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void machineTagsTest() {
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
@@ -258,6 +265,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void identifiersTest() {
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
@@ -279,6 +287,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void commentsTest() {
     T entity = testData.newEntity();
     UUID key = collectionEntityService.create(entity);
@@ -298,6 +307,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void updateAddressesTest() {
     // entities
     T newEntity = testData.newEntity();
@@ -358,6 +368,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void occurrenceMappingsTest() {
     T entity = testData.newEntity();
     UUID entityKey = collectionEntityService.create(entity);
@@ -498,6 +509,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void contactPersonsTest() {
     T entity = testData.newEntity();
     UUID entityKey1 = collectionEntityService.create(entity);
@@ -587,6 +599,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void addMasterSourceTest() throws InterruptedException, ExecutionException {
     T entity = testData.newEntity();
 
@@ -657,6 +670,7 @@ public abstract class BaseCollectionEntityServiceIT<
   }
 
   @Test
+  @Execution(ExecutionMode.CONCURRENT)
   public void removeLastIHEntityTest() {
     T entity = testData.newEntity();
     UUID entityKey = collectionEntityService.create(entity);
