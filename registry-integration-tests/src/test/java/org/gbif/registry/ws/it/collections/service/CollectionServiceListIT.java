@@ -64,9 +64,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -78,7 +75,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link CollectionService}. */
-@Isolated
 public class CollectionServiceListIT extends BaseServiceIT {
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);

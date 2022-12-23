@@ -52,7 +52,6 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.parallel.Isolated;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -63,7 +62,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Tests the {@link InstitutionService}. */
-@Isolated
 public class InstitutionServiceListIT extends BaseServiceIT {
 
   public static final Pageable DEFAULT_PAGE = new PagingRequest(0L, 5);
