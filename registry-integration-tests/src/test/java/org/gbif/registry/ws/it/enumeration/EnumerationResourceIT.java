@@ -16,6 +16,8 @@ package org.gbif.registry.ws.it.enumeration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -44,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
       "spring.flyway.enabled=false"
     })
 @AutoConfigureMockMvc(addFilters = false)
+@Execution(ExecutionMode.CONCURRENT)
 public class EnumerationResourceIT {
 
   @Autowired private MockMvc mockMvc;

@@ -21,6 +21,8 @@ import java.util.Collections;
 import javax.ws.rs.core.SecurityContext;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Unit tests for {@link SecurityContextCheck}. */
+@Execution(ExecutionMode.CONCURRENT)
 public class SecurityContextCheckTest {
 
   @Test

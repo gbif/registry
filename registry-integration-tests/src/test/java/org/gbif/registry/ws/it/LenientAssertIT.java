@@ -21,10 +21,13 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class LenientAssertIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;

@@ -16,9 +16,12 @@ package org.gbif.registry.ws.util;
 import org.gbif.registry.domain.ws.LegacyDataset;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class LegacyResourceUtilsTest {
 
   @Test

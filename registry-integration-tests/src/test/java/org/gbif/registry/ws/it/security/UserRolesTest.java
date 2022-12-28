@@ -18,9 +18,12 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.security.UserRoles;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class UserRolesTest {
 
   @Test
