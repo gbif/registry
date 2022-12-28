@@ -32,7 +32,6 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
 import org.gbif.api.vocabulary.MetadataType;
@@ -66,8 +65,9 @@ import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.ibatis.io.Resources;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,6 +145,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     this.testDataFactory = testDataFactory;
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testCreateDoi(ServiceType serviceType) {
@@ -163,8 +164,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
   /** Override creation to add process properties. */
   @Override
-  protected Dataset create(Dataset orig, ServiceType serviceType, int expectedCount) {
-    return create(orig, serviceType, expectedCount, buildExpectedProcessedProperties(orig));
+  protected Dataset create(Dataset orig, ServiceType serviceType) {
+    return create(orig, serviceType, buildExpectedProcessedProperties(orig));
   }
 
   @Override
@@ -180,22 +181,24 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     return organizationResource.get(entity.getPublishingOrganizationKey()).getEndorsingNodeKey();
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testConstituents(ServiceType serviceType) {
     DatasetService service = (DatasetService) getService(serviceType);
-    Dataset parent = newAndCreate(1, serviceType);
+    Dataset parent = newAndCreate(serviceType);
     for (int id = 0; id < 10; id++) {
       Dataset constituent = newEntity(serviceType);
       constituent.setParentDatasetKey(parent.getKey());
       constituent.setType(parent.getType());
-      create(constituent, serviceType, id + 2);
+      create(constituent, serviceType);
     }
 
     assertEquals(10, service.get(parent.getKey()).getNumConstituents());
   }
 
   // Easier to test this here than OrganizationIT due to our utility dataset factory
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testHostedByList(ServiceType serviceType) {
@@ -204,7 +207,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     InstallationService installationService =
         getService(serviceType, installationResource, installationClient);
 
-    Dataset dataset = newAndCreate(1, serviceType);
+    Dataset dataset = newAndCreate(serviceType);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull(i, "Dataset should have an installation");
     PagingResponse<Dataset> published =
@@ -218,13 +221,14 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   // Easier to test this here than OrganizationIT due to our utility dataset factory
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testPublishedByList(ServiceType serviceType) {
     OrganizationService organizationService =
         getService(serviceType, organizationResource, organizationClient);
 
-    Dataset dataset = newAndCreate(1, serviceType);
+    Dataset dataset = newAndCreate(serviceType);
     PagingResponse<Dataset> published =
         organizationService.publishedDatasets(
             dataset.getPublishingOrganizationKey(), new PagingRequest());
@@ -241,13 +245,14 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   // Easier to test this here than InstallationIT due to our utility dataset factory
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testHostedByInstallationList(ServiceType serviceType) {
     InstallationService installationService =
         getService(serviceType, installationResource, installationClient);
 
-    Dataset dataset = newAndCreate(1, serviceType);
+    Dataset dataset = newAndCreate(serviceType);
     Installation i = installationService.get(dataset.getInstallationKey());
     assertNotNull(i, "Dataset should have an installation");
     PagingResponse<Dataset> hosted =
@@ -259,357 +264,6 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
         hosted.getResults().get(0).getKey(),
         dataset.getKey(),
         "The hosted installation should serve the dataset created");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testTypedSearch(ServiceType serviceType) {
-    Dataset d = newEntity(serviceType);
-    d.setType(DatasetType.CHECKLIST);
-    d = create(d, serviceType, 1);
-    assertSearch(d.getTitle(), 1); // 1 result expected for a simple search
-
-    DatasetSearchRequest req = new DatasetSearchRequest();
-    req.addTypeFilter(DatasetType.CHECKLIST);
-    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
-    assertNotNull(resp.getCount());
-    assertEquals(
-        Long.valueOf(1),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSearchMultiCountryFacet(ServiceType serviceType) {
-    Dataset d = newEntity(Country.ALGERIA, serviceType);
-    d.setType(DatasetType.CHECKLIST);
-    create(d, serviceType, 1);
-
-    d = newEntity(Country.GERMANY, serviceType);
-    d.setType(DatasetType.CHECKLIST);
-    create(d, serviceType, 2);
-
-    d = newEntity(Country.FRANCE, serviceType);
-    d.setType(DatasetType.OCCURRENCE);
-    create(d, serviceType, 3);
-
-    d = newEntity(Country.GHANA, serviceType);
-    d.setType(DatasetType.OCCURRENCE);
-    create(d, serviceType, 4);
-
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-
-    DatasetSearchRequest req = new DatasetSearchRequest();
-    req.addPublishingCountryFilter(Country.ANGOLA);
-    req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
-    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
-    assertEquals(
-        Long.valueOf(0),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-    assertEquals(
-        1,
-        resp.getFacets().size(),
-        "Elasticsearch does not have the expected number of facets for query[" + req + "]");
-    assertEquals(
-        0,
-        resp.getFacets().get(0).getCounts().size(),
-        "Elasticsearch does not have the expected number of facet values for query[" + req + "]");
-
-    req = new DatasetSearchRequest();
-    req.addPublishingCountryFilter(Country.ALGERIA);
-    req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
-    req.addFacets(DatasetSearchParameter.LICENSE);
-    resp = searchService.search(req);
-    assertEquals(
-        Long.valueOf(1),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-    assertEquals(
-        2,
-        resp.getFacets().size(),
-        "Elasticsearch does not have the expected number of facets for query[" + req + "]");
-
-    req = new DatasetSearchRequest();
-    req.addPublishingCountryFilter(Country.GERMANY);
-    req.setMultiSelectFacets(true);
-    req.addFacets(DatasetSearchParameter.PUBLISHING_COUNTRY);
-
-    resp = searchService.search(req);
-    assertEquals(
-        Long.valueOf(1),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-    assertEquals(
-        4,
-        resp.getFacets().get(0).getCounts().size(),
-        "Elasticsearch does not have the expected number of facet values for query[" + req + "]");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSearchParameter(ServiceType serviceType) {
-    Dataset d = newEntity(Country.SOUTH_AFRICA, serviceType);
-    d.setType(DatasetType.CHECKLIST);
-    d.setLicense(License.CC0_1_0);
-    d.setLanguage(Language.AFRIKAANS);
-    create(d, serviceType, 1);
-
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-
-    DatasetSearchRequest req = new DatasetSearchRequest();
-    req.addPublishingCountryFilter(Country.GERMANY);
-    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
-    assertEquals(
-        Long.valueOf(0),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-
-    req.addPublishingCountryFilter(Country.SOUTH_AFRICA);
-    req.addTypeFilter(DatasetType.CHECKLIST);
-    resp = searchService.search(req);
-    assertEquals(
-        Long.valueOf(1),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSearchLargeTitles(ServiceType serviceType) {
-    Dataset d = newEntity(serviceType);
-    d.setType(DatasetType.OCCURRENCE);
-    d = create(d, serviceType, 1);
-
-    testSearch(d.getTitle());
-    testSearch("Pontaurus needs more than 255 characters for it's title");
-    testSearch(
-        "\"Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei\"");
-    testSearch(
-        "Vegetationskundliche Untersuchungen in der Hochgebirgsregion der Bolkar Daglari & Aladaglari, Türkei");
-    testSearch("PonTaurus");
-    testSearch("Pon Taurus");
-    testSearch("Bolkar Daglari Aladaglari");
-    testSearch("PonTaurus Bolkar Daglari Aladaglari");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testEventTypeSearch(ServiceType serviceType) {
-    Dataset d = newEntity(serviceType);
-    d.setType(DatasetType.SAMPLING_EVENT);
-    d = create(d, serviceType, 1);
-
-    assertSearch(d.getTitle(), 1);
-
-    DatasetSearchRequest req = new DatasetSearchRequest();
-    req.addTypeFilter(DatasetType.SAMPLING_EVENT);
-    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
-    assertNotNull(resp.getCount());
-    assertEquals(
-        Long.valueOf(1),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + req + "]");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testDismaxSearch(ServiceType serviceType) {
-    DatasetService service = (DatasetService) getService(serviceType);
-    OrganizationService organizationService =
-        getService(serviceType, organizationResource, organizationClient);
-
-    Dataset d = newAndCreate(1, serviceType);
-    final UUID pubKey = d.getPublishingOrganizationKey();
-    final UUID instKey = d.getInstallationKey();
-    final UUID nodeKey = organizationService.get(pubKey).getEndorsingNodeKey();
-
-    d = new Dataset();
-    d.setPublishingOrganizationKey(pubKey);
-    d.setInstallationKey(instKey);
-    d.setTitle("eBird is cool");
-    d.setLicense(License.CC0_1_0);
-    d.setType(DatasetType.CHECKLIST);
-    d.setDescription(
-        "bli bla blub, mein Hund ist ins Klo gefallen. Oh je! Der kommt da alleine gar nicht mehr raus.");
-    service.create(d);
-
-    d.setKey(null);
-    d.setType(DatasetType.OCCURRENCE);
-    d.setTitle("Fall in eBird ");
-    d.setDescription("bli bla blub, es gibt nix neues.");
-    service.create(d);
-
-    d.setKey(null);
-    d.setTitle(
-        "Bird tracking - GPS tracking of Lesser Black-backed Gulls and Herring Gulls breeding at the southern North Sea coast");
-    d.setDescription(
-        "Bird tracking - GPS tracking of Lesser Black-backed Gulls and Herring Gulls breeding at the southern North Sea coast is a species occurrence dataset published by the Research Institute for Nature and Forest (INBO) and described in Stienen et al. 2016 (http://doi.org/10.3897/zookeys.555.6173) The dataset contains close to 2.5 million occurrences, recorded by 101 GPS trackers mounted on 75 Lesser Black-backed Gulls and 26 Herring Gulls breeding at the Belgian and Dutch coast (see https://inbo.cartodb.com/u/lifewatch/viz/da04f120-ea70-11e4-a3f2-0e853d047bba/public_map for a visualization of the data). The trackers were developed by the University of Amsterdam Bird Tracking System (UvA-BiTS, http://www.uva-bits.nl). These automatically record and transmit bird movements, which allows us and others to study their habitat use and migration behaviour in great detail. Our bird tracking network is operational since 2013. It is funded for LifeWatch by the Hercules Foundation and maintained in collaboration with UvA-BiTS and the Flanders Marine Institute (VLIZ). The recorded data are periodically released in bulk as open data (http://dataset.inbo.be/bird-tracking-gull-occurrences), and are also accessible through CartoDB and the Global Biodiversity Information Facility (GBIF, http://doi.org/10.15468/02omly). See the dataset metadata for contact information, scope and methodology. Issues with the dataset can be reported at https://github.com/LifeWatchINBO/data-publication/tree/master/datasets/bird-tracking-gull-occurrences");
-    final UUID gpsKey = service.create(d);
-
-    d.setKey(null);
-    d.setTitle(
-        "BID-AF2015-0004-NAC- données de Dénombrements Internationaux des Oiseaux d'Eau en Afrique");
-    d.setDescription(
-        "Le Togo est un pays d’Afrique de l’Ouest limité à l’Est par le Bénin, à l’Ouest par le Ghana, au Nord par le Burkina-Faso et au sud par l’Océan Atlantique. Il est compris entre les latitudes 6° 06’ Sud et 11° 08’ Nord et les longitudes 0° 09’ Ouest et 1° 49’ Est avec une superficie de 56.600 km2. Cette configuration géographique lui confère une gradation climatique favorisée par l’existence d’importantes zones humides estimées à 2210 km2. En l’absence quasi-totale de leur plan de gestion, leur dégradation s’est accentuée au fils des années au risque d’entrainer à terme leur disparition si des mesures adéquates ne sont pas prises. Le Togo, Partie à un certain nombre de traités et accords relatifs à l’environnement et aux ressources forestières notamment à l’accord sur la conservation des oiseaux d’eau migrateurs (AEWA) a pris l’engagement d’enclencher le processus de gestion des zones humides du pays notamment les zones humides des bassins du Mono, du Zio et de Haho. Dans cette dynamique, la direction des ressources forestières participe annuellement aux recensements des oiseaux d’eau migrateurs. C’est dans ce contexte que cette opération de dénombrement s’est effectuée le 21 janvier 2016 grâce à l’appui de Wetlantlands International avec pour objectif de contribuer à l’actualisation de données mondiales de ces espèces. L’opération s’est déroulée uniquement au niveau des zones humides du littoral. Au point de vue approche méthodologique, le travail a été fait en trois phases. -\tLa première phase a consisté en une mission effectuée sur le terrain au cours de laquelle il a été procédé à l’identification des sites devant faire l’objet de décompte. -\tLa deuxième phase est axée sur le recensement des oiseaux d’eau sur les différents sites ; et -\tLa troisième phase est le rapportage prenant en compte l’ensemble des activités menées, les analyses technique et scientifique portant sur la notification et le suivi des espèces phares sur les sites. II - OBJECTIF 1.1 Objectif global Il s’agit de contribuer à la mise à jour de la Base de Données Internationales de Comptage (IWC) d’oiseaux d’eau. 1.2 Objectifs spécifiques A travers cette opération, il a été question de : \uF0A7\tCollecter les informations relatives aux caractéristiques écologiques des sites de décompte cibles; \uF0A7\tConduire les recensements des oiseaux d’eau en janvier 2016. II- METHODOLOGIE DE TRAVAIL ET MATERIEL UTILISE 2.1 Méthodologie de travail Dans le cadre de cette opération, une équipe a été mise en place pour une visite prospective des sites. Il s’agit d’un spécialiste de faune et d’un spécialiste en gestion des zones humides et d’un biologiste environnementaliste. Ceux-ci se sont rendus sur le terrain pour un pré-dénombrement. Cette étape a permis de faire l’inventaire qualitatif afin de s’assurer de la présence ou non des oiseaux d’eau migrateurs, objet de la mission et d’avoir une idée sur les caractéristiques écologiques des sites. Les résultats de ce pré-dénombrement ont conduit à la constitution de six équipes multidisciplinaires pour couvrir les six sites retenus. Il s’agit de biologistes, d’environnementalistes, de spécialistes en aménagement de la faune, de spécialistes en zone humide et de spécialistes en gestion des ressources forestières. Le dénombrement proprement dit a été effectué le 21 janvier 2016 avec la participation des acteurs indiqués dans le tableau I en annexe. Les intéressés se sont rendus dans les limites des zones ciblées pour compter les oiseaux. 2.2 Matériel utilisé La mise en œuvre des activités a nécessité les moyens ci-après: -\tUn véhicule 4 x 4 ; -\tDouze motos ; - Deux appareils de Système de Positionnement Géographique (GPS) pour la prise des coordonnées des sites lors de la visite prospective ; -\tKits de terrain (Bloc note; fiches de terrain, écritoires etc.…) pour la collecte des informations; - Trois appareils photos pour la prise des images ; -\tSix paires de jumelles pour l’observation et l’identification des oiseaux ; -\tCinq guides de terrain pour l’identification des espèces (les oiseaux de l’Ouest africain, les limicoles : comment les reconnaître et Birds of Southern Africa); -\tTrois ordinateurs portables pour la compilation et le traitement des données ainsi que pour le rapportage. III - RESULTATS 3. 1 Recensement général des oiseaux Le tableau II en excel annexé au présent rapport présente la synthèse des résultats du dénombrement effectué le 21 janvier 2016 au Togo. 3.2 Commentaire Au total six (06) sites de décompte ont été explorés dans le cadre de cette opération de dénombrement des oiseaux d’eau à cause des moyens insuffisants. Tous ces sites sont localisés au niveau des zones humides du Littoral. Il s’agit de deux sites au niveau de la lagune de Bè, du site du retenu d’eau de l’Université de Lomé, d’Agbalépédogan, de l’ancien Wharf et ses environs et de la mare Togo 2000. L’analyse des données de décompte indiquée dans le tableau II, montre une diversité des espèces au niveau des six sites. L’un des faits marquant de cette opération est la diversité importante observée au niveau du lac artificiel d’Agbalépédogan (LAA) où ont été dénombrées 19 espèces avec un effectif total de 150 individus. CONCLUSION ET RECOMMANDATIONS La participation du Togo aux décomptes des oiseaux d’eau, année 2016 prouve l’attachement du pays non seulement aux objectifs de l’accord sur la conservation des oiseaux d’eau migrateurs d’Afrique Eurasie (AEWA) mais également sa volonté à partager ses expériences avec les autres pays, Parties à cet accord en produisant des informations pour contribuer à l’actualisation de la base de données de comptages internationaux d’oiseaux (IWC). Dans cette dynamique, notre pays est toujours disposé à participer aux opérations de dénombrement pour les saisons à venir en prenant en compte les zones humiques importantes pour la conservation des oiseaux d’eau. Pour couvrir toute l’étendue du territoire national, il y a nécessité que les moyens alloués pour cette opération soient conséquents. Les observations sur le terrain indiquent une dégradation avancée des écosystèmes des zones humides du littoral et il y a nécessité d’inverser cette tendance pour assurer le cycle biologique des espèces à travers un vaste projet de restauration des sites concernés. A ce titre, le Togo a entamé un processus d’élaboration des plans de gestion des zones humides du littoral. Il est à noter que les principales activités de menaces sont entre autres la pollution de tout genre.");
-    d.setLicense(License.CC_BY_NC_4_0);
-    service.create(d);
-
-    final Organization plazi = new Organization();
-    plazi.setTitle("Plazi.org taxonomic treatments database");
-    plazi.setCountry(Country.SWITZERLAND);
-    plazi.setEndorsingNodeKey(nodeKey);
-    plazi.setEndorsementApproved(true);
-    plazi.setLanguage(Language.ENGLISH);
-    plazi.setPassword("passw0rd");
-    plazi.setKey(organizationService.create(plazi));
-
-    d.setKey(null);
-    d.setTitle(
-        "A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae");
-    d.setPublishingOrganizationKey(plazi.getKey());
-    d.setDescription(
-        "This dataset contains the digitized treatments in Plazi based on the original journal article Zefa, Edison, Redü, Darlan Rutz, Costa, Maria Kátia Matiotti Da, Fontanetti, Carmem S., Gottschalk, Marco Silva, Padilha, Giovanna Boff, Fernandes, Anelise, Martins, Luciano De P. (2014): A new species of Endecous Saussure, 1878 (Orthoptera, Gryllidae) from northeast Brazil with the first X X 0 chromosomal sex system in Gryllidae. Zootaxa 3847 (1): 125-132, DOI: http://dx.doi.org/10.11646/zootaxa.3847.1.7");
-    d.setLicense(License.CC0_1_0);
-    service.create(d);
-
-    assertAll(6L);
-    assertSearch("Hund", 1);
-    assertSearch("bli bla blub", 2);
-    assertSearch("PonTaurus", 1);
-    assertSearch("Pontaurus needs more than 255 characters", 1);
-    assertSearch("very, very long title", 1);
-    assertSearch("Bird tracking", 1);
-    assertSearch("Plazi", 1);
-    assertSearch("plazi.org", 1);
-    assertSearch("Kátia", 1);
-    assertSearch("10.11646/zootaxa.3847.1.7", 1);
-    List<DatasetSearchResult> docs = assertSearch("GPS", 2);
-    assertTrue(docs.stream().anyMatch(dataset -> dataset.getKey().equals(gpsKey)));
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSearchListener(ServiceType serviceType) {
-    DatasetService service = (DatasetService) getService(serviceType);
-    OrganizationService organizationService =
-        getService(serviceType, organizationResource, organizationClient);
-    InstallationService installationService =
-        getService(serviceType, installationResource, installationClient);
-
-    Dataset d = newEntity(serviceType);
-    d = create(d, serviceType, 1);
-
-    assertAll(1L);
-    assertSearch("Pontaurus needs more than 255 characters", 1); // 1 result expected
-    assertSearch("very, very long title", 1); // 1 result expected
-
-    // update
-    d.setTitle("NEW-DATASET-TITLE");
-    service.update(d);
-
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-
-    assertAll(1L);
-    assertSearch("Pontaurus", 0);
-    assertSearch(d.getTitle(), 1);
-
-    // update publishing organization title should be captured
-    Organization publisher = organizationService.get(d.getPublishingOrganizationKey());
-    assertSearch(publisher.getTitle(), 1);
-
-    publisher.setTitle("OWNERTITLE");
-    organizationService.update(publisher);
-    assertSearch(publisher.getTitle(), 1);
-
-    publisher.setTitle("BGBM");
-    organizationService.update(publisher);
-
-    assertSearch(publisher.getTitle(), 1);
-    assertSearch("OWNERTITLE", 0);
-
-    // update hosting organization title should be captured
-    Installation installation = installationService.get(d.getInstallationKey());
-    assertNotNull(installation, "Installation should be present");
-    Organization host = organizationService.get(installation.getOrganizationKey());
-    assertSearch(host.getTitle(), 1);
-    host.setTitle("HOSTTITLE");
-
-    organizationService.update(host);
-    assertSearch(host.getTitle(), 1);
-
-    host.setTitle("BGBM");
-    organizationService.update(host);
-    assertSearch(host.getTitle(), 1);
-    assertSearch("HOSTTITLE", 0);
-
-    // check a deletion removes the dataset for search
-    service.delete(d.getKey());
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-    assertSearch(host.getTitle(), 0);
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testInstallationMoveAndSearch(ServiceType serviceType) {
-    NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
-    OrganizationService organizationService =
-        getService(serviceType, organizationResource, organizationClient);
-    InstallationService installationService =
-        getService(serviceType, installationResource, installationClient);
-
-    Dataset d = newEntity(serviceType);
-    d = create(d, serviceType, 1);
-    assertSearch(d.getTitle(), 1); // 1 result expected
-
-    UUID nodeKey = nodeService.create(testDataFactory.newNode());
-    Organization o = testDataFactory.newOrganization(nodeKey);
-    o.setTitle("ANEWORG");
-    UUID organizationKey = organizationService.create(o);
-    assertSearch(o.getTitle(), 0); // No datasets hosted by that organization yet
-
-    Installation installation = installationService.get(d.getInstallationKey());
-    installation.setOrganizationKey(organizationKey);
-    installationService.update(
-        installation); // we just moved the installation to a new organization
-
-    assertSearch(o.getTitle(), 1); // The dataset moved with the organization!
-    assertSearch("*", 1);
-  }
-
-  /**
-   * Utility to verify that after waiting for Elasticsearch to update, the given query returns the
-   * expected count of results.
-   */
-  private List<DatasetSearchResult> assertSearch(String query, int expected) {
-    // Elasticsearch updates are asynchronous
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-
-    DatasetSearchRequest req = new DatasetSearchRequest();
-    req.setQ(query);
-    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
-    assertNotNull(resp.getCount());
-    assertEquals(
-        Long.valueOf(expected),
-        resp.getCount(),
-        "Elasticsearch does not have the expected number of results for query[" + query + "]");
-    return resp.getResults();
-  }
-
-  /**
-   * Utility to verify that after waiting for Elasticsearch to update, the given query returns the
-   * expected count of results.
-   */
-  private void testSearch(String query) {
-    System.out.println("\n*****\n" + query);
-    // Elasticsearch updates are asynchronous
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-
-    DatasetSearchRequest req = new DatasetSearchRequest();
-    req.setQ(query);
-
-    SearchResponse<DatasetSearchResult, DatasetSearchParameter> resp = searchService.search(req);
   }
 
   private void assertAll(Long expected) {
@@ -683,6 +337,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     return testDataFactory.newDataset(organizationKey, installationKey);
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testDatasetHTMLSanitizer(ServiceType serviceType) {
@@ -698,16 +353,17 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
     Map<String, Object> processProperties = Datasets.buildExpectedProcessedProperties(dataset);
     processProperties.put("description", expectedParagraph);
-    dataset = create(dataset, serviceType, 1, processProperties);
+    dataset = create(dataset, serviceType, processProperties);
     assertEquals(expectedParagraph, dataset.getDescription());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testCitation(ServiceType serviceType) {
     DatasetService service = (DatasetService) getService(serviceType);
     Dataset dataset = newEntity(serviceType);
-    dataset = create(dataset, serviceType, 1);
+    dataset = create(dataset, serviceType);
     dataset = service.get(dataset.getKey());
     assertNotNull(dataset.getCitation(), "Citation should never be null");
 
@@ -739,6 +395,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
         dataset.getCitation().getText());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testDoiChanges(ServiceType serviceType) {
@@ -750,7 +407,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
     Dataset src = newEntity(serviceType);
     src.setDoi(external1);
-    final UUID key = create(src, serviceType, 1).getKey();
+    final UUID key = create(src, serviceType).getKey();
     Dataset dataset = service.get(key);
     assertEquals(external1, dataset.getDoi());
     assertEquals(0, service.listIdentifiers(key).size());
@@ -812,6 +469,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
         .contains(gbif2.toString(), external2.toString(), originalGBIF.toString());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testLicenseChanges(ServiceType serviceType) {
@@ -822,7 +480,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     src.setLicense(null);
 
     // register dataset
-    final UUID key = create(src, serviceType, 1).getKey();
+    final UUID key = create(src, serviceType).getKey();
 
     // ensure default license CC-BY 4.0 was assigned
     Dataset dataset = service.get(key);
@@ -861,6 +519,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
    * dataset by reinterpreting its preferred metadata document. In particular the test ensures the
    * dataset license is updated properly as per the metadata document.
    */
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(
       value = ServiceType.class,
@@ -873,7 +532,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     src.setLicense(License.CC0_1_0);
 
     // register dataset
-    final UUID key = create(src, serviceType, 1).getKey();
+    final UUID key = create(src, serviceType).getKey();
 
     // ensure license CC0 was assigned
     Dataset dataset = service.get(key);
@@ -904,6 +563,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
    * Test checks behaviour updating Citation with valid and invalid identifier. In the database,
    * there is a min length 1 character constraint on Dataset.citation_identifier.
    */
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testDatasetCitationIdentifierConstraint(ServiceType serviceType) {
@@ -911,7 +571,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     Dataset src = newEntity(serviceType);
 
     // register dataset
-    final UUID key = create(src, serviceType, 1).getKey();
+    final UUID key = create(src, serviceType).getKey();
 
     Dataset dataset = service.get(key);
     assertNotNull(dataset.getCitation());
@@ -949,13 +609,14 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     }
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testMaintenanceUpdateFrequencyChanges(ServiceType serviceType) {
     DatasetService service = (DatasetService) getService(serviceType);
     Dataset src = newEntity(serviceType);
     assertNull(src.getMaintenanceUpdateFrequency());
-    final UUID key = create(src, serviceType, 1).getKey();
+    final UUID key = create(src, serviceType).getKey();
     Dataset dataset = service.get(key);
     assertNull(src.getMaintenanceUpdateFrequency());
 
@@ -972,6 +633,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertEquals(MaintenanceUpdateFrequency.BIANNUALLY, dataset.getMaintenanceUpdateFrequency());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void test404(ServiceType serviceType) {
@@ -982,11 +644,12 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     }
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testMetadata(ServiceType serviceType) throws IOException {
     DatasetService service = (DatasetService) getService(serviceType);
-    Dataset d1 = create(newEntity(serviceType), serviceType, 1);
+    Dataset d1 = create(newEntity(serviceType), serviceType);
     assertEquals(License.CC_BY_NC_4_0, d1.getLicense());
     List<Metadata> metadata = service.listMetadata(d1.getKey(), MetadataType.EML);
     assertEquals(0, metadata.size(), "No EML uploaded yes");
@@ -1092,11 +755,12 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   /** Test that uploading the same document repeatedly does not change the dataset. */
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testMetadataDuplication(ServiceType serviceType) throws IOException {
     DatasetService service = (DatasetService) getService(serviceType);
-    Dataset d1 = newAndCreate(1, serviceType);
+    Dataset d1 = newAndCreate(serviceType);
     List<Metadata> m1 = service.listMetadata(d1.getKey(), MetadataType.EML);
 
     // upload a valid EML doc
@@ -1117,86 +781,7 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
         "Dataset metadata should not have changed after same metadata document was uploaded");
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testByCountry(ServiceType serviceType) {
-    DatasetService service = (DatasetService) getService(serviceType);
-    createCountryDatasets(DatasetType.OCCURRENCE, serviceType, Country.ANDORRA, 3);
-    createCountryDatasets(DatasetType.OCCURRENCE, serviceType, Country.DJIBOUTI, 1);
-    createCountryDatasets(DatasetType.METADATA, serviceType, Country.HAITI, 7);
-    createCountryDatasets(DatasetType.OCCURRENCE, serviceType, Country.HAITI, 3);
-    createCountryDatasets(DatasetType.CHECKLIST, serviceType, Country.HAITI, 2);
-
-    assertResultsOfSize(service.listByCountry(Country.UNKNOWN, null, new PagingRequest()), 0);
-    assertResultsOfSize(service.listByCountry(Country.ANDORRA, null, new PagingRequest()), 3);
-    assertResultsOfSize(service.listByCountry(Country.DJIBOUTI, null, new PagingRequest()), 1);
-    assertResultsOfSize(service.listByCountry(Country.HAITI, null, new PagingRequest()), 12);
-
-    assertResultsOfSize(
-        service.listByCountry(Country.ANDORRA, DatasetType.CHECKLIST, new PagingRequest()), 0);
-    assertResultsOfSize(
-        service.listByCountry(Country.HAITI, DatasetType.OCCURRENCE, new PagingRequest()), 3);
-    assertResultsOfSize(
-        service.listByCountry(Country.HAITI, DatasetType.CHECKLIST, new PagingRequest()), 2);
-    assertResultsOfSize(
-        service.listByCountry(Country.HAITI, DatasetType.METADATA, new PagingRequest()), 7);
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testListByType(ServiceType serviceType) {
-    DatasetService service = (DatasetService) getService(serviceType);
-    createDatasetsWithType(DatasetType.METADATA, serviceType, 1);
-    createDatasetsWithType(DatasetType.CHECKLIST, serviceType, 2);
-    createDatasetsWithType(DatasetType.OCCURRENCE, serviceType, 3);
-    createDatasetsWithType(DatasetType.SAMPLING_EVENT, serviceType, 4);
-
-    assertResultsOfSize(service.listByType(DatasetType.METADATA, new PagingRequest()), 1);
-    assertResultsOfSize(service.listByType(DatasetType.CHECKLIST, new PagingRequest()), 2);
-    assertResultsOfSize(service.listByType(DatasetType.OCCURRENCE, new PagingRequest()), 3);
-    assertResultsOfSize(service.listByType(DatasetType.SAMPLING_EVENT, new PagingRequest()), 4);
-  }
-
-  // TODO: 18/05/2020 unstable test
-  @Disabled("Unstable")
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testCountrySearch(ServiceType serviceType) {
-    DatasetService service = (DatasetService) getService(serviceType);
-    createCountryDatasets(serviceType, Country.ANDORRA, 3);
-    createCountryDatasets(
-        DatasetType.OCCURRENCE, serviceType, Country.DJIBOUTI, 1, Country.DJIBOUTI);
-    createCountryDatasets(
-        DatasetType.OCCURRENCE,
-        serviceType,
-        Country.HAITI,
-        3,
-        Country.AFGHANISTAN,
-        Country.DENMARK);
-    createCountryDatasets(
-        DatasetType.CHECKLIST, serviceType, Country.HAITI, 4, Country.GABON, Country.FIJI);
-    createCountryDatasets(
-        DatasetType.OCCURRENCE, serviceType, Country.DOMINICA, 2, Country.DJIBOUTI);
-
-    DatasetSearchUpdateUtils.awaitUpdates(datasetRealtimeIndexer, esServer);
-
-    assertSearch(Country.ALBANIA, null, 0);
-    assertSearch(Country.ANDORRA, null, 3);
-    assertSearch(Country.DJIBOUTI, null, 1);
-    assertSearch(Country.HAITI, null, 7);
-    assertSearch(Country.UNKNOWN, null, 0);
-
-    // @Disabled("Country coverage not populated yet: http://dev.gbif.org/issues/browse/REG-393")
-    /*
-    assertSearch(Country.HAITI, Country.GABON, 4);
-    assertSearch(Country.HAITI, Country.FIJI, 4);
-    assertSearch(Country.HAITI, Country.DENMARK, 3);
-    assertSearch(Country.DJIBOUTI, Country.DENMARK, 0);
-    assertSearch(Country.DJIBOUTI, Country.DJIBOUTI, 1);
-    assertSearch(Country.DJIBOUTI, Country.GERMANY, 0);
-    assertSearch(null, Country.DJIBOUTI, 3);*/
-  }
-
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createDatasetsWithInvalidUri(ServiceType serviceType) {
@@ -1266,8 +851,8 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
   }
 
   /** Create a new instance of Dataset, store it using the create method. */
-  private Dataset newAndCreate(int expectedCount, ServiceType serviceType) {
+  private Dataset newAndCreate(ServiceType serviceType) {
     Dataset newDataset = newEntity(serviceType);
-    return create(newDataset, serviceType, expectedCount);
+    return create(newDataset, serviceType);
   }
 }

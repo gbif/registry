@@ -39,8 +39,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *   <li>The WS service client layer
  * </ol>
  */
-public class OrganizationIT extends NetworkEntityIT<Organization> {
+public class OrganizationSearchIT extends NetworkEntitySearchIT<Organization> {
 
   private final NodeService nodeResource;
   private final NodeService nodeClient;
@@ -67,7 +65,7 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
   private final TestDataFactory testDataFactory;
 
   @Autowired
-  public OrganizationIT(
+  public OrganizationSearchIT(
       OrganizationService service,
       NodeService nodeResource,
       NetworkService networkService,
@@ -92,44 +90,60 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     this.organizationResource = organizationResource;
   }
 
-  @Execution(ExecutionMode.CONCURRENT)
-  @Test
-  public void searchByNetworkTest() {
-    Installation installation = testDataFactory.newPersistedInstallation();
-    Dataset dataset =
-        testDataFactory.newPersistedDataset(
-            installation.getOrganizationKey(), installation.getKey());
-    Network network = testDataFactory.newPersistedNetwork();
-
-    OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
-    searchParams.setNetworkKey(network.getKey());
-    PagingResponse<Organization> response = organizationResource.list(null, searchParams, null);
-
-    assertResultsOfSize(response, 0);
-
-    networkService.addConstituent(network.getKey(), dataset.getKey());
-    response = organizationResource.list(null, searchParams, null);
-
-    assertResultsOfSize(response, 1);
-  }
-
-  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void testHostedByInstallationList(ServiceType serviceType) {
+  public void testSuggest(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
+    Node node = testDataFactory.newNode();
+    UUID nodeKey = nodeResource.create(node);
+
+    Organization o1 = testDataFactory.newOrganization(nodeKey);
+    o1.setTitle("Tim");
+    service.create(o1);
+
+    Organization o2 = testDataFactory.newOrganization(nodeKey);
+    o2.setTitle("The Tim");
+    service.create(o2);
+
+    Organization o3 = testDataFactory.newOrganization(nodeKey);
+    o3.setTitle("The Tim 3");
+    UUID key3 = service.create(o3);
+
+    assertEquals(2, service.suggest("The").size(), "Should find only the 2 The Tim");
+    assertEquals(3, service.suggest("Tim").size(), "Should find all organizations");
+
+    service.delete(key3);
+    assertEquals(1, service.suggest("The").size(), "Should find only The Tim");
+    assertEquals(2, service.suggest("Tim").size(), "Should find both organizations");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testByCountry(ServiceType serviceType) {
     OrganizationService service = (OrganizationService) getService(serviceType);
     NodeService nodeService = getService(serviceType, nodeResource, nodeClient);
 
-    Installation installation = testDataFactory.newPersistedInstallation();
-    Organization organization = service.get(installation.getOrganizationKey());
-    Node node = nodeService.get(organization.getEndorsingNodeKey());
+    Node node = testDataFactory.newNode();
+    nodeService.create(node);
+    node = nodeService.list(new PagingRequest()).getResults().get(0);
 
-    PagingResponse<Installation> resp =
-        nodeService.installations(node.getKey(), new PagingRequest());
-    assertResultsOfSize(resp, 1);
+    createOrgs(
+        node.getKey(),
+        serviceType,
+        Country.ANGOLA,
+        Country.ANGOLA,
+        Country.DENMARK,
+        Country.FRANCE,
+        Country.FRANCE,
+        Country.UNKNOWN);
 
-    resp = service.installations(organization.getKey(), new PagingRequest());
-    assertResultsOfSize(resp, 1);
+    assertResultsOfSize(service.listByCountry(Country.ANGOLA, new PagingRequest()), 2);
+    assertEquals(
+        Long.valueOf(2),
+        service.listByCountry(Country.ANGOLA, new PagingRequest()).getCount(),
+        "Paging is not returning the correct count");
+    assertResultsOfSize(service.listByCountry(Country.FRANCE, new PagingRequest()), 2);
+    assertResultsOfSize(service.listByCountry(Country.GERMANY, new PagingRequest()), 0);
   }
 
   private void createOrgs(UUID nodeKey, ServiceType serviceType, Country... countries) {
@@ -148,17 +162,5 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     UUID key = nodeService.create(testDataFactory.newNode());
     Node node = nodeService.get(key);
     return testDataFactory.newOrganization(node.getKey());
-  }
-
-  @Override
-  protected Organization duplicateForCreateAsEditorTest(Organization entity) throws Exception {
-    Organization duplicate = (Organization) BeanUtils.cloneBean(entity);
-    duplicate.setEndorsingNodeKey(entity.getEndorsingNodeKey());
-    return duplicate;
-  }
-
-  @Override
-  protected UUID keyForCreateAsEditorTest(Organization entity) {
-    return entity.getEndorsingNodeKey();
   }
 }

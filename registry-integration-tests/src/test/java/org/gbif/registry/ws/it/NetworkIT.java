@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.it;
 
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Network;
@@ -36,6 +34,8 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +89,7 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     this.datasetResource = datasetResource;
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void testAddAndDeleteConstituentAsEditor() throws Exception {
     // create a network and a dataset
@@ -141,64 +142,7 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     assertEquals(0, numConstituentsAfter);
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testListPublishingOrganizations(ServiceType serviceType) {
-    NetworkService service = (NetworkService) getService(serviceType);
-
-    // prepare two networks
-    Network network1 = testDataFactory.newPersistedNetwork();
-    Network network2 = testDataFactory.newPersistedNetwork();
-
-    // prepare organizations & installations
-    Organization org1 = testDataFactory.newPersistedOrganization();
-    Organization org2 = testDataFactory.newPersistedOrganization();
-    Organization org3 = testDataFactory.newPersistedOrganization();
-    Installation installation1 = testDataFactory.newPersistedInstallation(org1.getKey());
-    Installation installation2 = testDataFactory.newPersistedInstallation(org2.getKey());
-    Installation installation3 = testDataFactory.newPersistedInstallation(org3.getKey());
-
-    // prepare 4 datasets: 3 for the first network and 1 for the second one
-    Dataset dataset1 = testDataFactory.newPersistedDataset(org1.getKey(), installation1.getKey());
-    Dataset dataset2 = testDataFactory.newPersistedDataset(org1.getKey(), installation1.getKey());
-    Dataset dataset3 = testDataFactory.newPersistedDataset(org2.getKey(), installation2.getKey());
-    Dataset dataset4 = testDataFactory.newPersistedDataset(org3.getKey(), installation3.getKey());
-
-    // add constituents
-    service.addConstituent(network1.getKey(), dataset1.getKey());
-    service.addConstituent(network1.getKey(), dataset2.getKey());
-    service.addConstituent(network1.getKey(), dataset3.getKey());
-    service.addConstituent(network2.getKey(), dataset4.getKey());
-
-    // list publishing organizations for networks
-    PagingResponse<Organization> network1PublishingOrgs =
-        service.publishingOrganizations(network1.getKey(), new PagingRequest());
-    PagingResponse<Organization> network2PublishingOrgs =
-        service.publishingOrganizations(network2.getKey(), new PagingRequest());
-    PagingResponse<Organization> notExistingNetworkPublishingOrgs =
-        service.publishingOrganizations(UUID.randomUUID(), new PagingRequest());
-
-    assertEquals(2, network1PublishingOrgs.getCount());
-    assertEquals(1, network2PublishingOrgs.getCount());
-    assertEquals(0, notExistingNetworkPublishingOrgs.getCount());
-
-    // remove constituent
-    service.removeConstituent(network1.getKey(), dataset3.getKey());
-
-    // check again
-    network1PublishingOrgs =
-        service.publishingOrganizations(network1.getKey(), new PagingRequest());
-    assertEquals(1, network1PublishingOrgs.getCount());
-
-    // delete datasets
-    datasetResource.delete(dataset1.getKey());
-    datasetResource.delete(dataset2.getKey());
-    // check again
-    network1PublishingOrgs =
-        service.publishingOrganizations(network1.getKey(), new PagingRequest());
-    assertEquals(0, network1PublishingOrgs.getCount());
-  }
-
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testConstituentsHandlingErrors(ServiceType serviceType) {
@@ -238,30 +182,6 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
     // Simple remove
     service.removeConstituent(network.getKey(), dataset.getKey());
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSuggest(ServiceType serviceType) {
-    NetworkService service = (NetworkService) getService(serviceType);
-    Network network1 = testDataFactory.newNetwork();
-    network1.setTitle("The Network");
-    service.create(network1);
-
-    Network network2 = testDataFactory.newNetwork();
-    network2.setTitle("The Great Network");
-    service.create(network2);
-
-    Network network3 = testDataFactory.newNetwork();
-    network3.setTitle("The Great Network 3");
-    UUID key3 = service.create(network3);
-
-    assertEquals(2, service.suggest("Great").size(), "Should find only the 2 The Great Network");
-    assertEquals(3, service.suggest("the").size(), "Should find all networks");
-
-    service.delete(key3);
-    assertEquals(1, service.suggest("Great").size(), "Should find only The Great Network");
-    assertEquals(2, service.suggest("the").size(), "Should find both networks");
   }
 
   @Override

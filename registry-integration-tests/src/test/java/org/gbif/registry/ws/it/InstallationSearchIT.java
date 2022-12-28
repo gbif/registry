@@ -33,8 +33,6 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *   <li>The WS service client layer
  * </ol>
  */
-public class InstallationIT extends NetworkEntityIT<Installation> {
+public class InstallationSearchIT extends NetworkEntitySearchIT<Installation> {
 
   private final OrganizationService organizationResource;
   private final OrganizationService organizationClient;
@@ -63,7 +61,7 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
   private final TestDataFactory testDataFactory;
 
   @Autowired
-  public InstallationIT(
+  public InstallationSearchIT(
       InstallationService service,
       OrganizationService organizationResource,
       NodeService nodeResource,
@@ -87,38 +85,52 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
     this.testDataFactory = testDataFactory;
   }
 
-  /** Tests that we can successfully disable and undisable an installation. */
-  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void disableInstallation(ServiceType serviceType) {
-    Installation e = newEntity(serviceType);
+  public void testSuggest(ServiceType serviceType) {
     InstallationService service = (InstallationService) getService(serviceType);
-    UUID key = service.create(e);
-    e = service.get(key);
-    assertFalse(e.isDisabled(), "Should not be disabled to start");
+    Installation installation1 = newEntity(serviceType);
+    installation1.setTitle("The installation");
+    service.create(installation1);
 
-    e.setDisabled(true);
-    service.update(e);
-    e = service.get(e.getKey());
-    assertTrue(e.isDisabled(), "We just disabled it");
+    Installation installation2 = newEntity(serviceType);
+    installation2.setTitle("The Great installation");
+    service.create(installation2);
 
-    e.setDisabled(false);
-    service.update(e);
-    e = service.get(e.getKey());
-    assertFalse(e.isDisabled(), "We just un-disabled it");
+    Installation installation3 = newEntity(serviceType);
+    installation3.setTitle("The Great installation 3");
+    UUID key3 = service.create(installation3);
+
+    assertEquals(
+        2, service.suggest("Great").size(), "Should find only the 2 The Great installation");
+    assertEquals(3, service.suggest("the").size(), "Should find all installations");
+
+    service.delete(key3);
+    assertEquals(1, service.suggest("Great").size(), "Should find only The Great installation");
+    assertEquals(2, service.suggest("the").size(), "Should find both installations");
   }
 
-  @Override
-  protected Installation duplicateForCreateAsEditorTest(Installation entity) throws Exception {
-    Installation duplicate = (Installation) BeanUtils.cloneBean(entity);
-    duplicate.setOrganizationKey(entity.getOrganizationKey());
-    return duplicate;
-  }
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListByType(ServiceType serviceType) {
+    InstallationService service = (InstallationService) getService(serviceType);
+    Installation installation1 = newEntity(serviceType);
+    installation1.setTitle("The installation");
+    installation1.setType(InstallationType.HTTP_INSTALLATION);
+    service.create(installation1);
 
-  @Override
-  protected UUID keyForCreateAsEditorTest(Installation entity) {
-    return organizationResource.get(entity.getOrganizationKey()).getEndorsingNodeKey();
+    Installation installation2 = newEntity(serviceType);
+    installation2.setTitle("The Great installation");
+    installation2.setType(InstallationType.EARTHCAPE_INSTALLATION);
+    service.create(installation2);
+
+    assertEquals(
+        1,
+        service
+            .listByType(InstallationType.EARTHCAPE_INSTALLATION, new PagingRequest())
+            .getResults()
+            .size(),
+        "Should find only The Great installation");
   }
 
   @Override

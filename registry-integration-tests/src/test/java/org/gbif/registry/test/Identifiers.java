@@ -16,6 +16,8 @@ package org.gbif.registry.test;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -32,5 +34,13 @@ public class Identifiers extends JsonBackedData<Identifier> {
         new TypeReference<Identifier>() {},
         objectMapper,
         simplePrincipalProvider);
+  }
+
+  // TODO: paremeterized it so it can be random or not
+  @Override
+  public Identifier newInstance() {
+    Identifier identifier = super.newInstance();
+    identifier.setIdentifier(UUID.randomUUID().toString());
+    return identifier;
   }
 }

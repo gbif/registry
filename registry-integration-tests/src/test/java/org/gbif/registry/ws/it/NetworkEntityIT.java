@@ -28,7 +28,7 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.database.DatabaseCleaner;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.NetworkEntityClient;
@@ -39,7 +39,6 @@ import org.gbif.ws.security.KeyStore;
 import java.security.AccessControlException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -52,8 +51,8 @@ import javax.validation.ValidationException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +65,6 @@ import org.springframework.test.context.DynamicPropertySource;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 
 import static org.gbif.registry.ws.it.LenientAssert.assertLenientEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,6 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 /**
  * A generic test for all network entities that implement all interfaces required by the
@@ -93,7 +92,7 @@ public abstract class NetworkEntityIT<
   @Autowired private DataSource dataSource;
 
   @RegisterExtension
-  public TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  public static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
 
   public NetworkEntityIT(
       NetworkEntityService<T> service,
@@ -124,6 +123,7 @@ public abstract class NetworkEntityIT<
     }
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createWithKey(ServiceType serviceType) {
@@ -133,18 +133,20 @@ public abstract class NetworkEntityIT<
     assertThrows(ValidationException.class, () -> service.create(e));
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testCreate(ServiceType serviceType) {
-    create(newEntity(serviceType), serviceType, 1);
-    create(newEntity(serviceType), serviceType, 2);
+    create(newEntity(serviceType), serviceType);
+    create(newEntity(serviceType), serviceType);
   }
 
   @Disabled("Use during development.")
-  @Test
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
   public void testCreateAsEditor(ServiceType serviceType) throws Exception {
     // Create as admin.
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
 
     if (getSimplePrincipalProvider() == null) {
       return;
@@ -168,13 +170,14 @@ public abstract class NetworkEntityIT<
     }
 
     // Create as the editor user
-    create(anotherEntity, serviceType, 2);
+    create(anotherEntity, serviceType);
   }
 
   protected abstract T duplicateForCreateAsEditorTest(T entity) throws Exception;
 
   protected abstract UUID keyForCreateAsEditorTest(T entity);
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testTitles(ServiceType serviceType) {
@@ -185,7 +188,7 @@ public abstract class NetworkEntityIT<
 
     for (int i = 1; i < 8; i++) {
       T ent = newEntity(serviceType);
-      ent = create(ent, serviceType, i);
+      ent = create(ent, serviceType);
       titles.put(ent.getKey(), ent.getTitle());
     }
     assertEquals(titles, service.getTitles(titles.keySet()));
@@ -199,6 +202,7 @@ public abstract class NetworkEntityIT<
    * provider with name "heinz" won't authorize, because there is no user "heinz" in the test
    * identity database with role administrator.
    */
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testCreateBadRole(ServiceType serviceType) {
@@ -206,18 +210,19 @@ public abstract class NetworkEntityIT<
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("heinz");
       try {
-        create(newEntity(serviceType), serviceType, 1);
+        create(newEntity(serviceType), serviceType);
       } catch (Exception e) {
         assertTrue(e instanceof AccessControlException);
       }
     }
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testUpdate(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T n1 = create(newEntity(serviceType), serviceType, 1);
+    T n1 = create(newEntity(serviceType), serviceType);
     n1.setTitle("New title");
     service.update(n1);
     NetworkEntity n2 = service.get(n1.getKey());
@@ -229,235 +234,74 @@ public abstract class NetworkEntityIT<
     assertTrue(
         n2.getModified().after(n1.getCreated()),
         "Modification date must be after the creation date");
+    List<T> results = service.list(new PagingRequest()).getResults();
     assertEquals(
         1,
-        service.list(new PagingRequest()).getResults().size(),
+        results.stream().filter(r -> r.getKey().equals(n1.getKey())).count(),
         "List service does not reflect the number of created entities");
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testUpdateFailingValidation(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T n1 = create(newEntity(serviceType), serviceType, 1);
+    T n1 = create(newEntity(serviceType), serviceType);
     n1.setTitle("A"); // should fail as it is too short
     assertThrows(ValidationException.class, () -> service.update(n1));
+    service.delete(n1.getKey());
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testDelete(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    NetworkEntity n1 = create(newEntity(serviceType), serviceType, 1);
-    NetworkEntity n2 = create(newEntity(serviceType), serviceType, 2);
+    NetworkEntity n1 = create(newEntity(serviceType), serviceType);
+    NetworkEntity n2 = create(newEntity(serviceType), serviceType);
     service.delete(n1.getKey());
     T n4 = service.get(n1.getKey()); // one can get a deleted entity
     n1.setDeleted(n4.getDeleted());
     n1.setModified(n4.getModified());
     assertEquals(n1, n4, "Persisted does not reflect original after a deletion");
     // check that one cannot see the deleted entity in a list
+    List<T> results = service.list(new PagingRequest()).getResults();
     assertEquals(
         1,
-        service.list(new PagingRequest()).getResults().size(),
+        results.stream().filter(r -> r.getKey().equals(n2.getKey())).count(),
         "List service does not reflect the number of created entities");
     assertEquals(
-        n2,
-        service.list(new PagingRequest()).getResults().get(0),
+        0,
+        results.stream().filter(r -> r.getKey().equals(n1.getKey())).count(),
         "Following a delete, the wrong entity is returned in list results");
   }
 
-  /**
-   * Creates 5 entities, and then pages over them using differing paging strategies, confirming the
-   * correct number of records are returned for each strategy.
-   */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testPaging(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    for (int i = 1; i <= 5; i++) {
-      create(newEntity(serviceType), serviceType, i);
-    }
-
-    // the expected number of records returned when paging at different page sizes
-    int[][] expectedPages =
-        new int[][] {
-          {1, 1, 1, 1, 1, 0}, // page size of 1
-          {2, 2, 1, 0}, // page size of 2
-          {3, 2, 0}, // page size of 3
-          {4, 1, 0}, // page size of 4
-          {5, 0}, // page size of 5
-          {5, 0}, // page size of 6
-        };
-
-    // test the various paging strategies (e.g. page size of 1,2,3 etc to verify they behave as
-    // outlined above)
-    for (int pageSize = 1; pageSize <= expectedPages.length; pageSize++) {
-      int offset = 0; // always start at beginning
-      for (int page = 0; page < expectedPages[pageSize - 1].length; page++, offset += pageSize) {
-        // request the page using the page size and offset
-        List<T> results =
-            service.list(new PagingRequest(offset, expectedPages[pageSize - 1][page])).getResults();
-        // confirm it is the correct number of results as outlined above
-        assertEquals(
-            expectedPages[pageSize - 1][page],
-            results.size(),
-            "Paging is not operating as expected when requesting pages of size " + pageSize);
-      }
-    }
-  }
-
-  /** Confirm that the list method and its paging return entities in creation time order. */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testPagingOrder(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    // keeps a list of all uuids created in that creation order
-    List<UUID> uuids = new ArrayList<>();
-    for (int i = 1; i <= 5; i++) {
-      T d = create(newEntity(serviceType), serviceType, i);
-      uuids.add(d.getKey());
-    }
-    uuids = Lists.reverse(uuids);
-
-    // test the various paging strategies (e.g. page size of 1,2,3 etc to verify they behave as
-    // outlined above)
-    for (int pageSize = 1; pageSize <= uuids.size(); pageSize++) {
-      for (int offset = 0; offset < uuids.size() + 1; offset++) {
-        // request a page using the page size and offset
-        PagingResponse<T> resp = service.list(new PagingRequest(offset, pageSize));
-        // confirm it is the correct number of results as outlined above
-        assertEquals(
-            Math.min(pageSize, uuids.size() - offset),
-            resp.getResults().size(),
-            "Paging is not operating as expected when requesting pages of size " + pageSize);
-        assertEquals(Long.valueOf(uuids.size()), resp.getCount(), "Count wrong");
-        int lastIdx = -1;
-        for (T d : resp.getResults()) {
-          int idx = uuids.indexOf(d.getKey());
-          // make sure the datasets are in the same order as the reversed uuid list
-          assertTrue(idx > lastIdx);
-          lastIdx = idx;
-        }
-      }
-    }
-  }
-
-  /** Simple search test including when the entity is updated. */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSimpleSearch(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    T n1 = create(newEntity(serviceType), serviceType, 1);
-    n1.setTitle("New title foo");
-    service.update(n1);
-
-    assertEquals(
-        Long.valueOf(1),
-        service.search("New", new PagingRequest()).getCount(),
-        "Search should return a hit");
-    assertEquals(
-        Long.valueOf(1),
-        service.search("TITLE", new PagingRequest()).getCount(),
-        "Search should return a hit");
-    assertEquals(
-        Long.valueOf(0),
-        service.search("NO", new PagingRequest()).getCount(),
-        "Search should return a hit");
-    assertEquals(
-        Long.valueOf(1),
-        service.search(" new tit fo", new PagingRequest()).getCount(),
-        "Search should return a hit");
-    assertEquals(
-        Long.valueOf(0),
-        service.search("<", new PagingRequest()).getCount(),
-        "Search should return no hits");
-    assertEquals(
-        Long.valueOf(0),
-        service.search("\"<\"", new PagingRequest()).getCount(),
-        "Search should return no hits");
-    assertEquals(
-        Long.valueOf(1),
-        service.search(null, new PagingRequest()).getCount(),
-        "Search should return all hits");
-    assertEquals(
-        Long.valueOf(1),
-        service.search("  ", new PagingRequest()).getCount(),
-        "Search should return all hits");
-
-    // Updates should be reflected in search
-    n1.setTitle("BINGO");
-    service.update(n1);
-
-    assertEquals(
-        Long.valueOf(1),
-        service.search("BINGO", new PagingRequest()).getCount(),
-        "Search should return a hit");
-    assertEquals(
-        Long.valueOf(0),
-        service.search("New", new PagingRequest()).getCount(),
-        "Search should return no hits");
-    assertEquals(
-        Long.valueOf(0),
-        service.search("TITILE", new PagingRequest()).getCount(),
-        "Search should return no hits");
-    assertEquals(
-        Long.valueOf(1),
-        service.search("bi ", new PagingRequest()).getCount(),
-        "Search should return a hit");
-  }
-
-  /** Ensures the simple search pages as expected. */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSimpleSearchPaging(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    for (int i = 1; i <= 5; i++) {
-      T n1 = newEntity(serviceType);
-      n1.setTitle("Bingo");
-      create(n1, serviceType, i);
-    }
-
-    assertEquals(
-        Long.valueOf(5),
-        service.search("Bingo", new PagingRequest()).getCount(),
-        "Search should return a hit");
-    // first page 3 results
-    assertEquals(
-        3,
-        service.search("Bingo", new PagingRequest(0, 3)).getResults().size(),
-        "Search should return the requested number of records");
-    // second page should bring the last 2
-    assertEquals(
-        2,
-        service.search("Bingo", new PagingRequest(3, 3)).getResults().size(),
-        "Search should return the requested number of records");
-    // there are no results after 5
-    assertTrue(
-        service.search("Bingo", new PagingRequest(5, 3)).getResults().isEmpty(),
-        "Search should return the requested number of records");
-  }
-
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testContacts(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
     ContactTests.testAddDeleteUpdate(service, entity, testDataFactory);
+    service.delete(entity.getKey());
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testEndpoints(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
     EndpointTests.testAddDelete(service, entity, testDataFactory);
+    service.delete(entity.getKey());
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testMachineTags(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
     MachineTagTests.testAddDelete(service, entity, testDataFactory);
   }
 
@@ -466,12 +310,13 @@ public abstract class NetworkEntityIT<
   @EnumSource(
       value = ServiceType.class,
       names = {"CLIENT"})
-  public void testMachineTagsNotAllowedToCreateClient(ServiceType serviceType) {
+  public void testMachineTagsNotAllowedToCreateClient() {
+    ServiceType serviceType = ServiceType.RESOURCE;
     NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("notExisting");
-      T entity = create(newEntity(serviceType), serviceType, 1);
+      T entity = create(newEntity(serviceType), serviceType);
       assertThrows(
           AccessControlException.class,
           () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
@@ -485,12 +330,13 @@ public abstract class NetworkEntityIT<
   @EnumSource(
       value = ServiceType.class,
       names = {"CLIENT"})
-  public void testMachineTagsMissingNamespaceRights(ServiceType serviceType) {
+  public void testMachineTagsMissingNamespaceRights() {
+    ServiceType serviceType = ServiceType.RESOURCE;
     NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
       getSimplePrincipalProvider().setPrincipal("editor");
-      T entity = create(newEntity(serviceType), ServiceType.CLIENT, 1);
+      T entity = create(newEntity(serviceType), ServiceType.CLIENT);
       assertThrows(
           AccessControlException.class,
           () -> MachineTagTests.testAddDelete(service, entity, testDataFactory));
@@ -504,11 +350,12 @@ public abstract class NetworkEntityIT<
   @EnumSource(
       value = ServiceType.class,
       names = {"CLIENT"})
-  public void testMachineTagsNotAllowedToDeleteClient(ServiceType serviceType) {
+  public void testMachineTagsNotAllowedToDeleteClient() {
+    ServiceType serviceType = ServiceType.RESOURCE;
     NetworkEntityService<T> service = getService(serviceType);
     // only for client tests
     if (getSimplePrincipalProvider() != null) {
-      T entity = create(newEntity(serviceType), ServiceType.CLIENT, 1);
+      T entity = create(newEntity(serviceType), ServiceType.CLIENT);
       // add machine tags
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
       service.addMachineTag(entity.getKey(), testDataFactory.newMachineTag());
@@ -533,90 +380,32 @@ public abstract class NetworkEntityIT<
     return machineTag;
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testMachineTagSearch(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    T entity1 = create(newEntity(serviceType), serviceType, 1);
-    T entity2 = create(newEntity(serviceType), serviceType, 2);
-
-    service.addMachineTag(
-        entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "one"));
-    service.addMachineTag(
-        entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "two"));
-    service.addMachineTag(
-        entity1.getKey(), newMachineTag(entity1, "test.gbif.org", "network-entity", "three"));
-    service.addMachineTag(
-        entity2.getKey(), newMachineTag(entity2, "test.gbif.org", "network-entity", "four"));
-
-    PagingResponse<T> res;
-
-    res = service.listByMachineTag("test.gbif.org", "network-entity", "one", new PagingRequest());
-    assertEquals(Long.valueOf(1), res.getCount());
-    assertEquals(1, res.getResults().size());
-    res = service.listByMachineTag("test.gbif.org", "network-entity", null, new PagingRequest());
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(2, res.getResults().size());
-    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest());
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(2, res.getResults().size());
-
-    res = service.listByMachineTag("test.gbif.org", "network-entity", "five", new PagingRequest());
-    System.out.println("Results " + res.getResults());
-    System.out.println("Count " + res.getCount());
-    System.err.println("Results " + res.getResults());
-    System.err.println("Count " + res.getCount());
-    assertEquals(Long.valueOf(0), res.getCount());
-
-    res = service.listByMachineTag("test.gbif.org", "nothing", null, new PagingRequest());
-    assertEquals(Long.valueOf(0), res.getCount());
-
-    res = service.listByMachineTag("not-in-test.gbif.org", null, null, new PagingRequest());
-    assertEquals(Long.valueOf(0), res.getCount());
-
-    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(0, 1));
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(1, res.getResults().size());
-    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(1, 1));
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(1, res.getResults().size());
-    res = service.listByMachineTag("test.gbif.org", null, null, new PagingRequest(2, 1));
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(0, res.getResults().size());
-  }
-
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testTags(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
     TagTests.testAddDelete(service, entity);
-    entity = create(newEntity(serviceType), serviceType, 2);
+    entity = create(newEntity(serviceType), serviceType);
     TagTests.testTagErroneousDelete(service, entity);
   }
 
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testComments(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
     CommentTests.testAddDelete(service, entity, testDataFactory);
   }
 
-  // Check that simple search covers contacts which throws IllegalStateException for Nodes
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSimpleSearchContact(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    ContactTests.testSimpleSearch(
-        service, service, create(newEntity(serviceType), serviceType, 1), testDataFactory);
-  }
-
+  @Execution(CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testIdentifierCRUD(ServiceType serviceType) {
     NetworkEntityService<T> service = getService(serviceType);
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
     IdentifierTests.testAddDelete(service, service, entity, testDataFactory);
   }
 
@@ -626,56 +415,11 @@ public abstract class NetworkEntityIT<
     return identifier;
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testIdentifierSearch(ServiceType serviceType) {
-    NetworkEntityService<T> service = getService(serviceType);
-    T entity1 = create(newEntity(serviceType), serviceType, 1);
-    T entity2 = create(newEntity(serviceType), serviceType, 2);
-
-    service.addIdentifier(
-        entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
-    service.addIdentifier(
-        entity1.getKey(), newTestIdentifier(entity1, IdentifierType.DOI, "doi:1"));
-    service.addIdentifier(
-        entity1.getKey(), newTestIdentifier(entity2, IdentifierType.DOI, "doi:2"));
-    service.addIdentifier(
-        entity2.getKey(), newTestIdentifier(entity2, IdentifierType.DOI, "doi:2"));
-
-    PagingResponse<T> res =
-        service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest());
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(2, res.getResults().size());
-    res = service.listByIdentifier("doi:2", new PagingRequest());
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(2, res.getResults().size());
-
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:1", new PagingRequest());
-    assertEquals(Long.valueOf(1), res.getCount());
-    assertEquals(1, res.getResults().size());
-
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:XXX", new PagingRequest());
-    assertEquals(Long.valueOf(0), res.getCount());
-
-    res = service.listByIdentifier(IdentifierType.GBIF_PORTAL, "doi:1", new PagingRequest());
-    assertEquals(Long.valueOf(0), res.getCount());
-
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest(0, 1));
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(1, res.getResults().size());
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest(1, 1));
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(1, res.getResults().size());
-    res = service.listByIdentifier(IdentifierType.DOI, "doi:2", new PagingRequest(2, 1));
-    assertEquals(Long.valueOf(2), res.getCount());
-    assertEquals(0, res.getResults().size());
-  }
-
-  @Test
+  @Execution(CONCURRENT)
   public void updateEntityKeyMismatchTest() {
     ServiceType serviceType = ServiceType.CLIENT;
     NetworkEntityClient<T> crudClient = (NetworkEntityClient<T>) client;
-    T entity = create(newEntity(serviceType), serviceType, 1);
+    T entity = create(newEntity(serviceType), serviceType);
 
     assertThrows(
         IllegalArgumentException.class, () -> crudClient.updateResource(UUID.randomUUID(), entity));
@@ -685,8 +429,8 @@ public abstract class NetworkEntityIT<
   protected abstract T newEntity(ServiceType serviceType);
 
   // Repeatable entity creation with verification tests
-  protected T create(T orig, ServiceType serviceType, int expectedCount) {
-    return create(orig, serviceType, expectedCount, null);
+  protected T create(T orig, ServiceType serviceType) {
+    return create(orig, serviceType, null);
   }
 
   /**
@@ -695,8 +439,7 @@ public abstract class NetworkEntityIT<
    * @param processedProperties expected values of properties that are processed so they would not
    *     match the original
    */
-  protected T create(
-      T orig, ServiceType serviceType, int expectedCount, Map<String, Object> processedProperties) {
+  protected T create(T orig, ServiceType serviceType, Map<String, Object> processedProperties) {
     try {
       NetworkEntityService<T> service = getService(serviceType);
       @SuppressWarnings("unchecked")
@@ -725,9 +468,10 @@ public abstract class NetworkEntityIT<
               "Persisted does not reflect original\nPersisted: %s\nOriginal:  %s", written, entity),
           entity,
           written);
+      List<T> results = service.list(new PagingRequest()).getResults();
       assertEquals(
-          expectedCount,
-          service.list(new PagingRequest()).getResults().size(),
+          1,
+          results.stream().filter(r -> r.getKey().equals(key)).count(),
           "List service does not reflect the number of created entities");
       return written;
     } catch (Exception e) {

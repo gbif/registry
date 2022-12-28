@@ -39,11 +39,11 @@ import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
-import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 /**
  * This is parameterized to run the same test routines for the following:
@@ -114,28 +115,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     this.testDataFactory = testDataFactory;
   }
 
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testGetByCountry(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    initVotingCountryNodes(serviceType);
-    insertTestNode(Country.TAIWAN, ParticipationStatus.ASSOCIATE, NodeType.OTHER, serviceType);
-
-    Node n = service.getByCountry(Country.ANGOLA);
-    assertNull(n);
-
-    for (Country c : TEST_COUNTRIES.keySet()) {
-      n = service.getByCountry(c);
-      assertEquals(c, n.getCountry());
-    }
-
-    // test taiwan hack
-    n = service.getByCountry(Country.TAIWAN);
-    assertEquals(Country.TAIWAN, n.getCountry());
-  }
-
   private void initVotingCountryNodes(ServiceType serviceType) {
-    count = 0;
     for (Country c : TEST_COUNTRIES.keySet()) {
       insertTestNode(c, ParticipationStatus.VOTING, NodeType.COUNTRY, serviceType);
     }
@@ -150,8 +130,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     n.setType(nodeType);
     n.setParticipationStatus(status);
     n.setGbifRegion(GbifRegion.AFRICA);
-    n = create(n, serviceType, count + 1);
-    count++;
+    n = create(n, serviceType);
 
     if (TEST_COUNTRIES.containsKey(c)) {
       // create IMS identifiers
@@ -165,6 +144,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  @Execution(CONCURRENT)
   public void testAffiliateNode(ServiceType serviceType) {
     Node n = newEntity(serviceType);
     n.setTitle("GBIF Affiliate Node");
@@ -172,85 +152,12 @@ public class NodeIT extends NetworkEntityIT<Node> {
     n.setParticipationStatus(ParticipationStatus.AFFILIATE);
     n.setGbifRegion(null);
     n.setCountry(null);
-    create(n, serviceType, 1);
+    create(n, serviceType);
   }
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void testEndorsements(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    OrganizationService organizationService =
-        getService(serviceType, organizationResource, organizationClient);
-
-    Node node = testDataFactory.newNode();
-    service.create(node);
-    node = service.list(new PagingRequest()).getResults().get(0);
-
-    assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
-    assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 0);
-
-    Organization o = testDataFactory.newPersistedOrganization(node.getKey());
-    assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 0);
-    assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 1);
-    assertResultsOfSize(service.pendingEndorsements(node.getKey(), new PagingRequest()), 1);
-    assertEquals(
-        1L,
-        service.pendingEndorsements(new PagingRequest()).getCount(),
-        "Paging is not returning the correct count");
-
-    if (serviceType == ServiceType.RESOURCE) {
-      organizationService.confirmEndorsement(o.getKey());
-    } else {
-      ((OrganizationClient) organizationClient).confirmEndorsementEndpoint(o.getKey());
-    }
-
-    assertResultsOfSize(service.pendingEndorsements(new PagingRequest()), 0);
-    assertEquals(
-        0L,
-        service.pendingEndorsements(new PagingRequest()).getCount(),
-        "Paging is not returning the correct count");
-    assertResultsOfSize(service.endorsedOrganizations(node.getKey(), new PagingRequest()), 1);
-    assertEquals(
-        1L,
-        service.endorsedOrganizations(node.getKey(), new PagingRequest()).getCount(),
-        "Paging is not returning the correct count");
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testCountries(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    initVotingCountryNodes(serviceType);
-    List<Country> countries = service.listNodeCountries();
-    assertEquals(TEST_COUNTRIES.size(), countries.size());
-    for (Country c : countries) {
-      assertTrue(TEST_COUNTRIES.containsKey(c), "Unexpected node country" + c);
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testActiveCountries(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    initVotingCountryNodes(serviceType);
-    List<Country> countries = service.listActiveCountries();
-    assertEquals(TEST_COUNTRIES.size() + 1, countries.size());
-    for (Country c : countries) {
-      assertTrue(
-          Country.TAIWAN == c || TEST_COUNTRIES.containsKey(c), "Unexpected node country" + c);
-    }
-    assertTrue(countries.contains(Country.TAIWAN), "Taiwan missing");
-
-    // insert extra observer nodes and make sure we get the same list
-    insertTestNode(Country.BOTSWANA, ParticipationStatus.OBSERVER, NodeType.COUNTRY, serviceType);
-    insertTestNode(Country.HONG_KONG, ParticipationStatus.FORMER, NodeType.COUNTRY, serviceType);
-
-    List<Country> countries2 = service.listActiveCountries();
-    assertEquals(countries, countries2);
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
+  @Execution(CONCURRENT)
   public void testDatasets(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
     OrganizationService organizationService =
@@ -260,7 +167,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     DatasetService datasetService = getService(serviceType, datasetResource, datasetClient);
 
     // endorsing node for the organization
-    Node node = create(newEntity(serviceType), serviceType, 1);
+    Node node = create(newEntity(serviceType), serviceType);
     // publishing organization (required field)
     Organization o = testDataFactory.newOrganization(node.getKey());
     o.setEndorsingNodeKey(node.getKey());
@@ -291,46 +198,24 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertEquals(d2Key, resp.getResults().get(0).getKey());
   }
 
-  /**
-   * A test that requires a configured IMS with real spanish data. Jenkins is configured for this,
-   * so we activate this test to make sure IMS connections are working!
-   */
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testIms(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    initVotingCountryNodes(serviceType);
-    Node es = service.getByCountry(Country.SPAIN);
-    assertEquals((Integer) 2001, es.getParticipantSince());
-    assertEquals(ParticipationStatus.VOTING, es.getParticipationStatus());
-    // this is no real data, it comes from the test inserts above
-    assertEquals(GbifRegion.AFRICA, es.getGbifRegion());
-    assertEquals("GBIF.ES", es.getAbbreviation());
-    assertEquals("Madrid", es.getCity());
-    assertEquals("E-28014", es.getPostalCode());
-    assertEquals("Real Jardín Botánico - CSIC", es.getOrganization());
-    assertTrue(es.getContacts().size() > 5);
-
-    Node notInIms = service.getByCountry(Country.AFGHANISTAN);
-    assertNotNull(notInIms);
-  }
-
   /** Node contacts are IMS managed and the service throws exceptions */
   @Override
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  @Execution(CONCURRENT)
   public void testContacts(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
-    Node n = create(newEntity(serviceType), serviceType, 1);
+    Node n = create(newEntity(serviceType), serviceType);
     assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
 
   /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  @Execution(CONCURRENT)
   public void testAddContact(ServiceType serviceType) {
     NodeService service = ((NodeService) getService(serviceType));
-    Node n = create(newEntity(serviceType), serviceType, 1);
+    Node n = create(newEntity(serviceType), serviceType);
     assertThrows(
         UnsupportedOperationException.class, () -> service.addContact(n.getKey(), new Contact()));
   }
@@ -338,18 +223,11 @@ public class NodeIT extends NetworkEntityIT<Node> {
   /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  @Execution(CONCURRENT)
   public void testDeleteContact(ServiceType serviceType) {
     NodeService service = ((NodeService) getService(serviceType));
-    Node n = create(newEntity(serviceType), serviceType, 1);
+    Node n = create(newEntity(serviceType), serviceType);
     assertThrows(UnsupportedOperationException.class, () -> service.deleteContact(n.getKey(), 1));
-  }
-
-  @Override
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSimpleSearchContact(ServiceType serviceType) {
-    assertThrows(
-        UnsupportedOperationException.class, () -> super.testSimpleSearchContact(serviceType));
   }
 
   @Override
@@ -365,29 +243,5 @@ public class NodeIT extends NetworkEntityIT<Node> {
   @Override
   protected UUID keyForCreateAsEditorTest(Node entity) {
     return null;
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSuggest(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    Node node1 = testDataFactory.newNode();
-    node1.setTitle("The Node");
-    service.create(node1);
-
-    Node node2 = testDataFactory.newNode();
-    node2.setTitle("The Great Node");
-    service.create(node2);
-
-    Node node3 = testDataFactory.newNode();
-    node3.setTitle("The Great Node 3");
-    UUID key3 = service.create(node3);
-
-    assertEquals(2, service.suggest("Great").size(), "Should find only the 2 The Great Node");
-    assertEquals(3, service.suggest("the").size(), "Should find all nodes");
-
-    service.delete(key3);
-    assertEquals(1, service.suggest("Great").size(), "Should find only The Great Node");
-    assertEquals(2, service.suggest("the").size(), "Should find both nodes");
   }
 }
