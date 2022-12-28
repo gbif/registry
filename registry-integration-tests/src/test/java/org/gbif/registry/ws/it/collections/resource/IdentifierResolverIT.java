@@ -24,6 +24,8 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -160,6 +162,7 @@ public class IdentifierResolverIT extends BaseResourceMockIT {
         .andExpect(header().string("Location", endsWith("/institution/" + institutionKey)));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void unknownIdentifier() throws Exception {
     mockMvc.perform(get(BASE_URL + "dev.grbio.org/cool/foo")).andExpect(status().isNotFound());
