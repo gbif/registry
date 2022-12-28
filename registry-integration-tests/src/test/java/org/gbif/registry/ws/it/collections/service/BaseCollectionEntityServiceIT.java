@@ -107,9 +107,6 @@ public abstract class BaseCollectionEntityServiceIT<
   protected static CollectionsMaterializedViewsInitializer mvInitializer =
       new CollectionsMaterializedViewsInitializer(PG_CONTAINER);
 
-  @RegisterExtension
-  protected static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
-
   public BaseCollectionEntityServiceIT(
       CollectionEntityService<T> collectionEntityService,
       DatasetService datasetService,

@@ -91,9 +91,6 @@ public abstract class NetworkEntityIT<
 
   @Autowired private DataSource dataSource;
 
-  @RegisterExtension
-  public static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
-
   public NetworkEntityIT(
       NetworkEntityService<T> service,
       int localServerPort,
