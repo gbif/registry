@@ -48,7 +48,6 @@ import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@DirtiesContext
 public class BaseItTest extends BaseDBTest {
   private final SimplePrincipalProvider simplePrincipalProvider;
 
