@@ -14,11 +14,14 @@
 package org.gbif.registry.cli.doisynchronizer;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.gbif.registry.cli.doisynchronizer.DoiSynchronizerConfigurationValidator.isConfigurationValid;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class DoiSynchronizerConfigurationValidatorTest {
 
   @Test
