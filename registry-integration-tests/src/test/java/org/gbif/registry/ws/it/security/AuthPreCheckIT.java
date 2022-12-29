@@ -111,7 +111,8 @@ public class AuthPreCheckIT extends BaseItTest {
 
   @RegisterExtension
   public static DatabaseCleaner databaseCleaner =
-      new DatabaseCleaner(PG_CONTAINER, "public.user", "editor_rights", "namespace_rights", "country_rights");
+      new DatabaseCleaner(
+          PG_CONTAINER, "public.user", "editor_rights", "namespace_rights", "country_rights");
 
   @SneakyThrows
   @BeforeAll
@@ -120,6 +121,14 @@ public class AuthPreCheckIT extends BaseItTest {
       @Autowired NodeService nodeService,
       @Autowired OrganizationService organizationService,
       @Autowired InstitutionService institutionService) {
+
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+      new UsernamePasswordAuthenticationToken(
+        ADMIN,
+        "",
+        Collections.singleton(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE))));
 
     GbifUser admin = new GbifUser();
     admin.setUserName(ADMIN);
@@ -180,14 +189,6 @@ public class AuthPreCheckIT extends BaseItTest {
     Address address = new Address();
     address.setCountry(COUNTRY);
     institution.setAddress(address);
-
-    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-    SecurityContextHolder.setContext(ctx);
-    ctx.setAuthentication(
-        new UsernamePasswordAuthenticationToken(
-            ADMIN,
-            "",
-            Collections.singleton(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE))));
 
     INSTITUTION_KEY = institutionService.create(institution);
 
