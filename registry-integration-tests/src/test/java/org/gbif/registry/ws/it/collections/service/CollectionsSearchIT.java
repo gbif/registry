@@ -23,17 +23,23 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.api.vocabulary.UserRole;
+import org.gbif.registry.database.DatabaseCleaner;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.gbif.registry.domain.collections.TypeParam.COLLECTION;
 import static org.gbif.registry.domain.collections.TypeParam.INSTITUTION;
@@ -45,32 +51,38 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CollectionsSearchIT extends BaseServiceIT {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  protected static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
 
   private final CollectionsSearchService searchService;
-  private final InstitutionService institutionService;
-  private final CollectionService collectionService;
 
-  private final Institution i1 = new Institution();
-  private final Institution i11 = new Institution();
-  private final Institution i2 = new Institution();
-  private final Collection c1 = new Collection();
-  private final Collection c2 = new Collection();
+  private static final Institution i1 = new Institution();
+  private static final Institution i11 = new Institution();
+  private static final Institution i2 = new Institution();
+  private static final Collection c1 = new Collection();
+  private static final Collection c2 = new Collection();
 
   @Autowired
   public CollectionsSearchIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      CollectionsSearchService collectionsSearchService,
-      InstitutionService institutionService,
-      CollectionService collectionService) {
+      CollectionsSearchService collectionsSearchService) {
     super(simplePrincipalProvider);
     this.searchService = collectionsSearchService;
-    this.institutionService = institutionService;
-    this.collectionService = collectionService;
   }
 
-  @BeforeEach
-  public void loadData() {
+  @BeforeAll
+  public static void loadData(
+      @Autowired InstitutionService institutionService,
+      @Autowired CollectionService collectionService) {
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            "test",
+            "",
+            Arrays.asList(
+                new SimpleGrantedAuthority(UserRole.REGISTRY_ADMIN.name()),
+                new SimpleGrantedAuthority(UserRole.GRSCICOLL_ADMIN.name()))));
+
     i1.setCode("I1");
     i1.setName("Institution 1");
     Address addressI1 = new Address();
