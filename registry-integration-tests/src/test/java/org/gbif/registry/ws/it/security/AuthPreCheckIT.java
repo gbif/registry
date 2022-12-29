@@ -38,6 +38,7 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -121,6 +122,16 @@ public class AuthPreCheckIT extends BaseItTest {
       @Autowired OrganizationService organizationService,
       @Autowired InstitutionService institutionService) {
 
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+      new UsernamePasswordAuthenticationToken(
+        ADMIN,
+        "",
+        Arrays.asList(
+          new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE),
+          new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE))));
+
     GbifUser admin = new GbifUser();
     admin.setUserName(ADMIN);
     admin.setFirstName(ADMIN);
@@ -180,14 +191,6 @@ public class AuthPreCheckIT extends BaseItTest {
     Address address = new Address();
     address.setCountry(COUNTRY);
     institution.setAddress(address);
-
-    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-    SecurityContextHolder.setContext(ctx);
-    ctx.setAuthentication(
-        new UsernamePasswordAuthenticationToken(
-            ADMIN,
-            "",
-            Collections.singleton(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE))));
 
     INSTITUTION_KEY = institutionService.create(institution);
 
