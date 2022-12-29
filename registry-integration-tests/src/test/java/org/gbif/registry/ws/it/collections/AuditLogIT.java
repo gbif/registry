@@ -64,6 +64,7 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -121,7 +122,9 @@ public class AuditLogIT extends BaseItTest {
         new UsernamePasswordAuthenticationToken(
             "test",
             "",
-            Collections.singleton(new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE))));
+            Arrays.asList(
+                new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE),
+                new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE))));
 
     Node node = new Node();
     node.setTitle("node");
