@@ -55,6 +55,7 @@ import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.security.UserRoles;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.client.collections.InstitutionClient;
@@ -62,6 +63,7 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -70,6 +72,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -105,6 +111,17 @@ public class AuditLogIT extends BaseItTest {
       @Autowired OrganizationService organizationService,
       @Autowired InstallationService installationService,
       @Autowired DatasetService datasetService) {
+
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+    ctx.setAuthentication(
+      new UsernamePasswordAuthenticationToken(
+        "test",
+        "",
+        Arrays.asList(
+          new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE),
+          new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE))));
+
     Node node = new Node();
     node.setTitle("node");
     node.setType(NodeType.COUNTRY);
