@@ -48,7 +48,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpringBootTest(
     classes = {RegistryIntegrationTestsConfiguration.class, BaseServiceIT.MockConfig.class})
 @ActiveProfiles({"test", "mock"})
-@DirtiesContext
 public class BaseServiceIT extends BaseDBTest {
 
   // the audit log is tested in the AuditLogIT
