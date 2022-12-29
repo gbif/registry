@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
       "spring.flyway.enabled=false"
     })
 @AutoConfigureMockMvc(addFilters = false)
+@Execution(ExecutionMode.CONCURRENT)
 public class EnumerationResourceIT {
 
   @Autowired private MockMvc mockMvc;
