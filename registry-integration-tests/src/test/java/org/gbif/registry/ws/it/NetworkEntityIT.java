@@ -89,6 +89,9 @@ public abstract class NetworkEntityIT<
 
   private final TestDataFactory testDataFactory;
 
+  @RegisterExtension
+  protected static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
+
   @Autowired private DataSource dataSource;
 
   public NetworkEntityIT(

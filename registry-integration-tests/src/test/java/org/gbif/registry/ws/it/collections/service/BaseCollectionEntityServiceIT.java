@@ -104,6 +104,9 @@ public abstract class BaseCollectionEntityServiceIT<
   protected final TestData<T> testData;
 
   @RegisterExtension
+  protected static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
+
+  @RegisterExtension
   protected static CollectionsMaterializedViewsInitializer mvInitializer =
       new CollectionsMaterializedViewsInitializer(PG_CONTAINER);
 
