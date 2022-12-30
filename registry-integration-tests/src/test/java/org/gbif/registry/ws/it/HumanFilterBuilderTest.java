@@ -22,9 +22,12 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class HumanFilterBuilderTest {
   // make sure this is the right bundle as used by the human query builder
   private static final ResourceBundle resourceBundle =

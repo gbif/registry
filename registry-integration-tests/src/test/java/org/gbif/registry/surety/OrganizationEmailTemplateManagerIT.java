@@ -38,6 +38,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
@@ -48,6 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /** Unit tests related to {@link OrganizationEmailManager}. */
+@Execution(ExecutionMode.CONCURRENT)
 @SpringBootTest(
     classes =
         OrganizationEmailTemplateManagerIT.OrganizationEmailTemplateManagerTestConfiguration.class)
