@@ -32,6 +32,8 @@ import javax.validation.ValidatorFactory;
 import javax.validation.groups.Default;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 
 /** Tests that the builders in this package provide valid objects. */
+@Execution(ExecutionMode.CONCURRENT)
 @SpringBootTest(classes = EntityBuilderIT.EntityBuilderTestConfiguration.class)
 public class EntityBuilderIT extends BaseItTest {
 
