@@ -24,6 +24,8 @@ import org.gbif.registry.ws.jwt.JwtUtils;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.ResultActions;
@@ -53,6 +55,7 @@ public class JwtIT extends BaseItTest {
     this.requestTestFixture = requestTestFixture;
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void validTokenTest() throws Exception {
     String token = login(TestConstants.TEST_GRSCICOLL_ADMIN);
@@ -71,6 +74,7 @@ public class JwtIT extends BaseItTest {
     assertNotEquals(token, newToken);
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void invalidHeaderTest() throws Exception {
     String token = login(TestConstants.TEST_ADMIN);
@@ -82,6 +86,7 @@ public class JwtIT extends BaseItTest {
         .andExpect(status().isForbidden());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void invalidTokenTest() throws Exception {
     JwtConfiguration config = new JwtConfiguration();
@@ -98,6 +103,7 @@ public class JwtIT extends BaseItTest {
     assertNull(newToken);
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void insufficientRolesTest() throws Exception {
     String token = login(TestConstants.TEST_USER);
@@ -107,6 +113,7 @@ public class JwtIT extends BaseItTest {
         .andExpect(status().isForbidden());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void fakeUserTest() throws Exception {
     String token = JwtUtils.generateJwt("fake", jwtConfiguration);
@@ -116,11 +123,13 @@ public class JwtIT extends BaseItTest {
         .andExpect(status().isForbidden());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void noJwtAndNoBasicAuthTest() throws Exception {
     requestTestFixture.postRequest(createInstitution(), PATH).andExpect(status().isForbidden());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @Test
   public void noJwtWithBasicAuthTest() throws Exception {
     requestTestFixture
