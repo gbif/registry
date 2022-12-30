@@ -38,7 +38,7 @@ import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.NodeType;
 import org.gbif.api.vocabulary.ParticipationStatus;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.database.DatabaseCleaner;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.client.pipelines.PipelinesHistoryClient;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -53,6 +53,8 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +71,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PipelinesHistoryIT extends BaseItTest {
 
   @RegisterExtension
-  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+  protected static DatabaseCleaner databaseCleaner = new DatabaseCleaner(PG_CONTAINER);
 
   private final DatasetService datasetService;
   private final OrganizationService organizationService;
@@ -112,6 +114,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     userTestFixture.prepareAdminUser();
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createPipelineProcessTest(ServiceType serviceType) {
@@ -130,6 +133,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertEquals(TestConstants.TEST_ADMIN, processCreated.getCreatedBy());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void createPipelineProcessWithoutPrivilegesTest(ServiceType serviceType) {
@@ -141,6 +145,7 @@ public class PipelinesHistoryIT extends BaseItTest {
         () -> service.createPipelineProcess(new PipelineProcessParameters(UUID.randomUUID(), 1)));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void getNonExistentPipelineProcessTest(ServiceType serviceType) {
@@ -149,6 +154,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertNull(service.getPipelineProcess(UUID.randomUUID(), 0));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void historyTestAndSearchUpdate(ServiceType serviceType) {
@@ -163,16 +169,14 @@ public class PipelinesHistoryIT extends BaseItTest {
     service.createPipelineProcess(new PipelineProcessParameters(datasetKey2, 1));
     service.createPipelineProcess(new PipelineProcessParameters(datasetKey2, 2));
 
-    PagingResponse<PipelineProcess> processes = service.history(new PagingRequest());
-    assertEquals(5, processes.getCount());
-
-    processes = service.history(datasetKey1, new PagingRequest());
+    PagingResponse<PipelineProcess> processes = service.history(datasetKey1, new PagingRequest());
     assertEquals(3, processes.getCount());
 
     processes = service.history(datasetKey2, new PagingRequest());
     assertEquals(2, processes.getCount());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void addPipelineStepTestAndSearchUpdate(ServiceType serviceType) {
@@ -202,6 +206,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertTrue(stepCreated.lenientEquals(step));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void addPipelineStepWithoutPrivilegesTest(ServiceType serviceType) {
@@ -229,6 +234,7 @@ public class PipelinesHistoryIT extends BaseItTest {
         () -> serviceUserCredentials.addPipelineStep(processKey, executionKey, step));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void updatePipelineStepStatusAndMetricsTest(ServiceType serviceType) {
@@ -265,6 +271,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertEquals("value", stepCreated.getMetrics().iterator().next().getValue());
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void getPipelineWorkflowNonExistentProcessTest(ServiceType serviceType) {
@@ -273,6 +280,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     assertNull(service.getPipelineProcess(UUID.randomUUID(), 1));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void runPipelineAttemptTest(ServiceType serviceType) {
@@ -328,6 +336,7 @@ public class PipelinesHistoryIT extends BaseItTest {
     process.getExecutions().forEach(e -> assertNotNull(e.getRerunReason()));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(
       value = ServiceType.class,
@@ -373,6 +382,7 @@ public class PipelinesHistoryIT extends BaseItTest {
                 datasetKey1, StepType.ABCD_TO_VERBATIM.name(), "test", false, false, null));
   }
 
+  @Execution(ExecutionMode.CONCURRENT)
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void runPipelineAttemptInRunningStateMarkPreviousAsFailedTest(ServiceType serviceType) {
