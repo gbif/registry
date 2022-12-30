@@ -21,6 +21,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  * A test that will populate a sample registry database. This class should be removed when
  * development progresses. This is only used to help those developing the web console.
  */
+@Disabled("For development purposes only")
 public class BootstrapIT extends BaseItTest {
 
   private final TestDataFactory testDataFactory;
