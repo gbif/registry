@@ -16,6 +16,8 @@ package org.gbif.registry.ws.it.enumeration;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Simple test to make sure we can produce the Enumeration response. We use a simple Jersey Client
  * since it's not available in the Java client.
  */
+@Execution(ExecutionMode.CONCURRENT)
 @SpringBootTest(
     properties = {
       "spring.jpa.hibernate.ddl-auto=create-drop",
