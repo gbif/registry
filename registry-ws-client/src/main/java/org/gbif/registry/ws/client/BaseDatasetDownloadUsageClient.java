@@ -27,8 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-public interface BaseDatasetDownloadUsageClient
-    extends DatasetOccurrenceDownloadUsageService {
+public interface BaseDatasetDownloadUsageClient extends DatasetOccurrenceDownloadUsageService {
 
   @RequestMapping(
       method = RequestMethod.GET,

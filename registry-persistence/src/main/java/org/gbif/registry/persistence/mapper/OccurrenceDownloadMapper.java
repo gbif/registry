@@ -64,9 +64,10 @@ public interface OccurrenceDownloadMapper {
       @Param("status") Set<Download.Status> status,
       @Nullable @Param("type") DownloadType type);
 
-  int countByUser(@Param("creator") String creator,
-                  @Param("status") Set<Download.Status> status,
-                  @Nullable @Param("type") DownloadType type);
+  int countByUser(
+      @Param("creator") String creator,
+      @Param("status") Set<Download.Status> status,
+      @Nullable @Param("type") DownloadType type);
 
   List<Download> listByEraseAfter(
       @Nullable @Param("page") Pageable page,
@@ -86,10 +87,10 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("type") DownloadType type);
 
   List<Facet.Count> getDownloadsBySource(
-    @Nullable @Param("fromDate") Date fromDate,
-    @Nullable @Param("toDate") Date toDate,
-    @Nullable @Param("source") String source,
-    @Nullable @Param("type") DownloadType type);
+      @Nullable @Param("fromDate") Date fromDate,
+      @Nullable @Param("toDate") Date toDate,
+      @Nullable @Param("source") String source,
+      @Nullable @Param("type") DownloadType type);
 
   List<Facet.Count> getDownloadedRecordsByDataset(
       @Nullable @Param("fromDate") Date fromDate,

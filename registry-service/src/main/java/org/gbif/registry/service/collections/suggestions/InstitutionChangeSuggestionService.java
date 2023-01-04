@@ -137,11 +137,12 @@ public class InstitutionChangeSuggestionService
         dto.setSuggestedEntity(om.writeValueAsString(rootSugg));
 
         dto.getChanges().stream()
-          .filter(c -> c.getFieldName().equals("foundingDate"))
-          .forEach(c -> {
-            c.setFieldType(Integer.class);
-            c.setSuggested(date.getYear());
-          });
+            .filter(c -> c.getFieldName().equals("foundingDate"))
+            .forEach(
+                c -> {
+                  c.setFieldType(Integer.class);
+                  c.setSuggested(date.getYear());
+                });
       }
 
       changeSuggestionMapper.update(dto);

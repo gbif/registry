@@ -16,6 +16,4 @@ package org.gbif.registry.ws.client;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping("occurrence/download/dataset")
-public interface DatasetOccurrenceDownloadUsageClient
-    extends BaseDatasetDownloadUsageClient {
-}
+public interface DatasetOccurrenceDownloadUsageClient extends BaseDatasetDownloadUsageClient {}

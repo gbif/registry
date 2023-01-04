@@ -159,8 +159,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   private void assertDownloadType(Download download) {
     if (download != null && downloadType != download.getRequest().getType()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                        "Wrong download type for this endpoint");
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "Wrong download type for this endpoint");
     }
   }
 
@@ -398,12 +398,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("statistics/downloadsBySource")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsBySource(
-    @PartialDate Date fromDate, @PartialDate Date toDate, String source) {
+      @PartialDate Date fromDate, @PartialDate Date toDate, String source) {
     return groupByYear(
-      occurrenceDownloadMapper.getDownloadsBySource(
-        fromDate,
-        toDate, source,
-        downloadType));
+        occurrenceDownloadMapper.getDownloadsBySource(fromDate, toDate, source, downloadType));
   }
 
   @GetMapping("statistics/downloadedRecordsByDataset")

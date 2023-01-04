@@ -25,11 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController("datasetOccurrenceDownloadUsageResource")
 @RequestMapping(value = "occurrence/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
-public class OccurrenceDatasetDownloadUsageResource
-    extends DatasetDownloadUsageResourceBase {
+public class OccurrenceDatasetDownloadUsageResource extends DatasetDownloadUsageResourceBase {
 
-  public OccurrenceDatasetDownloadUsageResource(DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
+  public OccurrenceDatasetDownloadUsageResource(
+      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
     super(datasetOccurrenceDownloadMapper, DownloadType.OCCURRENCE);
   }
-
 }
