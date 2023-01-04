@@ -82,7 +82,8 @@ public interface DoiMessageManagingService {
    * @throws InvalidMetadataException in case the metadata is missing mandatory fields or the DOI is
    *     not a GBIF one
    */
-  void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey, DownloadType downloadType)
+  void registerDownload(
+      DOI doi, DataCiteMetadata metadata, String downloadKey, DownloadType downloadType)
       throws InvalidMetadataException;
 
   /**

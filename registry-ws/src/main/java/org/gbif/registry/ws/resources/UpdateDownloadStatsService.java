@@ -39,8 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 public class UpdateDownloadStatsService {
 
-  @Autowired
-  private OccurrenceDownloadMapper occurrenceDownloadMapper;
+  @Autowired private OccurrenceDownloadMapper occurrenceDownloadMapper;
 
   /** Converts a LocalDateTime to Date using the systems' time zone and applies the adjuster parameter.*/
   private Date toDate(LocalDateTime localDateTime, TemporalAdjuster adjuster) {
@@ -54,20 +53,23 @@ public class UpdateDownloadStatsService {
 
   /** Updates the download stats asynchronously from a single occurrence download.*/
   public void updateDownloadStatsAsync(Download download) {
-    CompletableFuture.runAsync(() -> {
-      try {
-        updateDownloadStats(download);
-      } catch (Exception ex) {
-        log.error("Error updating download {} statistics", download.getKey(), ex);
-      }
-    });
+    CompletableFuture.runAsync(
+        () -> {
+          try {
+            updateDownloadStats(download);
+          } catch (Exception ex) {
+            log.error("Error updating download {} statistics", download.getKey(), ex);
+          }
+        });
   }
 
   /** Updates the download stats from a single occurrence download.*/
   public void updateDownloadStats(Download download) {
-    if (Download.Status.SUCCEEDED == download.getStatus() || Download.Status.FILE_ERASED == download.getStatus()) {
+    if (Download.Status.SUCCEEDED == download.getStatus()
+        || Download.Status.FILE_ERASED == download.getStatus()) {
 
-      LocalDateTime createdDate = toLocalDateTime(Optional.ofNullable(download.getCreated()).orElse(new Date()));
+      LocalDateTime createdDate =
+          toLocalDateTime(Optional.ofNullable(download.getCreated()).orElse(new Date()));
 
       Date fromDate = toDate(createdDate, TemporalAdjusters.firstDayOfMonth());
       Date toDate = toDate(createdDate, TemporalAdjusters.firstDayOfNextMonth());
@@ -75,7 +77,6 @@ public class UpdateDownloadStatsService {
       updateDownloadStats(fromDate, toDate);
     }
   }
-
 
   /** Update download statistics for a range of dates.*/
   @Transactional

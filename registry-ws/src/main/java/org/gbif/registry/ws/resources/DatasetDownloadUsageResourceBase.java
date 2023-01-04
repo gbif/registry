@@ -38,7 +38,8 @@ public abstract class DatasetDownloadUsageResourceBase
 
   private final DownloadType downloadType;
 
-  public DatasetDownloadUsageResourceBase(DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper, DownloadType downloadType) {
+  public DatasetDownloadUsageResourceBase(
+      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper, DownloadType downloadType) {
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.downloadType = downloadType;
   }
@@ -49,9 +50,11 @@ public abstract class DatasetDownloadUsageResourceBase
       @PathVariable UUID datasetKey, Pageable page) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     List<DatasetOccurrenceDownloadUsage> usages =
-      datasetOccurrenceDownloadMapper.listByDataset(datasetKey, downloadType, page);
+        datasetOccurrenceDownloadMapper.listByDataset(datasetKey, downloadType, page);
     clearSensitiveData(authentication, usages);
     return new PagingResponse<>(
-        page, (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey, downloadType), usages);
+        page,
+        (long) datasetOccurrenceDownloadMapper.countByDataset(datasetKey, downloadType),
+        usages);
   }
 }

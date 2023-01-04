@@ -47,11 +47,11 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   static {
     embeddedElastic =
-      new ElasticsearchContainer(
-        "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+        new ElasticsearchContainer(
+            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
     embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
     embeddedElastic.setWaitStrategy(
-      Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
     embeddedElastic.start();
     restClient = buildRestClient();
   }
@@ -73,9 +73,9 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   @Override
   public void destroy() throws Exception {
-//    if (embeddedElastic != null && !embeddedElastic.isShouldBeReused()) {
-//      embeddedElastic.stop();
-//    }
+    //    if (embeddedElastic != null && !embeddedElastic.isShouldBeReused()) {
+    //      embeddedElastic.stop();
+    //    }
   }
 
   @Override
@@ -99,14 +99,14 @@ public class EsManageServer implements InitializingBean, DisposableBean {
   }
 
   public void start() throws Exception {
-//    embeddedElastic =
-//        new ElasticsearchContainer(
-//            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
-//    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
-//    embeddedElastic.setWaitStrategy(
-//        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
-//    embeddedElastic.start();
-//    restClient = buildRestClient();
+    //    embeddedElastic =
+    //        new ElasticsearchContainer(
+    //            "docker.elastic.co/elasticsearch/elasticsearch:" + getEsVersion());
+    //    embeddedElastic.withReuse(true).withLabel("reuse.UUID", "registry_ITs_ES_container");
+    //    embeddedElastic.setWaitStrategy(
+    //        Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofSeconds(60)));
+    //    embeddedElastic.start();
+    //    restClient = buildRestClient();
 
     createIndex();
   }
