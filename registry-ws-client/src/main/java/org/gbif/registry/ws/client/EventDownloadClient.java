@@ -16,6 +16,4 @@ package org.gbif.registry.ws.client;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @RequestMapping("event/download")
-public interface EventDownloadClient extends BaseDownloadClient {
-
-}
+public interface EventDownloadClient extends BaseDownloadClient {}

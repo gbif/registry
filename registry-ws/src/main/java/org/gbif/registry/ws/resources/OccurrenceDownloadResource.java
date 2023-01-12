@@ -33,14 +33,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(value = "occurrence/download", produces = MediaType.APPLICATION_JSON_VALUE)
 public class OccurrenceDownloadResource extends BaseDownloadResource {
 
-
   public OccurrenceDownloadResource(
-    OccurrenceDownloadMapper occurrenceDownloadMapper,
-    DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
-    DoiIssuingService doiIssuingService,
-    @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
-    @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
-    UpdateDownloadStatsService updateDownloadStatsService) {
-    super(occurrenceDownloadMapper, datasetOccurrenceDownloadMapper, doiIssuingService, doiDataCiteHandlingService, identityService, DownloadType.OCCURRENCE, updateDownloadStatsService);
+      OccurrenceDownloadMapper occurrenceDownloadMapper,
+      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
+      DoiIssuingService doiIssuingService,
+      @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
+      @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
+      UpdateDownloadStatsService updateDownloadStatsService) {
+    super(
+        occurrenceDownloadMapper,
+        datasetOccurrenceDownloadMapper,
+        doiIssuingService,
+        doiDataCiteHandlingService,
+        identityService,
+        DownloadType.OCCURRENCE,
+        updateDownloadStatsService);
   }
 }

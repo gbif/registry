@@ -31,7 +31,8 @@ import org.springframework.stereotype.Repository;
 public interface DatasetOccurrenceDownloadMapper {
 
   List<DatasetOccurrenceDownloadUsage> listByDataset(
-      @Param("datasetKey") UUID datasetKey, @Param("type") DownloadType type,
+      @Param("datasetKey") UUID datasetKey,
+      @Param("type") DownloadType type,
       @Nullable @Param("page") Pageable page);
 
   int countByDataset(@Param("datasetKey") UUID datasetKey, @Param("type") DownloadType type);
@@ -44,6 +45,6 @@ public interface DatasetOccurrenceDownloadMapper {
       @Param("downloadKey") String downloadKey, @Nullable @Param("page") Pageable page);
 
   void createOrUpdateUsages(
-    @Param("downloadKey") String downloadKey,
-    @Param("citationMap") Map<UUID, Long> downloadDataset);
+      @Param("downloadKey") String downloadKey,
+      @Param("citationMap") Map<UUID, Long> downloadDataset);
 }

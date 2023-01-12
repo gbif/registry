@@ -25,11 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 @RestController("datasetEventDownloadUsageResource")
 @RequestMapping(value = "event/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
-public class EventDatasetDownloadUsageResource
-    extends DatasetDownloadUsageResourceBase {
+public class EventDatasetDownloadUsageResource extends DatasetDownloadUsageResourceBase {
 
-  public EventDatasetDownloadUsageResource(DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
+  public EventDatasetDownloadUsageResource(
+      DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper) {
     super(datasetOccurrenceDownloadMapper, DownloadType.EVENT);
   }
-
 }
