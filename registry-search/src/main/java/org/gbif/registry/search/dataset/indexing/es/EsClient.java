@@ -103,7 +103,9 @@ public class EsClient implements Closeable {
    */
   public void flushIndex(String indexName) {
     try {
-      restHighLevelClient.indices().flush(new FlushRequest().indices(indexName), RequestOptions.DEFAULT);
+      restHighLevelClient
+          .indices()
+          .flush(new FlushRequest().indices(indexName), RequestOptions.DEFAULT);
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }

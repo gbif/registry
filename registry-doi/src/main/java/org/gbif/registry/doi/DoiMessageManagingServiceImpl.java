@@ -123,7 +123,8 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
   }
 
   @Override
-  public void registerDownload(DOI doi, DataCiteMetadata metadata, String downloadKey, DownloadType downloadType)
+  public void registerDownload(
+      DOI doi, DataCiteMetadata metadata, String downloadKey, DownloadType downloadType)
       throws InvalidMetadataException {
     checkNotNull(doi, "DOI required");
     checkNotNull(downloadKey, "Download key required");
@@ -131,7 +132,13 @@ public class DoiMessageManagingServiceImpl implements DoiMessageManagingService 
 
     String xml = DataCiteValidator.toXml(doi, metadata);
     Message message =
-        new ChangeDoiMessage(DoiStatus.REGISTERED, doi, xml, DownloadType.EVENT == downloadType? eventDownloadTarget.resolve(downloadKey) : occurrenceDownloadTarget.resolve(downloadKey));
+        new ChangeDoiMessage(
+            DoiStatus.REGISTERED,
+            doi,
+            xml,
+            DownloadType.EVENT == downloadType
+                ? eventDownloadTarget.resolve(downloadKey)
+                : occurrenceDownloadTarget.resolve(downloadKey));
 
     try {
       messagePublisher.send(message);

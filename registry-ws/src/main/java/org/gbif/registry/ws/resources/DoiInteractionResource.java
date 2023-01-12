@@ -162,7 +162,8 @@ public class DoiInteractionResource implements DoiInteractionService {
         doiMessageManagingService.registerDataPackage(doi, metadata);
       } else if (DoiType.DOWNLOAD == doiRegistration.getType()) {
         Download download = getDownload(doiRegistration.getKey());
-        doiMessageManagingService.registerDownload(doi, metadata, doiRegistration.getKey(), download.getRequest().getType());
+        doiMessageManagingService.registerDownload(
+            doi, metadata, doiRegistration.getKey(), download.getRequest().getType());
       } else if (DoiType.DATASET == doiRegistration.getType()) {
         doiMessageManagingService.registerDataset(
             doi, metadata, UUID.fromString(doiRegistration.getKey()));

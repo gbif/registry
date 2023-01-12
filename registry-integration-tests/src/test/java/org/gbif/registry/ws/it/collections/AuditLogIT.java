@@ -115,12 +115,12 @@ public class AuditLogIT extends BaseItTest {
     SecurityContext ctx = SecurityContextHolder.createEmptyContext();
     SecurityContextHolder.setContext(ctx);
     ctx.setAuthentication(
-      new UsernamePasswordAuthenticationToken(
-        "test",
-        "",
-        Arrays.asList(
-          new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE),
-          new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE))));
+        new UsernamePasswordAuthenticationToken(
+            "test",
+            "",
+            Arrays.asList(
+                new SimpleGrantedAuthority(UserRoles.GRSCICOLL_ADMIN_ROLE),
+                new SimpleGrantedAuthority(UserRoles.ADMIN_ROLE))));
 
     Node node = new Node();
     node.setTitle("node");
