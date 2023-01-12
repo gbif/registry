@@ -70,6 +70,7 @@ public final class DownloadSecurityUtils {
         && isUserNotAuthorizedInContext(authentication, download.getRequest().getCreator())) {
       download.getRequest().setNotificationAddresses(null);
       download.getRequest().setCreator(null);
+      download.setSource(null);
     }
   }
 
