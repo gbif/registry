@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import org.gbif.api.model.occurrence.Download;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 
 import java.time.LocalDateTime;
@@ -21,68 +20,55 @@ import java.time.ZoneId;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
+import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Utility service to update download statistics.
- */
+/** Utility service to update download statistics. */
 @Slf4j
 @Service
 @AllArgsConstructor
+@Endpoint(id = "downloadStatistics")
 public class UpdateDownloadStatsService {
 
   @Autowired private OccurrenceDownloadMapper occurrenceDownloadMapper;
 
-  /** Converts a LocalDateTime to Date using the systems' time zone and applies the adjuster parameter.*/
+  @WriteOperation
+  public void updateDownloadStatisticsEndpoint() {
+    updateStats(LocalDateTime.now());
+  }
+
+  /**
+   * Converts a LocalDateTime to Date using the systems' time zone and applies the adjuster
+   * parameter.
+   */
   private Date toDate(LocalDateTime localDateTime, TemporalAdjuster adjuster) {
     return Date.from(localDateTime.with(adjuster).atZone(ZoneId.systemDefault()).toInstant());
   }
 
-  /** Converts a Date to LocalDateTime using the systems' time zone.*/
-  private LocalDateTime toLocalDateTime(Date date) {
-    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-  }
-
-  /** Updates the download stats asynchronously from a single occurrence download.*/
-  public void updateDownloadStatsAsync(Download download) {
-    CompletableFuture.runAsync(
-        () -> {
-          try {
-            updateDownloadStats(download);
-          } catch (Exception ex) {
-            log.error("Error updating download {} statistics", download.getKey(), ex);
-          }
-        });
-  }
-
-  /** Updates the download stats from a single occurrence download.*/
-  public void updateDownloadStats(Download download) {
-    if (Download.Status.SUCCEEDED == download.getStatus()
-        || Download.Status.FILE_ERASED == download.getStatus()) {
-
-      LocalDateTime createdDate =
-          toLocalDateTime(Optional.ofNullable(download.getCreated()).orElse(new Date()));
-
-      Date fromDate = toDate(createdDate, TemporalAdjusters.firstDayOfMonth());
-      Date toDate = toDate(createdDate, TemporalAdjusters.firstDayOfNextMonth());
-
-      updateDownloadStats(fromDate, toDate);
-    }
-  }
-
-  /** Update download statistics for a range of dates.*/
+  @Scheduled(cron = "${downloads.statistics.cron:0 0 9 1 * *}")
   @Transactional
-  public void updateDownloadStats(Date fromDate, Date toDate) {
+  public void updateDownloadStatsTask() {
+    // we get the stats from the previous month because the current month is not completed yet
+    LocalDateTime previousMonthDate = LocalDateTime.now().minusMonths(1);
+    updateStats(previousMonthDate);
+  }
+
+  private void updateStats(LocalDateTime date) {
+    Date fromDate = toDate(date, TemporalAdjusters.firstDayOfMonth());
+    Date toDate = toDate(date, TemporalAdjusters.firstDayOfNextMonth());
+
+    log.info("Updating downloads stats for [{},{}]", fromDate, toDate);
     occurrenceDownloadMapper.updateDownloadStats(fromDate, toDate);
     occurrenceDownloadMapper.updateDownloadUserStats(fromDate, toDate);
     occurrenceDownloadMapper.updateDownloadSourceStats(fromDate, toDate);
+    log.info("Downloads stats update done for [{},{}]", fromDate, toDate);
   }
 }

@@ -99,7 +99,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   private final DoiIssuingService doiIssuingService;
   private final DownloadDoiDataCiteHandlingService doiDataCiteHandlingService;
   private final DownloadType downloadType;
-  private final UpdateDownloadStatsService updateDownloadStats;
 
   // Page size to iterate over dataset usages
   private static final int BATCH_SIZE = 5_000;
@@ -129,15 +128,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       DoiIssuingService doiIssuingService,
       @Lazy DownloadDoiDataCiteHandlingService doiDataCiteHandlingService,
       @Qualifier("baseIdentityAccessService") IdentityAccessService identityService,
-      DownloadType downloadType,
-      UpdateDownloadStatsService updateDownloadStats) {
+      DownloadType downloadType) {
     this.occurrenceDownloadMapper = occurrenceDownloadMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.doiIssuingService = doiIssuingService;
     this.doiDataCiteHandlingService = doiDataCiteHandlingService;
     this.identityService = identityService;
     this.downloadType = downloadType;
-    this.updateDownloadStats = updateDownloadStats;
   }
 
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -278,7 +275,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     GbifUser user = identityService.get(authentication.getName());
     doiDataCiteHandlingService.downloadChanged(download, currentDownload, user);
     occurrenceDownloadMapper.update(download);
-    updateDownloadStats.updateDownloadStatsAsync(download);
   }
 
   @Override
