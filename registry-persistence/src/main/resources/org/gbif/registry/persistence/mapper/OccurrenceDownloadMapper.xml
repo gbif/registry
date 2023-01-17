@@ -313,54 +313,54 @@
   </select>
 
   <select id="getDownloadedRecordsByDataset" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_TOTAL_RECORDS_MAP" parameterType="map">
-    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(total_records) AS total_records
-    FROM download_statistics
+    SELECT to_char(ds.year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(ds.total_records) AS total_records
+    FROM download_statistics ds
     <if test="publishingOrgKey != null">
-    JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+    JOIN dataset d ON d.key = ds.dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
     </if>
     <where>
-      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
-      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
-      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
-      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
-      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="publishingCountry != null">AND ds.publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND ds.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND ds.type = #{type,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND ds.year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND ds.year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
-    GROUP BY year_month
-    ORDER BY year_month DESC;
+    GROUP BY ds.year_month
+    ORDER BY ds.year_month DESC;
   </select>
 
   <select id="getDownloadsByDataset" resultType="org.gbif.api.model.common.search.Facet$Count" resultMap="DOWNLOADS_STATISTICS_COUNT_MAP" parameterType="map">
-    SELECT to_char(year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(number_downloads) AS number_downloads
-    FROM download_statistics
+    SELECT to_char(ds.year_month AT TIME ZONE 'UTC','YYYY-MM') AS year_month, SUM(ds.number_downloads) AS number_downloads
+    FROM download_statistics ds
     <if test="publishingOrgKey != null">
-    JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+    JOIN dataset d ON d.key = ds.dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
     </if>
     <where>
-      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
-      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
-      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
-      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
-      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="publishingCountry != null">AND ds.publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND ds.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND ds.type = #{type,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND ds.year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND ds.year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
-    GROUP BY year_month
-    ORDER BY year_month DESC;
+    GROUP BY ds.year_month
+    ORDER BY ds.year_month DESC;
   </select>
 
   <select id="getDownloadStatistics" resultMap="DOWNLOAD_STATISTICS" parameterType="map">
-    SELECT year_month, dataset_key, SUM(number_downloads) AS number_downloads, SUM(total_records) AS total_records
-    FROM download_statistics
+    SELECT ds.year_month, ds.dataset_key, SUM(ds.number_downloads) AS number_downloads, SUM(ds.total_records) AS total_records
+    FROM download_statistics ds
     <if test="publishingOrgKey != null">
-      JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+      JOIN dataset d ON d.key = ds.dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
     </if>
     <where>
-      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
-      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
-      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
-      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
-      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="publishingCountry != null">AND ds.publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND ds.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND ds.type = #{type,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND ds.year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND ds.year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
-    GROUP BY dataset_key, year_month
-    ORDER BY year_month DESC
+    GROUP BY ds.dataset_key, ds.year_month
+    ORDER BY ds.year_month DESC
     <if test="page != null" >
     LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -368,16 +368,16 @@
 
   <select id="countDownloadStatistics" resultType="Long" parameterType="map">
     SELECT COUNT(*)
-    FROM download_statistics
+    FROM download_statistics ds
     <if test="publishingOrgKey != null">
-      JOIN dataset d ON d.key = dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
+      JOIN dataset d ON d.key = ds.dataset_key AND d.publishing_organization_key = #{publishingOrgKey,jdbcType=OTHER}
     </if>
     <where>
-      <if test="publishingCountry != null">AND publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
-      <if test="datasetKey != null">AND dataset_key = #{datasetKey,jdbcType=OTHER}</if>
-      <if test="type != null">AND type = #{type,jdbcType=OTHER}</if>
-      <if test="fromDate != null"><![CDATA[AND year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
-      <if test="toDate != null"><![CDATA[AND year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="publishingCountry != null">AND ds.publishing_organization_country = #{publishingCountry,jdbcType=OTHER}</if>
+      <if test="datasetKey != null">AND ds.dataset_key = #{datasetKey,jdbcType=OTHER}</if>
+      <if test="type != null">AND ds.type = #{type,jdbcType=OTHER}</if>
+      <if test="fromDate != null"><![CDATA[AND ds.year_month >= #{fromDate,jdbcType=TIMESTAMP}]]></if>
+      <if test="toDate != null"><![CDATA[AND ds.year_month < #{toDate,jdbcType=TIMESTAMP}]]></if>
     </where>
   </select>
 
