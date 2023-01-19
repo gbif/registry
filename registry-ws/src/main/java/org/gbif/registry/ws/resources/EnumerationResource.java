@@ -17,29 +17,20 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.literature.LiteratureType;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Extension;
-import org.gbif.api.vocabulary.InterpretationRemark;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.NameUsageIssue;
-import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.dwc.terms.Term;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
+
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedMap.Builder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +48,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedMap.Builder;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -112,6 +100,11 @@ public class EnumerationResource {
   private static final List<String> BASIC_EXTENSIONS =
       Arrays.stream(Extension.values())
           .map(Extension::name)
+          .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+
+  private static final List<String> EXTENSION_ROW_TYPES =
+      Arrays.stream(Extension.values())
+          .map(Extension::getRowType)
           .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   /**
@@ -221,6 +214,16 @@ public class EnumerationResource {
   @GetMapping("basic/Extension")
   public List<String> getExtensionEnumeration() {
     return BASIC_EXTENSIONS;
+  }
+
+  /**
+   * Returns the keys of the Extension enum. It's done manually because the default for the
+   * Extension enum is done in {@link #getExtensionEnumeration()} and cannot be changed to keep
+   * backwards compatibility.
+   */
+  @GetMapping("ExtensionRowType")
+  public List<String> getExtensionRowTypesEnumeration() {
+    return EXTENSION_ROW_TYPES;
   }
 
   /**
