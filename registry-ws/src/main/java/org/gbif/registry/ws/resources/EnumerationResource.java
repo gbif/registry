@@ -32,6 +32,7 @@ import javax.validation.constraints.NotNull;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedMap.Builder;
 
+import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -41,13 +42,11 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.SystemPropertyUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -66,6 +65,12 @@ public class EnumerationResource {
 
   // Uses reflection to find the enumerations in the API
   private static final Map<String, Enum<?>[]> PATH_MAPPING = enumerations();
+  private static final Map<String, String> EXTENSIONS_BY_NAME_MAPPING =
+      Arrays.stream(Extension.values())
+          .collect(Collectors.toMap(Extension::name, Extension::getRowType));
+  private static final Map<String, String> EXTENSIONS_BY_ROWTYPE_MAPPING =
+      Arrays.stream(Extension.values())
+          .collect(Collectors.toMap(Extension::getRowType, Extension::name));
 
   // List of Licenses as String
   private static final List<String> LICENSES =
@@ -216,14 +221,23 @@ public class EnumerationResource {
     return BASIC_EXTENSIONS;
   }
 
+  @GetMapping("basic/Extension/{extensionName}")
+  public String getExtension(@PathVariable("extensionName") String extensionName) {
+    return EXTENSIONS_BY_NAME_MAPPING.getOrDefault(extensionName, null);
+  }
+
   /**
    * Returns the keys of the Extension enum. It's done manually because the default for the
    * Extension enum is done in {@link #getExtensionEnumeration()} and cannot be changed to keep
    * backwards compatibility.
    */
   @GetMapping("ExtensionRowType")
-  public List<String> getExtensionRowTypesEnumeration() {
-    return EXTENSION_ROW_TYPES;
+  public ResponseEntity getExtensionRowTypesEnumeration(
+      @RequestParam(value = "rowType", required = false) String rowType) {
+    if (!Strings.isNullOrEmpty(rowType)) {
+      return ResponseEntity.ok(EXTENSIONS_BY_ROWTYPE_MAPPING.getOrDefault(rowType, null));
+    }
+    return ResponseEntity.ok(EXTENSION_ROW_TYPES);
   }
 
   /**
