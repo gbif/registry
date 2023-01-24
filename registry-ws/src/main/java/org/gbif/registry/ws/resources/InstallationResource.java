@@ -70,9 +70,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Installations",
+  description = "The installation API provides CRUD and discovery services for installations.\n\n" +
+    "Please note deletion of installations is logical, meaning installation entries remain registered forever and only get a " +
+    "deleted timestamp. On the other hand, deletion of an installation's contacts, endpoints, identifiers, tags, " +
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
 @Validated
 @Primary
 @RestController

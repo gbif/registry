@@ -45,12 +45,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service requests coming from IPT installations, previously handled by the
  * GBRDS.
  */
+@Hidden
 @RestController
 @RequestMapping("registry/ipt")
 public class IptResource {

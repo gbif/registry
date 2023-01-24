@@ -52,10 +52,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.collect.Lists;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 /**
  * Handle all legacy web service Endpoint requests (excluding IPT requests), previously handled by
  * the GBRDS.
  */
+@Hidden
 @RestController
 @RequestMapping("registry")
 public class LegacyEndpointResource {

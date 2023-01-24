@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.extensions.Extension;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -56,9 +58,28 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Nodes",
+  description = "The nodes API provides CRUD and discovery services for nodes. Its most prominent use on the GBIF " +
+    "portal is to drive the [country pages]().\n\n" +
+    "Please note deletion of nodes is logical, meaning node entries remain registered forever and only get a " +
+    "deleted timestamp. On the other hand, deletion of a nodes's contacts, endpoints, identifiers, tags, " +
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
 @Validated
 @Primary
 @RestController
@@ -89,6 +110,17 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     this.installationMapper = mapperServiceLocator.getInstallationMapper();
   }
 
+  @Operation(
+    operationId = "getNode",
+    summary = "Gets details of a single node",
+    description = "Details of a single node.  Also works for deleted nodes.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
+    tags = "BASIC")
+  @DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Node found and returned")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/node/{key}")
   @Override
@@ -101,6 +133,19 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * interface, and is in addition to any complex, faceted search that might additionally be
    * supported, such as dataset search.
    */
+  @Operation(
+    operationId = "listNodes",
+    summary = "Lists all nodes",
+    description = "Lists all current nodes (deleted nodes are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
+  @DefaultSimpleSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Node search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Node> list(@Valid NodeRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {

@@ -32,7 +32,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import com.google.common.base.Strings;
 
 /**
- * Provider that accepts and transforms partial Dates. For example: 01-2018 or 01/2018 will be
+ * Provider that accepts and transforms partial Dates. For example: 2018-01 or 2018/01 will be
  * translated into 01-01-2018.
  */
 public class PartialDateHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {

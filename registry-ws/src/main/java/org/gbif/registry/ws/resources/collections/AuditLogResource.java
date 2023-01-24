@@ -35,12 +35,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
  * implementation of {@link CollectionService}.
  */
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Audit log",
+  description = "This services provides an audit log that tracks all the changes made to GRSciColl entities. " +
+    "Its usage is reserved for administrators.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1500")))
 @RestController
 @RequestMapping(value = "grscicoll/auditLog", produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuditLogResource {

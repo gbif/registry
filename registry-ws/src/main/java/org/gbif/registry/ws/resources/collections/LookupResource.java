@@ -29,6 +29,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Lookups",
+  description = "This API provides a service to lookup institutions and collections. It can be used to lookup for " +
+    "institutions, collections or both at the same time. Besides the matches, the response also provides information " +
+    "to help understand how the match was done.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
 @RestController
 @RequestMapping(value = "grscicoll/lookup", produces = MediaType.APPLICATION_JSON_VALUE)
 public class LookupResource {

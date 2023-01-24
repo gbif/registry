@@ -26,6 +26,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Search",
+  description = "This API provides a service to search institutions and collections. It searches in both institutions " +
+    "and collections and it highlights the matching fields (optional).",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1400")))
 @RestController
 @RequestMapping(value = "grscicoll/search", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionsSearchResource {
