@@ -53,10 +53,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
  * implementation of {@link CollectionService}.
  */
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Collections",
+  description = "The collections API provides CRUD services for collections, institutions and person entities. " +
+    "The data was originally migrated from GrSciColl and adapted to follow the same conventions as other registry " +
+    "services. Therefore, the deletion of collections, institutions and persons is logical, meaning these entries " +
+    "remain registered forever and only get a deleted timestamp. On the other hand, the deletion of tags and " +
+    "identifiers is physical, meaning the entries are permanently removed.\n\n" +
+    "*Please note that this part of the API is still under development, and may change in the future.*\n\n" +
+    "## Collection\n" +
+    "This API provides CRUD services for the collection entity. A collection can be associated with an institution " +
+    "and can have a list of contacts, which are represented by the person entity. It can also have tags and identifiers.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")))
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionResource

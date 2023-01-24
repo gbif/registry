@@ -51,10 +51,29 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.base.Strings;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Networks",
+  description = "The dataset API provides CRUD and discovery services for networks. " +
+    "Networks are arbitrary collections of datasets grouped for some purpose.\n\n" +
+    "Please note deletion of networks is logical, meaning network entries remain registered forever and only get a " +
+    "deleted timestamp. On the other hand, deletion of a network's contacts, endpoints, identifiers, tags, " +
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400")))
 @Validated
 @Primary
 @RestController
@@ -82,6 +101,17 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     this.organizationMapper = mapperServiceLocator.getOrganizationMapper();
   }
 
+  @Operation(
+    operationId = "getNetwork",
+    summary = "Gets details of a single network",
+    description = "Details of a single network.  Also works for deleted networks.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
+    tags = "BASIC")
+  @DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Network found and returned")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
@@ -94,6 +124,19 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    * interface, and is in addition to any complex, faceted search that might additionally be
    * supported, such as dataset search.
    */
+  @Operation(
+    operationId = "listNetworks",
+    summary = "Lists all networks",
+    description = "Lists all current networks (deleted networks are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
+  @DefaultSimpleSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Network search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Network> list(@Valid NetworkRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
@@ -113,6 +156,16 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     }
   }
 
+  @Operation(
+    operationId = "listNetworkConstituents",
+    summary = "Lists all constituents (datasets) of a network",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
+  @DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Constituent dataset list")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(
@@ -143,6 +196,20 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     }
   }
 
+  @Operation(
+    operationId = "networkConstituentAdd",
+    summary = "Add a constituent dataset to a network")
+  @DefaultEntityKeyParameter
+  @Parameter(
+    name = "datasetKey",
+    description = "The GBIF key of the dataset to add",
+    schema = @Schema(implementation = UUID.class),
+    in = ParameterIn.PATH
+  )
+  @ApiResponse(
+    responseCode = "201",
+    description = "Constituent added.",
+    content = @Content)
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -158,6 +225,20 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     eventManager.post(ChangedComponentEvent.newInstance(datasetKey, Network.class, Dataset.class));
   }
 
+  @Operation(
+    operationId = "networkConstituentDelete",
+    summary = "Remove a constituent dataset to a network")
+  @DefaultEntityKeyParameter
+  @Parameter(
+    name = "datasetKey",
+    description = "The GBIF key of the dataset to remove",
+    schema = @Schema(implementation = UUID.class),
+    in = ParameterIn.PATH
+  )
+  @ApiResponse(
+    responseCode = "204",
+    description = "Constituent removed.",
+    content = @Content)
   @DeleteMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -178,6 +259,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     return networkMapper.suggest(label);
   }
 
+  @Hidden // TODO Not sure whether this is supposed to be public
   @GetMapping("{key}/organization")
   @Override
   public PagingResponse<Organization> publishingOrganizations(

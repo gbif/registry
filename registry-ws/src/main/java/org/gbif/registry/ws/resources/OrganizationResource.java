@@ -13,6 +13,15 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.paging.Pageable;
@@ -27,6 +36,7 @@ import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.domain.ws.OrganizationRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
@@ -70,12 +80,23 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Organizations",
+  description = "The organization API provides CRUD and discovery services for organizations. Its most prominent use on the GBIF " +
+    "portal is to drive the [data publisher search]().\n\n" +
+    "Please note deletion of organizations is logical, meaning organization entries remain registered forever and only get a " +
+    "deleted timestamp. On the other hand, deletion of an organizations's contacts, endpoints, identifiers, tags, " +
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
 @Validated
 @Primary
 @RestController
@@ -189,6 +210,34 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * interface, and is in addition to any complex, faceted search that might additionally be
    * supported, such as dataset search.
    */
+  @Operation(
+    operationId = "listOrganizations",
+    summary = "Lists all publishing organizations",
+    description = "Lists all current publishing organizations (deleted organizations are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
+  @DefaultSimpleSearchParameters
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "isEndorsed",
+        description = "Whether the organization is endorsed by a node.",
+        schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY)
+      // TODO: Should networkKey be documented?
+      // @Parameter(
+      //   name = "networkKey",
+      //   description = "Restrict the search to The primary type of the dataset.",
+      //   schema = @Schema(implementation = DatasetType.class),
+      //   in = ParameterIn.QUERY,
+      //   explode = Explode.TRUE)
+    })
+  @ApiResponse(
+    responseCode = "200",
+    description = "Organization search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Organization> list(
       @Nullable Country country, @Valid OrganizationRequestSearchParams request, Pageable page) {
@@ -210,7 +259,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
           page);
     }
 
-    // short circuited list all
+    // short-circuited list all
     if (country == null
         && request.getIsEndorsed() == null
         && Strings.isNullOrEmpty(request.getQ())

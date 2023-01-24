@@ -53,10 +53,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
  * implementation of {@link InstitutionService}.
  */
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Institutions",
+  description = " This API provides CRUD services for the institution entity. An institution can have a list of " +
+    "contacts, which are represented by the person entity. They can also have tags and identifiers. ",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
