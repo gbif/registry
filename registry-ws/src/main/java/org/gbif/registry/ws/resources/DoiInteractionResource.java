@@ -54,7 +54,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Resource class that exposes services to interact with DOI issued thru GBIF and DataCite. */
+/** Resource class that exposes services to interact with DOI issued through GBIF and DataCite. */
 @Validated
 @RestController
 @RequestMapping("doi")

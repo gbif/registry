@@ -158,6 +158,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param entity entity that extends NetworkEntity
    * @return key of entity created
    */
+  // OpenAPI documentation is on the subclasses.
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -181,6 +182,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param key key of entity to delete
    */
+  // OpenAPI documentation is on the subclasses.
   @DeleteMapping("{key}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
@@ -296,6 +298,10 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
           "page of 20 results. Some services have a maximum offset.",
         schema = @Schema(implementation = Integer.class, minimum = "0"),
         in = ParameterIn.QUERY),
+      @Parameter(
+        name = "page",
+        hidden = true
+      )
     }
   )
   @interface DefaultOffsetLimitParameters {}
@@ -349,8 +355,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Retention(RetentionPolicy.RUNTIME)
   @ApiResponses({
     @ApiResponse(responseCode = "400", description = "Invalid request", content = @Content),
-    @ApiResponse(responseCode = "404", description = "Entity or subentity not Found", content = @Content),
-    @ApiResponse(responseCode = "500", description = "System failure – try again", content = @Content)})
+    @ApiResponse(responseCode = "404", description = "Entity or subentity not found", content = @Content),
+    @ApiResponse(responseCode = "5XX", description = "System failure – try again", content = @Content)})
   @interface DefaultUnsuccessfulReadResponses {}
 
   /**
@@ -407,17 +413,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    *
    * @param entity entity that extends NetworkEntity
    */
-  @Operation(
-    operationId = "update",
-    summary = "Updates the existing record",
-    description = "Updates the existing record.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
-  @DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Record updated")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  // OpenAPI documentation on subclass methods.
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Validated({PostPersist.class, Default.class})
@@ -454,7 +450,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addComment",
-    summary = "Adds a comment to the record")
+    summary = "Add a comment to the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -487,7 +483,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteComment",
-    summary = "Deletes a comment from the record")
+    summary = "Delete a comment from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -506,7 +502,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getComment",
-    summary = "Retrieves all comments of the record")
+    summary = "Retrieve all comments of the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -528,7 +524,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addMachineTag",
-    summary = "Adds a machine tag to the record")
+    summary = "Add a machine tag to the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -573,7 +569,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTag",
-    summary = "Deletes a machine tag from the record")
+    summary = "Delete a machine tag from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -594,7 +590,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTagsInNamespace",
-    summary = "Deletes all machine tags in a namespace from the record")
+    summary = "Delete all machine tags in a namespace from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -620,7 +616,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTagInNamespaceName",
-    summary = "Deletes all machine tags of a name in a namespace from the record")
+    summary = "Delete all machine tags of a name in a namespace from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -644,7 +640,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "listMachineTag",
-    summary = "Lists all machine tags on the record")
+    summary = "List all machine tags on the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -675,7 +671,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addTag",
-    summary = "Adds a tag to the record")
+    summary = "Add a tag to the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -711,7 +707,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteTag",
-    summary = "Deletes a tag from the record")
+    summary = "Delete a tag from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -728,7 +724,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getTag",
-    summary = "Retrieves all tags of the record")
+    summary = "Retrieve all tags of the record")
   @DefaultEntityKeyParameter
   @Parameter(name = "owner", hidden = true)
   @ApiResponse(
@@ -767,7 +763,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addContact",
-    summary = "Adds a contact to the record")
+    summary = "Add a contact to the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -800,7 +796,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "updateContact",
-    summary = "Updates an existing contact on the record")
+    summary = "Update an existing contact on the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -832,7 +828,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteContact",
-    summary = "Deletes a contact from the record")
+    summary = "Delete a contact from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -851,7 +847,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getContact",
-    summary = "Retrieves all contacts of the record")
+    summary = "Retrieve all contacts of the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -873,7 +869,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addEndpoint",
-    summary = "Adds an endpoint to the record")
+    summary = "Add an endpoint to the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -912,7 +908,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteEndpoint",
-    summary = "Deletes an endpoint from the record")
+    summary = "Delete an endpoint from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -931,7 +927,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getEndpoint",
-    summary = "Retrieves all endpoints of the record")
+    summary = "Retrieve all endpoints of the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -953,7 +949,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addIdentifier",
-    summary = "Adds an identifier to the record")
+    summary = "Add an identifier to the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -985,7 +981,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteIdentifier",
-    summary = "Deletes an identifier from the record")
+    summary = "Delete an identifier from the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -1004,7 +1000,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getIdentifier",
-    summary = "Retrieves all identifiers of the record")
+    summary = "Retrieve all identifiers of the record")
   @DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",

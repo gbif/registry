@@ -20,6 +20,8 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.PostPersist;
+import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
@@ -45,6 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -56,9 +59,11 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -70,14 +75,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
   name = "Installations",
-  description = "The installation API provides CRUD and discovery services for installations.\n\n" +
+  description = "A **technical installation** serves datasets.  They usually represent installations of the " +
+    "[GBIF IPT](https://www.gbif.org/ipt) or other HTTP-accessible data repositories.\n\n" +
+    "The installation API provides CRUD and discovery services for installations.\n\n" +
     "Please note deletion of installations is logical, meaning installation entries remain registered forever and only get a " +
     "deleted timestamp. On the other hand, deletion of an installation's contacts, endpoints, identifiers, tags, " +
     "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
@@ -118,6 +129,17 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     this.messagePublisher = messagePublisher;
   }
 
+  @Operation(
+    operationId = "getInstallation",
+    summary = "Get details of a single installation",
+    description = "Details of a single installation.  Also works for deleted installations.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
+    tags = "BASIC")
+  @DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Installation found and returned")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
@@ -126,10 +148,92 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   }
 
   /**
+   * Creates a new installation.
+   *
+   * @param installation installation
+   * @return key of entity created
+   */
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "createInstallation",
+    summary = "Create a new installation",
+    description = "Creates a new installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions must be added in subsequent requests.")
+  @ApiResponse(
+    responseCode = "201",
+    description = "Installation created, new installation's UUID returned")
+  @DefaultUnsuccessfulWriteResponses
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PrePersist.class, Default.class})
+  @Override
+  public UUID create(@RequestBody @Trim Installation installation) {
+    return super.create(installation);
+  }
+
+  /**
+   * Updates the installation.
+   *
+   * @param installation installation
+   */
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "updateInstallation",
+    summary = "Update an existing installation",
+    description = "Updates the existing installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions are not changed with this method.")
+  @DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Installation updated")
+  @DefaultUnsuccessfulReadResponses
+  @DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
+  @Override
+  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Installation installation) {
+    super.update(key, installation);
+  }
+
+  /**
+   * Deletes the installation.
+   *
+   * @param key key of installation to delete
+   */
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "deleteInstallation",
+    summary = "Delete an installation",
+    description = "Marks an installation as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions are not changed.")
+  @DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Installation deleted")
+  @DefaultUnsuccessfulWriteResponses
+  @DeleteMapping("{key}")
+  @Override
+  public void delete(@PathVariable UUID key) {
+    super.delete(key);
+  }
+
+  /**
    * All network entities support simple (!) search with "&q=". This is to support the console user
    * interface, and is in addition to any complex, faceted search that might additionally be
    * supported, such as dataset search.
    */
+  @Operation(
+    operationId = "listInstallations",
+    summary = "List all installations",
+    description = "Lists all current installations (deleted installations are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
+  @DefaultSimpleSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Installation search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Installation> list(
       @Valid InstallationRequestSearchParams request, Pageable page) {
@@ -152,6 +256,16 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     }
   }
 
+  @Operation(
+    operationId = "getInstallationDatasets",
+    summary = "List installation's datasets",
+    description = "Lists the datasets served by this installation.")
+  @DefaultEntityKeyParameter
+  @DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of datasets")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> getHostedDatasets(
@@ -162,6 +276,15 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         datasetMapper.listDatasetsByInstallation(installationKey, page));
   }
 
+  @Operation(
+    operationId = "getDeletedInstallations",
+    summary = "List deleted installations",
+    description = "Lists deleted installations.")
+  @DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted installations")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
   public PagingResponse<Installation> listDeleted(Pageable page) {
@@ -169,6 +292,15 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         page, installationMapper.countDeleted(), installationMapper.deleted(page));
   }
 
+  @Operation(
+    operationId = "getNonPublishingInstallations",
+    summary = "List non-publishing installations",
+    description = "Lists all installations serving 0 datasets.")
+  @DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of non-publishing installations")
+  @DefaultUnsuccessfulReadResponses
   @GetMapping("nonPublishing")
   @Override
   public PagingResponse<Installation> listNonPublishing(Pageable page) {
@@ -181,6 +313,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * trigger the synchronization of the installation. This simply emits a message to rabbitmq
    * requesting the sync, and applies necessary security.
    */
+  @Hidden
   @PostMapping("{key}/synchronize")
   @Secured(ADMIN_ROLE)
   public void synchronize(@PathVariable("key") UUID installationKey) {
@@ -205,6 +338,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * "locations of organizations hosting an IPT". The response holds the distinct organizations
    * running the installations of the specified type.
    */
+  @Hidden
   @GetMapping("location/{type}")
   public String organizationsAsGeoJSON(@PathVariable InstallationType type) {
     List<Organization> orgs = organizationMapper.hostingInstallationsOf(type, true);
@@ -247,6 +381,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     return featureCollection.toString();
   }
 
+  @Hidden
   @PostMapping(value = "{installationKey}/metasync", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
@@ -260,6 +395,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     this.createMetasync(metasyncHistory);
   }
 
+  @Hidden
   @PostMapping(value = "metasync", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
@@ -269,6 +405,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     metasyncHistoryMapper.create(metasyncHistory);
   }
 
+  @Hidden
   @GetMapping("metasync")
   @Override
   public PagingResponse<MetasyncHistory> listMetasync(Pageable page) {
@@ -276,6 +413,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         page, (long) metasyncHistoryMapper.count(), metasyncHistoryMapper.list(page));
   }
 
+  @Hidden
   @GetMapping("{installationKey}/metasync")
   @Override
   public PagingResponse<MetasyncHistory> listMetasync(
@@ -286,6 +424,22 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
         metasyncHistoryMapper.listByInstallation(installationKey, page));
   }
 
+  @Operation(
+    operationId = "suggestInstallations",
+    summary = "Suggest installations.",
+    description = "Search that returns up to 20 matching installations. Results are ordered by relevance. " +
+      "The response is smaller than an installation search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
+    tags = "BASIC"
+  )
+  @DefaultQParameter
+  @DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Node search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q) {

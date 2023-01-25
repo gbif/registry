@@ -242,7 +242,7 @@ public class EnumerationResource {
   /** @return list of country information based on our enum. */
   @Operation(
     operationId = "enumerationCountry",
-    summary = "Shows the Country enumeration",
+    summary = "Show the Country enumeration",
     description = "Lists the known countries, territories and islands based on ISO 3166-2")
   @ApiResponse(
     responseCode = "200",
@@ -255,7 +255,7 @@ public class EnumerationResource {
   /** @return list of language information based on our enum. */
   @Operation(
     operationId = "enumerationLanguage",
-    summary = "Shows the Language enumeration",
+    summary = "Show the Language enumeration",
     description = "Lists the known languages based on ISO 639-1")
   @ApiResponse(
     responseCode = "200",
@@ -271,7 +271,7 @@ public class EnumerationResource {
    */
   @Operation(
     operationId = "enumerationLicense",
-    summary = "Shows the License enumeration",
+    summary = "Show the License enumeration",
     description = "Lists the accepted licenses")
   @ApiResponse(
     responseCode = "200",
@@ -283,7 +283,7 @@ public class EnumerationResource {
 
   @Operation(
     operationId = "enumerationInterpretationRemark",
-    summary = "Shows the Interpretation Remark enumeration",
+    summary = "Show the Interpretation Remark enumeration",
     description = "Lists the known interpretation remarks")
   @ApiResponse(
     responseCode = "200",
@@ -301,7 +301,7 @@ public class EnumerationResource {
    */
   @Operation(
     operationId = "enumerationExtensions",
-    summary = "Shows the Extensions enumeration",
+    summary = "Show the Extensions enumeration",
     description = "Lists the known extensions")
   @ApiResponse(
     responseCode = "200",
@@ -339,7 +339,7 @@ public class EnumerationResource {
    */
   @Operation(
     operationId = "enumerationBasic",
-    summary = "Shows a summary of an enumeration",
+    summary = "Show a summary of an enumeration",
     description = "Lists the values of the given enumeration")
   @Parameter(
     name = "name",
