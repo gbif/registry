@@ -140,11 +140,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     description = "Details of a single publishing organization.  Also works for deleted publishing organizations.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
     tags = "BASIC")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Organization found and returned")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/organization/{key}")  // TODO TODO TODO
   @Override
@@ -167,7 +167,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @ApiResponse(
     responseCode = "201",
     description = "Publishing organization created, new publishing organization's UUID returned")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
@@ -206,12 +206,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     summary = "Update an existing organization",
     description = "Updates the existing publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed with this method.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Organization updated")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -230,11 +230,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     summary = "Delete a publishing organization",
     description = "Marks a publishing organization as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Publishing organization deleted")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -282,7 +282,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     description = "Lists all current publishing organizations (deleted organizations are not listed).",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
-  @DefaultSimpleSearchParameters
+  @SimpleSearchParameters
   @Parameters(
     value = {
       @Parameter(
@@ -351,12 +351,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getHostedDatasets",
     summary = "List hosted datasets",
     description = "Lists the hosted datasets (datasets hosted by installations hosted by the organization).")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of hosted datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/hostedDataset")
   @Override
   public PagingResponse<Dataset> hostedDatasets(
@@ -371,12 +371,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getPublishedDatasets",
     summary = "List published datasets",
     description = "Lists the published datasets (datasets published by the organization).")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of published datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/publishedDataset")
   @Override
   public PagingResponse<Dataset> publishedDatasets(
@@ -401,12 +401,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getOrganizationInstallations",
     summary = "List organization's installations",
     description = "Lists the technical installations registered to this organization.")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of technical installations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/installation")
   @Override
   public PagingResponse<Installation> installations(
@@ -429,11 +429,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getDeletedOrganizations",
     summary = "List deleted organizations",
     description = "Lists deleted organizations.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted organizations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
   public PagingResponse<Organization> listDeleted(Pageable page) {
@@ -445,11 +445,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getPendingOrganizations",
     summary = "List pending organizations",
     description = "Lists organizations whose endorsement is pending.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of pending organizations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("pending")
   @Override
   public PagingResponse<Organization> listPendingEndorsement(Pageable page) {
@@ -463,11 +463,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getNonPublishingOrganizations",
     summary = "List non-publishing organizations",
     description = "Lists organizations publishing 0 datasets (excluding deleted datasets).")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of non-publishing organizations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("nonPublishing")
   @Override
   public PagingResponse<Organization> listNonPublishing(Pageable page) {
@@ -483,7 +483,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @DefaultQParameter
+  @Docs.DefaultQParameter
   @ApiResponse(
     responseCode = "200",
     description = "Organization search successful")

@@ -22,6 +22,7 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
 import org.gbif.registry.persistence.mapper.collections.params.AuditLogListParams;
+import org.gbif.registry.ws.resources.Docs;
 
 import java.util.Date;
 import java.util.List;
@@ -35,7 +36,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
@@ -59,6 +65,61 @@ public class AuditLogResource {
     this.auditLogMapper = auditLogMapper;
   }
 
+  @Operation(
+    operationId = "lookupCollectionsInstitutions",
+    summary = "Lookup collections and institutions")
+  @Docs.DefaultOffsetLimitParameters
+  @Parameters(
+    value = {
+    @Parameter(
+      name = "traceId",
+      description = "Trace ID of a GRSciColl audit log",
+      schema = @Schema(implementation = Long.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "collectionEntityType",
+      description = "Entity type used in the GRSciColl audit log",
+      schema = @Schema(implementation = CollectionEntityType.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "subEntityType",
+      description = "Subentity type used in the GRSciColl audit log: Identifier, MachineTag, Comment, Tag, " +
+        "OccurrenceMapping, Person, ChangeSuggestion",
+      schema = @Schema(implementation = String.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "subEntityKey",
+      description = "TODO",
+      schema = @Schema(implementation = String.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "operation",
+      description = "Operation of a GRSciColl audit log: CREATE, UPDATE, DELETE, LINK, UNLINK, REPLACE, " +
+        "CONVERSION_TO_COLLECTION, APPLY_SUGGESTION, DISCARD_SUGGESTION",
+      schema = @Schema(implementation = String.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "collectionEntityKey",
+      description = "Key of the institution, collection or person being modified",
+      schema = @Schema(implementation = UUID.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "createdBy",
+      description = "TODO",
+      schema = @Schema(implementation = String.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "dateFrom",
+      description = "Filters GRSciColl audit logs after a specific date (format yyyy-MM-dd)",
+      schema = @Schema(implementation = Date.class),
+      in = ParameterIn.QUERY),
+    @Parameter(
+      name = "dateTo",
+      description = "Filters GRSciColl audit logs until a specific date (format yyyy-MM-dd)",
+      schema = @Schema(implementation = Date.class),
+      in = ParameterIn.QUERY)})
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @Secured(GRSCICOLL_ADMIN_ROLE)
   @GetMapping()
   public PagingResponse<AuditLog> getAuditLogs(

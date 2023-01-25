@@ -31,6 +31,12 @@ import org.gbif.registry.ws.util.SecurityUtil;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.net.URI;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,10 +68,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
+@Tag(name = "DerivedDatasets", description = "Derived datasets are metadata records allowing the citation of a " +
+  "subset of a larger dataset.  Typically the large dataset is a monthly download containing all GBIF occurrences " +
+  "and made available on a public cloud service.")
 @RestController
 @RequestMapping(path = "derivedDataset", produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
@@ -89,6 +105,57 @@ public class DerivedDatasetResource {
     this.eventManager = eventManager;
   }
 
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "originalDownloadDOI",
+        description = "The DOI of the source (large) download which has been filtered",
+        schema = @Schema(implementation = DOI.class)
+      ),
+      @Parameter(
+        name = "title",
+        description = "The human title of the derived dataset.",
+        schema = @Schema(implementation = String.class)
+      ),
+      @Parameter(
+        name = "description",
+        description = "",
+        schema = @Schema(implementation = String.class)
+      ),
+      @Parameter(
+        name = "sourceUrl",
+        description = "",
+        schema = @Schema(implementation = URI.class)
+      ),
+      @Parameter(
+        name = "registrationDate",
+        description = "",
+        schema = @Schema(implementation = Date.class)
+      ),
+      @Parameter(
+        name = "request",
+        hidden = true
+      )
+    })
+  @Docs.DefaultQParameter
+  @Docs.DefaultOffsetLimitParameters
+  public @interface CreateDerivedDatasetParameters {}
+
+  @Operation(
+    operationId = "createDerivedDataset",
+    summary = "Create a new derived dataset",
+    description = "Creates a new derived dataset with the specified source dataset and records of what subset" +
+      "should be cited.")
+  @CreateDerivedDatasetParameters
+  @Parameter(
+    name = "relatedDatasets",
+    description = ""
+  )
+  @ApiResponse(
+    responseCode = "201",
+    description = "Derived dataset information.")
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -96,6 +163,23 @@ public class DerivedDatasetResource {
     return createDerivedDataset(request, request.getRelatedDatasets());
   }
 
+  @Operation(
+    operationId = "createDerivedDatasetFromFile",
+    summary = "Create a new derived dataset from a file",
+    description = "Creates a new derived dataset with the specified source dataset and records of what subset" +
+      "should be cited.")
+  @CreateDerivedDatasetParameters
+  @Parameter(
+    name = "relatedDatasets",
+    description = ""
+  )
+  @Parameter(
+    name = "derivedDataset",
+    description = ""
+  )
+  @ApiResponse(
+    responseCode = "201",
+    description = "Derived dataset information.")
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -205,6 +289,13 @@ public class DerivedDatasetResource {
     }
   }
 
+  @Operation(
+    operationId = "getDerivedDatasetFrom",
+    summary = "Retrieve a derived dataset record")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Derived dataset information.")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{doiPrefix}/{doiSuffix}")
   public ResponseEntity<DerivedDataset> getDerivedDataset(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
@@ -212,12 +303,33 @@ public class DerivedDatasetResource {
     return result != null ? ResponseEntity.ok(result) : ResponseEntity.notFound().build();
   }
 
+  @Operation(
+    operationId = "getDerivedDatasetByDatasetKey",
+    summary = "Retrieve derived datasets of a dataset by key")
+  @Parameter(
+    name = "key",
+    description = "Dataset key",
+    schema = @Schema(implementation = UUID.class)
+  )
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Derived dataset information.")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("dataset/{key}")
   public PagingResponse<DerivedDataset> getDerivedDatasets(
       @PathVariable("key") UUID datasetKey, Pageable page) {
     return getDerivedDatasets(datasetKey.toString(), page);
   }
 
+  @Operation(
+    operationId = "getDerivedDatasetByDatasetDoi",
+    summary = "Retrieve derived datasets of a dataset by DOI")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Derived dataset information.")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("dataset/{doiPrefix}/{doiSuffix}")
   public PagingResponse<DerivedDataset> getDerivedDatasets(
       @PathVariable("doiPrefix") String doiPrefix,
@@ -226,6 +338,15 @@ public class DerivedDatasetResource {
     return getDerivedDatasets(new DOI(doiPrefix, doiSuffix).getDoiName(), page);
   }
 
+  @Operation(
+    operationId = "getDerivedDatasetByUser",
+    summary = "Retrieve derived datasets of a dataset by User")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Derived dataset information.")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @Secured({ADMIN_ROLE, USER_ROLE})
   @GetMapping("user/{user}")
   public PagingResponse<DerivedDataset> listByUser(
@@ -245,6 +366,14 @@ public class DerivedDatasetResource {
     return derivedDatasetService.getCitationText(doi);
   }
 
+  @Operation(
+    operationId = "getDerivedDatasetCitation",
+    summary = "Retrieve derived dataset citation")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Derived dataset citation.")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{doiPrefix}/{doiSuffix}/citation")
   public ResponseEntity<String> getCitationText(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
@@ -257,6 +386,14 @@ public class DerivedDatasetResource {
     return derivedDatasetService.getRelatedDatasets(derivedDatasetDoi, page);
   }
 
+  @Operation(
+    operationId = "getDerivedDatasetRelatedDatasets",
+    summary = "Retrieve derived dataset related datasets")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Related datasets.")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{doiPrefix}/{doiSuffix}/datasets")
   public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(
       @PathVariable("doiPrefix") String doiPrefix,

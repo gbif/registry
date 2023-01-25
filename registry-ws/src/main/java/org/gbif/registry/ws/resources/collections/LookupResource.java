@@ -18,6 +18,7 @@ import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.service.collections.lookup.LookupService;
+import org.gbif.registry.ws.resources.Docs;
 
 import java.util.UUID;
 
@@ -29,7 +30,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
   name = "Lookups",
@@ -48,6 +55,66 @@ public class LookupResource {
     this.lookupService = lookupService;
   }
 
+  // TODO: MatchStatus explanations.
+  @Operation(
+    operationId = "lookupCollectionsInstitutions",
+    summary = "Lookup collections and institutions")
+  @Docs.DefaultQParameter
+  @Docs.DefaultHlParameter
+  @Docs.DefaultOffsetLimitParameters
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "datasetKey",
+        description = "Institutions and collections can be linked manually to datasets by using occurrence mappings. " +
+          "If the dataset key parameter is set it will be used to try to match an occurrence mapping that contains " +
+          "that dataset. This manual mapping only happens if no exact matches were found",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "institutionCode",
+        description = "The code of an institution",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "institutionId",
+        description = "The identifier of an institution",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "ownerInstitutionCode",
+        description = "The code of the owner institution. This parameter is only used to detect the cases when the " +
+          "institution and the owner institution are different. If that happens, the match is not considered accepted",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "collectionCode",
+        description = "The code of a collection",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "collectionId",
+        description = "The identifier of a collection",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "country",
+        description = "The 2-letter country code (as per ISO-3166-1) of the country.",
+        schema = @Schema(implementation = Country.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "verbose",
+        description = "If set, it returns the accepted matches and other alternatives that were also found. " +
+          "Otherwise, it only returns the accepted ones",
+        schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY),
+    })
+  @ApiResponse(
+    responseCode = "200",
+    description = "Search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @Trim
   @GetMapping
   public LookupResult lookup(

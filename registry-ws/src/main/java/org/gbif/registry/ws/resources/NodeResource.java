@@ -117,11 +117,11 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     description = "Details of a single node.  Also works for deleted nodes.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
     tags = "BASIC")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Node found and returned")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/node/{key}")
   @Override
@@ -144,7 +144,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "201",
     description = "Node created, new node's UUID returned")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -163,12 +163,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     summary = "Update an existing node",
     description = "Updates the existing node.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed with this method.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Node updated")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -187,11 +187,11 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     summary = "Delete a node",
     description = "Marks a node as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Node deleted")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -209,7 +209,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     description = "Lists all current nodes (deleted nodes are not listed).",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
-  @DefaultSimpleSearchParameters
+  @SimpleSearchParameters
   @ApiResponse(
     responseCode = "200",
     description = "Node search successful")
@@ -268,12 +268,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "getNodeOrganizations",
     summary = "List node's organizations",
     description = "Lists the organizations registered to this node.")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of organizations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/organization")
   @Override
   public PagingResponse<Organization> endorsedOrganizations(
@@ -294,11 +294,11 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     summary = "List pending organizations",
     description = "Lists organizations whose endorsement is pending.\n\n" +
       "Use [getPendingOrganizations](#tag/Organizations/operation/getPendingOrganizations) instead.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of pending organizations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @Deprecated
   @GetMapping("pendingEndorsement")
   @Override
@@ -313,11 +313,11 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "getNodePendingOrganizations",
     summary = "List pending organizations of a node",
     description = "Lists organizations whose endorsement  by the given node is pending.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of pending organizations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(
@@ -335,7 +335,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "200",
     description = "Country node")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("country/{key}")
   @Nullable
   public Node getByCountry(@PathVariable("key") String isoCode) {
@@ -354,7 +354,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "200",
     description = "List of countries")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("country")
   @Override
   public List<Country> listNodeCountries() {
@@ -367,7 +367,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "200",
     description = "List of countries")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("activeCountries")
   @Override
   public List<Country> listActiveCountries() {
@@ -378,11 +378,11 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "getNodeDatasets",
     summary = "List all datasets from a node",
     description = "Lists datasets published by organizations endorsed by the node")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> endorsedDatasets(
@@ -414,12 +414,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "getNodeInstallations",
     summary = "List node's installations",
     description = "Lists installations hosted by organizations endorsed by the node.")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of technical installations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/installation")
   @Override
   public PagingResponse<Installation> installations(
@@ -438,7 +438,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @DefaultQParameter
+  @Docs.DefaultQParameter
   @ApiResponse(
     responseCode = "200",
     description = "Node search successful")

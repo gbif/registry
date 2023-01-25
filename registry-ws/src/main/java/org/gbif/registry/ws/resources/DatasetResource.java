@@ -339,17 +339,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")),
     tags = "BASIC")
   @DatasetSearchParameters
-  @DefaultQParameter
-  @DefaultHlParameter
-  @DefaultFacetParameters
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultQParameter
+  @Docs.DefaultHlParameter
+  @Docs.DefaultFacetParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("search")
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
@@ -365,14 +365,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     tags = "BASIC"
   )
   @DatasetSearchParameters
-  @DefaultQParameter
+  @Docs.DefaultQParameter
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("search/export")
   public void search(
       HttpServletResponse response,
@@ -400,14 +400,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     tags = "BASIC"
   )
   @DatasetSearchParameters
-  @DefaultQParameter
+  @Docs.DefaultQParameter
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("suggest")
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest suggestRequest) {
@@ -420,11 +420,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     description = "Details of a single dataset.  Also works for deleted datasets.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
     tags = "BASIC")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Dataset found and returned")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/dataset/{key}")
   @Override
@@ -458,7 +458,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         in = ParameterIn.QUERY,
         explode = Explode.TRUE)
     })
-  @DefaultSimpleSearchParameters
+  @SimpleSearchParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
@@ -527,11 +527,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "getDocuments",
     summary = "Retrieve GBIF metadata document of the dataset",
     description = "Gets a GBIF generated EML document overlaying GBIF information with any existing metadata document data.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "GBIF metadata documents")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   public byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID datasetKey) {
     // the fully augmented dataset
@@ -553,12 +553,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "deleteDataset",
     summary = "Delete an existing dataset",
     description = "Deletes an existing dataset. The dataset entry gets a deleted timestamp but remains registered.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Dataset marked as deleted")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
@@ -577,12 +577,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     summary = "Add a metadata document to the record",
     description = "Pushes a new original source metadata document for a dataset into the registry, replacing any " +
       "previously existing document of the same type.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Metadata document added, metadata document identifier returned")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(
@@ -832,7 +832,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @ApiResponse(
     responseCode = "201",
     description = "Dataset created, new dataset's UUID returned")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -873,12 +873,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     summary = "Update an existing dataset",
     description = "Updates the existing dataset.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed with this method.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Dataset updated")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -1037,12 +1037,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "getConstituents",
     summary = "Retrieve all constituents of the dataset",
     description = "Lists the dataset's subdataset constituents (datasets that have a parentDatasetKey equal to the one requested).")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of constituents")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(
@@ -1056,11 +1056,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getNetworks",
     summary = "List the networks the dataset belongs to")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of networks")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/networks")
   @Override
   public List<Network> listNetworks(@PathVariable("key") UUID datasetKey) {
@@ -1072,11 +1072,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "getAllConstituents",
     summary = "Retrieve all constituent datasets",
     description = "Lists datasets that are a constituent of any dataset.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(Pageable page) {
@@ -1087,11 +1087,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getDatasetGrids",
     summary = "Retrieve all grids of a dataset")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of dataset grids")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/gridded")
   @Override
   public List<Grid> listGrids(@PathVariable("key") UUID datasetKey) {
@@ -1101,11 +1101,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getAllMetadata",
     summary = "Retrieve all dataset source metadata")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of source metadata documents")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/metadata")
   @Override
   public List<Metadata> listMetadata(
@@ -1119,7 +1119,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @ApiResponse(
     responseCode = "200",
     description = "Metadata about a metadata document")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("metadata/{key}")
   @Override
   @NullToNotFound("/dataset/metadata/{key}")
@@ -1137,11 +1137,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getMetadataDocument",
     summary = "Retrieve a source metadata document of the dataset")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Source metadata document in XML format")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @NullToNotFound("/dataset/metadata/{key}/document")
   public byte[] getMetadataDocumentAsBytes(@PathVariable int key) {
@@ -1154,8 +1154,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @ApiResponse(
     responseCode = "204",
     description = "Metadata document deleted")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("metadata/{key}")
   @Override
   public void deleteMetadata(@PathVariable("key") int metadataKey) {
@@ -1165,11 +1165,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getDeletedDatasets",
     summary = "List all deleted datasets")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
   public PagingResponse<Dataset> listDeleted(Pageable page) {
@@ -1179,11 +1179,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getDuplicateDatasets",
     summary = "List all duplicate datasets")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Duplicate datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("duplicate")
   @Override
   public PagingResponse<Dataset> listDuplicates(Pageable page) {
@@ -1193,11 +1193,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getNoEndpointDatasets",
     summary = "List all datasets with no endpoint")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Datasets with no endpoint")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("withNoEndpoint")
   @Override
   public PagingResponse<Dataset> listDatasetsWithNoEndpoint(Pageable page) {
@@ -1257,15 +1257,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "crawlDataset",
     summary = "Schedule a new ingestion of the dataset")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @Parameter(
     name = "platform",
     hidden = true)
   @ApiResponse(
     responseCode = "204",
     description = "Ingestion request accepted, or dataset is already being processed.")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/crawl")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawl(
@@ -1355,12 +1355,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "datasetCrawlAttempt",
     summary = "Get details of a particular crawl attempt for the dataset")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Crawl attempt record")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/process/{attempt}")
   @Nullable
   @NullToNotFound("/dataset/{key}/process/{attempt}")
@@ -1391,8 +1391,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "listDatasetCrawlAttempt",
     summary = "Get details of all crawl attempts for a dataset")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Crawl attempt records")
@@ -1430,11 +1430,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         example = "igasai",
         in = ParameterIn.PATH)
     })
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset list")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("doi/{prefix}/{suffix}")
   public PagingResponse<Dataset> listByDOI(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
