@@ -17,6 +17,7 @@ import org.gbif.api.model.collections.search.CollectionsSearchResponse;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
+import org.gbif.registry.ws.resources.Docs;
 
 import java.util.List;
 
@@ -26,7 +27,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
   name = "Search",
@@ -44,6 +52,34 @@ public class CollectionsSearchResource {
     this.collectionsSearchService = collectionsSearchService;
   }
 
+  @Operation(
+    operationId = "searchCollectionsInstitutions",
+    summary = "Search collections and institutions")
+  @Docs.DefaultQParameter
+  @Docs.DefaultHlParameter
+  @Docs.DefaultOffsetLimitParameters
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "entityType",
+        description = "Code of a GrSciColl institution or collection",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "displayOnNHCPortal",
+        hidden = true),
+      @Parameter(
+        name = "country",
+        description = "The 2-letter country code (as per ISO-3166-1) of the country.",
+        schema = @Schema(implementation = Country.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.FALSE)})
+  @ApiResponse(
+    responseCode = "200",
+    description = "Search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,

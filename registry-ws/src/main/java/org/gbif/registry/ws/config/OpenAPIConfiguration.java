@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.resources;
+package org.gbif.registry.ws.config;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -21,6 +21,8 @@ import org.springdoc.core.customizers.OpenApiCustomiser;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.oas.models.tags.Tag;
 
 /**
@@ -46,5 +48,31 @@ public class OpenAPIConfiguration {
       tag.getExtensions() == null ?
         "__" + tag.getName() :
         ((Map)tag.getExtensions().get("x-Order")).get("Order").toString());
+  }
+
+  @Bean
+  public OpenApiCustomiser sortOperationsSomehow() {
+    System.err.println("Sorting OPERATIONS by order extension");
+
+    return openApi -> {
+      Paths paths = new Paths();
+      openApi.getPaths()
+        .entrySet()
+        .stream()
+        .sorted(Map.Entry.comparingByValue(pathOrder()))
+//      .peek(tag -> System.err.println("PI: " + pathItem.getName() + ": " + (tag.getExtensions() != null ? ((Map)tag.getExtensions().get("x-Order")).get("Order").toString() : "__" + tag.getName())))
+//      .collect(Collectors.))
+        .forEachOrdered(pi -> {
+          System.err.println("PI: " + pi.getKey()); // + " " + pi.getValue());
+          paths.addPathItem(pi.getKey(), pi.getValue());
+        });
+      openApi.setPaths(paths);
+    };
+  }
+  Comparator<PathItem> pathOrder() {
+    return Comparator.comparing(pathItem ->
+      pathItem.getExtensions() == null ?
+        "__" + pathItem.toString() :
+        ((Map)pathItem.getExtensions().get("x-Order")).get("Order").toString());
   }
 }

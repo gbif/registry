@@ -116,11 +116,11 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     description = "Details of a single network.  Also works for deleted networks.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
     tags = "BASIC")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Network found and returned")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
@@ -143,7 +143,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @ApiResponse(
     responseCode = "201",
     description = "Network created, new network's UUID returned")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -162,12 +162,12 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     summary = "Update an existing network",
     description = "Updates the existing network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed with this method.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Network updated")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -186,11 +186,11 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     summary = "Delete a network",
     description = "Marks a network as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Network deleted")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -208,7 +208,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     description = "Lists all current networks (deleted networks are not listed).",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
-  @DefaultSimpleSearchParameters
+  @SimpleSearchParameters
   @ApiResponse(
     responseCode = "200",
     description = "Network search successful")
@@ -239,12 +239,12 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     summary = "List all constituents (datasets) of a network",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Constituent dataset list")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(
@@ -278,7 +278,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Operation(
     operationId = "networkConstituentAdd",
     summary = "Add a constituent dataset to a network")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @Parameter(
     name = "datasetKey",
     description = "The GBIF key of the dataset to add",
@@ -289,6 +289,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "201",
     description = "Constituent added.",
     content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -307,7 +309,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Operation(
     operationId = "networkConstituentDelete",
     summary = "Remove a constituent dataset from a network")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @Parameter(
     name = "datasetKey",
     description = "The GBIF key of the dataset to remove",
@@ -318,6 +320,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "204",
     description = "Constituent removed.",
     content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -340,7 +344,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @DefaultQParameter
+  @Docs.DefaultQParameter
   @ApiResponse(
     responseCode = "200",
     description = "Network search successful")

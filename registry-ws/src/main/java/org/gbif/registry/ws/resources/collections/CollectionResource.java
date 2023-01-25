@@ -27,16 +27,24 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.util.iterables.Iterables;
+import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
+import org.gbif.registry.ws.resources.Docs;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,15 +53,26 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -62,10 +81,10 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 @io.swagger.v3.oas.annotations.tags.Tag(
   name = "Collections",
   description = "The collections API provides CRUD services for collections, institutions and person entities. " +
-    "The data was originally migrated from GrSciColl and adapted to follow the same conventions as other registry " +
-    "services. Therefore, the deletion of collections, institutions and persons is logical, meaning these entries " +
-    "remain registered forever and only get a deleted timestamp. On the other hand, the deletion of tags and " +
-    "identifiers is physical, meaning the entries are permanently removed.\n\n" +
+    "The data was originally migrated from the Global Registry of Scientific Collections (GRSciColl) and adapted to " +
+    "follow the same conventions as other registry services. Therefore, the deletion of collections, institutions and " +
+    "persons is logical, meaning these entries remain registered forever and only get a deleted timestamp. On the " +
+    "other hand, the deletion of tags and identifiers is physical, meaning the entries are permanently removed.\n\n" +
     "*Please note that this part of the API is still under development, and may change in the future.*\n\n" +
     "## Collection\n" +
     "This API provides CRUD services for the collection entity. A collection can be associated with an institution " +
@@ -99,12 +118,118 @@ public class CollectionResource
     this.collectionService = collectionService;
   }
 
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "institution",
+        description = "A key for the institution.",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "contentTypes",
+        description = "Content type of a GrSciColl collection. Accepts multiple values, for example " +
+          "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
+        schema = @Schema(implementation = CollectionContentType.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "preservationTypes",
+        description = "Preservation type of a GrSciColl collection. Accepts multiple values, for example " +
+          "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
+        schema = @Schema(implementation = PreservationType.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "accessionStatus",
+        description = "Accession status of a GrSciColl collection",
+        schema = @Schema(implementation = AccessionStatus.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "personalCollection",
+        description = "Flag for personal GRSciColl collections",
+        schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY)
+    })
+  @SearchRequestParameters
+  @interface CollectionSearchParameters {}
+
+  @Operation(
+    operationId = "getCollection",
+    summary = "Get details of a single collection",
+    description = "Details of a single collection.  Also works for deleted collections.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
   public CollectionView getCollectionView(@PathVariable UUID key) {
     return collectionService.getCollectionView(key);
   }
 
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "createCollection",
+    summary = "Create a new collection",
+    description = "Creates a new collection.")
+  @ApiResponse(
+    responseCode = "201",
+    description = "Collection created, new collection's UUID returned")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  public UUID create(@RequestBody @Trim Collection collection) {
+    return super.create(collection);
+  }
+
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "updateCollection",
+    summary = "Update an existing collection",
+    description = "Updates the existing collection.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Collection updated")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Collection collection) {
+    super.update(key, collection);
+  }
+
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "deleteCollection",
+    summary = "Delete an existing collection",
+    description = "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Collection marked as deleted")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @DeleteMapping("{key}")
+  @Override
+  public void delete(@PathVariable UUID key) {
+    super.delete(key);
+  }
+
+  @Operation(
+    operationId = "listCollections",
+    summary = "List all collections",
+    description = "Lists all current collections (deleted collections are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+  @CollectionSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return collectionService.list(searchRequest);
@@ -143,6 +268,18 @@ public class CollectionResource
         .toString();
   }
 
+  @Operation(
+    operationId = "listCollectionsExport",
+    summary = "Export search across all collections.",
+    description = "Download full-text search results as CSV or TSV.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
+  @CollectionSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -159,17 +296,47 @@ public class CollectionResource
     }
   }
 
+  @Operation(
+    operationId = "listDeleted",
+    summary = "Retrieve all deleted collection records")
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted collection records")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   public PagingResponse<CollectionView> listDeleted(
       @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
     return collectionService.listDeleted(replacedBy, page);
   }
 
+  @Operation(
+    operationId = "suggestCollections",
+    summary = "Suggest collections.",
+    description = "Search that returns up to 20 matching collections. Results are ordered by relevance. " +
+      "The response is smaller than a collection search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
+  @Docs.DefaultQParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
   }
 
+  @Operation(
+    operationId = "importCollection",
+    summary = "Import a collection",
+    description = "Imports a collection from a dataset.")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection imported, key returned.",
+    content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID createFromDataset(@RequestBody @Trim CollectionImportParams importParams) {
@@ -177,6 +344,7 @@ public class CollectionResource
         importParams.getDatasetKey(), importParams.getCollectionCode());
   }
 
+  @Hidden
   @GetMapping("sourceableFields")
   public List<SourceableField> getSourceableFields() {
     return MasterSourceUtils.COLLECTION_SOURCEABLE_FIELDS;

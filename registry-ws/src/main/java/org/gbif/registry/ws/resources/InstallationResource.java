@@ -135,11 +135,11 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     description = "Details of a single installation.  Also works for deleted installations.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
     tags = "BASIC")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Installation found and returned")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
@@ -162,7 +162,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @ApiResponse(
     responseCode = "201",
     description = "Installation created, new installation's UUID returned")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -181,12 +181,12 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     summary = "Update an existing installation",
     description = "Updates the existing installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed with this method.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Installation updated")
-  @DefaultUnsuccessfulReadResponses
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -205,11 +205,11 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     summary = "Delete an installation",
     description = "Marks an installation as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed.")
-  @DefaultEntityKeyParameter
+  @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Installation deleted")
-  @DefaultUnsuccessfulWriteResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -227,7 +227,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     description = "Lists all current installations (deleted installations are not listed).",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
-  @DefaultSimpleSearchParameters
+  @SimpleSearchParameters
   @ApiResponse(
     responseCode = "200",
     description = "Installation search successful")
@@ -260,12 +260,12 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getInstallationDatasets",
     summary = "List installation's datasets",
     description = "Lists the datasets served by this installation.")
-  @DefaultEntityKeyParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> getHostedDatasets(
@@ -280,11 +280,11 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getDeletedInstallations",
     summary = "List deleted installations",
     description = "Lists deleted installations.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted installations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
   public PagingResponse<Installation> listDeleted(Pageable page) {
@@ -296,11 +296,11 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getNonPublishingInstallations",
     summary = "List non-publishing installations",
     description = "Lists all installations serving 0 datasets.")
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of non-publishing installations")
-  @DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("nonPublishing")
   @Override
   public PagingResponse<Installation> listNonPublishing(Pageable page) {
@@ -432,8 +432,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @DefaultQParameter
-  @DefaultOffsetLimitParameters
+  @Docs.DefaultQParameter
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Node search successful")
