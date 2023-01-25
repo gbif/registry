@@ -316,16 +316,6 @@ public class NodeIT extends NetworkEntityIT<Node> {
   }
 
   /** Node contacts are IMS managed and the service throws exceptions */
-  @Override
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testContacts(ServiceType serviceType) {
-    NodeService service = (NodeService) getService(serviceType);
-    Node n = create(newEntity(serviceType), serviceType, 1);
-    assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
-  }
-
-  /** Node contacts are IMS managed and the service throws exceptions */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testAddContact(ServiceType serviceType) {
