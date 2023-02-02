@@ -393,6 +393,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
         datasetMapper.listDatasetsEndorsedBy(nodeKey, page));
   }
 
+  @GetMapping("{key}/contact")
+  @Override
+  public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
+    throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
+  }
+
   @Hidden
   @DeleteMapping("{key}/contact/{contactKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
