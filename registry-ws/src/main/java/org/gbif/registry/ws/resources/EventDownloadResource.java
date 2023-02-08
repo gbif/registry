@@ -27,7 +27,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 /** Event download resource/web service. */
+@Hidden
 @Validated
 @RestController("eventDownloadResource")
 @RequestMapping(value = "event/download", produces = MediaType.APPLICATION_JSON_VALUE)

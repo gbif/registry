@@ -74,6 +74,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
@@ -98,6 +100,7 @@ import static org.gbif.registry.security.UserRoles.USER_ROLE;
  * appKey whitelist. See {@link AppIdentityFilter}.
  */
 @SuppressWarnings("UnstableApiUsage")
+@Hidden
 @Validated
 @RestController
 @RequestMapping(path = "admin/user", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -17,20 +17,29 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.literature.LiteratureType;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Extension;
+import org.gbif.api.vocabulary.InterpretationRemark;
+import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.NameUsageIssue;
+import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.dwc.terms.Term;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
-
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedMap.Builder;
 
 import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
@@ -46,7 +55,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.SystemPropertyUtils;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedMap.Builder;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.servers.Server;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toList;
@@ -56,6 +85,26 @@ import static java.util.stream.Collectors.toList;
  * building Javascript based clients. This has no Java client, since Java clients have access to the
  * Enums directly. Reflection can be used to generate the inventory of enumerations.
  */
+@OpenAPIDefinition(
+  info = @Info(
+    title = "Registry API",
+    version = "v1",
+    description =
+        "This API works against the GBIF Registry, which makes all registered Datasets, Installations, Organizations, " +
+          "Nodes, and Networks discoverable.\n\n" +
+        "Internally we use a Java web service client for the consumption of these HTTP-based, RESTful web services. " +
+          "It may be of interest to those coding against the API, and can be found in the " +
+          "[registry-ws-client](https://github.com/gbif/registry/tree/master/registry-ws-client) project.\n\n" +
+        "Please note the old Registry API is still supported, but is now deprecated. Anyone starting new work is " +
+          "strongly encouraged to use the new API.",
+    termsOfService = "https://www.gbif.org/terms"),
+  servers = {
+    @Server(url = "https://api.gbif.org/v1/", description = "Production"),
+    @Server(url = "https://api.gbif-uat.org/v1/", description = "User testing")
+  })
+@Tag(name = "Enumerations", description = "This API provides JSON serializations of all enumerations in the GBIF API.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "5000")))
 @Validated
 @RestController
 @RequestMapping(value = "enumeration", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -117,6 +166,12 @@ public class EnumerationResource {
    *
    * @return The enumerations in the GBIF API.
    */
+  @Operation(
+    operationId = "enumerationsBasic",
+    summary = "An inventory of all enumerations")
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of enumerations.")
   @GetMapping("basic")
   public Set<String> inventory() {
     return PATH_MAPPING.keySet();
@@ -185,12 +240,26 @@ public class EnumerationResource {
   }
 
   /** @return list of country information based on our enum. */
+  @Operation(
+    operationId = "enumerationCountry",
+    summary = "Show the Country enumeration",
+    description = "Lists the known countries, territories and islands based on ISO 3166-2")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Country, territory and island list.")
   @GetMapping("country")
   public List<Map<String, String>> listCountries() {
     return COUNTRIES;
   }
 
   /** @return list of language information based on our enum. */
+  @Operation(
+    operationId = "enumerationLanguage",
+    summary = "Show the Language enumeration",
+    description = "Lists the known languages based on ISO 639-1")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Language list.")
   @GetMapping("language")
   public List<Map<String, String>> listLanguages() {
     return LANGUAGES;
@@ -200,11 +269,25 @@ public class EnumerationResource {
    * @return list of 'deserialized' License enums: uses License URL or just the enum name if no URL
    *     exists
    */
+  @Operation(
+    operationId = "enumerationLicense",
+    summary = "Show the License enumeration",
+    description = "Lists the accepted licenses")
+  @ApiResponse(
+    responseCode = "200",
+    description = "License list.")
   @GetMapping("license")
   public List<String> listLicenses() {
     return LICENSES;
   }
 
+  @Operation(
+    operationId = "enumerationInterpretationRemark",
+    summary = "Show the Interpretation Remark enumeration",
+    description = "Lists the known interpretation remarks")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Interpretation remark list.")
   @GetMapping("interpretationRemark")
   public List<Map<String, Object>> listInterpretationRemark() {
     return INTERPRETATION_REMARKS;
@@ -216,6 +299,13 @@ public class EnumerationResource {
    *
    * @return The enumeration values.
    */
+  @Operation(
+    operationId = "enumerationExtensions",
+    summary = "Show the Extensions enumeration",
+    description = "Lists the known extensions")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Extension list.")
   @GetMapping("basic/Extension")
   public List<String> getExtensionEnumeration() {
     return BASIC_EXTENSIONS;
@@ -244,9 +334,29 @@ public class EnumerationResource {
    * Gets the values of the named enumeration should the enumeration exist. Note this is used by the
    * AngularJS console.
    *
-   * @param name Which should be the enumeration name in the GBIF vocabulary package (e.g. Country)
+   * @param name The enumeration name in the GBIF vocabulary package (e.g. Country)
    * @return The enumeration values or null if the enumeration does not exist.
    */
+  @Operation(
+    operationId = "enumerationBasic",
+    summary = "Show a summary of an enumeration",
+    description = "Lists the values of the given enumeration")
+  @Parameter(
+    name = "name",
+    description = "The name of the enumeration",
+    schema = @Schema(implementation = String.class),
+    in = ParameterIn.PATH
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(
+        responseCode = "200",
+        description = "Country, territory and island list."),
+      @ApiResponse(
+        responseCode = "404",
+        description = "Unknown enumeration.",
+        content = @Content),
+    })
   @GetMapping("basic/{name}")
   @NullToNotFound("/enumeration/basic/{name}")
   public Object getEnumeration(@PathVariable("name") @NotNull String name) {

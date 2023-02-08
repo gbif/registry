@@ -44,10 +44,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 /**
  * This endpoint exists only to provide a custom feed for the iDigBio portal visible on
  * https://www.idigbio.org/portal/collections.
  */
+@Hidden
 @RestController
 @RequestMapping(
     value = "/external/idigbio/collections",

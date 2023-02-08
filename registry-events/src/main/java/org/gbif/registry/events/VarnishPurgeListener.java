@@ -59,7 +59,7 @@ import com.google.common.eventbus.Subscribe;
  *     of updates all keys used from the changed objects need be taken from both the old and new
  *     version.
  *     <h4>Node</h4>
- *     <p>Nodes are only modified in the IMS and no events are ever triggered.
+ *     <p>Nodes are only modified in the Directory and no events are ever triggered.
  *     <ul>
  *       <li>Node detail PURGE
  *       <li>List all nodes BAN

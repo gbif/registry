@@ -27,16 +27,24 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.util.iterables.Iterables;
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
+import org.gbif.registry.ws.resources.Docs;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,18 +53,37 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
  * implementation of {@link InstitutionService}.
  */
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Institutions",
+  description = " This API provides CRUD services for the institution entity. An institution can have a list of " +
+    "contacts, which are represented by the person entity. They can also have tags and identifiers. ",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
@@ -86,12 +113,107 @@ public class InstitutionResource
     this.institutionMergeService = institutionMergeService;
   }
 
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "type",
+        description = "Type of a GrSciColl institution",
+        schema = @Schema(implementation = InstitutionType.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "institutionalGovernance",
+        description = "Instutional governance of a GrSciColl institution",
+        schema = @Schema(implementation = InstitutionGovernance.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "disciplines",
+        description = "Discipline of a GrSciColl institution. Accepts multiple values, for example " +
+          "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
+        schema = @Schema(implementation = Discipline.class),
+        in = ParameterIn.QUERY)
+    })
+  @SearchRequestParameters
+  @interface InstitutionSearchParameters {}
+
+  @Operation(
+    operationId = "getInstitution",
+    summary = "Get details of a single institution",
+    description = "Details of a single institution.  Also works for deleted institutions.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
   public Institution get(@PathVariable UUID key) {
     return institutionService.get(key);
   }
 
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "createInstitution",
+    summary = "Create a new institution",
+    description = "Creates a new institution.")
+  @ApiResponse(
+    responseCode = "201",
+    description = "Institution created, new institution's UUID returned")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  public UUID create(@RequestBody @Trim Institution institution) {
+    return super.create(institution);
+  }
+
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "updateInstitution",
+    summary = "Update an existing institution",
+    description = "Updates the existing institution.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Institution updated")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Override
+  public void update(@PathVariable("key") UUID key, @RequestBody @Trim Institution institution) {
+    super.update(key, institution);
+  }
+
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "deleteInstitution",
+    summary = "Delete an existing institution",
+    description = "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Institution marked as deleted")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @DeleteMapping("{key}")
+  @Override
+  public void delete(@PathVariable UUID key) {
+    super.delete(key);
+  }
+
+  @Operation(
+    operationId = "listInstitutions",
+    summary = "List all institutions",
+    description = "Lists all current institutions (deleted institutions are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+  @InstitutionSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
@@ -128,6 +250,18 @@ public class InstitutionResource
         .toString();
   }
 
+  @Operation(
+    operationId = "listInstitutionsExport",
+    summary = "Export search across all institutions.",
+    description = "Download full-text search results as CSV or TSV.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
+  @CollectionResource.CollectionSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -143,17 +277,47 @@ public class InstitutionResource
     }
   }
 
+  @Operation(
+    operationId = "listDeleted",
+    summary = "Retrieve all deleted institution records")
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted institution records")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   public PagingResponse<Institution> listDeleted(
       @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
     return institutionService.listDeleted(replacedBy, page);
   }
 
+  @Operation(
+    operationId = "suggestInstitutions",
+    summary = "Suggest institutions.",
+    description = "Search that returns up to 20 matching institutions. Results are ordered by relevance. " +
+      "The response is smaller than an institution search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
+  @Docs.DefaultQParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return institutionService.suggest(q);
   }
 
+  @Operation(
+    operationId = "importCollection",
+    summary = "Converts an institution into a collection")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Conversion complete, key returned.",
+    content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/convertToCollection")
   public UUID convertToCollection(
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
@@ -161,6 +325,16 @@ public class InstitutionResource
         entityKey, params.getInstitutionForNewCollectionKey(), params.getNameForNewInstitution());
   }
 
+  @Operation(
+    operationId = "importInstitution",
+    summary = "Import an institution",
+    description = "Imports an institution from an organization.")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution imported, key returned.",
+    content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID createFromOrganization(@RequestBody @Trim InstitutionImportParams importParams) {
@@ -168,6 +342,7 @@ public class InstitutionResource
         importParams.getOrganizationKey(), importParams.getInstitutionCode());
   }
 
+  @Hidden
   @GetMapping("sourceableFields")
   public List<SourceableField> getSourceableFields() {
     return MasterSourceUtils.INSTITUTION_SOURCEABLE_FIELDS;
