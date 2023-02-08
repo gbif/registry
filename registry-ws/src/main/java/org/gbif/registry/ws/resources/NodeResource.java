@@ -77,7 +77,7 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
     "The nodes API provides CRUD and discovery services for nodes. Its most prominent use on the GBIF " +
     "portal is to drive the [GBIF network page](https://www.gbif.org/the-gbif-network) and country pages.\n\n" +
     "Please note deletion of nodes is logical, meaning node entries remain registered forever and only get a " +
-    "deleted timestamp. On the other hand, deletion of a nodes's contacts, endpoints, identifiers, tags, " +
+    "deleted timestamp. On the other hand, deletion of a nodes's endpoints, identifiers, tags, " +
     "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
   extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
     name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
@@ -139,7 +139,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "createNode",
     summary = "Create a new node",
-    description = "Creates a new node.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+    description = "Creates a new node.  Note endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions must be added in subsequent requests.")
   @ApiResponse(
     responseCode = "201",
@@ -161,7 +161,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "updateNode",
     summary = "Update an existing node",
-    description = "Updates the existing node.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+    description = "Updates the existing node.  Note endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed with this method.")
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
@@ -185,7 +185,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "deleteNode",
     summary = "Delete a node",
-    description = "Marks a node as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+    description = "Marks a node as deleted.  Note endpoints, identifiers, tags, machine tags, comments and " +
       "metadata descriptions are not changed.")
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
@@ -393,6 +393,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
         datasetMapper.listDatasetsEndorsedBy(nodeKey, page));
   }
 
+  @Hidden
   @GetMapping("{key}/contact")
   @Override
   public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
