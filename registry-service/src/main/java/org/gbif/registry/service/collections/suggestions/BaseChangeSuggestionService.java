@@ -629,10 +629,13 @@ public abstract class BaseChangeSuggestionService<
               currentEntity.getContactPersons().add((Contact) changeDto.getSuggested());
             } else {
               // update contact
-              int contactKey = ((Contact) changeDto.getSuggested()).getKey();
-              currentEntity
-                  .getContactPersons()
-                  .removeIf(c -> Objects.equals(c.getKey(), contactKey));
+              Integer contactKey = ((Contact) changeDto.getSuggested()).getKey();
+
+              if (contactKey != null) { // it can be null if it's an update of a previous suggestion
+                currentEntity
+                    .getContactPersons()
+                    .removeIf(c -> Objects.equals(c.getKey(), contactKey));
+              }
               currentEntity.getContactPersons().add((Contact) changeDto.getSuggested());
             }
 
