@@ -154,7 +154,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     count++;
 
     if (TEST_COUNTRIES.containsKey(c)) {
-      // create IMS identifiers
+      // create Directory identifiers
       Identifier id = new Identifier();
       id.setType(IdentifierType.GBIF_PARTICIPANT);
       id.setIdentifier(TEST_COUNTRIES.get(c).toString());
@@ -292,12 +292,12 @@ public class NodeIT extends NetworkEntityIT<Node> {
   }
 
   /**
-   * A test that requires a configured IMS with real spanish data. Jenkins is configured for this,
-   * so we activate this test to make sure IMS connections are working!
+   * A test that requires a configured Directory with real spanish data. Jenkins is configured for this,
+   * so we activate this test to make sure Directory connections are working!
    */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
-  public void testIms(ServiceType serviceType) {
+  public void testDirectory(ServiceType serviceType) {
     NodeService service = (NodeService) getService(serviceType);
     initVotingCountryNodes(serviceType);
     Node es = service.getByCountry(Country.SPAIN);
@@ -311,11 +311,11 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertEquals("Real Jardín Botánico - CSIC", es.getOrganization());
     assertTrue(es.getContacts().size() > 5);
 
-    Node notInIms = service.getByCountry(Country.AFGHANISTAN);
-    assertNotNull(notInIms);
+    Node notInDirectory = service.getByCountry(Country.AFGHANISTAN);
+    assertNotNull(notInDirectory);
   }
 
-  /** Node contacts are IMS managed and the service throws exceptions */
+  /** Node contacts are Directory managed and the service throws exceptions */
   @Override
   @ParameterizedTest
   @EnumSource(ServiceType.class)
@@ -325,7 +325,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
     assertThrows(UnsupportedOperationException.class, () -> service.listContacts(n.getKey()));
   }
 
-  /** Node contacts are IMS managed and the service throws exceptions */
+  /** Node contacts are Directory managed and the service throws exceptions */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testAddContact(ServiceType serviceType) {
@@ -335,7 +335,7 @@ public class NodeIT extends NetworkEntityIT<Node> {
         UnsupportedOperationException.class, () -> service.addContact(n.getKey(), new Contact()));
   }
 
-  /** Node contacts are IMS managed and the service throws exceptions */
+  /** Node contacts are Directory managed and the service throws exceptions */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testDeleteContact(ServiceType serviceType) {

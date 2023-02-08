@@ -30,6 +30,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.LenientEquals;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
@@ -41,7 +42,9 @@ import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.util.iterables.Iterables;
+import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
@@ -77,6 +80,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -119,6 +126,17 @@ import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
@@ -126,6 +144,19 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
+@io.swagger.v3.oas.annotations.tags.Tag(
+  name = "Datasets",
+  description = "A GBIF **dataset** provides occurrence data, checklist data, sampling event data or metadata. " +
+    "Publishing organizations register datasets in this Registry, and the data they reference is retrieved and " +
+    "indexed in GBIF's occurrence store on a regular schedule.\n\n" +
+    "Metadata of datasets follows the GBIF Metadata Profile.\n\n" +
+    "The dataset API provides CRUD and discovery services for datasets. Its most prominent use on the GBIF " +
+    "portal is to drive the [dataset search](https://www.gbif.org/dataset/search) and dataset pages.\n\n" +
+    "Please note deletion of datasets is logical, meaning dataset entries remain registered forever and only get a " +
+    "deleted timestamp. On the other hand, deletion of a dataset's contacts, endpoints, identifiers, tags, " +
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
 @Validated
 @Primary
 @RestController
@@ -194,6 +225,131 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     this.emlWriter = EMLWriter.newInstance(false);
   }
 
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "country",
+        description = "The 2-letter country code (as per ISO-3166-1) of the country publishing the dataset.",
+        schema = @Schema(implementation = Country.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.FALSE),
+      @Parameter(
+        name = "type",
+        description = "The primary type of the dataset.",
+        schema = @Schema(implementation = DatasetType.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.TRUE),
+      @Parameter(
+        name = "subtype",
+        description = "The sub-type of the dataset.",
+        schema = @Schema(implementation = DatasetSubtype.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.TRUE),
+      @Parameter(
+        name = "license",
+        description = "The dataset's licence.",
+        schema = @Schema(implementation = License.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.TRUE),
+      @Parameter(
+        name = "identifier",
+        description = "An identifier such as a DOI or UUID.",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "keyword",
+        description = "Filters datasets by a case insensitive plain text keyword. The search is done on the merged " +
+          "collection of tags, the dataset keywordCollections and temporalCoverages.",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "publishingOrg",
+        description = "Filters datasets by their publishing organization UUID key",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "hostingOrg",
+        description = "Filters datasets by their hosting organization UUID key",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "endorsingNodeKey",
+        description = "Node key that endorsed this dataset's publisher",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "decade",
+        description = "Filters datasets by their temporal coverage broken down to decades. Decades are given as a full " +
+          "year, e.g. 1880, 1960, 2000, etc, and will return datasets wholly contained in the decade as well as those " +
+          "that cover the entire decade or more. Facet by decade to get the break down, i.e. `facet=DECADE&limit=0`",
+        schema = @Schema(implementation = Short.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "publishingCountry",
+        description = "Filters datasets by their owning organization's country given as a ISO 639-1 (2 letter) country code",
+        schema = @Schema(implementation = Country.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.FALSE),
+      @Parameter(
+        name = "projectId",
+        description = "Filter or facet based on the project ID of a given dataset. A dataset can have a project id if " +
+          "it is the result of a project. multiple datasets can have the same project id.",
+        schema = @Schema(implementation = String.class),
+        in = ParameterIn.QUERY,
+        example = "AA003-AA003311F"),
+      @Parameter(
+        name = "hostingCountry",
+        description = "Filters datasets by their hosting organization's country given as a ISO 639-1 (2 letter) country code",
+        schema = @Schema(implementation = Country.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.FALSE),
+      @Parameter(
+        name = "continent",
+        description = "Not implemented.",
+        schema = @Schema(implementation = Continent.class),
+        in = ParameterIn.QUERY,
+        deprecated = true,
+        explode = Explode.FALSE),
+      @Parameter(
+        name = "networkKey",
+        description = "Network associated to a dataset",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "request",
+        hidden = true
+      ),
+      @Parameter(
+        name = "searchRequest",
+        hidden = true
+      ),
+      @Parameter(
+        name = "suggestRequest",
+        hidden = true
+      )
+    })
+  @interface DatasetSearchParameters {}
+
+  @Operation(
+    operationId = "searchDatasets",
+    summary = "Search across all datasets.",
+    description = "Full-text search across all datasets. Results are ordered by relevance.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")),
+    tags = "BASIC")
+  @DatasetSearchParameters
+  @Docs.DefaultQParameter
+  @Docs.DefaultHlParameter
+  @Docs.DefaultFacetParameters
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("search")
   @Override
   public SearchResponse<DatasetSearchResult, DatasetSearchParameter> search(
@@ -201,6 +357,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return searchService.search(searchRequest);
   }
 
+  @Operation(
+    operationId = "searchDatasetsExport",
+    summary = "Export search across all datasets.",
+    description = "Download full-text search results as CSV or TSV.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")),
+    tags = "BASIC"
+  )
+  @DatasetSearchParameters
+  @Docs.DefaultQParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("search/export")
   public void search(
       HttpServletResponse response,
@@ -219,12 +391,40 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
   }
 
+  @Operation(
+    operationId = "suggestDatasets",
+    summary = "Suggest datasets.",
+    description = "Search that returns up to 20 matching datasets. Results are ordered by relevance. " +
+      "The response is smaller than a dataset search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
+    tags = "BASIC"
+  )
+  @DatasetSearchParameters
+  @Docs.DefaultQParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("suggest")
   @Override
   public List<DatasetSuggestResult> suggest(DatasetSuggestRequest suggestRequest) {
     return searchService.suggest(suggestRequest);
   }
 
+  @Operation(
+    operationId = "getDataset",
+    summary = "Get details of a single dataset",
+    description = "Details of a single dataset.  Also works for deleted datasets.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
+    tags = "BASIC")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/dataset/{key}")
   @Override
@@ -237,6 +437,34 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * interface, and is in addition to any complex, faceted search that might additionally be
    * supported, such as dataset search.
    */
+  @Operation(
+    operationId = "listDatasets",
+    summary = "List all datasets",
+    description = "Lists all current datasets (deleted datasets are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "country",
+        description = "The 2-letter country code (as per ISO-3166-1) of the country publishing the dataset.",
+        schema = @Schema(implementation = Country.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.FALSE),
+      @Parameter(
+        name = "type",
+        description = "The primary type of the dataset.",
+        schema = @Schema(implementation = DatasetType.class),
+        in = ParameterIn.QUERY,
+        explode = Explode.TRUE)
+    })
+  @SimpleSearchParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Dataset> list(
       @Nullable Country country, @Valid DatasetRequestSearchParams request, Pageable page) {
@@ -295,6 +523,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return null;
   }
 
+  @Operation(
+    operationId = "getDocuments",
+    summary = "Retrieve GBIF metadata document of the dataset",
+    description = "Gets a GBIF generated EML document overlaying GBIF information with any existing metadata document data.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "GBIF metadata documents")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   public byte[] getMetadataDocumentAsBytes(@PathVariable("key") UUID datasetKey) {
     // the fully augmented dataset
@@ -312,6 +549,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return null;
   }
 
+  @Operation(
+    operationId = "deleteDataset",
+    summary = "Delete an existing dataset",
+    description = "Deletes an existing dataset. The dataset entry gets a deleted timestamp but remains registered.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Dataset marked as deleted")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
@@ -325,6 +572,17 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
   }
 
+  @Operation(
+    operationId = "addDocument",
+    summary = "Add a metadata document to the record",
+    description = "Pushes a new original source metadata document for a dataset into the registry, replacing any " +
+      "previously existing document of the same type.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Metadata document added, metadata document identifier returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/document", consumes = MediaType.APPLICATION_XML_VALUE)
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public Metadata insertMetadata(
@@ -566,6 +824,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * a {@link License} as per <a href="http://dev.gbif.org/issues/browse/POR-3133">GBIF License
    * business rules</a>
    */
+  @Operation(
+    operationId = "createDataset",
+    summary = "Create a new dataset",
+    description = "Creates a new dataset.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions must be added in subsequent requests.")
+  @ApiResponse(
+    responseCode = "201",
+    description = "Dataset created, new dataset's UUID returned")
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -593,6 +860,30 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     doiDataCiteHandlingService.scheduleDatasetRegistration(
         dataset.getDoi(), metadataBuilderService.buildMetadata(get(key)), key);
     return key;
+  }
+
+  /**
+   * Updates the dataset.
+   *
+   * @param dataset dataset
+   */
+  // Method overridden only for documentation.
+  @Operation(
+    operationId = "updateDataset",
+    summary = "Update an existing dataset",
+    description = "Updates the existing dataset.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions are not changed with this method.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "204",
+    description = "Dataset updated")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Validated({PostPersist.class, Default.class})
+  @Override
+  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Dataset dataset) {
+    super.update(key, dataset);
   }
 
   @Override
@@ -742,6 +1033,16 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return insertMetadata(datasetKey, document, "UNKNOWN USER");
   }
 
+  @Operation(
+    operationId = "getConstituents",
+    summary = "Retrieve all constituents of the dataset",
+    description = "Lists the dataset's subdataset constituents (datasets that have a parentDatasetKey equal to the one requested).")
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of constituents")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(
@@ -752,24 +1053,59 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         datasetMapper.listConstituents(datasetKey, page));
   }
 
+  @Operation(
+    operationId = "getNetworks",
+    summary = "List the networks the dataset belongs to")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of networks")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/networks")
   @Override
   public List<Network> listNetworks(@PathVariable("key") UUID datasetKey) {
     return networkMapper.listByDataset(datasetKey);
   }
 
+  // TODO: What for?
+  @Operation(
+    operationId = "getAllConstituents",
+    summary = "Retrieve all constituent datasets",
+    description = "Lists datasets that are a constituent of any dataset.")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of datasets")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(Pageable page) {
     return pagingResponse(page, datasetMapper.countSubdatasets(), datasetMapper.subdatasets(page));
   }
 
+  @Hidden
+  @Operation(
+    operationId = "getDatasetGrids",
+    summary = "Retrieve all grids of a dataset")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of dataset grids")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/gridded")
   @Override
   public List<Grid> listGrids(@PathVariable("key") UUID datasetKey) {
     return datasetMapper.listGrids(datasetKey);
   }
 
+  @Operation(
+    operationId = "getAllMetadata",
+    summary = "Retrieve all dataset source metadata")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of source metadata documents")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/metadata")
   @Override
   public List<Metadata> listMetadata(
@@ -777,6 +1113,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     return registryDatasetService.listMetadata(key, type);
   }
 
+  @Operation(
+    operationId = "getMetadata",
+    summary = "Retrieve metadata about a source metadata document of a dataset")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Metadata about a metadata document")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("metadata/{key}")
   @Override
   @NullToNotFound("/dataset/metadata/{key}")
@@ -791,30 +1134,70 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   // TODO: 05/04/2020 change API to return byte[]?
+  @Operation(
+    operationId = "getMetadataDocument",
+    summary = "Retrieve a source metadata document of the dataset")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Source metadata document in XML format")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
   @NullToNotFound("/dataset/metadata/{key}/document")
   public byte[] getMetadataDocumentAsBytes(@PathVariable int key) {
     return registryDatasetService.getMetadataDocument(key);
   }
 
+  @Operation(
+    operationId = "deleteMetadata",
+    summary = "Delete a source metadata document from the record")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Metadata document deleted")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("metadata/{key}")
   @Override
   public void deleteMetadata(@PathVariable("key") int metadataKey) {
     metadataMapper.delete(metadataKey);
   }
 
+  @Operation(
+    operationId = "getDeletedDatasets",
+    summary = "List all deleted datasets")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted datasets")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
   public PagingResponse<Dataset> listDeleted(Pageable page) {
     return pagingResponse(page, datasetMapper.countDeleted(), datasetMapper.deleted(page));
   }
 
+  @Operation(
+    operationId = "getDuplicateDatasets",
+    summary = "List all duplicate datasets")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Duplicate datasets")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("duplicate")
   @Override
   public PagingResponse<Dataset> listDuplicates(Pageable page) {
     return pagingResponse(page, datasetMapper.countDuplicates(), datasetMapper.duplicates(page));
   }
 
+  @Operation(
+    operationId = "getNoEndpointDatasets",
+    summary = "List all datasets with no endpoint")
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Datasets with no endpoint")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("withNoEndpoint")
   @Override
   public PagingResponse<Dataset> listDatasetsWithNoEndpoint(Pageable page) {
@@ -852,6 +1235,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * trigger the crawling of the dataset. This simply emits a message to rabbitmq requesting the
    * crawl, and applies necessary security.
    */
+  // TODO: Deprecate and remove?
+  @Hidden
   @PostMapping("crawlall")
   @Secured(ADMIN_ROLE)
   public void crawlAll(
@@ -869,6 +1254,18 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * trigger the crawling of the dataset. This simply emits a message to rabbitmq requesting the
    * crawl, and applies necessary security.
    */
+  @Operation(
+    operationId = "crawlDataset",
+    summary = "Schedule a new ingestion of the dataset")
+  @Docs.DefaultEntityKeyParameter
+  @Parameter(
+    name = "platform",
+    hidden = true)
+  @ApiResponse(
+    responseCode = "204",
+    description = "Ingestion request accepted, or dataset is already being processed.")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/crawl")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   public void crawl(
@@ -892,6 +1289,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     }
   }
 
+  @Hidden
   @PostMapping(value = "{datasetKey}/process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
@@ -927,6 +1325,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     datasetProcessStatusMapper.create(datasetProcessStatus);
   }
 
+  @Hidden
   @PutMapping(value = "{datasetKey}/process/{attempt}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   @Transactional
@@ -953,15 +1352,25 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     datasetProcessStatusMapper.update(datasetProcessStatus);
   }
 
-  @GetMapping("{datasetKey}/process/{attempt}")
+  @Operation(
+    operationId = "datasetCrawlAttempt",
+    summary = "Get details of a particular crawl attempt for the dataset")
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Crawl attempt record")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping("{key}/process/{attempt}")
   @Nullable
-  @NullToNotFound("/dataset/{datasetKey}/process/{attempt}")
+  @NullToNotFound("/dataset/{key}/process/{attempt}")
   @Override
   public DatasetProcessStatus getDatasetProcessStatus(
-      @PathVariable UUID datasetKey, @PathVariable int attempt) {
-    return datasetProcessStatusMapper.get(datasetKey, attempt);
+      @PathVariable UUID key, @PathVariable int attempt) {
+    return datasetProcessStatusMapper.get(key, attempt);
   }
 
+  @Hidden
   @GetMapping("process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(Pageable page) {
@@ -969,6 +1378,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         page, (long) datasetProcessStatusMapper.count(), datasetProcessStatusMapper.list(page));
   }
 
+  @Hidden
   @GetMapping("process/aborted")
   @Override
   public PagingResponse<DatasetProcessStatus> listAbortedDatasetProcesses(Pageable page) {
@@ -978,14 +1388,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         datasetProcessStatusMapper.listAborted(page));
   }
 
-  @GetMapping("{datasetKey}/process")
+  @Operation(
+    operationId = "listDatasetCrawlAttempt",
+    summary = "Get details of all crawl attempts for a dataset")
+  @Docs.DefaultEntityKeyParameter
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Crawl attempt records")
+  @GetMapping("{key}/process")
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(
-      @PathVariable UUID datasetKey, Pageable page) {
+      @PathVariable UUID key, Pageable page) {
     return new PagingResponse<>(
         page,
-        (long) datasetProcessStatusMapper.countByDataset(datasetKey),
-        datasetProcessStatusMapper.listByDataset(datasetKey, page));
+        (long) datasetProcessStatusMapper.countByDataset(key),
+        datasetProcessStatusMapper.listByDataset(key, page));
   }
 
   @Override
@@ -994,6 +1412,29 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
   }
 
+  @Operation(
+    operationId = "datasetByDoi",
+    summary = "Retrieve a dataset by DOI",
+    description = "Retrieves datasets (may be more than one) referencing the given DOI."
+  )
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "prefix",
+        description = "Plain DOI prefix (before the slash)",
+        example = "10.15468",
+        in = ParameterIn.PATH),
+      @Parameter(
+        name = "suffix",
+        description = "Plain DOI suffix (after the slash)",
+        example = "igasai",
+        in = ParameterIn.PATH)
+    })
+  @Docs.DefaultOffsetLimitParameters
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset list")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("doi/{prefix}/{suffix}")
   public PagingResponse<Dataset> listByDOI(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {

@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import org.gbif.api.model.common.AppPrincipal;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
@@ -53,6 +55,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.APP_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
+@Hidden // TODO: Document?
 @Validated
 @RequestMapping(path = "user", produces = MediaType.APPLICATION_JSON_VALUE)
 @RestController

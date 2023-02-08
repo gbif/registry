@@ -47,7 +47,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 /** Handle all legacy web service Organization requests, previously handled by the GBRDS. */
+@Hidden
 @RestController
 @RequestMapping("registry")
 public class LegacyOrganizationResource {

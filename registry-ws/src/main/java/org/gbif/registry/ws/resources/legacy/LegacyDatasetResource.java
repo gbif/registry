@@ -53,12 +53,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.collect.Lists;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import static org.gbif.registry.ws.util.LegacyResourceUtils.extractOrgKeyFromSecurity;
 
 /**
  * Handle all legacy web service Dataset requests (excluding IPT requests), previously handled by
  * the GBRDS.
  */
+@Hidden
 @RestController
 @RequestMapping("registry")
 public class LegacyDatasetResource {
