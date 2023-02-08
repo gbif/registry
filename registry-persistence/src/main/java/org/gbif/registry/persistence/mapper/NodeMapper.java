@@ -29,7 +29,7 @@ import org.springframework.stereotype.Repository;
 /**
  * For simplicity we keep ContactableMapper part of the BaseNetworkEntityMapper, but this NodeMapper
  * does not implement those mapper methods but will throw exceptions instead ! For a Node all
- * contacts are managed in the GBIF Filemaker IMS which we only access for reads and cannot
+ * contacts are managed in the GBIF Directory which we only access for reads and cannot
  * manipulate though our Java API.
  */
 @Repository
