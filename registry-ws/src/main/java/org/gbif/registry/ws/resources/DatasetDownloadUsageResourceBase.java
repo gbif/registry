@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.DownloadType;
@@ -51,7 +54,11 @@ public abstract class DatasetDownloadUsageResourceBase
     operationId = "getDatasetDownloadActivity",
     summary = "List the downloads activity of a dataset.",
     description = "Lists the downloads in which data from a dataset has been included.")
-  @Docs.DefaultEntityKeyParameter
+  @Parameter(
+    name = "datasetKey",
+    description = "The key of the dataset.",
+    in = ParameterIn.PATH)
+  @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset found and download information returned")
