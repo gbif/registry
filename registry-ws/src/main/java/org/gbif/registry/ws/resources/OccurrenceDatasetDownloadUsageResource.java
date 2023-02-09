@@ -21,7 +21,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /** Occurrence download resource/web service. */
+/*
+ * OpenAPI documentation:
+ *
+ * This class has OpenAPI/SpringDoc method annotations, but the tag is the same
+ * as in occurrence→occurrence-ws→OccurrenceDownloadResource.
+ *
+ * The result is manually moved from the Registry OpenAPI document to the
+ * Occurrence OpenAPI document.
+ */
+@Tag(name = "Occurrence downloads")
 @Validated
 @RestController("datasetOccurrenceDownloadUsageResource")
 @RequestMapping(value = "occurrence/download/dataset", produces = MediaType.APPLICATION_JSON_VALUE)
