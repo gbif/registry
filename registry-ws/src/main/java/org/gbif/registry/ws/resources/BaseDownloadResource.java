@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
@@ -103,7 +105,16 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsI
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
 /** Base download resource/web service. */
-@Hidden
+/*
+ * OpenAPI documentation:
+ *
+ * This class has OpenAPI/SpringDoc method annotations, but the tag is the same
+ * as in occurrence→occurrence-ws→OccurrenceDownloadResource.
+ *
+ * The result is manually moved from the Registry OpenAPI document to the
+ * Occurrence OpenAPI document.
+ */
+@Tag(name = "Occurrence downloads")
 public class BaseDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
