@@ -314,19 +314,46 @@ public class MasterSourceSynchronizer {
       Throwables.propagate(e);
     }
 
-    // update collection
-    collectionService.update(convertedCollection, false);
+    try {
+      // update collection
+      collectionService.update(convertedCollection, false);
+    } catch (Exception ex) {
+      log.error(
+          "Error while updating collection {} with dataset {}",
+          convertedCollection.getKey(),
+          dataset.getKey(),
+          ex);
+      Throwables.propagate(ex);
+    }
   }
 
   private void updateInstitution(Organization organization, Institution existingInstitution) {
     Institution convertedInstitution =
         InstitutionConverter.convertFromOrganization(organization, existingInstitution);
 
-    // replace contacts
-    institutionService.replaceContactPersons(
-        existingInstitution.getKey(), convertedInstitution.getContactPersons());
+    try {
+      // replace contacts
+      institutionService.replaceContactPersons(
+          existingInstitution.getKey(), convertedInstitution.getContactPersons());
+    } catch (ConstraintViolationException e) {
+      log.error(
+          "Invalid contacts updating institution {} with organization {}",
+          convertedInstitution.getKey(),
+          organization.getKey(),
+          e);
+      Throwables.propagate(e);
+    }
 
-    // update institution
-    institutionService.update(convertedInstitution, false);
+    try {
+      // update institution
+      institutionService.update(convertedInstitution, false);
+    } catch (Exception ex) {
+      log.error(
+          "Error while updating institution {} with organization {}",
+          convertedInstitution.getKey(),
+          organization.getKey(),
+          ex);
+      Throwables.propagate(ex);
+    }
   }
 }
