@@ -28,6 +28,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
 
 /** Base download resource/web service. */
@@ -44,6 +47,15 @@ public abstract class DatasetDownloadUsageResourceBase
     this.downloadType = downloadType;
   }
 
+  @Operation(
+    operationId = "getDatasetDownloadActivity",
+    summary = "List the downloads activity of a dataset.",
+    description = "Lists the downloads in which data from a dataset has been included.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(
+    responseCode = "200",
+    description = "Dataset found and download information returned")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{datasetKey}")
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(

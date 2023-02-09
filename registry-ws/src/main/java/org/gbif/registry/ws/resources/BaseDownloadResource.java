@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.gbif.api.annotation.NullToNotFound;
@@ -108,13 +109,12 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
 /*
  * OpenAPI documentation:
  *
- * This class has OpenAPI/SpringDoc method annotations, but the tag is the same
- * as in occurrence→occurrence-ws→OccurrenceDownloadResource.
+ * This class has OpenAPI/SpringDoc method annotations, but the non-stats
+ * tag is the same as in occurrence→occurrence-ws→OccurrenceDownloadResource.
  *
  * The result is manually moved from the Registry OpenAPI document to the
  * Occurrence OpenAPI document.
  */
-@Tag(name = "Occurrence downloads")
 public class BaseDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
@@ -244,6 +244,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return download;
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getOccurrenceDownloadByKey",
     summary = "Information about an occurrence download",
@@ -266,6 +267,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return download;
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getOccurrenceDownloadByDOI",
     summary = "Information about an occurrence download",
@@ -307,6 +309,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
    * Lists all the downloads. Users will see only their own downloads; an admin user
    * can see other users' downloads.
    */
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "listOccurrenceDownloadsByUser",
     summary = "Lists all downloads from a user",
@@ -389,6 +392,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return listDatasetUsagesInternal(download.getKey(), page, download);
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "listDatasetUsagesByDownloadDOI",
     summary = "Lists datasets present in a download",
@@ -405,6 +409,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return listDatasetUsagesInternal(download.getKey(), page, download);
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "listDatasetUsagesByDownloadKey",
     summary = "Lists datasets present in a download",
@@ -421,6 +426,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return listDatasetUsagesInternal(key, page, download);
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "exportDatasetUsagesByDownloadKey",
     summary = "Exports datasets present in a download in TSV or CSV format",
@@ -490,6 +496,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return getCitationInternal(download);
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getDownloadCitationByKey",
     summary = "Shows the citation for a download")
@@ -505,6 +512,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return getCitationInternal(download);
   }
 
+  @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getDownloadCitationByDOI",
     summary = "Shows the citation for a download")
@@ -534,6 +542,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     return null;
   }
 
+  @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "getDownloadsByUserCountry",
     summary = "Summarizes downloads by month, grouped by the user's country, territory or island",
@@ -565,6 +574,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             downloadType));
   }
 
+  @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "getDownloadedRecordsBySource",
     summary = "Summarize downloaded record totals by source",
@@ -587,6 +597,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
         occurrenceDownloadMapper.getDownloadsBySource(fromDate, toDate, source, downloadType));
   }
 
+  @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "getDownloadedRecordsByDataset",
     summary = "Summarize downloaded records by dataset",
@@ -635,6 +646,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             downloadType));
   }
 
+  @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "getDownloadedRecordsByDataset",
     summary = "Summarize downloads by dataset",
@@ -683,6 +695,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             downloadType));
   }
 
+  @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "getDownloadedStatistics",
     summary = "Summarize downloads",
@@ -733,6 +746,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             fromDate, toDate, country, datasetKey, publishingOrgKey, page, downloadType));
   }
 
+  @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "exportDownloadedStatistics",
     summary = "Export summary of downloads")
