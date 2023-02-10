@@ -34,6 +34,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
@@ -759,6 +760,11 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     datasetContact.setFirstName("firstName");
     datasetContact.setLastName("lastName");
     datasetService.addContact(dataset.getKey(), datasetContact);
+
+    org.gbif.api.model.registry.Contact datasetContact2 = new org.gbif.api.model.registry.Contact();
+    datasetContact2.setFirstName("c2");
+    datasetContact2.setType(ContactType.METADATA_AUTHOR);
+    datasetService.addContact(dataset.getKey(), datasetContact2);
 
     String collectionCode = "CODE";
     UUID collectionKey = collectionService.createFromDataset(dataset.getKey(), collectionCode);

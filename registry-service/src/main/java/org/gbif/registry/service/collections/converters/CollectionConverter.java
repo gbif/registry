@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.eml.TaxonomicCoverages;
+import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.PreservationMethodType;
 import org.gbif.api.vocabulary.collections.PreservationType;
@@ -188,6 +189,10 @@ public class CollectionConverter {
     // contacts
     List<Contact> collectionContacts =
         dataset.getContacts().stream()
+            .filter(
+                c ->
+                    c.getType() != ContactType.PROGRAMMER
+                        && c.getType() != ContactType.METADATA_AUTHOR)
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
     existingCollection.setContactPersons(collectionContacts);

@@ -16,6 +16,7 @@ package org.gbif.registry.service.collections.converters;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.vocabulary.ContactType;
 
 import java.util.List;
 import java.util.Objects;
@@ -64,6 +65,10 @@ public class InstitutionConverter {
     // contacts
     List<Contact> collectionContacts =
         organization.getContacts().stream()
+            .filter(
+                c ->
+                    c.getType() != ContactType.PROGRAMMER
+                        && c.getType() != ContactType.METADATA_AUTHOR)
             .map(ConverterUtils::datasetContactToCollectionsContact)
             .collect(Collectors.toList());
     existingInstitution.setContactPersons(collectionContacts);
