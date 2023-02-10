@@ -88,7 +88,7 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Organizations",
+  name = "Publishing organizations",
   description = "A **publishing organization** is an institution endorsed by a GBIF Node to publish datasets to GBIF.\n\n" +
     "The organization API provides CRUD and discovery services for organizations. Its most prominent use on the GBIF " +
     "portal is to drive the [data publisher search](https://www.gbif.org/publisher/search).\n\n" +

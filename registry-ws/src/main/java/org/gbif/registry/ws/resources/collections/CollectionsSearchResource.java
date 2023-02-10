@@ -37,7 +37,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Search",
+  name = "Search institutions and collections",
   description = "This API provides a service to search institutions and collections. It searches in both institutions " +
     "and collections and it highlights the matching fields (optional).",
   extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
