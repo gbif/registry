@@ -39,7 +39,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Lookups",
+  name = "Lookup institutions and collections",
   description = "This API provides a service to lookup institutions and collections. It can be used to lookup for " +
     "institutions, collections or both at the same time. Besides the matches, the response also provides information " +
     "to help understand how the match was done.",

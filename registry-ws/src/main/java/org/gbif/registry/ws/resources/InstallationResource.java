@@ -85,7 +85,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Installations",
+  name = "Technical installations",
   description = "A **technical installation** serves datasets.  They usually represent installations of the " +
     "[GBIF IPT](https://www.gbif.org/ipt) or other HTTP-accessible data repositories.\n\n" +
     "The installation API provides CRUD and discovery services for installations.\n\n" +

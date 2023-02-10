@@ -50,7 +50,7 @@ import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
  * implementation of {@link CollectionService}.
  */
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Audit log",
+  name = "GRSciColl Audit log",
   description = "This services provides an audit log that tracks all the changes made to GRSciColl entities. " +
     "Its usage is reserved for administrators.",
   extensions = @io.swagger.v3.oas.annotations.extensions.Extension(

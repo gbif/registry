@@ -71,7 +71,7 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Nodes",
+  name = "Participant nodes",
   description = "Each of GBIF's formal participants designates and establishes a **node** responsible for " +
     "coordinating GBIF-related in-country activities.\n\n" +
     "The nodes API provides CRUD and discovery services for nodes. Its most prominent use on the GBIF " +
