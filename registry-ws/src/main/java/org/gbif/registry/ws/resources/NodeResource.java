@@ -78,7 +78,9 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
     "portal is to drive the [GBIF network page](https://www.gbif.org/the-gbif-network) and country pages.\n\n" +
     "Please note deletion of nodes is logical, meaning node entries remain registered forever and only get a " +
     "deleted timestamp. On the other hand, deletion of a nodes's endpoints, identifiers, tags, " +
-    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.\n\n" +
+    "Also note, nodes are managed in a different, internal GBIF system, so the usual create-update-delete methods" +
+    "exist but are not documented here.",
   extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
     name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
 @Validated
@@ -135,7 +137,8 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * @param node node
    * @return key of entity created
    */
-  // Method overridden only for documentation.
+  // Method overridden only for documentation.  Note it is hidden.
+  @Hidden
   @Operation(
     operationId = "createNode",
     summary = "Create a new node",
@@ -157,7 +160,8 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    *
    * @param node node
    */
-  // Method overridden only for documentation.
+  // Method overridden only for documentation.  Note it is hidden.
+  @Hidden
   @Operation(
     operationId = "updateNode",
     summary = "Update an existing node",
@@ -181,7 +185,8 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    *
    * @param key key of node to delete
    */
-  // Method overridden only for documentation.
+  // Method overridden only for documentation.  Note it is hidden.
+  @Hidden
   @Operation(
     operationId = "deleteNode",
     summary = "Delete a node",
