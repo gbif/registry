@@ -206,6 +206,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     this.downloadType = downloadType;
   }
 
+  @Hidden // Users create downloads through occurrence-ws.
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -292,6 +293,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   /** Lists all the downloads. This operation can be executed by role ADMIN only. */
+  @Hidden // Admin method hidden
   @GetMapping
   @Secured(ADMIN_ROLE)
   @Override
