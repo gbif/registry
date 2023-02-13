@@ -36,18 +36,23 @@ public class OpenAPIConfiguration {
    */
   @Bean
   public OpenApiCustomiser sortTagsByOrderExtension() {
-    return openApi -> openApi.setTags(openApi.getTags()
-      .stream()
-      .sorted(tagOrder())
-      //.peek(tag -> System.err.println("TAG: " + tag.getName() + ": " +
-      //  (tag.getExtensions() != null ? ((Map)tag.getExtensions().get("x-Order")).get("Order").toString() : "__" + tag.getName())))
-      .collect(Collectors.toList()));
+    return openApi ->
+        openApi.setTags(
+            openApi.getTags().stream()
+                .sorted(tagOrder())
+                // .peek(tag -> System.err.println("TAG: " + tag.getName() + ": " +
+                //  (tag.getExtensions() != null ?
+                // ((Map)tag.getExtensions().get("x-Order")).get("Order").toString() : "__" +
+                // tag.getName())))
+                .collect(Collectors.toList()));
   }
+
   Comparator<Tag> tagOrder() {
-    return Comparator.comparing(tag ->
-      tag.getExtensions() == null ?
-        "__" + tag.getName() :
-        ((Map)tag.getExtensions().get("x-Order")).get("Order").toString());
+    return Comparator.comparing(
+        tag ->
+            tag.getExtensions() == null
+                ? "__" + tag.getName()
+                : ((Map) tag.getExtensions().get("x-Order")).get("Order").toString());
   }
 
   @Bean
@@ -56,23 +61,27 @@ public class OpenAPIConfiguration {
 
     return openApi -> {
       Paths paths = new Paths();
-      openApi.getPaths()
-        .entrySet()
-        .stream()
-        .sorted(Map.Entry.comparingByValue(pathOrder()))
-//      .peek(tag -> System.err.println("PI: " + pathItem.getName() + ": " + (tag.getExtensions() != null ? ((Map)tag.getExtensions().get("x-Order")).get("Order").toString() : "__" + tag.getName())))
-//      .collect(Collectors.))
-        .forEachOrdered(pi -> {
-          System.err.println("PI: " + pi.getKey()); // + " " + pi.getValue());
-          paths.addPathItem(pi.getKey(), pi.getValue());
-        });
+      openApi.getPaths().entrySet().stream()
+          .sorted(Map.Entry.comparingByValue(pathOrder()))
+          //      .peek(tag -> System.err.println("PI: " + pathItem.getName() + ": " +
+          // (tag.getExtensions() != null ?
+          // ((Map)tag.getExtensions().get("x-Order")).get("Order").toString() : "__" +
+          // tag.getName())))
+          //      .collect(Collectors.))
+          .forEachOrdered(
+              pi -> {
+                System.err.println("PI: " + pi.getKey()); // + " " + pi.getValue());
+                paths.addPathItem(pi.getKey(), pi.getValue());
+              });
       openApi.setPaths(paths);
     };
   }
+
   Comparator<PathItem> pathOrder() {
-    return Comparator.comparing(pathItem ->
-      pathItem.getExtensions() == null ?
-        "__" + pathItem.toString() :
-        ((Map)pathItem.getExtensions().get("x-Order")).get("Order").toString());
+    return Comparator.comparing(
+        pathItem ->
+            pathItem.getExtensions() == null
+                ? "__" + pathItem.toString()
+                : ((Map) pathItem.getExtensions().get("x-Order")).get("Order").toString());
   }
 }
