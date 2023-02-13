@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import org.gbif.api.model.common.AppPrincipal;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.registry.domain.ws.AuthenticationDataParameters;
@@ -45,8 +47,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Hidden;
 
 import static org.gbif.registry.security.SecurityContextCheck.ensureGbifScheme;
 import static org.gbif.registry.security.SecurityContextCheck.ensureNotGbifScheme;

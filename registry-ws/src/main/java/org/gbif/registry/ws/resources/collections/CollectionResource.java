@@ -79,21 +79,18 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * implementation of {@link CollectionService}.
  */
 @io.swagger.v3.oas.annotations.tags.Tag(
-    name = "Collections",
-    description =
-        "The collections API provides CRUD services for collections, institutions and person entities. "
-            + "The data was originally migrated from the Global Registry of Scientific Collections (GRSciColl) and adapted to "
-            + "follow the same conventions as other registry services. Therefore, the deletion of collections, institutions and "
-            + "persons is logical, meaning these entries remain registered forever and only get a deleted timestamp. On the "
-            + "other hand, the deletion of tags and identifiers is physical, meaning the entries are permanently removed.\n\n"
-            + "*Please note that this part of the API is still under development, and may change in the future.*\n\n"
-            + "## Collection\n"
-            + "This API provides CRUD services for the collection entity. A collection can be associated with an institution "
-            + "and can have a list of contacts, which are represented by the person entity. It can also have tags and identifiers.",
-    extensions =
-        @io.swagger.v3.oas.annotations.extensions.Extension(
-            name = "Order",
-            properties = @ExtensionProperty(name = "Order", value = "1000")))
+  name = "Collections",
+  description = "The collections API provides CRUD services for collections, institutions and person entities. " +
+    "The data was originally migrated from the Global Registry of Scientific Collections (GRSciColl) and adapted to " +
+    "follow the same conventions as other registry services. Therefore, the deletion of collections, institutions and " +
+    "persons is logical, meaning these entries remain registered forever and only get a deleted timestamp. On the " +
+    "other hand, the deletion of tags and identifiers is physical, meaning the entries are permanently removed.\n\n" +
+    "*Please note that this part of the API is still under development, and may change in the future.*\n\n" +
+    "## Collection\n" +
+    "This API provides CRUD services for the collection entity. A collection can be associated with an institution " +
+    "and can have a list of contacts, which are represented by the person entity. It can also have tags and identifiers.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")))
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionResource
@@ -124,50 +121,47 @@ public class CollectionResource
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-      value = {
-        @Parameter(
-            name = "institution",
-            description = "A key for the institution.",
-            schema = @Schema(implementation = UUID.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "contentTypes",
-            description =
-                "Content type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
-            schema = @Schema(implementation = CollectionContentType.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "preservationTypes",
-            description =
-                "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
-            schema = @Schema(implementation = PreservationType.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "accessionStatus",
-            description = "Accession status of a GrSciColl collection",
-            schema = @Schema(implementation = AccessionStatus.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "personalCollection",
-            description = "Flag for personal GRSciColl collections",
-            schema = @Schema(implementation = Boolean.class),
-            in = ParameterIn.QUERY)
-      })
+    value = {
+      @Parameter(
+        name = "institution",
+        description = "A key for the institution.",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "contentTypes",
+        description = "Content type of a GrSciColl collection. Accepts multiple values, for example " +
+          "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
+        schema = @Schema(implementation = CollectionContentType.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "preservationTypes",
+        description = "Preservation type of a GrSciColl collection. Accepts multiple values, for example " +
+          "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
+        schema = @Schema(implementation = PreservationType.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "accessionStatus",
+        description = "Accession status of a GrSciColl collection",
+        schema = @Schema(implementation = AccessionStatus.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "personalCollection",
+        description = "Flag for personal GRSciColl collections",
+        schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY)
+    })
   @SearchRequestParameters
   @interface CollectionSearchParameters {}
 
   @Operation(
-      operationId = "getCollection",
-      summary = "Get details of a single collection",
-      description = "Details of a single collection.  Also works for deleted collections.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0300")))
+    operationId = "getCollection",
+    summary = "Get details of a single collection",
+    description = "Details of a single collection.  Also works for deleted collections.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Collection found and returned")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
@@ -177,12 +171,12 @@ public class CollectionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "createCollection",
-      summary = "Create a new collection",
-      description = "Creates a new collection.")
+    operationId = "createCollection",
+    summary = "Create a new collection",
+    description = "Creates a new collection.")
   @ApiResponse(
-      responseCode = "201",
-      description = "Collection created, new collection's UUID returned")
+    responseCode = "201",
+    description = "Collection created, new collection's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
@@ -192,11 +186,13 @@ public class CollectionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "updateCollection",
-      summary = "Update an existing collection",
-      description = "Updates the existing collection.")
+    operationId = "updateCollection",
+    summary = "Update an existing collection",
+    description = "Updates the existing collection.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Collection updated")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Collection updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -207,12 +203,13 @@ public class CollectionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "deleteCollection",
-      summary = "Delete an existing collection",
-      description =
-          "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.")
+    operationId = "deleteCollection",
+    summary = "Delete an existing collection",
+    description = "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Collection marked as deleted")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Collection marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
@@ -222,16 +219,17 @@ public class CollectionResource
   }
 
   @Operation(
-      operationId = "listCollections",
-      summary = "List all collections",
-      description = "Lists all current collections (deleted collections are not listed).",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0100")))
+    operationId = "listCollections",
+    summary = "List all collections",
+    description = "Lists all current collections (deleted collections are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @CollectionSearchParameters
-  @ApiResponse(responseCode = "200", description = "Collection search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return collectionService.list(searchRequest);
@@ -271,16 +269,17 @@ public class CollectionResource
   }
 
   @Operation(
-      operationId = "listCollectionsExport",
-      summary = "Export search across all collections.",
-      description = "Download full-text search results as CSV or TSV.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1100")))
+    operationId = "listCollectionsExport",
+    summary = "Export search across all collections.",
+    description = "Download full-text search results as CSV or TSV.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
   @CollectionSearchParameters
-  @ApiResponse(responseCode = "200", description = "Collection search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -297,8 +296,12 @@ public class CollectionResource
     }
   }
 
-  @Operation(operationId = "listDeleted", summary = "Retrieve all deleted collection records")
-  @ApiResponse(responseCode = "200", description = "List of deleted collection records")
+  @Operation(
+    operationId = "listDeleted",
+    summary = "Retrieve all deleted collection records")
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted collection records")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   public PagingResponse<CollectionView> listDeleted(
@@ -307,31 +310,31 @@ public class CollectionResource
   }
 
   @Operation(
-      operationId = "suggestCollections",
-      summary = "Suggest collections.",
-      description =
-          "Search that returns up to 20 matching collections. Results are ordered by relevance. "
-              + "The response is smaller than a collection search.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1300")))
+    operationId = "suggestCollections",
+    summary = "Suggest collections.",
+    description = "Search that returns up to 20 matching collections. Results are ordered by relevance. " +
+      "The response is smaller than a collection search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
   @Docs.DefaultQParameter
-  @ApiResponse(responseCode = "200", description = "Collection search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Collection search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
   }
 
   @Operation(
-      operationId = "importCollection",
-      summary = "Import a collection",
-      description = "Imports a collection from a dataset.")
+    operationId = "importCollection",
+    summary = "Import a collection",
+    description = "Imports a collection from a dataset.")
   @ApiResponse(
-      responseCode = "200",
-      description = "Collection imported, key returned.",
-      content = @Content)
+    responseCode = "200",
+    description = "Collection imported, key returned.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
