@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Hidden;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.literature.LiteratureType;
 import org.gbif.api.model.pipelines.PipelineStep;
@@ -41,7 +43,6 @@ import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
 
-import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -51,14 +52,12 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.SystemPropertyUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.google.common.collect.ImmutableSortedMap;
@@ -137,6 +136,11 @@ public class EnumerationResource {
       Arrays.stream(Language.values())
           .map(EnumerationResource::languageToMap)
           .collect(collectingAndThen(toList(), Collections::unmodifiableList));
+
+  private static final List<Map<String, Object>> EXTENSIONS =
+      Arrays.stream(Extension.values())
+        .map(EnumerationResource::extensionToMap)
+        .collect(collectingAndThen(toList(), Collections::unmodifiableList));
 
   // Only includes InterpretationRemark that are NOT deprecated
   @SuppressWarnings("Convert2MethodRef")
@@ -293,41 +297,29 @@ public class EnumerationResource {
     return INTERPRETATION_REMARKS;
   }
 
+  /** @return list of DWCA extensions based on our enum. */
+  @Operation(
+    operationId = "enumerationExtension",
+    summary = "Show the Extension enumeration",
+    description = "Lists the known Darwin Core Archive extensions and their RowType")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Extension list.")
+  @GetMapping("extension")
+  public List<Map<String, Object>> listExtensions() {
+    return EXTENSIONS;
+  }
+
   /**
    * Gets the Extension enumeration. This exists to avoid use of the ExtensionSerializer, which
    * assumes JSON keys, since in this case we want values.
    *
    * @return The enumeration values.
    */
-  @Operation(
-    operationId = "enumerationExtensions",
-    summary = "Show the Extensions enumeration",
-    description = "Lists the known extensions")
-  @ApiResponse(
-    responseCode = "200",
-    description = "Extension list.")
+  @Hidden // Covered by documentation for getEnumeration
   @GetMapping("basic/Extension")
   public List<String> getExtensionEnumeration() {
     return BASIC_EXTENSIONS;
-  }
-
-  @GetMapping("basic/Extension/{extensionName}")
-  public String getExtension(@PathVariable("extensionName") String extensionName) {
-    return EXTENSIONS_BY_NAME_MAPPING.getOrDefault(extensionName, null);
-  }
-
-  /**
-   * Returns the keys of the Extension enum. It's done manually because the default for the
-   * Extension enum is done in {@link #getExtensionEnumeration()} and cannot be changed to keep
-   * backwards compatibility.
-   */
-  @GetMapping("ExtensionRowType")
-  public ResponseEntity getExtensionRowTypesEnumeration(
-      @RequestParam(value = "rowType", required = false) String rowType) {
-    if (!Strings.isNullOrEmpty(rowType)) {
-      return ResponseEntity.ok(EXTENSIONS_BY_ROWTYPE_MAPPING.getOrDefault(rowType, null));
-    }
-    return ResponseEntity.ok(EXTENSION_ROW_TYPES);
   }
 
   /**
@@ -397,6 +389,14 @@ public class EnumerationResource {
         interpretationRemark.getRelatedTerms().stream()
             .map(Term::qualifiedName)
             .collect(Collectors.toSet()));
+    return info;
+  }
+
+  /** Transform an {@link Extension} into a key-value map of properties. */
+  private static Map<String, Object> extensionToMap(Extension extension) {
+    Map<String, Object> info = new LinkedHashMap<>();
+    info.put("id", extension.name());
+    info.put("rowType", extension.getRowType());
     return info;
   }
 }
