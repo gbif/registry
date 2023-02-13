@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import io.swagger.v3.oas.annotations.Hidden;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.model.literature.LiteratureType;
 import org.gbif.api.model.pipelines.PipelineStep;
@@ -63,6 +61,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedMap.Builder;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
