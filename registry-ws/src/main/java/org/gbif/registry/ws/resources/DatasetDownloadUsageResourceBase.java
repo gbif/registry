@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.DownloadType;
@@ -32,6 +29,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
@@ -51,17 +50,14 @@ public abstract class DatasetDownloadUsageResourceBase
   }
 
   @Operation(
-    operationId = "getDatasetDownloadActivity",
-    summary = "List the downloads activity of a dataset.",
-    description = "Lists the downloads in which data from a dataset has been included.")
-  @Parameter(
-    name = "datasetKey",
-    description = "The key of the dataset.",
-    in = ParameterIn.PATH)
+      operationId = "getDatasetDownloadActivity",
+      summary = "List the downloads activity of a dataset.",
+      description = "Lists the downloads in which data from a dataset has been included.")
+  @Parameter(name = "datasetKey", description = "The key of the dataset.", in = ParameterIn.PATH)
   @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
-    responseCode = "200",
-    description = "Dataset found and download information returned")
+      responseCode = "200",
+      description = "Dataset found and download information returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{datasetKey}")
   @Override

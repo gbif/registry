@@ -88,15 +88,18 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @SuppressWarnings("UnstableApiUsage")
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Organizations",
-  description = "A **publishing organization** is an institution endorsed by a GBIF Node to publish datasets to GBIF.\n\n" +
-    "The organization API provides CRUD and discovery services for organizations. Its most prominent use on the GBIF " +
-    "portal is to drive the [data publisher search](https://www.gbif.org/publisher/search).\n\n" +
-    "Please note deletion of organizations is logical, meaning organization entries remain registered forever and only get a " +
-    "deleted timestamp. On the other hand, deletion of an organizations's contacts, endpoints, identifiers, tags, " +
-    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
-  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
-    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
+    name = "Organizations",
+    description =
+        "A **publishing organization** is an institution endorsed by a GBIF Node to publish datasets to GBIF.\n\n"
+            + "The organization API provides CRUD and discovery services for organizations. Its most prominent use on the GBIF "
+            + "portal is to drive the [data publisher search](https://www.gbif.org/publisher/search).\n\n"
+            + "Please note deletion of organizations is logical, meaning organization entries remain registered forever and only get a "
+            + "deleted timestamp. On the other hand, deletion of an organizations's contacts, endpoints, identifiers, tags, "
+            + "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+    extensions =
+        @io.swagger.v3.oas.annotations.extensions.Extension(
+            name = "Order",
+            properties = @ExtensionProperty(name = "Order", value = "0200")))
 @Validated
 @Primary
 @RestController
@@ -135,18 +138,20 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getOrganizatinon",
-    summary = "Get details of a single publishing organization",
-    description = "Details of a single publishing organization.  Also works for deleted publishing organizations.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+      operationId = "getOrganizatinon",
+      summary = "Get details of a single publishing organization",
+      description =
+          "Details of a single publishing organization.  Also works for deleted publishing organizations.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0300")),
+      tags = "BASIC")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Organization found and returned")
+  @ApiResponse(responseCode = "200", description = "Organization found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
-  @NullToNotFound("/organization/{key}")  // TODO TODO TODO
+  @NullToNotFound("/organization/{key}") // TODO TODO TODO
   @Override
   public Organization get(@PathVariable UUID key) {
     return super.get(key);
@@ -160,13 +165,14 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * @return key of entity created
    */
   @Operation(
-    operationId = "createOrganization",
-    summary = "Create a new publishing organization",
-    description = "Creates a new publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      operationId = "createOrganization",
+      summary = "Create a new publishing organization",
+      description =
+          "Creates a new publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions must be added in subsequent requests.")
   @ApiResponse(
-    responseCode = "201",
-    description = "Publishing organization created, new publishing organization's UUID returned")
+      responseCode = "201",
+      description = "Publishing organization created, new publishing organization's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
@@ -202,20 +208,20 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   // Method overridden only for documentation.
   @Operation(
-    operationId = "updateOrganization",
-    summary = "Update an existing organization",
-    description = "Updates the existing publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      operationId = "updateOrganization",
+      summary = "Update an existing organization",
+      description =
+          "Updates the existing publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions are not changed with this method.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Organization updated")
+  @ApiResponse(responseCode = "204", description = "Organization updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Organization organization) {
+  public void update(
+      @PathVariable("key") UUID key, @Valid @RequestBody @Trim Organization organization) {
     super.update(key, organization);
   }
 
@@ -226,14 +232,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    */
   // Method overridden only for documentation.
   @Operation(
-    operationId = "deleteOrganization",
-    summary = "Delete a publishing organization",
-    description = "Marks a publishing organization as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.")
+      operationId = "deleteOrganization",
+      summary = "Delete a publishing organization",
+      description =
+          "Marks a publishing organization as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions are not changed.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Publishing organization deleted")
+  @ApiResponse(responseCode = "204", description = "Publishing organization deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
@@ -277,30 +282,30 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
    * supported, such as dataset search.
    */
   @Operation(
-    operationId = "listOrganizations",
-    summary = "List all publishing organizations",
-    description = "Lists all current publishing organizations (deleted organizations are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+      operationId = "listOrganizations",
+      summary = "List all publishing organizations",
+      description =
+          "Lists all current publishing organizations (deleted organizations are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")),
+      tags = "BASIC")
   @SimpleSearchParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "isEndorsed",
-        description = "Whether the organization is endorsed by a node.",
-        schema = @Schema(implementation = Boolean.class),
-        in = ParameterIn.QUERY)
-      // TODO: Should networkKey be documented?
-      // @Parameter(
-      //   name = "networkKey",
-      //   in = ParameterIn.QUERY)
-    })
-  @ApiResponse(
-    responseCode = "200",
-    description = "Organization search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+      value = {
+        @Parameter(
+            name = "isEndorsed",
+            description = "Whether the organization is endorsed by a node.",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY)
+        // TODO: Should networkKey be documented?
+        // @Parameter(
+        //   name = "networkKey",
+        //   in = ParameterIn.QUERY)
+      })
+  @ApiResponse(responseCode = "200", description = "Organization search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Organization> list(
       @Nullable Country country, @Valid OrganizationRequestSearchParams request, Pageable page) {
@@ -348,14 +353,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getHostedDatasets",
-    summary = "List hosted datasets",
-    description = "Lists the hosted datasets (datasets hosted by installations hosted by the organization).")
+      operationId = "getHostedDatasets",
+      summary = "List hosted datasets",
+      description =
+          "Lists the hosted datasets (datasets hosted by installations hosted by the organization).")
   @Docs.DefaultEntityKeyParameter
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of hosted datasets")
+  @ApiResponse(responseCode = "200", description = "List of hosted datasets")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/hostedDataset")
   @Override
@@ -368,14 +372,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getPublishedDatasets",
-    summary = "List published datasets",
-    description = "Lists the published datasets (datasets published by the organization).")
+      operationId = "getPublishedDatasets",
+      summary = "List published datasets",
+      description = "Lists the published datasets (datasets published by the organization).")
   @Docs.DefaultEntityKeyParameter
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of published datasets")
+  @ApiResponse(responseCode = "200", description = "List of published datasets")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/publishedDataset")
   @Override
@@ -398,14 +400,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getOrganizationInstallations",
-    summary = "List organization's installations",
-    description = "Lists the technical installations registered to this organization.")
+      operationId = "getOrganizationInstallations",
+      summary = "List organization's installations",
+      description = "Lists the technical installations registered to this organization.")
   @Docs.DefaultEntityKeyParameter
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of technical installations")
+  @ApiResponse(responseCode = "200", description = "List of technical installations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/installation")
   @Override
@@ -426,13 +426,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getDeletedOrganizations",
-    summary = "List deleted organizations",
-    description = "Lists deleted organizations.")
+      operationId = "getDeletedOrganizations",
+      summary = "List deleted organizations",
+      description = "Lists deleted organizations.")
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of deleted organizations")
+  @ApiResponse(responseCode = "200", description = "List of deleted organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
@@ -442,13 +440,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getPendingOrganizations",
-    summary = "List pending organizations",
-    description = "Lists organizations whose endorsement is pending.")
+      operationId = "getPendingOrganizations",
+      summary = "List pending organizations",
+      description = "Lists organizations whose endorsement is pending.")
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of pending organizations")
+  @ApiResponse(responseCode = "200", description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("pending")
   @Override
@@ -460,13 +456,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "getNonPublishingOrganizations",
-    summary = "List non-publishing organizations",
-    description = "Lists organizations publishing 0 datasets (excluding deleted datasets).")
+      operationId = "getNonPublishingOrganizations",
+      summary = "List non-publishing organizations",
+      description = "Lists organizations publishing 0 datasets (excluding deleted datasets).")
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of non-publishing organizations")
+  @ApiResponse(responseCode = "200", description = "List of non-publishing organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("nonPublishing")
   @Override
@@ -476,20 +470,19 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-    operationId = "suggestOrganizations",
-    summary = "Suggest organizations.",
-    description = "Search that returns up to 20 matching publishing organizations. Results are ordered by relevance. " +
-      "The response is smaller than an organization search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
-  )
+      operationId = "suggestOrganizations",
+      summary = "Suggest organizations.",
+      description =
+          "Search that returns up to 20 matching publishing organizations. Results are ordered by relevance. "
+              + "The response is smaller than an organization search.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "1300")),
+      tags = "BASIC")
   @Docs.DefaultQParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Organization search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Organization search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
