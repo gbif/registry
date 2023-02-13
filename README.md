@@ -1,4 +1,4 @@
-[![Build status](https://builds.gbif.org/job/registry/badge/icon)](https://builds.gbif.org/job/registry/lastBuild/console)
+[![Build status](https://builds.gbif.org/job/registry-dev/badge/icon)](https://builds.gbif.org/job/registry-dev/lastBuild/console)
 [![Crowdin](https://badges.crowdin.net/gbif-registry/localized.svg)](https://crowdin.com/project/gbif-registry)
 
 # GBIF Registry
@@ -14,17 +14,17 @@ As a distributed network, the registry serves a central coordination mechanism, 
 
 ## Code style
 
-The registry uses [github action](.github/workflows/main.yml) with google code format (code formatting) and spotless-maven-plugin (import order, license header).
-Please check [motherpom](https://github.com/gbif/motherpom) project for some important configuration.
+The registry uses the spotless-maven-plugin (import order, license header).
+Please check the [motherpom](https://github.com/gbif/motherpom) project for some important configuration.
 
 ### Project files
 
 Code style related files. **Please make sure you properly configure required IDE settings**:
 
 - [gbif.importorder](./gbif.importorder) overrides default google package import order (for spotless-maven-plugin).
-- [gbif-lecense-header](./gbif-license-header) provides default license header (for spotless-maven-plugin).
-- [google-style.xml](./google-style.xml) java google code style, should be imported to IDE as a default one: Preferences --> Editor --> Code Style --> Import scheme (gear next to 'Scheme' dropdown) --> Intellij IDEA code style XML.
-- [.editorconfig](./.editorconfig) formatting properties which overrides some inconvenient google ones (e.g. static imports at the beginning of imports list). Make sure editorconfig file is enabled in IDE: Preferences --> Editor --> Code Style --> General --> Enable EditorConfig support.
+- [gbif-license-header](./gbif-license-header) provides default license header (for spotless-maven-plugin).
+- [google-style.xml](./google-style.xml) java google code style, should be imported to IDE as a default one: Preferences → Editor → Code Style → Import scheme (gear next to 'Scheme' dropdown) → Intellij IDEA code style XML.
+- [.editorconfig](./.editorconfig) formatting properties which overrides some inconvenient google ones (e.g. static imports at the beginning of imports list). Make sure editorconfig file is enabled in IDE: Preferences → Editor → Code Style → General → Enable EditorConfig support.
 
 
 ### Manual use of Spotless
