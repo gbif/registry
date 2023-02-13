@@ -72,20 +72,17 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-    name = "Networks",
-    description =
-        "**Networks** are collections of datasets, organized outside the Node-Organization model to serve "
-            + "some purpose.\n\n"
-            + "The largest network is [Ocean Biodiversity Information Systems (OBIS)](https://www.gbif.org/network/2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6).\n\n"
-            + "The dataset API provides CRUD and discovery services for networks. "
-            + "Networks are arbitrary collections of datasets grouped for some purpose.\n\n"
-            + "Please note deletion of networks is logical, meaning network entries remain registered forever and only get a "
-            + "deleted timestamp. On the other hand, deletion of a network's contacts, endpoints, identifiers, tags, "
-            + "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
-    extensions =
-        @io.swagger.v3.oas.annotations.extensions.Extension(
-            name = "Order",
-            properties = @ExtensionProperty(name = "Order", value = "0400")))
+  name = "Networks",
+  description = "**Networks** are collections of datasets, organized outside the Node-Organization model to serve " +
+    "some purpose.\n\n" +
+    "The largest network is [Ocean Biodiversity Information Systems (OBIS)](https://www.gbif.org/network/2b7c7b4f-4d4f-40d3-94de-c28b6fa054a6).\n\n" +
+    "The dataset API provides CRUD and discovery services for networks. " +
+    "Networks are arbitrary collections of datasets grouped for some purpose.\n\n" +
+    "Please note deletion of networks is logical, meaning network entries remain registered forever and only get a " +
+    "deleted timestamp. On the other hand, deletion of a network's contacts, endpoints, identifiers, tags, " +
+    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400")))
 @Validated
 @Primary
 @RestController
@@ -114,16 +111,15 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @Operation(
-      operationId = "getNetwork",
-      summary = "Get details of a single network",
-      description = "Details of a single network.  Also works for deleted networks.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0300")),
-      tags = "BASIC")
+    operationId = "getNetwork",
+    summary = "Get details of a single network",
+    description = "Details of a single network.  Also works for deleted networks.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
+    tags = "BASIC")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Network found and returned")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Network found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
@@ -140,12 +136,13 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    */
   // Method overridden only for documentation.
   @Operation(
-      operationId = "createNetwork",
-      summary = "Creates a new network",
-      description =
-          "Creates a new network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
-              + "metadata descriptions must be added in subsequent requests.")
-  @ApiResponse(responseCode = "201", description = "Network created, new network's UUID returned")
+    operationId = "createNetwork",
+    summary = "Creates a new network",
+    description = "Creates a new network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions must be added in subsequent requests.")
+  @ApiResponse(
+    responseCode = "201",
+    description = "Network created, new network's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
@@ -161,13 +158,14 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    */
   // Method overridden only for documentation.
   @Operation(
-      operationId = "updateNetwork",
-      summary = "Update an existing network",
-      description =
-          "Updates the existing network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
-              + "metadata descriptions are not changed with this method.")
+    operationId = "updateNetwork",
+    summary = "Update an existing network",
+    description = "Updates the existing network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions are not changed with this method.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Network updated")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Network updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -184,13 +182,14 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    */
   // Method overridden only for documentation.
   @Operation(
-      operationId = "deleteNetwork",
-      summary = "Delete a network",
-      description =
-          "Marks a network as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
-              + "metadata descriptions are not changed.")
+    operationId = "deleteNetwork",
+    summary = "Delete a network",
+    description = "Marks a network as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
+      "metadata descriptions are not changed.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Network deleted")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Network deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
@@ -204,17 +203,18 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
    * supported, such as dataset search.
    */
   @Operation(
-      operationId = "listNetworks",
-      summary = "List all networks",
-      description = "Lists all current networks (deleted networks are not listed).",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0100")),
-      tags = "BASIC")
+    operationId = "listNetworks",
+    summary = "List all networks",
+    description = "Lists all current networks (deleted networks are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
   @SimpleSearchParameters
-  @ApiResponse(responseCode = "200", description = "Network search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Network search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Network> list(@Valid NetworkRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
@@ -235,16 +235,15 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @Operation(
-      operationId = "listNetworkConstituents",
-      summary = "List all constituents (datasets) of a network",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0100")),
-      tags = "BASIC")
+    operationId = "listNetworkConstituents",
+    summary = "List all constituents (datasets) of a network",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
+    tags = "BASIC")
   @Docs.DefaultEntityKeyParameter
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(responseCode = "200", description = "Constituent dataset list")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Constituent dataset list")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/constituents")
   @Override
@@ -277,15 +276,19 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @Operation(
-      operationId = "networkConstituentAdd",
-      summary = "Add a constituent dataset to a network")
+    operationId = "networkConstituentAdd",
+    summary = "Add a constituent dataset to a network")
   @Docs.DefaultEntityKeyParameter
   @Parameter(
-      name = "datasetKey",
-      description = "The GBIF key of the dataset to add",
-      schema = @Schema(implementation = UUID.class),
-      in = ParameterIn.PATH)
-  @ApiResponse(responseCode = "201", description = "Constituent added.", content = @Content)
+    name = "datasetKey",
+    description = "The GBIF key of the dataset to add",
+    schema = @Schema(implementation = UUID.class),
+    in = ParameterIn.PATH
+  )
+  @ApiResponse(
+    responseCode = "201",
+    description = "Constituent added.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/constituents/{datasetKey}")
@@ -304,15 +307,19 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @Operation(
-      operationId = "networkConstituentDelete",
-      summary = "Remove a constituent dataset from a network")
+    operationId = "networkConstituentDelete",
+    summary = "Remove a constituent dataset from a network")
   @Docs.DefaultEntityKeyParameter
   @Parameter(
-      name = "datasetKey",
-      description = "The GBIF key of the dataset to remove",
-      schema = @Schema(implementation = UUID.class),
-      in = ParameterIn.PATH)
-  @ApiResponse(responseCode = "204", description = "Constituent removed.", content = @Content)
+    name = "datasetKey",
+    description = "The GBIF key of the dataset to remove",
+    schema = @Schema(implementation = UUID.class),
+    in = ParameterIn.PATH
+  )
+  @ApiResponse(
+    responseCode = "204",
+    description = "Constituent removed.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/constituents/{datasetKey}")
@@ -330,19 +337,20 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   }
 
   @Operation(
-      operationId = "suggestNetworks",
-      summary = "Suggest networks.",
-      description =
-          "Search that returns up to 20 matching networks. Results are ordered by relevance. "
-              + "The response is smaller than an network search.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1300")),
-      tags = "BASIC")
+    operationId = "suggestNetworks",
+    summary = "Suggest networks.",
+    description = "Search that returns up to 20 matching networks. Results are ordered by relevance. " +
+      "The response is smaller than an network search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
+    tags = "BASIC"
+  )
   @Docs.DefaultQParameter
-  @ApiResponse(responseCode = "200", description = "Network search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Network search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {

@@ -79,14 +79,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * implementation of {@link InstitutionService}.
  */
 @io.swagger.v3.oas.annotations.tags.Tag(
-    name = "Institutions",
-    description =
-        " This API provides CRUD services for the institution entity. An institution can have a list of "
-            + "contacts, which are represented by the person entity. They can also have tags and identifiers. ",
-    extensions =
-        @io.swagger.v3.oas.annotations.extensions.Extension(
-            name = "Order",
-            properties = @ExtensionProperty(name = "Order", value = "1100")))
+  name = "Institutions",
+  description = " This API provides CRUD services for the institution entity. An institution can have a list of " +
+    "contacts, which are represented by the person entity. They can also have tags and identifiers. ",
+  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
+    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
@@ -119,38 +116,36 @@ public class InstitutionResource
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-      value = {
-        @Parameter(
-            name = "type",
-            description = "Type of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionType.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "institutionalGovernance",
-            description = "Instutional governance of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionGovernance.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "disciplines",
-            description =
-                "Discipline of a GrSciColl institution. Accepts multiple values, for example "
-                    + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
-            schema = @Schema(implementation = Discipline.class),
-            in = ParameterIn.QUERY)
-      })
+    value = {
+      @Parameter(
+        name = "type",
+        description = "Type of a GrSciColl institution",
+        schema = @Schema(implementation = InstitutionType.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "institutionalGovernance",
+        description = "Instutional governance of a GrSciColl institution",
+        schema = @Schema(implementation = InstitutionGovernance.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "disciplines",
+        description = "Discipline of a GrSciColl institution. Accepts multiple values, for example " +
+          "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
+        schema = @Schema(implementation = Discipline.class),
+        in = ParameterIn.QUERY)
+    })
   @SearchRequestParameters
   @interface InstitutionSearchParameters {}
 
   @Operation(
-      operationId = "getInstitution",
-      summary = "Get details of a single institution",
-      description = "Details of a single institution.  Also works for deleted institutions.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0300")))
+    operationId = "getInstitution",
+    summary = "Get details of a single institution",
+    description = "Details of a single institution.  Also works for deleted institutions.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Institution found and returned")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
@@ -160,12 +155,12 @@ public class InstitutionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "createInstitution",
-      summary = "Create a new institution",
-      description = "Creates a new institution.")
+    operationId = "createInstitution",
+    summary = "Create a new institution",
+    description = "Creates a new institution.")
   @ApiResponse(
-      responseCode = "201",
-      description = "Institution created, new institution's UUID returned")
+    responseCode = "201",
+    description = "Institution created, new institution's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
@@ -175,11 +170,13 @@ public class InstitutionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "updateInstitution",
-      summary = "Update an existing institution",
-      description = "Updates the existing institution.")
+    operationId = "updateInstitution",
+    summary = "Update an existing institution",
+    description = "Updates the existing institution.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Institution updated")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Institution updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -190,12 +187,13 @@ public class InstitutionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "deleteInstitution",
-      summary = "Delete an existing institution",
-      description =
-          "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.")
+    operationId = "deleteInstitution",
+    summary = "Delete an existing institution",
+    description = "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Institution marked as deleted")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Institution marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
@@ -205,16 +203,17 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "listInstitutions",
-      summary = "List all institutions",
-      description = "Lists all current institutions (deleted institutions are not listed).",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0100")))
+    operationId = "listInstitutions",
+    summary = "List all institutions",
+    description = "Lists all current institutions (deleted institutions are not listed).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @InstitutionSearchParameters
-  @ApiResponse(responseCode = "200", description = "Institution search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
@@ -252,16 +251,17 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "listInstitutionsExport",
-      summary = "Export search across all institutions.",
-      description = "Download full-text search results as CSV or TSV.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1100")))
+    operationId = "listInstitutionsExport",
+    summary = "Export search across all institutions.",
+    description = "Download full-text search results as CSV or TSV.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
   @CollectionResource.CollectionSearchParameters
-  @ApiResponse(responseCode = "200", description = "Institution search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -277,8 +277,12 @@ public class InstitutionResource
     }
   }
 
-  @Operation(operationId = "listDeleted", summary = "Retrieve all deleted institution records")
-  @ApiResponse(responseCode = "200", description = "List of deleted institution records")
+  @Operation(
+    operationId = "listDeleted",
+    summary = "Retrieve all deleted institution records")
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted institution records")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   public PagingResponse<Institution> listDeleted(
@@ -287,31 +291,31 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "suggestInstitutions",
-      summary = "Suggest institutions.",
-      description =
-          "Search that returns up to 20 matching institutions. Results are ordered by relevance. "
-              + "The response is smaller than an institution search.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1300")))
+    operationId = "suggestInstitutions",
+    summary = "Suggest institutions.",
+    description = "Search that returns up to 20 matching institutions. Results are ordered by relevance. " +
+      "The response is smaller than an institution search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
   @Docs.DefaultQParameter
-  @ApiResponse(responseCode = "200", description = "Institution search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return institutionService.suggest(q);
   }
 
   @Operation(
-      operationId = "importCollection",
-      summary = "Converts an institution into a collection")
+    operationId = "importCollection",
+    summary = "Converts an institution into a collection")
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
-      responseCode = "200",
-      description = "Conversion complete, key returned.",
-      content = @Content)
+    responseCode = "200",
+    description = "Conversion complete, key returned.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/convertToCollection")
@@ -322,13 +326,13 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "importInstitution",
-      summary = "Import an institution",
-      description = "Imports an institution from an organization.")
+    operationId = "importInstitution",
+    summary = "Import an institution",
+    description = "Imports an institution from an organization.")
   @ApiResponse(
-      responseCode = "200",
-      description = "Institution imported, key returned.",
-      content = @Content)
+    responseCode = "200",
+    description = "Institution imported, key returned.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
