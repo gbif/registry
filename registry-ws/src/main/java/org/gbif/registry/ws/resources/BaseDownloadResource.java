@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
@@ -100,6 +97,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
@@ -148,47 +146,39 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
-  @Parameter(
-    name = "key",
-    description = "The key of the download",
-    in = ParameterIn.PATH
-  )
+  @Parameter(name = "key", description = "The key of the download", in = ParameterIn.PATH)
   @interface DownloadKeyParameter {}
 
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-    value = {
-      @Parameter(
-        name = "prefix",
-        description = "The DOI prefix of the download, 10.15468 for GBIF downloads",
-        in = ParameterIn.PATH
-      ),
-      @Parameter(
-        name = "suffix",
-        description = "The DOI suffix of the download, begins 'dl.' for GBIF downloads",
-        in = ParameterIn.PATH
-      )
-    })
+      value = {
+        @Parameter(
+            name = "prefix",
+            description = "The DOI prefix of the download, 10.15468 for GBIF downloads",
+            in = ParameterIn.PATH),
+        @Parameter(
+            name = "suffix",
+            description = "The DOI suffix of the download, begins 'dl.' for GBIF downloads",
+            in = ParameterIn.PATH)
+      })
   @interface DoiParameters {}
 
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-    value = {
-      @Parameter(
-        name = "fromDate",
-        description = "The year and month (YYYY-MM) to start from.",
-        schema = @Schema(implementation = Date.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "toDate",
-        description = "The year and month (YYYY-MM) to end at.",
-        schema = @Schema(implementation = Date.class),
-        in = ParameterIn.QUERY
-      )
-    })
+      value = {
+        @Parameter(
+            name = "fromDate",
+            description = "The year and month (YYYY-MM) to start from.",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "toDate",
+            description = "The year and month (YYYY-MM) to end at.",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY)
+      })
   @interface FromToParameters {}
 
   public BaseDownloadResource(
@@ -247,14 +237,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "getOccurrenceDownloadByKey",
-    summary = "Information about an occurrence download",
-    description = "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence " +
-      "download.  Authorized users see additional details on their own downloads.")
+      operationId = "getOccurrenceDownloadByKey",
+      summary = "Information about an occurrence download",
+      description =
+          "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence "
+              + "download.  Authorized users see additional details on their own downloads.")
   @DownloadKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Occurrence download information.")
+  @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound(useUrlMapping = true)
@@ -270,14 +259,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "getOccurrenceDownloadByDOI",
-    summary = "Information about an occurrence download",
-    description = "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence " +
-      "download.  Authorized users see additional details on their own downloads.")
+      operationId = "getOccurrenceDownloadByDOI",
+      summary = "Information about an occurrence download",
+      description =
+          "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence "
+              + "download.  Authorized users see additional details on their own downloads.")
   @DoiParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Occurrence download information.")
+  @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{prefix}/{suffix}")
   @NullToNotFound(useUrlMapping = true)
@@ -313,18 +301,16 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
    */
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "listOccurrenceDownloadsByUser",
-    summary = "Lists all downloads from a user",
-    description = "Retrieves the status, definitions and locations of all occurrence download by your own user.")
+      operationId = "listOccurrenceDownloadsByUser",
+      summary = "Lists all downloads from a user",
+      description =
+          "Retrieves the status, definitions and locations of all occurrence download by your own user.")
   @Parameter(
-    name = "user",
-    description = "Username (administrator account required to see other users).",
-    in = ParameterIn.PATH
-  )
+      name = "user",
+      description = "Username (administrator account required to see other users).",
+      in = ParameterIn.PATH)
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Occurrence download information.")
+  @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @GetMapping("user/{user}")
@@ -397,14 +383,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "listDatasetUsagesByDownloadDOI",
-    summary = "Lists datasets present in a download",
-    description = "Shows the datasets with occurrences present in the given occurrence download.")
+      operationId = "listDatasetUsagesByDownloadDOI",
+      summary = "Lists datasets present in a download",
+      description = "Shows the datasets with occurrences present in the given occurrence download.")
   @DoiParameters
   @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
-    responseCode = "200",
-    description = "Dataset usage within an occurrence download information.")
+      responseCode = "200",
+      description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{prefix}/{suffix}/datasets")
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByDoi(
@@ -415,14 +401,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "listDatasetUsagesByDownloadKey",
-    summary = "Lists datasets present in a download",
-    description = "Shows the datasets with occurrences present in the given occurrence download.")
+      operationId = "listDatasetUsagesByDownloadKey",
+      summary = "Lists datasets present in a download",
+      description = "Shows the datasets with occurrences present in the given occurrence download.")
   @DownloadKeyParameter
   @Docs.DefaultOffsetLimitParameters
   @ApiResponse(
-    responseCode = "200",
-    description = "Dataset usage within an occurrence download information.")
+      responseCode = "200",
+      description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/datasets")
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByKey(
@@ -433,19 +419,19 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "exportDatasetUsagesByDownloadKey",
-    summary = "Exports datasets present in a download in TSV or CSV format",
-    description = "Shows the datasets with occurrences present in the given occurrence download in TSV or CSV format.")
+      operationId = "exportDatasetUsagesByDownloadKey",
+      summary = "Exports datasets present in a download in TSV or CSV format",
+      description =
+          "Shows the datasets with occurrences present in the given occurrence download in TSV or CSV format.")
   @DownloadKeyParameter
   @Parameter(
-    name = "format",
-    description = "The export format.",
-    schema = @Schema(implementation = ExportFormat.class),
-    in = ParameterIn.QUERY
-  )
+      name = "format",
+      description = "The export format.",
+      schema = @Schema(implementation = ExportFormat.class),
+      in = ParameterIn.QUERY)
   @ApiResponse(
-    responseCode = "200",
-    description = "Dataset usage within an occurrence download information.")
+      responseCode = "200",
+      description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/datasets/export")
   public void exportListDatasetUsagesByKey(
@@ -503,12 +489,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "getDownloadCitationByKey",
-    summary = "Shows the citation for a download")
+      operationId = "getDownloadCitationByKey",
+      summary = "Shows the citation for a download")
   @DownloadKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download citation.")
+  @ApiResponse(responseCode = "200", description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/citation")
   @NullToNotFound(useUrlMapping = true)
@@ -519,12 +503,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence downloads")
   @Operation(
-    operationId = "getDownloadCitationByDOI",
-    summary = "Shows the citation for a download")
+      operationId = "getDownloadCitationByDOI",
+      summary = "Shows the citation for a download")
   @DoiParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download citation.")
+  @ApiResponse(responseCode = "200", description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{prefix}/{suffix}/citation")
   @NullToNotFound(useUrlMapping = true)
@@ -549,23 +531,21 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence download statistics")
   @Operation(
-    operationId = "getDownloadsByUserCountry",
-    summary = "Summarizes downloads by month, grouped by the user's country, territory or island",
-    description = "Provides counts of user downloads by month, grouped by the user's ISO 3166-2 country," +
-      " territory or island.")
+      operationId = "getDownloadsByUserCountry",
+      summary = "Summarizes downloads by month, grouped by the user's country, territory or island",
+      description =
+          "Provides counts of user downloads by month, grouped by the user's ISO 3166-2 country,"
+              + " territory or island.")
   @FromToParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "userCountry",
-        description = "The ISO 3166-2 code for the user's country, territory or island.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY
-      )
-    })
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download statistics.")
+      value = {
+        @Parameter(
+            name = "userCountry",
+            description = "The ISO 3166-2 code for the user's country, territory or island.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY)
+      })
+  @ApiResponse(responseCode = "200", description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("statistics/downloadsByUserCountry")
   @Override
@@ -581,18 +561,15 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence download statistics")
   @Operation(
-    operationId = "getDownloadedRecordsBySource",
-    summary = "Summarize downloaded record totals by source",
-    description = "Summarizes downloaded record totals by source, e.g. www.gbif.org or APIs.")
+      operationId = "getDownloadedRecordsBySource",
+      summary = "Summarize downloaded record totals by source",
+      description = "Summarizes downloaded record totals by source, e.g. www.gbif.org or APIs.")
   @FromToParameters
   @Parameter(
-    name = "source",
-    description = "Restrict to a particular source",
-    in = ParameterIn.QUERY
-  )
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download statistics.")
+      name = "source",
+      description = "Restrict to a particular source",
+      in = ParameterIn.QUERY)
+  @ApiResponse(responseCode = "200", description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("statistics/downloadsBySource")
   @Override
@@ -604,34 +581,31 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence download statistics")
   @Operation(
-    operationId = "getDownloadedRecordsByDataset",
-    summary = "Summarize downloaded records by dataset",
-    description = "Summarizes downloaded record totals by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
+      operationId = "getDownloadedRecordsByDataset",
+      summary = "Summarize downloaded records by dataset",
+      description =
+          "Summarizes downloaded record totals by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
   @FromToParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "publishingCountry",
-        description = "The ISO 3166-2 code for the publishing organization's country, territory or island.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "datasetKey",
-        description = "The UUID for a dataset.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "publishingOrgKey",
-        description = "The UUID for a publishing organization.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      )
-    })
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download statistics.")
+      value = {
+        @Parameter(
+            name = "publishingCountry",
+            description =
+                "The ISO 3166-2 code for the publishing organization's country, territory or island.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "datasetKey",
+            description = "The UUID for a dataset.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "publishingOrgKey",
+            description = "The UUID for a publishing organization.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY)
+      })
+  @ApiResponse(responseCode = "200", description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
@@ -653,34 +627,31 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence download statistics")
   @Operation(
-    operationId = "getDownloadedRecordsByDataset",
-    summary = "Summarize downloads by dataset",
-    description = "Summarizes downloads by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
+      operationId = "getDownloadedRecordsByDataset",
+      summary = "Summarize downloads by dataset",
+      description =
+          "Summarizes downloads by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
   @FromToParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "publishingCountry",
-        description = "The ISO 3166-2 code for the publishing organization's country, territory or island.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "datasetKey",
-        description = "The UUID for a dataset.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "publishingOrgKey",
-        description = "The UUID for a publishing organization.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      )
-    })
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download statistics.")
+      value = {
+        @Parameter(
+            name = "publishingCountry",
+            description =
+                "The ISO 3166-2 code for the publishing organization's country, territory or island.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "datasetKey",
+            description = "The UUID for a dataset.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "publishingOrgKey",
+            description = "The UUID for a publishing organization.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY)
+      })
+  @ApiResponse(responseCode = "200", description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("statistics/downloadsByDataset")
   @Override
@@ -702,35 +673,31 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Tag(name = "Occurrence download statistics")
   @Operation(
-    operationId = "getDownloadedStatistics",
-    summary = "Summarize downloads",
-    description = "Summarizes downloads")
+      operationId = "getDownloadedStatistics",
+      summary = "Summarize downloads",
+      description = "Summarizes downloads")
   @FromToParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "publishingCountry",
-        description = "The ISO 3166-2 code for the publishing organization's country, territory or island.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "datasetKey",
-        description = "The UUID for a dataset.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "publishingOrgKey",
-        description = "The UUID for a publishing organization.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      )
-    })
+      value = {
+        @Parameter(
+            name = "publishingCountry",
+            description =
+                "The ISO 3166-2 code for the publishing organization's country, territory or island.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "datasetKey",
+            description = "The UUID for a dataset.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "publishingOrgKey",
+            description = "The UUID for a publishing organization.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY)
+      })
   @Docs.DefaultOffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download statistics.")
+  @ApiResponse(responseCode = "200", description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("statistics")
   @Override
@@ -752,34 +719,28 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   @Tag(name = "Occurrence download statistics")
-  @Operation(
-    operationId = "exportDownloadedStatistics",
-    summary = "Export summary of downloads")
+  @Operation(operationId = "exportDownloadedStatistics", summary = "Export summary of downloads")
   @FromToParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "publishingCountry",
-        description = "The ISO 3166-2 code for the publishing organization's country, territory or island.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "datasetKey",
-        description = "The UUID for a dataset.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      ),
-      @Parameter(
-        name = "publishingOrgKey",
-        description = "The UUID for a publishing organization.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY
-      )
-    })
-  @ApiResponse(
-    responseCode = "200",
-    description = "Download statistics.")
+      value = {
+        @Parameter(
+            name = "publishingCountry",
+            description =
+                "The ISO 3166-2 code for the publishing organization's country, territory or island.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "datasetKey",
+            description = "The UUID for a dataset.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "publishingOrgKey",
+            description = "The UUID for a publishing organization.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY)
+      })
+  @ApiResponse(responseCode = "200", description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("statistics/export")
   public void getDownloadStatistics(

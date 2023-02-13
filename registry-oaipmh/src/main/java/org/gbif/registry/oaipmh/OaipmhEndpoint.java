@@ -40,36 +40,39 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 /** An OAI-PMH endpoint, using the XOAI library. */
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "OAI-PMH",
-  description = "In addition to the RESTful JSON API, Datasets are exposed using " +
-    "[OAI-PMH](https://www.openarchives.org/pmh/). " +
-    "Two metadata formats can be retrieved: Ecological Metadata Language (EML) and OAI Dublin Core. " +
-    "Datasets are grouped into sets according to type, country and installation.\n" +
-    "\n" +
-    "### Example queries\n" +
-    "Example queries:\n" +
-    "* Retrieve information about the OAI-PMH service: " +
-    "  [Identify](https://api.gbif.org/v1/oai-pmh/registry?verb=Identify).\n" +
-    "* Retrieve a list of available sets (dataset types, countries and serving installations): " +
-    "  [ListSets](https://api.gbif.org/v1/oai-pmh/registry?verb=ListSets).\n" +
-    "  Sets have names like `dataset_type:CHECKLIST` and `country:NL`.\n" +
-    "* Retrieve the identifiers for all datasets from a particular installation: " +
-    "  [ListIdentifiers](https://api.gbif.org/v1/oai-pmh/registry?verb=ListIdentifiers&metadataPrefix=oai_dc).\n" +
-    "  According to the OAI-PMH protocol, metadataPrefix must be set to either oai_dc or eml, even though both formats " +
-    "  are supported for all datasets.\n" +
-    "* Retrieve the metadata for all datasets served by installations in a country: " +
-    "  [ListRecords](https://api.gbif.org/v1/oai-pmh/registry?verb=ListRecords&metadataPrefix=oai_dc&set=Country:TG).\n" +
-    "  Country codes are based on the ISO 3166-1 standard.\n" +
-    "* Some queries will return more than one page of results. In this case, the XML will end with a resumption token " +
-    "  element, for example: `<resumptionToken cursor=\"1\">MToxMDB8Mjpjb3VudHJ5Ok5MfDM6fDQ6fDU6b2FpX2Rj</resumptionToken>` " +
-    "  The second page of results can be retrieved like this: " +
-    "  [Resume](https://api.gbif.org/v1/oai-pmh/registry?verb=ListRecords&resumptionToken=MToxMDB8MjpDb3VudHJ5Ok5MfDM6fDQ6fDU6b2FpX2Rj).\n",
-  externalDocs = @ExternalDocumentation(
-    description = " The Open Archives Initiative Protocol for Metadata Harvesting",
-    url = "https://www.openarchives.org/OAI/openarchivesprotocol.html"
-  ),
-  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
-    name = "Order", properties = @ExtensionProperty(name = "Order", value = "2000")))
+    name = "OAI-PMH",
+    description =
+        "In addition to the RESTful JSON API, Datasets are exposed using "
+            + "[OAI-PMH](https://www.openarchives.org/pmh/). "
+            + "Two metadata formats can be retrieved: Ecological Metadata Language (EML) and OAI Dublin Core. "
+            + "Datasets are grouped into sets according to type, country and installation.\n"
+            + "\n"
+            + "### Example queries\n"
+            + "Example queries:\n"
+            + "* Retrieve information about the OAI-PMH service: "
+            + "  [Identify](https://api.gbif.org/v1/oai-pmh/registry?verb=Identify).\n"
+            + "* Retrieve a list of available sets (dataset types, countries and serving installations): "
+            + "  [ListSets](https://api.gbif.org/v1/oai-pmh/registry?verb=ListSets).\n"
+            + "  Sets have names like `dataset_type:CHECKLIST` and `country:NL`.\n"
+            + "* Retrieve the identifiers for all datasets from a particular installation: "
+            + "  [ListIdentifiers](https://api.gbif.org/v1/oai-pmh/registry?verb=ListIdentifiers&metadataPrefix=oai_dc).\n"
+            + "  According to the OAI-PMH protocol, metadataPrefix must be set to either oai_dc or eml, even though both formats "
+            + "  are supported for all datasets.\n"
+            + "* Retrieve the metadata for all datasets served by installations in a country: "
+            + "  [ListRecords](https://api.gbif.org/v1/oai-pmh/registry?verb=ListRecords&metadataPrefix=oai_dc&set=Country:TG).\n"
+            + "  Country codes are based on the ISO 3166-1 standard.\n"
+            + "* Some queries will return more than one page of results. In this case, the XML will end with a resumption token "
+            + "  element, for example: `<resumptionToken cursor=\"1\">MToxMDB8Mjpjb3VudHJ5Ok5MfDM6fDQ6fDU6b2FpX2Rj</resumptionToken>` "
+            + "  The second page of results can be retrieved like this: "
+            + "  [Resume](https://api.gbif.org/v1/oai-pmh/registry?verb=ListRecords&resumptionToken=MToxMDB8MjpDb3VudHJ5Ok5MfDM6fDQ6fDU6b2FpX2Rj).\n",
+    externalDocs =
+        @ExternalDocumentation(
+            description = " The Open Archives Initiative Protocol for Metadata Harvesting",
+            url = "https://www.openarchives.org/OAI/openarchivesprotocol.html"),
+    extensions =
+        @io.swagger.v3.oas.annotations.extensions.Extension(
+            name = "Order",
+            properties = @ExtensionProperty(name = "Order", value = "2000")))
 @Controller
 @RequestMapping("oai-pmh/registry")
 public class OaipmhEndpoint {
@@ -90,19 +93,17 @@ public class OaipmhEndpoint {
    * @throws ParseException in case of wrong data format parameters 'from' or 'until'
    */
   @Operation(
-    operationId = "oaipmh",
-    summary = "Make an OAI-PMH request",
-    description = "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.",
-    externalDocs = @ExternalDocumentation(
-      description = "The Open Archives Initiative Protocol for Metadata Harvesting § Protocol Requests and, Responses.",
-      url = "https://www.openarchives.org/OAI/openarchivesprotocol.html#ProtocolMessages"
-    ))
-  @ApiResponse(
-    responseCode = "200",
-    description = "Successful query")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid query")
+      operationId = "oaipmh",
+      summary = "Make an OAI-PMH request",
+      description =
+          "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.",
+      externalDocs =
+          @ExternalDocumentation(
+              description =
+                  "The Open Archives Initiative Protocol for Metadata Harvesting § Protocol Requests and, Responses.",
+              url = "https://www.openarchives.org/OAI/openarchivesprotocol.html#ProtocolMessages"))
+  @ApiResponse(responseCode = "200", description = "Successful query")
+  @ApiResponse(responseCode = "400", description = "Invalid query")
   @GetMapping(produces = MediaType.APPLICATION_XML_VALUE)
   public ResponseEntity<byte[]> oaipmh(@Valid OaipmhRequestParameters params)
       throws ParseException {

@@ -53,33 +53,28 @@ public class CollectionsSearchResource {
   }
 
   @Operation(
-    operationId = "searchCollectionsInstitutions",
-    summary = "Search collections and institutions")
+      operationId = "searchCollectionsInstitutions",
+      summary = "Search collections and institutions")
   @Docs.DefaultQParameter
   @Docs.DefaultHlParameter
   @Docs.DefaultOffsetLimitParameters
   @Parameters(
-    value = {
-      @Parameter(
-        name = "entityType",
-        description = "Code of a GrSciColl institution or collection",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "displayOnNHCPortal",
-        hidden = true),
-      @Parameter(
-        name = "country",
-        description = "The 2-letter country code (as per ISO-3166-1) of the country.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY,
-        explode = Explode.FALSE)})
-  @ApiResponse(
-    responseCode = "200",
-    description = "Search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+      value = {
+        @Parameter(
+            name = "entityType",
+            description = "Code of a GrSciColl institution or collection",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(name = "displayOnNHCPortal", hidden = true),
+        @Parameter(
+            name = "country",
+            description = "The 2-letter country code (as per ISO-3166-1) of the country.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.FALSE)
+      })
+  @ApiResponse(responseCode = "200", description = "Search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   public List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
