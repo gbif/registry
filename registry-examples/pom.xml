@@ -3,12 +3,12 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>3.93.1-SNAPSHOT</version>
+    <version>3.94.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-examples</artifactId>
-  <version>3.93.1-SNAPSHOT</version>
+  <version>3.94.0-SNAPSHOT</version>
 
   <packaging>jar</packaging>
 
