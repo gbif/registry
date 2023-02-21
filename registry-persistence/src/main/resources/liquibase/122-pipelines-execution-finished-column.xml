@@ -1,0 +1,14 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="122" author="nvolik" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE pipeline_execution ADD COLUMN finished boolean DEFAULT false;
+        CREATE INDEX ON pipeline_step (finished) WHERE finished IS NULL;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

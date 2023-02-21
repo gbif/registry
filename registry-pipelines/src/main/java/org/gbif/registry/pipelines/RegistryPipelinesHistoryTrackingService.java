@@ -129,9 +129,17 @@ public interface RegistryPipelinesHistoryTrackingService {
    *
    * @param datasetKey dataset identifier
    * @param attempt crawl attempt identifier
-   * @return a instance of pipelines process if exists
+   * @return an instance of pipelines process if exists
    */
   PipelineProcess get(UUID datasetKey, int attempt);
+
+
+  /**
+   * Gets running PipelineProcess
+   *
+   * @param pageable paging request
+   */
+  PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable);
 
   /**
    * Creates/persists a pipelines process of dataset for an attempt identifier. If the process
@@ -145,6 +153,14 @@ public interface RegistryPipelinesHistoryTrackingService {
   long createOrGet(UUID datasetKey, int attempt, String creator);
 
   /**
+   * Gets execution key for running dataset
+   *
+   * @param datasetKey dataset identifier
+   * @return running execution key
+   */
+  Long getRunningExecutionKey(UUID datasetKey);
+
+  /**
    * Adds/persists the information of a pipeline execution.
    *
    * @param pipelineProcessKey sequential identifier of a pipeline process
@@ -156,16 +172,40 @@ public interface RegistryPipelinesHistoryTrackingService {
       long pipelineProcessKey, PipelineExecution pipelineExecution, String creator);
 
   /**
-   * Adds/persists the information of a pipeline step.
+   * Persists the information of a pipeline step.
    *
-   * @param pipelineProcessKey sequential identifier of a pipeline process
-   * @param executionKey key of the pipeline execution
    * @param pipelineStep step to be added
    * @param creator the user who is adding the step
    * @return the key of the PipelineStep created
    */
-  long addPipelineStep(
-      long pipelineProcessKey, long executionKey, PipelineStep pipelineStep, String creator);
+  long updatePipelineStep(PipelineStep pipelineStep, String creator);
+
+  /**
+   * Gets the PipelineSteps list of the execution key.
+   *
+   * @param executionKey key of the execution
+   * @return {@link PipelineStep}
+   */
+  List<PipelineStep> getPipelineStepsByExecutionKey(long executionKey);
+
+  /**
+   * Marks all pipeline execution as finished
+   */
+  void markAllPipelineExecutionAsFinished();
+
+  /**
+   * Marks pipeline execution as finished when all pipeline steps are finished
+   *
+   * @param executionKey key of the pipeline execution
+   */
+  void markPipelineExecutionIfFinished(long executionKey);
+
+  /**
+   * Changes status to ABORTED and set finished date if state is RUNNING, QUEUED or SUBMITTED
+   *
+   * @param executionKey key of the pipeline execution
+   */
+  void markPipelineStatusAsAborted(long executionKey);
 
   /**
    * Gets the PipelineStep of the specified key.
@@ -174,25 +214,6 @@ public interface RegistryPipelinesHistoryTrackingService {
    * @return {@link PipelineStep}
    */
   PipelineStep getPipelineStep(long key);
-
-  /**
-   * Updates the status of a pipeline step and retrieves the metrics from ES and inserts them in the
-   * DB.
-   *
-   * @param processKey key of the process of the step
-   * @param executionKey key of the execution
-   * @param pipelineStepKey sequential identifier of a pipeline process step
-   * @param status new status for the pipeline step
-   * @param metrics metrics from pipelines
-   * @param user the user who is updating the status
-   */
-  void updatePipelineStepStatusAndMetrics(
-      long processKey,
-      long executionKey,
-      long pipelineStepKey,
-      PipelineStep.Status status,
-      List<PipelineStep.MetricInfo> metrics,
-      String user);
 
   PagingResponse<SearchResult> search(
       @Nullable UUID datasetKey,

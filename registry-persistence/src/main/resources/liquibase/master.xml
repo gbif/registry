@@ -126,5 +126,7 @@
   <include file="liquibase/118-add-download-source-statistics.xml" />
   <include file="liquibase/119-symbiota-uuid-identifier-type.xml" />
   <include file="liquibase/120-dna-download-extension.xml" />
+  <include file="liquibase/121-pipelines-step-status.xml" />
+  <include file="liquibase/122-pipelines-execution-finished-column.xml" />
 
 </databaseChangeLog>

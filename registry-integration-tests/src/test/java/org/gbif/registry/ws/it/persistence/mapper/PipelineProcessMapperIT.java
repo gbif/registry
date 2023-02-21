@@ -156,7 +156,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
         new PipelineExecution()
             .setCreatedBy(TEST_USER)
             .setRerunReason("rerun")
-            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
+            .setStepsToRun(Collections.singleton(StepType.DWCA_TO_VERBATIM));
     pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     PipelineProcess processRetrieved =
@@ -289,7 +289,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
         new PipelineExecution()
             .setCreatedBy(TEST_USER)
             .setRerunReason("rerun")
-            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
+            .setStepsToRun(Collections.singleton(StepType.DWCA_TO_VERBATIM));
     pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
@@ -318,7 +318,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
         new PipelineExecution()
             .setCreatedBy(TEST_USER)
             .setRerunReason("rerun")
-            .setStepsToRun(Collections.singletonList(StepType.DWCA_TO_VERBATIM));
+            .setStepsToRun(Collections.singleton(StepType.DWCA_TO_VERBATIM));
     pipelineProcessMapper.addPipelineExecution(process.getKey(), execution);
 
     // add a step
