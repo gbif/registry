@@ -47,8 +47,8 @@ public interface PipelineProcessMapper {
   /**
    * Retrieves a {@link PipelineProcess} by dataset key and attempt.
    *
-   * @param datasetKey
-   * @param attempt
+   * @param datasetKey registy dataset identifier
+   * @param attempt numerical attempt
    * @return {@link PipelineProcess}
    */
   PipelineProcess getByDatasetAndAttempt(
@@ -62,10 +62,16 @@ public interface PipelineProcessMapper {
    */
   PipelineProcess get(@Param("key") long key);
 
+  List<PipelineProcess> getRunningPipelineProcess(@Param("page") Pageable page);
+
+  long getRunningPipelineProcessCount();
+
   Optional<Integer> getLastAttempt(@Param("datasetKey") UUID datasetKey);
 
   Optional<Integer> getLastSuccessfulAttempt(
       @Param("datasetKey") UUID datasetKey, @Param("stepType") StepType stepType);
+
+  Long getRunningExecutionKey(@Param("datasetKey") UUID datasetKey);
 
   /**
    * Adds a {@link PipelineExecution} to an existing {@link PipelineProcess}.
@@ -92,7 +98,14 @@ public interface PipelineProcessMapper {
    * @param step step to add
    */
   void addPipelineStep(
-      @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
+    @Param("pipelineExecutionKey") long pipelineExecutionKey, @Param("step") PipelineStep step);
+
+  /**
+   * Adds a {@link PipelineStep} to an existing {@link PipelineExecution}.
+   *
+   * @param step step to add
+   */
+  void updatePipelineStep(@Param("step") PipelineStep step);
 
   /**
    * Lists {@link PipelineProcess} based in the search parameters.
@@ -113,9 +126,9 @@ public interface PipelineProcessMapper {
   long count(
       @Nullable @Param("datasetKey") UUID datasetKey, @Nullable @Param("attempt") Integer attempt);
 
-  PipelineStep getPipelineStep(@Param("key") long key);
+  List<PipelineStep> getPipelineStepsByExecutionKey(@Param("key") long pipelineExecutionKey);
 
-  void updatePipelineStep(@Param("step") PipelineStep step);
+  PipelineStep getPipelineStep(@Param("key") long key);
 
   List<PipelineProcess> getPipelineProcessesByDatasetAndAttempts(
       @Nullable @Param("datasetKey") UUID datasetKey,
@@ -145,12 +158,21 @@ public interface PipelineProcessMapper {
       @Nullable @Param("pipelinesVersion") String pipelinesVersion);
 
   /**
-   * Update a {@link PipelineStep.Status} to an existing {@link PipelineExecution}.
-   *
-   * @param pipelineExecutionKey key of the process where we want to update the status
-   * @param status status to update
+   * Mark all existing {@link PipelineExecution} as finished
    */
-  void updatePipelineStatus(
-      @Param("pipelineExecutionKey") long pipelineExecutionKey,
-      @Param("status") PipelineStep.Status status);
+  void markAllPipelineExecutionAsFinished();
+
+  /**
+   * Abourt an existing {@link PipelineStep}.
+   *
+   * @param pipelineExecutionKey key of the process
+   */
+  void markPipelineStatusAsAborted(@Param("pipelineExecutionKey") long pipelineExecutionKey);
+
+  /**
+   * Mark an existing {@link PipelineExecution} as finished when all pipelin steps are finished
+   *
+   * @param pipelineExecutionKey key of the process
+   */
+  void markPipelineExecutionIfFinished(@Param("pipelineExecutionKey") long pipelineExecutionKey);
 }

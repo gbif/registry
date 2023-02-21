@@ -21,9 +21,9 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.ibatis.type.BaseTypeHandler;
@@ -32,42 +32,44 @@ import org.apache.ibatis.type.JdbcType;
 import com.google.common.base.Strings;
 
 /** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link PreservationType}. */
-public class StepTypeArrayTypeHandler extends BaseTypeHandler<List<StepType>> {
+public class StepTypeArrayTypeHandler extends BaseTypeHandler<Set<StepType>> {
 
   @Override
   public void setNonNullParameter(
-      PreparedStatement ps, int i, List<StepType> parameter, JdbcType jdbcType)
+      PreparedStatement ps, int i, Set<StepType> parameter, JdbcType jdbcType)
       throws SQLException {
     Array array = ps.getConnection().createArrayOf("text", parameter.toArray());
     ps.setArray(i, array);
   }
 
   @Override
-  public List<StepType> getNullableResult(ResultSet rs, String columnName) throws SQLException {
-    return toList(rs.getArray(columnName));
+  public Set<StepType> getNullableResult(ResultSet rs, String columnName) throws SQLException {
+    return toSet(rs.getArray(columnName));
   }
 
   @Override
-  public List<StepType> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-    return toList(rs.getArray(columnIndex));
+  public Set<StepType> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+    return toSet(rs.getArray(columnIndex));
   }
 
   @Override
-  public List<StepType> getNullableResult(CallableStatement cs, int columnIndex)
+  public Set<StepType> getNullableResult(CallableStatement cs, int columnIndex)
       throws SQLException {
-    return toList(cs.getArray(columnIndex));
+    return toSet(cs.getArray(columnIndex));
   }
 
-  private List<StepType> toList(Array pgArray) throws SQLException {
-    if (pgArray == null) return new ArrayList<>();
+  private Set<StepType> toSet(Array pgArray) throws SQLException {
+    if (pgArray == null) {
+      return new HashSet<>();
+    }
 
     String[] strings = (String[]) pgArray.getArray();
     if (strings != null && strings.length > 0) {
       return Arrays.stream(strings)
           .filter(v -> !Strings.isNullOrEmpty(v))
           .map(StepType::valueOf)
-          .collect(Collectors.toList());
+          .collect(Collectors.toSet());
     }
-    return new ArrayList<>();
+    return new HashSet<>();
   }
 }

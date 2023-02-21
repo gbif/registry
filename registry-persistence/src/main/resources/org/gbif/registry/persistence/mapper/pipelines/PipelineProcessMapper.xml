@@ -7,10 +7,15 @@
     <collection property="executions" column="key" select="listExecutions"/>
   </resultMap>
 
+  <resultMap id="RUNNING_PIPELINES_PROCESS_MAP" type="org.gbif.api.model.pipelines.PipelineProcess" autoMapping="true">
+    <id property="key" column="key"/>
+    <collection property="executions" column="key" select="listRunningExecutions"/>
+  </resultMap>
+
   <resultMap id="EXECUTION_MAP" type="org.gbif.api.model.pipelines.PipelineExecution" autoMapping="true">
     <id property="key" column="key"/>
     <result property="stepsToRun" column="steps_to_run" typeHandler="org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler"/>
-    <collection property="steps" column="key" select="listSteps"/>
+    <collection property="steps" column="key" select="getPipelineStepsByExecutionKey"/>
   </resultMap>
 
   <resultMap id="STEP_MAP" type="org.gbif.api.model.pipelines.PipelineStep" autoMapping="true">
@@ -89,11 +94,13 @@
   <sql id="STEP_UPDATE">
     finished = #{step.finished,jdbcType=OTHER},
     state = #{step.state,jdbcType=OTHER},
+    message = #{step.message,jdbcType=VARCHAR},
     modified = now(),
     modified_by = #{step.modifiedBy,jdbcType=VARCHAR},
     metrics = #{step.metrics,jdbcType=OTHER,typeHandler=MetricInfoTypeHandler}::hstore,
     number_records = #{step.numberRecords,jdbcType=BIGINT},
-    pipelines_version = #{step.pipelinesVersion,jdbcType=VARCHAR}
+    pipelines_version = #{step.pipelinesVersion,jdbcType=VARCHAR},
+    runner = #{step.runner,jdbcType=OTHER}
   </sql>
 
   <insert id="createIfNotExists" parameterType="org.gbif.api.model.pipelines.PipelineProcess" useGeneratedKeys="true" keyProperty="key">
@@ -120,16 +127,24 @@
     ORDER BY e.created DESC
   </select>
 
+  <select id="listRunningExecutions" resultMap="EXECUTION_MAP">
+    SELECT <include refid="EXECUTION_FIELDS_SELECT"/>
+    FROM pipeline_execution e
+    WHERE e.pipeline_process_key = #{key,jdbcType=BIGINT}
+    AND e.finished = FALSE
+    ORDER BY e.created ASC
+  </select>
+
   <insert id="addPipelineStep" useGeneratedKeys="true" keyProperty="step.key">
     INSERT INTO pipeline_step(<include refid="STEP_FIELDS_CREATE"/>)
     VALUES (<include refid="STEP_VALUES_CREATE"/>)
   </insert>
 
-  <select id="listSteps" resultMap="STEP_MAP">
+  <select id="getPipelineStepsByExecutionKey" resultMap="STEP_MAP">
     SELECT <include refid="STEP_FIELDS_SELECT"/>
     FROM pipeline_step s
     WHERE s.pipeline_execution_key = #{key,jdbcType=BIGINT}
-    ORDER BY s.started DESC
+    ORDER BY s.finished ASC
   </select>
 
   <select id="getByDatasetAndAttempt" resultMap="PIPELINES_PROCESS_MAP">
@@ -292,10 +307,65 @@
     </where>
   </select>
 
-  <update id="updatePipelineStatus">
+  <update id="markPipelineStatusAsAborted">
     UPDATE pipeline_step
-    SET state = #{status,jdbcType=OTHER}
+    SET state = 'ABORTED', finished = now()
     WHERE pipeline_execution_key = #{pipelineExecutionKey,jdbcType=BIGINT}
+    AND state in ('RUNNING', 'SUBMITTED', 'QUEUED');
+
+    UPDATE pipeline_execution
+    SET finished = true
+    WHERE key = #{pipelineExecutionKey,jdbcType=BIGINT};
   </update>
+
+  <update id="markPipelineExecutionIfFinished">
+    UPDATE pipeline_execution
+    SET finished = true
+    WHERE key = #{pipelineExecutionKey,jdbcType=BIGINT}
+    AND
+    (
+      SELECT COUNT(1)
+      FROM pipeline_step
+      WHERE finished IS NULL
+      AND pipeline_execution_key = #{pipelineExecutionKey,jdbcType=BIGINT}
+    ) = 0
+  </update>
+
+  <update id="markAllPipelineExecutionAsFinished">
+    UPDATE pipeline_step
+    SET state = 'ABORTED', finished = now()
+    WHERE state in ('RUNNING', 'SUBMITTED', 'QUEUED');
+
+    UPDATE pipeline_execution
+    SET finished = true
+    WHERE finished = false;
+  </update>
+
+  <select id="getRunningPipelineProcessCount" resultType="Long">
+    SELECT COUNT(1)
+    FROM pipeline_execution pe
+    WHERE pe.finished = false
+  </select>
+
+  <select id="getRunningPipelineProcess" resultMap="RUNNING_PIPELINES_PROCESS_MAP">
+    SELECT p.key, d.title dataset_title, p.dataset_key, p.attempt, p.created, p.created_by
+    FROM dataset d, pipeline_process p, pipeline_execution pe
+    WHERE d.key = p.dataset_key
+    AND p.key = pe.pipeline_process_key
+    AND pe.finished = FALSE
+    ORDER BY pe.created DESC
+    <if test="page != null">
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="getRunningExecutionKey" resultType="Long">
+    SELECT pe.key
+    FROM pipeline_process p, pipeline_execution pe
+    WHERE p.key = pe.pipeline_process_key
+    AND p.dataset_key = #{datasetKey, jdbcType=OTHER}
+    AND pe.finished = FALSE
+    LIMIT 1
+  </select>
 
 </mapper>

@@ -20,33 +20,32 @@ import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
-import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("pipelines/history")
 public interface PipelinesHistoryClient extends PipelinesHistoryService {
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   PagingResponse<PipelineProcess> history(@SpringQueryMap Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
+  @GetMapping(
       value = "{datasetKey}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
@@ -54,8 +53,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   PagingResponse<PipelineProcess> history(
       @PathVariable("datasetKey") UUID datasetKey, @SpringQueryMap Pageable pageable);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
+  @GetMapping(
       value = "{datasetKey}/{attempt}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
@@ -63,15 +61,13 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   PipelineProcess getPipelineProcess(
       @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
+  @PostMapping(
       value = "process",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   long createPipelineProcess(@RequestBody PipelineProcessParameters params);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
+  @PostMapping(
       value = "process/{processKey}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
@@ -79,39 +75,47 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @PathVariable("processKey") long processKey,
       @RequestBody PipelineExecution pipelineExecution);
 
-  @RequestMapping(
-      method = RequestMethod.POST,
-      value = "process/{processKey}/{executionKey}",
+  @GetMapping("execution/running/{datasetKey}")
+  @Override
+  Long getRunningExecutionKey(@PathVariable("datasetKey") UUID datasetKey);
+
+  @GetMapping("execution/{executionKey}/step")
+  @Override
+  List<PipelineStep> getPipelineStepsByExecutionKey(
+    @PathVariable("executionKey") long executionKey);
+
+  @GetMapping("process/running")
+  @Override
+  PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable);
+
+  @PostMapping("execution/finished")
+  @Override
+  void markAllPipelineExecutionAsFinished();
+
+  @PostMapping("execution/{executionKey}/finished")
+  @Override
+  void markPipelineExecutionIfFinished(@PathVariable("executionKey") long executionKey);
+
+  @PostMapping("execution/{executionKey}/abort")
+  @Override
+  void markPipelineStatusAsAborted(@PathVariable("executionKey") long executionKey);
+
+  @PostMapping(
+      value = "step",
       consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  long addPipelineStep(
-      @PathVariable("processKey") long processKey,
-      @PathVariable("executionKey") long executionKey,
+  long updatePipelineStep(
       @RequestBody PipelineStep pipelineStep);
 
-  @RequestMapping(
-      method = RequestMethod.GET,
-      value = "process/{processKey}/{executionKey}/{stepKey}",
+  @GetMapping(
+      value = "step/{stepKey}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   PipelineStep getPipelineStep(
-      @PathVariable("processKey") long processKey,
-      @PathVariable("executionKey") long executionKey,
       @PathVariable("stepKey") long stepKey);
 
-  @RequestMapping(
-      method = RequestMethod.PUT,
-      value = "process/{processKey}/{executionKey}/{stepKey}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Override
-  void updatePipelineStepStatusAndMetrics(
-      @PathVariable("processKey") long processKey,
-      @PathVariable("executionKey") long executionKey,
-      @PathVariable("stepKey") long stepKey,
-      @RequestBody PipelineStepParameters stepParams);
-
-  @RequestMapping(method = RequestMethod.POST, value = "run")
+  @PostMapping(value = "run")
   @ResponseBody
   @Override
   RunPipelineResponse runAll(
@@ -123,7 +127,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       @RequestBody(required = false) RunAllParams runAllParams,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
 
-  @RequestMapping(method = RequestMethod.POST, value = "run/{datasetKey}")
+  @PostMapping(value = "run/{datasetKey}")
   @ResponseBody
   @Override
   RunPipelineResponse runPipelineAttempt(
@@ -135,7 +139,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
           boolean markPreviousAttemptAsFailed,
       @RequestParam(value = "interpretTypes", defaultValue = "false") Set<String> interpretTypes);
 
-  @RequestMapping(method = RequestMethod.POST, value = "run/{datasetKey}/{attempt}")
+  @PostMapping(value = "run/{datasetKey}/{attempt}")
   @ResponseBody
   @Override
   RunPipelineResponse runPipelineAttempt(

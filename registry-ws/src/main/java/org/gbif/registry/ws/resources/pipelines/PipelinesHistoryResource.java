@@ -21,7 +21,6 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.RunPipelineResponse;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.PipelineProcessParameters;
-import org.gbif.api.model.pipelines.ws.PipelineStepParameters;
 import org.gbif.api.model.pipelines.ws.RunAllParams;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.service.pipelines.PipelinesHistoryService;
@@ -29,10 +28,7 @@ import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 import org.gbif.registry.ws.util.DateUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -50,7 +46,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -97,6 +92,12 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
     return historyTrackingService.get(datasetKey, attempt);
   }
 
+  @GetMapping("process/running")
+  @Override
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
+    return historyTrackingService.getRunningPipelineProcess(pageable);
+  }
+
   @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(ADMIN_ROLE)
   @Override
@@ -118,49 +119,57 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
         processKey, pipelineExecution, authentication.getName());
   }
 
-  /** Adds a new pipeline step. */
-  @PostMapping(
-      value = "process/{processKey}/{executionKey}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
-  @Secured(ADMIN_ROLE)
+  @GetMapping("execution/running/{datasetKey}")
   @Override
-  public long addPipelineStep(
-      @PathVariable("processKey") long processKey,
-      @PathVariable("executionKey") long executionKey,
-      @RequestBody PipelineStep pipelineStep) {
-    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return historyTrackingService.addPipelineStep(
-        processKey, executionKey, pipelineStep, authentication.getName());
+  public Long getRunningExecutionKey(@PathVariable("datasetKey") UUID datasetKey) {
+    return historyTrackingService.getRunningExecutionKey(datasetKey);
   }
 
-  @GetMapping("process/{processKey}/{executionKey}/{stepKey}")
+  @GetMapping("execution/{executionKey}/step")
+  @Override
+  public List<PipelineStep> getPipelineStepsByExecutionKey(
+    @PathVariable("executionKey") long executionKey) {
+    return historyTrackingService.getPipelineStepsByExecutionKey(executionKey);
+  }
+
+  @PostMapping("execution/finished")
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void markAllPipelineExecutionAsFinished() {
+    historyTrackingService.markAllPipelineExecutionAsFinished();
+  }
+
+  @PostMapping("execution/{executionKey}/finished")
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void markPipelineExecutionIfFinished(@PathVariable("executionKey") long executionKey) {
+    historyTrackingService.markPipelineExecutionIfFinished(executionKey);
+  }
+
+  @PostMapping("execution/{executionKey}/abort")
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void markPipelineStatusAsAborted(@PathVariable("executionKey") long executionKey) {
+    historyTrackingService.markPipelineStatusAsAborted(executionKey);
+  }
+
+  @GetMapping("step/{stepKey}")
   @Override
   public PipelineStep getPipelineStep(
-      @PathVariable("processKey") long processKey,
-      @PathVariable("executionKey") long executionKey,
       @PathVariable("stepKey") long stepKey) {
     return historyTrackingService.getPipelineStep(stepKey);
   }
 
-  /** Updates the step status. */
-  @PutMapping(
-      value = "process/{processKey}/{executionKey}/{stepKey}",
-      consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
+  /** Update pipeline step*/
+  @PostMapping(
+    value = "step",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(ADMIN_ROLE)
   @Override
-  public void updatePipelineStepStatusAndMetrics(
-      @PathVariable("processKey") long processKey,
-      @PathVariable("executionKey") long executionKey,
-      @PathVariable("stepKey") long stepKey,
-      @RequestBody PipelineStepParameters stepParams) {
+  public long updatePipelineStep(
+    @RequestBody PipelineStep pipelineStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    historyTrackingService.updatePipelineStepStatusAndMetrics(
-        processKey,
-        executionKey,
-        stepKey,
-        stepParams.getStatus(),
-        stepParams.getMetrics(),
-        authentication.getName());
+    return historyTrackingService.updatePipelineStep(pipelineStep, authentication.getName());
   }
 
   /**

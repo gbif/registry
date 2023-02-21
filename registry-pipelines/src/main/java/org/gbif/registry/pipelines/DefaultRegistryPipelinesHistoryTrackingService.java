@@ -16,12 +16,8 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -48,7 +44,6 @@ import org.gbif.registry.pipelines.util.PredicateUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -75,6 +70,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
@@ -84,7 +80,7 @@ import com.google.common.collect.Ordering;
 
 import freemarker.template.TemplateException;
 
-/** Service that allows to re-run pipeline steps on an specific attempt. */
+/** Service that allows to re-run pipeline steps on a specific attempt. */
 @Service
 public class DefaultRegistryPipelinesHistoryTrackingService
     implements RegistryPipelinesHistoryTrackingService {
@@ -240,8 +236,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   private Set<StepType> prioritizeSteps(Set<StepType> steps, Dataset dataset) {
-    Set<StepType> newSteps = new HashSet<>();
+    Set<StepType> newSteps = new HashSet<>(steps);
     if (steps.contains(StepType.TO_VERBATIM)) {
+      newSteps.remove(StepType.TO_VERBATIM);
       getEndpointToCrawl(dataset)
           .ifPresent(
               endpoint -> {
@@ -253,32 +250,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                   newSteps.add(StepType.XML_TO_VERBATIM);
                 }
               });
-    } else if (steps.contains(StepType.ABCD_TO_VERBATIM)) {
-      newSteps.add(StepType.ABCD_TO_VERBATIM);
-    } else if (steps.contains(StepType.XML_TO_VERBATIM)) {
-      newSteps.add(StepType.XML_TO_VERBATIM);
-    } else if (steps.contains(StepType.DWCA_TO_VERBATIM)) {
-      newSteps.add(StepType.DWCA_TO_VERBATIM);
-    } else if (steps.contains(StepType.VERBATIM_TO_INTERPRETED)) {
-      newSteps.add(StepType.VERBATIM_TO_INTERPRETED);
-    } else if (steps.contains(StepType.INTERPRETED_TO_INDEX)
-        || steps.contains(StepType.HDFS_VIEW)
-        || steps.contains(StepType.FRAGMENTER)) {
-      if (steps.contains(StepType.INTERPRETED_TO_INDEX)) {
-        newSteps.add(StepType.INTERPRETED_TO_INDEX);
-      }
-      if (steps.contains(StepType.HDFS_VIEW)) {
-        newSteps.add(StepType.HDFS_VIEW);
-      }
-      if (steps.contains(StepType.FRAGMENTER)) {
-        newSteps.add(StepType.FRAGMENTER);
-      }
-    } else if (steps.contains(StepType.EVENTS_VERBATIM_TO_INTERPRETED)) {
-      newSteps.add(StepType.EVENTS_VERBATIM_TO_INTERPRETED);
-    } else if (steps.contains(StepType.EVENTS_INTERPRETED_TO_INDEX)) {
-      newSteps.add(StepType.EVENTS_INTERPRETED_TO_INDEX);
-    } else if (steps.contains(StepType.EVENTS_HDFS_VIEW)) {
-      newSteps.add(StepType.EVENTS_HDFS_VIEW);
     }
 
     return newSteps;
@@ -302,16 +273,16 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   /**
    * Calculates the general state of a {@link PipelineProcess}. If one the latest steps of a
-   * specific {@link StepType} has a {@link PipelineStep.Status#FAILED}, the process is considered
+   * specific {@link StepType} has a {@link Status#FAILED}, the process is considered
    * as FAILED. If all the latest steps of all {@link StepType} have the same {@link
-   * PipelineStep.Status}, that status used for the {@link PipelineProcess}. If it has step in
-   * {@link PipelineStep.Status#RUNNING} it is decided as the process status, otherwise is {@link
-   * PipelineStep.Status#COMPLETED}
+   * Status}, that status used for the {@link PipelineProcess}. If it has step in
+   * {@link Status#RUNNING} it is decided as the process status, otherwise is {@link
+   * Status#COMPLETED}
    *
    * @param pipelineProcess that contains all the steps.
    * @return the calculated status of a {@link PipelineProcess}
    */
-  private PipelineStep.Status getStatus(PipelineProcess pipelineProcess) {
+  private Status getStatus(PipelineProcess pipelineProcess) {
     // get last execution
     PipelineExecution lastExecution =
         pipelineProcess.getExecutions().stream()
@@ -322,7 +293,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                         "Couldn't find las execution for process: " + pipelineProcess));
 
     // Collects the latest steps per type.
-    Set<PipelineStep.Status> statuses = new HashSet<>();
+    Set<Status> statuses = new HashSet<>();
     for (StepType stepType : StepType.values()) {
       lastExecution.getSteps().stream()
           .filter(s -> stepType == s.getType())
@@ -330,17 +301,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .ifPresent(step -> statuses.add(step.getState()));
     }
 
-    // Only has one states, it could means that all steps have the same status
+    // Only has one states, it could mean that all steps have the same status
     if (statuses.size() == 1) {
       return statuses.iterator().next();
     } else {
       // Checks the states by priority
-      if (statuses.contains(PipelineStep.Status.FAILED)) {
-        return PipelineStep.Status.FAILED;
-      } else if (statuses.contains(PipelineStep.Status.RUNNING)) {
-        return PipelineStep.Status.RUNNING;
+      if (statuses.contains(Status.FAILED) || statuses.contains(Status.ABORTED)) {
+        return Status.FAILED;
+      } else if (statuses.contains(Status.RUNNING) || statuses.contains(Status.QUEUED) || statuses.contains(Status.SUBMITTED)) {
+        return Status.RUNNING;
       } else {
-        return PipelineStep.Status.COMPLETED;
+        return Status.COMPLETED;
       }
     }
   }
@@ -355,7 +326,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                     new IllegalStateException(
                         "Couldn't find las execution for process: " + pipelineProcess));
 
-    mapper.updatePipelineStatus(lastExecution.getKey(), PipelineStep.Status.FAILED);
+    mapper.markPipelineStatusAsAborted(lastExecution.getKey());
   }
 
   @Override
@@ -382,6 +353,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return new PagingResponse<>(pageable, count, statuses);
   }
 
+  @Transactional
   @Override
   public RunPipelineResponse runPipelineAttempt(
       UUID datasetKey,
@@ -400,14 +372,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
-    PipelineStep.Status status = getStatus(process);
+    Status status = getStatus(process);
 
-    if (markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
+    if (markPreviousAttemptAsFailed && status == Status.RUNNING) {
       markPreviousAttemptAsFailed(process);
     }
 
     // Checks that the pipelines is not in RUNNING state
-    if (!markPreviousAttemptAsFailed && status == PipelineStep.Status.RUNNING) {
+    if (!markPreviousAttemptAsFailed && status == Status.RUNNING) {
       return new RunPipelineResponse.Builder()
           .setResponseStatus(RunPipelineResponse.ResponseStatus.PIPELINE_IN_SUBMITTED)
           .setSteps(steps)
@@ -424,8 +396,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       if (!latestStepOpt.isPresent()) {
         continue;
       }
-
-      // TODO: add number event records??
 
       PipelineStep step = latestStepOpt.get();
       try {
@@ -466,19 +436,26 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
+    Set<StepType> finalSteps = stepsToSend.entrySet()
+            .stream()
+            .flatMap(x -> x.getValue().getPipelineSteps().stream())
+            .map(StepType::valueOf)
+            .collect(Collectors.toSet());
+
     // create pipelines execution
     PipelineExecution execution =
         new PipelineExecution()
             .setCreatedBy(user)
             .setRerunReason(reason)
-            .setStepsToRun(new ArrayList<>(steps));
-    mapper.addPipelineExecution(process.getKey(), execution);
+            .setStepsToRun(finalSteps);
+
+    long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
     // send messages
     Set<StepType> stepsFailed = new HashSet<>(stepsToSend.size());
     stepsToSend.forEach(
         (key, message) -> {
-          message.setExecutionId(execution.getKey());
+          message.setExecutionId(executionKey);
           try {
             if (message instanceof PipelinesInterpretedMessage
                 || message instanceof PipelinesVerbatimMessage) {
@@ -546,7 +523,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     PipelinesInterpretedMessage message =
         objectMapper.readValue(jsonMessage, PipelinesInterpretedMessage.class);
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    message.setOnlyForStep(stepType.name());
     message.setPipelineSteps(Collections.singleton(stepType.name()));
     return message;
   }
@@ -560,6 +536,17 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     setDatasetTitle(process);
 
     return process;
+  }
+
+  @Override
+  public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
+    long count = mapper.getRunningPipelineProcessCount();
+    List<PipelineProcess> running = Collections.emptyList();
+    if(count > 0) {
+      running = mapper.getRunningPipelineProcess(pageable);
+    }
+
+    return new PagingResponse<>(pageable, count, running);
   }
 
   @Override
@@ -577,6 +564,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
+  public Long getRunningExecutionKey(UUID datasetKey) {
+    return mapper.getRunningExecutionKey(datasetKey);
+  }
+
+  @Transactional
+  @Override
   public long addPipelineExecution(
       long pipelineProcessKey, PipelineExecution pipelineExecution, String creator) {
     Objects.requireNonNull(pipelineExecution, "pipelineExecution can't be null");
@@ -586,22 +579,51 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     mapper.addPipelineExecution(pipelineProcessKey, pipelineExecution);
 
+    pipelineExecution.getStepsToRun()
+      .forEach(st -> {
+        PipelineStep step =
+          new PipelineStep()
+            .setType(st)
+            .setState(Status.SUBMITTED)
+            .setStarted(LocalDateTime.now())
+            .setCreatedBy(creator);
+
+        mapper.addPipelineStep(pipelineExecution.getKey(), step);
+    });
+
     return pipelineExecution.getKey();
   }
 
   @Override
-  public long addPipelineStep(
-      long pipelineProcessKey, long executionKey, PipelineStep pipelineStep, String user) {
+  public long updatePipelineStep(PipelineStep pipelineStep, String user) {
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
-
-    // TODO: check that execution belongs to the process??
 
     pipelineStep.setStarted(LocalDateTime.now());
     pipelineStep.setCreatedBy(user);
 
-    mapper.addPipelineStep(executionKey, pipelineStep);
+    mapper.updatePipelineStep(pipelineStep);
     return pipelineStep.getKey();
+  }
+
+  @Override
+  public List<PipelineStep> getPipelineStepsByExecutionKey(long executionKey) {
+    return mapper.getPipelineStepsByExecutionKey(executionKey);
+  }
+
+  @Override
+  public void markAllPipelineExecutionAsFinished() {
+    mapper.markAllPipelineExecutionAsFinished();
+  }
+
+  @Override
+  public void markPipelineExecutionIfFinished(long executionKey) {
+    mapper.markPipelineExecutionIfFinished(executionKey);
+  }
+
+  @Override
+  public void markPipelineStatusAsAborted(long executionKey) {
+    mapper.markPipelineStatusAsAborted(executionKey);
   }
 
   @Override
@@ -610,44 +632,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   }
 
   @Override
-  public void updatePipelineStepStatusAndMetrics(
-      long processKey,
-      long executionKey,
-      long pipelineStepKey,
-      PipelineStep.Status status,
-      List<PipelineStep.MetricInfo> metrics,
-      String user) {
-    Objects.requireNonNull(status, "Status can't be null");
-    Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
-
-    // fetch entities
-    PipelineProcess process = mapper.get(processKey);
-    PipelineExecution execution = mapper.getPipelineExecution(executionKey);
-    PipelineStep step = mapper.getPipelineStep(pipelineStepKey);
-    Preconditions.checkArgument(
-        process.getExecutions().contains(execution), "The process doesn't contain the execution.");
-    Preconditions.checkArgument(
-        execution.getSteps().contains(step), "The execution doesn't contain the step.");
-
-    if (step.getState() != status
-        && (PipelineStep.Status.FAILED == status || PipelineStep.Status.COMPLETED == status)) {
-      step.setFinished(LocalDateTime.now());
-    }
-
-    step.setMetrics(new HashSet<>(metrics));
-    step.setNumberRecords(getNumberRecordsFromMetrics(metrics, step.getType()));
-
-    // update status and modifying user
-    step.setState(status);
-    step.setModifiedBy(user);
-
-    mapper.updatePipelineStep(step);
-  }
-
-  @Override
   public PagingResponse<SearchResult> search(
       @Nullable UUID datasetKey,
-      @Nullable PipelineStep.Status state,
+      @Nullable Status state,
       @Nullable StepType stepType,
       @Nullable LocalDateTime startedMin,
       @Nullable LocalDateTime startedMax,
@@ -764,33 +751,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       }
     } catch (IOException ex) {
       LOG.error(ex.getMessage(), ex);
-    }
-  }
-
-  public Long getNumberRecordsFromMetrics(
-      List<PipelineStep.MetricInfo> metrics, StepType stepType) {
-    try {
-      if (stepType == StepType.VERBATIM_TO_INTERPRETED) {
-        Optional<Long> numberRecords =
-            metrics.stream()
-                .filter(m -> m.getName().equals("basicRecordsCountAttempted"))
-                .findFirst()
-                .map(PipelineStep.MetricInfo::getValue)
-                .map(Long::parseLong);
-
-        if (numberRecords.isPresent()) {
-          return numberRecords.get();
-        }
-      }
-
-      return metrics.stream()
-          .map(PipelineStep.MetricInfo::getValue)
-          .map(Long::parseLong)
-          .max(Comparator.naturalOrder())
-          .orElse(null);
-    } catch (NumberFormatException ex) {
-      LOG.warn("Couldn't get number of records from metrics {}", metrics, ex);
-      return null;
     }
   }
 
