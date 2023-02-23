@@ -713,8 +713,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           process.getExecutions().stream().max(Comparator.comparingLong(PipelineExecution::getKey));
 
       if (execution.isPresent()) {
+        Set<PipelineStep> steps = execution.get().getSteps();
         Optional<PipelineStep> identifierStep =
-            execution.get().getSteps().stream()
+            steps.stream()
                 .filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER)
                 .findAny();
 
@@ -728,6 +729,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               pipelineStep.getKey(),
               datasetKey,
               attempt);
+
+          steps.stream()
+              .filter(x-> x.getState() == Status.ABORTED)
+              .forEach(s-> {
+                PipelineStep step = s.setState(Status.SUBMITTED).setFinished(null);
+                mapper.updatePipelineStep(step);
+              });
 
           // Send message to interpretaton
           PipelinesVerbatimMessage message =
