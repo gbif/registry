@@ -31,12 +31,6 @@ import org.gbif.registry.ws.util.SecurityUtil;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.net.URI;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +64,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -79,7 +72,7 @@ import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
-@Tag(name = "DerivedDatasets", description = "Derived datasets are metadata records allowing the citation of a " +
+@Tag(name = "Derived datasets", description = "Derived datasets are metadata records allowing the citation of a " +
   "subset of a larger dataset.  Typically the large dataset is a monthly download containing all GBIF occurrences " +
   "and made available on a public cloud service.")
 @RestController
@@ -105,54 +98,11 @@ public class DerivedDatasetResource {
     this.eventManager = eventManager;
   }
 
-  @Target({ElementType.METHOD, ElementType.TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  @Parameters(
-    value = {
-      @Parameter(
-        name = "originalDownloadDOI",
-        description = "The DOI of the source (large) download which has been filtered",
-        schema = @Schema(implementation = DOI.class)
-      ),
-      @Parameter(
-        name = "title",
-        description = "The human title of the derived dataset.",
-        schema = @Schema(implementation = String.class)
-      ),
-      @Parameter(
-        name = "description",
-        description = "",
-        schema = @Schema(implementation = String.class)
-      ),
-      @Parameter(
-        name = "sourceUrl",
-        description = "",
-        schema = @Schema(implementation = URI.class)
-      ),
-      @Parameter(
-        name = "registrationDate",
-        description = "",
-        schema = @Schema(implementation = Date.class)
-      ),
-      @Parameter(
-        name = "request",
-        hidden = true
-      )
-    })
-  @Docs.DefaultQParameter
-  @Docs.DefaultOffsetLimitParameters
-  public @interface CreateDerivedDatasetParameters {}
-
   @Operation(
     operationId = "createDerivedDataset",
     summary = "Create a new derived dataset",
-    description = "Creates a new derived dataset with the specified source dataset and records of what subset" +
+    description = "Creates a new derived dataset with the specified source dataset and records of what subset " +
       "should be cited.")
-  @CreateDerivedDatasetParameters
-  @Parameter(
-    name = "relatedDatasets",
-    description = ""
-  )
   @ApiResponse(
     responseCode = "201",
     description = "Derived dataset information.")
@@ -166,16 +116,10 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "createDerivedDatasetFromFile",
     summary = "Create a new derived dataset from a file",
-    description = "Creates a new derived dataset with the specified source dataset and records of what subset" +
+    description = "Creates a new derived dataset with the specified source dataset and records of what subset " +
       "should be cited.")
-  @CreateDerivedDatasetParameters
-  @Parameter(
-    name = "relatedDatasets",
-    description = ""
-  )
-  @Parameter(
-    name = "derivedDataset",
-    description = ""
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+    description = "File body TODO" // TODO
   )
   @ApiResponse(
     responseCode = "201",
@@ -244,6 +188,15 @@ public class DerivedDatasetResource {
     return derivedDatasetService.get(doi);
   }
 
+  @Operation(
+    operationId = "updateDerivedDataset",
+    summary = "Updates a derived dataset",
+    description = "Updates the values of a derived dataset.\n\n" +
+      "This is restricted to administrators, contact the [helpdesk](https://www.gbif.org/contact-us) " +
+      "for assistance.")
+  @ApiResponse(
+    responseCode = "201",
+    description = "Derived dataset updated.")
   @Secured({ADMIN_ROLE, USER_ROLE})
   @PutMapping(path = "{doiPrefix}/{doiSuffix}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public void update(
