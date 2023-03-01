@@ -24,6 +24,7 @@ import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.util.CitationGenerator;
 import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.metadata.dc.parse.DatasetDcParser;
 import org.gbif.metadata.eml.parse.DatasetEmlParser;
 import org.gbif.registry.doi.util.RegistryDoiUtils;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
@@ -283,21 +284,25 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   @Nullable
   @Override
   public Dataset getPreferredMetadataDataset(UUID key) {
-    Dataset result = null;
-    List<Metadata> docs = listMetadata(key, null);
+   List<Metadata> docs = listMetadata(key, null);
     if (!docs.isEmpty()) {
       // the list is sorted by priority already, just pick the first!
       Integer metadataKey = docs.get(0).getKey();
       byte[] metadataDocument = getMetadataDocument(metadataKey);
       try {
-        result = DatasetEmlParser.build(metadataDocument);
+        switch (docs.get(0).getType()) {
+          case DC:
+            return DatasetDcParser.build(metadataDocument);
+          case EML:
+            return DatasetEmlParser.build(metadataDocument);
+        }
       } catch (IOException | IllegalArgumentException e) {
         // Not sure if we should not propagate an Exception to return a 500 instead
         LOG.error("Stored metadata document {} cannot be read", metadataKey, e);
       }
     }
 
-    return result;
+    return null;
   }
 
   @Override
