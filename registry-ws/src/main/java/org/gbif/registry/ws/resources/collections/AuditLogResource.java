@@ -68,7 +68,7 @@ public class AuditLogResource {
   @Operation(
     operationId = "lookupCollectionsInstitutions",
     summary = "Lookup collections and institutions")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @Parameters(
     value = {
     @Parameter(

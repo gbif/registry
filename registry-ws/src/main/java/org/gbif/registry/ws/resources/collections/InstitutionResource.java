@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.SourceableField;
@@ -53,15 +54,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -296,7 +289,7 @@ public class InstitutionResource
     description = "Search that returns up to 20 matching institutions. Results are ordered by relevance. " +
       "The response is smaller than an institution search.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
-  @Docs.DefaultQParameter
+  @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
     description = "Institution search successful")

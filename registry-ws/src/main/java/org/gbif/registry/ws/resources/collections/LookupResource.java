@@ -14,11 +14,12 @@
 package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.LookupResult;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.service.collections.lookup.LookupService;
-import org.gbif.registry.ws.resources.Docs;
 
 import java.util.UUID;
 
@@ -59,9 +60,9 @@ public class LookupResource {
   @Operation(
     operationId = "lookupCollectionsInstitutions",
     summary = "Lookup collections and institutions")
-  @Docs.DefaultQParameter
-  @Docs.DefaultHlParameter
-  @Docs.DefaultOffsetLimitParameters
+  @CommonParameters.QParameter
+  @CommonParameters.HighlightParameter
+  @Pageable.OffsetLimitParameters
   @Parameters(
     value = {
       @Parameter(

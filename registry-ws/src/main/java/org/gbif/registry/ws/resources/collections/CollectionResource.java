@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.SourceableField;
@@ -315,7 +316,7 @@ public class CollectionResource
     description = "Search that returns up to 20 matching collections. Results are ordered by relevance. " +
       "The response is smaller than a collection search.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
-  @Docs.DefaultQParameter
+  @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
     description = "Collection search successful")
