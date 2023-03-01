@@ -92,9 +92,7 @@ import static java.util.stream.Collectors.toList;
           "Nodes, and Networks discoverable.\n\n" +
         "Internally we use a Java web service client for the consumption of these HTTP-based, RESTful web services. " +
           "It may be of interest to those coding against the API, and can be found in the " +
-          "[registry-ws-client](https://github.com/gbif/registry/tree/master/registry-ws-client) project.\n\n" +
-        "Please note the old Registry API is still supported, but is now deprecated. Anyone starting new work is " +
-          "strongly encouraged to use the new API.",
+          "[registry-ws-client](https://github.com/gbif/registry/tree/master/registry-ws-client) project.",
     termsOfService = "https://www.gbif.org/terms"),
   servers = {
     @Server(url = "https://api.gbif.org/v1/", description = "Production"),

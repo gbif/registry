@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -352,7 +353,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     summary = "List hosted datasets",
     description = "Lists the hosted datasets (datasets hosted by installations hosted by the organization).")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of hosted datasets")
@@ -372,7 +373,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     summary = "List published datasets",
     description = "Lists the published datasets (datasets published by the organization).")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of published datasets")
@@ -402,7 +403,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     summary = "List organization's installations",
     description = "Lists the technical installations registered to this organization.")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of technical installations")
@@ -429,7 +430,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getDeletedOrganizations",
     summary = "List deleted organizations",
     description = "Lists deleted organizations.")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted organizations")
@@ -445,7 +446,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getPendingOrganizations",
     summary = "List pending organizations",
     description = "Lists organizations whose endorsement is pending.")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of pending organizations")
@@ -463,7 +464,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getNonPublishingOrganizations",
     summary = "List non-publishing organizations",
     description = "Lists organizations publishing 0 datasets (excluding deleted datasets).")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of non-publishing organizations")
@@ -483,7 +484,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @Docs.DefaultQParameter
+  @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
     description = "Organization search successful")

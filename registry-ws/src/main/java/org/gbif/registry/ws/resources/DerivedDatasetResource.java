@@ -311,7 +311,7 @@ public class DerivedDatasetResource {
     description = "Dataset key",
     schema = @Schema(implementation = UUID.class)
   )
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset information.")
@@ -325,7 +325,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetByDatasetDoi",
     summary = "Retrieve derived datasets of a dataset by DOI")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset information.")
@@ -341,7 +341,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetByUser",
     summary = "Retrieve derived datasets of a dataset by User")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset information.")
@@ -369,7 +369,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetCitation",
     summary = "Retrieve derived dataset citation")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset citation.")
@@ -389,7 +389,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetRelatedDatasets",
     summary = "Retrieve derived dataset related datasets")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Related datasets.")

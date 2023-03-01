@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -183,8 +184,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         hidden = true
       )
     })
-  @Docs.DefaultQParameter
-  @Docs.DefaultOffsetLimitParameters
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   @interface SimpleSearchParameters {}
 
   /**

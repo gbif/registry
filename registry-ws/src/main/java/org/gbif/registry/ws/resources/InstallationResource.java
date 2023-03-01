@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -261,7 +262,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     summary = "List installation's datasets",
     description = "Lists the datasets served by this installation.")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
@@ -280,7 +281,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getDeletedInstallations",
     summary = "List deleted installations",
     description = "Lists deleted installations.")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted installations")
@@ -296,7 +297,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getNonPublishingInstallations",
     summary = "List non-publishing installations",
     description = "Lists all installations serving 0 datasets.")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of non-publishing installations")
@@ -432,8 +433,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @Docs.DefaultQParameter
-  @Docs.DefaultOffsetLimitParameters
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Node search successful")

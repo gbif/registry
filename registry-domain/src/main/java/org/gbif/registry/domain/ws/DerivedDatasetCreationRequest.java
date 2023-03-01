@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.domain.ws;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.util.HttpURI;
 
@@ -38,11 +40,36 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 public class DerivedDatasetCreationRequest implements Serializable {
 
+  @Schema(
+    description = "The DOI of the source (large) download which has been filtered",
+    implementation = String.class
+  )
   private DOI originalDownloadDOI;
+
+  @Schema(
+    description = "The human title of the derived dataset."
+  )
   private String title;
+
+  @Schema(
+    description = "Description of the derived dataset, such as how it was filtered."
+  )
   private String description;
+
+  @Schema(
+    description = "The URL where your derived dataset is deposited."
+  )
   private URI sourceUrl;
+
+  @Schema(
+    description = "" // TODO
+  )
   private Date registrationDate;
+
+  @Schema(
+    description = "A map with keys of GBIF Dataset DOIs or UUIDs, and values (>0) of the number of records " +
+      "present in the derived dataset."
+  )
   private Map<String, Long> relatedDatasets = new HashMap<>();
 
   public DOI getOriginalDownloadDOI() {
