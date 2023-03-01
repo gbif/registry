@@ -15,12 +15,14 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.exception.ServiceUnavailableException;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
 import org.gbif.api.model.registry.Contact;
@@ -339,10 +341,10 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")),
     tags = "BASIC")
   @DatasetSearchParameters
-  @Docs.DefaultQParameter
-  @Docs.DefaultHlParameter
-  @Docs.DefaultFacetParameters
-  @Docs.DefaultOffsetLimitParameters
+  @CommonParameters.QParameter
+  @CommonParameters.HighlightParameter
+  @FacetedSearchRequest.FacetParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
@@ -365,7 +367,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     tags = "BASIC"
   )
   @DatasetSearchParameters
-  @Docs.DefaultQParameter
+  @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
@@ -400,7 +402,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     tags = "BASIC"
   )
   @DatasetSearchParameters
-  @Docs.DefaultQParameter
+  @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
     description = "Dataset search successful")
@@ -1038,7 +1040,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     summary = "Retrieve all constituents of the dataset",
     description = "Lists the dataset's subdataset constituents (datasets that have a parentDatasetKey equal to the one requested).")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of constituents")
@@ -1072,7 +1074,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "getAllConstituents",
     summary = "Retrieve all constituent datasets",
     description = "Lists datasets that are a constituent of any dataset.")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
@@ -1165,7 +1167,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getDeletedDatasets",
     summary = "List all deleted datasets")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted datasets")
@@ -1179,7 +1181,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getDuplicateDatasets",
     summary = "List all duplicate datasets")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Duplicate datasets")
@@ -1193,7 +1195,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getNoEndpointDatasets",
     summary = "List all datasets with no endpoint")
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Datasets with no endpoint")
@@ -1356,7 +1358,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "datasetCrawlAttempt",
     summary = "Get details of a particular crawl attempt for the dataset")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Crawl attempt record")
@@ -1392,7 +1394,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "listDatasetCrawlAttempt",
     summary = "Get details of all crawl attempts for a dataset")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Crawl attempt records")
@@ -1430,7 +1432,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
         example = "igasai",
         in = ParameterIn.PATH)
     })
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset list")

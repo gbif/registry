@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.domain.ws;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import org.gbif.api.model.common.DOI;
 
 import java.io.Serializable;
@@ -23,16 +25,59 @@ import java.util.StringJoiner;
 
 public class DerivedDataset implements Serializable {
 
+  @Schema(
+    description = "The DOI of the derived dataset."
+  )
   private DOI doi;
+
+  @Schema(
+    description = "The DOI of the source (large) download which has been filtered."
+  )
   private DOI originalDownloadDOI;
+
+  @Schema(
+    description = "Description of the derived dataset, such as how it was filtered."
+  )
   private String description;
+
+  @Schema(
+    description = "The citation for the derived dataset."
+  )
   private String citation;
+
+  @Schema(
+    description = "The human title of the derived dataset."
+  )
   private String title;
+
+  @Schema(
+    description = "The URL where the derived dataset is deposited."
+  )
   private URI sourceUrl;
+
+  @Schema(
+    description = "The GBIF user who created the derived dataset."
+  )
   private String createdBy;
+
+  @Schema(
+    description = "The GBIF user who last modified the derived dataset."
+  )
   private String modifiedBy;
+
+  @Schema(
+    description = "" // TODO
+  )
   private Date registrationDate;
+
+  @Schema(
+    description = "The time the derived dataset was created."
+  )
   private Date created;
+
+  @Schema(
+    description = "The time the derived dataset was last modified."
+  )
   private Date modified;
 
   public DOI getDoi() {

@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -240,7 +241,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
   @Docs.DefaultEntityKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Constituent dataset list")
@@ -344,7 +345,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
     tags = "BASIC"
   )
-  @Docs.DefaultQParameter
+  @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
     description = "Network search successful")

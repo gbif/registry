@@ -57,7 +57,7 @@ public abstract class DatasetDownloadUsageResourceBase
     name = "datasetKey",
     description = "The key of the dataset.",
     in = ParameterIn.PATH)
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset found and download information returned")

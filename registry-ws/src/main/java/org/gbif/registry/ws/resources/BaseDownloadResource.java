@@ -319,7 +319,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     description = "Username (administrator account required to see other users).",
     in = ParameterIn.PATH
   )
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Occurrence download information.")
@@ -399,7 +399,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     summary = "Lists datasets present in a download",
     description = "Shows the datasets with occurrences present in the given occurrence download.")
   @DoiParameters
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset usage within an occurrence download information.")
@@ -417,7 +417,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     summary = "Lists datasets present in a download",
     description = "Shows the datasets with occurrences present in the given occurrence download.")
   @DownloadKeyParameter
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset usage within an occurrence download information.")
@@ -725,7 +725,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
         in = ParameterIn.QUERY
       )
     })
-  @Docs.DefaultOffsetLimitParameters
+  @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Download statistics.")

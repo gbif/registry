@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.domain.ws;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import org.gbif.api.model.common.DOI;
 
 import java.util.Objects;
@@ -22,10 +25,19 @@ import java.util.UUID;
 public class DerivedDatasetUsage {
 
   private UUID datasetKey;
+
   private DOI datasetDOI;
+
   private String datasetTitle;
+
+  @Schema(
+    description = "The DOI of the derived dataset",
+    implementation = String.class
+  )
   private DOI derivedDatasetDOI;
+
   private Long numberRecords;
+
   private String citation;
 
   public DerivedDatasetUsage() {}

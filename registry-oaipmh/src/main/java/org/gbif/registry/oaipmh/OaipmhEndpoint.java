@@ -86,13 +86,12 @@ public class OaipmhEndpoint {
    * Main OAI-PMH endpoint.
    *
    * @param params request parameters
-   * @return xml response data as bytes
+   * @return XML response data as bytes
    * @throws ParseException in case of wrong data format parameters 'from' or 'until'
    */
   @Operation(
     operationId = "oaipmh",
     summary = "Make an OAI-PMH request",
-    description = "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.",
     externalDocs = @ExternalDocumentation(
       description = "The Open Archives Initiative Protocol for Metadata Harvesting § Protocol Requests and, Responses.",
       url = "https://www.openarchives.org/OAI/openarchivesprotocol.html#ProtocolMessages"
