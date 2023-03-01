@@ -13,11 +13,12 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.search.dataset.service.collections.CollectionsSearchService;
-import org.gbif.registry.ws.resources.Docs;
 
 import java.util.List;
 
@@ -55,9 +56,9 @@ public class CollectionsSearchResource {
   @Operation(
     operationId = "searchCollectionsInstitutions",
     summary = "Search collections and institutions")
-  @Docs.DefaultQParameter
-  @Docs.DefaultHlParameter
-  @Docs.DefaultOffsetLimitParameters
+  @CommonParameters.QParameter
+  @CommonParameters.HighlightParameter
+  @Pageable.OffsetLimitParameters
   @Parameters(
     value = {
       @Parameter(

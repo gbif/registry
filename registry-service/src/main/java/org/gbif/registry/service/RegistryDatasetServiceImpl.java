@@ -284,7 +284,7 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
   @Nullable
   @Override
   public Dataset getPreferredMetadataDataset(UUID key) {
-   List<Metadata> docs = listMetadata(key, null);
+    List<Metadata> docs = listMetadata(key, null);
     if (!docs.isEmpty()) {
       // the list is sorted by priority already, just pick the first!
       Integer metadataKey = docs.get(0).getKey();

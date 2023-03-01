@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.util.HttpURI;
 
@@ -37,6 +35,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class DerivedDatasetCreationRequest implements Serializable {
 

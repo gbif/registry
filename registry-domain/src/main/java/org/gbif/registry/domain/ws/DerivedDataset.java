@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import org.gbif.api.model.common.DOI;
 
 import java.io.Serializable;
@@ -22,6 +20,8 @@ import java.net.URI;
 import java.util.Date;
 import java.util.Objects;
 import java.util.StringJoiner;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class DerivedDataset implements Serializable {
 

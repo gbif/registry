@@ -15,6 +15,7 @@ package org.gbif.registry.ws.resources.collections;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
+import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -196,8 +197,8 @@ public abstract class BaseCollectionEntityResource<
         hidden = true
       )
     })
-  @Docs.DefaultQParameter
-  @Docs.DefaultOffsetLimitParameters
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   public @interface SearchRequestParameters {}
 
   // OpenAPI documentation on subclasses
