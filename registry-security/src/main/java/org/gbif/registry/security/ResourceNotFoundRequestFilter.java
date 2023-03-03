@@ -13,13 +13,13 @@
 
 package org.gbif.registry.security;
 
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.InstallationMapper;
-import org.gbif.registry.persistence.mapper.NetworkMapper;
-import org.gbif.registry.persistence.mapper.NodeMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NetworkService;
+import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
@@ -50,23 +50,23 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
       Pattern.compile(
           ".*/(organization|dataset|installation|node|network|institution|collection)/([a-f0-9-]+)/.+$");
 
-  Map<String, Predicate<UUID>> ENTITY_EXISTS_PREDICATES = new HashMap<>();
+  private static final Map<String, Predicate<UUID>> ENTITY_EXISTS_PREDICATES = new HashMap<>();
 
   public ResourceNotFoundRequestFilter(
-      OrganizationMapper organizationMapper,
-      DatasetMapper datasetMapper,
-      InstallationMapper installationMapper,
-      NodeMapper nodeMapper,
-      NetworkMapper networkMapper,
-      InstitutionMapper institutionMapper,
-      CollectionMapper collectionMapper) {
-    ENTITY_EXISTS_PREDICATES.put("organization", key -> organizationMapper.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("dataset", key -> datasetMapper.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("installation", key -> installationMapper.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("node", key -> nodeMapper.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("network", key -> networkMapper.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("institution", key -> institutionMapper.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("collection", key -> collectionMapper.get(key) != null);
+      OrganizationService organizationService,
+      DatasetService datasetService,
+      InstallationService installationService,
+      NodeService nodeService,
+      NetworkService networkService,
+      InstitutionService institutionService,
+      CollectionService collectionService) {
+    ENTITY_EXISTS_PREDICATES.put("organization", key -> organizationService.get(key) != null);
+    ENTITY_EXISTS_PREDICATES.put("dataset", key -> datasetService.get(key) != null);
+    ENTITY_EXISTS_PREDICATES.put("installation", key -> installationService.get(key) != null);
+    ENTITY_EXISTS_PREDICATES.put("node", key -> nodeService.get(key) != null);
+    ENTITY_EXISTS_PREDICATES.put("network", key -> networkService.get(key) != null);
+    ENTITY_EXISTS_PREDICATES.put("institution", key -> institutionService.get(key) != null);
+    ENTITY_EXISTS_PREDICATES.put("collection", key -> collectionService.get(key) != null);
   }
 
   @Override

@@ -29,6 +29,8 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.registry.persistence.mapper.collections.BaseMapper;
+import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;

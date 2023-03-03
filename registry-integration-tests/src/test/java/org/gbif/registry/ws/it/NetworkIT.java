@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -180,7 +181,12 @@ public class NetworkIT extends NetworkEntityIT<Network> {
 
     assertEquals(2, network1PublishingOrgs.getCount());
     assertEquals(1, network2PublishingOrgs.getCount());
-    assertEquals(0, notExistingNetworkPublishingOrgs.getCount());
+
+    if (serviceType == ServiceType.RESOURCE) {
+      assertEquals(0, notExistingNetworkPublishingOrgs.getCount());
+    } else if (serviceType == ServiceType.CLIENT) {
+      assertNull(notExistingNetworkPublishingOrgs);
+    }
 
     // remove constituent
     service.removeConstituent(network1.getKey(), dataset3.getKey());
