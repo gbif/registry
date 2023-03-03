@@ -16,6 +16,7 @@ package org.gbif.registry.security.config;
 import org.gbif.registry.identity.util.RegistryPasswordEncoder;
 import org.gbif.registry.security.EditorAuthorizationFilter;
 import org.gbif.registry.security.LegacyAuthorizationFilter;
+import org.gbif.registry.security.ResourceNotFoundRequestFilter;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
 import org.gbif.registry.security.jwt.JwtRequestFilter;
 import org.gbif.registry.security.precheck.AuthPreCheckCreationRequestFilter;
@@ -107,6 +108,9 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         .addFilterAfter(
             context.getBean(GrSciCollEditorAuthorizationFilter.class),
             EditorAuthorizationFilter.class)
+        .addFilterAfter(
+            context.getBean(ResourceNotFoundRequestFilter.class),
+            GrSciCollEditorAuthorizationFilter.class)
         .csrf()
         .disable()
         .cors()
