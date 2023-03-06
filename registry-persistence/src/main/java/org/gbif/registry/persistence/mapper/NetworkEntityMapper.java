@@ -35,6 +35,8 @@ public interface NetworkEntityMapper<T extends NetworkEntity> {
    */
   T get(@Param("key") UUID key);
 
+  boolean exists(@Param("key") UUID key);
+
   String title(@Param("key") UUID key);
 
   void create(T entity);

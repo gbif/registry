@@ -144,6 +144,12 @@
     WHERE i.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="exists" resultType="Boolean">
+    SELECT count(1)
+    FROM institution i
+    WHERE i.key = #{key,jdbcType=OTHER}
+  </select>
+
   <!-- new contacts model -->
   <select id="listContactPersons" resultMap="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_READ_FIELDS"/>

@@ -384,6 +384,11 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
+  public boolean exists(UUID key) {
+    return key != null;
+  }
+
+  @Override
   public String title(@Param("key") UUID key) {
     return null;
   }
