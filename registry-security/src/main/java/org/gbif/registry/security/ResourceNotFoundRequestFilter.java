@@ -65,7 +65,9 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
       }
 
       if (resource != null && key != null && !resourceNotFoundService.entityExists(resource, key)) {
-        throw new WebApplicationException("Entity not found", HttpStatus.NOT_FOUND);
+        throw new WebApplicationException(
+            "Entity " + resource.name().toLowerCase() + " not found with key " + key,
+            HttpStatus.NOT_FOUND);
       }
     }
 
