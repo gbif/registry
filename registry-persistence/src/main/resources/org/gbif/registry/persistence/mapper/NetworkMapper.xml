@@ -99,6 +99,12 @@
     WHERE n.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="exists" resultType="Boolean">
+    SELECT count(1)
+    FROM network n
+    WHERE n.key = #{key,jdbcType=OTHER}
+  </select>
+
   <select id="title" resultType="String">
     SELECT title
     FROM network

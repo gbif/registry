@@ -68,6 +68,12 @@
     WHERE key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="exists" resultType="Boolean">
+    SELECT count(1)
+    FROM node n
+    WHERE key = #{key,jdbcType=OTHER}
+  </select>
+
   <select id="title" resultType="String">
     SELECT title
     FROM node

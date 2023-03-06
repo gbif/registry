@@ -13,20 +13,10 @@
 
 package org.gbif.registry.security;
 
-import org.gbif.api.service.collections.CollectionService;
-import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.NetworkService;
-import org.gbif.api.service.registry.NodeService;
-import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.ws.WebApplicationException;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +31,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import static org.gbif.registry.security.ResourceNotFoundService.Resource;
+
 @Component
 public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
 
@@ -50,23 +42,10 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
       Pattern.compile(
           ".*/(organization|dataset|installation|node|network|institution|collection)/([a-f0-9-]+)/.+$");
 
-  private static final Map<String, Predicate<UUID>> ENTITY_EXISTS_PREDICATES = new HashMap<>();
+  private final ResourceNotFoundService resourceNotFoundService;
 
-  public ResourceNotFoundRequestFilter(
-      OrganizationService organizationService,
-      DatasetService datasetService,
-      InstallationService installationService,
-      NodeService nodeService,
-      NetworkService networkService,
-      InstitutionService institutionService,
-      CollectionService collectionService) {
-    ENTITY_EXISTS_PREDICATES.put("organization", key -> organizationService.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("dataset", key -> datasetService.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("installation", key -> installationService.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("node", key -> nodeService.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("network", key -> networkService.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("institution", key -> institutionService.get(key) != null);
-    ENTITY_EXISTS_PREDICATES.put("collection", key -> collectionService.get(key) != null);
+  public ResourceNotFoundRequestFilter(ResourceNotFoundService resourceNotFoundService) {
+    this.resourceNotFoundService = resourceNotFoundService;
   }
 
   @Override
@@ -76,7 +55,7 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
 
     Matcher entityMatcher = ENTITY_PATTERN.matcher(request.getRequestURI());
     if (request.getMethod().equalsIgnoreCase("GET") && entityMatcher.matches()) {
-      String entityType = entityMatcher.group(1);
+      Resource resource = Resource.fromString(entityMatcher.group(1).toUpperCase());
 
       UUID key = null;
       try {
@@ -85,7 +64,7 @@ public class ResourceNotFoundRequestFilter extends OncePerRequestFilter {
         LOG.info("Not an entity key. Skipping request", ex);
       }
 
-      if (key != null && !ENTITY_EXISTS_PREDICATES.get(entityType).test(key)) {
+      if (resource != null && key != null && !resourceNotFoundService.entityExists(resource, key)) {
         throw new WebApplicationException("Entity not found", HttpStatus.NOT_FOUND);
       }
     }

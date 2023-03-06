@@ -124,6 +124,12 @@
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
 
+  <select id="exists" resultType="Boolean">
+    SELECT count(1)
+    FROM dataset d
+    WHERE d.key = #{key,jdbcType=OTHER}
+  </select>
+
   <!--  Note: you can get entities which are deleted -->
   <select id="listByDOI" resultMap="DATASET_MAP">
     SELECT DISTINCT ON (d.key) <include refid="DATASET_FIELDS"/>

@@ -43,6 +43,8 @@ public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable 
 
   T get(@Param("key") UUID key);
 
+  boolean exists(@Param("key") UUID key);
+
   void create(T entity);
 
   void delete(@Param("key") UUID key);

@@ -43,8 +43,8 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Source;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
+import org.gbif.registry.security.ResourceNotFoundService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.client.collections.BaseCollectionEntityClient;
@@ -63,6 +63,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -94,6 +95,8 @@ abstract class BaseCollectionEntityResourceIT<
 
   @Autowired protected ObjectMapper objectMapper;
   @Autowired protected MockMvc mockMvc;
+
+  @MockBean private ResourceNotFoundService resourceNotFoundService;
 
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T, R>> cls,
@@ -226,7 +229,8 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().listTags(key, null))
         .thenReturn(Collections.singletonList(tag));
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(key)).thenReturn(entity);
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
     List<Tag> tagsReturned = baseClient.listTags(key, null);
     assertEquals(1, tagsReturned.size());
     assertEquals(tagKey, tagsReturned.get(0).getKey());
@@ -253,7 +257,8 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().listMachineTags(entityKey))
         .thenReturn(Collections.singletonList(machineTag));
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(entityKey)).thenReturn(entity);
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
     List<MachineTag> machineTags = baseClient.listMachineTags(entityKey);
     assertEquals(1, machineTags.size());
     assertEquals(machineTagKey, machineTags.get(0).getKey());
@@ -281,7 +286,7 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().listIdentifiers(entityKey))
         .thenReturn(Collections.singletonList(identifier));
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(entityKey)).thenReturn(testData.newEntity());
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
 
     List<Identifier> identifiers = baseClient.listIdentifiers(entityKey);
     assertEquals(1, identifiers.size());
@@ -308,7 +313,8 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().listComments(entityKey))
         .thenReturn(Collections.singletonList(comment));
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(entityKey)).thenReturn(testData.newEntity());
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
     List<Comment> comments = baseClient.listComments(entityKey);
     assertEquals(1, comments.size());
     assertEquals(commentKey, comments.get(0).getKey());
@@ -339,7 +345,7 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().listContactPersons(any(UUID.class)))
         .thenReturn(Arrays.asList(contact, contact2));
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(any(UUID.class))).thenReturn(testData.newEntity());
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
 
     List<Contact> contactsEntity1 =
         getPrimaryCollectionEntityClient().listContactPersons(UUID.randomUUID());
@@ -411,7 +417,7 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().listOccurrenceMappings(any(UUID.class)))
         .thenReturn(Collections.singletonList(occurrenceMapping));
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(any(UUID.class))).thenReturn(testData.newEntity());
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
 
     List<OccurrenceMapping> mappings =
         getPrimaryCollectionEntityClient().listOccurrenceMappings(UUID.randomUUID());
@@ -547,7 +553,8 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().addMasterSourceMetadata(any(UUID.class), eq(metadata)))
         .thenReturn(key);
     // mock call in ResourceNotFoundRequestFilter
-    when(getMockCollectionEntityService().get(any(UUID.class))).thenReturn(testData.newEntity());
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+
     int metadataKey =
         getPrimaryCollectionEntityClient().addMasterSourceMetadata(UUID.randomUUID(), metadata);
     assertEquals(key, metadataKey);
