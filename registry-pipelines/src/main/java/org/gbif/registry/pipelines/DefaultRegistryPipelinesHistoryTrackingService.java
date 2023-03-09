@@ -374,7 +374,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     Status status = getStatus(process);
 
-    if (markPreviousAttemptAsFailed && status == Status.RUNNING) {
+    if (markPreviousAttemptAsFailed) {
       markPreviousAttemptAsFailed(process);
     }
 
