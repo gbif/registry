@@ -51,7 +51,7 @@
   </sql>
 
   <sql id="EXECUTION_FIELDS_SELECT">
-    e.key, e.pipeline_process_key, e.steps_to_run, e.created, e.created_by, e.rerun_reason, e.remarks
+    e.key, e.pipeline_process_key, e.steps_to_run, e.created, e.created_by, e.rerun_reason, e.remarks, e.finished
   </sql>
 
   <sql id="EXECUTION_FIELDS_CREATE">
