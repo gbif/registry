@@ -271,31 +271,31 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         .max(Comparator.comparing(PipelineStep::getStarted));
   }
 
+  private PipelineExecution getLastestExecution(PipelineProcess pipelineProcess){
+    return pipelineProcess.getExecutions().stream()
+        .max(Comparator.comparing(PipelineExecution::getCreated))
+        .orElseThrow(
+          () ->
+            new IllegalStateException(
+              "Couldn't find las execution for process: " + pipelineProcess));
+  }
+
   /**
-   * Calculates the general state of a {@link PipelineProcess}. If one the latest steps of a
+   * Calculates the general state of a {@link PipelineExecution}. If one the latest steps of a
    * specific {@link StepType} has a {@link Status#FAILED}, the process is considered
    * as FAILED. If all the latest steps of all {@link StepType} have the same {@link
-   * Status}, that status used for the {@link PipelineProcess}. If it has step in
+   * Status}, that status used for the {@link PipelineExecution}. If it has step in
    * {@link Status#RUNNING} it is decided as the process status, otherwise is {@link
    * Status#COMPLETED}
    *
-   * @param pipelineProcess that contains all the steps.
+   * @param execution that contains all the steps.
    * @return the calculated status of a {@link PipelineProcess}
    */
-  private Status getStatus(PipelineProcess pipelineProcess) {
-    // get last execution
-    PipelineExecution lastExecution =
-        pipelineProcess.getExecutions().stream()
-            .max(Comparator.comparing(PipelineExecution::getCreated))
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Couldn't find las execution for process: " + pipelineProcess));
-
+  private Status getStatus(PipelineExecution execution) {
     // Collects the latest steps per type.
     Set<Status> statuses = new HashSet<>();
     for (StepType stepType : StepType.values()) {
-      lastExecution.getSteps().stream()
+      execution.getSteps().stream()
           .filter(s -> stepType == s.getType())
           .max(Comparator.comparing(PipelineStep::getStarted))
           .ifPresent(step -> statuses.add(step.getState()));
@@ -314,19 +314,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         return Status.COMPLETED;
       }
     }
-  }
-
-  private void markPreviousAttemptAsFailed(PipelineProcess pipelineProcess) {
-    // get last execution
-    PipelineExecution lastExecution =
-        pipelineProcess.getExecutions().stream()
-            .max(Comparator.comparing(PipelineExecution::getCreated))
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Couldn't find las execution for process: " + pipelineProcess));
-
-    mapper.markPipelineStatusAsAborted(lastExecution.getKey());
   }
 
   @Override
@@ -372,10 +359,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     PipelineProcess process = mapper.getByDatasetAndAttempt(datasetKey, attempt);
 
-    Status status = getStatus(process);
+    PipelineExecution lastestExecution = getLastestExecution(process);
+    Status status = getStatus(lastestExecution);
 
-    if (markPreviousAttemptAsFailed) {
-      markPreviousAttemptAsFailed(process);
+    if(markPreviousAttemptAsFailed || (status == Status.FAILED && !lastestExecution.isFinished())){
+      markPipelineStatusAsAborted(lastestExecution.getKey());
     }
 
     // Checks that the pipelines is not in RUNNING state
