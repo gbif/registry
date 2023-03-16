@@ -122,6 +122,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "200",
     description = "Network found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
@@ -145,6 +146,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "201",
     description = "Network created, new network's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -169,6 +171,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     description = "Network updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -192,6 +195,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "204",
     description = "Network deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -216,6 +220,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Network> list(@Valid NetworkRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
@@ -246,6 +251,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "200",
     description = "Constituent dataset list")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230"))
   @GetMapping("{key}/constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(
@@ -292,6 +298,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0406"))
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -323,6 +330,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0408"))
   @DeleteMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -352,6 +360,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {

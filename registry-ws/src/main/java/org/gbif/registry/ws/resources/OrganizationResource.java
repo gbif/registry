@@ -146,6 +146,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "Organization found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/organization/{key}")  // TODO TODO TODO
   @Override
@@ -169,6 +170,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "201",
     description = "Publishing organization created, new publishing organization's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE, APP_ROLE})
@@ -213,6 +215,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     description = "Organization updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -236,6 +239,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "204",
     description = "Publishing organization deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -290,11 +294,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         name = "isEndorsed",
         description = "Whether the organization is endorsed by a node.",
         schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "networkKey",
+        description = "Filter for organizations publishing datasets belonging to a network.",
+        schema = @Schema(implementation = UUID.class),
         in = ParameterIn.QUERY)
-      // TODO: Should networkKey be documented?
-      // @Parameter(
-      //   name = "networkKey",
-      //   in = ParameterIn.QUERY)
     })
   @ApiResponse(
     responseCode = "200",
@@ -302,6 +307,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Organization> list(
       @Nullable Country country, @Valid OrganizationRequestSearchParams request, Pageable page) {
@@ -358,6 +364,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "List of hosted datasets")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232"))
   @GetMapping("{key}/hostedDataset")
   @Override
   public PagingResponse<Dataset> hostedDatasets(
@@ -378,6 +385,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "List of published datasets")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0231"))
   @GetMapping("{key}/publishedDataset")
   @Override
   public PagingResponse<Dataset> publishedDatasets(
@@ -408,6 +416,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "List of technical installations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0234"))
   @GetMapping("{key}/installation")
   @Override
   public PagingResponse<Installation> installations(
@@ -435,6 +444,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "List of deleted organizations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500"))
   @GetMapping("deleted")
   @Override
   public PagingResponse<Organization> listDeleted(Pageable page) {
@@ -451,6 +461,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510"))
   @GetMapping("pending")
   @Override
   public PagingResponse<Organization> listPendingEndorsement(Pageable page) {
@@ -469,6 +480,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     responseCode = "200",
     description = "List of non-publishing organizations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520"))
   @GetMapping("nonPublishing")
   @Override
   public PagingResponse<Organization> listNonPublishing(Pageable page) {
@@ -491,6 +503,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {

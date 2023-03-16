@@ -157,13 +157,13 @@ public class CollectionResource
   @Operation(
     operationId = "getCollection",
     summary = "Get details of a single collection",
-    description = "Details of a single collection.  Also works for deleted collections.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
+    description = "Details of a single collection.  Also works for deleted collections.")
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Collection found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
   public CollectionView getCollectionView(@PathVariable UUID key) {
@@ -179,6 +179,7 @@ public class CollectionResource
     responseCode = "201",
     description = "Collection created, new collection's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public UUID create(@RequestBody @Trim Collection collection) {
@@ -196,6 +197,7 @@ public class CollectionResource
     description = "Collection updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim Collection collection) {
@@ -213,6 +215,7 @@ public class CollectionResource
     description = "Collection marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -231,6 +234,7 @@ public class CollectionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return collectionService.list(searchRequest);
@@ -281,6 +285,7 @@ public class CollectionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102"))
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -304,6 +309,7 @@ public class CollectionResource
     responseCode = "200",
     description = "List of deleted collection records")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500"))
   @GetMapping("deleted")
   public PagingResponse<CollectionView> listDeleted(
       @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
@@ -323,6 +329,7 @@ public class CollectionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
@@ -338,6 +345,7 @@ public class CollectionResource
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0495"))
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID createFromDataset(@RequestBody @Trim CollectionImportParams importParams) {
