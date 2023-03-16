@@ -64,6 +64,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -106,6 +108,7 @@ public class DerivedDatasetResource {
   @ApiResponse(
     responseCode = "201",
     description = "Derived dataset information.")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201.1"))
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -124,6 +127,7 @@ public class DerivedDatasetResource {
   @ApiResponse(
     responseCode = "201",
     description = "Derived dataset information.")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201.2"))
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -197,6 +201,7 @@ public class DerivedDatasetResource {
   @ApiResponse(
     responseCode = "201",
     description = "Derived dataset updated.")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @Secured({ADMIN_ROLE, USER_ROLE})
   @PutMapping(path = "{doiPrefix}/{doiSuffix}", consumes = MediaType.APPLICATION_JSON_VALUE)
   public void update(
@@ -243,12 +248,13 @@ public class DerivedDatasetResource {
   }
 
   @Operation(
-    operationId = "getDerivedDatasetFrom",
+    operationId = "getDerivedDatasetByDoi",
     summary = "Retrieve a derived dataset record")
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset information.")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.1"))
   @GetMapping("{doiPrefix}/{doiSuffix}")
   public ResponseEntity<DerivedDataset> getDerivedDataset(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
@@ -268,6 +274,7 @@ public class DerivedDatasetResource {
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset information.")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.2"))
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("dataset/{key}")
   public PagingResponse<DerivedDataset> getDerivedDatasets(
@@ -283,6 +290,7 @@ public class DerivedDatasetResource {
     responseCode = "200",
     description = "Derived dataset information.")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.3"))
   @GetMapping("dataset/{doiPrefix}/{doiSuffix}")
   public PagingResponse<DerivedDataset> getDerivedDatasets(
       @PathVariable("doiPrefix") String doiPrefix,
@@ -300,6 +308,7 @@ public class DerivedDatasetResource {
     description = "Derived dataset information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.4"))
   @Secured({ADMIN_ROLE, USER_ROLE})
   @GetMapping("user/{user}")
   public PagingResponse<DerivedDataset> listByUser(
@@ -327,6 +336,7 @@ public class DerivedDatasetResource {
     responseCode = "200",
     description = "Derived dataset citation.")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210"))
   @GetMapping("{doiPrefix}/{doiSuffix}/citation")
   public ResponseEntity<String> getCitationText(
       @PathVariable("doiPrefix") String doiPrefix, @PathVariable("doiSuffix") String doiSuffix) {
@@ -347,6 +357,7 @@ public class DerivedDatasetResource {
     responseCode = "200",
     description = "Related datasets.")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0220"))
   @GetMapping("{doiPrefix}/{doiSuffix}/datasets")
   public PagingResponse<DerivedDatasetUsage> getRelatedDatasets(
       @PathVariable("doiPrefix") String doiPrefix,

@@ -173,6 +173,7 @@ public class EnumerationResource {
   @ApiResponse(
     responseCode = "200",
     description = "List of enumerations.")
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping("basic")
   public Set<String> inventory() {
     return PATH_MAPPING.keySet();
@@ -248,6 +249,7 @@ public class EnumerationResource {
   @ApiResponse(
     responseCode = "200",
     description = "Country, territory and island list.")
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110"))
   @GetMapping("country")
   public List<Map<String, String>> listCountries() {
     return COUNTRIES;
@@ -261,6 +263,7 @@ public class EnumerationResource {
   @ApiResponse(
     responseCode = "200",
     description = "Language list.")
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0140"))
   @GetMapping("language")
   public List<Map<String, String>> listLanguages() {
     return LANGUAGES;
@@ -277,6 +280,7 @@ public class EnumerationResource {
   @ApiResponse(
     responseCode = "200",
     description = "License list.")
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0150"))
   @GetMapping("license")
   public List<String> listLicenses() {
     return LICENSES;
@@ -289,6 +293,7 @@ public class EnumerationResource {
   @ApiResponse(
     responseCode = "200",
     description = "Interpretation remark list.")
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0130"))
   @GetMapping("interpretationRemark")
   public List<Map<String, Object>> listInterpretationRemark() {
     return INTERPRETATION_REMARKS;
@@ -302,6 +307,7 @@ public class EnumerationResource {
   @ApiResponse(
     responseCode = "200",
     description = "Extension list.")
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0120"))
   @GetMapping("extension")
   public List<Map<String, Object>> listExtensions() {
     return EXTENSIONS;
@@ -346,6 +352,7 @@ public class EnumerationResource {
         description = "Unknown enumeration.",
         content = @Content),
     })
+  @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0105"))
   @GetMapping("basic/{name}")
   @NullToNotFound("/enumeration/basic/{name}")
   public Object getEnumeration(@PathVariable("name") @NotNull String name) {

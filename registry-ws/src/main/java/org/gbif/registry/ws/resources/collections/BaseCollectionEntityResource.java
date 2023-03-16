@@ -75,6 +75,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
@@ -225,6 +227,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Contact person added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411"))
   @PostMapping(
       value = "{key}/contactPerson",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -242,6 +245,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Contact person updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412"))
   @PutMapping(
       value = "{key}/contactPerson/{contactKey}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -264,6 +268,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Contact person deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413"))
   @DeleteMapping("{key}/contactPerson/{contactKey}")
   public void removeContactPerson(
       @PathVariable("key") UUID entityKey, @PathVariable int contactKey) {
@@ -278,6 +283,7 @@ public abstract class BaseCollectionEntityResource<
     responseCode = "200",
     description = "List of contact people")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0410"))
   @GetMapping("{key}/contactPerson")
   @Nullable
   public List<Contact> listContactPersons(@PathVariable UUID key) {
@@ -293,6 +299,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Occurrence mapping added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0461"))
   @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addOccurrenceMapping(
@@ -308,6 +315,7 @@ public abstract class BaseCollectionEntityResource<
     responseCode = "200",
     description = "List of occurrence mappings")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0460"))
   @GetMapping("{key}/occurrenceMapping")
   @Nullable
   public List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID uuid) {
@@ -323,6 +331,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Occurrence mapping deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0463"))
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
   public void deleteOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
@@ -338,6 +347,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Records merged")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0490"))
   @PostMapping(value = "{key}/merge")
   public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     mergeService.merge(entityKey, params.getReplacementEntityKey());
@@ -350,6 +360,7 @@ public abstract class BaseCollectionEntityResource<
     responseCode = "200",
     description = "List of possible duplicates")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510"))
   @GetMapping("possibleDuplicates")
   public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
     Preconditions.checkArgument(
@@ -377,6 +388,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Change suggestion added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0482"))
   @PostMapping(value = "changeSuggestion")
   public int createChangeSuggestion(@RequestBody @Trim R createSuggestion) {
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
@@ -391,6 +403,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Change suggestion updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0483"))
   @PutMapping(value = "changeSuggestion/{key}")
   public void updateChangeSuggestion(
       @PathVariable("key") int key, @RequestBody @Trim R suggestion) {
@@ -404,6 +417,7 @@ public abstract class BaseCollectionEntityResource<
   @ApiResponse(
     responseCode = "200",
     description = "A change suggestion")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0481"))
   @Docs.DefaultUnsuccessfulReadResponses
   @NullToNotFound
   @GetMapping(value = "changeSuggestion/{key}")
@@ -412,12 +426,13 @@ public abstract class BaseCollectionEntityResource<
   }
 
   @Operation(
-    operationId = "listPossibleDuplicates",
-    summary = "Retrieve all possible duplicates of the record")
+    operationId = "listChangeSuggestion",
+    summary = "Retrieve all change suggestions of the record")
   @ApiResponse(
     responseCode = "200",
-    description = "List of possible duplicates")
+    description = "List of change suggestions")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0480"))
   @GetMapping(value = "changeSuggestion")
   public PagingResponse<R> listChangeSuggestion(
       @RequestParam(value = "status", required = false) Status status,
@@ -437,6 +452,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Change suggestion discarded")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0484"))
   @PutMapping(value = "changeSuggestion/{key}/discard")
   public void discardChangeSuggestion(@PathVariable("key") int key) {
     changeSuggestionService.discardChangeSuggestion(key);
@@ -451,6 +467,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Apply suggestion discarded")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0485"))
   @PutMapping(value = "changeSuggestion/{key}/apply")
   public ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key) {
     UUID entityCreatedKey = changeSuggestionService.applyChangeSuggestion(key);
@@ -468,6 +485,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Master source metadata added, key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451"))
   @PostMapping(value = "{key}/masterSourceMetadata", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addMasterSourceMetadata(
@@ -484,6 +502,7 @@ public abstract class BaseCollectionEntityResource<
     responseCode = "200",
     description = "Master source metadata record")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450"))
   @GetMapping("{key}/masterSourceMetadata")
   @Nullable
   public MasterSourceMetadata getMasterSourceMetadata(@PathVariable("key") UUID entityKey) {
@@ -499,6 +518,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Deletes a master source metadata record")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0453"))
   @DeleteMapping("{key}/masterSourceMetadata")
   public void deleteMasterSourceMetadata(@PathVariable("key") UUID entityKey) {
     collectionEntityService.deleteMasterSourceMetadata(entityKey);
@@ -519,6 +539,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Identifier added, identifier key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431"))
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addIdentifier(
@@ -535,6 +556,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0433"))
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Transactional
   public void deleteIdentifier(
@@ -551,6 +573,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Identifiers list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430"))
   @GetMapping("{key}/identifier")
   @Nullable
   public List<Identifier> listIdentifiers(@PathVariable UUID key) {
@@ -566,6 +589,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Tag added, tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0471"))
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addTag(@PathVariable("key") UUID entityKey, @RequestBody @Trim Tag tag) {
@@ -581,6 +605,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0473"))
   @DeleteMapping("{key}/tag/{tagKey}")
   @Transactional
   public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable int tagKey) {
@@ -596,6 +621,7 @@ public abstract class BaseCollectionEntityResource<
     responseCode = "200",
     description = "Tag list")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0470"))
   @GetMapping("{key}/tag")
   @Nullable
   public List<Tag> listTags(
@@ -613,6 +639,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Machine tag added, machine tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441"))
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addMachineTag(
@@ -629,6 +656,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Machine tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442"))
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
@@ -644,6 +672,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443"))
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
@@ -659,6 +688,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Named machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444"))
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
@@ -676,6 +706,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Machine tags list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440"))
   @GetMapping("{key}/machineTag")
   public List<MachineTag> listMachineTags(@PathVariable("key") UUID targetEntityKey) {
     return collectionEntityService.listMachineTags(targetEntityKey);
@@ -690,6 +721,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Comment added, comment key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401"))
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addComment(
@@ -706,6 +738,7 @@ public abstract class BaseCollectionEntityResource<
     description = "Comment deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0403"))
   @DeleteMapping("{key}/comment/{commentKey}")
   public void deleteComment(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
@@ -720,6 +753,7 @@ public abstract class BaseCollectionEntityResource<
     responseCode = "200",
     description = "List of comments")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400"))
   @GetMapping(value = "{key}/comment")
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
     return collectionEntityService.listComments(targetEntityKey);

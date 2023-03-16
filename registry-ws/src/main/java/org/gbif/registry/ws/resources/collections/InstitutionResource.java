@@ -54,7 +54,15 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -140,6 +148,7 @@ public class InstitutionResource
     responseCode = "200",
     description = "Institution found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
   public Institution get(@PathVariable UUID key) {
@@ -155,6 +164,7 @@ public class InstitutionResource
     responseCode = "201",
     description = "Institution created, new institution's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public UUID create(@RequestBody @Trim Institution institution) {
@@ -172,6 +182,7 @@ public class InstitutionResource
     description = "Institution updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim Institution institution) {
@@ -189,6 +200,7 @@ public class InstitutionResource
     description = "Institution marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -207,6 +219,7 @@ public class InstitutionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
@@ -255,6 +268,7 @@ public class InstitutionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102"))
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -277,6 +291,7 @@ public class InstitutionResource
     responseCode = "200",
     description = "List of deleted institution records")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500"))
   @GetMapping("deleted")
   public PagingResponse<Institution> listDeleted(
       @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
@@ -296,6 +311,7 @@ public class InstitutionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return institutionService.suggest(q);
@@ -311,6 +327,7 @@ public class InstitutionResource
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0495"))
   @PostMapping("{key}/convertToCollection")
   public UUID convertToCollection(
       @PathVariable("key") UUID entityKey, @RequestBody ConvertToCollectionParams params) {
@@ -328,6 +345,7 @@ public class InstitutionResource
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0496"))
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID createFromOrganization(@RequestBody @Trim InstitutionImportParams importParams) {

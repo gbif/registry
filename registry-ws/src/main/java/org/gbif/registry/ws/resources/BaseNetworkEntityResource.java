@@ -85,6 +85,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -333,6 +335,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Comment added, comment key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401"))
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -366,6 +369,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Comment deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0402"))
   @DeleteMapping("{key}/comment/{commentKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -384,6 +388,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     responseCode = "200",
     description = "List of comments")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400"))
   @GetMapping(value = "{key}/comment")
   @Override
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
@@ -405,6 +410,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @ApiResponse(
     responseCode = "204",
     description = "Machine tag added, machine tag key returned")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441"))
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -452,6 +458,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Machine tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442"))
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -473,6 +480,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443"))
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   @Secured(ADMIN_ROLE)
   @Override
@@ -499,6 +507,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Named machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444"))
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
   @Secured(ADMIN_ROLE)
   @Override
@@ -523,6 +532,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Machine tags list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440"))
   @SuppressWarnings("unchecked")
   @GetMapping("{key}/machineTag")
   @Override
@@ -554,6 +564,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Tag added, tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451"))
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -590,6 +601,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0452"))
   @DeleteMapping("{key}/tag/{tagKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -618,6 +630,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         "  }\n" +
         "]")))
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450"))
   @GetMapping("{key}/tag")
   @Override
   public List<Tag> listTags(
@@ -646,6 +659,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Contact added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412"))
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -679,6 +693,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Contact updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413"))
   @PutMapping(
       value = {"{key}/contact", "{key}/contact/{contactKey}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -711,6 +726,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Contact deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0414"))
   @DeleteMapping("{key}/contact/{contactKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -729,6 +745,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     responseCode = "200",
     description = "List of contacts")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411"))
   @GetMapping("{key}/contact")
   @Override
   public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
@@ -752,6 +769,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Endpoint added, endpoint key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0421"))
   @PostMapping(value = "{key}/endpoint", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -791,6 +809,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0422"))
   @DeleteMapping("{key}/endpoint/{endpointKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -809,6 +828,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     responseCode = "200",
     description = "List of endpoints")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0420"))
   @GetMapping("{key}/endpoint")
   @Override
   public List<Endpoint> listEndpoints(@PathVariable("key") UUID targetEntityKey) {
@@ -832,6 +852,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Identifier added, identifier key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431"))
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -864,6 +885,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0432"))
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -883,6 +905,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     description = "Identifiers list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430"))
   @GetMapping("{key}/identifier")
   @Override
   public List<Identifier> listIdentifiers(@PathVariable("key") UUID targetEntityKey) {

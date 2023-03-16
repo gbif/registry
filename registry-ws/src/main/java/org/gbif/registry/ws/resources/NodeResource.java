@@ -125,6 +125,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "Node found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/node/{key}")
   @Override
@@ -149,6 +150,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "201",
     description = "Node created, new node's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -174,6 +176,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     description = "Node updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -197,6 +200,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "204",
     description = "Node deleted")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
@@ -222,6 +226,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Node> list(@Valid NodeRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
@@ -280,6 +285,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of organizations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240"))
   @GetMapping("{key}/organization")
   @Override
   public PagingResponse<Organization> endorsedOrganizations(
@@ -305,6 +311,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0511"))
   @Deprecated
   @GetMapping("pendingEndorsement")
   @Override
@@ -324,6 +331,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510"))
   @GetMapping("{key}/pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(
@@ -342,6 +350,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "Country node")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0250"))
   @GetMapping("country/{key}")
   @Nullable
   public Node getByCountry(@PathVariable("key") String isoCode) {
@@ -361,6 +370,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of countries")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0251"))
   @GetMapping("country")
   @Override
   public List<Country> listNodeCountries() {
@@ -374,6 +384,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of countries")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0252"))
   @GetMapping("activeCountries")
   @Override
   public List<Country> listActiveCountries() {
@@ -389,6 +400,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0253"))
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> endorsedDatasets(
@@ -433,6 +445,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "200",
     description = "List of technical installations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0260"))
   @GetMapping("{key}/installation")
   @Override
   public PagingResponse<Installation> installations(
@@ -458,6 +471,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {

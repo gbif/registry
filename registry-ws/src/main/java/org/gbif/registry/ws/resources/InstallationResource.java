@@ -78,8 +78,11 @@ import com.google.common.collect.Maps;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -141,6 +144,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     responseCode = "200",
     description = "Installation found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
@@ -164,6 +168,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     responseCode = "201",
     description = "Installation created, new installation's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -188,6 +193,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     description = "Installation updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -211,6 +217,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     responseCode = "204",
     description = "Installation deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -229,12 +236,19 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
     tags = "BASIC")
   @SimpleSearchParameters
+  @Parameter(
+    name = "type",
+    description = "Filter by the type of installation.",
+    schema = @Schema(implementation = InstallationType.class),
+    in = ParameterIn.QUERY
+  )
   @ApiResponse(
     responseCode = "200",
     description = "Installation search successful")
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Installation> list(
       @Valid InstallationRequestSearchParams request, Pageable page) {
@@ -267,6 +281,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     responseCode = "200",
     description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232"))
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> getHostedDatasets(
@@ -286,6 +301,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     responseCode = "200",
     description = "List of deleted installations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500"))
   @GetMapping("deleted")
   @Override
   public PagingResponse<Installation> listDeleted(Pageable page) {
@@ -302,6 +318,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     responseCode = "200",
     description = "List of non-publishing installations")
   @Docs.DefaultUnsuccessfulReadResponses
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520"))
   @GetMapping("nonPublishing")
   @Override
   public PagingResponse<Installation> listNonPublishing(Pageable page) {
@@ -441,6 +458,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
+  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q) {
