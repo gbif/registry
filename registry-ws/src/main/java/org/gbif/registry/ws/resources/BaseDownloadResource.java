@@ -250,13 +250,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     operationId = "getOccurrenceDownloadByKey",
     summary = "Information about an occurrence download",
     description = "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence " +
-      "download.  Authorized users see additional details on their own downloads.")
+      "download.  Authorized users see additional details on their own downloads.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110")))
   @DownloadKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110"))
   @GetMapping("{key}")
   @NullToNotFound(useUrlMapping = true)
   public Download getByKey(@NotNull @PathVariable("key") String key) {
@@ -274,13 +274,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     operationId = "getOccurrenceDownloadByDOI",
     summary = "Information about an occurrence download",
     description = "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence " +
-      "download.  Authorized users see additional details on their own downloads.")
+      "download.  Authorized users see additional details on their own downloads.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0111")))
   @DoiParameters
   @ApiResponse(
     responseCode = "200",
     description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0111"))
   @GetMapping("{prefix}/{suffix}")
   @NullToNotFound(useUrlMapping = true)
   public Download getByDoi(
@@ -317,7 +317,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "listOccurrenceDownloadsByUser",
     summary = "Lists all downloads from a user",
-    description = "Retrieves the status, definitions and locations of all occurrence download by your own user.")
+    description = "Retrieves the status, definitions and locations of all occurrence download by your own user.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0120")))
   @Parameter(
     name = "user",
     description = "Username (administrator account required to see other users).",
@@ -329,7 +330,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0120"))
   @GetMapping("user/{user}")
   @Override
   public PagingResponse<Download> listByUser(
@@ -402,14 +402,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "listDatasetUsagesByDownloadDOI",
     summary = "Lists datasets present in a download",
-    description = "Shows the datasets with occurrences present in the given occurrence download.")
+    description = "Shows the datasets with occurrences present in the given occurrence download.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0130")))
   @DoiParameters
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0130"))
   @GetMapping("{prefix}/{suffix}/datasets")
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByDoi(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
@@ -421,14 +421,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "listDatasetUsagesByDownloadKey",
     summary = "Lists datasets present in a download",
-    description = "Shows the datasets with occurrences present in the given occurrence download.")
+    description = "Shows the datasets with occurrences present in the given occurrence download.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0131")))
   @DownloadKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0131"))
   @GetMapping("{key}/datasets")
   public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByKey(
       @PathVariable("key") String key, Pageable page) {
@@ -440,7 +440,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "exportDatasetUsagesByDownloadKey",
     summary = "Exports datasets present in a download in TSV or CSV format",
-    description = "Shows the datasets with occurrences present in the given occurrence download in TSV or CSV format.")
+    description = "Shows the datasets with occurrences present in the given occurrence download in TSV or CSV format.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0132")))
   @DownloadKeyParameter
   @Parameter(
     name = "format",
@@ -452,7 +453,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0132"))
   @GetMapping("{key}/datasets/export")
   public void exportListDatasetUsagesByKey(
       HttpServletResponse response,
@@ -510,13 +510,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getDownloadCitationByKey",
-    summary = "Shows the citation for a download")
+    summary = "Shows the citation for a download",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0140")))
   @DownloadKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0140"))
   @GetMapping("{key}/citation")
   @NullToNotFound(useUrlMapping = true)
   public String getCitationByKey(@NotNull @PathVariable("key") String key) {
@@ -527,13 +527,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getDownloadCitationByDOI",
-    summary = "Shows the citation for a download")
+    summary = "Shows the citation for a download",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0141")))
   @DoiParameters
   @ApiResponse(
     responseCode = "200",
     description = "Download citation.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0141"))
   @GetMapping("{prefix}/{suffix}/citation")
   @NullToNotFound(useUrlMapping = true)
   public String getCitationByDoi(
@@ -560,7 +560,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     operationId = "getDownloadsByUserCountry",
     summary = "Summarizes downloads by month, grouped by the user's country, territory or island",
     description = "Provides counts of user downloads by month, grouped by the user's ISO 3166-2 country," +
-      " territory or island.")
+      " territory or island.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210")))
   @FromToParameters
   @Parameters(
     value = {
@@ -575,7 +576,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210"))
   @GetMapping("statistics/downloadsByUserCountry")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsByUserCountry(
@@ -592,7 +592,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedRecordsBySource",
     summary = "Summarize downloaded record totals by source",
-    description = "Summarizes downloaded record totals by source, e.g. www.gbif.org or APIs.")
+    description = "Summarizes downloaded record totals by source, e.g. www.gbif.org or APIs.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240")))
   @FromToParameters
   @Parameter(
     name = "source",
@@ -603,7 +604,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240"))
   @GetMapping("statistics/downloadsBySource")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsBySource(
@@ -616,7 +616,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedRecordsByDataset",
     summary = "Summarize downloaded records by dataset",
-    description = "Summarizes downloaded record totals by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
+    description = "Summarizes downloaded record totals by month, filtered by a publishing organization's country, territory or island and/or a single dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0220")))
   @FromToParameters
   @Parameters(
     value = {
@@ -643,7 +644,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0220"))
   @GetMapping("statistics/downloadedRecordsByDataset")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadedRecordsByDataset( // TODO rename method?
@@ -666,7 +666,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedRecordsByDataset",
     summary = "Summarize downloads by dataset",
-    description = "Summarizes downloads by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
+    description = "Summarizes downloads by month, filtered by a publishing organization's country, territory or island and/or a single dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230")))
   @FromToParameters
   @Parameters(
     value = {
@@ -693,7 +694,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230"))
   @GetMapping("statistics/downloadsByDataset")
   @Override
   public Map<Integer, Map<Integer, Long>> getDownloadsByDataset(
@@ -716,7 +716,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedStatistics",
     summary = "Summarize downloads",
-    description = "Summarizes downloads")
+    description = "Summarizes downloads",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @FromToParameters
   @Parameters(
     value = {
@@ -744,7 +745,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("statistics")
   @Override
   public PagingResponse<DownloadStatistics> getDownloadStatistics(
@@ -767,7 +767,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "exportDownloadedStatistics",
-    summary = "Export summary of downloads")
+    summary = "Export summary of downloads",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @FromToParameters
   @Parameters(
     value = {
@@ -794,7 +795,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     responseCode = "200",
     description = "Download statistics.")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @GetMapping("statistics/export")
   public void getDownloadStatistics(
       HttpServletResponse response,

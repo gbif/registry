@@ -118,14 +118,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "getNode",
     summary = "Get details of a single node",
     description = "Details of a single node.  Also works for deleted nodes.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Node found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/node/{key}")
   @Override
@@ -145,12 +143,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "createNode",
     summary = "Create a new node",
     description = "Creates a new node.  Note endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      "metadata descriptions must be added in subsequent requests.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Node created, new node's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -169,14 +167,14 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "updateNode",
     summary = "Update an existing node",
     description = "Updates the existing node.  Note endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      "metadata descriptions are not changed with this method.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Node updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -195,12 +193,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "deleteNode",
     summary = "Delete a node",
     description = "Marks a node as deleted.  Note endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.")
+      "metadata descriptions are not changed.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Node deleted")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
@@ -217,8 +215,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "listNodes",
     summary = "List all nodes",
     description = "Lists all current nodes (deleted nodes are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
   @ApiResponse(
     responseCode = "200",
@@ -226,7 +223,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Node> list(@Valid NodeRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
@@ -278,14 +274,14 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "getNodeOrganizations",
     summary = "List node's organizations",
-    description = "Lists the organizations registered to this node.")
+    description = "Lists the organizations registered to this node.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of organizations")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240"))
   @GetMapping("{key}/organization")
   @Override
   public PagingResponse<Organization> endorsedOrganizations(
@@ -305,13 +301,13 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     operationId = "getPendingOrganizations2",
     summary = "List pending organizations",
     description = "Lists organizations whose endorsement is pending.\n\n" +
-      "Use [getPendingOrganizations](#tag/Organizations/operation/getPendingOrganizations) instead.")
+      "Use [getPendingOrganizations](#tag/Organizations/operation/getPendingOrganizations) instead.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0511")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0511"))
   @Deprecated
   @GetMapping("pendingEndorsement")
   @Override
@@ -325,13 +321,13 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "getNodePendingOrganizations",
     summary = "List pending organizations of a node",
-    description = "Lists organizations whose endorsement  by the given node is pending.")
+    description = "Lists organizations whose endorsement  by the given node is pending.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510"))
   @GetMapping("{key}/pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(
@@ -345,12 +341,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "getNodeByCountry",
     summary = "Get the node for a country",
-    description = "Gets the country node by ISO 639-1 (2 letter) or ISO 639-2 (3 letter) country code")
+    description = "Gets the country node by ISO 639-1 (2 letter) or ISO 639-2 (3 letter) country code",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0250")))
   @ApiResponse(
     responseCode = "200",
     description = "Country node")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0250"))
   @GetMapping("country/{key}")
   @Nullable
   public Node getByCountry(@PathVariable("key") String isoCode) {
@@ -365,12 +361,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
 
   @Operation(
     operationId = "getMemberCountries",
-    summary = "List all GBIF member countries")
+    summary = "List all GBIF member countries",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0251")))
   @ApiResponse(
     responseCode = "200",
     description = "List of countries")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0251"))
   @GetMapping("country")
   @Override
   public List<Country> listNodeCountries() {
@@ -379,12 +375,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
 
   @Operation(
     operationId = "getActiveCountries",
-    summary = "List all GBIF member countries than are either voting or associate participants")
+    summary = "List all GBIF member countries than are either voting or associate participants",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0252")))
   @ApiResponse(
     responseCode = "200",
     description = "List of countries")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0252"))
   @GetMapping("activeCountries")
   @Override
   public List<Country> listActiveCountries() {
@@ -394,13 +390,13 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "getNodeDatasets",
     summary = "List all datasets from a node",
-    description = "Lists datasets published by organizations endorsed by the node")
+    description = "Lists datasets published by organizations endorsed by the node",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0253")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0253"))
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> endorsedDatasets(
@@ -438,14 +434,14 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @Operation(
     operationId = "getNodeInstallations",
     summary = "List node's installations",
-    description = "Lists installations hosted by organizations endorsed by the node.")
+    description = "Lists installations hosted by organizations endorsed by the node.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0260")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of technical installations")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0260"))
   @GetMapping("{key}/installation")
   @Override
   public PagingResponse<Installation> installations(
@@ -461,9 +457,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     summary = "Suggest nodes.",
     description = "Search that returns up to 20 matching nodes. Results are ordered by relevance. " +
       "The response is smaller than an node search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
-  )
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
@@ -471,7 +465,6 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {

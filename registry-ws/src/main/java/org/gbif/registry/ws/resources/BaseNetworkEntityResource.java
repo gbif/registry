@@ -328,14 +328,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addComment",
-    summary = "Add a comment to the record")
+    summary = "Add a comment to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Comment added, comment key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401"))
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -362,14 +362,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteComment",
-    summary = "Delete a comment from the record")
+    summary = "Delete a comment from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0402")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Comment deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0402"))
   @DeleteMapping("{key}/comment/{commentKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -382,13 +382,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getComment",
-    summary = "Retrieve all comments of the record")
+    summary = "Retrieve all comments of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of comments")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400"))
   @GetMapping(value = "{key}/comment")
   @Override
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
@@ -405,12 +405,12 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addMachineTag",
-    summary = "Add a machine tag to the record")
+    summary = "Add a machine tag to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Machine tag added, machine tag key returned")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441"))
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -451,14 +451,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTag",
-    summary = "Delete a machine tag from the record")
+    summary = "Delete a machine tag from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Machine tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442"))
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -473,14 +473,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTagsInNamespace",
-    summary = "Delete all machine tags in a namespace from the record")
+    summary = "Delete all machine tags in a namespace from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443"))
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   @Secured(ADMIN_ROLE)
   @Override
@@ -500,14 +500,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTagInNamespaceName",
-    summary = "Delete all machine tags of a name in a namespace from the record")
+    summary = "Delete all machine tags of a name in a namespace from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Named machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444"))
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
   @Secured(ADMIN_ROLE)
   @Override
@@ -525,14 +525,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "listMachineTag",
-    summary = "List all machine tags on the record")
+    summary = "List all machine tags on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Machine tags list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440"))
   @SuppressWarnings("unchecked")
   @GetMapping("{key}/machineTag")
   @Override
@@ -557,14 +557,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addTag",
-    summary = "Add a tag to the record")
+    summary = "Add a tag to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Tag added, tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451"))
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
@@ -594,14 +594,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteTag",
-    summary = "Delete a tag from the record")
+    summary = "Delete a tag from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0452")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0452"))
   @DeleteMapping("{key}/tag/{tagKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -612,7 +612,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getTag",
-    summary = "Retrieve all tags of the record")
+    summary = "Retrieve all tags of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(name = "owner", hidden = true)
   @ApiResponse(
@@ -630,7 +631,6 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
         "  }\n" +
         "]")))
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450"))
   @GetMapping("{key}/tag")
   @Override
   public List<Tag> listTags(
@@ -652,14 +652,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addContact",
-    summary = "Add a contact to the record")
+    summary = "Add a contact to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Contact added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412"))
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -686,14 +686,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "updateContact",
-    summary = "Update an existing contact on the record")
+    summary = "Update an existing contact on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Contact updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413"))
   @PutMapping(
       value = {"{key}/contact", "{key}/contact/{contactKey}"},
       consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -719,14 +719,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteContact",
-    summary = "Delete a contact from the record")
+    summary = "Delete a contact from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0414")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Contact deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0414"))
   @DeleteMapping("{key}/contact/{contactKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -739,13 +739,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getContact",
-    summary = "Retrieve all contacts of the record")
+    summary = "Retrieve all contacts of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of contacts")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411"))
   @GetMapping("{key}/contact")
   @Override
   public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
@@ -762,14 +762,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addEndpoint",
-    summary = "Add an endpoint to the record")
+    summary = "Add an endpoint to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0421")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Endpoint added, endpoint key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0421"))
   @PostMapping(value = "{key}/endpoint", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -802,14 +802,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteEndpoint",
-    summary = "Delete an endpoint from the record")
+    summary = "Delete an endpoint from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0422")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0422"))
   @DeleteMapping("{key}/endpoint/{endpointKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -822,13 +822,13 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getEndpoint",
-    summary = "Retrieve all endpoints of the record")
+    summary = "Retrieve all endpoints of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0420")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of endpoints")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0420"))
   @GetMapping("{key}/endpoint")
   @Override
   public List<Endpoint> listEndpoints(@PathVariable("key") UUID targetEntityKey) {
@@ -845,14 +845,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addIdentifier",
-    summary = "Add an identifier to the record")
+    summary = "Add an identifier to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Identifier added, identifier key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431"))
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Trim
@@ -878,14 +878,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteIdentifier",
-    summary = "Delete an identifier from the record")
+    summary = "Delete an identifier from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0432")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0432"))
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
@@ -898,14 +898,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getIdentifier",
-    summary = "Retrieve all identifiers of the record")
+    summary = "Retrieve all identifiers of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Identifiers list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430"))
   @GetMapping("{key}/identifier")
   @Override
   public List<Identifier> listIdentifiers(@PathVariable("key") UUID targetEntityKey) {

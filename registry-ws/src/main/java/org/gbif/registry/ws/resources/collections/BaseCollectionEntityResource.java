@@ -220,14 +220,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addContactPerson",
-    summary = "Add a contact person to the record")
+    summary = "Add a contact person to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Contact person added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411"))
   @PostMapping(
       value = "{key}/contactPerson",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -238,14 +238,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "updateContactPerson",
-    summary = "Update an existing contact person on the record")
+    summary = "Update an existing contact person on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Contact person updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412"))
   @PutMapping(
       value = "{key}/contactPerson/{contactKey}",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -261,14 +261,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteContactPerson",
-    summary = "Delete a contact person from the record")
+    summary = "Delete a contact person from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Contact person deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413"))
   @DeleteMapping("{key}/contactPerson/{contactKey}")
   public void removeContactPerson(
       @PathVariable("key") UUID entityKey, @PathVariable int contactKey) {
@@ -277,13 +277,13 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "listContactPeople",
-    summary = "Retrieve all contact people of the record")
+    summary = "Retrieve all contact people of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0461")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of contact people")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0410"))
   @GetMapping("{key}/contactPerson")
   @Nullable
   public List<Contact> listContactPersons(@PathVariable UUID key) {
@@ -296,10 +296,10 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
-    description = "Occurrence mapping added, contact key returned")
+    description = "Occurrence mapping added, contact key returned",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0461")))
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0461"))
   @PostMapping(value = "{key}/occurrenceMapping", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addOccurrenceMapping(
@@ -309,13 +309,13 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "listOccurrenceMappings",
-    summary = "Retrieve all occurrence mappings of the record")
+    summary = "Retrieve all occurrence mappings of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0460")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of occurrence mappings")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0460"))
   @GetMapping("{key}/occurrenceMapping")
   @Nullable
   public List<OccurrenceMapping> listOccurrenceMappings(@PathVariable("key") UUID uuid) {
@@ -324,14 +324,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteOccurrenceMapping",
-    summary = "Delete an occurrence mapping from the record")
+    summary = "Delete an occurrence mapping from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0463")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Occurrence mapping deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0463"))
   @DeleteMapping("{key}/occurrenceMapping/{occurrenceMappingKey}")
   public void deleteOccurrenceMapping(
       @PathVariable("key") UUID entityKey, @PathVariable int occurrenceMappingKey) {
@@ -340,14 +340,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "merge",
-    summary = "Merges a record with another record")
+    summary = "Merges a record with another record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0490")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Records merged")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0490"))
   @PostMapping(value = "{key}/merge")
   public void merge(@PathVariable("key") UUID entityKey, @RequestBody MergeParams params) {
     mergeService.merge(entityKey, params.getReplacementEntityKey());
@@ -355,12 +355,12 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "listPossibleDuplicates",
-    summary = "Retrieve a list of all possible duplicates")
+    summary = "Retrieve a list of all possible duplicates",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510")))
   @ApiResponse(
     responseCode = "200",
     description = "List of possible duplicates")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510"))
   @GetMapping("possibleDuplicates")
   public DuplicatesResult findPossibleDuplicates(DuplicatesRequest request) {
     Preconditions.checkArgument(
@@ -381,14 +381,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addChangeSuggestion",
-    summary = "Add a change suggestion to the record")
+    summary = "Add a change suggestion to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0482")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Change suggestion added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0482"))
   @PostMapping(value = "changeSuggestion")
   public int createChangeSuggestion(@RequestBody @Trim R createSuggestion) {
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
@@ -396,14 +396,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "updateChangeSuggestion",
-    summary = "Update an existing change suggestion on the record")
+    summary = "Update an existing change suggestion on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0483")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Change suggestion updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0483"))
   @PutMapping(value = "changeSuggestion/{key}")
   public void updateChangeSuggestion(
       @PathVariable("key") int key, @RequestBody @Trim R suggestion) {
@@ -413,11 +413,11 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "getChangeSuggestion",
-    summary = "Retrieve a single change suggestion of a record")
+    summary = "Retrieve a single change suggestion of a record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0481")))
   @ApiResponse(
     responseCode = "200",
     description = "A change suggestion")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0481"))
   @Docs.DefaultUnsuccessfulReadResponses
   @NullToNotFound
   @GetMapping(value = "changeSuggestion/{key}")
@@ -427,12 +427,12 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "listChangeSuggestion",
-    summary = "Retrieve all change suggestions of the record")
+    summary = "Retrieve all change suggestions of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0480")))
   @ApiResponse(
     responseCode = "200",
     description = "List of change suggestions")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0480"))
   @GetMapping(value = "changeSuggestion")
   public PagingResponse<R> listChangeSuggestion(
       @RequestParam(value = "status", required = false) Status status,
@@ -445,14 +445,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "discardChangeSuggestion",
-    summary = "Discard a collection change suggestion")
+    summary = "Discard a collection change suggestion",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0484")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Change suggestion discarded")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0484"))
   @PutMapping(value = "changeSuggestion/{key}/discard")
   public void discardChangeSuggestion(@PathVariable("key") int key) {
     changeSuggestionService.discardChangeSuggestion(key);
@@ -460,14 +460,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "applyChangeSuggestion",
-    summary = "Apply a collection change suggestion")
+    summary = "Apply a collection change suggestion",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0485")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Apply suggestion discarded")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0485"))
   @PutMapping(value = "changeSuggestion/{key}/apply")
   public ApplySuggestionResult applyChangeSuggestion(@PathVariable("key") int key) {
     UUID entityCreatedKey = changeSuggestionService.applyChangeSuggestion(key);
@@ -478,14 +478,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addMasterSourceMetadata",
-    summary = "Add master source metadata to the record")
+    summary = "Add master source metadata to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Master source metadata added, key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451"))
   @PostMapping(value = "{key}/masterSourceMetadata", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addMasterSourceMetadata(
@@ -496,13 +496,13 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "getMasterSourceMetadata",
-    summary = "Retrieve a master source metadata record")
+    summary = "Retrieve a master source metadata record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Master source metadata record")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450"))
   @GetMapping("{key}/masterSourceMetadata")
   @Nullable
   public MasterSourceMetadata getMasterSourceMetadata(@PathVariable("key") UUID entityKey) {
@@ -511,14 +511,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteMasterSourceMetadata",
-    summary = "Delete a master source metadata from a record")
+    summary = "Delete a master source metadata from a record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0453")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Deletes a master source metadata record")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0453"))
   @DeleteMapping("{key}/masterSourceMetadata")
   public void deleteMasterSourceMetadata(@PathVariable("key") UUID entityKey) {
     collectionEntityService.deleteMasterSourceMetadata(entityKey);
@@ -532,14 +532,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addIdentifier",
-    summary = "Add an identifier to the record")
+    summary = "Add an identifier to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Identifier added, identifier key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431"))
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addIdentifier(
@@ -549,14 +549,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteIdentifier",
-    summary = "Delete an identifier from the record")
+    summary = "Delete an identifier from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0433")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0433"))
   @DeleteMapping("{key}/identifier/{identifierKey}")
   @Transactional
   public void deleteIdentifier(
@@ -566,14 +566,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "getIdentifier",
-    summary = "Retrieve all identifiers of the record")
+    summary = "Retrieve all identifiers of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Identifiers list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430"))
   @GetMapping("{key}/identifier")
   @Nullable
   public List<Identifier> listIdentifiers(@PathVariable UUID key) {
@@ -582,14 +582,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addTag",
-    summary = "Add a tag to the record")
+    summary = "Add a tag to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0471")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Tag added, tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0471"))
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addTag(@PathVariable("key") UUID entityKey, @RequestBody @Trim Tag tag) {
@@ -598,14 +598,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteTag",
-    summary = "Delete a tag from the record")
+    summary = "Delete a tag from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0473")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0473"))
   @DeleteMapping("{key}/tag/{tagKey}")
   @Transactional
   public void deleteTag(@PathVariable("key") UUID entityKey, @PathVariable int tagKey) {
@@ -614,14 +614,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "getTag",
-    summary = "Retrieve all tags of the record")
+    summary = "Retrieve all tags of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0470")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(name = "owner", hidden = true)
   @ApiResponse(
     responseCode = "200",
     description = "Tag list")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0470"))
   @GetMapping("{key}/tag")
   @Nullable
   public List<Tag> listTags(
@@ -632,14 +632,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addMachineTag",
-    summary = "Add a machine tag to the record")
+    summary = "Add a machine tag to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Machine tag added, machine tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441"))
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addMachineTag(
@@ -649,14 +649,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteMachineTag",
-    summary = "Delete a machine tag from the record")
+    summary = "Delete a machine tag from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Machine tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442"))
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
   public void deleteMachineTagByMachineTagKey(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("machineTagKey") int machineTagKey) {
@@ -665,14 +665,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteMachineTagsInNamespace",
-    summary = "Delete all machine tags in a namespace from the record")
+    summary = "Delete all machine tags in a namespace from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443"))
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
   public void deleteMachineTagsByNamespace(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("namespace") String namespace) {
@@ -681,14 +681,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteMachineTagInNamespaceName",
-    summary = "Delete all machine tags of a name in a namespace from the record")
+    summary = "Delete all machine tags of a name in a namespace from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Named machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444"))
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
@@ -699,14 +699,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "listMachineTag",
-    summary = "List all machine tags on the record")
+    summary = "List all machine tags on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Machine tags list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440"))
   @GetMapping("{key}/machineTag")
   public List<MachineTag> listMachineTags(@PathVariable("key") UUID targetEntityKey) {
     return collectionEntityService.listMachineTags(targetEntityKey);
@@ -714,14 +714,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "addComment",
-    summary = "Add a comment to the record")
+    summary = "Add a comment to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Comment added, comment key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401"))
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public int addComment(
@@ -731,14 +731,14 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "deleteComment",
-    summary = "Delete a comment from the record")
+    summary = "Delete a comment from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0403")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Comment deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0403"))
   @DeleteMapping("{key}/comment/{commentKey}")
   public void deleteComment(
       @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
@@ -747,13 +747,13 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "getComment",
-    summary = "Retrieve all comments of the record")
+    summary = "Retrieve all comments of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "List of comments")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400"))
   @GetMapping(value = "{key}/comment")
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
     return collectionEntityService.listComments(targetEntityKey);
