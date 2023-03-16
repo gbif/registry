@@ -157,13 +157,13 @@ public class CollectionResource
   @Operation(
     operationId = "getCollection",
     summary = "Get details of a single collection",
-    description = "Details of a single collection.  Also works for deleted collections.")
+    description = "Details of a single collection.  Also works for deleted collections.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Collection found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
   public CollectionView getCollectionView(@PathVariable UUID key) {
@@ -174,12 +174,12 @@ public class CollectionResource
   @Operation(
     operationId = "createCollection",
     summary = "Create a new collection",
-    description = "Creates a new collection.")
+    description = "Creates a new collection.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Collection created, new collection's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public UUID create(@RequestBody @Trim Collection collection) {
@@ -190,14 +190,14 @@ public class CollectionResource
   @Operation(
     operationId = "updateCollection",
     summary = "Update an existing collection",
-    description = "Updates the existing collection.")
+    description = "Updates the existing collection.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Collection updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim Collection collection) {
@@ -208,14 +208,14 @@ public class CollectionResource
   @Operation(
     operationId = "deleteCollection",
     summary = "Delete an existing collection",
-    description = "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.")
+    description = "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Collection marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -234,7 +234,6 @@ public class CollectionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return collectionService.list(searchRequest);
@@ -277,7 +276,7 @@ public class CollectionResource
     operationId = "listCollectionsExport",
     summary = "Export search across all collections.",
     description = "Download full-text search results as CSV or TSV.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102")))
   @CollectionSearchParameters
   @ApiResponse(
     responseCode = "200",
@@ -285,7 +284,6 @@ public class CollectionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102"))
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -304,12 +302,12 @@ public class CollectionResource
 
   @Operation(
     operationId = "listDeleted",
-    summary = "Retrieve all deleted collection records")
+    summary = "Retrieve all deleted collection records",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted collection records")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500"))
   @GetMapping("deleted")
   public PagingResponse<CollectionView> listDeleted(
       @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
@@ -321,7 +319,7 @@ public class CollectionResource
     summary = "Suggest collections.",
     description = "Search that returns up to 20 matching collections. Results are ordered by relevance. " +
       "The response is smaller than a collection search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",
@@ -329,7 +327,6 @@ public class CollectionResource
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
@@ -338,14 +335,14 @@ public class CollectionResource
   @Operation(
     operationId = "importCollection",
     summary = "Import a collection",
-    description = "Imports a collection from a dataset.")
+    description = "Imports a collection from a dataset.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0495")))
   @ApiResponse(
     responseCode = "200",
     description = "Collection imported, key returned.",
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0495"))
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Trim
   public UUID createFromDataset(@RequestBody @Trim CollectionImportParams importParams) {

@@ -137,14 +137,12 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getInstallation",
     summary = "Get details of a single installation",
     description = "Details of a single installation.  Also works for deleted installations.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Installation found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
@@ -163,12 +161,12 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "createInstallation",
     summary = "Create a new installation",
     description = "Creates a new installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      "metadata descriptions must be added in subsequent requests.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Installation created, new installation's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -186,14 +184,14 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "updateInstallation",
     summary = "Update an existing installation",
     description = "Updates the existing installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      "metadata descriptions are not changed with this method.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Installation updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -211,13 +209,13 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "deleteInstallation",
     summary = "Delete an installation",
     description = "Marks an installation as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.")
+      "metadata descriptions are not changed.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Installation deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -233,8 +231,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "listInstallations",
     summary = "List all installations",
     description = "Lists all current installations (deleted installations are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
   @Parameter(
     name = "type",
@@ -248,7 +245,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Installation> list(
       @Valid InstallationRequestSearchParams request, Pageable page) {
@@ -274,14 +270,14 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Operation(
     operationId = "getInstallationDatasets",
     summary = "List installation's datasets",
-    description = "Lists the datasets served by this installation.")
+    description = "Lists the datasets served by this installation.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232"))
   @GetMapping("{key}/dataset")
   @Override
   public PagingResponse<Dataset> getHostedDatasets(
@@ -295,13 +291,13 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Operation(
     operationId = "getDeletedInstallations",
     summary = "List deleted installations",
-    description = "Lists deleted installations.")
+    description = "Lists deleted installations.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of deleted installations")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500"))
   @GetMapping("deleted")
   @Override
   public PagingResponse<Installation> listDeleted(Pageable page) {
@@ -312,13 +308,13 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Operation(
     operationId = "getNonPublishingInstallations",
     summary = "List non-publishing installations",
-    description = "Lists all installations serving 0 datasets.")
+    description = "Lists all installations serving 0 datasets.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "List of non-publishing installations")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520"))
   @GetMapping("nonPublishing")
   @Override
   public PagingResponse<Installation> listNonPublishing(Pageable page) {
@@ -447,9 +443,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     summary = "Suggest installations.",
     description = "Search that returns up to 20 matching installations. Results are ordered by relevance. " +
       "The response is smaller than an installation search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
-  )
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -458,7 +452,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q) {

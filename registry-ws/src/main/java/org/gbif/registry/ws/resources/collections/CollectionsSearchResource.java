@@ -56,7 +56,8 @@ public class CollectionsSearchResource {
 
   @Operation(
     operationId = "searchCollectionsInstitutions",
-    summary = "Search collections and institutions")
+    summary = "Search collections and institutions",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0101")))
   @CommonParameters.QParameter
   @CommonParameters.HighlightParameter
   @Pageable.OffsetLimitParameters
@@ -82,7 +83,6 @@ public class CollectionsSearchResource {
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0101"))
   @GetMapping
   public List<CollectionsSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,

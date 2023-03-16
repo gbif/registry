@@ -115,14 +115,12 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     operationId = "getNetwork",
     summary = "Get details of a single network",
     description = "Details of a single network.  Also works for deleted networks.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
     description = "Network found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200"))
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
@@ -141,12 +139,12 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     operationId = "createNetwork",
     summary = "Creates a new network",
     description = "Creates a new network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      "metadata descriptions must be added in subsequent requests.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Network created, new network's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201"))
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
   @Override
@@ -164,14 +162,14 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     operationId = "updateNetwork",
     summary = "Update an existing network",
     description = "Updates the existing network.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      "metadata descriptions are not changed with this method.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Network updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202"))
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
@@ -189,13 +187,13 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     operationId = "deleteNetwork",
     summary = "Delete a network",
     description = "Marks a network as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.")
+      "metadata descriptions are not changed.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
     description = "Network deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203"))
   @DeleteMapping("{key}")
   @Override
   public void delete(@PathVariable UUID key) {
@@ -211,8 +209,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     operationId = "listNetworks",
     summary = "List all networks",
     description = "Lists all current networks (deleted networks are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
   @ApiResponse(
     responseCode = "200",
@@ -220,7 +217,6 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100"))
   @GetMapping
   public PagingResponse<Network> list(@Valid NetworkRequestSearchParams request, Pageable page) {
     if (request.getIdentifierType() != null && request.getIdentifier() != null) {
@@ -243,15 +239,13 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @Operation(
     operationId = "listNetworkConstituents",
     summary = "List all constituents (datasets) of a network",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
     description = "Constituent dataset list")
   @Docs.DefaultUnsuccessfulReadResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230"))
   @GetMapping("{key}/constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(
@@ -284,7 +278,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
 
   @Operation(
     operationId = "networkConstituentAdd",
-    summary = "Add a constituent dataset to a network")
+    summary = "Add a constituent dataset to a network",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0406")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(
     name = "datasetKey",
@@ -298,7 +293,6 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0406"))
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -316,7 +310,8 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
 
   @Operation(
     operationId = "networkConstituentDelete",
-    summary = "Remove a constituent dataset from a network")
+    summary = "Remove a constituent dataset from a network",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0408")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(
     name = "datasetKey",
@@ -330,7 +325,6 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0408"))
   @DeleteMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
@@ -350,8 +344,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     summary = "Suggest networks.",
     description = "Search that returns up to 20 matching networks. Results are ordered by relevance. " +
       "The response is smaller than an network search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   )
   @CommonParameters.QParameter
   @ApiResponse(
@@ -360,7 +353,6 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
   @ApiResponse(
     responseCode = "400",
     description = "Invalid search query provided")
-  @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103"))
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
