@@ -62,6 +62,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.extensions.Extension;
@@ -74,9 +76,11 @@ import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.USER_ROLE;
 
-@Tag(name = "Derived datasets", description = "Derived datasets are metadata records allowing the citation of a " +
+@Tag(name = "Derived datasets",
+  description = "Derived datasets are metadata records allowing the citation of a " +
   "subset of a larger dataset.  Typically the large dataset is a monthly download containing all GBIF occurrences " +
-  "and made available on a public cloud service.")
+  "and made available on a public cloud service.",
+  externalDocs = @ExternalDocumentation(description = "GBIF data blog article", url = "https://data-blog.gbif.org/post/derived-datasets/"))
 @RestController
 @RequestMapping(path = "derivedDataset", produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
@@ -105,29 +109,26 @@ public class DerivedDatasetResource {
     summary = "Create a new derived dataset",
     description = "Creates a new derived dataset with the specified source dataset and records of what subset " +
       "should be cited.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201.1")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @ApiResponse(
     responseCode = "201",
     description = "Derived dataset information.")
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-  public DerivedDataset create(@RequestBody @Valid DerivedDatasetCreationRequest request) {
+  public DerivedDataset create(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "The request body should contain the parameters below.  Note the `relatedDatasets` map " +
+        "may use GBIF Dataset DOIs or UUIDs as keys, with the values being the number of records to cite " +
+        "from each dataset."
+    )
+    @RequestBody @Valid DerivedDatasetCreationRequest request) {
     return createDerivedDataset(request, request.getRelatedDatasets());
   }
 
-  @Operation(
-    operationId = "createDerivedDatasetFromFile",
-    summary = "Create a new derived dataset from a file",
-    description = "Creates a new derived dataset with the specified source dataset and records of what subset " +
-      "should be cited.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201.2")))
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-    description = "File body TODO" // TODO
-  )
-  @ApiResponse(
-    responseCode = "201",
-    description = "Derived dataset information.")
+  // It seems complicated to document the multipart form upload, and it's probably
+  // only intended for use on the website anyway.
+  @Hidden
   @Secured({ADMIN_ROLE, USER_ROLE})
   @Validated({PrePersist.class, Default.class})
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -198,7 +199,7 @@ public class DerivedDatasetResource {
     description = "Updates the values of a derived dataset.\n\n" +
       "This is restricted to administrators, contact the [helpdesk](https://www.gbif.org/contact-us) " +
       "for assistance.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0105")))
   @ApiResponse(
     responseCode = "201",
     description = "Derived dataset updated.")
@@ -250,7 +251,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetByDoi",
     summary = "Retrieve a derived dataset record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.1")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0105")))
   @ApiResponse(
     responseCode = "200",
     description = "Derived dataset information.")
@@ -265,7 +266,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetByDatasetKey",
     summary = "Retrieve derived datasets of a dataset by key",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.2")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110")))
   @Parameter(
     name = "key",
     description = "Dataset key",
@@ -285,7 +286,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetByDatasetDoi",
     summary = "Retrieve derived datasets of a dataset by DOI",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.3")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0120")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -302,7 +303,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetByUser",
     summary = "Retrieve derived datasets of a dataset by User",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200.4")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0130")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -331,7 +332,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetCitation",
     summary = "Retrieve derived dataset citation",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -352,7 +353,7 @@ public class DerivedDatasetResource {
   @Operation(
     operationId = "getDerivedDatasetRelatedDatasets",
     summary = "Retrieve derived dataset related datasets",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0220")))
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
