@@ -379,9 +379,9 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
               properties = @ExtensionProperty(name = "Order", value = "0250")))
   @ApiResponse(responseCode = "200", description = "Country node")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("country/{key}")
+  @GetMapping("country/{countryCode}")
   @Nullable
-  public Node getByCountry(@PathVariable("key") String isoCode) {
+  public Node getByCountry(@PathVariable("countryCode") String isoCode) {
     return getByCountry(Country.fromIsoCode(isoCode));
   }
 
