@@ -3,6 +3,7 @@ package org.gbif.registry.service.collections.batch;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -13,7 +14,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -232,6 +235,46 @@ public class FileParsingUtils {
     }
 
     return ParserResult.of(userIdsList, errors);
+  }
+
+  static ParserResult<DOI> parseDoi(String value) {
+    if (Strings.isNullOrEmpty(value)) {
+      return ParserResult.empty();
+    }
+
+    try {
+      return ParserResult.of(new DOI(value));
+    } catch (Exception ex) {
+      return ParserResult.fail("Failed to parse DOI: " + value);
+    }
+  }
+
+  static ParserResult<Map<String, Integer>> parseCollectionsSummary(String value) {
+    if (Strings.isNullOrEmpty(value)) {
+      return ParserResult.empty();
+    }
+
+    String[] values = value.split(LIST_DELIMITER);
+    if (values.length == 0) {
+      return ParserResult.empty();
+    }
+
+    Map<String, Integer> result = new HashMap<>();
+    List<String> errors = new ArrayList<>();
+    for (String v : values) {
+      String[] fields = v.split(FIELD_DELIMITER);
+      if (fields.length != 2) {
+        errors.add("Invalid format of collection summary: " + v);
+        continue;
+      }
+      try {
+        result.put(fields[0], Integer.valueOf(fields[1]));
+      } catch (Exception ex) {
+        errors.add("Invalid count in collection summary: " + fields[1]);
+      }
+    }
+
+    return ParserResult.of(result, errors);
   }
 
   @AllArgsConstructor(access = AccessLevel.PRIVATE)

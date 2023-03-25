@@ -724,4 +724,9 @@ public abstract class BaseCollectionEntityResource<
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
     return collectionEntityService.listComments(targetEntityKey);
   }
+
+  public int importBatch() {
+
+  }
+
 }

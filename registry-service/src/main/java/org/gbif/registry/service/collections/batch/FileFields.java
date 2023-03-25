@@ -1,10 +1,17 @@
 package org.gbif.registry.service.collections.batch;
 
+import org.gbif.api.model.collections.CollectionEntityType;
+
 import java.util.Arrays;
 import java.util.List;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileFields {
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class InstitutionFields {
     public static final String INSTITUTION_TYPE = "TYPE";
     public static final String ADDITIONAL_NAMES = "ADDITIONAL_NAMES";
@@ -31,9 +38,49 @@ public class FileFields {
             TAXONOMIC_DESCRIPTION);
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class CollectionFields {
+    public static final String CONTENT_TYPES = "CONTENT_TYPES";
+    public static final String PERSONAL_COLLECTION = "PERSONAL_COLLECTION";
+    public static final String DOI = "DOI";
+    public static final String PRESERVATION_TYPES = "PRESERVATION_TYPES";
+    public static final String ACCESSION_STATUS = "ACCESSION_STATUS";
+    public static final String INSTITUTION_KEY = "INSTITUTION_KEY";
+    public static final String TAXONOMIC_COVERAGE = "TAXONOMIC_COVERAGE";
+    public static final String GEOGRAPHY = "GEOGRAPHY";
+    public static final String NOTES = "NOTES";
+    public static final String INCORPORATED_COLLECTIONS = "INCORPORATED_COLLECTIONS";
+    public static final String IMPORTANT_COLLECTIONS = "IMPORTANT_COLLECTIONS";
+    public static final String IMPORTANT_COLLECTORS = "IMPORTANT_COLLECTORS";
+    public static final String COLLECTION_SUMMARY = "COLLECTION_SUMMARY";
+    public static final String DEPARTMENT = "DEPARTMENT";
+    public static final String DIVISION = "DIVISION";
+
+    protected static final List<String> ALL_FIELDS =
+        Arrays.asList(
+            CONTENT_TYPES,
+            PERSONAL_COLLECTION,
+            DOI,
+            PRESERVATION_TYPES,
+            ACCESSION_STATUS,
+            INSTITUTION_KEY,
+            TAXONOMIC_COVERAGE,
+            GEOGRAPHY,
+            NOTES,
+            INCORPORATED_COLLECTIONS,
+            IMPORTANT_COLLECTIONS,
+            IMPORTANT_COLLECTORS,
+            COLLECTION_SUMMARY,
+            DEPARTMENT,
+            DIVISION);
+  }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class ContactFields {
     public static final String INSTITUTION_CODE = "INSTITUTION_CODE";
     public static final String INSTITUTION_KEY = "INSTITUTION_KEY";
+    public static final String COLLECTION_CODE = "COLLECTION_CODE";
+    public static final String COLLECTION_KEY = "COLLECTION_KEY";
     public static final String KEY = "KEY";
     public static final String FIRST_NAME = "FIRST_NAME";
     public static final String LAST_NAME = "LAST_NAME";
@@ -50,6 +97,14 @@ public class FileFields {
     public static final String TAXONOMIC_EXPERTISE = "TAXONOMIC_EXPERTISE";
     public static final String NOTES = "NOTES";
     public static final String USER_IDS = "USER_IDS";
+
+    public static String getEntityKey(CollectionEntityType entityType) {
+      return entityType == CollectionEntityType.INSTITUTION ? INSTITUTION_KEY : COLLECTION_KEY;
+    }
+
+    public static String getEntityCode(CollectionEntityType entityType) {
+      return entityType == CollectionEntityType.INSTITUTION ? INSTITUTION_CODE : COLLECTION_CODE;
+    }
 
     protected static final List<String> ALL_FIELDS =
         Arrays.asList(
@@ -73,6 +128,7 @@ public class FileFields {
             USER_IDS);
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class CommonFields {
 
     public static final String ERRORS = "ERRORS";
@@ -89,7 +145,6 @@ public class FileFields {
     public static final String CATALOG_URL = "CATALOG_URL";
     public static final String API_URL = "API_URL";
     public static final String NUMBER_SPECIMENS = "NUMBER_SPECIMENS";
-
     /** address fields */
     private static final String ADDRESS_PREFIX = "ADDRESS_";
 
@@ -137,9 +192,20 @@ public class FileFields {
             MAIL_COUNTRY);
   }
 
-  public static boolean isInstitutionField(String field) {
-    return InstitutionFields.ALL_FIELDS.contains(field.toUpperCase())
-        || CommonFields.ALL_FIELDS.contains(field.toUpperCase());
+  public static boolean isEntityField(String field, CollectionEntityType entityType) {
+    if (CommonFields.ALL_FIELDS.contains(field.toUpperCase())) {
+      return true;
+    }
+
+    if (entityType == CollectionEntityType.INSTITUTION) {
+      return InstitutionFields.ALL_FIELDS.contains(field.toUpperCase());
+    }
+
+    if (entityType == CollectionEntityType.COLLECTION) {
+      return CollectionFields.ALL_FIELDS.contains(field.toUpperCase());
+    }
+
+    return false;
   }
 
   public static boolean isContactField(String field) {
