@@ -18,16 +18,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.base.Strings;
 
+import org.springframework.stereotype.Service;
+
 import static org.gbif.registry.service.collections.batch.FileParser.ParsingData;
 
 // TODO: interface in gbif-api
-public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
+@Service
+public class InstitutionBatchService extends BaseBatchService<Institution> {
   private final InstitutionService institutionService;
 
   // TODO: check required columns??
 
   @Autowired
-  public InstitutionBatchHandler(BatchMapper batchMapper, InstitutionService institutionService) {
+  public InstitutionBatchService(BatchMapper batchMapper, InstitutionService institutionService) {
     super(batchMapper, institutionService, CollectionEntityType.INSTITUTION, Institution.class);
     this.institutionService = institutionService;
   }

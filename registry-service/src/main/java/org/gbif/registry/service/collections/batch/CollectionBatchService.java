@@ -1,43 +1,38 @@
 package org.gbif.registry.service.collections.batch;
 
-import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
-import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.BatchMapper;
 import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+
+import org.springframework.stereotype.Service;
 
 import static org.gbif.registry.service.collections.batch.FileParser.ParsingData;
 
 // TODO: interface in gbif-api
-public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
+@Service
+public class CollectionBatchService extends BaseBatchService<Collection> {
 
   private final CollectionService collectionService;
 
   // TODO: check required columns??
 
   @Autowired
-  public CollectionBatchHandler(BatchMapper batchMapper, CollectionService collectionService) {
+  public CollectionBatchService(BatchMapper batchMapper, CollectionService collectionService) {
     super(batchMapper, collectionService, CollectionEntityType.COLLECTION, Collection.class);
     this.collectionService = collectionService;
   }

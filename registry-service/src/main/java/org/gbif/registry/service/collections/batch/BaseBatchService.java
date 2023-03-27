@@ -8,6 +8,7 @@ import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.registry.persistence.mapper.BatchMapper;
 import org.gbif.registry.service.collections.batch.FileFields.ContactFields;
@@ -47,14 +48,14 @@ import static org.gbif.registry.service.collections.batch.FileFields.CommonField
 import static org.gbif.registry.service.collections.batch.FileParser.parseContacts;
 import static org.gbif.registry.service.collections.batch.FileParser.parseEntities;
 
-public abstract class BaseBatchHandler<T extends CollectionEntity> {
+public abstract class BaseBatchService<T extends CollectionEntity> implements BatchService {
 
   private final BatchMapper batchMapper;
   private final CollectionEntityService<T> entityService;
   private final CollectionEntityType entityType;
   private final Class<T> clazz;
 
-  BaseBatchHandler(
+  BaseBatchService(
       BatchMapper batchMapper,
       CollectionEntityService<T> entityService,
       CollectionEntityType entityType,
@@ -65,6 +66,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> {
     this.clazz = clazz;
   }
 
+  @Override
   public int handleBatchAsync(
     Path entitiesPath, Path contactsPath, ExportFormat format, boolean update) {
     Objects.requireNonNull(entitiesPath);
@@ -92,6 +94,11 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> {
     batchMapper.create(batch);
 
     return batch.getKey();
+  }
+
+  @Override
+  public Batch get(int key) {
+    return batchMapper.get(key);
   }
 
   @SneakyThrows
