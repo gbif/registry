@@ -26,12 +26,12 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
+import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
@@ -108,13 +108,13 @@ public class InstitutionResource
       InstitutionDuplicatesService duplicatesService,
       InstitutionService institutionService,
       InstitutionChangeSuggestionService institutionChangeSuggestionService,
-      BatchService batchService) {
+      InstitutionBatchService institutionBatchService) {
     super(
         institutionMergeService,
         institutionService,
         institutionChangeSuggestionService,
         duplicatesService,
-        batchService,
+        institutionBatchService,
         Institution.class);
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;

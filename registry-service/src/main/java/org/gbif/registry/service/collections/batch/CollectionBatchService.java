@@ -6,7 +6,7 @@ import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
-import org.gbif.registry.persistence.mapper.BatchMapper;
+import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
 
 import java.util.ArrayList;

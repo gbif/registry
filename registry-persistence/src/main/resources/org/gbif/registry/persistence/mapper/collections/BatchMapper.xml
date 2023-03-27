@@ -3,9 +3,10 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.collections.BatchMapper">
 
   <!-- Auto-mapping and eager loading of sub resources  -->
-  <resultMap id="BATCH_MAP" type="org.gbif.registry.domain.collections.Batch"
+  <resultMap id="BATCH_MAP" type="org.gbif.api.model.collections.Batch"
              autoMapping="true">
     <id property="key" column="key"/>
+    <result property="fileErrors" column="file_errors" typeHandler="StringArrayTypeHandler"/>
   </resultMap>
 
   <sql id="BATCH_WRITE_FIELDS">
@@ -21,7 +22,7 @@
     #{operation,jdbcType=VARCHAR},
     #{entityType,jdbcType=VARCHAR},
     #{resultFilePath,jdbcType=VARCHAR},
-    #{fileErrors,jdbcType=VARCHAR},
+    #{fileErrors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     now(), <!-- created -->
     #{createdBy,jdbcType=VARCHAR}
   </sql>
@@ -31,10 +32,10 @@
     operation = #{operation,jdbcType=VARCHAR},
     entity_type = #{entityType,jdbcType=VARCHAR},
     result_file_path = #{resultFilePath,jdbcType=VARCHAR},
-    file_errors = #{fileErrors,jdbcType=VARCHAR}
+    file_errors = #{fileErrors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
   </sql>
 
-  <insert id="create" parameterType="org.gbif.registry.domain.collections.AuditLog"
+  <insert id="create" parameterType="org.gbif.api.model.collections.Batch"
           useGeneratedKeys="true" keyProperty="key">
     INSERT INTO collections_batch(<include refid="BATCH_WRITE_FIELDS"/>)
     VALUES(<include refid="BATCH_PARAMS_CREATE"/>)
@@ -46,7 +47,7 @@
     WHERE b.key = #{key,jdbcType=OTHER}
   </select>
 
-  <update id="update" parameterType="org.gbif.registry.domain.collections.Batch">
+  <update id="update" parameterType="org.gbif.api.model.collections.Batch">
     UPDATE collections_batch
     SET <include refid="BATCH_PARAMS_UPDATE"/>
     WHERE key = #{key,jdbcType=OTHER}

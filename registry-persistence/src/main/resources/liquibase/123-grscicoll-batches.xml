@@ -9,9 +9,9 @@
         CREATE TABLE collections_batch(
           key serial NOT NULL PRIMARY KEY,
           successful bool,
-          operation varchar(10)
+          operation varchar(10),
           entity_type varchar(12) NOT NULL,
-          result_file_path text NOT NULL,
+          result_file_path text,
           file_errors text[],
           created timestamptz NOT NULL DEFAULT now(),
           created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3))

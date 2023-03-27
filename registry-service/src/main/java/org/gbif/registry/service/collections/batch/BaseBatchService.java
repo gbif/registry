@@ -10,7 +10,7 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionEntityService;
-import org.gbif.registry.persistence.mapper.BatchMapper;
+import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import org.gbif.registry.service.collections.batch.FileFields.ContactFields;
 import org.gbif.registry.service.collections.batch.FileParser.ParsingData;
 
