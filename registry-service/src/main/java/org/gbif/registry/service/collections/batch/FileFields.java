@@ -2,11 +2,14 @@ package org.gbif.registry.service.collections.batch;
 
 import org.gbif.api.model.collections.CollectionEntityType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+
+import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileFields {
@@ -81,7 +84,6 @@ public class FileFields {
     public static final String INSTITUTION_KEY = "INSTITUTION_KEY";
     public static final String COLLECTION_CODE = "COLLECTION_CODE";
     public static final String COLLECTION_KEY = "COLLECTION_KEY";
-    public static final String KEY = "KEY";
     public static final String FIRST_NAME = "FIRST_NAME";
     public static final String LAST_NAME = "LAST_NAME";
     public static final String POSITION = "POSITION";
@@ -206,6 +208,20 @@ public class FileFields {
     }
 
     return false;
+  }
+
+  public static List<String> getEntityFields(CollectionEntityType entityType) {
+    List<String> fields = new ArrayList<>(ContactFields.ALL_FIELDS);
+
+    if (entityType == CollectionEntityType.INSTITUTION) {
+      fields.addAll(InstitutionFields.ALL_FIELDS);
+    }
+
+    if (entityType == CollectionEntityType.COLLECTION) {
+      fields.addAll(CollectionFields.ALL_FIELDS);
+    }
+
+    return fields;
   }
 
   public static boolean isContactField(String field) {

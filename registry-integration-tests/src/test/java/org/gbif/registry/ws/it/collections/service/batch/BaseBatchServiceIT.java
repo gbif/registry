@@ -1,0 +1,247 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.gbif.registry.ws.it.collections.service.batch;
+
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.CollectionEntityType;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Contactable;
+import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.registry.Commentable;
+import org.gbif.api.model.registry.Identifiable;
+import org.gbif.api.model.registry.MachineTaggable;
+import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.CollectionEntityService;
+import org.gbif.registry.service.collections.batch.BaseBatchService;
+import org.gbif.registry.service.collections.batch.FileFields;
+import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
+import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
+import org.gbif.registry.service.collections.batch.model.ParsedData;
+import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
+import org.gbif.ws.client.filter.SimplePrincipalProvider;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public abstract class BaseBatchServiceIT<
+        T extends
+            CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
+                & Taggable & Commentable>
+    extends BaseServiceIT {
+
+  protected final BaseBatchService<T> batchService;
+  protected final CollectionEntityService<T> entityService;
+  protected final CollectionEntityType entityType;
+
+  public BaseBatchServiceIT(
+      SimplePrincipalProvider simplePrincipalProvider,
+      BaseBatchService<T> batchService,
+      CollectionEntityService<T> entityService,
+      CollectionEntityType entityType) {
+    super(simplePrincipalProvider);
+    this.batchService = batchService;
+    this.entityService = entityService;
+    this.entityType = entityType;
+  }
+
+  @Test
+  public void mergeEntitiesTest() {
+    Set<String> headers = new HashSet<>();
+    headers.add(FileFields.CommonFields.CODE);
+    headers.add(FileFields.CommonFields.NAME);
+    headers.add(FileFields.CommonFields.ACTIVE);
+
+    T existing = newEntity();
+    existing.setCode("c1");
+    existing.setName("n1");
+    existing.setActive(false);
+    existing.setDescription("desc");
+
+    T parsed = newEntity();
+    parsed.setCode("c11");
+    parsed.setName("n11");
+    parsed.setActive(true);
+    parsed.setDescription("desc2");
+
+    T merged = batchService.mergeEntities(existing, parsed, headers);
+
+    assertEquals("c11", merged.getCode());
+    assertEquals("n11", merged.getName());
+    assertTrue(merged.isActive());
+    assertEquals("desc", merged.getDescription());
+  }
+
+  @Test
+  public void createResultFileTest() throws IOException {
+    // TODO: generify
+    Resource institutionsFile = new ClassPathResource("collections/institutions.csv");
+    Resource contactsFile = new ClassPathResource("collections/contacts.csv");
+    ExportFormat format = ExportFormat.CSV;
+
+    T parsedEntity = newEntity();
+    parsedEntity.setKey(UUID.randomUUID());
+    parsedEntity.setCode("c1");
+    parsedEntity.setDescription("desc1");
+
+    Map<String, Integer> fileHeadersIndex = new HashMap<>();
+    fileHeadersIndex.put(FileFields.CommonFields.CODE, 0);
+    fileHeadersIndex.put(FileFields.CommonFields.NAME, 1);
+    fileHeadersIndex.put(FileFields.CommonFields.DESCRIPTION, 2);
+    fileHeadersIndex.put(FileFields.CommonFields.ACTIVE, 3);
+
+    ParsedData<T> parsedData =
+        ParsedData.<T>builder()
+            .entity(parsedEntity)
+            .errors(Collections.singletonList("entity error"))
+            .build();
+
+    EntitiesParserResult<T> parserResult =
+        EntitiesParserResult.<T>builder()
+            .format(format)
+            .fileHeadersIndex(fileHeadersIndex)
+            .parsedDataMap(Collections.singletonMap(parsedEntity.getCode(), parsedData))
+            .build();
+
+    Contact contact = new Contact();
+    contact.setKey(1);
+    contact.setFirstName("name1");
+    contact.setLastName("lastn1");
+    contact.setPosition(Collections.singletonList("tester"));
+    int contactHash = Objects.hash(Arrays.asList("name1", "lastn1", "tester"));
+
+    ParsedData<Contact> contactParsedData =
+        ParsedData.<Contact>builder()
+            .entity(contact)
+            .errors(Collections.singletonList("contact error"))
+            .build();
+
+    Map<String, Integer> contactsHeadersIndex = new HashMap<>();
+    contactsHeadersIndex.put(FileFields.ContactFields.FIRST_NAME, 0);
+    contactsHeadersIndex.put(FileFields.ContactFields.LAST_NAME, 1);
+    contactsHeadersIndex.put(FileFields.ContactFields.POSITION, 2);
+
+    ContactsParserResult contactsParserResult =
+        ContactsParserResult.builder()
+            .format(format)
+            .fileHeadersIndex(contactsHeadersIndex)
+            .contactsByKey(Collections.singletonMap(String.valueOf(contactHash), contactParsedData))
+            .build();
+
+    Path resultFile =
+        batchService.createResultFile(
+            institutionsFile.getFile().toPath(),
+            contactsFile.getFile().toPath(),
+            parserResult,
+            contactsParserResult,
+            FileFields.CommonFields.CODE);
+
+    List<Path> unzippedFiles = unzip(resultFile, "src/test/resources/collections");
+    assertEquals(2, unzippedFiles.size());
+
+    for (Path unzipped : unzippedFiles) {
+      try (BufferedReader br = new BufferedReader(new FileReader(unzipped.toFile()))) {
+        List<String> headers = Arrays.asList(br.readLine().split(format.getDelimiter().toString()));
+        assertTrue(headers.contains(FileFields.CommonFields.KEY));
+        assertTrue(headers.contains(FileFields.CommonFields.ERRORS));
+
+        if (unzipped.getFileName().toString().startsWith("result-")) {
+          assertEquals(fileHeadersIndex.size() + 2, headers.size());
+        } else if (unzipped.getFileName().toString().startsWith("contacts-")) {
+          assertEquals(contactsHeadersIndex.size() + 2, headers.size());
+        }
+
+        br.lines()
+            .forEach(
+                l -> {
+                  String[] values = l.split(format.getDelimiter().toString());
+                  assertNotNull(values[headers.indexOf(FileFields.CommonFields.KEY)]);
+                  assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
+                });
+      }
+    }
+
+    Files.deleteIfExists(resultFile);
+    for (Path f : unzippedFiles) {
+      Files.deleteIfExists(f);
+    }
+  }
+
+  private static List<Path> unzip(Path zipFilePath, String destDir) {
+    List<Path> filesUnzipped = new ArrayList<>();
+    File dir = new File(destDir);
+    // create output directory if it doesn't exist
+    if (!dir.exists()) dir.mkdirs();
+    FileInputStream fis;
+    // buffer for read and write data to file
+    byte[] buffer = new byte[1024];
+    try {
+      fis = new FileInputStream(zipFilePath.toFile());
+      ZipInputStream zis = new ZipInputStream(fis);
+      ZipEntry ze = zis.getNextEntry();
+      while (ze != null) {
+        String fileName = ze.getName();
+        File newFile = new File(destDir + File.separator + fileName);
+        filesUnzipped.add(newFile.toPath());
+        // create directories for sub directories in zip
+        new File(newFile.getParent()).mkdirs();
+        FileOutputStream fos = new FileOutputStream(newFile);
+        int len;
+        while ((len = zis.read(buffer)) > 0) {
+          fos.write(buffer, 0, len);
+        }
+        fos.close();
+        // close this ZipEntry
+        zis.closeEntry();
+        ze = zis.getNextEntry();
+      }
+      // close last ZipEntry
+      zis.closeEntry();
+      zis.close();
+      fis.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return filesUnzipped;
+  }
+
+  abstract T newEntity();
+}

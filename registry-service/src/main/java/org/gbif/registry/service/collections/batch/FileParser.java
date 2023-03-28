@@ -12,6 +12,10 @@ import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
+import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
+import org.gbif.registry.service.collections.batch.model.ParsedData;
+import org.gbif.registry.service.collections.batch.model.ParserResult;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -29,7 +33,6 @@ import java.util.function.Function;
 import com.google.common.base.Strings;
 
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -88,15 +91,17 @@ import static org.gbif.registry.service.collections.batch.FileParsingUtils.parse
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {
 
+  // TODO: check required columns??
+
   @SneakyThrows
-  static <T extends CollectionEntity> ParsingResult<T> parseEntities(
+  static <T extends CollectionEntity> ParserResult<T> parseEntities(
       Path entitiesPath,
       ExportFormat format,
-      BiFunction<String[], Map<String, Integer>, ParsingData<T>> createEntityFn,
+      BiFunction<String[], Map<String, Integer>, ParsedData<T>> createEntityFn,
       Function<T, String> keyExtractor,
       CollectionEntityType entityType) {
 
-    Map<String, ParsingData<T>> dataMap = new HashMap<>();
+    Map<String, ParsedData<T>> dataMap = new HashMap<>();
     List<String> fileErrors = new ArrayList<>();
     List<String> duplicateKeys = new ArrayList<>();
     Map<String, Integer> headersIndex = new HashMap<>();
@@ -115,12 +120,12 @@ public class FileParser {
           .forEach(
               line -> {
                 String[] values = line.split(format.getDelimiter().toString());
-                ParsingData<T> data = createEntityFn.apply(values, headersIndex);
+                ParsedData<T> data = createEntityFn.apply(values, headersIndex);
 
-                String key = keyExtractor.apply(data.entity);
+                String key = keyExtractor.apply(data.getEntity());
 
                 if (key == null) {
-                  data.errors.add("No key or code found");
+                  data.getErrors().add("No key or code found");
                 } else {
                   if (dataMap.containsKey(key)) {
                     duplicateKeys.add(key);
@@ -130,15 +135,16 @@ public class FileParser {
               });
     }
 
-    return ParsingResult.<T>builder()
-        .parsingData(dataMap)
+    return EntitiesParserResult.<T>builder()
+        .format(format)
+        .parsedDataMap(dataMap)
         .duplicates(duplicateKeys)
         .fileHeadersIndex(headersIndex)
         .fileErrors(fileErrors)
         .build();
   }
 
-  static ParsingData<Institution> createInstitutionFromValues(
+  static ParsedData<Institution> createInstitutionFromValues(
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Institution institution = new Institution();
@@ -233,10 +239,10 @@ public class FileParser {
         institution::setIdentifiers,
         errors);
 
-    return ParsingData.<Institution>builder().entity(institution).errors(errors).build();
+    return ParsedData.<Institution>builder().entity(institution).errors(errors).build();
   }
 
-  static ParsingData<Collection> createCollectionFromValues(
+  static ParsedData<Collection> createCollectionFromValues(
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Collection collection = new Collection();
@@ -348,7 +354,7 @@ public class FileParser {
     collection.setDivision(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.DIVISION)));
 
-    return ParsingData.<Collection>builder().entity(collection).errors(errors).build();
+    return ParsedData.<Collection>builder().entity(collection).errors(errors).build();
   }
 
   static String extractValue(String[] values, Integer index) {
@@ -356,17 +362,17 @@ public class FileParser {
   }
 
   @SneakyThrows
-  static <T extends CollectionEntity> ParsingContactsResult<Contact> parseContacts(
+  static <T extends CollectionEntity> ContactsParserResult parseContacts(
       Path contactsPath,
-      Map<String, ParsingData<T>> entitiesMap,
+      Map<String, ParsedData<T>> entitiesMap,
       ExportFormat format,
       String entityKeyColum) {
     Map<String, Integer> columnsIndex = new HashMap<>();
 
-    Map<String, List<ParsingData<Contact>>> contactsByEntityKey = new HashMap<>();
+    Map<String, List<ParsedData<Contact>>> contactsByEntityKey = new HashMap<>();
     List<String> fileErrors = new ArrayList<>();
-    List<Integer> duplicateContactKeys = new ArrayList<>();
-    Map<Integer, ParsingData<Contact>> contactsByKey = new HashMap<>();
+    List<String> duplicateContactKeys = new ArrayList<>();
+    Map<String, ParsedData<Contact>> contactsByKey = new HashMap<>();
     try (BufferedReader br = new BufferedReader(new FileReader(contactsPath.toFile()))) {
       String[] headers = br.readLine().split(format.getDelimiter().toString());
       for (int i = 0; i < headers.length; i++) {
@@ -382,10 +388,10 @@ public class FileParser {
               line -> {
                 String[] values = line.split(format.getDelimiter().toString());
 
-                ParsingData<Contact> parsedContact = createContactFromValues(values, columnsIndex);
+                ParsedData<Contact> parsedContact = createContactFromValues(values, columnsIndex);
                 // it can either be the entity code (new entities) or the entity key(entity update)
                 if (!columnsIndex.containsKey(entityKeyColum)) {
-                  parsedContact.errors.add("There is no column with entity key or code");
+                  parsedContact.getErrors().add("There is no column with entity key or code");
                   return;
                 }
 
@@ -393,20 +399,20 @@ public class FileParser {
 
                 if (Strings.isNullOrEmpty(entityKeyColumn)
                     || !entitiesMap.containsKey(entityKeyColumn)) {
-                  parsedContact.errors.add("Invalid entity key or code");
+                  parsedContact.getErrors().add("Invalid entity key or code");
                   return;
                 }
 
                 // assign the contact to the entity
                 entitiesMap
                     .get(entityKeyColum)
-                    .entity
+                    .getEntity()
                     .getContactPersons()
-                    .add(parsedContact.entity);
+                    .add(parsedContact.getEntity());
 
                 // get a key of the contact. For updates it's the contact key but for inital imports
                 // we hash all the values of the fields
-                int uniqueKey = getContactUniqueKey(values, columnsIndex);
+                String uniqueKey = String.valueOf(getContactUniqueKey(values, columnsIndex));
 
                 if (contactsByKey.containsKey(uniqueKey)) {
                   duplicateContactKeys.add(uniqueKey);
@@ -418,7 +424,8 @@ public class FileParser {
               });
     }
 
-    return ParsingContactsResult.<Contact>builder()
+    return ContactsParserResult.builder()
+        .format(format)
         .contactsByEntity(contactsByEntityKey)
         .contactsByKey(contactsByKey)
         .duplicates(duplicateContactKeys)
@@ -427,14 +434,12 @@ public class FileParser {
         .build();
   }
 
-  private static ParsingData<Contact> createContactFromValues(
+  private static ParsedData<Contact> createContactFromValues(
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Contact contact = new Contact();
     handleParserResult(
-        parseInteger(extractValue(values, headersIndex.get(FileFields.ContactFields.KEY))),
-        contact::setKey,
-        errors);
+        parseInteger(extractValue(values, headersIndex.get(KEY))), contact::setKey, errors);
     contact.setFirstName(extractValue(values, headersIndex.get(FIRST_NAME)));
     contact.setLastName(extractValue(values, headersIndex.get(LAST_NAME)));
     parseStringList(extractValue(values, headersIndex.get(POSITION)))
@@ -467,33 +472,46 @@ public class FileParser {
         contact::setUserIds,
         errors);
 
-    return ParsingData.<Contact>builder().entity(contact).errors(errors).build();
+    return ParsedData.<Contact>builder().entity(contact).errors(errors).build();
   }
 
   static int getContactUniqueKey(String[] values, Map<String, Integer> headersIndex) {
-    String rawKey = extractValue(values, headersIndex.get(FileFields.ContactFields.KEY));
+    String rawKey = extractValue(values, headersIndex.get(KEY));
     FileParsingUtils.ParserResult<Integer> keyParsedResult = parseInteger(rawKey);
     if (keyParsedResult.getResult().isPresent()) {
       return keyParsedResult.getResult().get();
     }
 
     List<String> rawValues = new ArrayList<>();
-    rawValues.add(extractValue(values, headersIndex.get(FIRST_NAME)));
-    rawValues.add(extractValue(values, headersIndex.get(LAST_NAME)));
-    rawValues.add(extractValue(values, headersIndex.get(POSITION)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.PHONE)));
-    rawValues.add(extractValue(values, headersIndex.get(FAX)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.EMAIL)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.ADDRESS)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.CITY)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.PROVINCE)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.COUNTRY)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.POSTAL_CODE)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.PRIMARY)));
-    rawValues.add(
-        extractValue(values, headersIndex.get(FileFields.ContactFields.TAXONOMIC_EXPERTISE)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.NOTES)));
-    rawValues.add(extractValue(values, headersIndex.get(FileFields.ContactFields.USER_IDS)));
+    Optional.ofNullable(extractValue(values, headersIndex.get(FIRST_NAME)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(LAST_NAME)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(POSITION))).ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.PHONE)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FAX))).ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.EMAIL)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.CITY)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.PROVINCE)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.COUNTRY)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(
+            extractValue(values, headersIndex.get(FileFields.ContactFields.POSTAL_CODE)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.PRIMARY)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(
+            extractValue(values, headersIndex.get(FileFields.ContactFields.TAXONOMIC_EXPERTISE)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.NOTES)))
+        .ifPresent(rawValues::add);
+    Optional.ofNullable(extractValue(values, headersIndex.get(FileFields.ContactFields.USER_IDS)))
+        .ifPresent(rawValues::add);
+
     return Objects.hash(rawValues);
   }
 
@@ -501,28 +519,5 @@ public class FileParser {
       FileParsingUtils.ParserResult<T> parserResult, Consumer<T> setter, List<String> errors) {
     parserResult.getResult().ifPresent(setter);
     errors.addAll(parserResult.getErrors());
-  }
-
-  @Builder
-  static class ParsingResult<T> {
-    Map<String, ParsingData<T>> parsingData;
-    List<String> duplicates;
-    List<String> fileErrors = new ArrayList<>();
-    Map<String, Integer> fileHeadersIndex;
-  }
-
-  @Builder
-  static class ParsingContactsResult<T> {
-    Map<String, List<ParsingData<T>>> contactsByEntity;
-    Map<Integer, ParsingData<T>> contactsByKey;
-    List<Integer> duplicates;
-    List<String> fileErrors = new ArrayList<>();
-    Map<String, Integer> fileHeadersIndex;
-  }
-
-  @Builder
-  static class ParsingData<T> {
-    T entity;
-    List<String> errors;
   }
 }

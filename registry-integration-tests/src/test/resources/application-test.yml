@@ -33,6 +33,7 @@ grscicoll:
     url: https://registry.gbif-dev.org/
   mail:
     enabled: false
+  batchResultPath: src/test/resources/collections/
 
 derivedDataset:
   text: Derived dataset GBIF.org ({0}) Filtered export of GBIF occurrence data https://doi.org/{1}

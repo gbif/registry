@@ -7,6 +7,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
+import org.gbif.registry.service.collections.batch.model.ParsedData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,23 +16,21 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
 
-import org.springframework.stereotype.Service;
-
-import static org.gbif.registry.service.collections.batch.FileParser.ParsingData;
-
-// TODO: interface in gbif-api
 @Service
 public class InstitutionBatchService extends BaseBatchService<Institution> {
   private final InstitutionService institutionService;
 
-  // TODO: check required columns??
-
   @Autowired
-  public InstitutionBatchService(BatchMapper batchMapper, InstitutionService institutionService) {
-    super(batchMapper, institutionService, CollectionEntityType.INSTITUTION, Institution.class);
+  public InstitutionBatchService(
+      BatchMapper batchMapper,
+      InstitutionService institutionService,
+      @Value("${grscicoll.batchResultPath}") String resultPath) {
+    super(batchMapper, institutionService, resultPath, CollectionEntityType.INSTITUTION, Institution.class);
     this.institutionService = institutionService;
   }
 
@@ -43,7 +42,7 @@ public class InstitutionBatchService extends BaseBatchService<Institution> {
   }
 
   @Override
-  ParsingData<Institution> createEntityFromValues(
+  ParsedData<Institution> createEntityFromValues(
       String[] values, Map<String, Integer> headersIndex) {
     return FileParser.createInstitutionFromValues(values, headersIndex);
   }
