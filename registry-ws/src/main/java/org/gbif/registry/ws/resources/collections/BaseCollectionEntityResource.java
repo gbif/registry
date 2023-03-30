@@ -18,7 +18,9 @@ import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
@@ -106,6 +108,7 @@ public abstract class BaseCollectionEntityResource<
   protected final ChangeSuggestionService<T, R> changeSuggestionService;
   protected final DuplicatesService duplicatesService;
   protected final BatchService batchService;
+  protected final CollectionEntityType entityType;
 
   protected BaseCollectionEntityResource(
       MergeService<T> mergeService,
@@ -120,6 +123,10 @@ public abstract class BaseCollectionEntityResource<
     this.collectionEntityService = collectionEntityService;
     this.duplicatesService = duplicatesService;
     this.batchService = batchService;
+    this.entityType =
+        objectClass.isAssignableFrom(Institution.class)
+            ? CollectionEntityType.INSTITUTION
+            : CollectionEntityType.COLLECTION;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -659,7 +666,8 @@ public abstract class BaseCollectionEntityResource<
             entitiesFile.getResource().getFile().toPath(),
             contactsFile.getResource().getFile().toPath(),
             format,
-            false);
+            false,
+            entityType);
 
     return request.getRequestURI().endsWith("/")
         ? request.getRequestURI() + batchKey
@@ -678,7 +686,8 @@ public abstract class BaseCollectionEntityResource<
             entitiesFile.getResource().getFile().toPath(),
             contactsFile.getResource().getFile().toPath(),
             format,
-            true);
+            true,
+            entityType);
 
     return request.getRequestURI().endsWith("/")
         ? request.getRequestURI() + batchKey

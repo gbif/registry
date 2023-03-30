@@ -6,33 +6,33 @@
   <resultMap id="BATCH_MAP" type="org.gbif.api.model.collections.Batch"
              autoMapping="true">
     <id property="key" column="key"/>
-    <result property="fileErrors" column="file_errors" typeHandler="StringArrayTypeHandler"/>
+    <result property="errors" column="errors" typeHandler="StringArrayTypeHandler"/>
   </resultMap>
 
   <sql id="BATCH_WRITE_FIELDS">
-    successful, operation, entity_type, result_file_path, file_errors, created, created_by
+    state, operation, entity_type, result_file_path, errors, created, created_by
   </sql>
 
   <sql id="BATCH_READ_FIELDS">
-    key, operation, successful, entity_type, result_file_path, file_errors, created, created_by
+    key, operation, state, entity_type, result_file_path, errors, created, created_by
   </sql>
 
   <sql id="BATCH_PARAMS_CREATE">
-    #{successful,jdbcType=BOOLEAN},
+    #{state,jdbcType=VARCHAR},
     #{operation,jdbcType=VARCHAR},
     #{entityType,jdbcType=VARCHAR},
     #{resultFilePath,jdbcType=VARCHAR},
-    #{fileErrors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{errors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     now(), <!-- created -->
     #{createdBy,jdbcType=VARCHAR}
   </sql>
 
   <sql id="BATCH_PARAMS_UPDATE">
-    successful = #{successful,jdbcType=BOOLEAN},
+    state = #{state,jdbcType=VARCHAR},
     operation = #{operation,jdbcType=VARCHAR},
     entity_type = #{entityType,jdbcType=VARCHAR},
     result_file_path = #{resultFilePath,jdbcType=VARCHAR},
-    file_errors = #{fileErrors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
+    errors = #{errors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
   </sql>
 
   <insert id="create" parameterType="org.gbif.api.model.collections.Batch"

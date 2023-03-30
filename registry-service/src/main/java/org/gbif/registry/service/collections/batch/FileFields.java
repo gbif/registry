@@ -112,6 +112,8 @@ public class FileFields {
         Arrays.asList(
             INSTITUTION_CODE,
             INSTITUTION_KEY,
+            COLLECTION_CODE,
+            COLLECTION_KEY,
             KEY,
             FIRST_NAME,
             LAST_NAME,
@@ -139,8 +141,8 @@ public class FileFields {
     public static final String NAME = "NAME";
     public static final String DESCRIPTION = "DESCRIPTION";
     public static final String ACTIVE = "ACTIVE";
-    public static final String EMAIL = "EMAILS";
-    public static final String PHONE = "PHONES";
+    public static final String EMAIL = "EMAIL";
+    public static final String PHONE = "PHONE";
     public static final String ALT_CODES = "ALTERNATIVE_CODES";
     public static final String IDENTIFIERS = "IDENTIFIERS";
     public static final String HOMEPAGE = "HOMEPAGE";
@@ -148,9 +150,9 @@ public class FileFields {
     public static final String API_URL = "API_URL";
     public static final String NUMBER_SPECIMENS = "NUMBER_SPECIMENS";
     /** address fields */
-    private static final String ADDRESS_PREFIX = "ADDRESS_";
+    public static final String ADDRESS_PREFIX = "ADDRESS_";
 
-    private static final String MAILING_ADDRESS_PREFIX = "MAILING_ADDRESS_";
+    public static final String MAILING_ADDRESS_PREFIX = "MAILING_ADDRESS_";
     private static final String ADDRESS_SUFFIX = "ADDRESS";
     private static final String CITY_SUFFIX = "CITY";
     private static final String PROVINCE_SUFFIX = "PROVINCE";

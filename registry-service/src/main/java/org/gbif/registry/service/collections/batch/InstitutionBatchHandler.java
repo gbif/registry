@@ -1,11 +1,10 @@
 package org.gbif.registry.service.collections.batch;
 
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
@@ -23,22 +22,16 @@ import org.springframework.stereotype.Service;
 import com.google.common.base.Strings;
 
 @Service
-public class CollectionBatchService extends BaseBatchService<Collection> {
-
-  private final CollectionService collectionService;
+public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
+  private final InstitutionService institutionService;
 
   @Autowired
-  public CollectionBatchService(
+  public InstitutionBatchHandler(
       BatchMapper batchMapper,
-      CollectionService collectionService,
+      InstitutionService institutionService,
       @Value("${grscicoll.batchResultPath}") String resultPath) {
-    super(
-        batchMapper,
-        collectionService,
-        resultPath,
-        CollectionEntityType.COLLECTION,
-        Collection.class);
-    this.collectionService = collectionService;
+    super(batchMapper, institutionService, resultPath, CollectionEntityType.INSTITUTION, Institution.class);
+    this.institutionService = institutionService;
   }
 
   @Override
@@ -49,34 +42,36 @@ public class CollectionBatchService extends BaseBatchService<Collection> {
   }
 
   @Override
-  ParsedData<Collection> createEntityFromValues(
+  ParsedData<Institution> createEntityFromValues(
       String[] values, Map<String, Integer> headersIndex) {
-    return FileParser.createCollectionFromValues(values, headersIndex);
+    return FileParser.createInstitutionFromValues(values, headersIndex);
   }
 
   @Override
   List<UUID> findEntity(String code, List<Identifier> identifiers) {
-    List<CollectionView> collectionsFound = new ArrayList<>();
+    List<Institution> institutionsFound = new ArrayList<>();
     if (!Strings.isNullOrEmpty(code)) {
-      collectionsFound =
-          collectionService.list(CollectionSearchRequest.builder().code(code).build()).getResults();
+      institutionsFound =
+          institutionService
+              .list(InstitutionSearchRequest.builder().code(code).build())
+              .getResults();
 
-      if (collectionsFound.isEmpty()) {
-        collectionsFound =
-            collectionService
-                .list(CollectionSearchRequest.builder().alternativeCode(code).build())
+      if (institutionsFound.isEmpty()) {
+        institutionsFound =
+            institutionService
+                .list(InstitutionSearchRequest.builder().alternativeCode(code).build())
                 .getResults();
       }
     }
 
-    if (collectionsFound.isEmpty() && identifiers != null && !identifiers.isEmpty()) {
+    if (institutionsFound.isEmpty() && identifiers != null && !identifiers.isEmpty()) {
       int i = 0;
-      while (i < identifiers.size() && collectionsFound.isEmpty()) {
+      while (i < identifiers.size() && institutionsFound.isEmpty()) {
         Identifier identifier = identifiers.get(i);
-        collectionsFound =
-            collectionService
+        institutionsFound =
+            institutionService
                 .list(
-                    CollectionSearchRequest.builder()
+                    InstitutionSearchRequest.builder()
                         .identifier(identifier.getIdentifier())
                         .identifierType(identifier.getType())
                         .build())
@@ -85,10 +80,8 @@ public class CollectionBatchService extends BaseBatchService<Collection> {
       }
     }
 
-    return !collectionsFound.isEmpty()
-        ? collectionsFound.stream()
-            .map(c -> c.getCollection().getKey())
-            .collect(Collectors.toList())
+    return !institutionsFound.isEmpty()
+        ? institutionsFound.stream().map(Institution::getKey).collect(Collectors.toList())
         : new ArrayList<>();
   }
 }

@@ -16,15 +16,10 @@ package org.gbif.registry.ws.it.collections.service.batch;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.OccurrenceMappeable;
 import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CollectionEntityService;
-import org.gbif.registry.service.collections.batch.BaseBatchService;
+import org.gbif.registry.database.TestCaseDatabaseInitializer;
+import org.gbif.registry.service.collections.batch.BaseBatchHandler;
 import org.gbif.registry.service.collections.batch.FileFields;
 import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
 import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
@@ -38,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -54,6 +50,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -61,29 +58,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class BaseBatchServiceIT<
-        T extends
-            CollectionEntity & Identifiable & MachineTaggable & OccurrenceMappeable & Contactable
-                & Taggable & Commentable>
-    extends BaseServiceIT {
+public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends BaseServiceIT {
 
-  protected final BaseBatchService<T> batchService;
+  protected final BaseBatchHandler<T> batchHandler;
   protected final CollectionEntityService<T> entityService;
   protected final CollectionEntityType entityType;
 
-  public BaseBatchServiceIT(
+  @RegisterExtension
+  protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
+
+  public BaseBatchHandlerIT(
       SimplePrincipalProvider simplePrincipalProvider,
-      BaseBatchService<T> batchService,
+      BaseBatchHandler<T> batchHandler,
       CollectionEntityService<T> entityService,
       CollectionEntityType entityType) {
     super(simplePrincipalProvider);
-    this.batchService = batchService;
+    this.batchHandler = batchHandler;
     this.entityService = entityService;
     this.entityType = entityType;
   }
 
   @Test
-  public void mergeEntitiesTest() {
+  public void mergeEntitiesTest()
+      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
     Set<String> headers = new HashSet<>();
     headers.add(FileFields.CommonFields.CODE);
     headers.add(FileFields.CommonFields.NAME);
@@ -101,7 +98,7 @@ public abstract class BaseBatchServiceIT<
     parsed.setActive(true);
     parsed.setDescription("desc2");
 
-    T merged = batchService.mergeEntities(existing, parsed, headers);
+    T merged = batchHandler.mergeEntities(existing, parsed, headers);
 
     assertEquals("c11", merged.getCode());
     assertEquals("n11", merged.getName());
@@ -111,9 +108,11 @@ public abstract class BaseBatchServiceIT<
 
   @Test
   public void createResultFileTest() throws IOException {
-    // TODO: generify
-    Resource institutionsFile = new ClassPathResource("collections/institutions.csv");
-    Resource contactsFile = new ClassPathResource("collections/contacts.csv");
+    Resource institutionsFile =
+        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "_import.csv");
+    Resource contactsFile =
+        new ClassPathResource(
+            "collections/" + entityType.name().toLowerCase() + "_contacts_import.csv");
     ExportFormat format = ExportFormat.CSV;
 
     T parsedEntity = newEntity();
@@ -166,7 +165,7 @@ public abstract class BaseBatchServiceIT<
             .build();
 
     Path resultFile =
-        batchService.createResultFile(
+        batchHandler.createResultFile(
             institutionsFile.getFile().toPath(),
             contactsFile.getFile().toPath(),
             parserResult,
@@ -204,11 +203,13 @@ public abstract class BaseBatchServiceIT<
     }
   }
 
-  private static List<Path> unzip(Path zipFilePath, String destDir) {
+  static List<Path> unzip(Path zipFilePath, String destDir) {
     List<Path> filesUnzipped = new ArrayList<>();
     File dir = new File(destDir);
     // create output directory if it doesn't exist
-    if (!dir.exists()) dir.mkdirs();
+    if (!dir.exists()) {
+      dir.mkdirs();
+    }
     FileInputStream fis;
     // buffer for read and write data to file
     byte[] buffer = new byte[1024];

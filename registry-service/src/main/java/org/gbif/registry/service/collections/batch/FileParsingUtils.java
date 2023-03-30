@@ -4,6 +4,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.DOI;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -133,7 +134,7 @@ public class FileParsingUtils {
     for (String v : values) {
       ParserResult<T> parserResult = mapper.apply(v);
       parserResult.getResult().ifPresent(result::add);
-      errors.addAll(parserResult.getErrors());
+      Optional.ofNullable(parserResult.getErrors()).ifPresent(errors::addAll);
     }
 
     return ParserResult.of(result, errors);
@@ -178,7 +179,7 @@ public class FileParsingUtils {
     for (String id : ids) {
       ParserResult<Identifier> parserResult = parseIdentifier(id);
       parserResult.getResult().ifPresent(idsList::add);
-      errors.addAll(parserResult.getErrors());
+      Optional.ofNullable(parserResult.getErrors()).ifPresent(errors::addAll);
     }
 
     return ParserResult.of(idsList, errors);
@@ -228,7 +229,7 @@ public class FileParsingUtils {
       if (values.length == 2) {
         ParserResult<IdType> parserResult = parseEnum(values[0], IdType::valueOf);
         parserResult.getResult().ifPresent(type -> userIdsList.add(new UserId(type, values[1])));
-        errors.addAll(parserResult.getErrors());
+        Optional.ofNullable(parserResult.getErrors()).ifPresent(errors::addAll);
       } else {
         errors.add("Incorrect user ID: " + id);
       }
@@ -277,10 +278,21 @@ public class FileParsingUtils {
     return ParserResult.of(result, errors);
   }
 
+  public static String[] splitLine(ExportFormat format, int headersSize, String line) {
+    String[] splitValues = line.split(format.getDelimiter().toString());
+
+    // fill empty columns
+    String[] values = Arrays.copyOf(splitValues, headersSize);
+    for (int i = splitValues.length; i < values.length; i++) {
+      values[i] = "";
+    }
+    return values;
+  }
+
   @AllArgsConstructor(access = AccessLevel.PRIVATE)
   static class ParserResult<T> {
     private T result;
-    private List<String> errors = new ArrayList<>();
+    private List<String> errors;
 
     static <T> ParserResult<T> empty() {
       return new ParserResult<>(null, null);

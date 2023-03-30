@@ -87,11 +87,10 @@ import static org.gbif.registry.service.collections.batch.FileParsingUtils.parse
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUUID;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUri;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUserIds;
+import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {
-
-  // TODO: check required columns??
 
   @SneakyThrows
   static <T extends CollectionEntity> ParserResult<T> parseEntities(
@@ -119,7 +118,7 @@ public class FileParser {
       br.lines()
           .forEach(
               line -> {
-                String[] values = line.split(format.getDelimiter().toString());
+                String[] values = splitLine(format, headersIndex.entrySet().size(), line);
                 ParsedData<T> data = createEntityFn.apply(values, headersIndex);
 
                 String key = keyExtractor.apply(data.getEntity());
@@ -358,7 +357,7 @@ public class FileParser {
   }
 
   static String extractValue(String[] values, Integer index) {
-    return index != null ? values[index] : null;
+    return index != null && index < values.length ? values[index] : null;
   }
 
   @SneakyThrows
@@ -386,7 +385,7 @@ public class FileParser {
       br.lines()
           .forEach(
               line -> {
-                String[] values = line.split(format.getDelimiter().toString());
+                String[] values = splitLine(format, columnsIndex.entrySet().size(), line);
 
                 ParsedData<Contact> parsedContact = createContactFromValues(values, columnsIndex);
                 // it can either be the entity code (new entities) or the entity key(entity update)
@@ -395,17 +394,16 @@ public class FileParser {
                   return;
                 }
 
-                String entityKeyColumn = values[columnsIndex.get(entityKeyColum)];
+                String entityKey = values[columnsIndex.get(entityKeyColum)];
 
-                if (Strings.isNullOrEmpty(entityKeyColumn)
-                    || !entitiesMap.containsKey(entityKeyColumn)) {
+                if (Strings.isNullOrEmpty(entityKey) || !entitiesMap.containsKey(entityKey)) {
                   parsedContact.getErrors().add("Invalid entity key or code");
                   return;
                 }
 
                 // assign the contact to the entity
                 entitiesMap
-                    .get(entityKeyColum)
+                    .get(entityKey)
                     .getEntity()
                     .getContactPersons()
                     .add(parsedContact.getEntity());
@@ -419,7 +417,7 @@ public class FileParser {
                 }
                 contactsByKey.put(uniqueKey, parsedContact);
                 contactsByEntityKey
-                    .computeIfAbsent(entityKeyColum, k -> new ArrayList<>())
+                    .computeIfAbsent(entityKey, k -> new ArrayList<>())
                     .add(parsedContact);
               });
     }
@@ -518,6 +516,6 @@ public class FileParser {
   private static <T> void handleParserResult(
       FileParsingUtils.ParserResult<T> parserResult, Consumer<T> setter, List<String> errors) {
     parserResult.getResult().ifPresent(setter);
-    errors.addAll(parserResult.getErrors());
+    Optional.ofNullable(parserResult.getErrors()).ifPresent(errors::addAll);
   }
 }

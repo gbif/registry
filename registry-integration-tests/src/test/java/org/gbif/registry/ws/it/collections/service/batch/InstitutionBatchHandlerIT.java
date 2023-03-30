@@ -3,23 +3,26 @@ package org.gbif.registry.ws.it.collections.service.batch;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.registry.service.collections.batch.InstitutionBatchService;
+import org.gbif.registry.service.collections.batch.InstitutionBatchHandler;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class InstitutionBatchServiceIT extends BaseBatchServiceIT<Institution> {
+public class InstitutionBatchHandlerIT extends BaseBatchHandlerIT<Institution> {
+
+  private final InstitutionService institutionService;
 
   @Autowired
-  public InstitutionBatchServiceIT(
+  public InstitutionBatchHandlerIT(
       SimplePrincipalProvider simplePrincipalProvider,
       InstitutionService institutionService,
-      InstitutionBatchService institutionBatchService) {
+      InstitutionBatchHandler institutionBatchHandler) {
     super(
         simplePrincipalProvider,
-        institutionBatchService,
+        institutionBatchHandler,
         institutionService,
         CollectionEntityType.INSTITUTION);
+    this.institutionService = institutionService;
   }
 
   @Override

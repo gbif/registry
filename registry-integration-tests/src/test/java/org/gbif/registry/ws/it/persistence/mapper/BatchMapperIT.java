@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BatchMapperIT extends BaseItTest {
@@ -52,6 +51,7 @@ public class BatchMapperIT extends BaseItTest {
     Batch batch = new Batch();
     batch.setEntityType(CollectionEntityType.INSTITUTION);
     batch.setCreatedBy("test");
+    batch.setState(Batch.State.IN_PROGRESS);
     batch.setOperation(Batch.Operation.CREATE);
     batchMapper.create(batch);
 
@@ -59,13 +59,13 @@ public class BatchMapperIT extends BaseItTest {
 
     Batch created = batchMapper.get(batch.getKey());
     assertNotNull(created.getCreated());
-    assertNull(created.getSuccessful());
+    assertEquals(Batch.State.IN_PROGRESS, created.getState());
     assertEquals(CollectionEntityType.INSTITUTION, created.getEntityType());
     assertEquals(Batch.Operation.CREATE, created.getOperation());
     assertEquals("test", created.getCreatedBy());
 
-    batch.setFileErrors(Arrays.asList("e1", "e2"));
-    batch.setSuccessful(true);
+    batch.setErrors(Arrays.asList("e1", "e2"));
+    batch.setState(Batch.State.SUCCESSFUL);
     batch.setResultFilePath("/test/file.zip");
     batchMapper.update(batch);
 
@@ -75,8 +75,8 @@ public class BatchMapperIT extends BaseItTest {
     assertEquals(Batch.Operation.CREATE, updated.getOperation());
     assertEquals("test", updated.getCreatedBy());
     assertEquals("/test/file.zip", updated.getResultFilePath());
-    assertTrue(batch.getSuccessful());
-    assertEquals(2, updated.getFileErrors().size());
-    assertTrue(updated.getFileErrors().containsAll(Arrays.asList("e1", "e2")));
+    assertEquals(Batch.State.SUCCESSFUL, updated.getState());
+    assertEquals(2, updated.getErrors().size());
+    assertTrue(updated.getErrors().containsAll(Arrays.asList("e1", "e2")));
   }
 }

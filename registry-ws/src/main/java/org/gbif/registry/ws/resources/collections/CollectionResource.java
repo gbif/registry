@@ -26,12 +26,12 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
-import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
@@ -114,13 +114,13 @@ public class CollectionResource
       CollectionDuplicatesService duplicatesService,
       CollectionService collectionService,
       CollectionChangeSuggestionService collectionChangeSuggestionService,
-      CollectionBatchService collectionBatchService) {
+      BatchService batchService) {
     super(
         collectionMergeService,
         collectionService,
         collectionChangeSuggestionService,
         duplicatesService,
-        collectionBatchService,
+        batchService,
         Collection.class);
     this.collectionService = collectionService;
   }
