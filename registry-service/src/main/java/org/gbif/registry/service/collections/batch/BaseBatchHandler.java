@@ -318,11 +318,18 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       if (headers.contains(h)) {
 
         if (h.startsWith(FileFields.CommonFields.ADDRESS_PREFIX)) {
+          if (existing.getAddress() != null && existing.getAddress().getKey() != null) {
+            parsed.getAddress().setKey(existing.getAddress().getKey());
+          }
           existing.setAddress(parsed.getAddress());
           continue;
         }
 
         if (h.startsWith(FileFields.CommonFields.MAILING_ADDRESS_PREFIX)) {
+          if (existing.getMailingAddress() != null
+              && existing.getMailingAddress().getKey() != null) {
+            parsed.getMailingAddress().setKey(existing.getMailingAddress().getKey());
+          }
           existing.setMailingAddress(parsed.getMailingAddress());
           continue;
         }

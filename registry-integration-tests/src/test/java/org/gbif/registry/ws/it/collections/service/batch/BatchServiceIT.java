@@ -1,8 +1,10 @@
 package org.gbif.registry.ws.it.collections.service.batch;
 
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
@@ -17,6 +19,7 @@ import org.gbif.api.model.registry.Identifiable;
 import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
@@ -43,8 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BatchServiceIT extends BaseServiceIT {
-
-  // TODO: test addresses
 
   private final InstitutionService institutionService;
   private final CollectionService collectionService;
@@ -81,10 +82,6 @@ public class BatchServiceIT extends BaseServiceIT {
             CollectionEntityType.INSTITUTION);
 
     Batch batch = batchService.get(key);
-    while (batch.getState() == Batch.State.IN_PROGRESS) {
-      batch = batchService.get(key);
-    }
-
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(CollectionEntityType.INSTITUTION, batch.getEntityType());
@@ -94,6 +91,7 @@ public class BatchServiceIT extends BaseServiceIT {
         institutionService.list(InstitutionSearchRequest.builder().build());
     assertEquals(1, institutions.getCount());
     assertEquals(1, institutions.getResults().get(0).getContactPersons().size());
+    assertEquals(Country.SPAIN, institutions.getResults().get(0).getAddress().getCountry());
 
     Files.delete(Paths.get(batch.getResultFilePath()));
   }
@@ -114,10 +112,6 @@ public class BatchServiceIT extends BaseServiceIT {
             CollectionEntityType.COLLECTION);
 
     Batch batch = batchService.get(key);
-    while (batch.getState() == Batch.State.IN_PROGRESS) {
-      batch = batchService.get(key);
-    }
-
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(CollectionEntityType.COLLECTION, batch.getEntityType());
@@ -143,8 +137,7 @@ public class BatchServiceIT extends BaseServiceIT {
     existing.setAlternativeCodes(Collections.singletonList(new AlternativeCode("foo", "boo")));
 
     // create entities
-    persistInstitution(existing);
-    persistContactsAndIdentifiers(existing.getKey(), CollectionEntityType.INSTITUTION);
+    persistDBEntities(existing, CollectionEntityType.INSTITUTION, existing.getEmail().get(0));
 
     Resource institutionsFile = new ClassPathResource("collections/institutions_update.csv");
     Resource contactsFile = new ClassPathResource("collections/institution_contacts_update.csv");
@@ -158,10 +151,6 @@ public class BatchServiceIT extends BaseServiceIT {
             CollectionEntityType.INSTITUTION);
 
     Batch batch = batchService.get(key);
-    while (batch.getState() == Batch.State.IN_PROGRESS) {
-      batch = batchService.get(key);
-    }
-
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.UPDATE, batch.getOperation());
     assertEquals(CollectionEntityType.INSTITUTION, batch.getEntityType());
@@ -177,7 +166,7 @@ public class BatchServiceIT extends BaseServiceIT {
     assertEquals(InstitutionType.HERBARIUM, updated.getType());
     assertEquals(2, updated.getDisciplines().size());
 
-    assertContactsAndIdentifiers(updated);
+    assertAddressContactsAndIdentifiers(updated);
 
     assertTrue(Files.exists(Paths.get(batch.getResultFilePath())));
 
@@ -196,8 +185,7 @@ public class BatchServiceIT extends BaseServiceIT {
     existing.setAlternativeCodes(Collections.singletonList(new AlternativeCode("foo", "boo")));
 
     // create entities
-    persistCollection(existing);
-    persistContactsAndIdentifiers(existing.getKey(), CollectionEntityType.COLLECTION);
+    persistDBEntities(existing, CollectionEntityType.COLLECTION, existing.getEmail().get(0));
 
     Resource institutionsFile = new ClassPathResource("collections/collections_update.csv");
     Resource contactsFile = new ClassPathResource("collections/collection_contacts_update.csv");
@@ -211,10 +199,6 @@ public class BatchServiceIT extends BaseServiceIT {
             CollectionEntityType.COLLECTION);
 
     Batch batch = batchService.get(key);
-    while (batch.getState() == Batch.State.IN_PROGRESS) {
-      batch = batchService.get(key);
-    }
-
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.UPDATE, batch.getOperation());
     assertEquals(CollectionEntityType.COLLECTION, batch.getEntityType());
@@ -229,14 +213,15 @@ public class BatchServiceIT extends BaseServiceIT {
     assertEquals("another code", updated.getAlternativeCodes().get(0).getDescription());
     assertEquals(2, updated.getContentTypes().size());
 
-    assertContactsAndIdentifiers(updated);
+    assertAddressContactsAndIdentifiers(updated);
 
     assertTrue(Files.exists(Paths.get(batch.getResultFilePath())));
 
     Files.delete(Paths.get(batch.getResultFilePath()));
   }
 
-  private <T extends Contactable & Identifiable> void assertContactsAndIdentifiers(T entity) {
+  private <T extends Contactable & Identifiable> void assertAddressContactsAndIdentifiers(
+      T entity) {
     assertEquals(2, entity.getIdentifiers().size());
     assertTrue(entity.getIdentifiers().stream().noneMatch(i -> i.getIdentifier().equals("foo")));
 
@@ -252,6 +237,11 @@ public class BatchServiceIT extends BaseServiceIT {
     assertEquals("lastn22", newContact.getLastName());
     assertEquals(0, newContact.getEmail().size());
     assertEquals(0, newContact.getUserIds().size());
+
+    assertNull(entity.getAddress().getCountry());
+    assertEquals("Avilés", entity.getAddress().getCity());
+    assertEquals("234", entity.getAddress().getPostalCode());
+    assertEquals("foo123", entity.getMailingAddress().getAddress());
   }
 
   @Test
@@ -269,15 +259,11 @@ public class BatchServiceIT extends BaseServiceIT {
             false,
             CollectionEntityType.INSTITUTION);
 
-    Batch batch = batchService.get(key);
-    while (batch.getState() == Batch.State.IN_PROGRESS) {
-      batch = batchService.get(key);
-    }
-
     PagingResponse<Institution> institutions =
         institutionService.list(InstitutionSearchRequest.builder().build());
     assertEquals(0, institutions.getCount());
 
+    Batch batch = batchService.get(key);
     // 2 errors: unknown column and duplicate codes
     assertEquals(1, batch.getErrors().size());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
@@ -301,15 +287,11 @@ public class BatchServiceIT extends BaseServiceIT {
             false,
             CollectionEntityType.INSTITUTION);
 
-    Batch batch = batchService.get(key);
-    while (batch.getState() == Batch.State.IN_PROGRESS) {
-      batch = batchService.get(key);
-    }
-
     PagingResponse<Institution> institutions =
         institutionService.list(InstitutionSearchRequest.builder().build());
     assertEquals(1, institutions.getCount());
 
+    Batch batch = batchService.get(key);
     // 2 errors: unknown column and duplicate codes
     assertEquals(1, batch.getErrors().size());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
@@ -319,45 +301,39 @@ public class BatchServiceIT extends BaseServiceIT {
     Files.delete(Paths.get(batch.getResultFilePath()));
   }
 
-  private static void persistInstitution(Institution existing) throws SQLException {
+  private static <T extends CollectionEntity & Contactable> void persistDBEntities(
+      T entity, CollectionEntityType entityType, String entityEmail) throws SQLException {
     Connection connection = PG_CONTAINER.createConnection("");
+
+    Address address = new Address();
+    address.setCountry(Country.SPAIN);
+    address.setCity("Oviedo");
+    entity.setAddress(address);
+
     connection
         .prepareStatement(
-            "INSERT INTO institution(key,code,name,description,email,created_by,modified_by) VALUES('"
-                + existing.getKey()
+            "INSERT INTO address(key,city,country) VALUES(1,'"
+                + entity.getAddress().getCity()
                 + "','"
-                + existing.getCode()
-                + "','"
-                + existing.getName()
-                + "','"
-                + existing.getDescription()
-                + "','{\""
-                + existing.getEmail().get(0)
-                + "\"}','test','test')")
+                + entity.getAddress().getCountry().getIso2LetterCode()
+                + "')")
         .executeUpdate();
-  }
-
-  private static void persistCollection(Collection existing) throws SQLException {
-    Connection connection = PG_CONTAINER.createConnection("");
     connection
         .prepareStatement(
-            "INSERT INTO collection(key,code,name,description,email,created_by,modified_by) VALUES('"
-                + existing.getKey()
+            "INSERT INTO "
+                + entityType.name().toLowerCase()
+                + "(key,code,name,description,email,address_key,created_by,modified_by) VALUES('"
+                + entity.getKey()
                 + "','"
-                + existing.getCode()
+                + entity.getCode()
                 + "','"
-                + existing.getName()
+                + entity.getName()
                 + "','"
-                + existing.getDescription()
+                + entity.getDescription()
                 + "','{\""
-                + existing.getEmail().get(0)
-                + "\"}','test','test')")
+                + entityEmail
+                + "\"}',1,'test','test')")
         .executeUpdate();
-  }
-
-  private static void persistContactsAndIdentifiers(UUID entityKey, CollectionEntityType entityType)
-      throws SQLException {
-    Connection connection = PG_CONTAINER.createConnection("");
 
     Contact contact1 = new Contact();
     contact1.setKey(-1);
@@ -397,7 +373,7 @@ public class BatchServiceIT extends BaseServiceIT {
                   + "_collection_contact("
                   + entityType.name().toLowerCase()
                   + "_key,collection_contact_key) VALUES('"
-                  + entityKey
+                  + entity.getKey()
                   + "','"
                   + contact.getKey()
                   + "')")
@@ -423,7 +399,7 @@ public class BatchServiceIT extends BaseServiceIT {
                   + "_identifier("
                   + entityType.name().toLowerCase()
                   + "_key,identifier_key) VALUES('"
-                  + entityKey
+                  + entity.getKey()
                   + "',"
                   + key
                   + ")")
