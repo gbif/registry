@@ -53,6 +53,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.util.StreamUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -166,8 +167,8 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
 
     Path resultFile =
         batchHandler.createResultFile(
-            institutionsFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(institutionsFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             parserResult,
             contactsParserResult,
             FileFields.CommonFields.CODE);

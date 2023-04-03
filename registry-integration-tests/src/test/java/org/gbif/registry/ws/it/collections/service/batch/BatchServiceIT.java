@@ -40,6 +40,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.util.StreamUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -75,8 +76,8 @@ public class BatchServiceIT extends BaseServiceIT {
 
     int key =
         batchService.handleBatchAsync(
-            institutionsFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(institutionsFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
             false,
             CollectionEntityType.INSTITUTION);
@@ -105,8 +106,8 @@ public class BatchServiceIT extends BaseServiceIT {
 
     int key =
         batchService.handleBatchAsync(
-            collectionsFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(collectionsFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
             false,
             CollectionEntityType.COLLECTION);
@@ -144,8 +145,8 @@ public class BatchServiceIT extends BaseServiceIT {
 
     int key =
         batchService.handleBatchAsync(
-            institutionsFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(institutionsFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
             true,
             CollectionEntityType.INSTITUTION);
@@ -192,8 +193,8 @@ public class BatchServiceIT extends BaseServiceIT {
 
     int key =
         batchService.handleBatchAsync(
-            institutionsFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(institutionsFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
             true,
             CollectionEntityType.COLLECTION);
@@ -253,8 +254,8 @@ public class BatchServiceIT extends BaseServiceIT {
 
     int key =
         batchService.handleBatchAsync(
-            duplicatesFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(duplicatesFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
             false,
             CollectionEntityType.INSTITUTION);
@@ -281,8 +282,8 @@ public class BatchServiceIT extends BaseServiceIT {
 
     int key =
         batchService.handleBatchAsync(
-            unknownColumnFile.getFile().toPath(),
-            contactsFile.getFile().toPath(),
+            StreamUtils.copyToByteArray(unknownColumnFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
             false,
             CollectionEntityType.INSTITUTION);

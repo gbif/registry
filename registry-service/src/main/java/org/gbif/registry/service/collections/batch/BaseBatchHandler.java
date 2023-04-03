@@ -14,11 +14,12 @@ import org.gbif.registry.service.collections.batch.model.ParserResult;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -75,12 +76,12 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @Async
   @Override
   public void importBatch(
-      Path entitiesPath, Path contactsPath, ExportFormat format, Batch batch, String userName) {
+      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch, String userName) {
 
     try {
       ParserResult<T> parsingResult =
           parseEntities(
-              entitiesPath,
+              entitiesFile,
               format,
               this::createEntityFromValues,
               CollectionEntity::getCode,
@@ -101,7 +102,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       ContactsParserResult contactsParsed =
           parseContacts(
-              contactsPath,
+              contactsFile,
               parsingResult.getParsedDataMap(),
               format,
               FileFields.ContactFields.getEntityCode(entityType));
@@ -160,7 +161,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       // csv
       Path resultPath =
-          createResultFile(entitiesPath, contactsPath, parsingResult, contactsParsed, CODE);
+          createResultFile(entitiesFile, contactsFile, parsingResult, contactsParsed, CODE);
 
       // update batch
       batch.setState(Batch.State.SUCCESSFUL);
@@ -190,11 +191,11 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @Async
   @Override
   public void updateBatch(
-      Path entitiesPath, Path contactsPath, ExportFormat format, Batch batch, String userName) {
+      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch, String userName) {
     try {
       ParserResult<T> parsingResult =
           parseEntities(
-              entitiesPath,
+              entitiesFile,
               format,
               this::createEntityFromValues,
               i -> i.getKey().toString(),
@@ -215,7 +216,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       ContactsParserResult contactsParsed =
           parseContacts(
-              contactsPath,
+              contactsFile,
               parsingResult.getParsedDataMap(),
               format,
               FileFields.ContactFields.getEntityKey(entityType));
@@ -296,7 +297,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       // csv
       Path resultPath =
-          createResultFile(entitiesPath, contactsPath, parsingResult, contactsParsed, KEY);
+          createResultFile(entitiesFile, contactsFile, parsingResult, contactsParsed, KEY);
 
       // update batch
       batch.setState(Batch.State.SUCCESSFUL);
@@ -384,8 +385,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @SneakyThrows
   @VisibleForTesting
   public Path createResultFile(
-      Path entitiesPath,
-      Path contactsPath,
+      byte[] entitiesFile,
+      byte[] contactsFile,
       ParserResult<T> entityParserResult,
       ContactsParserResult contactsParsed,
       String keyColumn) {
@@ -396,7 +397,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
             "result-" + System.currentTimeMillis(),
             "." + entityParserResult.getFormat().name().toLowerCase());
     writeResult(
-        entitiesPath,
+        entitiesFile,
         resultFile,
         getEntityFields(),
         entityParserResult,
@@ -406,7 +407,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
     resultFiles.add(resultFile);
 
     // contacts
-    if (contactsPath != null && !contactsParsed.getParsedDataMap().isEmpty()) {
+    if (contactsFile != null && !contactsParsed.getParsedDataMap().isEmpty()) {
       Path contactsResultFile =
           Files.createTempFile(
               resultDirPath,
@@ -414,7 +415,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
               "." + contactsParsed.getFormat().name().toLowerCase());
 
       writeResult(
-          contactsPath,
+          contactsFile,
           contactsResultFile,
           FileFields.ContactFields.ALL_FIELDS,
           contactsParsed,
@@ -437,13 +438,14 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   }
 
   private <R> void writeResult(
-      Path entitiesFile,
+      byte[] entitiesFile,
       Path resultFile,
       List<String> entityFields,
       ParserResult<R> parserResult,
       BiFunction<String[], Map<String, Integer>, String> keyExtractor)
       throws IOException {
-    try (BufferedReader br = new BufferedReader(new FileReader(entitiesFile.toFile()));
+    try (BufferedReader br =
+            new BufferedReader(new InputStreamReader(new ByteArrayInputStream(entitiesFile)));
         BufferedWriter bw = new BufferedWriter(new FileWriter(resultFile.toFile()))) {
 
       // write headers in result file. We only use the headers used in the batch plus the key and

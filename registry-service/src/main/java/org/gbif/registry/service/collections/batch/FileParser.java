@@ -18,8 +18,8 @@ import org.gbif.registry.service.collections.batch.model.ParsedData;
 import org.gbif.registry.service.collections.batch.model.ParserResult;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
-import java.nio.file.Path;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -94,7 +94,7 @@ public class FileParser {
 
   @SneakyThrows
   static <T extends CollectionEntity> ParserResult<T> parseEntities(
-      Path entitiesPath,
+      byte[] entitiesFile,
       ExportFormat format,
       BiFunction<String[], Map<String, Integer>, ParsedData<T>> createEntityFn,
       Function<T, String> keyExtractor,
@@ -104,7 +104,8 @@ public class FileParser {
     List<String> fileErrors = new ArrayList<>();
     List<String> duplicateKeys = new ArrayList<>();
     Map<String, Integer> headersIndex = new HashMap<>();
-    try (BufferedReader br = new BufferedReader(new FileReader(entitiesPath.toFile()))) {
+    try (BufferedReader br =
+        new BufferedReader(new InputStreamReader(new ByteArrayInputStream(entitiesFile)))) {
       // extract headers
       String[] headers = br.readLine().split(format.getDelimiter().toString());
       for (int i = 0; i < headers.length; i++) {
@@ -362,7 +363,7 @@ public class FileParser {
 
   @SneakyThrows
   static <T extends CollectionEntity> ContactsParserResult parseContacts(
-      Path contactsPath,
+      byte[] contactsFile,
       Map<String, ParsedData<T>> entitiesMap,
       ExportFormat format,
       String entityKeyColum) {
@@ -372,7 +373,8 @@ public class FileParser {
     List<String> fileErrors = new ArrayList<>();
     List<String> duplicateContactKeys = new ArrayList<>();
     Map<String, ParsedData<Contact>> contactsByKey = new HashMap<>();
-    try (BufferedReader br = new BufferedReader(new FileReader(contactsPath.toFile()))) {
+    try (BufferedReader br =
+        new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contactsFile)))) {
       String[] headers = br.readLine().split(format.getDelimiter().toString());
       for (int i = 0; i < headers.length; i++) {
         if (isContactField(headers[i])) {

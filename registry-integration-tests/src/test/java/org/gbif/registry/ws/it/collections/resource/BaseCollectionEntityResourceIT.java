@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -26,6 +27,7 @@ import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -38,10 +40,12 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.security.ResourceNotFoundService;
@@ -54,6 +58,7 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -61,10 +66,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.hamcrest.core.StringContains;
+import org.hamcrest.core.StringEndsWith;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -75,11 +90,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 abstract class BaseCollectionEntityResourceIT<
@@ -97,6 +115,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Autowired protected MockMvc mockMvc;
 
   @MockBean private ResourceNotFoundService resourceNotFoundService;
+  @MockBean private BatchService batchService;
 
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T, R>> cls,
@@ -570,6 +589,100 @@ abstract class BaseCollectionEntityResourceIT<
     doNothing().when(getMockCollectionEntityService()).deleteMasterSourceMetadata(any(UUID.class));
     assertDoesNotThrow(
         () -> getPrimaryCollectionEntityClient().deleteMasterSourceMetadata(UUID.randomUUID()));
+  }
+
+  @Test
+  public void importBatchTest() throws Exception {
+    int key = 1;
+    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean(), any())).thenReturn(key);
+
+    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
+    Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
+
+    resetSecurityContext("admin", UserRole.GRSCICOLL_ADMIN);
+
+    MockMultipartFile entitiesFile =
+        new MockMultipartFile("entitiesFile", collectionsResource.getInputStream());
+    MockMultipartFile contactsFile =
+        new MockMultipartFile("contactsFile", contactsResource.getInputStream());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.multipart(
+                    "/grscicoll/" + paramType.getSimpleName().toLowerCase() + "/batch")
+                .file(entitiesFile)
+                .file(contactsFile)
+                .param("format", ExportFormat.CSV.name())
+                .with(
+                    httpBasic(
+                        TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated())
+        .andExpect(
+            MockMvcResultMatchers.content().string(StringContains.containsString("/batch/1")));
+  }
+
+  @Test
+  public void updateBatchTest() throws Exception {
+    int key = 1;
+    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean(), any())).thenReturn(key);
+
+    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
+    Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
+
+    resetSecurityContext("admin", UserRole.GRSCICOLL_ADMIN);
+
+    MockMultipartFile entitiesFile =
+        new MockMultipartFile("entitiesFile", collectionsResource.getInputStream());
+    MockMultipartFile contactsFile =
+        new MockMultipartFile("contactsFile", contactsResource.getInputStream());
+
+    mockMvc
+        .perform(
+            MockMvcRequestBuilders.multipart(
+                    "/grscicoll/" + paramType.getSimpleName().toLowerCase() + "/batch")
+                .file(entitiesFile)
+                .file(contactsFile)
+                .param("format", ExportFormat.CSV.name())
+                .with(
+                    r -> {
+                      r.setMethod(HttpMethod.PUT.name());
+                      return r;
+                    })
+                .with(
+                    httpBasic(
+                        TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN))
+                .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isCreated())
+        .andExpect(
+            header()
+                .string(
+                    "Location",
+                    StringEndsWith.endsWith(
+                        "/grscicoll/" + paramType.getSimpleName().toLowerCase() + "/batch/1")))
+        .andExpect(MockMvcResultMatchers.content().string(StringEndsWith.endsWith("/batch/1")));
+  }
+
+  @Test
+  public void getBatchTest() throws Exception {
+    Batch batch = new Batch();
+    batch.setKey(1);
+    batch.setState(Batch.State.SUCCESSFUL);
+    batch.setOperation(Batch.Operation.CREATE);
+
+    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
+    batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
+
+    when(batchService.get(anyInt())).thenReturn(batch);
+
+    mockMvc
+        .perform(
+            get(
+                "/grscicoll/"
+                    + paramType.getSimpleName().toLowerCase()
+                    + "/batch/"
+                    + batch.getKey()))
+        .andExpect(status().isOk());
   }
 
   void mockGetEntity(UUID key, T entityToReturn) {

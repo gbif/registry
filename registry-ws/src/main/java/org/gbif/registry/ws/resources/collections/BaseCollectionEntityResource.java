@@ -52,11 +52,16 @@ import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.resources.Docs;
 
+import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -64,13 +69,12 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -79,7 +83,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Preconditions;
@@ -658,13 +661,13 @@ public abstract class BaseCollectionEntityResource<
   @PostMapping(value = "batch", consumes = MediaType.APPLICATION_JSON_VALUE)
   public String importBatch(
       HttpServletRequest request,
-      @RequestPart("format") ExportFormat format,
-      @RequestPart("entitiesFile") MultipartFile entitiesFile,
-      @RequestPart("contactsFile") MultipartFile contactsFile) {
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("entitiesFile") MultipartFile entitiesFile,
+      @RequestParam("contactsFile") MultipartFile contactsFile) {
     int batchKey =
         batchService.handleBatchAsync(
-            entitiesFile.getResource().getFile().toPath(),
-            contactsFile.getResource().getFile().toPath(),
+            StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
             format,
             false,
             entityType);
@@ -676,37 +679,51 @@ public abstract class BaseCollectionEntityResource<
 
   @SneakyThrows
   @PutMapping(value = "batch", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public String updateBatch(
+  public ResponseEntity<String> updateBatch(
       HttpServletRequest request,
-      @RequestPart("format") ExportFormat format,
-      @RequestPart("entitiesFile") MultipartFile entitiesFile,
-      @RequestPart("contactsFile") MultipartFile contactsFile) {
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("entitiesFile") MultipartFile entitiesFile,
+      @RequestParam("contactsFile") MultipartFile contactsFile) {
     int batchKey =
         batchService.handleBatchAsync(
-            entitiesFile.getResource().getFile().toPath(),
-            contactsFile.getResource().getFile().toPath(),
+            StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
             format,
             true,
             entityType);
 
-    return request.getRequestURI().endsWith("/")
-        ? request.getRequestURI() + batchKey
-        : request.getRequestURI() + "/" + batchKey;
+    String batchUri =
+        request.getRequestURI().endsWith("/")
+            ? request.getRequestURI() + batchKey
+            : request.getRequestURI() + "/" + batchKey;
+    return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
   @GetMapping("batch/{key}")
-  public MultiValueMap<String, HttpEntity<?>> getBatch(@PathVariable("key") int batchKey) {
-    MultipartBodyBuilder builder = new MultipartBodyBuilder();
-
+  public Map<String, HttpEntity<?>> getBatch(@PathVariable("key") int batchKey) {
     Batch batch = batchService.get(batchKey);
 
+    Map<String, HttpEntity<?>> result = new HashMap<>();
+
     // Add file result
-    Resource fileResult = new ClassPathResource(batch.getResultFilePath());
-    builder.part("file", fileResult).contentType(MediaType.APPLICATION_OCTET_STREAM);
+    File fileResult = new File(batch.getResultFilePath());
+    HttpEntity<File> fileHttpEntity =
+        new HttpEntity<>(
+            fileResult,
+            CollectionUtils.toMultiValueMap(
+                Collections.singletonMap(
+                    "Content-Type", Collections.singletonList("application/octet-stream"))));
+    result.put("fileResult", fileHttpEntity);
 
     // add batch info
-    builder.part("batch", batch).contentType(MediaType.APPLICATION_JSON);
+    HttpEntity<Batch> batchHttpEntity =
+        new HttpEntity<>(
+            batch,
+            CollectionUtils.toMultiValueMap(
+                Collections.singletonMap(
+                    "Content-Type", Collections.singletonList("application/json"))));
+    result.put("batch", batchHttpEntity);
 
-    return builder.build();
+    return result;
   }
 }
