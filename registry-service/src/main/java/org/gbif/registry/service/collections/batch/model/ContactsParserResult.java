@@ -43,7 +43,7 @@ public class ContactsParserResult implements ParserResult<Contact> {
 
   @Override
   public Function<Contact, String> getEntityKeyExtractor() {
-    return c -> c.getKey().toString();
+    return c -> c.getKey() != null ? c.getKey().toString() : null;
   }
 
   @Override

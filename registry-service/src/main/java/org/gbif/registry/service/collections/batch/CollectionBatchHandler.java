@@ -7,6 +7,7 @@ import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
 
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -25,19 +28,33 @@ import com.google.common.base.Strings;
 public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
 
   private final CollectionService collectionService;
+  private final GrSciCollAuthorizationService authorizationService;
 
   @Autowired
   public CollectionBatchHandler(
       BatchMapper batchMapper,
       CollectionService collectionService,
+      GrSciCollAuthorizationService authorizationService,
       @Value("${grscicoll.batchResultPath}") String resultPath) {
     super(
         batchMapper,
         collectionService,
+        authorizationService,
         resultPath,
         CollectionEntityType.COLLECTION,
         Collection.class);
     this.collectionService = collectionService;
+    this.authorizationService = authorizationService;
+  }
+
+  @Override
+  boolean allowedToCreateEntity(Collection entity, Authentication authentication) {
+    return authorizationService.allowedToCreateCollection(entity, authentication);
+  }
+
+  @Override
+  boolean allowedToUpdateEntity(Collection entity, Authentication authentication) {
+    return authorizationService.allowedToModifyCollection(authentication, entity.getKey(), entity);
   }
 
   @Override

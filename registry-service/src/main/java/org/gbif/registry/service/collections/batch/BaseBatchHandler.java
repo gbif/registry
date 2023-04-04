@@ -8,6 +8,7 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
 import org.gbif.registry.service.collections.batch.model.ParserResult;
@@ -40,6 +41,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -56,6 +59,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
   private final BatchMapper batchMapper;
   private final CollectionEntityService<T> entityService;
+  private final GrSciCollAuthorizationService authorizationService;
   private final Path resultDirPath;
   private final CollectionEntityType entityType;
   private final Class<T> clazz;
@@ -63,11 +67,13 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   BaseBatchHandler(
       BatchMapper batchMapper,
       CollectionEntityService<T> entityService,
+      GrSciCollAuthorizationService authorizationService,
       String resultDirPath,
       CollectionEntityType entityType,
       Class<T> clazz) {
     this.batchMapper = batchMapper;
     this.entityService = entityService;
+    this.authorizationService = authorizationService;
     this.resultDirPath = Paths.get(resultDirPath);
     this.entityType = entityType;
     this.clazz = clazz;
@@ -76,7 +82,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @Async
   @Override
   public void importBatch(
-      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch, String userName) {
+      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch) {
 
     try {
       ParserResult<T> parsingResult =
@@ -124,8 +130,20 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
           continue;
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!allowedToCreateEntity(entity, authentication)) {
+          parsedEntity
+              .getErrors()
+              .add(
+                  "User "
+                      + authentication.getName()
+                      + " not allowed to create this "
+                      + entityType.name().toLowerCase());
+          continue;
+        }
+
         // create entity
-        entity.setCreatedBy(userName);
+        entity.setCreatedBy(authentication.getName());
 
         UUID key = null;
         try {
@@ -191,7 +209,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @Async
   @Override
   public void updateBatch(
-      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch, String userName) {
+      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch) {
     try {
       ParserResult<T> parsingResult =
           parseEntities(
@@ -228,13 +246,25 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
           continue;
         }
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!allowedToUpdateEntity(entity, authentication)) {
+          parsedEntity
+              .getErrors()
+              .add(
+                  "User "
+                      + authentication.getName()
+                      + " not allowed to update this "
+                      + entityType.name().toLowerCase());
+          continue;
+        }
+
         // update entity
         T mergedEntity =
             mergeEntities(
                 entityService.get(entity.getKey()),
                 entity,
                 parsingResult.getFileHeadersIndex().keySet());
-        mergedEntity.setModifiedBy(userName);
+        mergedEntity.setModifiedBy(authentication.getName());
 
         try {
           entityService.update(mergedEntity);
@@ -477,7 +507,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
         for (String header : headersResult) {
           if (header.equals(KEY) && !parserResult.getFileHeadersIndex().containsKey(KEY)) {
             // case of initial imports
-            resultLine.append(parserResult.getEntityKeyExtractor().apply(parsingData.getEntity()));
+            Optional.ofNullable(parserResult.getEntityKeyExtractor().apply(parsingData.getEntity()))
+                .ifPresent(resultLine::append);
           } else {
             resultLine.append(values[parserResult.getFileHeadersIndex().get(header)]);
           }
@@ -510,6 +541,10 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       }
     }
   }
+
+  abstract boolean allowedToCreateEntity(T entity, Authentication authentication);
+
+  abstract boolean allowedToUpdateEntity(T entity, Authentication authentication);
 
   abstract List<String> getEntityFields();
 

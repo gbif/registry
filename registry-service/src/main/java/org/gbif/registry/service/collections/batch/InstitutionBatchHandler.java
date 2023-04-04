@@ -1,11 +1,13 @@
 package org.gbif.registry.service.collections.batch;
 
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
+import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.batch.FileFields.InstitutionFields;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
 
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -24,14 +28,33 @@ import com.google.common.base.Strings;
 @Service
 public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
   private final InstitutionService institutionService;
+  private final GrSciCollAuthorizationService authorizationService;
 
   @Autowired
   public InstitutionBatchHandler(
       BatchMapper batchMapper,
       InstitutionService institutionService,
+      GrSciCollAuthorizationService authorizationService,
       @Value("${grscicoll.batchResultPath}") String resultPath) {
-    super(batchMapper, institutionService, resultPath, CollectionEntityType.INSTITUTION, Institution.class);
+    super(
+        batchMapper,
+        institutionService,
+        authorizationService,
+        resultPath,
+        CollectionEntityType.INSTITUTION,
+        Institution.class);
     this.institutionService = institutionService;
+    this.authorizationService = authorizationService;
+  }
+
+  @Override
+  boolean allowedToCreateEntity(Institution entity, Authentication authentication) {
+    return authorizationService.allowedToCreateInstitution(entity, authentication);
+  }
+
+  @Override
+  boolean allowedToUpdateEntity(Institution entity, Authentication authentication) {
+    return authorizationService.allowedToModifyInstitution(authentication, entity.getKey());
   }
 
   @Override

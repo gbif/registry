@@ -98,6 +98,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 abstract class BaseCollectionEntityResourceIT<
@@ -594,7 +595,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void importBatchTest() throws Exception {
     int key = 1;
-    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean(), any())).thenReturn(key);
+    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean())).thenReturn(key);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
@@ -616,7 +617,7 @@ abstract class BaseCollectionEntityResourceIT<
                 .with(
                     httpBasic(
                         TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN))
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isCreated())
         .andExpect(
             MockMvcResultMatchers.content().string(StringContains.containsString("/batch/1")));
@@ -625,7 +626,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void updateBatchTest() throws Exception {
     int key = 1;
-    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean(), any())).thenReturn(key);
+    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean())).thenReturn(key);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
@@ -652,7 +653,7 @@ abstract class BaseCollectionEntityResourceIT<
                 .with(
                     httpBasic(
                         TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN))
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(MediaType.MULTIPART_FORM_DATA))
         .andExpect(status().isCreated())
         .andExpect(
             header()
@@ -682,7 +683,33 @@ abstract class BaseCollectionEntityResourceIT<
                     + paramType.getSimpleName().toLowerCase()
                     + "/batch/"
                     + batch.getKey()))
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("key").value(batch.getKey()))
+        .andExpect(jsonPath("state").value(batch.getState()));
+  }
+
+  @Test
+  public void getBatchResultFileTest() throws Exception {
+    Batch batch = new Batch();
+    batch.setKey(1);
+    batch.setState(Batch.State.SUCCESSFUL);
+    batch.setOperation(Batch.Operation.CREATE);
+
+    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
+    batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
+
+    when(batchService.get(anyInt())).thenReturn(batch);
+
+    mockMvc
+        .perform(
+            get(
+                "/grscicoll/"
+                    + paramType.getSimpleName().toLowerCase()
+                    + "/batch/"
+                    + batch.getKey()
+                    + "/resultFile"))
+        .andExpect(status().isOk())
+        .andExpect(header().exists("Content-Disposition"));
   }
 
   void mockGetEntity(UUID key, T entityToReturn) {

@@ -28,15 +28,11 @@ import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,8 +42,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -173,7 +167,7 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
             contactsParserResult,
             FileFields.CommonFields.CODE);
 
-    List<Path> unzippedFiles = unzip(resultFile, "src/test/resources/collections");
+    List<Path> unzippedFiles = ZipUtils.unzip(resultFile, "src/test/resources/collections");
     assertEquals(2, unzippedFiles.size());
 
     for (Path unzipped : unzippedFiles) {
@@ -202,47 +196,6 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
     for (Path f : unzippedFiles) {
       Files.deleteIfExists(f);
     }
-  }
-
-  static List<Path> unzip(Path zipFilePath, String destDir) {
-    List<Path> filesUnzipped = new ArrayList<>();
-    File dir = new File(destDir);
-    // create output directory if it doesn't exist
-    if (!dir.exists()) {
-      dir.mkdirs();
-    }
-    FileInputStream fis;
-    // buffer for read and write data to file
-    byte[] buffer = new byte[1024];
-    try {
-      fis = new FileInputStream(zipFilePath.toFile());
-      ZipInputStream zis = new ZipInputStream(fis);
-      ZipEntry ze = zis.getNextEntry();
-      while (ze != null) {
-        String fileName = ze.getName();
-        File newFile = new File(destDir + File.separator + fileName);
-        filesUnzipped.add(newFile.toPath());
-        // create directories for sub directories in zip
-        new File(newFile.getParent()).mkdirs();
-        FileOutputStream fos = new FileOutputStream(newFile);
-        int len;
-        while ((len = zis.read(buffer)) > 0) {
-          fos.write(buffer, 0, len);
-        }
-        fos.close();
-        // close this ZipEntry
-        zis.closeEntry();
-        ze = zis.getNextEntry();
-      }
-      // close last ZipEntry
-      zis.closeEntry();
-      zis.close();
-      fis.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    return filesUnzipped;
   }
 
   abstract T newEntity();

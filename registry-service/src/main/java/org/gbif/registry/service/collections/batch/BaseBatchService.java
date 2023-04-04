@@ -9,36 +9,34 @@ import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 
 import com.google.common.base.Preconditions;
 
-@Service
-public class DefaultBatchService implements BatchService {
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+
+public abstract class BaseBatchService implements BatchService {
 
   private final BatchMapper batchMapper;
-  private final InstitutionBatchHandler institutionBatchHandler;
-  private final CollectionBatchHandler collectionBatchHandler;
+  private final BatchHandler batchHandler;
+  private final CollectionEntityType entityType;
 
   @Autowired
-  DefaultBatchService(
-      BatchMapper batchMapper,
-      InstitutionBatchHandler institutionBatchHandler,
-      CollectionBatchHandler collectionBatchHandler) {
+  BaseBatchService(
+      BatchMapper batchMapper, BatchHandler batchHandler, CollectionEntityType entityType) {
     this.batchMapper = batchMapper;
-    this.institutionBatchHandler = institutionBatchHandler;
-    this.collectionBatchHandler = collectionBatchHandler;
+    this.batchHandler = batchHandler;
+    this.entityType = entityType;
   }
 
   @Override
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   public int handleBatchAsync(
-      byte[] entitiesFile,
-      byte[] contactsFile,
-      ExportFormat format,
-      boolean update,
-      CollectionEntityType entityType) {
+      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, boolean update) {
     Objects.requireNonNull(entitiesFile);
     Objects.requireNonNull(contactsFile);
     Objects.requireNonNull(format);
@@ -56,22 +54,10 @@ public class DefaultBatchService implements BatchService {
     // async import
     if (update) {
       batch.setOperation(Batch.Operation.UPDATE);
-      if (entityType == CollectionEntityType.INSTITUTION) {
-        institutionBatchHandler.updateBatch(
-          entitiesFile, contactsFile, format, batch, authentication.getName());
-      } else if (entityType == CollectionEntityType.COLLECTION) {
-        collectionBatchHandler.updateBatch(
-          entitiesFile, contactsFile, format, batch, authentication.getName());
-      }
+      batchHandler.updateBatch(entitiesFile, contactsFile, format, batch);
     } else {
       batch.setOperation(Batch.Operation.CREATE);
-      if (entityType == CollectionEntityType.INSTITUTION) {
-        institutionBatchHandler.importBatch(
-            entitiesFile, contactsFile, format, batch, authentication.getName());
-      } else if (entityType == CollectionEntityType.COLLECTION) {
-        collectionBatchHandler.importBatch(
-            entitiesFile, contactsFile, format, batch, authentication.getName());
-      }
+      batchHandler.importBatch(entitiesFile, contactsFile, format, batch);
     }
 
     batchMapper.create(batch);

@@ -32,6 +32,7 @@ import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
@@ -52,6 +53,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -114,13 +116,15 @@ public class CollectionResource
       CollectionDuplicatesService duplicatesService,
       CollectionService collectionService,
       CollectionChangeSuggestionService collectionChangeSuggestionService,
-      BatchService batchService) {
+      CollectionBatchService batchService,
+      @Value("${api.root.url}") String apiBaseUrl) {
     super(
         collectionMergeService,
         collectionService,
         collectionChangeSuggestionService,
         duplicatesService,
         batchService,
+        apiBaseUrl,
         Collection.class);
     this.collectionService = collectionService;
   }

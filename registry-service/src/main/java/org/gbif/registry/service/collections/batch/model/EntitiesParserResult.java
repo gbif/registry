@@ -1,6 +1,7 @@
 package org.gbif.registry.service.collections.batch.model;
 
 import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.common.export.ExportFormat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,8 +9,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import lombok.Builder;
-
-import org.gbif.api.model.common.export.ExportFormat;
 
 @Builder
 public class EntitiesParserResult<T extends CollectionEntity> implements ParserResult<T> {
@@ -42,7 +41,7 @@ public class EntitiesParserResult<T extends CollectionEntity> implements ParserR
 
   @Override
   public Function<T, String> getEntityKeyExtractor() {
-    return e -> e.getKey().toString();
+    return e -> e.getKey() != null ? e.getKey().toString() : null;
   }
 
   @Override
