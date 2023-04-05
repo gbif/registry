@@ -182,7 +182,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
           createResultFile(entitiesFile, contactsFile, parsingResult, contactsParsed, CODE);
 
       // update batch
-      batch.setState(Batch.State.SUCCESSFUL);
+      batch.setState(Batch.State.FINISHED);
       batch.getErrors().addAll(parsingResult.getFileErrors());
       batch.getErrors().addAll(contactsParsed.getFileErrors());
 
@@ -332,7 +332,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
           createResultFile(entitiesFile, contactsFile, parsingResult, contactsParsed, KEY);
 
       // update batch
-      batch.setState(Batch.State.SUCCESSFUL);
+      batch.setState(Batch.State.FINISHED);
       batch.getErrors().addAll(parsingResult.getFileErrors());
       batch.getErrors().addAll(contactsParsed.getFileErrors());
       batch.setResultFilePath(resultPath.toFile().getAbsolutePath());
