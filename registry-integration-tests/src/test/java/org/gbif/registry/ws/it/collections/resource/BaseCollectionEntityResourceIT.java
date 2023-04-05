@@ -58,7 +58,6 @@ import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -77,7 +76,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -595,7 +593,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void importBatchTest() throws Exception {
     int key = 1;
-    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean())).thenReturn(key);
+    when(batchService.handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
@@ -626,7 +624,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void updateBatchTest() throws Exception {
     int key = 1;
-    when(batchService.handleBatchAsync(any(), any(), any(), anyBoolean())).thenReturn(key);
+    when(batchService.handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
@@ -668,7 +666,7 @@ abstract class BaseCollectionEntityResourceIT<
   public void getBatchTest() throws Exception {
     Batch batch = new Batch();
     batch.setKey(1);
-    batch.setState(Batch.State.SUCCESSFUL);
+    batch.setState(Batch.State.FINISHED);
     batch.setOperation(Batch.Operation.CREATE);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
@@ -692,7 +690,7 @@ abstract class BaseCollectionEntityResourceIT<
   public void getBatchResultFileTest() throws Exception {
     Batch batch = new Batch();
     batch.setKey(1);
-    batch.setState(Batch.State.SUCCESSFUL);
+    batch.setState(Batch.State.FINISHED);
     batch.setOperation(Batch.Operation.CREATE);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");

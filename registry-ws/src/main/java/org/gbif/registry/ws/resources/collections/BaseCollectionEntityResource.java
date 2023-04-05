@@ -91,6 +91,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.SneakyThrows;
@@ -654,7 +655,13 @@ public abstract class BaseCollectionEntityResource<
     return collectionEntityService.listComments(targetEntityKey);
   }
 
-  // TODO: docs
+  @Operation(operationId = "importBatch", summary = "Imports a batch of new GRSciColl entities")
+  @ApiResponse(
+      responseCode = "201",
+      description = "Batch created and being handled. Key returned to check the status.",
+      content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @SneakyThrows
   @PostMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> importBatch(
@@ -663,7 +670,7 @@ public abstract class BaseCollectionEntityResource<
       @RequestPart("entitiesFile") MultipartFile entitiesFile,
       @RequestPart("contactsFile") MultipartFile contactsFile) {
     int batchKey =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
             format,
@@ -678,6 +685,15 @@ public abstract class BaseCollectionEntityResource<
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
+  @Operation(
+      operationId = "updateBatch",
+      summary = "Updates a batch of existing GRSciColl entities")
+  @ApiResponse(
+      responseCode = "201",
+      description = "Batch created and being handled. Key returned to check the status.",
+      content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
   @SneakyThrows
   @PutMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> updateBatch(
@@ -686,7 +702,7 @@ public abstract class BaseCollectionEntityResource<
       @RequestPart("entitiesFile") MultipartFile entitiesFile,
       @RequestPart("contactsFile") MultipartFile contactsFile) {
     int batchKey =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
             format,
@@ -701,7 +717,15 @@ public abstract class BaseCollectionEntityResource<
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
+  @Operation(
+      operationId = "getBatch",
+      summary = "Get details of a batch",
+      description = "Details of a batch.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "200", description = "Batch found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("batch/{key}")
+  @NullToNotFound("/grscicoll/institution/{key}")
   public BatchView getBatch(HttpServletRequest request, @PathVariable("key") int batchKey) {
     Batch batch = batchService.get(batchKey);
 
@@ -715,16 +739,21 @@ public abstract class BaseCollectionEntityResource<
     String resultFilePath = batch.getResultFilePath();
     if (resultFilePath != null) {
       String resultFileUri =
-          apiBaseUrl
-              .concat(request.getRequestURI())
-              .concat("/resultFile")
-              .replace("//", "/");
+          apiBaseUrl.concat(request.getRequestURI()).concat("/resultFile").replace("//", "/");
       batchView.setResultFileLink(resultFileUri);
     }
 
     return batchView;
   }
 
+  @Operation(
+      operationId = "getBatchResultFile",
+      summary =
+          "Get a file with the result of a batch that includes keys of the new entities created and errors found",
+      description = "Result file of a batch.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "200", description = "Result file found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "batch/{key}/resultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
   public ResponseEntity<Resource> getBatchResultFile(@PathVariable("key") int batchKey)
       throws IOException {

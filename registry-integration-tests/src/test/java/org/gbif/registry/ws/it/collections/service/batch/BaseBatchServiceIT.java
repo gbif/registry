@@ -34,7 +34,6 @@ import java.util.UUID;
 import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.postgresql.util.HStoreConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -76,7 +75,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(0, listAllEntities().size());
 
     int key =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
@@ -86,7 +85,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.SUCCESSFUL, batch.getState());
+    assertEquals(Batch.State.FINISHED, batch.getState());
 
     List<T> entities = listAllEntities();
     assertEquals(1, entities.size());
@@ -106,7 +105,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(0, listAllEntities().size());
 
     int key =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
@@ -116,7 +115,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.SUCCESSFUL, batch.getState());
+    assertEquals(Batch.State.FINISHED, batch.getState());
     assertEquals(0, listAllEntities().size());
 
     List<Path> unzippedFiles =
@@ -168,7 +167,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     Resource contactsFile = getContactsUpdateResource();
 
     int key =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
@@ -178,7 +177,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.UPDATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.SUCCESSFUL, batch.getState());
+    assertEquals(Batch.State.FINISHED, batch.getState());
 
     T updated = entityService.get(existing.getKey());
     assertEquals("descr2", updated.getDescription());
@@ -214,7 +213,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     Resource contactsFile = getContactsUpdateResource();
 
     int key =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
@@ -224,7 +223,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertTrue(batch.getErrors().isEmpty());
     assertEquals(Batch.Operation.UPDATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.SUCCESSFUL, batch.getState());
+    assertEquals(Batch.State.FINISHED, batch.getState());
 
     T updated = entityService.get(existing.getKey());
     assertEquals(existing.getDescription(), updated.getDescription());
@@ -236,28 +235,28 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertTrue(Files.exists(Paths.get(batch.getResultFilePath())));
 
     List<Path> unzippedFiles =
-      ZipUtils.unzip(Paths.get(batch.getResultFilePath()), "src/test/resources/collections");
+        ZipUtils.unzip(Paths.get(batch.getResultFilePath()), "src/test/resources/collections");
     assertEquals(2, unzippedFiles.size());
 
     for (Path unzipped : unzippedFiles) {
       boolean isEntitiesFile = unzipped.getFileName().toString().contains("result-");
       try (BufferedReader br = new BufferedReader(new FileReader(unzipped.toFile()))) {
         List<String> headers =
-          Arrays.asList(br.readLine().split(ExportFormat.CSV.getDelimiter().toString()));
+            Arrays.asList(br.readLine().split(ExportFormat.CSV.getDelimiter().toString()));
         assertTrue(headers.contains(FileFields.CommonFields.KEY));
         assertTrue(headers.contains(FileFields.CommonFields.ERRORS));
 
         br.lines()
-          .forEach(
-            l -> {
-              String[] values = splitLine(ExportFormat.CSV, headers.size(), l);
-              if (isEntitiesFile) {
-                assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
-                assertTrue(
-                  values[headers.indexOf(FileFields.CommonFields.ERRORS)].contains(
-                    "not allowed to update"));
-              }
-            });
+            .forEach(
+                l -> {
+                  String[] values = splitLine(ExportFormat.CSV, headers.size(), l);
+                  if (isEntitiesFile) {
+                    assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
+                    assertTrue(
+                        values[headers.indexOf(FileFields.CommonFields.ERRORS)].contains(
+                            "not allowed to update"));
+                  }
+                });
       }
     }
 
@@ -295,7 +294,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(0, listAllEntities().size());
 
     int key =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(duplicatesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
@@ -321,7 +320,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(0, listAllEntities().size());
 
     int key =
-        batchService.handleBatchAsync(
+        batchService.handleBatch(
             StreamUtils.copyToByteArray(unknownColumnFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             ExportFormat.CSV,
@@ -335,7 +334,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(1, batch.getErrors().size());
     assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.SUCCESSFUL, batch.getState());
+    assertEquals(Batch.State.FINISHED, batch.getState());
 
     Files.delete(Paths.get(batch.getResultFilePath()));
   }
@@ -369,7 +368,9 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
                 + "','"
                 + entity.getDescription()
                 + "','"
-                + entity.getAlternativeCodes().get(0).getCode() + " => " + entity.getAlternativeCodes().get(0).getDescription()
+                + entity.getAlternativeCodes().get(0).getCode()
+                + " => "
+                + entity.getAlternativeCodes().get(0).getDescription()
                 + "','{\""
                 + entity.getEmail()
                 + "\"}',1,'test','test')")

@@ -35,7 +35,7 @@ public abstract class BaseBatchService implements BatchService {
 
   @Override
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public int handleBatchAsync(
+  public int handleBatch(
       byte[] entitiesFile, byte[] contactsFile, ExportFormat format, boolean update) {
     Objects.requireNonNull(entitiesFile);
     Objects.requireNonNull(contactsFile);
