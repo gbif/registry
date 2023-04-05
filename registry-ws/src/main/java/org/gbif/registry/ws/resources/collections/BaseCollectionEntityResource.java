@@ -717,8 +717,6 @@ public abstract class BaseCollectionEntityResource<
       String resultFileUri =
           apiBaseUrl
               .concat(request.getRequestURI())
-              .concat("/")
-              .concat(String.valueOf(batchKey))
               .concat("/resultFile")
               .replace("//", "/");
       batchView.setResultFileLink(resultFileUri);

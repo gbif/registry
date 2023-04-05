@@ -122,11 +122,10 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
               .getErrors()
               .add(
                   "Other "
-                      + entityType.name().toUpperCase()
+                      + entityType.name().toLowerCase()
                       + "s already exist with the same code or id: "
-                      + existingEntities.stream()
-                          .map(UUID::toString)
-                          .collect(Collectors.joining()));
+                      + existingEntities.stream().map(UUID::toString).collect(Collectors.joining())
+                      + ". Contacts skipped");
           continue;
         }
 
@@ -138,7 +137,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                   "User "
                       + authentication.getName()
                       + " not allowed to create this "
-                      + entityType.name().toLowerCase());
+                      + entityType.name().toLowerCase()
+                      + ". Contacts skipped");
           continue;
         }
 
@@ -227,7 +227,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                 "Duplicate "
                     + entityType.name().toLowerCase()
                     + " keys: "
-                    + String.join(",", parsingResult.getDuplicates()));
+                    + String.join(",", parsingResult.getDuplicates())
+                    + ". Contacts skipped");
         batchMapper.update(batch);
         return;
       }
@@ -254,7 +255,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                   "User "
                       + authentication.getName()
                       + " not allowed to update this "
-                      + entityType.name().toLowerCase());
+                      + entityType.name().toLowerCase()
+                      + ". Contacts skipped");
           continue;
         }
 

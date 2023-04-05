@@ -48,7 +48,7 @@ public abstract class BaseBatchService implements BatchService {
     // create entry in DB
     Batch batch = new Batch();
     batch.setCreatedBy(authentication.getName());
-    batch.setState(Batch.State.SUCCESSFUL);
+    batch.setState(Batch.State.IN_PROGRESS);
     batch.setEntityType(entityType);
 
     // async import
