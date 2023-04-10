@@ -692,12 +692,7 @@ public abstract class BaseCollectionEntityResource<
             format,
             false);
 
-    String batchUri =
-        apiBaseUrl
-            .concat(request.getRequestURI())
-            .concat("/")
-            .concat(String.valueOf(batchKey))
-            .replace("//", "/");
+    String batchUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/" + batchKey;
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
@@ -740,12 +735,7 @@ public abstract class BaseCollectionEntityResource<
             format,
             true);
 
-    String batchUri =
-        apiBaseUrl
-            .concat(request.getRequestURI())
-            .concat("/")
-            .concat(String.valueOf(batchKey))
-            .replace("//", "/");
+    String batchUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/" + batchKey;
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
@@ -757,7 +747,7 @@ public abstract class BaseCollectionEntityResource<
   @ApiResponse(responseCode = "200", description = "Batch found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("batch/{key}")
-  @NullToNotFound("/grscicoll/institution/{key}")
+  @NullToNotFound
   public BatchView getBatch(HttpServletRequest request, @PathVariable("key") int batchKey) {
     Batch batch = batchService.get(batchKey);
 
@@ -770,8 +760,7 @@ public abstract class BaseCollectionEntityResource<
     // Add file result link
     String resultFilePath = batch.getResultFilePath();
     if (resultFilePath != null) {
-      String resultFileUri =
-          apiBaseUrl.concat(request.getRequestURI()).concat("/resultFile").replace("//", "/");
+      String resultFileUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/resultFile";
       batchView.setResultFileLink(resultFileUri);
     }
 
@@ -805,5 +794,9 @@ public abstract class BaseCollectionEntityResource<
     }
 
     return ResponseEntity.notFound().build();
+  }
+
+  private String getNormalizedApiBaseUrl() {
+    return apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
   }
 }
