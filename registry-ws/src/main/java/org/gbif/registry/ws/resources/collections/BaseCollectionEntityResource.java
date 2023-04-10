@@ -662,6 +662,22 @@ public abstract class BaseCollectionEntityResource<
       content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Parameter(
+      name = "format",
+      description = "Format of the files(CSV or TSV)",
+      required = true,
+      in = ParameterIn.QUERY,
+      schema = @Schema(implementation = ExportFormat.class))
+  @Parameter(
+      name = "entitiesFile",
+      description = "File with the entities to import",
+      required = true,
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "contactsFile",
+      description = "File with the contacts to import",
+      required = true,
+      in = ParameterIn.QUERY)
   @SneakyThrows
   @PostMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> importBatch(
@@ -694,6 +710,22 @@ public abstract class BaseCollectionEntityResource<
       content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
+  @Parameter(
+      name = "format",
+      description = "Format of the files(CSV or TSV)",
+      required = true,
+      in = ParameterIn.QUERY,
+      schema = @Schema(implementation = ExportFormat.class))
+  @Parameter(
+      name = "entitiesFile",
+      description = "File with the entities to update",
+      required = true,
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "contactsFile",
+      description = "File with the contacts to update",
+      required = true,
+      in = ParameterIn.QUERY)
   @SneakyThrows
   @PutMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<String> updateBatch(
