@@ -59,7 +59,6 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
   private final BatchMapper batchMapper;
   private final CollectionEntityService<T> entityService;
-  private final GrSciCollAuthorizationService authorizationService;
   private final Path resultDirPath;
   private final CollectionEntityType entityType;
   private final Class<T> clazz;
@@ -67,13 +66,11 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   BaseBatchHandler(
       BatchMapper batchMapper,
       CollectionEntityService<T> entityService,
-      GrSciCollAuthorizationService authorizationService,
       String resultDirPath,
       CollectionEntityType entityType,
       Class<T> clazz) {
     this.batchMapper = batchMapper;
     this.entityService = entityService;
-    this.authorizationService = authorizationService;
     this.resultDirPath = Paths.get(resultDirPath);
     this.entityType = entityType;
     this.clazz = clazz;

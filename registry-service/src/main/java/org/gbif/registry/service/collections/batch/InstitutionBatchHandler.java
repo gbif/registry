@@ -1,6 +1,5 @@
 package org.gbif.registry.service.collections.batch;
 
-import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.Strings;
@@ -39,7 +37,6 @@ public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
     super(
         batchMapper,
         institutionService,
-        authorizationService,
         resultPath,
         CollectionEntityType.INSTITUTION,
         Institution.class);
