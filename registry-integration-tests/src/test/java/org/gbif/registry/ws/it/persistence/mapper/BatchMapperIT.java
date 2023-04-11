@@ -65,7 +65,7 @@ public class BatchMapperIT extends BaseItTest {
     assertEquals("test", created.getCreatedBy());
 
     batch.setErrors(Arrays.asList("e1", "e2"));
-    batch.setState(Batch.State.SUCCESSFUL);
+    batch.setState(Batch.State.FINISHED);
     batch.setResultFilePath("/test/file.zip");
     batchMapper.update(batch);
 
@@ -75,7 +75,7 @@ public class BatchMapperIT extends BaseItTest {
     assertEquals(Batch.Operation.CREATE, updated.getOperation());
     assertEquals("test", updated.getCreatedBy());
     assertEquals("/test/file.zip", updated.getResultFilePath());
-    assertEquals(Batch.State.SUCCESSFUL, updated.getState());
+    assertEquals(Batch.State.FINISHED, updated.getState());
     assertEquals(2, updated.getErrors().size());
     assertTrue(updated.getErrors().containsAll(Arrays.asList("e1", "e2")));
   }
