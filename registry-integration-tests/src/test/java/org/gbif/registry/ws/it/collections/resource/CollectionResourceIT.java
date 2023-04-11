@@ -23,12 +23,14 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
@@ -64,6 +66,8 @@ public class CollectionResourceIT
   @MockBean private CollectionMergeService collectionMergeService;
 
   @MockBean private CollectionChangeSuggestionService collectionChangeSuggestionService;
+
+  @MockBean private CollectionBatchService collectionBatchService;
 
   @Autowired
   public CollectionResourceIT(
@@ -163,6 +167,11 @@ public class CollectionResourceIT
     changeSuggestion.setSuggestedEntity(c1);
 
     return changeSuggestion;
+  }
+
+  @Override
+  protected BatchService getBatchService() {
+    return collectionBatchService;
   }
 
   @Test

@@ -114,7 +114,6 @@ abstract class BaseCollectionEntityResourceIT<
   @Autowired protected MockMvc mockMvc;
 
   @MockBean private ResourceNotFoundService resourceNotFoundService;
-  @MockBean private BatchService batchService;
 
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T, R>> cls,
@@ -593,7 +592,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void importBatchTest() throws Exception {
     int key = 1;
-    when(batchService.handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
+    when(getBatchService().handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
@@ -624,7 +623,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void updateBatchTest() throws Exception {
     int key = 1;
-    when(batchService.handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
+    when(getBatchService().handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
 
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
@@ -672,7 +671,7 @@ abstract class BaseCollectionEntityResourceIT<
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
 
-    when(batchService.get(anyInt())).thenReturn(batch);
+    when(getBatchService().get(anyInt())).thenReturn(batch);
 
     mockMvc
         .perform(
@@ -683,7 +682,7 @@ abstract class BaseCollectionEntityResourceIT<
                     + batch.getKey()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("key").value(batch.getKey()))
-        .andExpect(jsonPath("state").value(batch.getState()));
+        .andExpect(jsonPath("state").value(batch.getState().name()));
   }
 
   @Test
@@ -696,7 +695,7 @@ abstract class BaseCollectionEntityResourceIT<
     Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
     batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
 
-    when(batchService.get(anyInt())).thenReturn(batch);
+    when(getBatchService().get(anyInt())).thenReturn(batch);
 
     mockMvc
         .perform(
@@ -723,4 +722,6 @@ abstract class BaseCollectionEntityResourceIT<
   protected abstract ChangeSuggestionService<T, R> getMockChangeSuggestionService();
 
   protected abstract R newChangeSuggestion();
+
+  protected abstract BatchService getBatchService();
 }
