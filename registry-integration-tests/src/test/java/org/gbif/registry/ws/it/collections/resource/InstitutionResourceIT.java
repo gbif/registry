@@ -23,12 +23,14 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
@@ -63,6 +65,8 @@ public class InstitutionResourceIT
   @MockBean private InstitutionMergeService institutionMergeService;
 
   @MockBean private InstitutionChangeSuggestionService institutionChangeSuggestionService;
+
+  @MockBean private InstitutionBatchService institutionBatchService;
 
   @Autowired
   public InstitutionResourceIT(
@@ -189,6 +193,11 @@ public class InstitutionResourceIT
     changeSuggestion.setSuggestedEntity(i1);
 
     return changeSuggestion;
+  }
+
+  @Override
+  protected BatchService getBatchService() {
+    return institutionBatchService;
   }
 
   protected InstitutionClient getClient() {
