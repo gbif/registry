@@ -139,8 +139,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "getOrganizatinon",
     summary = "Get details of a single publishing organization",
     description = "Details of a single publishing organization.  Also works for deleted publishing organizations.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -164,7 +163,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "createOrganization",
     summary = "Create a new publishing organization",
     description = "Creates a new publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      "metadata descriptions must be added in subsequent requests.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Publishing organization created, new publishing organization's UUID returned")
@@ -206,7 +206,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "updateOrganization",
     summary = "Update an existing organization",
     description = "Updates the existing publishing organization.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      "metadata descriptions are not changed with this method.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -230,7 +231,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "deleteOrganization",
     summary = "Delete a publishing organization",
     description = "Marks a publishing organization as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.")
+      "metadata descriptions are not changed.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -281,8 +283,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     operationId = "listOrganizations",
     summary = "List all publishing organizations",
     description = "Lists all current publishing organizations (deleted organizations are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
   @Parameters(
     value = {
@@ -290,11 +291,12 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
         name = "isEndorsed",
         description = "Whether the organization is endorsed by a node.",
         schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "networkKey",
+        description = "Filter for organizations publishing datasets belonging to a network.",
+        schema = @Schema(implementation = UUID.class),
         in = ParameterIn.QUERY)
-      // TODO: Should networkKey be documented?
-      // @Parameter(
-      //   name = "networkKey",
-      //   in = ParameterIn.QUERY)
     })
   @ApiResponse(
     responseCode = "200",
@@ -351,7 +353,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Operation(
     operationId = "getHostedDatasets",
     summary = "List hosted datasets",
-    description = "Lists the hosted datasets (datasets hosted by installations hosted by the organization).")
+    description = "Lists the hosted datasets (datasets hosted by installations hosted by the organization).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -371,7 +374,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Operation(
     operationId = "getPublishedDatasets",
     summary = "List published datasets",
-    description = "Lists the published datasets (datasets published by the organization).")
+    description = "Lists the published datasets (datasets published by the organization).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0231")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -401,7 +405,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Operation(
     operationId = "getOrganizationInstallations",
     summary = "List organization's installations",
-    description = "Lists the technical installations registered to this organization.")
+    description = "Lists the technical installations registered to this organization.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0234")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -429,7 +434,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Operation(
     operationId = "getDeletedOrganizations",
     summary = "List deleted organizations",
-    description = "Lists deleted organizations.")
+    description = "Lists deleted organizations.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -445,7 +451,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Operation(
     operationId = "getPendingOrganizations",
     summary = "List pending organizations",
-    description = "Lists organizations whose endorsement is pending.")
+    description = "Lists organizations whose endorsement is pending.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -463,7 +470,8 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Operation(
     operationId = "getNonPublishingOrganizations",
     summary = "List non-publishing organizations",
-    description = "Lists organizations publishing 0 datasets (excluding deleted datasets).")
+    description = "Lists organizations publishing 0 datasets (excluding deleted datasets).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -481,9 +489,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     summary = "Suggest organizations.",
     description = "Search that returns up to 20 matching publishing organizations. Results are ordered by relevance. " +
       "The response is smaller than an organization search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
-  )
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @ApiResponse(
     responseCode = "200",

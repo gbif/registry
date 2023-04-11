@@ -85,6 +85,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -326,7 +328,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addComment",
-    summary = "Add a comment to the record")
+    summary = "Add a comment to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -359,7 +362,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteComment",
-    summary = "Delete a comment from the record")
+    summary = "Delete a comment from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0402")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -378,7 +382,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getComment",
-    summary = "Retrieve all comments of the record")
+    summary = "Retrieve all comments of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -400,7 +405,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addMachineTag",
-    summary = "Add a machine tag to the record")
+    summary = "Add a machine tag to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -445,7 +451,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTag",
-    summary = "Delete a machine tag from the record")
+    summary = "Delete a machine tag from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -466,7 +473,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTagsInNamespace",
-    summary = "Delete all machine tags in a namespace from the record")
+    summary = "Delete all machine tags in a namespace from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -492,7 +500,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteMachineTagInNamespaceName",
-    summary = "Delete all machine tags of a name in a namespace from the record")
+    summary = "Delete all machine tags of a name in a namespace from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -516,7 +525,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "listMachineTag",
-    summary = "List all machine tags on the record")
+    summary = "List all machine tags on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -547,7 +557,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addTag",
-    summary = "Add a tag to the record")
+    summary = "Add a tag to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -583,7 +594,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteTag",
-    summary = "Delete a tag from the record")
+    summary = "Delete a tag from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0452")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -600,7 +612,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getTag",
-    summary = "Retrieve all tags of the record")
+    summary = "Retrieve all tags of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(name = "owner", hidden = true)
   @ApiResponse(
@@ -639,7 +652,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addContact",
-    summary = "Add a contact to the record")
+    summary = "Add a contact to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -672,7 +686,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "updateContact",
-    summary = "Update an existing contact on the record")
+    summary = "Update an existing contact on the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -704,7 +719,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteContact",
-    summary = "Delete a contact from the record")
+    summary = "Delete a contact from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0414")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -723,7 +739,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getContact",
-    summary = "Retrieve all contacts of the record")
+    summary = "Retrieve all contacts of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -745,7 +762,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addEndpoint",
-    summary = "Add an endpoint to the record")
+    summary = "Add an endpoint to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0421")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -784,7 +802,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteEndpoint",
-    summary = "Delete an endpoint from the record")
+    summary = "Delete an endpoint from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0422")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -803,7 +822,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getEndpoint",
-    summary = "Retrieve all endpoints of the record")
+    summary = "Retrieve all endpoints of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0420")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -825,7 +845,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "addIdentifier",
-    summary = "Add an identifier to the record")
+    summary = "Add an identifier to the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -857,7 +878,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    */
   @Operation(
     operationId = "deleteIdentifier",
-    summary = "Delete an identifier from the record")
+    summary = "Delete an identifier from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0432")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -876,7 +898,8 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
 
   @Operation(
     operationId = "getIdentifier",
-    summary = "Retrieve all identifiers of the record")
+    summary = "Retrieve all identifiers of the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",

@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -55,7 +56,8 @@ public class CollectionsSearchResource {
 
   @Operation(
     operationId = "searchCollectionsInstitutions",
-    summary = "Search collections and institutions")
+    summary = "Search collections and institutions",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0101")))
   @CommonParameters.QParameter
   @CommonParameters.HighlightParameter
   @Pageable.OffsetLimitParameters

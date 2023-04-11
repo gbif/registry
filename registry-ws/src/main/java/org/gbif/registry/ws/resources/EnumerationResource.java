@@ -169,7 +169,9 @@ public class EnumerationResource {
    */
   @Operation(
     operationId = "enumerationsBasic",
-    summary = "An inventory of all enumerations")
+    summary = "An inventory of all enumerations",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0100")))
   @ApiResponse(
     responseCode = "200",
     description = "List of enumerations.")
@@ -244,7 +246,9 @@ public class EnumerationResource {
   @Operation(
     operationId = "enumerationCountry",
     summary = "Show the Country enumeration",
-    description = "Lists the known countries, territories and islands based on ISO 3166-2")
+    description = "Lists the known countries, territories and islands based on ISO 3166-2",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0110")))
   @ApiResponse(
     responseCode = "200",
     description = "Country, territory and island list.")
@@ -257,7 +261,9 @@ public class EnumerationResource {
   @Operation(
     operationId = "enumerationLanguage",
     summary = "Show the Language enumeration",
-    description = "Lists the known languages based on ISO 639-1")
+    description = "Lists the known languages based on ISO 639-1",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0140")))
   @ApiResponse(
     responseCode = "200",
     description = "Language list.")
@@ -273,7 +279,9 @@ public class EnumerationResource {
   @Operation(
     operationId = "enumerationLicense",
     summary = "Show the License enumeration",
-    description = "Lists the accepted licenses")
+    description = "Lists the accepted licenses",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0150")))
   @ApiResponse(
     responseCode = "200",
     description = "License list.")
@@ -285,7 +293,9 @@ public class EnumerationResource {
   @Operation(
     operationId = "enumerationInterpretationRemark",
     summary = "Show the Interpretation Remark enumeration",
-    description = "Lists the known interpretation remarks")
+    description = "Lists the known interpretation remarks",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0130")))
   @ApiResponse(
     responseCode = "200",
     description = "Interpretation remark list.")
@@ -298,7 +308,9 @@ public class EnumerationResource {
   @Operation(
     operationId = "enumerationExtension",
     summary = "Show the Extension enumeration",
-    description = "Lists the known Darwin Core Archive extensions and their RowType")
+    description = "Lists the known Darwin Core Archive extensions and their RowType",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0120")))
   @ApiResponse(
     responseCode = "200",
     description = "Extension list.")
@@ -329,7 +341,9 @@ public class EnumerationResource {
   @Operation(
     operationId = "enumerationBasic",
     summary = "Show a summary of an enumeration",
-    description = "Lists the values of the given enumeration")
+    description = "Lists the values of the given enumeration",
+    extensions = @io.swagger.v3.oas.annotations.extensions.Extension(name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0105")))
   @Parameter(
     name = "name",
     description = "The name of the enumeration",

@@ -338,8 +338,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "searchDatasets",
     summary = "Search across all datasets.",
     description = "Full-text search across all datasets. Results are ordered by relevance.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0101")))
   @DatasetSearchParameters
   @CommonParameters.QParameter
   @CommonParameters.HighlightParameter
@@ -363,9 +362,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "searchDatasetsExport",
     summary = "Export search across all datasets.",
     description = "Download full-text search results as CSV or TSV.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")),
-    tags = "BASIC"
-  )
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102")))
   @DatasetSearchParameters
   @CommonParameters.QParameter
   @ApiResponse(
@@ -398,9 +395,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     summary = "Suggest datasets.",
     description = "Search that returns up to 20 matching datasets. Results are ordered by relevance. " +
       "The response is smaller than a dataset search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
-  )
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @DatasetSearchParameters
   @CommonParameters.QParameter
   @ApiResponse(
@@ -420,8 +415,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "getDataset",
     summary = "Get details of a single dataset",
     description = "Details of a single dataset.  Also works for deleted datasets.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -443,8 +437,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "listDatasets",
     summary = "List all datasets",
     description = "Lists all current datasets (deleted datasets are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @Parameters(
     value = {
       @Parameter(
@@ -528,7 +521,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getDocuments",
     summary = "Retrieve GBIF metadata document of the dataset",
-    description = "Gets a GBIF generated EML document overlaying GBIF information with any existing metadata document data.")
+    description = "Gets a GBIF generated EML document overlaying GBIF information with any existing metadata document data.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -554,7 +548,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "deleteDataset",
     summary = "Delete an existing dataset",
-    description = "Deletes an existing dataset. The dataset entry gets a deleted timestamp but remains registered.")
+    description = "Deletes an existing dataset. The dataset entry gets a deleted timestamp but remains registered.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -578,7 +573,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "addDocument",
     summary = "Add a metadata document to the record",
     description = "Pushes a new original source metadata document for a dataset into the registry, replacing any " +
-      "previously existing document of the same type.")
+      "previously existing document of the same type.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0301")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -830,7 +826,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "createDataset",
     summary = "Create a new dataset",
     description = "Creates a new dataset.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      "metadata descriptions must be added in subsequent requests.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Dataset created, new dataset's UUID returned")
@@ -874,7 +871,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     operationId = "updateDataset",
     summary = "Update an existing dataset",
     description = "Updates the existing dataset.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      "metadata descriptions are not changed with this method.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -1038,7 +1036,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getConstituents",
     summary = "Retrieve all constituents of the dataset",
-    description = "Lists the dataset's subdataset constituents (datasets that have a parentDatasetKey equal to the one requested).")
+    description = "Lists the dataset's subdataset constituents (datasets that have a parentDatasetKey equal to the one requested).",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -1057,7 +1056,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "getNetworks",
-    summary = "List the networks the dataset belongs to")
+    summary = "List the networks the dataset belongs to",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0220")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -1073,7 +1073,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "getAllConstituents",
     summary = "Retrieve all constituent datasets",
-    description = "Lists datasets that are a constituent of any dataset.")
+    description = "Lists datasets that are a constituent of any dataset.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -1102,7 +1103,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "getAllMetadata",
-    summary = "Retrieve all dataset source metadata")
+    summary = "Retrieve all dataset source metadata",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0302")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -1117,7 +1119,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "getMetadata",
-    summary = "Retrieve metadata about a source metadata document of a dataset")
+    summary = "Retrieve metadata about a source metadata document of a dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0303")))
   @ApiResponse(
     responseCode = "200",
     description = "Metadata about a metadata document")
@@ -1138,7 +1141,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   // TODO: 05/04/2020 change API to return byte[]?
   @Operation(
     operationId = "getMetadataDocument",
-    summary = "Retrieve a source metadata document of the dataset")
+    summary = "Retrieve a source metadata document of the dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0304")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -1152,7 +1156,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "deleteMetadata",
-    summary = "Delete a source metadata document from the record")
+    summary = "Delete a source metadata document from the record",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0305")))
   @ApiResponse(
     responseCode = "204",
     description = "Metadata document deleted")
@@ -1166,7 +1171,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "getDeletedDatasets",
-    summary = "List all deleted datasets")
+    summary = "List all deleted datasets",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -1180,7 +1186,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "getDuplicateDatasets",
-    summary = "List all duplicate datasets")
+    summary = "List all duplicate datasets",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -1194,7 +1201,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "getNoEndpointDatasets",
-    summary = "List all datasets with no endpoint")
+    summary = "List all datasets with no endpoint",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -1258,7 +1266,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    */
   @Operation(
     operationId = "crawlDataset",
-    summary = "Schedule a new ingestion of the dataset")
+    summary = "Schedule a new ingestion of the dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(
     name = "platform",
@@ -1356,7 +1365,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "datasetCrawlAttempt",
-    summary = "Get details of a particular crawl attempt for the dataset")
+    summary = "Get details of a particular crawl attempt for the dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0212")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -1392,7 +1402,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Operation(
     operationId = "listDatasetCrawlAttempt",
-    summary = "Get details of all crawl attempts for a dataset")
+    summary = "Get details of all crawl attempts for a dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0211")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -1417,8 +1428,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Operation(
     operationId = "datasetByDoi",
     summary = "Retrieve a dataset by DOI",
-    description = "Retrieves datasets (may be more than one) referencing the given DOI."
-  )
+    description = "Retrieves datasets (may be more than one) referencing the given DOI.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110")))
   @Parameters(
     value = {
       @Parameter(

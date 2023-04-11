@@ -78,8 +78,11 @@ import com.google.common.collect.Maps;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -134,8 +137,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "getInstallation",
     summary = "Get details of a single installation",
     description = "Details of a single installation.  Also works for deleted installations.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -159,7 +161,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "createInstallation",
     summary = "Create a new installation",
     description = "Creates a new installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.")
+      "metadata descriptions must be added in subsequent requests.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
     responseCode = "201",
     description = "Installation created, new installation's UUID returned")
@@ -181,7 +184,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "updateInstallation",
     summary = "Update an existing installation",
     description = "Updates the existing installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.")
+      "metadata descriptions are not changed with this method.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -205,7 +209,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "deleteInstallation",
     summary = "Delete an installation",
     description = "Marks an installation as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.")
+      "metadata descriptions are not changed.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
     responseCode = "204",
@@ -226,9 +231,14 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     operationId = "listInstallations",
     summary = "List all installations",
     description = "Lists all current installations (deleted installations are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")),
-    tags = "BASIC")
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
+  @Parameter(
+    name = "type",
+    description = "Filter by the type of installation.",
+    schema = @Schema(implementation = InstallationType.class),
+    in = ParameterIn.QUERY
+  )
   @ApiResponse(
     responseCode = "200",
     description = "Installation search successful")
@@ -260,7 +270,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Operation(
     operationId = "getInstallationDatasets",
     summary = "List installation's datasets",
-    description = "Lists the datasets served by this installation.")
+    description = "Lists the datasets served by this installation.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -280,7 +291,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Operation(
     operationId = "getDeletedInstallations",
     summary = "List deleted installations",
-    description = "Lists deleted installations.")
+    description = "Lists deleted installations.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -296,7 +308,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @Operation(
     operationId = "getNonPublishingInstallations",
     summary = "List non-publishing installations",
-    description = "Lists all installations serving 0 datasets.")
+    description = "Lists all installations serving 0 datasets.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(
     responseCode = "200",
@@ -430,9 +443,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     summary = "Suggest installations.",
     description = "Search that returns up to 20 matching installations. Results are ordered by relevance. " +
       "The response is smaller than an installation search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "1300")),
-    tags = "BASIC"
-  )
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(

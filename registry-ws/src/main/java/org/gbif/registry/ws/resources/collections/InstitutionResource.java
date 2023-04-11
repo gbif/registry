@@ -149,15 +149,14 @@ public class InstitutionResource
   @interface InstitutionSearchParameters {}
 
   @Operation(
-      operationId = "getInstitution",
-      summary = "Get details of a single institution",
-      description = "Details of a single institution.  Also works for deleted institutions.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0300")))
+    operationId = "getInstitution",
+    summary = "Get details of a single institution",
+    description = "Details of a single institution.  Also works for deleted institutions.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Institution found and returned")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
@@ -167,12 +166,13 @@ public class InstitutionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "createInstitution",
-      summary = "Create a new institution",
-      description = "Creates a new institution.")
+    operationId = "createInstitution",
+    summary = "Create a new institution",
+    description = "Creates a new institution.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
-      responseCode = "201",
-      description = "Institution created, new institution's UUID returned")
+    responseCode = "201",
+    description = "Institution created, new institution's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
@@ -182,11 +182,14 @@ public class InstitutionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "updateInstitution",
-      summary = "Update an existing institution",
-      description = "Updates the existing institution.")
+    operationId = "updateInstitution",
+    summary = "Update an existing institution",
+    description = "Updates the existing institution.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Institution updated")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Institution updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -197,12 +200,14 @@ public class InstitutionResource
 
   // Method overridden only for documentation.
   @Operation(
-      operationId = "deleteInstitution",
-      summary = "Delete an existing institution",
-      description =
-          "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.")
+    operationId = "deleteInstitution",
+    summary = "Delete an existing institution",
+    description = "Deletes an existing institution. The institution entry gets a deleted timestamp but remains registered.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Institution marked as deleted")
+  @ApiResponse(
+    responseCode = "204",
+    description = "Institution marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
@@ -259,16 +264,17 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "listInstitutionsExport",
-      summary = "Export search across all institutions.",
-      description = "Download full-text search results as CSV or TSV.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1100")))
+    operationId = "listInstitutionsExport",
+    summary = "Export search across all institutions.",
+    description = "Download full-text search results as CSV or TSV.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102")))
   @CollectionResource.CollectionSearchParameters
-  @ApiResponse(responseCode = "200", description = "Institution search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Institution search successful")
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid search query provided")
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -284,8 +290,13 @@ public class InstitutionResource
     }
   }
 
-  @Operation(operationId = "listDeleted", summary = "Retrieve all deleted institution records")
-  @ApiResponse(responseCode = "200", description = "List of deleted institution records")
+  @Operation(
+    operationId = "listDeleted",
+    summary = "Retrieve all deleted institution records",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of deleted institution records")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   public PagingResponse<Institution> listDeleted(
@@ -294,15 +305,11 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "suggestInstitutions",
-      summary = "Suggest institutions.",
-      description =
-          "Search that returns up to 20 matching institutions. Results are ordered by relevance. "
-              + "The response is smaller than an institution search.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "1300")))
+    operationId = "suggestInstitutions",
+    summary = "Suggest institutions.",
+    description = "Search that returns up to 20 matching institutions. Results are ordered by relevance. " +
+      "The response is smaller than an institution search.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @ApiResponse(responseCode = "200", description = "Institution search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
@@ -312,13 +319,14 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "importCollection",
-      summary = "Converts an institution into a collection")
+    operationId = "importCollection",
+    summary = "Converts an institution into a collection",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0495")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
-      responseCode = "200",
-      description = "Conversion complete, key returned.",
-      content = @Content)
+    responseCode = "200",
+    description = "Conversion complete, key returned.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping("{key}/convertToCollection")
@@ -329,13 +337,14 @@ public class InstitutionResource
   }
 
   @Operation(
-      operationId = "importInstitution",
-      summary = "Import an institution",
-      description = "Imports an institution from an organization.")
+    operationId = "importInstitution",
+    summary = "Import an institution",
+    description = "Imports an institution from an organization.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0496")))
   @ApiResponse(
-      responseCode = "200",
-      description = "Institution imported, key returned.",
-      content = @Content)
+    responseCode = "200",
+    description = "Institution imported, key returned.",
+    content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)

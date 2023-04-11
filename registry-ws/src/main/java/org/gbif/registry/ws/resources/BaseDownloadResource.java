@@ -95,6 +95,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -248,7 +250,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     operationId = "getOccurrenceDownloadByKey",
     summary = "Information about an occurrence download",
     description = "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence " +
-      "download.  Authorized users see additional details on their own downloads.")
+      "download.  Authorized users see additional details on their own downloads.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0110")))
   @DownloadKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -271,7 +274,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     operationId = "getOccurrenceDownloadByDOI",
     summary = "Information about an occurrence download",
     description = "Retrieves the status (in-progress, complete, etc), definition and location of an occurrence " +
-      "download.  Authorized users see additional details on their own downloads.")
+      "download.  Authorized users see additional details on their own downloads.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0111")))
   @DoiParameters
   @ApiResponse(
     responseCode = "200",
@@ -313,7 +317,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "listOccurrenceDownloadsByUser",
     summary = "Lists all downloads from a user",
-    description = "Retrieves the status, definitions and locations of all occurrence download by your own user.")
+    description = "Retrieves the status, definitions and locations of all occurrence download by your own user.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0120")))
   @Parameter(
     name = "user",
     description = "Username (administrator account required to see other users).",
@@ -397,7 +402,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "listDatasetUsagesByDownloadDOI",
     summary = "Lists datasets present in a download",
-    description = "Shows the datasets with occurrences present in the given occurrence download.")
+    description = "Shows the datasets with occurrences present in the given occurrence download.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0130")))
   @DoiParameters
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -415,7 +421,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "listDatasetUsagesByDownloadKey",
     summary = "Lists datasets present in a download",
-    description = "Shows the datasets with occurrences present in the given occurrence download.")
+    description = "Shows the datasets with occurrences present in the given occurrence download.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0131")))
   @DownloadKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -433,7 +440,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "exportDatasetUsagesByDownloadKey",
     summary = "Exports datasets present in a download in TSV or CSV format",
-    description = "Shows the datasets with occurrences present in the given occurrence download in TSV or CSV format.")
+    description = "Shows the datasets with occurrences present in the given occurrence download in TSV or CSV format.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0132")))
   @DownloadKeyParameter
   @Parameter(
     name = "format",
@@ -502,7 +510,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getDownloadCitationByKey",
-    summary = "Shows the citation for a download")
+    summary = "Shows the citation for a download",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0140")))
   @DownloadKeyParameter
   @ApiResponse(
     responseCode = "200",
@@ -518,7 +527,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence downloads")
   @Operation(
     operationId = "getDownloadCitationByDOI",
-    summary = "Shows the citation for a download")
+    summary = "Shows the citation for a download",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0141")))
   @DoiParameters
   @ApiResponse(
     responseCode = "200",
@@ -550,7 +560,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     operationId = "getDownloadsByUserCountry",
     summary = "Summarizes downloads by month, grouped by the user's country, territory or island",
     description = "Provides counts of user downloads by month, grouped by the user's ISO 3166-2 country," +
-      " territory or island.")
+      " territory or island.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0210")))
   @FromToParameters
   @Parameters(
     value = {
@@ -581,7 +592,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedRecordsBySource",
     summary = "Summarize downloaded record totals by source",
-    description = "Summarizes downloaded record totals by source, e.g. www.gbif.org or APIs.")
+    description = "Summarizes downloaded record totals by source, e.g. www.gbif.org or APIs.",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240")))
   @FromToParameters
   @Parameter(
     name = "source",
@@ -604,7 +616,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedRecordsByDataset",
     summary = "Summarize downloaded records by dataset",
-    description = "Summarizes downloaded record totals by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
+    description = "Summarizes downloaded record totals by month, filtered by a publishing organization's country, territory or island and/or a single dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0220")))
   @FromToParameters
   @Parameters(
     value = {
@@ -653,7 +666,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedRecordsByDataset",
     summary = "Summarize downloads by dataset",
-    description = "Summarizes downloads by month, filtered by a publishing organization's country, territory or island and/or a single dataset")
+    description = "Summarizes downloads by month, filtered by a publishing organization's country, territory or island and/or a single dataset",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0230")))
   @FromToParameters
   @Parameters(
     value = {
@@ -702,7 +716,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Operation(
     operationId = "getDownloadedStatistics",
     summary = "Summarize downloads",
-    description = "Summarizes downloads")
+    description = "Summarizes downloads",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
   @FromToParameters
   @Parameters(
     value = {
@@ -752,7 +767,8 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence download statistics")
   @Operation(
     operationId = "exportDownloadedStatistics",
-    summary = "Export summary of downloads")
+    summary = "Export summary of downloads",
+    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
   @FromToParameters
   @Parameters(
     value = {
