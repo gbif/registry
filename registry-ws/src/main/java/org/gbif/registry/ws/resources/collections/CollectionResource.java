@@ -26,11 +26,13 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
@@ -51,6 +53,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -80,18 +83,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * implementation of {@link CollectionService}.
  */
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Collections",
-  description = "The collections API provides CRUD services for collections, institutions and person entities. " +
-    "The data was originally migrated from the Global Registry of Scientific Collections (GRSciColl) and adapted to " +
-    "follow the same conventions as other registry services. Therefore, the deletion of collections, institutions and " +
-    "persons is logical, meaning these entries remain registered forever and only get a deleted timestamp. On the " +
-    "other hand, the deletion of tags and identifiers is physical, meaning the entries are permanently removed.\n\n" +
-    "*Please note that this part of the API is still under development, and may change in the future.*\n\n" +
-    "## Collection\n" +
-    "This API provides CRUD services for the collection entity. A collection can be associated with an institution " +
-    "and can have a list of contacts, which are represented by the person entity. It can also have tags and identifiers.",
-  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
-    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1000")))
+    name = "Collections",
+    description =
+        "The collections API provides CRUD services for collections, institutions and person entities. "
+            + "The data was originally migrated from the Global Registry of Scientific Collections (GRSciColl) and adapted to "
+            + "follow the same conventions as other registry services. Therefore, the deletion of collections, institutions and "
+            + "persons is logical, meaning these entries remain registered forever and only get a deleted timestamp. On the "
+            + "other hand, the deletion of tags and identifiers is physical, meaning the entries are permanently removed.\n\n"
+            + "*Please note that this part of the API is still under development, and may change in the future.*\n\n"
+            + "## Collection\n"
+            + "This API provides CRUD services for the collection entity. A collection can be associated with an institution "
+            + "and can have a list of contacts, which are represented by the person entity. It can also have tags and identifiers.",
+    extensions =
+        @io.swagger.v3.oas.annotations.extensions.Extension(
+            name = "Order",
+            properties = @ExtensionProperty(name = "Order", value = "1000")))
 @RestController
 @RequestMapping(value = "grscicoll/collection", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionResource
@@ -109,12 +115,16 @@ public class CollectionResource
       CollectionMergeService collectionMergeService,
       CollectionDuplicatesService duplicatesService,
       CollectionService collectionService,
-      CollectionChangeSuggestionService collectionChangeSuggestionService) {
+      CollectionChangeSuggestionService collectionChangeSuggestionService,
+      CollectionBatchService batchService,
+      @Value("${api.root.url}") String apiBaseUrl) {
     super(
         collectionMergeService,
         collectionService,
         collectionChangeSuggestionService,
         duplicatesService,
+        batchService,
+        apiBaseUrl,
         Collection.class);
     this.collectionService = collectionService;
   }
@@ -122,35 +132,37 @@ public class CollectionResource
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-    value = {
-      @Parameter(
-        name = "institution",
-        description = "A key for the institution.",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "contentTypes",
-        description = "Content type of a GrSciColl collection. Accepts multiple values, for example " +
-          "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
-        schema = @Schema(implementation = CollectionContentType.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "preservationTypes",
-        description = "Preservation type of a GrSciColl collection. Accepts multiple values, for example " +
-          "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
-        schema = @Schema(implementation = PreservationType.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "accessionStatus",
-        description = "Accession status of a GrSciColl collection",
-        schema = @Schema(implementation = AccessionStatus.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "personalCollection",
-        description = "Flag for personal GRSciColl collections",
-        schema = @Schema(implementation = Boolean.class),
-        in = ParameterIn.QUERY)
-    })
+      value = {
+        @Parameter(
+            name = "institution",
+            description = "A key for the institution.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contentTypes",
+            description =
+                "Content type of a GrSciColl collection. Accepts multiple values, for example "
+                    + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
+            schema = @Schema(implementation = CollectionContentType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "preservationTypes",
+            description =
+                "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
+                    + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
+            schema = @Schema(implementation = PreservationType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "accessionStatus",
+            description = "Accession status of a GrSciColl collection",
+            schema = @Schema(implementation = AccessionStatus.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "personalCollection",
+            description = "Flag for personal GRSciColl collections",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY)
+      })
   @SearchRequestParameters
   @interface CollectionSearchParameters {}
 
@@ -223,17 +235,16 @@ public class CollectionResource
   }
 
   @Operation(
-    operationId = "listCollections",
-    summary = "List all collections",
-    description = "Lists all current collections (deleted collections are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+      operationId = "listCollections",
+      summary = "List all collections",
+      description = "Lists all current collections (deleted collections are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")))
   @CollectionSearchParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Collection search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Collection search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return collectionService.list(searchRequest);

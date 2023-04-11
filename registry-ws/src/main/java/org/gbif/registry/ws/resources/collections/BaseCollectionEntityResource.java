@@ -16,6 +16,7 @@ package org.gbif.registry.ws.resources.collections;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
+import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -25,9 +26,10 @@ import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.ApplySuggestionResult;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.ChangeSuggestionService;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.collections.view.BatchView;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
@@ -38,6 +40,8 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.service.collections.BatchService;
+import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -47,19 +51,29 @@ import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.resources.Docs;
 
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -68,6 +82,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.google.common.base.Preconditions;
 
@@ -75,10 +91,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.SneakyThrows;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -95,110 +113,116 @@ public abstract class BaseCollectionEntityResource<
   protected final MergeService<T> mergeService;
   protected final ChangeSuggestionService<T, R> changeSuggestionService;
   protected final DuplicatesService duplicatesService;
+  protected final BatchService batchService;
+  protected String apiBaseUrl;
 
   protected BaseCollectionEntityResource(
       MergeService<T> mergeService,
       CollectionEntityService<T> collectionEntityService,
       ChangeSuggestionService<T, R> changeSuggestionService,
       DuplicatesService duplicatesService,
+      BatchService batchService,
+      String apiBaseUrl,
       Class<T> objectClass) {
     this.objectClass = objectClass;
     this.mergeService = mergeService;
     this.changeSuggestionService = changeSuggestionService;
     this.collectionEntityService = collectionEntityService;
     this.duplicatesService = duplicatesService;
+    this.batchService = batchService;
+    this.apiBaseUrl = apiBaseUrl;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-    value = {
-      @Parameter(
-        name = "code",
-        description = "Code of a GrSciColl institution or collection",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "name",
-        description = "Name of a GrSciColl institution or collection",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "alternativeCode",
-        description = "Alternative code of a GrSciColl institution or collection",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "contact",
-        description = "Filters collections and institutions whose contacts contain the person key specified",
-        schema = @Schema(implementation = UUID.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "machineTagNamespace",
-        description = "Filters for entities with a machine tag in the specified namespace.",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "machineTagName",
-        description = "Filters for entities with a machine tag with the specified name (use in combination with the machineTagNamespace parameter).",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "machineTagValue",
-        description = "Filters for entities with a machine tag with the specified value (use in combination with the machineTagNamespace and machineTagName parameters).",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "identifierType",
-        description = "An identifier type for the identifier parameter.",
-        schema = @Schema(implementation = IdentifierType.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "identifier",
-        description = "An identifier of the type given by the identifierType parameter, for example a DOI or UUID.",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "country",
-        description = "Filters by country given as a ISO 639-1 (2 letter) country code.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "city",
-        description = "TODO",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "fuzzyName",
-        description = "TODO",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "active",
-        description = "Active status of a GrSciColl institution or collection",
-        schema = @Schema(implementation = Boolean.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "masterSourceType",
-        description = "The master source type of a GRSciColl institution or collection",
-        schema = @Schema(implementation = MasterSourceType.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "numberSpecimens",
-        description = "TODO",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "displayOnNHCPortal",
-        description = "TODO",
-        schema = @Schema(implementation = Boolean.class),
-        in = ParameterIn.QUERY),
-
-      @Parameter(
-        name = "searchRequest",
-        hidden = true
-      )
-    })
+      value = {
+        @Parameter(
+            name = "code",
+            description = "Code of a GrSciColl institution or collection",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "name",
+            description = "Name of a GrSciColl institution or collection",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "alternativeCode",
+            description = "Alternative code of a GrSciColl institution or collection",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "contact",
+            description =
+                "Filters collections and institutions whose contacts contain the person key specified",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagNamespace",
+            description = "Filters for entities with a machine tag in the specified namespace.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagName",
+            description =
+                "Filters for entities with a machine tag with the specified name (use in combination with the machineTagNamespace parameter).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagValue",
+            description =
+                "Filters for entities with a machine tag with the specified value (use in combination with the machineTagNamespace and machineTagName parameters).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifierType",
+            description = "An identifier type for the identifier parameter.",
+            schema = @Schema(implementation = IdentifierType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifier",
+            description =
+                "An identifier of the type given by the identifierType parameter, for example a DOI or UUID.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "country",
+            description = "Filters by country given as a ISO 639-1 (2 letter) country code.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "city",
+            description = "TODO",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "fuzzyName",
+            description = "TODO",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "active",
+            description = "Active status of a GrSciColl institution or collection",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "masterSourceType",
+            description = "The master source type of a GRSciColl institution or collection",
+            schema = @Schema(implementation = MasterSourceType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "numberSpecimens",
+            description = "TODO",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "displayOnNHCPortal",
+            description = "TODO",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(name = "searchRequest", hidden = true)
+      })
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   public @interface SearchRequestParameters {}
@@ -757,5 +781,150 @@ public abstract class BaseCollectionEntityResource<
   @GetMapping(value = "{key}/comment")
   public List<Comment> listComments(@PathVariable("key") UUID targetEntityKey) {
     return collectionEntityService.listComments(targetEntityKey);
+  }
+
+  @Operation(operationId = "importBatch", summary = "Imports a batch of new GRSciColl entities")
+  @ApiResponse(
+      responseCode = "201",
+      description = "Batch created and being handled. Key returned to check the status.",
+      content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @Parameter(
+      name = "format",
+      description = "Format of the files(CSV or TSV)",
+      required = true,
+      in = ParameterIn.QUERY,
+      schema = @Schema(implementation = ExportFormat.class))
+  @Parameter(
+      name = "entitiesFile",
+      description = "File with the entities to import",
+      required = true,
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "contactsFile",
+      description = "File with the contacts to import",
+      required = true,
+      in = ParameterIn.QUERY)
+  @SneakyThrows
+  @PostMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> importBatch(
+      HttpServletRequest request,
+      @RequestParam("format") ExportFormat format,
+      @RequestPart("entitiesFile") MultipartFile entitiesFile,
+      @RequestPart("contactsFile") MultipartFile contactsFile) {
+    int batchKey =
+        batchService.handleBatch(
+            StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
+            format,
+            false);
+
+    String batchUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/" + batchKey;
+    return ResponseEntity.created(new URI(batchUri)).body(batchUri);
+  }
+
+  @Operation(
+      operationId = "updateBatch",
+      summary = "Updates a batch of existing GRSciColl entities")
+  @ApiResponse(
+      responseCode = "201",
+      description = "Batch created and being handled. Key returned to check the status.",
+      content = @Content)
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @Parameter(
+      name = "format",
+      description = "Format of the files(CSV or TSV)",
+      required = true,
+      in = ParameterIn.QUERY,
+      schema = @Schema(implementation = ExportFormat.class))
+  @Parameter(
+      name = "entitiesFile",
+      description = "File with the entities to update",
+      required = true,
+      in = ParameterIn.QUERY)
+  @Parameter(
+      name = "contactsFile",
+      description = "File with the contacts to update",
+      required = true,
+      in = ParameterIn.QUERY)
+  @SneakyThrows
+  @PutMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<String> updateBatch(
+      HttpServletRequest request,
+      @RequestParam("format") ExportFormat format,
+      @RequestPart("entitiesFile") MultipartFile entitiesFile,
+      @RequestPart("contactsFile") MultipartFile contactsFile) {
+    int batchKey =
+        batchService.handleBatch(
+            StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
+            format,
+            true);
+
+    String batchUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/" + batchKey;
+    return ResponseEntity.created(new URI(batchUri)).body(batchUri);
+  }
+
+  @Operation(
+      operationId = "getBatch",
+      summary = "Get details of a batch",
+      description = "Details of a batch.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "200", description = "Batch found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping("batch/{key}")
+  @NullToNotFound
+  public BatchView getBatch(HttpServletRequest request, @PathVariable("key") int batchKey) {
+    Batch batch = batchService.get(batchKey);
+
+    if (batch == null) {
+      return null;
+    }
+
+    BatchView batchView = new BatchView(batch);
+
+    // Add file result link
+    String resultFilePath = batch.getResultFilePath();
+    if (resultFilePath != null) {
+      String resultFileUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/resultFile";
+      batchView.setResultFileLink(resultFileUri);
+    }
+
+    return batchView;
+  }
+
+  @Operation(
+      operationId = "getBatchResultFile",
+      summary =
+          "Get a file with the result of a batch that includes keys of the new entities created and errors found",
+      description = "Result file of a batch.")
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "200", description = "Result file found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "batch/{key}/resultFile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<Resource> getBatchResultFile(@PathVariable("key") int batchKey)
+      throws IOException {
+    Batch batch = batchService.get(batchKey);
+
+    if (batch == null) {
+      return ResponseEntity.notFound().build();
+    }
+
+    String resultFilePath = batch.getResultFilePath();
+    if (resultFilePath != null) {
+      Path resultFile = Paths.get(resultFilePath);
+      ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(resultFile));
+      return ResponseEntity.ok()
+          .header("Content-Disposition", "attachment; filename=" + resultFile.getFileName())
+          .body(resource);
+    }
+
+    return ResponseEntity.notFound().build();
+  }
+
+  private String getNormalizedApiBaseUrl() {
+    return apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
   }
 }

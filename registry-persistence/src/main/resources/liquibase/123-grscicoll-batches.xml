@@ -1,0 +1,22 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="123" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        CREATE TABLE collections_batch(
+          key serial NOT NULL PRIMARY KEY,
+          state varchar(15),
+          operation varchar(10),
+          entity_type varchar(12) NOT NULL,
+          result_file_path text,
+          errors text[],
+          created timestamptz NOT NULL DEFAULT now(),
+          created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3))
+        );
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

@@ -47,7 +47,9 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -101,7 +103,6 @@ public class CsvWriterTest {
 
   @Test
   public void downloadStatisticsTest() {
-
     // Test data
     List<DownloadStatistics> stats =
         Arrays.asList(

@@ -506,6 +506,11 @@ public class BaseCollectionEntityService<
     update(entity, true);
   }
 
+  @Override
+  public boolean exists(@NotNull UUID key) {
+    return baseMapper.exists(key);
+  }
+
   @Validated({PostPersist.class, Default.class})
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
