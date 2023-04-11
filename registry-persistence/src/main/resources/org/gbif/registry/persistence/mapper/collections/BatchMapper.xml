@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.gbif.registry.persistence.mapper.collections.BatchMapper">
+
+  <!-- Auto-mapping and eager loading of sub resources  -->
+  <resultMap id="BATCH_MAP" type="org.gbif.api.model.collections.Batch"
+             autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="errors" column="errors" typeHandler="StringArrayTypeHandler"/>
+  </resultMap>
+
+  <sql id="BATCH_WRITE_FIELDS">
+    state, operation, entity_type, result_file_path, errors, created, created_by
+  </sql>
+
+  <sql id="BATCH_READ_FIELDS">
+    key, operation, state, entity_type, result_file_path, errors, created, created_by
+  </sql>
+
+  <sql id="BATCH_PARAMS_CREATE">
+    #{state,jdbcType=VARCHAR},
+    #{operation,jdbcType=VARCHAR},
+    #{entityType,jdbcType=VARCHAR},
+    #{resultFilePath,jdbcType=VARCHAR},
+    #{errors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    now(), <!-- created -->
+    #{createdBy,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="BATCH_PARAMS_UPDATE">
+    state = #{state,jdbcType=VARCHAR},
+    operation = #{operation,jdbcType=VARCHAR},
+    entity_type = #{entityType,jdbcType=VARCHAR},
+    result_file_path = #{resultFilePath,jdbcType=VARCHAR},
+    errors = #{errors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
+  </sql>
+
+  <insert id="create" parameterType="org.gbif.api.model.collections.Batch"
+          useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO collections_batch(<include refid="BATCH_WRITE_FIELDS"/>)
+    VALUES(<include refid="BATCH_PARAMS_CREATE"/>)
+  </insert>
+
+  <select id="get" resultMap="BATCH_MAP">
+    SELECT <include refid="BATCH_READ_FIELDS"/>
+    FROM collections_batch b
+    WHERE b.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <update id="update" parameterType="org.gbif.api.model.collections.Batch">
+    UPDATE collections_batch
+    SET <include refid="BATCH_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
+
+</mapper>

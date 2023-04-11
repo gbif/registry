@@ -31,6 +31,7 @@ import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
+import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.registry.service.collections.suggestions.InstitutionChangeSuggestionService;
@@ -51,6 +52,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -80,11 +82,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * implementation of {@link InstitutionService}.
  */
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Institutions",
-  description = " This API provides CRUD services for the institution entity. An institution can have a list of " +
-    "contacts, which are represented by the person entity. They can also have tags and identifiers. ",
-  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
-    name = "Order", properties = @ExtensionProperty(name = "Order", value = "1100")))
+    name = "Institutions",
+    description =
+        " This API provides CRUD services for the institution entity. An institution can have a list of "
+            + "contacts, which are represented by the person entity. They can also have tags and identifiers. ",
+    extensions =
+        @io.swagger.v3.oas.annotations.extensions.Extension(
+            name = "Order",
+            properties = @ExtensionProperty(name = "Order", value = "1100")))
 @RestController
 @RequestMapping(value = "grscicoll/institution", produces = MediaType.APPLICATION_JSON_VALUE)
 public class InstitutionResource
@@ -103,12 +108,16 @@ public class InstitutionResource
       InstitutionMergeService institutionMergeService,
       InstitutionDuplicatesService duplicatesService,
       InstitutionService institutionService,
-      InstitutionChangeSuggestionService institutionChangeSuggestionService) {
+      InstitutionChangeSuggestionService institutionChangeSuggestionService,
+      InstitutionBatchService batchService,
+      @Value("${api.root.url}") String apiBaseUrl) {
     super(
         institutionMergeService,
         institutionService,
         institutionChangeSuggestionService,
         duplicatesService,
+        batchService,
+        apiBaseUrl,
         Institution.class);
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
@@ -117,24 +126,25 @@ public class InstitutionResource
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-    value = {
-      @Parameter(
-        name = "type",
-        description = "Type of a GrSciColl institution",
-        schema = @Schema(implementation = InstitutionType.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "institutionalGovernance",
-        description = "Instutional governance of a GrSciColl institution",
-        schema = @Schema(implementation = InstitutionGovernance.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "disciplines",
-        description = "Discipline of a GrSciColl institution. Accepts multiple values, for example " +
-          "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
-        schema = @Schema(implementation = Discipline.class),
-        in = ParameterIn.QUERY)
-    })
+      value = {
+        @Parameter(
+            name = "type",
+            description = "Type of a GrSciColl institution",
+            schema = @Schema(implementation = InstitutionType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "institutionalGovernance",
+            description = "Instutional governance of a GrSciColl institution",
+            schema = @Schema(implementation = InstitutionGovernance.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "disciplines",
+            description =
+                "Discipline of a GrSciColl institution. Accepts multiple values, for example "
+                    + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
+            schema = @Schema(implementation = Discipline.class),
+            in = ParameterIn.QUERY)
+      })
   @SearchRequestParameters
   @interface InstitutionSearchParameters {}
 
@@ -207,17 +217,16 @@ public class InstitutionResource
   }
 
   @Operation(
-    operationId = "listInstitutions",
-    summary = "List all institutions",
-    description = "Lists all current institutions (deleted institutions are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+      operationId = "listInstitutions",
+      summary = "List all institutions",
+      description = "Lists all current institutions (deleted institutions are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")))
   @InstitutionSearchParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Institution search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Institution search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
@@ -302,12 +311,8 @@ public class InstitutionResource
       "The response is smaller than an institution search.",
     extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Institution search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Institution search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return institutionService.suggest(q);
