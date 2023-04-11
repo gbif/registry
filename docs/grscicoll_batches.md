@@ -54,7 +54,7 @@ curl -u "username:password" \
 You can find more information about these endpoints in the official API documentation.
 
 The processing of the batches is done asynchronously so those endpoints return a URL that contains information about the
-batch. The processing is not done until the state is `FINISHED` or 'FAILED'. If it failed you can find the errors in the
+batch: `{gbif_api_base_path}/v1/grscicoll/institution/batch/{batchKey}`.  The processing is not done until the state is `FINISHED` or 'FAILED'. If it failed you can find the errors in the
 `errors field`. Also, this processing generates another CSV or TSV file with the original file plus a column called `ERRORS`
 where you can check if there has been with the import or update of that particular entity. Also, for the case of batches to
 import new entities it returns the key of the created entities in the `KEY` column. The same applies for contacts.
