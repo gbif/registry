@@ -7,7 +7,13 @@ together):
     - Institutions: the `InstitutionFields` and `CommonFields`
       defined [here](../registry-service/src/main/java/org/gbif/registry/service/collections/batch/FileFields.java)
     - Collections: the `CollectionFields` and `CommonFields`
-  defined [here](../registry-service/src/main/java/org/gbif/registry/service/collections/batch/FileFields.java)
+      defined [here](../registry-service/src/main/java/org/gbif/registry/service/collections/batch/FileFields.java)
+
+  Example of an entities file:
+  ```
+  CODE,NAME,DESCRIPTION,ACTIVE,ADDRESS_COUNTRY
+  c1,n1,descr1,true,ES
+  ```
 
   If you are doing an update of existing entities you must specify the key of each entity in the `KEY` column.
 - Contacts file: it contains the contacts of the institutions or the collections. You can use any of the fields of
@@ -17,6 +23,12 @@ together):
   key of the institution(`INSTITUTION_KEY`) or the collection(`COLLECTION_KEY`). If it is an initial import and the
   corresponding institution or collection doesn't exist yet because it'll be created during the import, you have to use
   the `INSTITUTION_CODE` and `COLLECTION_CODE`to link them.
+
+  Example of a contacts file:
+  ```
+  FIRST_NAME,LAST_NAME,POSITION,INSTITUTION_CODE
+  name1,lastn1,tester,c1
+  ```
 
 Also, there are these general rules:
 
