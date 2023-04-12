@@ -8,7 +8,6 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
-import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
 import org.gbif.registry.service.collections.batch.model.ParserResult;
@@ -32,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -80,6 +80,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @Override
   public void importBatch(
       byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch) {
+    Objects.requireNonNull(batch.getKey());
 
     try {
       ParserResult<T> parsingResult =
@@ -176,7 +177,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       // csv
       Path resultPath =
-          createResultFile(entitiesFile, contactsFile, parsingResult, contactsParsed, CODE);
+          createResultFile(
+              entitiesFile, contactsFile, parsingResult, contactsParsed, CODE, batch.getKey());
 
       // update batch
       batch.setState(Batch.State.FINISHED);
@@ -207,6 +209,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   @Override
   public void updateBatch(
       byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch) {
+    Objects.requireNonNull(batch.getKey());
+
     try {
       ParserResult<T> parsingResult =
           parseEntities(
@@ -326,7 +330,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       // csv
       Path resultPath =
-          createResultFile(entitiesFile, contactsFile, parsingResult, contactsParsed, KEY);
+          createResultFile(
+              entitiesFile, contactsFile, parsingResult, contactsParsed, KEY, batch.getKey());
 
       // update batch
       batch.setState(Batch.State.FINISHED);
@@ -418,7 +423,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       byte[] contactsFile,
       ParserResult<T> entityParserResult,
       ContactsParserResult contactsParsed,
-      String keyColumn) {
+      String keyColumn,
+      int batchKey) {
 
     Path resultFile =
         Files.createTempFile(
@@ -456,7 +462,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
     // zip both files
     Path zipFile =
         Files.createFile(
-            resultDirPath.resolve(Paths.get("batchResult-" + System.currentTimeMillis() + ".zip")));
+            resultDirPath.resolve(
+                Paths.get("batchResult-" + batchKey + "-" + System.currentTimeMillis() + ".zip")));
     toZipFile(resultFiles, zipFile);
 
     for (Path path : resultFiles) {
