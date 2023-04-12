@@ -115,7 +115,6 @@ public abstract class BaseCollectionEntityResource<
   protected final ChangeSuggestionService<T, R> changeSuggestionService;
   protected final DuplicatesService duplicatesService;
   protected final BatchService batchService;
-  protected String apiBaseUrl;
 
   protected BaseCollectionEntityResource(
       MergeService<T> mergeService,
@@ -123,7 +122,6 @@ public abstract class BaseCollectionEntityResource<
       ChangeSuggestionService<T, R> changeSuggestionService,
       DuplicatesService duplicatesService,
       BatchService batchService,
-      String apiBaseUrl,
       Class<T> objectClass) {
     this.objectClass = objectClass;
     this.mergeService = mergeService;
@@ -131,7 +129,6 @@ public abstract class BaseCollectionEntityResource<
     this.collectionEntityService = collectionEntityService;
     this.duplicatesService = duplicatesService;
     this.batchService = batchService;
-    this.apiBaseUrl = apiBaseUrl;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -855,7 +852,7 @@ public abstract class BaseCollectionEntityResource<
             format,
             false);
 
-    String batchUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/" + batchKey;
+    String batchUri = request.getRequestURL().append("/").append(batchKey).toString();
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
@@ -898,7 +895,7 @@ public abstract class BaseCollectionEntityResource<
             format,
             true);
 
-    String batchUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/" + batchKey;
+    String batchUri = request.getRequestURL().append("/").append(batchKey).toString();
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);
   }
 
@@ -923,8 +920,7 @@ public abstract class BaseCollectionEntityResource<
     // Add file result link
     String resultFilePath = batch.getResultFilePath();
     if (resultFilePath != null) {
-      String resultFileUri = getNormalizedApiBaseUrl() + request.getRequestURI() + "/resultFile";
-      batchView.setResultFileLink(resultFileUri);
+      batchView.setResultFileLink(request.getRequestURL().append("/resultFile").toString());
     }
 
     return batchView;
@@ -967,9 +963,5 @@ public abstract class BaseCollectionEntityResource<
     }
 
     return ResponseEntity.notFound().build();
-  }
-
-  private String getNormalizedApiBaseUrl() {
-    return apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
   }
 }
