@@ -165,7 +165,8 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             parserResult,
             contactsParserResult,
-            FileFields.CommonFields.CODE);
+            FileFields.CommonFields.CODE,
+            1);
 
     List<Path> unzippedFiles = ZipUtils.unzip(resultFile, "src/test/resources/collections");
     assertEquals(2, unzippedFiles.size());
