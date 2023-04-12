@@ -26,7 +26,6 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
@@ -53,7 +52,6 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -116,15 +114,13 @@ public class CollectionResource
       CollectionDuplicatesService duplicatesService,
       CollectionService collectionService,
       CollectionChangeSuggestionService collectionChangeSuggestionService,
-      CollectionBatchService batchService,
-      @Value("${api.root.url}") String apiBaseUrl) {
+      CollectionBatchService batchService) {
     super(
         collectionMergeService,
         collectionService,
         collectionChangeSuggestionService,
         duplicatesService,
         batchService,
-        apiBaseUrl,
         Collection.class);
     this.collectionService = collectionService;
   }
@@ -167,14 +163,15 @@ public class CollectionResource
   @interface CollectionSearchParameters {}
 
   @Operation(
-    operationId = "getCollection",
-    summary = "Get details of a single collection",
-    description = "Details of a single collection.  Also works for deleted collections.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
+      operationId = "getCollection",
+      summary = "Get details of a single collection",
+      description = "Details of a single collection.  Also works for deleted collections.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Collection found and returned")
+  @ApiResponse(responseCode = "200", description = "Collection found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
@@ -184,13 +181,16 @@ public class CollectionResource
 
   // Method overridden only for documentation.
   @Operation(
-    operationId = "createCollection",
-    summary = "Create a new collection",
-    description = "Creates a new collection.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
+      operationId = "createCollection",
+      summary = "Create a new collection",
+      description = "Creates a new collection.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
-    responseCode = "201",
-    description = "Collection created, new collection's UUID returned")
+      responseCode = "201",
+      description = "Collection created, new collection's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
@@ -200,14 +200,15 @@ public class CollectionResource
 
   // Method overridden only for documentation.
   @Operation(
-    operationId = "updateCollection",
-    summary = "Update an existing collection",
-    description = "Updates the existing collection.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
+      operationId = "updateCollection",
+      summary = "Update an existing collection",
+      description = "Updates the existing collection.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Collection updated")
+  @ApiResponse(responseCode = "204", description = "Collection updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -218,14 +219,16 @@ public class CollectionResource
 
   // Method overridden only for documentation.
   @Operation(
-    operationId = "deleteCollection",
-    summary = "Delete an existing collection",
-    description = "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
+      operationId = "deleteCollection",
+      summary = "Delete an existing collection",
+      description =
+          "Deletes an existing collection. The collection entry gets a deleted timestamp but remains registered.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Collection marked as deleted")
+  @ApiResponse(responseCode = "204", description = "Collection marked as deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
@@ -284,17 +287,16 @@ public class CollectionResource
   }
 
   @Operation(
-    operationId = "listCollectionsExport",
-    summary = "Export search across all collections.",
-    description = "Download full-text search results as CSV or TSV.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0102")))
+      operationId = "listCollectionsExport",
+      summary = "Export search across all collections.",
+      description = "Download full-text search results as CSV or TSV.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0102")))
   @CollectionSearchParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Collection search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Collection search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("export")
   public void export(
       HttpServletResponse response,
@@ -312,12 +314,13 @@ public class CollectionResource
   }
 
   @Operation(
-    operationId = "listDeleted",
-    summary = "Retrieve all deleted collection records",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of deleted collection records")
+      operationId = "listDeleted",
+      summary = "Retrieve all deleted collection records",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @ApiResponse(responseCode = "200", description = "List of deleted collection records")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   public PagingResponse<CollectionView> listDeleted(
@@ -326,32 +329,35 @@ public class CollectionResource
   }
 
   @Operation(
-    operationId = "suggestCollections",
-    summary = "Suggest collections.",
-    description = "Search that returns up to 20 matching collections. Results are ordered by relevance. " +
-      "The response is smaller than a collection search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
+      operationId = "suggestCollections",
+      summary = "Suggest collections.",
+      description =
+          "Search that returns up to 20 matching collections. Results are ordered by relevance. "
+              + "The response is smaller than a collection search.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Collection search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Collection search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("suggest")
   public List<KeyCodeNameResult> suggest(@RequestParam(value = "q", required = false) String q) {
     return collectionService.suggest(q);
   }
 
   @Operation(
-    operationId = "importCollection",
-    summary = "Import a collection",
-    description = "Imports a collection from a dataset.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0495")))
+      operationId = "importCollection",
+      summary = "Import a collection",
+      description = "Imports a collection from a dataset.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0495")))
   @ApiResponse(
-    responseCode = "200",
-    description = "Collection imported, key returned.",
-    content = @Content)
+      responseCode = "200",
+      description = "Collection imported, key returned.",
+      content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "import", consumes = MediaType.APPLICATION_JSON_VALUE)
