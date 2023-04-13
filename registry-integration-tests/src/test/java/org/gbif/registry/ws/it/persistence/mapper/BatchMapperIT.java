@@ -52,7 +52,6 @@ public class BatchMapperIT extends BaseItTest {
     batch.setEntityType(CollectionEntityType.INSTITUTION);
     batch.setCreatedBy("test");
     batch.setState(Batch.State.IN_PROGRESS);
-    batch.setOperation(Batch.Operation.CREATE);
     batchMapper.create(batch);
 
     assertNotNull(batch.getKey());
@@ -61,7 +60,6 @@ public class BatchMapperIT extends BaseItTest {
     assertNotNull(created.getCreated());
     assertEquals(Batch.State.IN_PROGRESS, created.getState());
     assertEquals(CollectionEntityType.INSTITUTION, created.getEntityType());
-    assertEquals(Batch.Operation.CREATE, created.getOperation());
     assertEquals("test", created.getCreatedBy());
 
     batch.setErrors(Arrays.asList("e1", "e2"));
@@ -72,7 +70,6 @@ public class BatchMapperIT extends BaseItTest {
     Batch updated = batchMapper.get(batch.getKey());
     assertNotNull(updated.getCreated());
     assertEquals(CollectionEntityType.INSTITUTION, updated.getEntityType());
-    assertEquals(Batch.Operation.CREATE, updated.getOperation());
     assertEquals("test", updated.getCreatedBy());
     assertEquals("/test/file.zip", updated.getResultFilePath());
     assertEquals(Batch.State.FINISHED, updated.getState());

@@ -66,13 +66,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hamcrest.core.StringContains;
-import org.hamcrest.core.StringEndsWith;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -88,7 +86,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -592,10 +589,10 @@ abstract class BaseCollectionEntityResourceIT<
   @Test
   public void importBatchTest() throws Exception {
     int key = 1;
-    when(getBatchService().handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
+    when(getBatchService().handleBatch(any(), any(), any())).thenReturn(key);
 
-    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
-    Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
+    Resource collectionsResource = new ClassPathResource("collections/collections.csv");
+    Resource contactsResource = new ClassPathResource("collections/collections_contacts.csv");
 
     resetSecurityContext("admin", UserRole.GRSCICOLL_ADMIN);
 
@@ -621,54 +618,12 @@ abstract class BaseCollectionEntityResourceIT<
   }
 
   @Test
-  public void updateBatchTest() throws Exception {
-    int key = 1;
-    when(getBatchService().handleBatch(any(), any(), any(), anyBoolean())).thenReturn(key);
-
-    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
-    Resource contactsResource = new ClassPathResource("collections/collection_contacts_import.csv");
-
-    resetSecurityContext("admin", UserRole.GRSCICOLL_ADMIN);
-
-    MockMultipartFile entitiesFile =
-        new MockMultipartFile("entitiesFile", collectionsResource.getInputStream());
-    MockMultipartFile contactsFile =
-        new MockMultipartFile("contactsFile", contactsResource.getInputStream());
-
-    mockMvc
-        .perform(
-            MockMvcRequestBuilders.multipart(
-                    "/grscicoll/" + paramType.getSimpleName().toLowerCase() + "/batch")
-                .file(entitiesFile)
-                .file(contactsFile)
-                .param("format", ExportFormat.CSV.name())
-                .with(
-                    r -> {
-                      r.setMethod(HttpMethod.PUT.name());
-                      return r;
-                    })
-                .with(
-                    httpBasic(
-                        TestConstants.TEST_GRSCICOLL_ADMIN, TestConstants.TEST_GRSCICOLL_ADMIN))
-                .contentType(MediaType.MULTIPART_FORM_DATA))
-        .andExpect(status().isCreated())
-        .andExpect(
-            header()
-                .string(
-                    "Location",
-                    StringEndsWith.endsWith(
-                        "/grscicoll/" + paramType.getSimpleName().toLowerCase() + "/batch/1")))
-        .andExpect(MockMvcResultMatchers.content().string(StringEndsWith.endsWith("/batch/1")));
-  }
-
-  @Test
   public void getBatchTest() throws Exception {
     Batch batch = new Batch();
     batch.setKey(1);
     batch.setState(Batch.State.FINISHED);
-    batch.setOperation(Batch.Operation.CREATE);
 
-    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
+    Resource collectionsResource = new ClassPathResource("collections/collections.csv");
     batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
 
     when(getBatchService().get(anyInt())).thenReturn(batch);
@@ -690,9 +645,8 @@ abstract class BaseCollectionEntityResourceIT<
     Batch batch = new Batch();
     batch.setKey(1);
     batch.setState(Batch.State.FINISHED);
-    batch.setOperation(Batch.Operation.CREATE);
 
-    Resource collectionsResource = new ClassPathResource("collections/collection_import.csv");
+    Resource collectionsResource = new ClassPathResource("collections/collections.csv");
     batch.setResultFilePath(collectionsResource.getFile().getAbsolutePath());
 
     when(getBatchService().get(anyInt())).thenReturn(batch);

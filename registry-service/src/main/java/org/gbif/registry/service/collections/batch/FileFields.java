@@ -100,10 +100,6 @@ public class FileFields {
     public static final String NOTES = "NOTES";
     public static final String USER_IDS = "USER_IDS";
 
-    public static String getEntityKey(CollectionEntityType entityType) {
-      return entityType == CollectionEntityType.INSTITUTION ? INSTITUTION_KEY : COLLECTION_KEY;
-    }
-
     public static String getEntityCode(CollectionEntityType entityType) {
       return entityType == CollectionEntityType.INSTITUTION ? INSTITUTION_CODE : COLLECTION_CODE;
     }

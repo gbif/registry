@@ -47,6 +47,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.google.common.annotations.VisibleForTesting;
 
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CODE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ERRORS;
@@ -55,6 +56,7 @@ import static org.gbif.registry.service.collections.batch.FileParser.parseContac
 import static org.gbif.registry.service.collections.batch.FileParser.parseEntities;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
 
+@Slf4j
 public abstract class BaseBatchHandler<T extends CollectionEntity> implements BatchHandler {
 
   private final BatchMapper batchMapper;
@@ -78,18 +80,13 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
   @Async
   @Override
-  public void importBatch(
+  public void handleBatch(
       byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch) {
     Objects.requireNonNull(batch.getKey());
 
     try {
       ParserResult<T> parsingResult =
-          parseEntities(
-              entitiesFile,
-              format,
-              this::createEntityFromValues,
-              CollectionEntity::getCode,
-              entityType);
+          parseEntities(entitiesFile, format, this::createEntityFromValues, entityType);
 
       if (!parsingResult.getDuplicates().isEmpty()) {
         batch.setState(Batch.State.FAILED);
@@ -111,80 +108,6 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
               format,
               FileFields.ContactFields.getEntityCode(entityType));
 
-      for (ParsedData<T> parsedEntity : parsingResult.getParsedDataMap().values()) {
-        T entity = parsedEntity.getEntity();
-
-        List<UUID> existingEntities = findEntity(entity.getCode(), entity.getIdentifiers());
-        if (!existingEntities.isEmpty()) {
-          parsedEntity
-              .getErrors()
-              .add(
-                  "Other "
-                      + entityType.name().toLowerCase()
-                      + "s already exist with the same code or id: "
-                      + existingEntities.stream().map(UUID::toString).collect(Collectors.joining())
-                      + ". Contacts skipped");
-          continue;
-        }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!allowedToCreateEntity(entity, authentication)) {
-          parsedEntity
-              .getErrors()
-              .add(
-                  "User "
-                      + authentication.getName()
-                      + " not allowed to create this "
-                      + entityType.name().toLowerCase()
-                      + ". Contacts skipped");
-          continue;
-        }
-
-        // create entity
-        entity.setCreatedBy(authentication.getName());
-
-        UUID key = null;
-        try {
-          key = entityService.create(entity);
-          entity.setKey(key);
-        } catch (Exception ex) {
-          parsedEntity
-              .getErrors()
-              .add("Couldn't create " + entityType.name().toLowerCase() + ": " + ex.getMessage());
-        }
-
-        if (key == null) {
-          continue;
-        }
-
-        // add identifiers
-        entity
-            .getIdentifiers()
-            .forEach(i -> addIdentifier(entity.getKey(), i, parsedEntity.getErrors()));
-
-        // add contacts
-        for (ParsedData<Contact> parsedContact :
-            contactsParsed
-                .getContactsByEntity()
-                .getOrDefault(entity.getCode(), Collections.emptyList())) {
-          try {
-            entityService.addContactPerson(key, parsedContact.getEntity());
-          } catch (Exception ex) {
-            parsedContact.getErrors().add("Couldn't add contact: " + ex.getMessage());
-          }
-        }
-      }
-
-      // csv
-      Path resultPath =
-          createResultFile(
-              entitiesFile, contactsFile, parsingResult, contactsParsed, CODE, batch.getKey());
-
-      // update batch
-      batch.setState(Batch.State.FINISHED);
-      batch.getErrors().addAll(parsingResult.getFileErrors());
-      batch.getErrors().addAll(contactsParsed.getFileErrors());
-
       if (!contactsParsed.getDuplicates().isEmpty()) {
         batch
             .getErrors()
@@ -194,6 +117,43 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                         .map(Object::toString)
                         .collect(Collectors.joining(",")));
       }
+
+      for (ParsedData<T> parsedEntity : parsingResult.getParsedDataMap().values()) {
+        T entity = parsedEntity.getEntity();
+
+        if (entity.getKey() == null) {
+          Optional<UUID> key = createEntity(entity, parsedEntity);
+          if (!key.isPresent()) {
+            continue;
+          }
+        } else {
+          updateEntity(entity, parsedEntity, parsingResult.getFileHeadersIndex());
+        }
+
+        handleIdentifiers(parsedEntity, entity);
+
+        // handle contacts of the entity
+        List<ParsedData<Contact>> entityContacts =
+            contactsParsed
+                .getContactsByEntity()
+                .getOrDefault(entity.getCode(), Collections.emptyList());
+
+        if (entityContacts.isEmpty()) {
+          continue;
+        }
+
+        handleContacts(parsedEntity, entity, entityContacts);
+      }
+
+      // csv
+      Path resultPath =
+          createResultFile(
+              entitiesFile, contactsFile, parsingResult, contactsParsed, batch.getKey());
+
+      // update batch
+      batch.setState(Batch.State.FINISHED);
+      batch.getErrors().addAll(parsingResult.getFileErrors());
+      batch.getErrors().addAll(contactsParsed.getFileErrors());
 
       batch.setResultFilePath(resultPath.toFile().getAbsolutePath());
       batchMapper.update(batch);
@@ -205,144 +165,137 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
     }
   }
 
-  @Async
-  @Override
-  public void updateBatch(
-      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, Batch batch) {
-    Objects.requireNonNull(batch.getKey());
+  private void handleContacts(
+      ParsedData<T> parsedEntity, T entity, List<ParsedData<Contact>> entityContacts) {
+    // delete contacts
+    List<Contact> existingContacts = entityService.listContactPersons(entity.getKey());
+    if (existingContacts != null && !existingContacts.isEmpty()) {
+      for (Contact existing : existingContacts) {
+        if (!containsContact(entityContacts, existing)) {
+          try {
+            entityService.removeContactPerson(entity.getKey(), existing.getKey());
+          } catch (Exception ex) {
+            parsedEntity.getErrors().add("Couldn't remove contact: " + ex.getMessage());
+          }
+        }
+      }
+    }
+
+    // update or create new contacts
+    for (ParsedData<Contact> contact : entityContacts) {
+      if (contact.getEntity().getKey() == null) {
+        // create new contact
+        try {
+          entityService.addContactPerson(entity.getKey(), contact.getEntity());
+        } catch (Exception ex) {
+          contact.getErrors().add("Couldn't add contact: " + ex.getMessage());
+        }
+      } else {
+        try {
+          entityService.updateContactPerson(entity.getKey(), contact.getEntity());
+        } catch (Exception ex) {
+          contact.getErrors().add("Couldn't update contact: " + ex.getMessage());
+        }
+      }
+    }
+  }
+
+  private void handleIdentifiers(ParsedData<T> parsedEntity, T entity) {
+    List<Identifier> existingIdentifiers = entityService.listIdentifiers(entity.getKey());
+    if (existingIdentifiers != null && !existingIdentifiers.isEmpty()) {
+      // delete identifiers
+      for (Identifier existing : existingIdentifiers) {
+        if (!containsIdentifier(entity.getIdentifiers(), existing)) {
+          try {
+            entityService.deleteIdentifier(entity.getKey(), existing.getKey());
+          } catch (Exception ex) {
+            parsedEntity.getErrors().add("Couldn't delete identifier: " + ex.getMessage());
+          }
+        }
+      }
+    }
+
+    // create new identifiers
+    entity.getIdentifiers().stream()
+        .filter(i -> !containsIdentifier(existingIdentifiers, i))
+        .forEach(i -> addIdentifier(entity.getKey(), i, parsedEntity.getErrors()));
+  }
+
+  private Optional<UUID> createEntity(T entity, ParsedData<T> parsedEntity) {
+    List<UUID> existingEntities = findEntity(entity.getCode(), entity.getIdentifiers());
+    if (!existingEntities.isEmpty()) {
+      parsedEntity
+          .getErrors()
+          .add(
+              "Other "
+                  + entityType.name().toLowerCase()
+                  + "s already exist with the same code or id: "
+                  + existingEntities.stream().map(UUID::toString).collect(Collectors.joining())
+                  + ". Contacts skipped");
+      return Optional.empty();
+    }
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!allowedToCreateEntity(entity, authentication)) {
+      parsedEntity
+          .getErrors()
+          .add(
+              "User "
+                  + authentication.getName()
+                  + " not allowed to create this "
+                  + entityType.name().toLowerCase()
+                  + ". Contacts skipped");
+      return Optional.empty();
+    }
+
+    // create entity
+    entity.setCreatedBy(authentication.getName());
 
     try {
-      ParserResult<T> parsingResult =
-          parseEntities(
-              entitiesFile,
-              format,
-              this::createEntityFromValues,
-              i -> i.getKey().toString(),
-              entityType);
-
-      if (!parsingResult.getDuplicates().isEmpty()) {
-        batch.setState(Batch.State.FAILED);
-        batch
-            .getErrors()
-            .add(
-                "Duplicate "
-                    + entityType.name().toLowerCase()
-                    + " keys: "
-                    + String.join(",", parsingResult.getDuplicates())
-                    + ". Contacts skipped");
-        batchMapper.update(batch);
-        return;
-      }
-
-      ContactsParserResult contactsParsed =
-          parseContacts(
-              contactsFile,
-              parsingResult.getParsedDataMap(),
-              format,
-              FileFields.ContactFields.getEntityKey(entityType));
-
-      for (ParsedData<T> parsedEntity : parsingResult.getParsedDataMap().values()) {
-        T entity = parsedEntity.getEntity();
-        if (!entityService.exists(entity.getKey()) || entity.getKey() == null) {
-          parsedEntity.getErrors().add(entityType.name().toLowerCase() + " doesn't exist");
-          continue;
-        }
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!allowedToUpdateEntity(entity, authentication)) {
-          parsedEntity
-              .getErrors()
-              .add(
-                  "User "
-                      + authentication.getName()
-                      + " not allowed to update this "
-                      + entityType.name().toLowerCase()
-                      + ". Contacts skipped");
-          continue;
-        }
-
-        // update entity
-        T mergedEntity =
-            mergeEntities(
-                entityService.get(entity.getKey()),
-                entity,
-                parsingResult.getFileHeadersIndex().keySet());
-        mergedEntity.setModifiedBy(authentication.getName());
-
-        try {
-          entityService.update(mergedEntity);
-        } catch (Exception ex) {
-          parsedEntity
-              .getErrors()
-              .add("Couldn't update " + entityType.name().toLowerCase() + ": " + ex.getMessage());
-        }
-
-        List<Identifier> existingIdentifiers = entityService.listIdentifiers(entity.getKey());
-
-        // delete identifiers
-        for (Identifier existing : existingIdentifiers) {
-          if (!containsIdentifier(entity.getIdentifiers(), existing)) {
-            try {
-              entityService.deleteIdentifier(entity.getKey(), existing.getKey());
-            } catch (Exception ex) {
-              parsedEntity.getErrors().add("Couldn't delete identifier: " + ex.getMessage());
-            }
-          }
-        }
-
-        // create new identifiers
-        entity.getIdentifiers().stream()
-            .filter(i -> !containsIdentifier(existingIdentifiers, i))
-            .forEach(i -> addIdentifier(entity.getKey(), i, parsedEntity.getErrors()));
-
-        // delete contacts
-        List<Contact> existingContacts = entityService.listContactPersons(entity.getKey());
-        java.util.Collection<ParsedData<Contact>> parsingDataContacts =
-            contactsParsed.getParsedDataMap().values();
-        for (Contact existing : existingContacts) {
-          if (!containsContact(parsingDataContacts, existing)) {
-            try {
-              entityService.removeContactPerson(entity.getKey(), existing.getKey());
-            } catch (Exception ex) {
-              parsedEntity.getErrors().add("Couldn't remove contact: " + ex.getMessage());
-            }
-          }
-        }
-
-        // update contacts
-        for (ParsedData<Contact> contact : parsingDataContacts) {
-          if (contact.getEntity().getKey() == null) {
-            // create new contact
-            try {
-              entityService.addContactPerson(entity.getKey(), contact.getEntity());
-            } catch (Exception ex) {
-              contact.getErrors().add("Couldn't add contact: " + ex.getMessage());
-            }
-          } else {
-            try {
-              entityService.updateContactPerson(entity.getKey(), contact.getEntity());
-            } catch (Exception ex) {
-              contact.getErrors().add("Couldn't update contact: " + ex.getMessage());
-            }
-          }
-        }
-      }
-
-      // csv
-      Path resultPath =
-          createResultFile(
-              entitiesFile, contactsFile, parsingResult, contactsParsed, KEY, batch.getKey());
-
-      // update batch
-      batch.setState(Batch.State.FINISHED);
-      batch.getErrors().addAll(parsingResult.getFileErrors());
-      batch.getErrors().addAll(contactsParsed.getFileErrors());
-      batch.setResultFilePath(resultPath.toFile().getAbsolutePath());
-      batchMapper.update(batch);
+      UUID key = entityService.create(entity);
+      entity.setKey(key);
+      return Optional.of(key);
     } catch (Exception ex) {
-      batch.getErrors().add("Update failed: " + ex.getMessage());
-      batch.setState(Batch.State.FAILED);
-      batchMapper.update(batch);
+      parsedEntity
+          .getErrors()
+          .add("Couldn't create " + entityType.name().toLowerCase() + ": " + ex.getMessage());
+    }
+
+    return Optional.empty();
+  }
+
+  private void updateEntity(
+      T entity, ParsedData<T> parsedEntity, Map<String, Integer> fileHeadersIndex)
+      throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    if (!entityService.exists(entity.getKey()) || entity.getKey() == null) {
+      parsedEntity.getErrors().add(entityType.name().toLowerCase() + " doesn't exist");
+      return;
+    }
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (!allowedToUpdateEntity(entity, authentication)) {
+      parsedEntity
+          .getErrors()
+          .add(
+              "User "
+                  + authentication.getName()
+                  + " not allowed to update this "
+                  + entityType.name().toLowerCase()
+                  + ". Contacts skipped");
+      return;
+    }
+
+    // update entity
+    T mergedEntity =
+        mergeEntities(entityService.get(entity.getKey()), entity, fileHeadersIndex.keySet());
+    mergedEntity.setModifiedBy(authentication.getName());
+
+    try {
+      entityService.update(mergedEntity);
+    } catch (Exception ex) {
+      parsedEntity
+          .getErrors()
+          .add("Couldn't update " + entityType.name().toLowerCase() + ": " + ex.getMessage());
     }
   }
 
@@ -402,18 +355,21 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
   }
 
   private boolean containsIdentifier(List<Identifier> identifierList, Identifier identifier) {
-    return identifierList.stream()
-        .anyMatch(
-            i ->
-                i.getIdentifier().equals(identifier.getIdentifier())
-                    && i.getType() == identifier.getType());
+    return identifierList != null
+        && identifierList.stream()
+            .anyMatch(
+                i ->
+                    i.getIdentifier().equals(identifier.getIdentifier())
+                        && i.getType() == identifier.getType());
   }
 
   private boolean containsContact(
       java.util.Collection<ParsedData<Contact>> contactList, Contact contact) {
-    return contactList.stream()
-        .map(ParsedData::getEntity)
-        .anyMatch(c -> c.getKey() != null && c.getKey().equals(contact.getKey()));
+    return contactList != null
+        && contactList.stream()
+            .map(ParsedData::getEntity)
+            .filter(c -> c.getKey() != null)
+            .anyMatch(c -> c.getKey().equals(contact.getKey()));
   }
 
   @SneakyThrows
@@ -423,7 +379,6 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       byte[] contactsFile,
       ParserResult<T> entityParserResult,
       ContactsParserResult contactsParsed,
-      String keyColumn,
       int batchKey) {
 
     Path resultFile =
@@ -432,11 +387,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
             "result-" + System.currentTimeMillis(),
             "." + entityParserResult.getFormat().name().toLowerCase());
     writeResult(
-        entitiesFile,
-        resultFile,
-        getEntityFields(),
-        entityParserResult,
-        (v, h) -> v[h.get(keyColumn)]);
+        entitiesFile, resultFile, getEntityFields(), entityParserResult, (v, h) -> v[h.get(CODE)]);
 
     List<Path> resultFiles = new ArrayList<>();
     resultFiles.add(resultFile);
@@ -480,6 +431,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       ParserResult<R> parserResult,
       BiFunction<String[], Map<String, Integer>, String> keyExtractor)
       throws IOException {
+
     try (BufferedReader br =
             new BufferedReader(new InputStreamReader(new ByteArrayInputStream(entitiesFile)));
         BufferedWriter bw = new BufferedWriter(new FileWriter(resultFile.toFile()))) {
@@ -504,10 +456,22 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
       String line;
       while ((line = br.readLine()) != null) {
+        if (line.isEmpty()) {
+          continue;
+        }
+
         String[] values = splitLine(parserResult.getFormat(), headersResult.size(), line);
 
+        // we get the key of the current entity from the specific column
         String keyValue = keyExtractor.apply(values, parserResult.getFileHeadersIndex());
+        // we find the entity in the parsed data to write the generated values during the batch
+        // processing such as the key and the errors
         ParsedData<R> parsingData = parserResult.getParsedDataMap().get(keyValue);
+
+        if (parsingData == null) {
+          log.warn("No parsed data found for key value {}", keyValue);
+          continue;
+        }
 
         StringBuilder resultLine = new StringBuilder();
         for (String header : headersResult) {
@@ -522,7 +486,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
         }
 
         // add errors
-        resultLine.append(String.join(FileParsingUtils.LIST_DELIMITER, parsingData.getErrors()));
+        Optional.ofNullable(parsingData.getErrors())
+            .ifPresent(e -> resultLine.append(String.join(FileParsingUtils.LIST_DELIMITER, e)));
 
         bw.write(resultLine.toString());
         bw.newLine();

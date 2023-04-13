@@ -35,8 +35,7 @@ public abstract class BaseBatchService implements BatchService {
 
   @Override
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
-  public int handleBatch(
-      byte[] entitiesFile, byte[] contactsFile, ExportFormat format, boolean update) {
+  public int handleBatch(byte[] entitiesFile, byte[] contactsFile, ExportFormat format) {
     Objects.requireNonNull(entitiesFile);
     Objects.requireNonNull(contactsFile);
     Objects.requireNonNull(format);
@@ -50,17 +49,10 @@ public abstract class BaseBatchService implements BatchService {
     batch.setCreatedBy(authentication.getName());
     batch.setState(Batch.State.IN_PROGRESS);
     batch.setEntityType(entityType);
-
-    // async import
-    if (update) {
-      batch.setOperation(Batch.Operation.UPDATE);
-      batchHandler.updateBatch(entitiesFile, contactsFile, format, batch);
-    } else {
-      batch.setOperation(Batch.Operation.CREATE);
-      batchHandler.importBatch(entitiesFile, contactsFile, format, batch);
-    }
-
     batchMapper.create(batch);
+
+    // async handle
+    batchHandler.handleBatch(entitiesFile, contactsFile, format, batch);
 
     return batch.getKey();
   }

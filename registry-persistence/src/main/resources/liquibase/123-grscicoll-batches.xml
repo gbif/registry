@@ -9,7 +9,6 @@
         CREATE TABLE collections_batch(
           key serial NOT NULL PRIMARY KEY,
           state varchar(15),
-          operation varchar(10),
           entity_type varchar(12) NOT NULL,
           result_file_path text,
           errors text[],

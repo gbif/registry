@@ -49,6 +49,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
+import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -104,10 +105,9 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
   @Test
   public void createResultFileTest() throws IOException {
     Resource institutionsFile =
-        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "_import.csv");
+        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "s.csv");
     Resource contactsFile =
-        new ClassPathResource(
-            "collections/" + entityType.name().toLowerCase() + "_contacts_import.csv");
+        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "s_contacts.csv");
     ExportFormat format = ExportFormat.CSV;
 
     T parsedEntity = newEntity();
@@ -115,11 +115,17 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
     parsedEntity.setCode("c1");
     parsedEntity.setDescription("desc1");
 
+    T parsedEntity2 = newEntity();
+    parsedEntity2.setKey(UUID.randomUUID());
+    parsedEntity2.setCode("c2");
+    parsedEntity2.setDescription("desc2");
+
     Map<String, Integer> fileHeadersIndex = new HashMap<>();
-    fileHeadersIndex.put(FileFields.CommonFields.CODE, 0);
-    fileHeadersIndex.put(FileFields.CommonFields.NAME, 1);
-    fileHeadersIndex.put(FileFields.CommonFields.DESCRIPTION, 2);
-    fileHeadersIndex.put(FileFields.CommonFields.ACTIVE, 3);
+    fileHeadersIndex.put(FileFields.CommonFields.KEY, 0);
+    fileHeadersIndex.put(FileFields.CommonFields.CODE, 1);
+    fileHeadersIndex.put(FileFields.CommonFields.NAME, 2);
+    fileHeadersIndex.put(FileFields.CommonFields.DESCRIPTION, 3);
+    fileHeadersIndex.put(FileFields.CommonFields.ACTIVE, 4);
 
     ParsedData<T> parsedData =
         ParsedData.<T>builder()
@@ -127,11 +133,17 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
             .errors(Collections.singletonList("entity error"))
             .build();
 
+    ParsedData<T> parsedData2 = ParsedData.<T>builder().entity(parsedEntity2).build();
+
+    Map<String, ParsedData<T>> parsedDataMap = new HashMap<>();
+    parsedDataMap.put(parsedEntity.getCode(), parsedData);
+    parsedDataMap.put(parsedEntity2.getCode(), parsedData2);
+
     EntitiesParserResult<T> parserResult =
         EntitiesParserResult.<T>builder()
             .format(format)
             .fileHeadersIndex(fileHeadersIndex)
-            .parsedDataMap(Collections.singletonMap(parsedEntity.getCode(), parsedData))
+            .parsedDataMap(parsedDataMap)
             .build();
 
     Contact contact = new Contact();
@@ -148,9 +160,10 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
             .build();
 
     Map<String, Integer> contactsHeadersIndex = new HashMap<>();
-    contactsHeadersIndex.put(FileFields.ContactFields.FIRST_NAME, 0);
-    contactsHeadersIndex.put(FileFields.ContactFields.LAST_NAME, 1);
-    contactsHeadersIndex.put(FileFields.ContactFields.POSITION, 2);
+    contactsHeadersIndex.put(FileFields.CommonFields.KEY, 0);
+    contactsHeadersIndex.put(FileFields.ContactFields.FIRST_NAME, 1);
+    contactsHeadersIndex.put(FileFields.ContactFields.LAST_NAME, 2);
+    contactsHeadersIndex.put(FileFields.ContactFields.POSITION, 3);
 
     ContactsParserResult contactsParserResult =
         ContactsParserResult.builder()
@@ -165,7 +178,6 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
             parserResult,
             contactsParserResult,
-            FileFields.CommonFields.CODE,
             1);
 
     List<Path> unzippedFiles = ZipUtils.unzip(resultFile, "src/test/resources/collections");
@@ -177,16 +189,17 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
         assertTrue(headers.contains(FileFields.CommonFields.KEY));
         assertTrue(headers.contains(FileFields.CommonFields.ERRORS));
 
+        // it should have one more column with the errors
         if (unzipped.getFileName().toString().startsWith("result-")) {
-          assertEquals(fileHeadersIndex.size() + 2, headers.size());
+          assertEquals(fileHeadersIndex.size() + 1, headers.size());
         } else if (unzipped.getFileName().toString().startsWith("contacts-")) {
-          assertEquals(contactsHeadersIndex.size() + 2, headers.size());
+          assertEquals(contactsHeadersIndex.size() + 1, headers.size());
         }
 
         br.lines()
             .forEach(
                 l -> {
-                  String[] values = l.split(format.getDelimiter().toString());
+                  String[] values = splitLine(format, headers.size(), l);
                   assertNotNull(values[headers.indexOf(FileFields.CommonFields.KEY)]);
                   assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
                 });
