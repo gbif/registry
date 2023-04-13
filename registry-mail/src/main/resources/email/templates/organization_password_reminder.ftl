@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="" type="org.gbif.registry.domain.mail.OrganizationPasswordReminderTemplateDataModel" -->
 <#include "header.ftl">
 
-<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear ${contact.firstName},</h5>
+<h5 style="margin: 0 0 20px;padding: 0;font-size: 16px;line-height: 1.25;">Dear <#if (contact.firstName)??>${contact.firstName}<#else>user</#if>,</h5>
 
 <p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
     You, or someone else has requested the shared token for the organisation
