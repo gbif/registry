@@ -26,8 +26,8 @@ together):
 
   Example of a contacts file:
   ```
-  FIRST_NAME,LAST_NAME,POSITION,INSTITUTION_CODE
-  name1,lastn1,tester,c1
+  KEY,FIRST_NAME,LAST_NAME,POSITION,INSTITUTION_CODE
+  1,name1,lastn1,tester,c1
   ```
 
 Also, there are these general rules:
@@ -38,17 +38,14 @@ Also, there are these general rules:
 - The names of the columns in the files are not case-sensitive and can be organized in any order.
 
 Once the files are ready you need to use these endpoints:
-  - Import of a batch of institutions: POST to `{gbif_api_base_path}/v1/grscicoll/institution/batch`
-  - Update of a batch of existing institutions: PUT to `{gbif_api_base_path}/v1/grscicoll/institution/batch`
-  - Import of a batch of institutions: POST to `{gbif_api_base_path}/v1/grscicoll/collection/batch`
-  - Update of a batch of existing collections: PUT to `{gbif_api_base_path}/v1/grscicoll/collection/batch`
+  - Batch of institutions: POST to `{gbif_api_base_path}/v1/grscicoll/institution/batch`
+  - Batch of collections: POST to `{gbif_api_base_path}/v1/grscicoll/collection/batch`
 
 Example:
 ```
-curl -u "username:password" \
+curl {api_url}/v1/grscicoll/institution/batch?format=CSV -u "username:password" \
 -F 'entitiesFile=@"/your_path/your_entities_file.csv"' \
--F 'contactsFile=@"/your_path/your_contacts_file.csv"' \
-{api_url}/v1/grscicoll/institution/batch?format=CSV
+-F 'contactsFile=@"/your_path/your_contacts_file.csv"'
 ```
 
 You can find more information about these endpoints in the official API documentation.
