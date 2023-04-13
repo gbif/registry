@@ -52,6 +52,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -114,13 +115,15 @@ public class CollectionResource
       CollectionDuplicatesService duplicatesService,
       CollectionService collectionService,
       CollectionChangeSuggestionService collectionChangeSuggestionService,
-      CollectionBatchService batchService) {
+      CollectionBatchService batchService,
+      @Value("${api.root.url}") String apiBaseUrl) {
     super(
         collectionMergeService,
         collectionService,
         collectionChangeSuggestionService,
         duplicatesService,
         batchService,
+        apiBaseUrl,
         Collection.class);
     this.collectionService = collectionService;
   }

@@ -52,6 +52,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -108,13 +109,15 @@ public class InstitutionResource
       InstitutionDuplicatesService duplicatesService,
       InstitutionService institutionService,
       InstitutionChangeSuggestionService institutionChangeSuggestionService,
-      InstitutionBatchService batchService) {
+      InstitutionBatchService batchService,
+      @Value("${api.root.url}") String apiBaseUrl) {
     super(
         institutionMergeService,
         institutionService,
         institutionChangeSuggestionService,
         duplicatesService,
         batchService,
+        apiBaseUrl,
         Institution.class);
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
