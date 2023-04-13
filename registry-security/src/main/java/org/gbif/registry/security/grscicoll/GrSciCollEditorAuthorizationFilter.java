@@ -124,7 +124,7 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
         if (isChangeSuggestionRequest(path)) {
           checkChangeSuggestionUpdate(path, authentication);
-        } else {
+        } else if (!isBatchRequest(path)) {
           // editors cannot edit machine tags
           checkMachineTagsPermissions(request, path, authentication);
 
@@ -139,6 +139,10 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
   private boolean isChangeSuggestionRequest(String path) {
     return path.contains("/changeSuggestion");
+  }
+
+  private boolean isBatchRequest(String path) {
+    return path.contains("/batch");
   }
 
   // it's a POST but can be done by anyone
