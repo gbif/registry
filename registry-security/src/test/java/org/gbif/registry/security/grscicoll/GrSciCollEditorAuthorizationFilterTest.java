@@ -1013,6 +1013,37 @@ public class GrSciCollEditorAuthorizationFilterTest {
     assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
   }
 
+  @Test
+  public void createBatchWithPermissionsTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/batch");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+    doReturn(ROLES_GRSCICOLL_EDITOR_ONLY).when(mockAuthentication).getAuthorities();
+
+    // WHEN, THEN
+    assertDoesNotThrow(() -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+  }
+
+  @Test
+  public void createBatchNotLoggedTest() {
+    // GIVEN
+    when(mockAuthenticationFacade.getAuthentication()).thenReturn(mockAuthentication);
+    when(mockRequest.getRequestURI()).thenReturn("/grscicoll/institution/batch");
+    when(mockRequest.getMethod()).thenReturn("POST");
+    when(mockAuthentication.getName()).thenReturn(USERNAME);
+
+    // WHEN
+    WebApplicationException ex =
+      assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
   private void mockInstitutionConversion(
       List<GrantedAuthority> roles,
       boolean institutionRights,
