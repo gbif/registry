@@ -136,7 +136,6 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     // this one is not included in the csv so it's removed in the batch update
     existing.setAlternativeCodes(Collections.singletonList(new AlternativeCode("foo", "boo")));
 
-    resetSecurityContext("test", UserRole.GRSCICOLL_MEDIATOR);
 
     // create entities
     persistDBEntities(existing);
