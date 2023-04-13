@@ -126,13 +126,15 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       for (ParsedData<T> parsedEntity : parsingResult.getParsedDataMap().values()) {
         T entity = parsedEntity.getEntity();
 
+        boolean succesful = false;
         if (entity.getKey() == null) {
-          Optional<UUID> key = createEntity(entity, parsedEntity);
-          if (!key.isPresent()) {
-            continue;
-          }
+          succesful = createEntity(entity, parsedEntity);
         } else {
-          updateEntity(entity, parsedEntity, parsingResult.getFileHeadersIndex());
+          succesful = updateEntity(entity, parsedEntity, parsingResult.getFileHeadersIndex());
+        }
+
+        if (!succesful) {
+          continue;
         }
 
         handleIdentifiers(parsedEntity, entity);
@@ -227,7 +229,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
         .forEach(i -> addIdentifier(entity.getKey(), i, parsedEntity.getErrors()));
   }
 
-  private Optional<UUID> createEntity(T entity, ParsedData<T> parsedEntity) {
+  private boolean createEntity(T entity, ParsedData<T> parsedEntity) {
     List<UUID> existingEntities = findEntity(entity.getCode(), entity.getIdentifiers());
     if (!existingEntities.isEmpty()) {
       parsedEntity
@@ -238,7 +240,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                   + "s already exist with the same code or id: "
                   + existingEntities.stream().map(UUID::toString).collect(Collectors.joining())
                   + ". Contacts skipped");
-      return Optional.empty();
+      return false;
     }
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -251,7 +253,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                   + " not allowed to create this "
                   + entityType.name().toLowerCase()
                   + ". Contacts skipped");
-      return Optional.empty();
+      return false;
     }
 
     // create entity
@@ -260,22 +262,22 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
     try {
       UUID key = entityService.create(entity);
       entity.setKey(key);
-      return Optional.of(key);
+      return true;
     } catch (Exception ex) {
       parsedEntity
           .getErrors()
           .add("Couldn't create " + entityType.name().toLowerCase() + ": " + ex.getMessage());
     }
 
-    return Optional.empty();
+    return false;
   }
 
-  private void updateEntity(
+  private boolean updateEntity(
       T entity, ParsedData<T> parsedEntity, Map<String, Integer> fileHeadersIndex)
       throws InvocationTargetException, NoSuchMethodException, IllegalAccessException {
     if (!entityService.exists(entity.getKey()) || entity.getKey() == null) {
       parsedEntity.getErrors().add(entityType.name().toLowerCase() + " doesn't exist");
-      return;
+      return false;
     }
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -288,7 +290,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
                   + " not allowed to update this "
                   + entityType.name().toLowerCase()
                   + ". Contacts skipped");
-      return;
+      return false;
     }
 
     // update entity
@@ -298,11 +300,13 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
     try {
       entityService.update(mergedEntity);
+      return true;
     } catch (Exception ex) {
       parsedEntity
           .getErrors()
           .add("Couldn't update " + entityType.name().toLowerCase() + ": " + ex.getMessage());
     }
+    return false;
   }
 
   @VisibleForTesting
