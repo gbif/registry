@@ -481,7 +481,7 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
 
         StringBuilder resultLine = new StringBuilder();
         for (String header : headersResult) {
-          if (header.equals(KEY) && !parserResult.getFileHeadersIndex().containsKey(KEY)) {
+          if (header.equals(KEY)) {
             // case of initial imports
             Optional.ofNullable(parserResult.getEntityKeyExtractor().apply(parsingData.getEntity()))
                 .ifPresent(resultLine::append);
