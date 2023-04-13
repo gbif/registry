@@ -10,16 +10,15 @@
   </resultMap>
 
   <sql id="BATCH_WRITE_FIELDS">
-    state, operation, entity_type, result_file_path, errors, created, created_by
+    state, entity_type, result_file_path, errors, created, created_by
   </sql>
 
   <sql id="BATCH_READ_FIELDS">
-    key, operation, state, entity_type, result_file_path, errors, created, created_by
+    key, state, entity_type, result_file_path, errors, created, created_by
   </sql>
 
   <sql id="BATCH_PARAMS_CREATE">
     #{state,jdbcType=VARCHAR},
-    #{operation,jdbcType=VARCHAR},
     #{entityType,jdbcType=VARCHAR},
     #{resultFilePath,jdbcType=VARCHAR},
     #{errors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -29,7 +28,6 @@
 
   <sql id="BATCH_PARAMS_UPDATE">
     state = #{state,jdbcType=VARCHAR},
-    operation = #{operation,jdbcType=VARCHAR},
     entity_type = #{entityType,jdbcType=VARCHAR},
     result_file_path = #{resultFilePath,jdbcType=VARCHAR},
     errors = #{errors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}

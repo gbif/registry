@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,94 +67,15 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
   }
 
   @Test
-  public void importBatchTest() throws IOException {
-    Resource entitiesFile = getEntitiesImportResource();
-    Resource contactsFile = getContactsImportResource();
+  public void handleBatchTest() throws IOException, SQLException {
+    Resource entitiesFile = getEntitiesResource();
+    Resource contactsFile = getContactsResource();
 
-    assertEquals(0, listAllEntities().size());
-
-    int key =
-        batchService.handleBatch(
-            StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
-            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-            ExportFormat.CSV,
-            false);
-
-    Batch batch = batchService.get(key);
-    assertTrue(batch.getErrors().isEmpty());
-    assertEquals(Batch.Operation.CREATE, batch.getOperation());
-    assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.FINISHED, batch.getState());
-
-    List<T> entities = listAllEntities();
-    assertEquals(1, entities.size());
-    assertEquals(1, entities.get(0).getContactPersons().size());
-    assertEquals(Country.SPAIN, entities.get(0).getAddress().getCountry());
-
-    Files.delete(Paths.get(batch.getResultFilePath()));
-  }
-
-  @Test
-  public void importBatchWithoutPermissionsTest() throws IOException {
-    Resource entitiesFile = getEntitiesImportResource();
-    Resource contactsFile = getContactsImportResource();
-
-    resetSecurityContext("test", UserRole.GRSCICOLL_MEDIATOR);
-
-    assertEquals(0, listAllEntities().size());
-
-    int key =
-        batchService.handleBatch(
-            StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
-            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-            ExportFormat.CSV,
-            false);
-
-    Batch batch = batchService.get(key);
-    assertTrue(batch.getErrors().isEmpty());
-    assertEquals(Batch.Operation.CREATE, batch.getOperation());
-    assertEquals(entityType, batch.getEntityType());
-    assertEquals(Batch.State.FINISHED, batch.getState());
-    assertEquals(0, listAllEntities().size());
-
-    List<Path> unzippedFiles =
-        ZipUtils.unzip(Paths.get(batch.getResultFilePath()), "src/test/resources/collections");
-    assertEquals(2, unzippedFiles.size());
-
-    for (Path unzipped : unzippedFiles) {
-      boolean isEntitiesFile = unzipped.getFileName().toString().contains("result-");
-      try (BufferedReader br = new BufferedReader(new FileReader(unzipped.toFile()))) {
-        List<String> headers =
-            Arrays.asList(br.readLine().split(ExportFormat.CSV.getDelimiter().toString()));
-        assertTrue(headers.contains(FileFields.CommonFields.KEY));
-        assertTrue(headers.contains(FileFields.CommonFields.ERRORS));
-
-        br.lines()
-            .forEach(
-                l -> {
-                  String[] values = splitLine(ExportFormat.CSV, headers.size(), l);
-                  assertTrue(
-                      Strings.isNullOrEmpty(values[headers.indexOf(FileFields.CommonFields.KEY)]));
-                  if (isEntitiesFile) {
-                    assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
-                    assertTrue(
-                        values[headers.indexOf(FileFields.CommonFields.ERRORS)].contains(
-                            "not allowed to create"));
-                  }
-                });
-      }
-    }
-
-    Files.delete(Paths.get(batch.getResultFilePath()));
-  }
-
-  @Test
-  public void updateBatchTest() throws SQLException, IOException {
     T existing = newInstance();
     existing.setKey(UUID.fromString("0b453274-d25e-4644-b860-327d5c54f173"));
-    existing.setCode("c1");
-    existing.setName("n1");
-    existing.setDescription("descr1");
+    existing.setCode("c2");
+    existing.setName("n2");
+    existing.setDescription("descr2");
     existing.setEmail(Collections.singletonList("email1@test.com"));
     // this one is not included in the csv so it's removed in the batch update
     existing.setAlternativeCodes(Collections.singletonList(new AlternativeCode("foo", "boo")));
@@ -163,28 +83,35 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     // create entities
     persistDBEntities(existing);
 
-    Resource entitiesFile = getEntitiesUpdateResource();
-    Resource contactsFile = getContactsUpdateResource();
+    assertEquals(1, listAllEntities().size());
 
     int key =
         batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-            ExportFormat.CSV,
-            true);
+            ExportFormat.CSV);
 
     Batch batch = batchService.get(key);
     assertTrue(batch.getErrors().isEmpty());
-    assertEquals(Batch.Operation.UPDATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
     assertEquals(Batch.State.FINISHED, batch.getState());
 
+    List<T> entities = listAllEntities();
+    assertEquals(2, entities.size());
+    assertEquals(1, entities.stream().filter(e -> e.getContactPersons().size() == 1).count());
+    assertEquals(1, entities.stream().filter(e -> e.getContactPersons().size() == 2).count());
+    assertEquals(
+        1,
+        entities.stream()
+            .filter(e -> e.getAddress() != null && e.getAddress().getCountry() == Country.SPAIN)
+            .count());
+
     T updated = entityService.get(existing.getKey());
-    assertEquals("descr2", updated.getDescription());
+    assertEquals("descr22", updated.getDescription());
     assertEquals(2, updated.getEmail().size());
     assertTrue(updated.isActive());
     assertEquals(1, updated.getAlternativeCodes().size());
-    assertEquals("c11", updated.getAlternativeCodes().get(0).getCode());
+    assertEquals("c22", updated.getAlternativeCodes().get(0).getCode());
     assertEquals("another code", updated.getAlternativeCodes().get(0).getDescription());
 
     assertAddressContactsAndIdentifiers(updated);
@@ -194,12 +121,17 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
   }
 
   @Test
-  public void updateBatchWithoutPermissionsTest() throws SQLException, IOException {
+  public void importBatchWithoutPermissionsTest() throws IOException, SQLException {
+    Resource entitiesFile = getEntitiesResource();
+    Resource contactsFile = getContactsResource();
+
+    resetSecurityContext("test", UserRole.GRSCICOLL_MEDIATOR);
+
     T existing = newInstance();
     existing.setKey(UUID.fromString("0b453274-d25e-4644-b860-327d5c54f173"));
-    existing.setCode("c1");
-    existing.setName("n1");
-    existing.setDescription("descr1");
+    existing.setCode("c2");
+    existing.setName("n2");
+    existing.setDescription("descr2");
     existing.setEmail(Collections.singletonList("email1@test.com"));
     // this one is not included in the csv so it's removed in the batch update
     existing.setAlternativeCodes(Collections.singletonList(new AlternativeCode("foo", "boo")));
@@ -209,21 +141,19 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     // create entities
     persistDBEntities(existing);
 
-    Resource entitiesFile = getEntitiesUpdateResource();
-    Resource contactsFile = getContactsUpdateResource();
+    assertEquals(1, listAllEntities().size());
 
     int key =
         batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-            ExportFormat.CSV,
-            true);
+            ExportFormat.CSV);
 
     Batch batch = batchService.get(key);
     assertTrue(batch.getErrors().isEmpty());
-    assertEquals(Batch.Operation.UPDATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
     assertEquals(Batch.State.FINISHED, batch.getState());
+    assertEquals(1, listAllEntities().size());
 
     T updated = entityService.get(existing.getKey());
     assertEquals(existing.getDescription(), updated.getDescription());
@@ -234,6 +164,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
 
     assertTrue(Files.exists(Paths.get(batch.getResultFilePath())));
 
+    assertTrue(batch.getResultFilePath().contains("batchResult-" + batch.getKey() + "-"));
     List<Path> unzippedFiles =
         ZipUtils.unzip(Paths.get(batch.getResultFilePath()), "src/test/resources/collections");
     assertEquals(2, unzippedFiles.size());
@@ -250,11 +181,26 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
             .forEach(
                 l -> {
                   String[] values = splitLine(ExportFormat.CSV, headers.size(), l);
+                  String codeValue =
+                      headers.contains(FileFields.CommonFields.CODE)
+                          ? values[headers.indexOf(FileFields.CommonFields.CODE)]
+                          : null;
+                  String keyValue = values[headers.indexOf(FileFields.CommonFields.KEY)];
+                  if (existing.getCode().equals(codeValue)) {
+                    assertEquals(
+                        existing.getKey().toString(),
+                        values[headers.indexOf(FileFields.CommonFields.KEY)]);
+                  }
+
                   if (isEntitiesFile) {
                     assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
                     assertTrue(
                         values[headers.indexOf(FileFields.CommonFields.ERRORS)].contains(
-                            "not allowed to update"));
+                            " not allowed to "));
+                  } else {
+                    if (keyValue != null && !keyValue.isEmpty()) {
+                      assertEquals("-1", keyValue);
+                    }
                   }
                 });
       }
@@ -289,7 +235,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
   @Test
   public void duplicateCodesTest() throws IOException {
     Resource duplicatesFile = new ClassPathResource("collections/duplicate_codes.csv");
-    Resource contactsFile = new ClassPathResource("collections/institution_contacts_import.csv");
+    Resource contactsFile = new ClassPathResource("collections/institutions_contacts.csv");
 
     assertEquals(0, listAllEntities().size());
 
@@ -297,8 +243,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
         batchService.handleBatch(
             StreamUtils.copyToByteArray(duplicatesFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-            ExportFormat.CSV,
-            false);
+            ExportFormat.CSV);
 
     List<T> entities = listAllEntities();
     assertEquals(0, entities.size());
@@ -306,7 +251,6 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     Batch batch = batchService.get(key);
     // 2 errors: unknown column and duplicate codes
     assertEquals(1, batch.getErrors().size());
-    assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
     assertEquals(Batch.State.FAILED, batch.getState());
     assertNull(batch.getResultFilePath());
@@ -315,7 +259,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
   @Test
   public void unknownColumnsTest() throws IOException {
     Resource unknownColumnFile = new ClassPathResource("collections/unknown_column.csv");
-    Resource contactsFile = new ClassPathResource("collections/institution_contacts_import.csv");
+    Resource contactsFile = new ClassPathResource("collections/institutions_contacts.csv");
 
     assertEquals(0, listAllEntities().size());
 
@@ -323,8 +267,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
         batchService.handleBatch(
             StreamUtils.copyToByteArray(unknownColumnFile.getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-            ExportFormat.CSV,
-            false);
+            ExportFormat.CSV);
 
     List<T> entities = listAllEntities();
     assertEquals(1, entities.size());
@@ -332,7 +275,6 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     Batch batch = batchService.get(key);
     // 2 errors: unknown column and duplicate codes
     assertEquals(1, batch.getErrors().size());
-    assertEquals(Batch.Operation.CREATE, batch.getOperation());
     assertEquals(entityType, batch.getEntityType());
     assertEquals(Batch.State.FINISHED, batch.getState());
 
@@ -349,7 +291,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
 
     connection
         .prepareStatement(
-            "INSERT INTO address(key,city,country) VALUES(1,'"
+            "INSERT INTO address(key,city,country) VALUES(-1,'"
                 + entity.getAddress().getCity()
                 + "','"
                 + entity.getAddress().getCountry().getIso2LetterCode()
@@ -373,7 +315,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
                 + entity.getAlternativeCodes().get(0).getDescription()
                 + "','{\""
                 + entity.getEmail()
-                + "\"}',1,'test','test')")
+                + "\"}',-1,'test','test')")
         .executeUpdate();
 
     Contact contact1 = new Contact();
@@ -450,25 +392,14 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     }
   }
 
-  private ClassPathResource getContactsImportResource() {
+  private ClassPathResource getContactsResource() {
     return new ClassPathResource(
-        "collections/" + entityType.name().toLowerCase() + "_contacts_import.csv");
+        "collections/" + entityType.name().toLowerCase() + "s_contacts.csv");
   }
 
-  private Resource getEntitiesImportResource() {
+  private Resource getEntitiesResource() {
     Resource institutionsFile =
-        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "_import.csv");
-    return institutionsFile;
-  }
-
-  private ClassPathResource getContactsUpdateResource() {
-    return new ClassPathResource(
-        "collections/" + entityType.name().toLowerCase() + "_contacts_update.csv");
-  }
-
-  private Resource getEntitiesUpdateResource() {
-    Resource institutionsFile =
-        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "_update.csv");
+        new ClassPathResource("collections/" + entityType.name().toLowerCase() + "s.csv");
     return institutionsFile;
   }
 

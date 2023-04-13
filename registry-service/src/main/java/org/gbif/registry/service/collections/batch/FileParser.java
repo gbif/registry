@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.google.common.base.Strings;
 
@@ -97,7 +96,6 @@ public class FileParser {
       byte[] entitiesFile,
       ExportFormat format,
       BiFunction<String[], Map<String, Integer>, ParsedData<T>> createEntityFn,
-      Function<T, String> keyExtractor,
       CollectionEntityType entityType) {
 
     Map<String, ParsedData<T>> dataMap = new HashMap<>();
@@ -117,20 +115,20 @@ public class FileParser {
       }
 
       br.lines()
+          .filter(l -> !l.isEmpty())
           .forEach(
               line -> {
                 String[] values = splitLine(format, headersIndex.entrySet().size(), line);
                 ParsedData<T> data = createEntityFn.apply(values, headersIndex);
 
-                String key = keyExtractor.apply(data.getEntity());
-
-                if (key == null) {
-                  data.getErrors().add("No key or code found");
+                String entityCode = data.getEntity().getCode();
+                if (entityCode == null) {
+                  data.getErrors().add("No code found");
                 } else {
-                  if (dataMap.containsKey(key)) {
-                    duplicateKeys.add(key);
+                  if (dataMap.containsKey(entityCode)) {
+                    duplicateKeys.add(entityCode);
                   }
-                  dataMap.put(key, data);
+                  dataMap.put(entityCode, data);
                 }
               });
     }
@@ -358,7 +356,7 @@ public class FileParser {
   }
 
   static String extractValue(String[] values, Integer index) {
-    return index != null && index < values.length ? values[index] : null;
+    return index != null && index < values.length ? Strings.emptyToNull(values[index]) : null;
   }
 
   @SneakyThrows
@@ -366,7 +364,7 @@ public class FileParser {
       byte[] contactsFile,
       Map<String, ParsedData<T>> entitiesMap,
       ExportFormat format,
-      String entityKeyColum) {
+      String entityCodeColum) {
     Map<String, Integer> columnsIndex = new HashMap<>();
 
     Map<String, List<ParsedData<Contact>>> contactsByEntityKey = new HashMap<>();
@@ -385,27 +383,27 @@ public class FileParser {
       }
 
       br.lines()
+          .filter(l -> !l.isEmpty())
           .forEach(
               line -> {
                 String[] values = splitLine(format, columnsIndex.entrySet().size(), line);
 
                 ParsedData<Contact> parsedContact = createContactFromValues(values, columnsIndex);
-                // it can either be the entity code (new entities) or the entity key(entity update)
-                if (!columnsIndex.containsKey(entityKeyColum)) {
-                  parsedContact.getErrors().add("There is no column with entity key or code");
+                if (!columnsIndex.containsKey(entityCodeColum)) {
+                  parsedContact.getErrors().add("There is no column with entity code");
                   return;
                 }
 
-                String entityKey = values[columnsIndex.get(entityKeyColum)];
+                String entityCode = values[columnsIndex.get(entityCodeColum)];
 
-                if (Strings.isNullOrEmpty(entityKey) || !entitiesMap.containsKey(entityKey)) {
-                  parsedContact.getErrors().add("Invalid entity key or code");
+                if (Strings.isNullOrEmpty(entityCode) || !entitiesMap.containsKey(entityCode)) {
+                  parsedContact.getErrors().add("Invalid entity code");
                   return;
                 }
 
                 // assign the contact to the entity
                 entitiesMap
-                    .get(entityKey)
+                    .get(entityCode)
                     .getEntity()
                     .getContactPersons()
                     .add(parsedContact.getEntity());
@@ -419,7 +417,7 @@ public class FileParser {
                 }
                 contactsByKey.put(uniqueKey, parsedContact);
                 contactsByEntityKey
-                    .computeIfAbsent(entityKey, k -> new ArrayList<>())
+                    .computeIfAbsent(entityCode, k -> new ArrayList<>())
                     .add(parsedContact);
               });
     }

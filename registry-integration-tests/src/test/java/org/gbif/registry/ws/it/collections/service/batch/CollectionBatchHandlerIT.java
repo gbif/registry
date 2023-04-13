@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class CollectionBatchHandlerIT extends BaseBatchHandlerIT<Collection> {
 
-  private final CollectionService collectionService;
-
   @Autowired
   public CollectionBatchHandlerIT(
       SimplePrincipalProvider simplePrincipalProvider,
@@ -22,7 +20,6 @@ public class CollectionBatchHandlerIT extends BaseBatchHandlerIT<Collection> {
         collectionBatchHandler,
         collectionService,
         CollectionEntityType.COLLECTION);
-    this.collectionService = collectionService;
   }
 
   @Override

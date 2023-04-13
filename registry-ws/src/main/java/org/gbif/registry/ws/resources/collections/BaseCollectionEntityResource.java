@@ -849,51 +849,7 @@ public abstract class BaseCollectionEntityResource<
         batchService.handleBatch(
             StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
             StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
-            format,
-            false);
-
-    String batchUri = request.getRequestURL().append("/").append(batchKey).toString();
-    return ResponseEntity.created(new URI(batchUri)).body(batchUri);
-  }
-
-  @Operation(
-      operationId = "updateBatch",
-      summary = "Updates a batch of existing GRSciColl entities")
-  @ApiResponse(
-      responseCode = "201",
-      description = "Batch created and being handled. Key returned to check the status.",
-      content = @Content)
-  @Docs.DefaultUnsuccessfulReadResponses
-  @Docs.DefaultUnsuccessfulWriteResponses
-  @Parameter(
-      name = "format",
-      description = "Format of the files(CSV or TSV)",
-      required = true,
-      in = ParameterIn.QUERY,
-      schema = @Schema(implementation = ExportFormat.class))
-  @Parameter(
-      name = "entitiesFile",
-      description = "File with the entities to update",
-      required = true,
-      in = ParameterIn.QUERY)
-  @Parameter(
-      name = "contactsFile",
-      description = "File with the contacts to update",
-      required = true,
-      in = ParameterIn.QUERY)
-  @SneakyThrows
-  @PutMapping(value = "batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public ResponseEntity<String> updateBatch(
-      HttpServletRequest request,
-      @RequestParam("format") ExportFormat format,
-      @RequestPart("entitiesFile") MultipartFile entitiesFile,
-      @RequestPart("contactsFile") MultipartFile contactsFile) {
-    int batchKey =
-        batchService.handleBatch(
-            StreamUtils.copyToByteArray(entitiesFile.getResource().getInputStream()),
-            StreamUtils.copyToByteArray(contactsFile.getResource().getInputStream()),
-            format,
-            true);
+            format);
 
     String batchUri = request.getRequestURL().append("/").append(batchKey).toString();
     return ResponseEntity.created(new URI(batchUri)).body(batchUri);

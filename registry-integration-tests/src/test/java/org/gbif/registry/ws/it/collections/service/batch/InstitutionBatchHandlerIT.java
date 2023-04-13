@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 public class InstitutionBatchHandlerIT extends BaseBatchHandlerIT<Institution> {
 
-  private final InstitutionService institutionService;
-
   @Autowired
   public InstitutionBatchHandlerIT(
       SimplePrincipalProvider simplePrincipalProvider,
@@ -22,7 +20,6 @@ public class InstitutionBatchHandlerIT extends BaseBatchHandlerIT<Institution> {
         institutionBatchHandler,
         institutionService,
         CollectionEntityType.INSTITUTION);
-    this.institutionService = institutionService;
   }
 
   @Override
