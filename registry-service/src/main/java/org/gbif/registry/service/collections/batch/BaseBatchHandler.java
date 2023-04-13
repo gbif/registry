@@ -88,6 +88,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
     try {
       ParserResult<T> parsingResult =
           parseEntities(entitiesFile, format, this::createEntityFromValues, entityType);
+      Optional.ofNullable(parsingResult.getFileErrors())
+          .ifPresent(e -> batch.getErrors().addAll(e));
 
       if (!parsingResult.getDuplicates().isEmpty()) {
         batch.setState(Batch.State.FAILED);
@@ -108,6 +110,8 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
               parsingResult.getParsedDataMap(),
               format,
               FileFields.ContactFields.getEntityCode(entityType));
+      Optional.ofNullable(contactsParsed.getFileErrors())
+          .ifPresent(e -> batch.getErrors().addAll(e));
 
       if (!contactsParsed.getDuplicates().isEmpty()) {
         batch
@@ -146,19 +150,20 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
         handleContacts(parsedEntity, entity, entityContacts);
       }
 
-      // csv
-      Path resultPath =
-          createResultFile(
-              entitiesFile, contactsFile, parsingResult, contactsParsed, batch.getKey());
+      if (!parsingResult.getParsedDataMap().isEmpty()) {
+        // write the results to a new file
+        Path resultPath =
+            createResultFile(
+                entitiesFile, contactsFile, parsingResult, contactsParsed, batch.getKey());
+        batch.setState(Batch.State.FINISHED);
+        batch.setResultFilePath(resultPath.toFile().getAbsolutePath());
+      } else {
+        batch.setState(Batch.State.FAILED);
+        batch.getErrors().add("No entities found. Check the file delimiter is correct");
+      }
 
       // update batch
-      batch.setState(Batch.State.FINISHED);
-      batch.getErrors().addAll(parsingResult.getFileErrors());
-      batch.getErrors().addAll(contactsParsed.getFileErrors());
-
-      batch.setResultFilePath(resultPath.toFile().getAbsolutePath());
       batchMapper.update(batch);
-
     } catch (Exception ex) {
       batch.getErrors().add("Import failed: " + ex.getMessage());
       batch.setState(Batch.State.FAILED);

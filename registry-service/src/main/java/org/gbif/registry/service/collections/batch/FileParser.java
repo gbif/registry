@@ -110,7 +110,11 @@ public class FileParser {
         if (isEntityField(headers[i], entityType)) {
           headersIndex.put(headers[i].toUpperCase(), i);
         } else {
-          fileErrors.add("Unknown " + entityType.name().toLowerCase() + " column: " + headers[i]);
+          fileErrors.add(
+              "Unknown "
+                  + entityType.name().toLowerCase()
+                  + " column in entities file: "
+                  + headers[i]);
         }
       }
 
@@ -378,7 +382,7 @@ public class FileParser {
         if (isContactField(headers[i])) {
           columnsIndex.put(headers[i].toUpperCase(), i);
         } else {
-          fileErrors.add("Unknown contact column: " + headers[i]);
+          fileErrors.add("Unknown contact column in contacts file: " + headers[i]);
         }
       }
 
