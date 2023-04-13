@@ -281,6 +281,30 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     Files.delete(Paths.get(batch.getResultFilePath()));
   }
 
+  @Test
+  public void wrongDelimiterTest() throws IOException {
+    Resource unknownColumnFile = new ClassPathResource("collections/wrong_delimiter.csv");
+    Resource contactsFile = new ClassPathResource("collections/institutions_contacts.csv");
+
+    assertEquals(0, listAllEntities().size());
+
+    int key =
+      batchService.handleBatch(
+        StreamUtils.copyToByteArray(unknownColumnFile.getInputStream()),
+        StreamUtils.copyToByteArray(contactsFile.getInputStream()),
+        ExportFormat.CSV);
+
+    List<T> entities = listAllEntities();
+    assertEquals(0, entities.size());
+
+    Batch batch = batchService.get(key);
+    // 2 errors: unknown columns in entities file plus no entities found
+    assertEquals(2, batch.getErrors().size());
+    assertEquals(entityType, batch.getEntityType());
+    assertEquals(Batch.State.FAILED, batch.getState());
+    assertNull(batch.getResultFilePath());
+  }
+
   private void persistDBEntities(T entity) throws SQLException {
     Connection connection = PG_CONTAINER.createConnection("");
 
