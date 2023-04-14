@@ -56,7 +56,7 @@ Also, the batch processing generates another CSV or TSV file called `result file
 a column called `ERRORS` where you can check if there has been issues for each entity. It also adds a column `KEY` if
 it doesn't exist yet and it will include the key of the newly created entities. The same applies to contacts.
 
-These generated files can be found at `{gbif_api_base_path}/v1/grscicoll/collection/batch/{batchKet}/resultFile`
+These generated files can be found at `{gbif_api_base_path}/v1/grscicoll/collection/batch/{batchKey}/resultFile`
 
 
 
