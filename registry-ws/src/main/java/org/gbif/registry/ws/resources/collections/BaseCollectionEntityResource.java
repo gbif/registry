@@ -818,10 +818,10 @@ public abstract class BaseCollectionEntityResource<
     return collectionEntityService.listComments(targetEntityKey);
   }
 
-  @Operation(operationId = "importBatch", summary = "Imports a batch of new GRSciColl entities")
+  @Operation(operationId = "importBatch", summary = "Process a batch of GRSciColl entities")
   @ApiResponse(
       responseCode = "201",
-      description = "Batch created and being handled. Key returned to check the status.",
+      description = "Batch created and being handled. URL with the batch information to check its status.",
       content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
@@ -833,12 +833,12 @@ public abstract class BaseCollectionEntityResource<
       schema = @Schema(implementation = ExportFormat.class))
   @Parameter(
       name = "entitiesFile",
-      description = "File with the entities to import",
+      description = "File with the entities of the batch",
       required = true,
       in = ParameterIn.QUERY)
   @Parameter(
       name = "contactsFile",
-      description = "File with the contacts to import",
+      description = "File with the contacts associated to the entities",
       required = true,
       in = ParameterIn.QUERY)
   @SneakyThrows
@@ -863,7 +863,7 @@ public abstract class BaseCollectionEntityResource<
       summary = "Get details of a batch",
       description = "Details of a batch.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Batch found and returned")
+  @ApiResponse(responseCode = "200", description = "Batch information")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("batch/{key}")
   @NullToNotFound
@@ -892,7 +892,7 @@ public abstract class BaseCollectionEntityResource<
           "Get a file with the result of a batch that includes keys of the new entities created and errors found",
       description = "Result file of a batch.")
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Result file found and returned")
+  @ApiResponse(responseCode = "200", description = "Result file found and returned as attachment")
   @Docs.DefaultUnsuccessfulReadResponses
   @ApiResponse(
       responseCode = "410",

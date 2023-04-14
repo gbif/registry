@@ -1,7 +1,7 @@
-# How to import or update a batch of institutions or collections
+# How to upload a batch of institutions or collections
 
-For each operation you need 2 CSV or TSV files(both of them need to have the same format, you cannot use a CSV and a TSV
-together):
+For a batch you need 2 CSV or TSV files(both of them need to have the same format, you cannot use CSV for one file and TSV
+for the another one):
 
 - Entities file: it contains the institutions or the collections. You can use these fields:
     - Institutions: the `InstitutionFields` and `CommonFields`
@@ -15,14 +15,12 @@ together):
   c1,n1,descr1,true,ES
   ```
 
-  If you are doing an update of existing entities you must specify the key of each entity in the `KEY` column.
-- Contacts file: it contains the contacts of the institutions or the collections. You can use any of the fields of
+  If you are doing an update of an existing entity you must specify the key of the entity in the `KEY` column.
+- Contacts file: it contains the contacts associated with the institutions or collections. You can use any of the fields of
   the `ContactFields` defined [here](../registry-service/src/main/java/org/gbif/registry/service/collections/batch/FileFields.java)
 
-  If you are doing an update of existing contacts you must specify the key of each entity in the `KEY` column and the
-  key of the institution(`INSTITUTION_KEY`) or the collection(`COLLECTION_KEY`). If it is an initial import and the
-  corresponding institution or collection doesn't exist yet because it'll be created during the import, you have to use
-  the `INSTITUTION_CODE` and `COLLECTION_CODE`to link them.
+  If you are doing an update of existing contacts you must specify the key of the contact in the `KEY` column and the
+  code of the institution(`INSTITUTION_CODE`) or the collection(`COLLECTION_CODE`) to link them.
 
   Example of a contacts file:
   ```
@@ -51,10 +49,12 @@ curl {api_url}/v1/grscicoll/institution/batch?format=CSV -u "username:password" 
 You can find more information about these endpoints in the official API documentation.
 
 The processing of the batches is done asynchronously so those endpoints return a URL that contains information about the
-batch: `{gbif_api_base_path}/v1/grscicoll/institution/batch/{batchKey}`.  The processing is not done until the state is `FINISHED` or 'FAILED'. If it failed you can find the errors in the
-`errors field`. Also, this processing generates another CSV or TSV file with the original file plus a column called `ERRORS`
-where you can check if there has been with the import or update of that particular entity. Also, for the case of batches to
-import new entities it returns the key of the created entities in the `KEY` column. The same applies for contacts.
+batch: `{gbif_api_base_path}/v1/grscicoll/institution/batch/{batchKey}`. The processing is not done until the state
+is `FINISHED` or `FAILED`. If it failed you can find the errors in the `errors field`.
+
+Also, the batch processing generates another CSV or TSV file called `result file` that includes the original file plus
+a column called `ERRORS` where you can check if there has been issues for each entity. It also adds a column `KEY` if
+it doesn't exist yet and it will include the key of the newly created entities. The same applies to contacts.
 
 These generated files can be found at `{gbif_api_base_path}/v1/grscicoll/collection/batch/{batchKet}/resultFile`
 
