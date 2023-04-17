@@ -15,6 +15,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.batch.FileFields;
+import org.gbif.registry.service.collections.batch.FileParsingUtils;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -38,7 +39,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -107,7 +112,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
             .count());
 
     T updated = entityService.get(existing.getKey());
-    assertEquals("descr22", updated.getDescription());
+    assertEquals("descr,22", updated.getDescription());
     assertEquals(2, updated.getEmail().size());
     assertTrue(updated.isActive());
     assertEquals(1, updated.getAlternativeCodes().size());
@@ -135,7 +140,6 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     existing.setEmail(Collections.singletonList("email1@test.com"));
     // this one is not included in the csv so it's removed in the batch update
     existing.setAlternativeCodes(Collections.singletonList(new AlternativeCode("foo", "boo")));
-
 
     // create entities
     persistDBEntities(existing);
@@ -168,40 +172,44 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
         ZipUtils.unzip(Paths.get(batch.getResultFilePath()), "src/test/resources/collections");
     assertEquals(2, unzippedFiles.size());
 
+    // csv options
+    CSVParser csvParser =
+        new CSVParserBuilder().withSeparator(ExportFormat.CSV.getDelimiter()).build();
+
     for (Path unzipped : unzippedFiles) {
       boolean isEntitiesFile = unzipped.getFileName().toString().contains("result-");
-      try (BufferedReader br = new BufferedReader(new FileReader(unzipped.toFile()))) {
-        List<String> headers =
-            Arrays.asList(br.readLine().split(ExportFormat.CSV.getDelimiter().toString()));
+      try (CSVReader csvReader =
+          new CSVReaderBuilder(new BufferedReader(new FileReader(unzipped.toFile())))
+              .withCSVParser(csvParser)
+              .build()) {
+        List<String> headers = Arrays.asList(csvReader.readNextSilently());
         assertTrue(headers.contains(FileFields.CommonFields.KEY));
         assertTrue(headers.contains(FileFields.CommonFields.ERRORS));
 
-        br.lines()
-            .forEach(
-                l -> {
-                  String[] values = splitLine(ExportFormat.CSV, headers.size(), l);
-                  String codeValue =
-                      headers.contains(FileFields.CommonFields.CODE)
-                          ? values[headers.indexOf(FileFields.CommonFields.CODE)]
-                          : null;
-                  String keyValue = values[headers.indexOf(FileFields.CommonFields.KEY)];
-                  if (existing.getCode().equals(codeValue)) {
-                    assertEquals(
-                        existing.getKey().toString(),
-                        values[headers.indexOf(FileFields.CommonFields.KEY)]);
-                  }
+        String[] values;
+        while ((values = csvReader.readNextSilently()) != null) {
+          values = FileParsingUtils.normalizeValues(headers.size(), values);
+          String codeValue =
+              headers.contains(FileFields.CommonFields.CODE)
+                  ? values[headers.indexOf(FileFields.CommonFields.CODE)]
+                  : null;
+          String keyValue = values[headers.indexOf(FileFields.CommonFields.KEY)];
+          if (existing.getCode().equals(codeValue)) {
+            assertEquals(
+                existing.getKey().toString(), values[headers.indexOf(FileFields.CommonFields.KEY)]);
+          }
 
-                  if (isEntitiesFile) {
-                    assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
-                    assertTrue(
-                        values[headers.indexOf(FileFields.CommonFields.ERRORS)].contains(
-                            " not allowed to "));
-                  } else {
-                    if (keyValue != null && !keyValue.isEmpty()) {
-                      assertEquals("-1", keyValue);
-                    }
-                  }
-                });
+          if (isEntitiesFile) {
+            assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
+            assertTrue(
+                values[headers.indexOf(FileFields.CommonFields.ERRORS)].contains(
+                    " not allowed to "));
+          } else {
+            if (keyValue != null && !keyValue.isEmpty()) {
+              assertEquals("-1", keyValue);
+            }
+          }
+        }
       }
     }
 
@@ -288,10 +296,10 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(0, listAllEntities().size());
 
     int key =
-      batchService.handleBatch(
-        StreamUtils.copyToByteArray(unknownColumnFile.getInputStream()),
-        StreamUtils.copyToByteArray(contactsFile.getInputStream()),
-        ExportFormat.CSV);
+        batchService.handleBatch(
+            StreamUtils.copyToByteArray(unknownColumnFile.getInputStream()),
+            StreamUtils.copyToByteArray(contactsFile.getInputStream()),
+            ExportFormat.CSV);
 
     List<T> entities = listAllEntities();
     assertEquals(0, entities.size());

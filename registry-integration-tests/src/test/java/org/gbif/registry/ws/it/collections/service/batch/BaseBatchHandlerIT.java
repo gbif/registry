@@ -49,7 +49,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
 
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+
+import static org.gbif.registry.service.collections.batch.FileParsingUtils.normalizeValues;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -183,9 +188,15 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
     List<Path> unzippedFiles = ZipUtils.unzip(resultFile, "src/test/resources/collections");
     assertEquals(2, unzippedFiles.size());
 
+    // csv options
+    CSVParser csvParser = new CSVParserBuilder().withSeparator(format.getDelimiter()).build();
+
     for (Path unzipped : unzippedFiles) {
-      try (BufferedReader br = new BufferedReader(new FileReader(unzipped.toFile()))) {
-        List<String> headers = Arrays.asList(br.readLine().split(format.getDelimiter().toString()));
+      try (CSVReader csvReader =
+          new CSVReaderBuilder(new BufferedReader(new FileReader(unzipped.toFile())))
+              .withCSVParser(csvParser)
+              .build()) {
+        List<String> headers = Arrays.asList(csvReader.readNextSilently());
         assertTrue(headers.contains(FileFields.CommonFields.KEY));
         assertTrue(headers.contains(FileFields.CommonFields.ERRORS));
 
@@ -196,13 +207,12 @@ public abstract class BaseBatchHandlerIT<T extends CollectionEntity> extends Bas
           assertEquals(contactsHeadersIndex.size() + 1, headers.size());
         }
 
-        br.lines()
-            .forEach(
-                l -> {
-                  String[] values = splitLine(format, headers.size(), l);
-                  assertNotNull(values[headers.indexOf(FileFields.CommonFields.KEY)]);
-                  assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
-                });
+        String[] values;
+        while ((values = csvReader.readNextSilently()) != null) {
+          values = normalizeValues(headers.size(), values);
+          assertNotNull(values[headers.indexOf(FileFields.CommonFields.KEY)]);
+          assertNotNull(values[headers.indexOf(FileFields.CommonFields.ERRORS)]);
+        }
       }
     }
 

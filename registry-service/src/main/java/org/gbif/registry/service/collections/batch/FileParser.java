@@ -30,6 +30,10 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import com.google.common.base.Strings;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -86,7 +90,6 @@ import static org.gbif.registry.service.collections.batch.FileParsingUtils.parse
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUUID;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUri;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUserIds;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {
@@ -102,10 +105,17 @@ public class FileParser {
     List<String> fileErrors = new ArrayList<>();
     List<String> duplicateKeys = new ArrayList<>();
     Map<String, Integer> headersIndex = new HashMap<>();
-    try (BufferedReader br =
-        new BufferedReader(new InputStreamReader(new ByteArrayInputStream(entitiesFile)))) {
+
+    // csv options
+    CSVParser csvParser = new CSVParserBuilder().withSeparator(format.getDelimiter()).build();
+
+    try (CSVReader csvReader =
+        new CSVReaderBuilder(
+                new BufferedReader(new InputStreamReader(new ByteArrayInputStream(entitiesFile))))
+            .withCSVParser(csvParser)
+            .build()) {
       // extract headers
-      String[] headers = br.readLine().split(format.getDelimiter().toString());
+      String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
         if (isEntityField(headers[i], entityType)) {
           headersIndex.put(headers[i].toUpperCase(), i);
@@ -118,23 +128,25 @@ public class FileParser {
         }
       }
 
-      br.lines()
-          .filter(l -> !l.isEmpty())
-          .forEach(
-              line -> {
-                String[] values = splitLine(format, headersIndex.entrySet().size(), line);
-                ParsedData<T> data = createEntityFn.apply(values, headersIndex);
+      String[] values;
+      while ((values = csvReader.readNextSilently()) != null) {
+        if (values.length == 0) {
+          continue;
+        }
 
-                String entityCode = data.getEntity().getCode();
-                if (entityCode == null) {
-                  data.getErrors().add("No code found");
-                } else {
-                  if (dataMap.containsKey(entityCode)) {
-                    duplicateKeys.add(entityCode);
-                  }
-                  dataMap.put(entityCode, data);
-                }
-              });
+        values = FileParsingUtils.normalizeValues(headersIndex.entrySet().size(), values);
+
+        ParsedData<T> data = createEntityFn.apply(values, headersIndex);
+        String entityCode = data.getEntity().getCode();
+        if (entityCode == null) {
+          data.getErrors().add("No code found");
+        } else {
+          if (dataMap.containsKey(entityCode)) {
+            duplicateKeys.add(entityCode);
+          }
+          dataMap.put(entityCode, data);
+        }
+      }
     }
 
     return EntitiesParserResult.<T>builder()
@@ -375,9 +387,16 @@ public class FileParser {
     List<String> fileErrors = new ArrayList<>();
     List<String> duplicateContactKeys = new ArrayList<>();
     Map<String, ParsedData<Contact>> contactsByKey = new HashMap<>();
-    try (BufferedReader br =
-        new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contactsFile)))) {
-      String[] headers = br.readLine().split(format.getDelimiter().toString());
+
+    // csv options
+    CSVParser csvParser = new CSVParserBuilder().withSeparator(format.getDelimiter()).build();
+
+    try (CSVReader csvReader =
+        new CSVReaderBuilder(
+                new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contactsFile))))
+            .withCSVParser(csvParser)
+            .build()) {
+      String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
         if (isContactField(headers[i])) {
           columnsIndex.put(headers[i].toUpperCase(), i);
@@ -386,44 +405,40 @@ public class FileParser {
         }
       }
 
-      br.lines()
-          .filter(l -> !l.isEmpty())
-          .forEach(
-              line -> {
-                String[] values = splitLine(format, columnsIndex.entrySet().size(), line);
+      String[] values;
+      while ((values = csvReader.readNextSilently()) != null) {
+        if (values.length == 0) {
+          continue;
+        }
 
-                ParsedData<Contact> parsedContact = createContactFromValues(values, columnsIndex);
-                if (!columnsIndex.containsKey(entityCodeColum)) {
-                  parsedContact.getErrors().add("There is no column with entity code");
-                  return;
-                }
+        values = FileParsingUtils.normalizeValues(columnsIndex.entrySet().size(), values);
 
-                String entityCode = values[columnsIndex.get(entityCodeColum)];
+        ParsedData<Contact> parsedContact = createContactFromValues(values, columnsIndex);
+        if (!columnsIndex.containsKey(entityCodeColum)) {
+          parsedContact.getErrors().add("There is no column with entity code");
+          continue;
+        }
 
-                if (Strings.isNullOrEmpty(entityCode) || !entitiesMap.containsKey(entityCode)) {
-                  parsedContact.getErrors().add("Invalid entity code");
-                  return;
-                }
+        String entityCode = values[columnsIndex.get(entityCodeColum)];
 
-                // assign the contact to the entity
-                entitiesMap
-                    .get(entityCode)
-                    .getEntity()
-                    .getContactPersons()
-                    .add(parsedContact.getEntity());
+        if (Strings.isNullOrEmpty(entityCode) || !entitiesMap.containsKey(entityCode)) {
+          parsedContact.getErrors().add("Invalid entity code");
+          continue;
+        }
 
-                // get a key of the contact. For updates it's the contact key but for inital imports
-                // we hash all the values of the fields
-                String uniqueKey = String.valueOf(getContactUniqueKey(values, columnsIndex));
+        // assign the contact to the entity
+        entitiesMap.get(entityCode).getEntity().getContactPersons().add(parsedContact.getEntity());
 
-                if (contactsByKey.containsKey(uniqueKey)) {
-                  duplicateContactKeys.add(uniqueKey);
-                }
-                contactsByKey.put(uniqueKey, parsedContact);
-                contactsByEntityKey
-                    .computeIfAbsent(entityCode, k -> new ArrayList<>())
-                    .add(parsedContact);
-              });
+        // get a key of the contact. For updates it's the contact key but for inital imports
+        // we hash all the values of the fields
+        String uniqueKey = String.valueOf(getContactUniqueKey(values, columnsIndex));
+
+        if (contactsByKey.containsKey(uniqueKey)) {
+          duplicateContactKeys.add(uniqueKey);
+        }
+        contactsByKey.put(uniqueKey, parsedContact);
+        contactsByEntityKey.computeIfAbsent(entityCode, k -> new ArrayList<>()).add(parsedContact);
+      }
     }
 
     return ContactsParserResult.builder()

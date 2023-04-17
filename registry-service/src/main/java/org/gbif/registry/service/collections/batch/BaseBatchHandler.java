@@ -46,6 +46,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.CSVWriter;
+import com.opencsv.ICSVWriter;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +61,6 @@ import static org.gbif.registry.service.collections.batch.FileFields.CommonField
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
 import static org.gbif.registry.service.collections.batch.FileParser.parseContacts;
 import static org.gbif.registry.service.collections.batch.FileParser.parseEntities;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.splitLine;
 
 @Slf4j
 public abstract class BaseBatchHandler<T extends CollectionEntity> implements BatchHandler {
@@ -442,35 +447,47 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
       BiFunction<String[], Map<String, Integer>, String> keyExtractor)
       throws IOException {
 
-    try (BufferedReader br =
-            new BufferedReader(new InputStreamReader(new ByteArrayInputStream(entitiesFile)));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(resultFile.toFile()))) {
+    // csv options
+    CSVParser csvParser =
+        new CSVParserBuilder().withSeparator(parserResult.getFormat().getDelimiter()).build();
+
+    try (CSVReader csvReader =
+            new CSVReaderBuilder(
+                    new BufferedReader(
+                        new InputStreamReader(new ByteArrayInputStream(entitiesFile))))
+                .withCSVParser(csvParser)
+                .build();
+        CSVWriter csvWriter =
+            new CSVWriter(
+                new BufferedWriter(new FileWriter(resultFile.toFile())),
+                parserResult.getFormat().getDelimiter(),
+                ICSVWriter.DEFAULT_QUOTE_CHARACTER,
+                ICSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                ICSVWriter.DEFAULT_LINE_END)) {
 
       // write headers in result file. We only use the headers used in the batch plus the key and
       // errors
-      Set<String> headersResult =
+      Set<String> sourceHeaders =
           entityFields.stream()
               .filter(f -> parserResult.getFileHeadersIndex().containsKey(f))
               .collect(Collectors.toCollection(LinkedHashSet::new));
-      headersResult.add(KEY);
+      sourceHeaders.add(KEY);
 
-      String headersLine =
-          headersResult.stream()
-              .collect(Collectors.joining(parserResult.getFormat().getDelimiter().toString()));
-      headersLine += parserResult.getFormat().getDelimiter().toString() + ERRORS;
-      bw.write(headersLine);
-      bw.newLine();
+      String[] resultHeaders =
+          Arrays.copyOf(sourceHeaders.toArray(new String[0]), sourceHeaders.size() + 1);
+      resultHeaders[resultHeaders.length - 1] = ERRORS;
+      csvWriter.writeNext(resultHeaders);
 
       // skip header line
-      br.readLine();
+      csvReader.readNextSilently();
 
-      String line;
-      while ((line = br.readLine()) != null) {
-        if (line.isEmpty()) {
+      String[] values;
+      while ((values = csvReader.readNextSilently()) != null) {
+        if (values.length == 0) {
           continue;
         }
 
-        String[] values = splitLine(parserResult.getFormat(), headersResult.size(), line);
+        values = FileParsingUtils.normalizeValues(sourceHeaders.size(), values);
 
         // we get the key of the current entity from the specific column
         String keyValue = keyExtractor.apply(values, parserResult.getFileHeadersIndex());
@@ -483,24 +500,24 @@ public abstract class BaseBatchHandler<T extends CollectionEntity> implements Ba
           continue;
         }
 
-        StringBuilder resultLine = new StringBuilder();
-        for (String header : headersResult) {
-          if (header.equals(KEY)) {
-            // case of initial imports
-            Optional.ofNullable(parserResult.getEntityKeyExtractor().apply(parsingData.getEntity()))
-                .ifPresent(resultLine::append);
+        String[] resultValues = new String[resultHeaders.length + 1];
+        int i = 0;
+        for (String sourceHeader : sourceHeaders) {
+          if (sourceHeader.equals(KEY)) {
+            String key = parserResult.getEntityKeyExtractor().apply(parsingData.getEntity());
+            resultValues[i] = key != null ? key : "";
           } else {
-            resultLine.append(values[parserResult.getFileHeadersIndex().get(header)]);
+            resultValues[i] = values[parserResult.getFileHeadersIndex().get(sourceHeader)];
           }
-          resultLine.append(parserResult.getFormat().getDelimiter().toString());
+          i++;
         }
 
         // add errors
-        Optional.ofNullable(parsingData.getErrors())
-            .ifPresent(e -> resultLine.append(String.join(FileParsingUtils.LIST_DELIMITER, e)));
+        if (parsingData.getErrors() != null) {
+          resultValues[i] = String.join(FileParsingUtils.LIST_DELIMITER, parsingData.getErrors());
+        }
 
-        bw.write(resultLine.toString());
-        bw.newLine();
+        csvWriter.writeNext(resultValues);
       }
     }
   }
