@@ -126,6 +126,7 @@
     <zookeeper.version>3.4.14</zookeeper.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
+    <opencsv.version>5.7.1</opencsv.version>
 
     <!-- Test -->
     <junit.version>5.9.1</junit.version>
@@ -605,6 +606,13 @@
         <groupId>net.sf.supercsv</groupId>
         <artifactId>super-csv-dozer</artifactId>
         <version>${super-csv.version}</version>
+      </dependency>
+
+      <!-- grscicoll batches -->
+      <dependency>
+        <groupId>com.opencsv</groupId>
+        <artifactId>opencsv</artifactId>
+        <version>${opencsv.version}</version>
       </dependency>
 
       <!-- Caching -->

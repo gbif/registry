@@ -4,7 +4,6 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -278,12 +277,11 @@ public class FileParsingUtils {
     return ParserResult.of(result, errors);
   }
 
-  public static String[] splitLine(ExportFormat format, int headersSize, String line) {
-    String[] splitValues = line.split(format.getDelimiter().toString());
-
+  /** Makes sure there is an element for each header. */
+  public static String[] normalizeValues(int headersSize, String[] readValues) {
     // fill empty columns
-    String[] values = Arrays.copyOf(splitValues, headersSize);
-    for (int i = splitValues.length; i < values.length; i++) {
+    String[] values = Arrays.copyOf(readValues, headersSize);
+    for (int i = readValues.length; i < values.length; i++) {
       values[i] = "";
     }
     return values;
