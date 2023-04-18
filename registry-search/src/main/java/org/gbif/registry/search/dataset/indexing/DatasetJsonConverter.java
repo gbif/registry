@@ -295,7 +295,7 @@ public class DatasetJsonConverter {
         .ifPresent(
             p ->
                 dataset.put(
-                    "maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKNOWN.toString()));
+                    "maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKOWN.toString()));
   }
 
   private void enumTransforms(ObjectNode dataset) {
