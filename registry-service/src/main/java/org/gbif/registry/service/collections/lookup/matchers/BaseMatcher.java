@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.vocabulary.Country;
@@ -28,6 +30,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Strings;
@@ -45,6 +49,9 @@ import static org.gbif.api.model.collections.lookup.Match.fuzzy;
 /** Base matcher that contains common methods for the GrSciColl matchers. */
 public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMatched> {
 
+  private static final Pattern GBIF_URL_PATTERN =
+      Pattern.compile(
+          "^.*(gbif.org|grscicoll).*/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})(/)?$");
   protected final String apiBaseUrl;
 
   protected BaseMatcher(String apiBaseUrl) {
@@ -164,12 +171,28 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
         : matches;
   }
 
-  private static UUID parseUUID(String value) {
-    try {
-      return value != null ? UUID.fromString(value) : null;
-    } catch (Exception e) {
+  @VisibleForTesting
+  static UUID parseUUID(String value) {
+    if (Strings.isNullOrEmpty(value)) {
       return null;
     }
+
+    try {
+      return UUID.fromString(value);
+    } catch (Exception e) {
+      // do nothing
+    }
+
+    // check if it's a url containing a UUID
+    Matcher gbifUrlMatcher = GBIF_URL_PATTERN.matcher(value);
+    if (gbifUrlMatcher.matches()) {
+      try {
+        return UUID.fromString(gbifUrlMatcher.group(2));
+      } catch (Exception ex) {
+        // do nothing
+      }
+    }
+    return null;
   }
 
   private static String cleanString(String value) {
