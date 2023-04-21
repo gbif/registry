@@ -640,6 +640,28 @@ public class LookupServiceIT extends BaseServiceIT {
   }
 
   @Test
+  public void keyFromUrlMatchTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i1.getCode());
+    params.setInstitutionId("https://www.gbif.org/grscicoll/institution/" + i1.getKey().toString());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.KEY_MATCH));
+    assertTrue(institutionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+  }
+
+  @Test
   public void identifierDisambiguationTest() {
     // State
     LookupParams params = new LookupParams();
