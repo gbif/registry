@@ -16,6 +16,7 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.vocabulary.Country;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,4 +50,8 @@ public class ChangeSuggestionDto {
   private String nameNewInstitutionConvertedCollection;
   private Date modified;
   private String modifiedBy;
+
+  // this field is not persisted in the DB. It stores the country that has to be taken into account
+  // to check the user permissions
+  private Country countryScope;
 }

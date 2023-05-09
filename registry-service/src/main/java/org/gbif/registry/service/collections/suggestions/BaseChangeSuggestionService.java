@@ -25,6 +25,7 @@ import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -36,6 +37,7 @@ import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
@@ -43,6 +45,7 @@ import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
+import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
@@ -115,6 +118,7 @@ public abstract class BaseChangeSuggestionService<
   private final MergeService<T> mergeService;
   private final CrudService<T> crudService;
   private final ContactService contactService;
+  private final UserMapper userMapper;
   private final Class<T> clazz;
   private final ObjectMapper objectMapper;
   private final EmailSender emailSender;
@@ -129,6 +133,7 @@ public abstract class BaseChangeSuggestionService<
       MergeService<T> mergeService,
       CrudService<T> crudService,
       ContactService contactService,
+      UserMapper userMapper,
       Class<T> clazz,
       ObjectMapper objectMapper,
       EmailSender emailSender,
@@ -140,6 +145,7 @@ public abstract class BaseChangeSuggestionService<
     this.mergeService = mergeService;
     this.crudService = crudService;
     this.contactService = contactService;
+    this.userMapper = userMapper;
     this.clazz = clazz;
     this.objectMapper = objectMapper;
     this.emailSender = emailSender;
@@ -184,14 +190,16 @@ public abstract class BaseChangeSuggestionService<
     if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
       try {
         T suggestedEntity = readJson(dto.getSuggestedEntity(), clazz);
+
         BaseEmailModel emailModel =
             emailManager.generateNewChangeSuggestionEmailModel(
                 dto.getKey(),
                 dto.getEntityType(),
                 suggestedEntity.getName(),
-                getCountry(suggestedEntity),
+                dto.getCountryScope(),
                 dto.getEntityKey(),
-                dto.getType());
+                dto.getType(),
+                findRecipientsWithPermissions(dto.getEntityKey(), dto.getCountryScope()));
         emailSender.send(emailModel);
       } catch (Exception e) {
         LOG.error("Couldn't send email for new change suggestion", e);
@@ -199,6 +207,42 @@ public abstract class BaseChangeSuggestionService<
     }
 
     return dto.getKey();
+  }
+
+  private Set<String> findRecipientsWithPermissions(UUID entityKey, Country country) {
+
+    // first we try to find users that has permissions on the entity
+    if (entityKey != null) {
+      List<GbifUser> users =
+          userMapper.search(
+              null,
+              new HashSet<>(Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)),
+              Collections.singleton(entityKey),
+              null,
+              null,
+              new PagingRequest());
+
+      if (!users.isEmpty()) {
+        return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+      }
+    }
+
+    if (country != null) {
+      List<GbifUser> users =
+          userMapper.search(
+              null,
+              new HashSet<>(Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)),
+              null,
+              null,
+              Collections.singleton(country),
+              new PagingRequest());
+
+      if (!users.isEmpty()) {
+        return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+      }
+    }
+
+    return Collections.emptySet();
   }
 
   protected ChangeSuggestionDto createUpdateSuggestionDto(R changeSuggestion) {
@@ -210,6 +254,7 @@ public abstract class BaseChangeSuggestionService<
 
     T currentEntity = crudService.get(changeSuggestion.getEntityKey());
     dto.setChanges(extractChanges(changeSuggestion.getSuggestedEntity(), currentEntity));
+    dto.setCountryScope(getCountry(currentEntity));
 
     return dto;
   }
@@ -221,6 +266,7 @@ public abstract class BaseChangeSuggestionService<
     dto.setSuggestedEntity(toJson(changeSuggestion.getSuggestedEntity()));
     dto.setChanges(
         extractChanges(changeSuggestion.getSuggestedEntity(), createEmptyEntityInstance()));
+    dto.setCountryScope(getCountry(changeSuggestion.getSuggestedEntity()));
 
     return dto;
   }
@@ -235,7 +281,10 @@ public abstract class BaseChangeSuggestionService<
           "Suggestions to delete entities whose master source is not GRSciColl are not allowed");
     }
 
-    return createBaseChangeSuggestionDto(changeSuggestion);
+    ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
+    dto.setCountryScope(getCountry(currentEntity));
+
+    return dto;
   }
 
   protected ChangeSuggestionDto createMergeSuggestionDto(R changeSuggestion) {
@@ -244,6 +293,9 @@ public abstract class BaseChangeSuggestionService<
 
     ChangeSuggestionDto dto = createBaseChangeSuggestionDto(changeSuggestion);
     dto.setMergeTargetKey(changeSuggestion.getMergeTargetKey());
+
+    T currentEntity = crudService.get(changeSuggestion.getEntityKey());
+    dto.setCountryScope(getCountry(currentEntity));
 
     return dto;
   }

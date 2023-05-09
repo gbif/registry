@@ -22,6 +22,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
+import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
@@ -50,6 +51,7 @@ public class CollectionChangeSuggestionService
       ChangeSuggestionMapper changeSuggestionMapper,
       CollectionService collectionService,
       CollectionMergeService collectionMergeService,
+      UserMapper userMapper,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
@@ -61,6 +63,7 @@ public class CollectionChangeSuggestionService
         collectionMergeService,
         collectionService,
         collectionService,
+        userMapper,
         Collection.class,
         objectMapper,
         emailSender,
