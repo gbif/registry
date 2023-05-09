@@ -213,32 +213,36 @@ public abstract class BaseChangeSuggestionService<
 
     // first we try to find users that has permissions on the entity
     if (entityKey != null) {
-      List<GbifUser> users =
-          userMapper.search(
-              null,
-              new HashSet<>(Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)),
-              Collections.singleton(entityKey),
-              null,
-              null,
-              new PagingRequest());
+      for (UserRole role : Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)) {
+        List<GbifUser> users =
+            userMapper.search(
+                null,
+                Collections.singleton(role),
+                Collections.singleton(entityKey),
+                null,
+                null,
+                new PagingRequest());
 
-      if (!users.isEmpty()) {
-        return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+        if (!users.isEmpty()) {
+          return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+        }
       }
     }
 
     if (country != null) {
-      List<GbifUser> users =
-          userMapper.search(
-              null,
-              new HashSet<>(Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)),
-              null,
-              null,
-              Collections.singleton(country),
-              new PagingRequest());
+      for (UserRole role : Arrays.asList(UserRole.GRSCICOLL_EDITOR, UserRole.GRSCICOLL_MEDIATOR)) {
+        List<GbifUser> users =
+            userMapper.search(
+                null,
+                Collections.singleton(role),
+                null,
+                null,
+                Collections.singleton(country),
+                new PagingRequest());
 
-      if (!users.isEmpty()) {
-        return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+        if (!users.isEmpty()) {
+          return users.stream().map(GbifUser::getEmail).collect(Collectors.toSet());
+        }
       }
     }
 
