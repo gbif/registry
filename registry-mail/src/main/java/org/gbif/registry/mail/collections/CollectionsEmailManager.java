@@ -67,7 +67,8 @@ public class CollectionsEmailManager {
       String entityName,
       Country entityCountry,
       @Nullable UUID entityKey,
-      Type suggestionType)
+      Type suggestionType,
+      Set<String> recipients)
       throws IOException {
     return buildChangeSuggestionBaseEmailModel(
         suggestionKey,
@@ -77,7 +78,7 @@ public class CollectionsEmailManager {
         CollectionsEmailType.NEW_CHANGE_SUGGESTION,
         entityKey,
         suggestionType,
-        null);
+        recipients);
   }
 
   public BaseEmailModel generateAppliedChangeSuggestionEmailModel(
@@ -206,20 +207,23 @@ public class CollectionsEmailManager {
       templateDataModel.setEntityName(entityName);
       templateDataModel.setEntityCountry(entityCountry != null ? entityCountry.name() : "");
 
-      Set<String> allRecipients = new HashSet<>();
-      allRecipients.add(collectionsMailConfigurationProperties.getRecipient());
+      Set<String> finalRecipients = new HashSet<>();
+      Set<String> ccRecipients = new HashSet<>();
       if (recipients != null && !recipients.isEmpty()) {
-        allRecipients.addAll(recipients);
+        finalRecipients = recipients;
+        ccRecipients = Collections.singleton(collectionsMailConfigurationProperties.getRecipient());
+      } else {
+        finalRecipients.add(collectionsMailConfigurationProperties.getRecipient());
       }
 
       baseEmailModel =
           emailTemplateProcessors.buildEmail(
               emailType,
-              allRecipients,
+              finalRecipients,
               collectionsMailConfigurationProperties.getFrom(),
               templateDataModel,
               Locale.ENGLISH,
-              Collections.emptySet());
+              ccRecipients);
     } catch (TemplateException e) {
       throw new IOException(e);
     }

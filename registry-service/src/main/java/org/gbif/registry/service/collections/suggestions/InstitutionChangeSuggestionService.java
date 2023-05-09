@@ -21,6 +21,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
 import org.gbif.registry.mail.config.CollectionsMailConfigurationProperties;
+import org.gbif.registry.persistence.mapper.UserMapper;
 import org.gbif.registry.persistence.mapper.collections.ChangeSuggestionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
@@ -53,12 +54,14 @@ public class InstitutionChangeSuggestionService
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final InstitutionMergeService institutionMergeService;
+  private final InstitutionService institutionService;
 
   @Autowired
   public InstitutionChangeSuggestionService(
       ChangeSuggestionMapper changeSuggestionMapper,
       InstitutionService institutionService,
       InstitutionMergeService institutionMergeService,
+      UserMapper userMapper,
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
       EmailSender emailSender,
       CollectionsEmailManager emailManager,
@@ -70,6 +73,7 @@ public class InstitutionChangeSuggestionService
         institutionMergeService,
         institutionService,
         institutionService,
+        userMapper,
         Institution.class,
         objectMapper,
         emailSender,
@@ -79,6 +83,7 @@ public class InstitutionChangeSuggestionService
         collectionsMailConfigurationProperties);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionMergeService = institutionMergeService;
+    this.institutionService = institutionService;
   }
 
   @Override
@@ -91,6 +96,9 @@ public class InstitutionChangeSuggestionService
         institutionChangeSuggestion.getInstitutionForConvertedCollection());
     dto.setNameNewInstitutionConvertedCollection(
         institutionChangeSuggestion.getNameForNewInstitutionForConvertedCollection());
+
+    Institution currentEntity = institutionService.get(institutionChangeSuggestion.getEntityKey());
+    dto.setCountryScope(getCountry(currentEntity));
 
     return dto;
   }
