@@ -300,7 +300,15 @@ public class DatasetJsonConverter {
 
   private void enumTransforms(ObjectNode dataset) {
     Optional.ofNullable(dataset.get("license"))
-        .flatMap(licenseUrl -> License.fromLicenseUrl(licenseUrl.asText()))
+        .flatMap(
+            licenseUrl -> {
+              Optional<License> license = License.fromLicenseUrl(licenseUrl.asText());
+              if (license.isPresent()) {
+                return license;
+              } else {
+                return License.fromString(licenseUrl.asText());
+              }
+            })
         .ifPresent(license -> dataset.put("license", license.name()));
   }
 
