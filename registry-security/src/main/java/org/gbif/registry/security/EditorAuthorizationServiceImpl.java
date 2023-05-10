@@ -151,10 +151,6 @@ public class EditorAuthorizationServiceImpl implements EditorAuthorizationServic
     if (key != null && allowedToModifyEntity(name, key)) {
       return true;
     }
-    // try installation rights
-    if (allowedToModifyInstallation(name, dataset.getInstallationKey())) {
-      return true;
-    }
     // try higher organization or node rights
     return allowedToModifyOrganization(name, dataset.getPublishingOrganizationKey());
   }
