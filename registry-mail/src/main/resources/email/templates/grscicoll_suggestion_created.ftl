@@ -15,4 +15,9 @@
   </ul>
 </p>
 
+<p style="margin: 0 0 20px;padding: 0;line-height: 1.65;">
+You can review and apply or discard the suggestion by clicking on the link above and logging in with your GBIF
+credentials. Please contact scientific-collections@gbif.org if you encounter any issue or have any question. Thanks!
+</p>
+
 <#include "footer.ftl">
