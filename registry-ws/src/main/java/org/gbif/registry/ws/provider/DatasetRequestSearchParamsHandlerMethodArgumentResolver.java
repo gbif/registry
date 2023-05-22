@@ -13,11 +13,14 @@
  */
 package org.gbif.registry.ws.provider;
 
+import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
 import org.gbif.registry.domain.ws.RequestSearchParams;
+
+import java.util.Optional;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -28,6 +31,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @SuppressWarnings("NullableProblems")
 public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
+  private static final String WILDCARD_SEARCH = "*";
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
@@ -54,6 +58,8 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
     params.setType(
         VocabularyUtils.lookupEnum(
             webRequest.getParameter(DatasetRequestSearchParams.TYPE_PARAM), DatasetType.class));
+    Optional.ofNullable(webRequest.getParameter(RequestSearchParams.MODIFIED_PARAM))
+        .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
 
     return params;
   }

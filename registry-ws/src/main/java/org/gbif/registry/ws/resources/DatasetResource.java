@@ -43,6 +43,7 @@ import org.gbif.api.model.registry.search.DatasetSuggestResult;
 import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.util.Range;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Continent;
 import org.gbif.api.vocabulary.Country;
@@ -88,6 +89,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -434,41 +437,44 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
    * supported, such as dataset search.
    */
   @Operation(
-    operationId = "listDatasets",
-    summary = "List all datasets",
-    description = "Lists all current datasets (deleted datasets are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+      operationId = "listDatasets",
+      summary = "List all datasets",
+      description = "Lists all current datasets (deleted datasets are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")))
   @Parameters(
-    value = {
-      @Parameter(
-        name = "country",
-        description = "The 2-letter country code (as per ISO-3166-1) of the country publishing the dataset.",
-        schema = @Schema(implementation = Country.class),
-        in = ParameterIn.QUERY,
-        explode = Explode.FALSE),
-      @Parameter(
-        name = "type",
-        description = "The primary type of the dataset.",
-        schema = @Schema(implementation = DatasetType.class),
-        in = ParameterIn.QUERY,
-        explode = Explode.TRUE)
-    })
+      value = {
+        @Parameter(
+            name = "country",
+            description =
+                "The 2-letter country code (as per ISO-3166-1) of the country publishing the dataset.",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.FALSE),
+        @Parameter(
+            name = "type",
+            description = "The primary type of the dataset.",
+            schema = @Schema(implementation = DatasetType.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "modified",
+            description =
+                "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
+            schema = @Schema(implementation = DatasetType.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE)
+      })
   @SimpleSearchParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Dataset search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Dataset search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   public PagingResponse<Dataset> list(
       @Nullable Country country, @Valid DatasetRequestSearchParams request, Pageable page) {
-    if (country == null && request.getType() != null) {
-      return listByType(request.getType(), page);
-    } else if (country != null) {
-      return listByCountry(country, request.getType(), page);
-    } else if (request.getIdentifierType() != null && request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
+    if (country != null || request.getType() != null || request.getModified() != null) {
+      return listInternal(country, request.getType(), request.getModified(), page);
     } else if (request.getIdentifier() != null) {
       return listByIdentifier(request.getIdentifier(), page);
     } else if (request.getMachineTagNamespace() != null) {
@@ -482,6 +488,21 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
     } else {
       return list(page);
     }
+  }
+
+  private PagingResponse<Dataset> listInternal(
+      Country country, DatasetType type, Range<LocalDate> modified, Pageable page) {
+    Date from =
+        modified != null && modified.lowerEndpoint() != null
+            ? Date.from(modified.lowerEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+            : null;
+    Date to =
+        modified != null && modified.upperEndpoint() != null
+            ? Date.from(modified.upperEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+            : null;
+    long total = datasetMapper.countWithFilter(country, type, null, from, to);
+    return pagingResponse(
+        page, total, datasetMapper.listWithFilter(country, type, null, from, to, page));
   }
 
   @Override
