@@ -13,6 +13,13 @@
  */
 package org.gbif.registry.cli.datasetindex;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
+
+import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -52,6 +59,9 @@ import org.springframework.core.env.MapPropertySource;
 
 import com.google.common.collect.ImmutableMap;
 import com.zaxxer.hikari.HikariDataSource;
+
+import java.io.IOException;
+import java.util.Date;
 
 public class SpringContextBuilder {
 
@@ -189,8 +199,14 @@ public class SpringContextBuilder {
     @Bean
     public ClientBuilder clientBuilder(DatasetIndexConfiguration configuration) {
       ClientBuilder clientBuilder = new ClientBuilder();
+
+      ObjectMapper objectMapper = JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+      SimpleModule simpleModule = new SimpleModule();
+      simpleModule.addDeserializer(Date.class, new CustomDateDeserializer());
+      objectMapper.registerModule(simpleModule);
+
       clientBuilder.withObjectMapper(
-          JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
+        objectMapper);
       clientBuilder.withUrl(
           configuration.getRegistryWsUrl() != null
               ? configuration.getRegistryWsUrl()
@@ -216,6 +232,18 @@ public class SpringContextBuilder {
     @Bean
     public NetworkService networkService(ClientBuilder clientBuilder) {
       return clientBuilder.build(NetworkClient.class);
+    }
+  }
+
+  private static class CustomDateDeserializer extends DateDeserializers.DateDeserializer {
+
+    @Override
+    public Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      try {
+        return super.deserialize(p, ctxt);
+      } catch (Exception ex) {
+        return null;
+      }
     }
   }
 }
