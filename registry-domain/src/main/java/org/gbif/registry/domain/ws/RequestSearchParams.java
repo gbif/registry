@@ -13,7 +13,10 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.IdentifierType;
+
+import java.time.LocalDate;
 
 import javax.annotation.Nullable;
 
@@ -25,6 +28,7 @@ public abstract class RequestSearchParams {
   public static final String MACHINE_TAG_NAME_PARAM = "machineTagName";
   public static final String MACHINE_TAG_VALUE_PARAM = "machineTagValue";
   public static final String Q_PARAM = "q";
+  public static final String MODIFIED_PARAM = "modified";
 
   private IdentifierType identifierType;
   private String identifier;
@@ -32,6 +36,7 @@ public abstract class RequestSearchParams {
   private String machineTagName; // name
   private String machineTagValue; // value
   private String q; // query
+  private Range<LocalDate> modified;
 
   @Nullable
   public IdentifierType getIdentifierType() {
@@ -85,5 +90,14 @@ public abstract class RequestSearchParams {
 
   public void setQ(@Nullable String q) {
     this.q = q;
+  }
+
+  @Nullable
+  public Range<LocalDate> getModified() {
+    return modified;
+  }
+
+  public void setModified(Range<LocalDate> modified) {
+    this.modified = modified;
   }
 }
