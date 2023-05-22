@@ -475,6 +475,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
       @Nullable Country country, @Valid DatasetRequestSearchParams request, Pageable page) {
     if (country != null || request.getType() != null || request.getModified() != null) {
       return listInternal(country, request.getType(), request.getModified(), page);
+    } else if (request.getIdentifierType() != null && request.getIdentifier() != null) {
+      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
     } else if (request.getIdentifier() != null) {
       return listByIdentifier(request.getIdentifier(), page);
     } else if (request.getMachineTagNamespace() != null) {
