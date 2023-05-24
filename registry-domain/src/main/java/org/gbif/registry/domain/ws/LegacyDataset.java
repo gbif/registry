@@ -785,9 +785,9 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
 
   /**
    * Return the DatasetType from the Dataset's endpoints, defaulting to type METADATA if type
-   * OCCURRENCE, CHECKLIST or SAMPLING_EVENT could not be resolved.
+   * OCCURRENCE, MATERIAL_ENTITY, CHECKLIST or SAMPLING_EVENT could not be resolved.
    *
-   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE, CHECKLIST or
+   * @return the DatasetType, defaulting to type METADATA if type OCCURRENCE, MATERIAL_ENTITY, CHECKLIST or
    *     SAMPLING_EVENT could not be resolved
    */
   public DatasetType resolveType() {
@@ -799,6 +799,9 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           || serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
           || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE)) {
         return DatasetType.OCCURRENCE;
+      } else if (serviceTypes.contains(LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_1)
+          || serviceTypes.contains(LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_2)) {
+        return DatasetType.MATERIAL_ENTITY;
       } else if (serviceTypes.contains(LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE)) {
         return DatasetType.SAMPLING_EVENT;
       }

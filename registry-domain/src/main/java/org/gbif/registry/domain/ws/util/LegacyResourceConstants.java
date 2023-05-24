@@ -57,6 +57,8 @@ public class LegacyResourceConstants {
   public static final String CHECKLIST_SERVICE_TYPE_2 = "DWC_ARCHIVE_CHECKLIST";
   public static final String OCCURRENCE_SERVICE_TYPE_1 = "DWC-ARCHIVE-OCCURRENCE";
   public static final String OCCURRENCE_SERVICE_TYPE_2 = "DWC_ARCHIVE_OCCURRENCE";
+  public static final String MATERIAL_ENTITY_SERVICE_TYPE_1 = "DWC-ARCHIVE-MATERIAL-ENTITY";
+  public static final String MATERIAL_ENTITY_SERVICE_TYPE_2 = "DWC_ARCHIVE_MATERIAL_ENTITY";
   public static final String SAMPLING_EVENT_SERVICE_TYPE = "DWC-ARCHIVE-SAMPLING-EVENT";
   public static final String CAMTRAP_DP_SERVICE_TYPE = "CAMTRAP_DP";
 
