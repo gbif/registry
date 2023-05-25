@@ -88,6 +88,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2,
           LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1,
           LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2,
+          LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_1,
+          LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_2,
           LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
   private static final Set<String> DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES =
       ImmutableSet.of(
