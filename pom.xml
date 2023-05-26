@@ -95,7 +95,7 @@
     <gbif-metadata-profile.version>2.1</gbif-metadata-profile.version>
     <gbif-metrics.version>1.2</gbif-metrics.version>
     <gbif-parsers.version>0.60</gbif-parsers.version>
-    <gbif-postal-service.version>1.7.0</gbif-postal-service.version>
+    <gbif-postal-service.version>1.8.0-SNAPSHOT</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
 
     <!-- Third party -->
