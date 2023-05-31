@@ -403,14 +403,15 @@ public class OaipmhItemRepository implements ItemRepository {
               installationKey,
               from,
               until,
+              null,
               new PagingRequest(offset, length));
       datasetCount =
-          datasetMapper.countWithFilter(country, datasetType, installationKey, from, until);
+          datasetMapper.countWithFilter(country, datasetType, installationKey, from, until, null);
     } else {
       datasetList =
           datasetMapper.listWithFilter(
-              null, null, null, from, until, new PagingRequest(offset, length));
-      datasetCount = datasetMapper.countWithFilter(null, null, null, from, until);
+              null, null, null, from, until, null, new PagingRequest(offset, length));
+      datasetCount = datasetMapper.countWithFilter(null, null, null, from, until, null);
     }
 
     return new DatasetListWithTotalSize(datasetCount, datasetList);

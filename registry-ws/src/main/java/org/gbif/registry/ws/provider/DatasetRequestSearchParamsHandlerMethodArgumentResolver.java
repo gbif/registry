@@ -60,6 +60,8 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
             webRequest.getParameter(DatasetRequestSearchParams.TYPE_PARAM), DatasetType.class));
     Optional.ofNullable(webRequest.getParameter(RequestSearchParams.MODIFIED_PARAM))
         .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
+    Optional.ofNullable(webRequest.getParameter(DatasetRequestSearchParams.DELETED_PARAM))
+      .ifPresent(v -> params.setDeleted(Boolean.parseBoolean(v)));
 
     return params;
   }

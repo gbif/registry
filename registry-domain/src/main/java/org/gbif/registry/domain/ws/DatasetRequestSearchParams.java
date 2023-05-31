@@ -20,8 +20,10 @@ import javax.annotation.Nullable;
 public class DatasetRequestSearchParams extends RequestSearchParams {
 
   public static final String TYPE_PARAM = "type";
+  public static final String DELETED_PARAM = "deleted";
 
   private DatasetType type; // datasetType
+  private Boolean deleted;
 
   @Nullable
   public DatasetType getType() {
@@ -30,5 +32,13 @@ public class DatasetRequestSearchParams extends RequestSearchParams {
 
   public void setType(@Nullable DatasetType type) {
     this.type = type;
+  }
+
+  public Boolean getDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(Boolean deleted) {
+    this.deleted = deleted;
   }
 }

@@ -128,6 +128,7 @@ public class MockDatasetMapper implements DatasetMapper {
       @Nullable @Param("installation_key") UUID installationKey,
       @Nullable @Param("date_from") Date from,
       @Nullable @Param("date_to") Date to,
+      @Nullable @Param("deleted") Boolean deleted,
       @Nullable @Param("page") Pageable page) {
     return null;
   }
@@ -158,7 +159,8 @@ public class MockDatasetMapper implements DatasetMapper {
       @Nullable @Param("type") DatasetType type,
       @Nullable @Param("installation_key") UUID installationKey,
       @Nullable @Param("date_from") Date from,
-      @Nullable @Param("date_to") Date to) {
+      @Nullable @Param("date_to") Date to,
+      @Nullable @Param("deleted") Boolean deleted) {
     return 0;
   }
 
