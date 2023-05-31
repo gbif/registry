@@ -76,6 +76,7 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
       @Nullable @Param("installationKey") UUID installationKey,
       @Nullable @Param("dateFrom") Date from,
       @Nullable @Param("dateTo") Date to,
+      @Nullable @Param("deleted") Boolean deleted,
       @Nullable @Param("page") Pageable page);
 
   /** Counts all datasets from a DOI. This counts for dataset.doi and alternate identifiers. */
@@ -97,7 +98,8 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
       @Nullable @Param("type") DatasetType type,
       @Nullable @Param("installationKey") UUID installationKey,
       @Nullable @Param("dateFrom") Date from,
-      @Nullable @Param("dateTo") Date to);
+      @Nullable @Param("dateTo") Date to,
+      @Nullable @Param("deleted") Boolean deleted);
 
   /** Obtains a list of all the datasets hosted by the given installation. */
   List<Dataset> listDatasetsByInstallation(

@@ -222,7 +222,15 @@
     <if test="country != null" >
       INNER JOIN organization o ON d.publishing_organization_key = o.key
     </if>
-    WHERE d.deleted IS NULL
+    WHERE
+    <choose>
+      <when test="_parameter.containsKey('deleted') and deleted">
+        d.deleted IS NOT NULL
+      </when>
+      <otherwise>
+        d.deleted IS NULL
+      </otherwise>
+    </choose>
     <if test="type != null" >
       AND d.type = #{type,jdbcType=OTHER}
     </if>
@@ -531,7 +539,14 @@
     FROM dataset d
     INNER JOIN organization o ON d.publishing_organization_key = o.key
     <where>
-      <if test="!_parameter.containsKey('includeDeleted') or !includeDeleted" > d.deleted IS NULL</if>
+      <choose>
+        <when test="_parameter.containsKey('deleted') and deleted">
+          d.deleted IS NOT NULL
+        </when>
+        <otherwise>
+          d.deleted IS NULL
+        </otherwise>
+      </choose>
       <if test="country != null" > AND o.country = #{country}</if>
       <if test="type != null" > AND d.type = #{type,jdbcType=OTHER}</if>
       <if test="_parameter.containsKey('installationKey') and installationKey != null" > AND d.installation_key = #{installationKey}</if>

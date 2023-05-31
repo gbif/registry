@@ -473,8 +473,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @GetMapping
   public PagingResponse<Dataset> list(
       @Nullable Country country, @Valid DatasetRequestSearchParams request, Pageable page) {
-    if (country != null || request.getType() != null || request.getModified() != null) {
-      return listInternal(country, request.getType(), request.getModified(), page);
+    if (country != null
+        || request.getType() != null
+        || request.getModified() != null
+        || Boolean.TRUE.equals(request.getDeleted())) {
+      return listInternal(country, request, page);
     } else if (request.getIdentifierType() != null && request.getIdentifier() != null) {
       return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
     } else if (request.getIdentifier() != null) {
@@ -493,18 +496,33 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   }
 
   private PagingResponse<Dataset> listInternal(
-      Country country, DatasetType type, Range<LocalDate> modified, Pageable page) {
+      Country country, DatasetRequestSearchParams params, Pageable page) {
     Date from =
-        modified != null && modified.lowerEndpoint() != null
-            ? Date.from(modified.lowerEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+        params.getModified() != null && params.getModified().lowerEndpoint() != null
+            ? Date.from(
+                params
+                    .getModified()
+                    .lowerEndpoint()
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant())
             : null;
     Date to =
-        modified != null && modified.upperEndpoint() != null
-            ? Date.from(modified.upperEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+        params.getModified() != null && params.getModified().upperEndpoint() != null
+            ? Date.from(
+                params
+                    .getModified()
+                    .upperEndpoint()
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant())
             : null;
-    long total = datasetMapper.countWithFilter(country, type, null, from, to);
+    long total =
+        datasetMapper.countWithFilter(
+            country, params.getType(), null, from, to, params.getDeleted());
     return pagingResponse(
-        page, total, datasetMapper.listWithFilter(country, type, null, from, to, page));
+        page,
+        total,
+        datasetMapper.listWithFilter(
+            country, params.getType(), null, from, to, params.getDeleted(), page));
   }
 
   @Override
@@ -1203,6 +1221,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
+  @Deprecated() // use the {@link #list} method
   public PagingResponse<Dataset> listDeleted(Pageable page) {
     return pagingResponse(page, datasetMapper.countDeleted(), datasetMapper.deleted(page));
   }
