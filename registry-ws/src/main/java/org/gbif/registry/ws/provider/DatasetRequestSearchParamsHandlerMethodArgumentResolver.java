@@ -13,14 +13,20 @@
  */
 package org.gbif.registry.ws.provider;
 
+import com.google.common.base.Strings;
+
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.registry.domain.ws.DatasetRequestSearchParams;
 import org.gbif.registry.domain.ws.RequestSearchParams;
 
 import java.util.Optional;
+
+import org.gbif.ws.server.provider.PageableProvider;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -31,7 +37,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @SuppressWarnings("NullableProblems")
 public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
-  private static final String WILDCARD_SEARCH = "*";
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
@@ -60,8 +65,22 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
             webRequest.getParameter(DatasetRequestSearchParams.TYPE_PARAM), DatasetType.class));
     Optional.ofNullable(webRequest.getParameter(RequestSearchParams.MODIFIED_PARAM))
         .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
-    Optional.ofNullable(webRequest.getParameter(DatasetRequestSearchParams.DELETED_PARAM))
-      .ifPresent(v -> params.setDeleted(Boolean.parseBoolean(v)));
+
+    // country
+    String countryParam = webRequest.getParameter("country");
+    if (!Strings.isNullOrEmpty(countryParam)) {
+      Country country = Country.fromIsoCode(countryParam);
+      if (country == null) {
+        // if nothing found also try by enum name
+        country = VocabularyUtils.lookupEnum(countryParam, Country.class);
+      }
+      params.setCountry(country);
+    }
+
+    // page
+    Pageable page = PageableProvider.getPagingRequest(webRequest, Integer.MAX_VALUE);
+    params.setLimit(page.getLimit());
+    params.setOffset(page.getOffset());
 
     return params;
   }

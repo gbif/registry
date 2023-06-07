@@ -620,7 +620,7 @@ public abstract class NetworkEntityIT<
     IdentifierTests.testAddDelete(service, service, entity, testDataFactory);
   }
 
-  private Identifier newTestIdentifier(T owner, IdentifierType type, String identifierValue) {
+  protected Identifier newTestIdentifier(T owner, IdentifierType type, String identifierValue) {
     Identifier identifier = new Identifier(type, identifierValue);
     identifier.setCreatedBy(owner.getCreatedBy());
     return identifier;

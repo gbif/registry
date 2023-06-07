@@ -45,6 +45,7 @@ public interface NetworkEntityMapper<T extends NetworkEntity> {
 
   void update(T entity);
 
+  // TODO: remove when refactored all entities
   List<T> list(@Nullable @Param("page") Pageable page);
 
   List<T> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);

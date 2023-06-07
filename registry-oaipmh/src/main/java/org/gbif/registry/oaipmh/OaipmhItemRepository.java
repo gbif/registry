@@ -28,6 +28,7 @@ import org.gbif.metrics.ws.client.CubeWsClient;
 import org.gbif.registry.oaipmh.OaipmhSetRepository.SetIdentification;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.ws.util.ExtraMediaTypes;
 
@@ -396,22 +397,28 @@ public class OaipmhItemRepository implements ItemRepository {
           break;
       }
 
-      datasetList =
-          datasetMapper.listWithFilter(
-              country,
-              datasetType,
-              installationKey,
-              from,
-              until,
-              null,
-              new PagingRequest(offset, length));
-      datasetCount =
-          datasetMapper.countWithFilter(country, datasetType, installationKey, from, until, null);
+      DatasetListParams listParams =
+          DatasetListParams.builder()
+              .country(country)
+              .type(datasetType)
+              .installationKey(installationKey)
+              .from(from)
+              .to(until)
+              .page(new PagingRequest(offset, length))
+              .build();
+
+      datasetList = datasetMapper.listWithFilter(listParams);
+      datasetCount = datasetMapper.countWithFilter(listParams);
     } else {
-      datasetList =
-          datasetMapper.listWithFilter(
-              null, null, null, from, until, null, new PagingRequest(offset, length));
-      datasetCount = datasetMapper.countWithFilter(null, null, null, from, until, null);
+      DatasetListParams listParams =
+          DatasetListParams.builder()
+              .from(from)
+              .to(until)
+              .page(new PagingRequest(offset, length))
+              .build();
+
+      datasetList = datasetMapper.listWithFilter(listParams);
+      datasetCount = datasetMapper.countWithFilter(listParams);
     }
 
     return new DatasetListWithTotalSize(datasetCount, datasetList);

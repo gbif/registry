@@ -25,11 +25,10 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -114,22 +113,7 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public List<Dataset> listWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public List<Dataset> listWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("installation_key") UUID installationKey,
-      @Nullable @Param("date_from") Date from,
-      @Nullable @Param("date_to") Date to,
-      @Nullable @Param("deleted") Boolean deleted,
-      @Nullable @Param("page") Pageable page) {
+  public List<Dataset> listWithFilter(@Nullable @Param("params") DatasetListParams params) {
     return null;
   }
 
@@ -144,36 +128,12 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public int countWithFilter(
-      @Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type) {
-    if (country != null) {
-      Long count = datasetsByCountry.get(country);
+  public int countWithFilter(@Nullable @Param("params") DatasetListParams params) {
+    if (params.getCountry() != null) {
+      Long count = datasetsByCountry.get(params.getCountry());
       return count == null ? 0 : count.intValue();
     }
     return 0;
-  }
-
-  @Override
-  public int countWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("installation_key") UUID installationKey,
-      @Nullable @Param("date_from") Date from,
-      @Nullable @Param("date_to") Date to,
-      @Nullable @Param("deleted") Boolean deleted) {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> listDatasetsByInstallation(
-      @Param("installationKey") UUID installationKey, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countDatasetsByInstallation(@Param("installationKey") UUID installationKey) {
-    Long count = datasetsByInstallation.get(installationKey);
-    return count == null ? 0 : count;
   }
 
   @Override
@@ -193,16 +153,6 @@ public class MockDatasetMapper implements DatasetMapper {
 
   @Override
   public int countConstituents(@Param("key") UUID datasetKey) {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> deleted(@Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countDeleted() {
     return 0;
   }
 

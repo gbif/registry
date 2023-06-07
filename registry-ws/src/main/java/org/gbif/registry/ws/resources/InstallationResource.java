@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.WithMyBatis;
 
@@ -284,8 +285,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       @PathVariable("key") UUID installationKey, Pageable page) {
     return new PagingResponse<>(
         page,
-        datasetMapper.countDatasetsByInstallation(installationKey),
-        datasetMapper.listDatasetsByInstallation(installationKey, page));
+        new Long(datasetMapper.countWithFilter(DatasetListParams.builder().installationKey(installationKey).build())),
+        datasetMapper.listWithFilter(DatasetListParams.builder().installationKey(installationKey).build()));
   }
 
   @Operation(
