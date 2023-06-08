@@ -28,9 +28,10 @@ import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.DatasetRequestSearchParamsHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.networkEntitiesList.DatasetRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.OrganizationRequestSearchParamsHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.networkEntitiesList.InstallationRequestSearchParamsHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.networkEntitiesList.OrganizationRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.server.processor.ParamNameProcessor;
@@ -82,6 +83,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new DatasetSuggestRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new OrganizationRequestSearchParamsHandlerMethodArgumentResolver());
+    argumentResolvers.add(new InstallationRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
   }

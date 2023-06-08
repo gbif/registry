@@ -14,6 +14,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Node;
+import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
@@ -24,6 +25,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
+
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
+import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
+
 import org.springframework.stereotype.Repository;
 
 /**
@@ -67,4 +72,8 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
 
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
+
+  List<Node> list(@Param("params") NodeListParams params);
+  // TODO: rename
+  int countList(@Param("params") NodeListParams params);
 }

@@ -14,6 +14,7 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.registry.domain.ws.IptNetworkBriefResponse;
 
@@ -23,6 +24,10 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
+
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -40,6 +45,7 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
 
   /** @return the list of networks a dataset is a constituent of */
+  // TODO: remove
   List<Network> listByDataset(@Param("datasetKey") UUID datasetKey);
 
   /** A simple suggest by title service. */
@@ -47,4 +53,9 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
 
   /** @return The list of networks, with only their key and title populated. */
   List<IptNetworkBriefResponse> listNetworksBrief();
+
+  // TODO: rename
+  List<Network> listParams(@Param("params") NetworkListParams params);
+
+  int countList(@Param("params") NetworkListParams params);
 }

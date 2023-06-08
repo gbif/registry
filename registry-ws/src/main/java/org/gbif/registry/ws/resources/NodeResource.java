@@ -26,16 +26,17 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.api.model.registry.search.NodeRequestSearchParams;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.Augmenter;
-import org.gbif.registry.domain.ws.NodeRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.WithMyBatis;
 
@@ -59,8 +60,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.google.common.base.Strings;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -224,22 +223,25 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
     responseCode = "400",
     description = "Invalid search query provided")
   @GetMapping
-  public PagingResponse<Node> list(@Valid NodeRequestSearchParams request, Pageable page) {
-    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
-    } else if (request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifier(), page);
-    } else if (request.getMachineTagNamespace() != null) {
-      return listByMachineTag(
-          request.getMachineTagNamespace(),
-          request.getMachineTagName(),
-          request.getMachineTagValue(),
-          page);
-    } else if (Strings.isNullOrEmpty(request.getQ())) {
-      return list(page);
-    } else {
-      return search(request.getQ(), page);
-    }
+  @Override
+  public PagingResponse<Node> list(NodeRequestSearchParams request) {
+    // TODO: modified
+    // TODO: check page is filled without the params processor
+
+    NodeListParams listParams =
+      NodeListParams.builder()
+        .query(request.getQ())
+        .deleted(false)
+        .identifier(request.getIdentifier())
+        .identifierType(request.getIdentifierType())
+        .mtNamespace(request.getMachineTagNamespace())
+        .mtName(request.getMachineTagName())
+        .mtValue(request.getMachineTagValue())
+        .page(request.getPage())
+        .build();
+
+    long total = nodeMapper.countList(listParams);
+    return decorateResponse(pagingResponse(request.getPage(), total, nodeMapper.list(listParams)));
   }
 
   /** Decorates the Nodes in the response with the Augmenter. */

@@ -24,6 +24,9 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
+
+import org.gbif.registry.persistence.mapper.params.InstallationListParams;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -31,14 +34,17 @@ public interface InstallationMapper extends BaseNetworkEntityMapper<Installation
 
   long countInstallationsEndorsedBy(@Param("nodeKey") UUID nodeKey);
 
+  // TODO: remove
   List<Installation> listInstallationsEndorsedBy(
       @Param("nodeKey") UUID nodeKey, @Nullable @Param("page") Pageable page);
 
   long countInstallationsByOrganization(@Param("organizationKey") UUID organizationKey);
 
+  // TODO: Remove
   List<Installation> listInstallationsByOrganization(
       @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page);
 
+  // TODO: Remove
   List<Installation> deleted(@Nullable @Param("page") Pageable page);
 
   long countDeleted();
@@ -51,9 +57,8 @@ public interface InstallationMapper extends BaseNetworkEntityMapper<Installation
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
   /** Count all installations having all non null filters given. */
-  int countWithFilter(@Nullable @Param("type") InstallationType type);
+  int countWithFilter(@Param("params")InstallationListParams params);
 
   /** Obtains a list of all installations filtered optionally by a type. */
-  List<Installation> listWithFilter(
-      @Nullable @Param("type") InstallationType type, @Nullable @Param("page") Pageable page);
+  List<Installation> listWithFilter(@Param("params")InstallationListParams params);
 }

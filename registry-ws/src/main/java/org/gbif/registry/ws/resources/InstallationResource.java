@@ -24,19 +24,20 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
+import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;
-import org.gbif.registry.domain.ws.InstallationRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.WithMyBatis;
 
@@ -71,7 +72,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -90,15 +90,18 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Technical installations",
-  description = "A **technical installation** serves datasets.  They usually represent installations of the " +
-    "[GBIF IPT](https://www.gbif.org/ipt) or other HTTP-accessible data repositories.\n\n" +
-    "The installation API provides CRUD and discovery services for installations.\n\n" +
-    "Please note deletion of installations is logical, meaning installation entries remain registered forever and only get a " +
-    "deleted timestamp. On the other hand, deletion of an installation's contacts, endpoints, identifiers, tags, " +
-    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
-  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
-    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
+    name = "Technical installations",
+    description =
+        "A **technical installation** serves datasets.  They usually represent installations of the "
+            + "[GBIF IPT](https://www.gbif.org/ipt) or other HTTP-accessible data repositories.\n\n"
+            + "The installation API provides CRUD and discovery services for installations.\n\n"
+            + "Please note deletion of installations is logical, meaning installation entries remain registered forever and only get a "
+            + "deleted timestamp. On the other hand, deletion of an installation's contacts, endpoints, identifiers, tags, "
+            + "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.",
+    extensions =
+        @io.swagger.v3.oas.annotations.extensions.Extension(
+            name = "Order",
+            properties = @ExtensionProperty(name = "Order", value = "0500")))
 @Validated
 @Primary
 @RestController
@@ -135,14 +138,15 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   }
 
   @Operation(
-    operationId = "getInstallation",
-    summary = "Get details of a single installation",
-    description = "Details of a single installation.  Also works for deleted installations.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
+      operationId = "getInstallation",
+      summary = "Get details of a single installation",
+      description = "Details of a single installation.  Also works for deleted installations.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Installation found and returned")
+  @ApiResponse(responseCode = "200", description = "Installation found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
@@ -159,14 +163,18 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    */
   // Method overridden only for documentation.
   @Operation(
-    operationId = "createInstallation",
-    summary = "Create a new installation",
-    description = "Creates a new installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
+      operationId = "createInstallation",
+      summary = "Create a new installation",
+      description =
+          "Creates a new installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions must be added in subsequent requests.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0201")))
   @ApiResponse(
-    responseCode = "201",
-    description = "Installation created, new installation's UUID returned")
+      responseCode = "201",
+      description = "Installation created, new installation's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
@@ -182,21 +190,24 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    */
   // Method overridden only for documentation.
   @Operation(
-    operationId = "updateInstallation",
-    summary = "Update an existing installation",
-    description = "Updates the existing installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
+      operationId = "updateInstallation",
+      summary = "Update an existing installation",
+      description =
+          "Updates the existing installation.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions are not changed with this method.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Installation updated")
+  @ApiResponse(responseCode = "204", description = "Installation updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PostPersist.class, Default.class})
   @Override
-  public void update(@PathVariable("key") UUID key, @Valid @RequestBody @Trim Installation installation) {
+  public void update(
+      @PathVariable("key") UUID key, @Valid @RequestBody @Trim Installation installation) {
     super.update(key, installation);
   }
 
@@ -207,15 +218,17 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    */
   // Method overridden only for documentation.
   @Operation(
-    operationId = "deleteInstallation",
-    summary = "Delete an installation",
-    description = "Marks an installation as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
+      operationId = "deleteInstallation",
+      summary = "Delete an installation",
+      description =
+          "Marks an installation as deleted.  Note contacts, endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions are not changed.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Installation deleted")
+  @ApiResponse(responseCode = "204", description = "Installation deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
@@ -229,55 +242,57 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
    * supported, such as dataset search.
    */
   @Operation(
-    operationId = "listInstallations",
-    summary = "List all installations",
-    description = "Lists all current installations (deleted installations are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+      operationId = "listInstallations",
+      summary = "List all installations",
+      description = "Lists all current installations (deleted installations are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
   @Parameter(
-    name = "type",
-    description = "Filter by the type of installation.",
-    schema = @Schema(implementation = InstallationType.class),
-    in = ParameterIn.QUERY
-  )
-  @ApiResponse(
-    responseCode = "200",
-    description = "Installation search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+      name = "type",
+      description = "Filter by the type of installation.",
+      schema = @Schema(implementation = InstallationType.class),
+      in = ParameterIn.QUERY)
+  @ApiResponse(responseCode = "200", description = "Installation search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
-  public PagingResponse<Installation> list(
-      @Valid InstallationRequestSearchParams request, Pageable page) {
-    if (request.getType() != null) {
-      return listByType(request.getType(), page);
-    } else if (request.getIdentifierType() != null && request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
-    } else if (request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifier(), page);
-    } else if (request.getMachineTagNamespace() != null) {
-      return listByMachineTag(
-          request.getMachineTagNamespace(),
-          request.getMachineTagName(),
-          request.getMachineTagValue(),
-          page);
-    } else if (Strings.isNullOrEmpty(request.getQ())) {
-      return list(page);
-    } else {
-      return search(request.getQ(), page);
-    }
+  @Override
+  public PagingResponse<Installation> list(InstallationRequestSearchParams request) {
+    // TODO: modified
+    // TODO: check page is filled without the params processor
+
+    InstallationListParams listParams =
+        InstallationListParams.builder()
+            .query(request.getQ())
+            .type(request.getType())
+            .endorsedByNodeKey(request.getEndorsedByNodeKey())
+            .organizationKey(request.getOrganizationKey())
+            .deleted(false)
+            .identifier(request.getIdentifier())
+            .identifierType(request.getIdentifierType())
+            .mtNamespace(request.getMachineTagNamespace())
+            .mtName(request.getMachineTagName())
+            .mtValue(request.getMachineTagValue())
+            .page(request.getPage())
+            .build();
+
+    long total = installationMapper.countWithFilter(listParams);
+    return pagingResponse(request.getPage(), total, installationMapper.listWithFilter(listParams));
   }
 
   @Operation(
-    operationId = "getInstallationDatasets",
-    summary = "List installation's datasets",
-    description = "Lists the datasets served by this installation.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0232")))
+      operationId = "getInstallationDatasets",
+      summary = "List installation's datasets",
+      description = "Lists the datasets served by this installation.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0232")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of datasets")
+  @ApiResponse(responseCode = "200", description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/dataset")
   @Override
@@ -285,19 +300,23 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
       @PathVariable("key") UUID installationKey, Pageable page) {
     return new PagingResponse<>(
         page,
-        new Long(datasetMapper.countWithFilter(DatasetListParams.builder().installationKey(installationKey).build())),
-        datasetMapper.listWithFilter(DatasetListParams.builder().installationKey(installationKey).build()));
+        new Long(
+            datasetMapper.countWithFilter(
+                DatasetListParams.builder().installationKey(installationKey).build())),
+        datasetMapper.listWithFilter(
+            DatasetListParams.builder().installationKey(installationKey).build()));
   }
 
   @Operation(
-    operationId = "getDeletedInstallations",
-    summary = "List deleted installations",
-    description = "Lists deleted installations.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0500")))
+      operationId = "getDeletedInstallations",
+      summary = "List deleted installations",
+      description = "Lists deleted installations.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of deleted installations")
+  @ApiResponse(responseCode = "200", description = "List of deleted installations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
@@ -307,14 +326,15 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   }
 
   @Operation(
-    operationId = "getNonPublishingInstallations",
-    summary = "List non-publishing installations",
-    description = "Lists all installations serving 0 datasets.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0520")))
+      operationId = "getNonPublishingInstallations",
+      summary = "List non-publishing installations",
+      description = "Lists all installations serving 0 datasets.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0520")))
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of non-publishing installations")
+  @ApiResponse(responseCode = "200", description = "List of non-publishing installations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("nonPublishing")
   @Override
@@ -440,19 +460,19 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   }
 
   @Operation(
-    operationId = "suggestInstallations",
-    summary = "Suggest installations.",
-    description = "Search that returns up to 20 matching installations. Results are ordered by relevance. " +
-      "The response is smaller than an installation search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
+      operationId = "suggestInstallations",
+      summary = "Suggest installations.",
+      description =
+          "Search that returns up to 20 matching installations. Results are ordered by relevance. "
+              + "The response is smaller than an installation search.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Node search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Node search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q) {
@@ -461,7 +481,9 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
 
   @Override
   public PagingResponse<Installation> listByType(InstallationType type, Pageable page) {
-    long total = installationMapper.countWithFilter(type);
-    return pagingResponse(page, total, installationMapper.listWithFilter(type, page));
+    InstallationListParams listParams =
+        InstallationListParams.builder().type(type).page(page).build();
+    long total = installationMapper.countWithFilter(listParams);
+    return pagingResponse(page, total, installationMapper.listWithFilter(listParams));
   }
 }

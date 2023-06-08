@@ -24,13 +24,15 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.api.model.registry.search.NetworkRequestSearchParams;
 import org.gbif.api.service.registry.NetworkService;
-import org.gbif.registry.domain.ws.NetworkRequestSearchParams;
 import org.gbif.registry.events.ChangedComponentEvent;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.ws.WebApplicationException;
@@ -218,22 +220,25 @@ public class NetworkResource extends BaseNetworkEntityResource<Network> implemen
     responseCode = "400",
     description = "Invalid search query provided")
   @GetMapping
-  public PagingResponse<Network> list(@Valid NetworkRequestSearchParams request, Pageable page) {
-    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
-    } else if (request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifier(), page);
-    } else if (request.getMachineTagNamespace() != null) {
-      return listByMachineTag(
-          request.getMachineTagNamespace(),
-          request.getMachineTagName(),
-          request.getMachineTagValue(),
-          page);
-    } else if (Strings.isNullOrEmpty(request.getQ())) {
-      return list(page);
-    } else {
-      return search(request.getQ(), page);
-    }
+  @Override
+  public PagingResponse<Network> list(NetworkRequestSearchParams request) {
+    // TODO: modified
+    // TODO: check page is filled without the params processor
+
+    NetworkListParams listParams =
+      NetworkListParams.builder()
+        .query(request.getQ())
+        .deleted(false)
+        .identifier(request.getIdentifier())
+        .identifierType(request.getIdentifierType())
+        .mtNamespace(request.getMachineTagNamespace())
+        .mtName(request.getMachineTagName())
+        .mtValue(request.getMachineTagValue())
+        .page(request.getPage())
+        .build();
+
+    long total = networkMapper.countList(listParams);
+    return pagingResponse(request.getPage(), total, networkMapper.listParams(listParams));
   }
 
   @Operation(

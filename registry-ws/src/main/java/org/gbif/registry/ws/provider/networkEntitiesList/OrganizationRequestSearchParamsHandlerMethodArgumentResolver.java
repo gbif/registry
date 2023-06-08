@@ -11,30 +11,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.gbif.registry.ws.provider;
+package org.gbif.registry.ws.provider.networkEntitiesList;
 
-import com.google.common.base.Strings;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
-import org.gbif.api.model.registry.search.RequestSearchParams;
-import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.ws.server.provider.PageableProvider;
+
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.google.common.base.Strings;
 
 @SuppressWarnings("NullableProblems")
 public class OrganizationRequestSearchParamsHandlerMethodArgumentResolver
+    extends BaseRequestSearchParamsHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
 
   @Override
@@ -49,20 +45,10 @@ public class OrganizationRequestSearchParamsHandlerMethodArgumentResolver
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
     OrganizationRequestSearchParams params = new OrganizationRequestSearchParams();
-    params.setIdentifier(webRequest.getParameter(RequestSearchParams.IDENTIFIER_PARAM));
-    params.setIdentifierType(
-        VocabularyUtils.lookupEnum(
-            webRequest.getParameter(RequestSearchParams.IDENTIFIER_TYPE_PARAM),
-            IdentifierType.class));
-    params.setMachineTagName(webRequest.getParameter(RequestSearchParams.MACHINE_TAG_NAME_PARAM));
-    params.setMachineTagNamespace(
-        webRequest.getParameter(RequestSearchParams.MACHINE_TAG_NAMESPACE_PARAM));
-    params.setMachineTagValue(webRequest.getParameter(RequestSearchParams.MACHINE_TAG_VALUE_PARAM));
-    params.setQ(webRequest.getParameter(RequestSearchParams.Q_PARAM));
+    fillCommonParams(params, webRequest);
+
     Optional.ofNullable(webRequest.getParameter(OrganizationRequestSearchParams.IS_ENDORSED_PARAM))
         .ifPresent(v -> params.setIsEndorsed(Boolean.parseBoolean(v)));
-    Optional.ofNullable(webRequest.getParameter(RequestSearchParams.MODIFIED_PARAM))
-        .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
 
     String networkKeyParam =
         webRequest.getParameter(OrganizationRequestSearchParams.NETWORK_KEY_PARAM);
@@ -84,11 +70,6 @@ public class OrganizationRequestSearchParamsHandlerMethodArgumentResolver
       }
       params.setCountry(country);
     }
-
-    // page
-    Pageable page = PageableProvider.getPagingRequest(webRequest, Integer.MAX_VALUE);
-    params.setLimit(page.getLimit());
-    params.setOffset(page.getOffset());
 
     return params;
   }

@@ -352,6 +352,8 @@ public class NodeIT extends NetworkEntityIT<Node> {
         UnsupportedOperationException.class, () -> super.testSimpleSearchContact(serviceType));
   }
 
+  // TODO: list test, create it in the base class??
+
   @Override
   protected Node newEntity(ServiceType serviceType) {
     return testDataFactory.newNode();

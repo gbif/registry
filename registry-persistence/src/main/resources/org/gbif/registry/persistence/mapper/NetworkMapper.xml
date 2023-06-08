@@ -163,6 +163,68 @@
     </if>
   </select>
 
+  <!-- TODO: list by dataset -->
+  <select id="listParams" resultMap="NETWORK_MAP">
+    SELECT <include refid="NETWORK_FIELDS"/>
+    <include refid="LIST_FILTER" />
+    ORDER BY <if test="query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>n.created DESC, key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="countList" resultType="Integer">
+    SELECT COUNT(*)
+    <include refid="LIST_FILTER"/>
+  </select>
+
+  <sql id="LIST_FILTER">
+    FROM network n<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    <if test="params.identifier != null or params.identifierType != null">
+      INNER JOIN network_identifier ON network_key = n.key
+      INNER JOIN identifier i ON identifier_key = i.key
+    </if>
+    <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
+      INNER JOIN network_machine_tag nmt ON nmt.network_key = n.key
+      INNER JOIN machine_tag m ON nmt.machine_tag_key = m.key
+    </if>
+    <if test="params.datasetKey != null">
+      INNER JOIN dataset_network dn ON dn.network_key = n.key
+      INNER JOIN dataset d ON d.key = dn.dataset_key
+    </if>
+    <where>
+      <choose>
+        <when test="params.deleted != null and params.deleted">
+          n.deleted IS NOT NULL
+        </when>
+        <otherwise>
+          n.deleted IS NULL
+        </otherwise>
+      </choose>
+      <if test="params.query != null" >
+        <include refid="SIMPLE_SEARCH"/>
+      </if>
+      <if test="params.identifier != null" >
+        AND i.identifier = #{params.identifier,jdbcType=VARCHAR}
+      </if>
+      <if test="params.identifierType != null" >
+        AND i.type=#{params.identifierType,jdbcType=OTHER}
+      </if>
+      <if test="params.mtNamespace != null" >
+        AND m.namespace = #{params.mtNamespace,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtName != null" >
+        AND m.name=#{params.mtName,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtValue != null" >
+        AND m.value=#{params.mtValue,jdbcType=VARCHAR}
+      </if>
+      <if test="params.datasetKey != null" >
+        AND dn.dataset_key = #{params.datasetKey,jdbcType=OTHER}
+      </if>
+    </where>
+  </sql>
+
   <!-- TAGS -->
   <insert id="addTag">
     INSERT INTO network_tag(network_key,tag_key)
@@ -410,6 +472,7 @@
     ORDER BY n.created DESC, n.key
   </select>
 
+  <!-- TODO: remove -->
   <select id="listByIdentifier" resultMap="NETWORK_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT DISTINCT ON (n.key) <include refid="NETWORK_FIELDS"/>
     FROM network n
