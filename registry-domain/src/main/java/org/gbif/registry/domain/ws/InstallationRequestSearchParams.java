@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.model.registry.search.RequestSearchParams;
 import org.gbif.api.vocabulary.InstallationType;
 
 import javax.annotation.Nullable;

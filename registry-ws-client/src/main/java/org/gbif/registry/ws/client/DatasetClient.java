@@ -190,4 +190,6 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
       @SpringQueryMap Pageable pageable);
+
+  // TODO: list deleted with params
 }

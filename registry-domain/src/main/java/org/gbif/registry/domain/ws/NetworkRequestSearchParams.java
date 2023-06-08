@@ -13,4 +13,6 @@
  */
 package org.gbif.registry.domain.ws;
 
+import org.gbif.api.model.registry.search.RequestSearchParams;
+
 public class NetworkRequestSearchParams extends RequestSearchParams {}

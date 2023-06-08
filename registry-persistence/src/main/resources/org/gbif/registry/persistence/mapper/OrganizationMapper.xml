@@ -164,7 +164,7 @@
   </update>
 
   <!-- Append safe ordering, omitting deleted entities -->
-  <select id="list" resultType="org.gbif.api.model.registry.Organization"  resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+  <!--<select id="list" resultType="org.gbif.api.model.registry.Organization"  resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o
     WHERE o.deleted IS NULL
@@ -172,7 +172,7 @@
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
-  </select>
+  </select>-->
 
   <!-- Append ordering by title, omitting deleted entities. No paging, instead all organizations included in response -->
   <select id="listLegacyOrganizationsBrief" resultType="org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse">
@@ -183,55 +183,75 @@
   </select>
 
   <!-- Basic paging search functionality -->
-  <select id="search" resultMap="ORGANIZATION_MAP">
+  <select id="list" resultMap="ORGANIZATION_MAP">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    <if test="query != null" >
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
-    </if>
-    WHERE deleted IS NULL
-    <if test="country != null" >
-      AND o.country = #{country,jdbcType=OTHER}
-    </if>
-    <if test="isEndorsed != null" >
-      AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
-    </if>
-    <if test="networkKey != null" >
-      AND EXISTS (
-      SELECT d2.publishing_organization_key
-      FROM dataset d2
-      JOIN dataset_network nk ON nk.dataset_key = d2.key
-      JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
-      WHERE d2.publishing_organization_key = o.key AND n.key = #{networkKey,jdbcType=OTHER})
-    </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    <include refid="LIST_FILTER" />
+    ORDER BY <if test="params.query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
-    FROM organization o
-    <if test="query != null" >
-    JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
-    </if>
-    WHERE deleted IS NULL
-    <if test="country != null" >
-      AND o.country = #{country,jdbcType=OTHER}
-    </if>
-    <if test="isEndorsed != null" >
-      AND o.endorsement_approved = #{isEndorsed,jdbcType=BOOLEAN}
-    </if>
-    <if test="networkKey != null" >
-      AND EXISTS (
-      SELECT d2.publishing_organization_key
-      FROM dataset d2
-      JOIN dataset_network nk ON nk.dataset_key = d2.key
-      JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
-      WHERE d2.publishing_organization_key = o.key AND n.key = #{networkKey,jdbcType=OTHER})
-    </if>
+    <include refid="LIST_FILTER" />
   </select>
+
+  <sql id="LIST_FILTER">
+    FROM organization o
+    <if test="params.query != null" >
+      JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
+    </if>
+    <if test="params.identifier != null or params.identifierType != null">
+      INNER JOIN organization_identifier ON organization_key = o.key
+      INNER JOIN identifier i ON identifier_key = i.key
+    </if>
+    <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
+      INNER JOIN organization_machine_tag omt ON omt.organization_key = o.key
+      INNER JOIN machine_tag m ON omt.machine_tag_key = m.key
+    </if>
+    <where>
+      <choose>
+        <when test="params.deleted != null and params.deleted">
+          o.deleted IS NOT NULL
+        </when>
+        <otherwise>
+          o.deleted IS NULL
+        </otherwise>
+      </choose>
+      <if test="params.from != null" > AND o.modified &gt;= #{params.from}</if>
+      <if test="params.to != null" > AND o.modified &lt; #{params.to}</if>
+      <if test="params.country != null" >
+        AND o.country = #{params.country,jdbcType=OTHER}
+      </if>
+      <if test="params.isEndorsed != null" >
+        AND o.endorsement_approved = #{params.isEndorsed,jdbcType=BOOLEAN}
+      </if>
+      <if test="params.networkKey != null" >
+        AND EXISTS (
+        SELECT d2.publishing_organization_key
+        FROM dataset d2
+        JOIN dataset_network nk ON nk.dataset_key = d2.key
+        JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
+        WHERE d2.publishing_organization_key = o.key AND n.key = #{networkKey,jdbcType=OTHER})
+      </if>
+      <if test="params.identifier != null" >
+        AND identifier = #{params.identifier,jdbcType=VARCHAR}
+      </if>
+      <if test="params.identifierType != null" >
+        AND i.type=#{params.identifierType,jdbcType=OTHER}
+      </if>
+      <if test="params.mtNamespace != null" >
+        AND m.namespace = #{params.mtNamespace,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtName != null" >
+        AND m.name=#{params.mtName,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtValue != null" >
+        AND m.value=#{params.mtValue,jdbcType=VARCHAR}
+      </if>
+    </where>
+  </sql>
 
   <!-- TAGS -->
   <insert id="addTag">

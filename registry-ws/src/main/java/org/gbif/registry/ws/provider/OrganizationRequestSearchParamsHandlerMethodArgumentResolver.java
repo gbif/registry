@@ -14,35 +14,32 @@
 package org.gbif.registry.ws.provider;
 
 import com.google.common.base.Strings;
-
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
+import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.model.registry.search.RequestSearchParams;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
-
-import java.util.Optional;
-
 import org.gbif.ws.server.provider.PageableProvider;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-@SuppressWarnings("NullableProblems")
-public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
-    implements HandlerMethodArgumentResolver {
+import java.util.Optional;
+import java.util.UUID;
 
-  // TODO: base class??
+@SuppressWarnings("NullableProblems")
+public class OrganizationRequestSearchParamsHandlerMethodArgumentResolver
+    implements HandlerMethodArgumentResolver {
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
-    return DatasetRequestSearchParams.class.equals(parameter.getParameterType());
+    return OrganizationRequestSearchParams.class.equals(parameter.getParameterType());
   }
 
   @Override
@@ -51,7 +48,7 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
       ModelAndViewContainer mavContainer,
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
-    DatasetRequestSearchParams params = new DatasetRequestSearchParams();
+    OrganizationRequestSearchParams params = new OrganizationRequestSearchParams();
     params.setIdentifier(webRequest.getParameter(RequestSearchParams.IDENTIFIER_PARAM));
     params.setIdentifierType(
         VocabularyUtils.lookupEnum(
@@ -62,11 +59,20 @@ public class DatasetRequestSearchParamsHandlerMethodArgumentResolver
         webRequest.getParameter(RequestSearchParams.MACHINE_TAG_NAMESPACE_PARAM));
     params.setMachineTagValue(webRequest.getParameter(RequestSearchParams.MACHINE_TAG_VALUE_PARAM));
     params.setQ(webRequest.getParameter(RequestSearchParams.Q_PARAM));
-    params.setType(
-        VocabularyUtils.lookupEnum(
-            webRequest.getParameter(DatasetRequestSearchParams.TYPE_PARAM), DatasetType.class));
+    Optional.ofNullable(webRequest.getParameter(OrganizationRequestSearchParams.IS_ENDORSED_PARAM))
+        .ifPresent(v -> params.setIsEndorsed(Boolean.parseBoolean(v)));
     Optional.ofNullable(webRequest.getParameter(RequestSearchParams.MODIFIED_PARAM))
         .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
+
+    String networkKeyParam =
+        webRequest.getParameter(OrganizationRequestSearchParams.NETWORK_KEY_PARAM);
+    if (!Strings.isNullOrEmpty(networkKeyParam)) {
+      try {
+        params.setNetworkKey(UUID.fromString(networkKeyParam));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid UUID for network key: " + networkKeyParam);
+      }
+    }
 
     // country
     String countryParam = webRequest.getParameter("country");

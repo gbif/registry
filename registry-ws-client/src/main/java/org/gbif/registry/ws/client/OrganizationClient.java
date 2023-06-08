@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 
@@ -116,4 +117,9 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/endorsement")
   @ResponseBody
   ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
+
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<Organization> list(@SpringQueryMap OrganizationRequestSearchParams searchParams);
 }
