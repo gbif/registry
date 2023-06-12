@@ -18,7 +18,9 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.ContactsSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.api.model.registry.view.OrganizationContactView;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 
@@ -28,6 +30,7 @@ import java.util.UUID;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -116,4 +119,12 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/endorsement")
   @ResponseBody
   ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "contacts",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  PagingResponse<OrganizationContactView> searchContacts(
+      @SpringQueryMap ContactsSearchParams searchParams);
 }

@@ -68,6 +68,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
+import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
@@ -164,6 +165,7 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("MasterSourceOrganizationDto", MasterSourceOrganizationDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("OrganizationContactDto", OrganizationContactDto.class);
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
