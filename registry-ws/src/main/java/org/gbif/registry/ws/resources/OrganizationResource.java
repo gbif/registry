@@ -674,6 +674,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @ApiResponse(responseCode = "200", description = "Contacts search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("contacts")
+  @Override
   public PagingResponse<OrganizationContactView> searchContacts(ContactsSearchParams params) {
     if (params.getGbifRegion() != null && !params.getGbifRegion().isEmpty()) {
       params
