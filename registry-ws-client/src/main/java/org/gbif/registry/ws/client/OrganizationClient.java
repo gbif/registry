@@ -125,6 +125,7 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
       value = "contacts",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
+  @Override
   PagingResponse<OrganizationContactView> searchContacts(
       @SpringQueryMap ContactsSearchParams searchParams);
 }
