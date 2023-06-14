@@ -54,6 +54,7 @@ import org.gbif.registry.service.collections.merge.MergeService;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -564,7 +565,7 @@ public abstract class BaseChangeSuggestionService<
                           + field.getName().substring(1))
                   .invoke(currentEntity);
 
-          if (!Objects.equals(suggestedValue, previousValue)) {
+          if (isDifferentValue(suggestedValue, previousValue)) {
             changes.add(createChangeDto(field, suggestedValue, previousValue, field.getType()));
           }
         } catch (Exception e) {
@@ -573,6 +574,13 @@ public abstract class BaseChangeSuggestionService<
       }
     }
     return changes;
+  }
+
+  private static boolean isDifferentValue(Object suggestedValue, Object previousValue) {
+    if (suggestedValue instanceof BigDecimal && previousValue instanceof BigDecimal) {
+      return ((BigDecimal) suggestedValue).compareTo((BigDecimal) previousValue) != 0;
+    }
+    return !Objects.equals(suggestedValue, previousValue);
   }
 
   @NotNull
