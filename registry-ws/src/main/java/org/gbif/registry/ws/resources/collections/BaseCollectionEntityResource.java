@@ -427,7 +427,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "changeSuggestion")
-  public int createChangeSuggestion(@RequestBody @Trim R createSuggestion) {
+  public int createChangeSuggestion(@RequestBody R createSuggestion) {
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
   }
 
@@ -444,7 +444,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "changeSuggestion/{key}")
   public void updateChangeSuggestion(
-      @PathVariable("key") int key, @RequestBody @Trim R suggestion) {
+      @PathVariable("key") int key, @RequestBody R suggestion) {
     checkArgument(key == suggestion.getKey());
     changeSuggestionService.updateChangeSuggestion(suggestion);
   }
