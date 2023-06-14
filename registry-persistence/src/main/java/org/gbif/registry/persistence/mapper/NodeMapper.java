@@ -34,8 +34,8 @@ import org.springframework.stereotype.Repository;
 /**
  * For simplicity we keep ContactableMapper part of the BaseNetworkEntityMapper, but this NodeMapper
  * does not implement those mapper methods but will throw exceptions instead ! For a Node all
- * contacts are managed in the GBIF Directory which we only access for reads and cannot
- * manipulate though our Java API.
+ * contacts are managed in the GBIF Directory which we only access for reads and cannot manipulate
+ * though our Java API.
  */
 @Repository
 public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
@@ -74,6 +74,6 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
   List<Node> list(@Param("params") NodeListParams params);
-  // TODO: rename
-  int countList(@Param("params") NodeListParams params);
+
+  int count(@Param("params") NodeListParams params);
 }

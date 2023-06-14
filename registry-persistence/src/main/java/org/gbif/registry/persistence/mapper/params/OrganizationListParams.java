@@ -22,4 +22,5 @@ public class OrganizationListParams extends BaseListParams {
   @Nullable private UUID networkKey;
   @Nullable private UUID installationKey;
   @Nullable private Country country;
+  @Nullable private UUID endorsedByNodeKey;
 }

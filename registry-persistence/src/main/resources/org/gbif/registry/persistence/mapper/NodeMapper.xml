@@ -105,40 +105,6 @@
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <!-- Append safe ordering, omitting deleted entities -->
-  <select id="list" resultMap="NODE_MAP">
-    SELECT <include refid="NODE_FIELDS"/>
-    FROM node n
-    WHERE deleted IS NULL
-    ORDER BY created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <!-- Basic paging search functionality -->
-  <select id="search" resultMap="NODE_MAP">
-    SELECT <include refid="NODE_FIELDS"/>
-    FROM node n<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="count" resultType="Integer">
-    SELECT COUNT(*)
-    FROM node<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-  </select>
-
   <select id="list" resultMap="NODE_MAP">
     SELECT <include refid="NODE_FIELDS"/>
     <include refid="LIST_FILTER"/>
@@ -148,7 +114,7 @@
     </if>
   </select>
 
-  <select id="countList" resultType="Integer">
+  <select id="count" resultType="Integer">
     SELECT COUNT(*)
     <include refid="LIST_FILTER"/>
   </select>
@@ -302,37 +268,6 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="NODE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (n.key) <include refid="NODE_FIELDS"/>
-    FROM node n
-    INNER JOIN node_machine_tag nm ON nm.node_key = n.key
-    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-    ORDER BY n.key, n.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByMachineTag" resultType="Long">
-    SELECT count(DISTINCT n.key)
-    FROM node n
-    INNER JOIN node_machine_tag nm ON nm.node_key = n.key
-    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-  </select>
-
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO node_comment(node_key,comment_key)
@@ -374,31 +309,6 @@
     FROM node
     WHERE type='COUNTRY' AND country IS NOT NULL AND participation_status IN ('VOTING', 'ASSOCIATE')
     ORDER BY 1
-  </select>
-
-  <select id="listByIdentifier" resultMap="NODE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (n.key) <include refid="NODE_FIELDS"/>
-    FROM node n
-    INNER JOIN node_identifier ON node_key = n.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-    ORDER BY n.key, n.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByIdentifier" resultType="Long">
-    SELECT count(DISTINCT n.key)
-    FROM node n
-    INNER JOIN node_identifier ON node_key = n.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
   </select>
 
   <!--

@@ -299,37 +299,6 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN installation_machine_tag im ON im.installation_key = i.key
-    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-    ORDER BY i.key, i.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByMachineTag" resultType="Long">
-    SELECT count(DISTINCT i.key)
-    FROM installation i
-    INNER JOIN installation_machine_tag im ON im.installation_key = i.key
-    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-  </select>
-
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO installation_comment(installation_key,comment_key)
@@ -354,59 +323,6 @@
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="listInstallationsEndorsedBy" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-    INNER JOIN node n ON o.endorsing_node_key=n.key AND n.deleted IS NULL
-    WHERE i.deleted IS NULL AND n.key=#{nodeKey,jdbcType=OTHER}
-    ORDER BY created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countInstallationsEndorsedBy" resultType="Long">
-    SELECT count(*)
-    FROM installation i
-           INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-           INNER JOIN node n ON o.endorsing_node_key=n.key AND n.deleted IS NULL
-    WHERE i.deleted IS NULL AND n.key=#{nodeKey,jdbcType=OTHER}
-  </select>
-
-  <select id="listInstallationsByOrganization" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-    WHERE i.deleted IS NULL AND o.key=#{organizationKey,jdbcType=OTHER}
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countInstallationsByOrganization" resultType="Long">
-    SELECT count(*)
-    FROM installation i
-           INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-    WHERE i.deleted IS NULL AND o.key=#{organizationKey,jdbcType=OTHER}
-  </select>
-
-  <select id="deleted" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    WHERE i.deleted IS NOT NULL
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countDeleted" resultType="Long">
-    SELECT count(*)
-    FROM installation
-    WHERE deleted IS NOT NULL
-  </select>
-
   <select id="nonPublishing" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
@@ -424,31 +340,6 @@
     WHERE ds.key IS NULL
   </select>
 
-  <select id="listByIdentifier" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN installation_identifier ON installation_key = i.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-    ORDER BY i.key, i.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByIdentifier" resultType="Long">
-    SELECT count(DISTINCT i.key)
-    FROM installation i
-    INNER JOIN installation_identifier ON installation_key = i.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-  </select>
-
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
     SELECT key,title FROM (
@@ -458,12 +349,12 @@
                           ) t1 LIMIT 25
   </select>
 
-  <select id="countWithFilter" resultType="Integer">
+  <select id="count" resultType="Integer">
     SELECT COUNT(*)
     <include refid="LIST_FILTER" />
   </select>
 
-  <select id="listWithFilter" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+  <select id="list" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     <include refid="LIST_FILTER" />
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key

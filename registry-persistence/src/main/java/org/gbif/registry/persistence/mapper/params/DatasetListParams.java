@@ -17,4 +17,10 @@ public class DatasetListParams extends BaseListParams {
   @Nullable private DatasetType type;
   @Nullable private UUID installationKey;
   @Nullable private Country country;
+  @Nullable private String doi;
+  @Nullable private UUID publishedByOrgKey;
+  @Nullable private UUID parentKey;
+  @Nullable private UUID networkKey;
+  @Nullable private Boolean isDuplicate;
+  @Nullable private Boolean isSubdataset;
 }

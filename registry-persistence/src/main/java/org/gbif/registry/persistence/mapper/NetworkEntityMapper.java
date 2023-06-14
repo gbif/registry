@@ -44,21 +44,4 @@ public interface NetworkEntityMapper<T extends NetworkEntity> {
   void delete(@Param("key") UUID key);
 
   void update(T entity);
-
-  // TODO: remove when refactored all entities
-  List<T> list(@Nullable @Param("page") Pageable page);
-
-  List<T> search(@Nullable @Param("query") String query, @Nullable @Param("page") Pageable page);
-
-  int count();
-
-  int count(@Nullable @Param("query") String query);
-
-  long countByIdentifier(
-      @Nullable @Param("type") IdentifierType type, @Param("identifier") String identifier);
-
-  List<T> listByIdentifier(
-      @Nullable @Param("type") IdentifierType type,
-      @Param("identifier") String identifier,
-      @Param("page") Pageable page);
 }

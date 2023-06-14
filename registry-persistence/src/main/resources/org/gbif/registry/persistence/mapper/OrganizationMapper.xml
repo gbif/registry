@@ -167,17 +167,6 @@
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <!-- Append safe ordering, omitting deleted entities -->
-  <!--<select id="list" resultType="org.gbif.api.model.registry.Organization"  resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    WHERE o.deleted IS NULL
-    ORDER BY o.created DESC, o.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>-->
-
   <!-- Append ordering by title, omitting deleted entities. No paging, instead all organizations included in response -->
   <select id="listLegacyOrganizationsBrief" resultType="org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse">
     SELECT <include refid="LEGACY_ORGANIZATION_BRIEF_FIELDS"/>
@@ -214,6 +203,13 @@
       INNER JOIN organization_machine_tag omt ON omt.organization_key = o.key
       INNER JOIN machine_tag m ON omt.machine_tag_key = m.key
     </if>
+    <if test="params.networkKey != null">
+      INNER JOIN dataset d ON o.key = d.publishing_organization_key
+      INNER JOIN dataset_network dn ON dn.dataset_key = d.key
+    </if>
+    <if test="params.endorsedByNodeKey != null">
+      INNER JOIN node n ON o.endorsing_node_key = n.key
+    </if>
     <where>
       <choose>
         <when test="params.deleted != null and params.deleted">
@@ -232,12 +228,7 @@
         AND o.endorsement_approved = #{params.isEndorsed,jdbcType=BOOLEAN}
       </if>
       <if test="params.networkKey != null" >
-        AND EXISTS (
-        SELECT d2.publishing_organization_key
-        FROM dataset d2
-        JOIN dataset_network nk ON nk.dataset_key = d2.key
-        JOIN network n ON n.key = nk.network_key AND n.deleted IS NULL
-        WHERE d2.publishing_organization_key = o.key AND n.key = #{networkKey,jdbcType=OTHER})
+        AND dn.network_key = #{params.networkKey,jdbcType=OTHER}
       </if>
       <if test="params.identifier != null" >
         AND identifier = #{params.identifier,jdbcType=VARCHAR}
@@ -253,6 +244,9 @@
       </if>
       <if test="params.mtValue != null" >
         AND m.value=#{params.mtValue,jdbcType=VARCHAR}
+      </if>
+      <if test="params.endorsedByNodeKey != null">
+        AND n.deleted IS NULL AND n.key = #{params.endorsedByNodeKey,jdbcType=OTHER}
       </if>
     </where>
   </sql>
@@ -422,37 +416,6 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    INNER JOIN organization_machine_tag om ON om.organization_key = o.key
-    INNER JOIN machine_tag m ON om.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-    ORDER BY o.key, o.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByMachineTag" resultType="Long">
-    SELECT count(DISTINCT o.key)
-    FROM organization o
-    INNER JOIN organization_machine_tag om ON om.organization_key = o.key
-    INNER JOIN machine_tag m ON om.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-  </select>
-
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO organization_comment(organization_key,comment_key)
@@ -476,81 +439,6 @@
       comment_key = comment.key AND
       organization_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
-
-  <!-- Append safe ordering (ordering done first by organization name, then created date), omitting deleted entities -->
-  <select id="organizationsEndorsedBy" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    INNER JOIN node n ON o.endorsing_node_key = n.key
-    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true
-    ORDER BY o.title, o.created DESC, o.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countOrganizationsEndorsedBy" resultType="Long">
-    SELECT count(*)
-    FROM organization o
-           INNER JOIN node n ON o.endorsing_node_key = n.key
-    WHERE o.deleted IS NULL AND n.deleted IS NULL AND n.key = #{nodeKey,jdbcType=OTHER} AND o.endorsement_approved = true
-  </select>
-
-  <!-- Append safe ordering, omitting deleted entities -->
-  <select id="pendingEndorsements" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    WHERE o.deleted IS NULL AND o.endorsement_approved = false
-    <if test="nodeKey != null" >
-      AND o.endorsing_node_key= #{nodeKey,jdbcType=OTHER}
-    </if>
-    ORDER BY o.created DESC, o.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countPendingEndorsements" resultType="Long">
-    SELECT count(*)
-    FROM organization o
-    WHERE o.deleted IS NULL AND o.endorsement_approved = false
-    <if test="nodeKey != null" >
-      AND o.endorsing_node_key= #{nodeKey,jdbcType=OTHER}
-    </if>
-  </select>
-
-  <!--
-   Append safe ordering, omitting deleted entities
-  -->
-  <select id="organizationsByCountry" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    WHERE o.deleted IS NULL AND o.country = #{country,jdbcType=OTHER}
-    ORDER BY o.created DESC, o.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countOrganizationsByCountry" resultType="Long">
-    SELECT count(*)
-    FROM organization o
-    WHERE o.deleted IS NULL AND o.country = #{country,jdbcType=OTHER}
-  </select>
-
-  <select id="deleted" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    WHERE o.deleted IS NOT NULL
-    ORDER BY o.created DESC, o.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countDeleted" resultType="Long">
-    SELECT count(*)
-    FROM organization o
-    WHERE o.deleted IS NOT NULL
-  </select>
 
   <select id="nonPublishing" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
@@ -584,32 +472,6 @@
     </if>
   </select>
 
-  <select id="listByIdentifier" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
-    FROM organization o
-    INNER JOIN organization_identifier ON organization_key = o.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-    ORDER BY o.key, o.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countByIdentifier" resultType="Long">
-    SELECT count(DISTINCT o.key)
-    FROM organization o
-    INNER JOIN organization_identifier ON organization_key = o.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-  </select>
-
   <select id="getChallengeCodeKey" resultType="Integer">
     SELECT challenge_code_key FROM organization WHERE key = #{key, jdbcType=OTHER}
   </select>
@@ -629,26 +491,6 @@
                             UNION ALL
                             (SELECT key,title FROM organization WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' AND deleted IS NULL ORDER BY title LIMIT 25)
                           ) t1 LIMIT 25
-  </select>
-
-  <select id="countPublishingOrganizationsInNetwork" resultType="Long">
-    SELECT count(DISTINCT o.key)
-    FROM dataset d
-    INNER JOIN dataset_network dn ON dn.dataset_key = d.key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dn.network_key = #{networkKey,jdbcType=OTHER} AND d.deleted IS NULL
-  </select>
-
-  <select id="listPublishingOrganizationsInNetwork" resultMap="ORGANIZATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (o.key) <include refid="ORGANIZATION_FIELDS"/>
-    FROM dataset d
-    INNER JOIN dataset_network dn ON dn.dataset_key = d.key
-    INNER JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dn.network_key = #{networkKey,jdbcType=OTHER} AND d.deleted IS NULL
-    ORDER BY o.key, o.created DESC
-    <if test="page != null">
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
   </select>
 
   <select id="searchContacts" resultMap="ORG_CONTACT_DTO_MAP">

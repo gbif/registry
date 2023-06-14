@@ -44,18 +44,11 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
   void deleteDatasetConstituent(
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
 
-  /** @return the list of networks a dataset is a constituent of */
-  // TODO: remove
-  List<Network> listByDataset(@Param("datasetKey") UUID datasetKey);
-
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
   /** @return The list of networks, with only their key and title populated. */
   List<IptNetworkBriefResponse> listNetworksBrief();
-
-  // TODO: rename
-  List<Network> listParams(@Param("params") NetworkListParams params);
-
-  int countList(@Param("params") NetworkListParams params);
+  List<Network> list(@Param("params") NetworkListParams params);
+  int count(@Param("params") NetworkListParams params);
 }

@@ -31,18 +31,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
 
-  /** Obtains a list of all the constituent datasets that are part of this parent dataset. */
-  List<Dataset> listConstituents(
-      @Param("parentKey") UUID parentKey, @Nullable @Param("page") Pageable page);
-
-  /** Obtains a list of all the constituent datasets that are part of this network. */
-  List<Dataset> listDatasetsInNetwork(
-      @Param("networkKey") UUID networkKey, @Nullable @Param("page") Pageable page);
-
-  /** Obtains a list of all the datasets published by the given organization. */
-  List<Dataset> listDatasetsPublishedBy(
-      @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page);
-
+  // TODO: merge the others wiht the list?
   /** Obtains a list of all the datasets hosted by, but not published by, the given organization. */
   List<Dataset> listDatasetsHostedBy(
       @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page);
@@ -57,37 +46,15 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   /**
    * Obtains a list of all datasets using the provided filter(s)
    */
-  List<Dataset> listWithFilter(@Param("params") DatasetListParams params);
+  List<Dataset> list(@Param("params") DatasetListParams params);
 
   /** Count all datasets having all non null filters given. */
-  int countWithFilter(@Param("params") DatasetListParams params);
-
-  /** Counts all datasets from a DOI. This counts for dataset.doi and alternate identifiers. */
-  long countByDOI(@Param("doi") String doi);
-
-  /**
-   * Get a Dataset list from a DOI, dataset.dois and alternate identifier are searched. Multiple
-   * datasets could share the same DOI since this is not enforced.
-   */
-  List<Dataset> listByDOI(@Param("doi") String doi, @Nullable @Param("page") Pageable page);
+  int count(@Param("params") DatasetListParams params);
 
   /** Count of datasets published by an organization that is endorsed by the given node. */
   long countDatasetsEndorsedBy(@Param("nodeKey") UUID nodeKey);
 
   long countDatasetsHostedBy(@Param("organizationKey") UUID organizationKey);
-
-  long countDatasetsPublishedBy(@Param("organizationKey") UUID organizationKey);
-
-  // sigh - int required by the model object, but the paging is long
-  int countConstituents(@Param("key") UUID datasetKey);
-
-  List<Dataset> duplicates(@Nullable @Param("page") Pageable page);
-
-  long countDuplicates();
-
-  List<Dataset> subdatasets(@Nullable @Param("page") Pageable page);
-
-  long countSubdatasets();
 
   List<Dataset> withNoEndpoint(@Nullable @Param("page") Pageable page);
 

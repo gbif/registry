@@ -106,7 +106,8 @@ public class WithMyBatis {
     return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.list(page));
   }
 
-  public <T extends NetworkEntity> PagingResponse<T> listByIdentifier(
+  // TODO: remove
+ /* public <T extends NetworkEntity> PagingResponse<T> listByIdentifier(
       NetworkEntityMapper<T> mapper,
       @Nullable IdentifierType type,
       String identifier,
@@ -116,7 +117,7 @@ public class WithMyBatis {
     long total = mapper.countByIdentifier(type, identifier);
     return new PagingResponse<>(
         page.getOffset(), page.getLimit(), total, mapper.listByIdentifier(type, identifier, page));
-  }
+  }*/
 
   @Transactional
   public int addComment(
@@ -142,7 +143,8 @@ public class WithMyBatis {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> PagingResponse<T> listByMachineTag(
+  // TODO: remove
+ /* public <T> PagingResponse<T> listByMachineTag(
       MachineTaggableMapper mapper,
       String namespace,
       @Nullable String name,
@@ -156,7 +158,7 @@ public class WithMyBatis {
         page.getLimit(),
         total,
         mapper.listByMachineTag(namespace, name, value, page));
-  }
+  }*/
 
   @Transactional
   public int addTag(

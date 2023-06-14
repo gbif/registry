@@ -45,13 +45,6 @@ import org.springframework.stereotype.Repository;
 public interface OrganizationMapper
     extends BaseNetworkEntityMapper<Organization>, ChallengeCodeSupportMapper<UUID> {
 
-  /**
-   * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation
-   * on this mapper.
-   */
-  List<Organization> organizationsEndorsedBy(
-      @Param("nodeKey") UUID nodeKey, @Nullable @Param("page") Pageable page);
-
   /** Endorse organization by key. */
   void endorse(@Param("key") UUID key);
 
@@ -63,46 +56,6 @@ public interface OrganizationMapper
       @Param("key") UUID organizationKey, @Param("status") EndorsementStatus status);
 
   /**
-   * At higher levels this appears on the NodeService, but it makes a cleaner MyBatis implementation
-   * on this mapper.
-   */
-  List<Organization> pendingEndorsements(
-      @Nullable @Param("nodeKey") UUID nodeKey, @Nullable @Param("page") Pageable page);
-
-  /**
-   * At higher levels this appears on the OrganizationService. Selects all organizations by the
-   * country of their address.
-   */
-  List<Organization> organizationsByCountry(
-      @Param("country") Country country, @Nullable @Param("page") Pageable page);
-
-  /**
-   * @return The count of all organizations with approved endorsements for the node
-   */
-  long countOrganizationsEndorsedBy(@Param("nodeKey") UUID nodeKey);
-
-  /**
-   * @return The count of all organizations with a pending endorsement approval, optionally limited
-   *     by the node if supplied
-   */
-  long countPendingEndorsements(@Nullable @Param("nodeKey") UUID nodeKey);
-
-  /**
-   * @return The count of all organizations for the given country
-   */
-  long countOrganizationsByCountry(@Param("country") Country country);
-
-  /**
-   * @return The count of organizations marked as deleted
-   */
-  long countDeleted();
-
-  /**
-   * @return The organizations marked as deleted
-   */
-  List<Organization> deleted(@Param("page") Pageable page);
-
-  /**
    * @return The count of organizations that publish no datasets
    */
   long countNonPublishing();
@@ -110,6 +63,7 @@ public interface OrganizationMapper
   /**
    * @return The organizations that publish no datasets
    */
+  // TODO: merge into list?
   List<Organization> nonPublishing(@Param("page") Pageable page);
 
   /**
@@ -138,13 +92,6 @@ public interface OrganizationMapper
 
   /** Overloaded count to allow a search scoped by country. */
   int count(@Param("params") OrganizationListParams params);
-
-  /** Count all the publishing organizations that are part of this network. */
-  long countPublishingOrganizationsInNetwork(@Param("networkKey") UUID networkKey);
-
-  /** Obtains a list of all the publishing organizations that are part of this network. */
-  List<Organization> listPublishingOrganizationsInNetwork(
-      @Param("networkKey") UUID networkKey, @Nullable @Param("page") Pageable page);
 
   List<OrganizationContactDto> searchContacts(
       @Nullable @Param("country") List<Country> countries,
