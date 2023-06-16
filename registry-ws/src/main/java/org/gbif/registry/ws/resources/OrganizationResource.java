@@ -38,6 +38,8 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.security.EditorAuthorizationService;
@@ -114,7 +116,8 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 @Primary
 @RestController
 @RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)
-public class OrganizationResource extends BaseNetworkEntityResource<Organization>
+public class OrganizationResource
+    extends BaseNetworkEntityResource<Organization, OrganizationListParams>
     implements OrganizationService {
 
   public static final int MINIMUM_PASSWORD_SIZE = 12;
@@ -326,7 +329,6 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
             schema = @Schema(implementation = UUID.class),
             in = ParameterIn.QUERY)
       })
-  // TODO: modified
   @ApiResponse(responseCode = "200", description = "Organization search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
@@ -427,10 +429,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Dataset> publishedDatasets(
       @PathVariable("key") UUID organizationKey, Pageable page) {
-    return pagingResponse(
-        page,
-        datasetMapper.countDatasetsPublishedBy(organizationKey),
-        datasetMapper.listDatasetsPublishedBy(organizationKey, page));
+    DatasetListParams listParams =
+        DatasetListParams.builder().publishedByOrgKey(organizationKey).page(page).build();
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   /**
@@ -459,18 +460,18 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Installation> installations(
       @PathVariable("key") UUID organizationKey, Pageable page) {
+    InstallationListParams listParams =
+        InstallationListParams.builder().organizationKey(organizationKey).page(page).build();
     return pagingResponse(
-        page,
-        installationMapper.countInstallationsByOrganization(organizationKey),
-        installationMapper.listInstallationsByOrganization(organizationKey, page));
+        page, installationMapper.count(listParams), installationMapper.list(listParams));
   }
 
   @Override
   public PagingResponse<Organization> listByCountry(Country country, Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().country(country).page(page).build();
     return pagingResponse(
-        page,
-        organizationMapper.countOrganizationsByCountry(country),
-        organizationMapper.organizationsByCountry(country, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(
@@ -487,8 +488,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @GetMapping("deleted")
   @Override
   public PagingResponse<Organization> listDeleted(Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().deleted(true).page(page).build();
     return pagingResponse(
-        page, organizationMapper.countDeleted(), organizationMapper.deleted(page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(
@@ -505,10 +508,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @GetMapping("pending")
   @Override
   public PagingResponse<Organization> listPendingEndorsement(Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().isEndorsed(false).page(page).build();
     return pagingResponse(
-        page,
-        organizationMapper.countPendingEndorsements(null),
-        organizationMapper.pendingEndorsements(null, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(

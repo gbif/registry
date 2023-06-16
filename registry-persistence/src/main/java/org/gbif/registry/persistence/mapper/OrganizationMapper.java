@@ -43,7 +43,7 @@ import org.springframework.stereotype.Repository;
 @Qualifier("organizationChallengeCodeSupportMapper")
 @Repository
 public interface OrganizationMapper
-    extends BaseNetworkEntityMapper<Organization>, ChallengeCodeSupportMapper<UUID> {
+    extends BaseNetworkEntityMapper<Organization, OrganizationListParams>, ChallengeCodeSupportMapper<UUID> {
 
   /** Endorse organization by key. */
   void endorse(@Param("key") UUID key);
@@ -86,12 +86,6 @@ public interface OrganizationMapper
 
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
-
-  /** Overloaded search to allow it to scope the search by country. */
-  List<Organization> list(@Param("params") OrganizationListParams params);
-
-  /** Overloaded count to allow a search scoped by country. */
-  int count(@Param("params") OrganizationListParams params);
 
   List<OrganizationContactDto> searchContacts(
       @Nullable @Param("country") List<Country> countries,

@@ -51,10 +51,10 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   void delete(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> list(@SpringQueryMap Pageable page);
+  default PagingResponse<T> list(@SpringQueryMap Pageable page) {
+    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+  }
 
   @Override
   default void update(@RequestBody T entity) {
@@ -84,10 +84,10 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   Map<UUID, String> getTitles(@RequestBody Collection<UUID> collection);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> search(@RequestParam("q") String query, @SpringQueryMap Pageable page);
+  default PagingResponse<T> search(@RequestParam("q") String query, @SpringQueryMap Pageable page) {
+    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+  }
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -218,14 +218,14 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   List<MachineTag> listMachineTags(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> listByMachineTag(
+  default PagingResponse<T> listByMachineTag(
       @RequestParam("machineTagNamespace") String namespace,
       @RequestParam(value = "machineTagName", required = false) String name,
       @RequestParam(value = "machineTagValue", required = false) String value,
-      @SpringQueryMap Pageable page);
+      @SpringQueryMap Pageable page) {
+    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+  }
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -266,17 +266,17 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> listByIdentifier(
+  default PagingResponse<T> listByIdentifier(
       @RequestParam("identifierType") IdentifierType type,
       @RequestParam("identifier") String identifier,
-      @SpringQueryMap Pageable page);
+      @SpringQueryMap Pageable page) {
+    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+  }
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> listByIdentifier(
-      @RequestParam("identifier") String identifier, @SpringQueryMap Pageable page);
+  default PagingResponse<T> listByIdentifier(
+      @RequestParam("identifier") String identifier, @SpringQueryMap Pageable page) {
+    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+  }
 }

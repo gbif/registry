@@ -38,7 +38,7 @@ import org.springframework.stereotype.Repository;
  * though our Java API.
  */
 @Repository
-public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
+public interface NodeMapper extends BaseNetworkEntityMapper<Node, NodeListParams> {
 
   List<Country> listNodeCountries();
 
@@ -72,8 +72,4 @@ public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
 
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
-
-  List<Node> list(@Param("params") NodeListParams params);
-
-  int count(@Param("params") NodeListParams params);
 }

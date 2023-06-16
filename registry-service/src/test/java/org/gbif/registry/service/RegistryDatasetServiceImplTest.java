@@ -26,11 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.parameters.P;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -59,7 +62,8 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(UUID_1_STR, 1L);
     datasetUsages.put(DOI_1_STR, 2L);
     when(datasetMapper.get(UUID_1)).thenReturn(dataset);
-    when(datasetMapper.listByDOI(DOI_1_STR, new PagingRequest()))
+    when(datasetMapper.list(
+            DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build()))
         .thenReturn(Collections.singletonList(dataset));
 
     // when & then
@@ -67,7 +71,8 @@ class RegistryDatasetServiceImplTest {
         IllegalArgumentException.class,
         () -> registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages));
     verify(datasetMapper).get(UUID_1);
-    verify(datasetMapper).listByDOI(DOI_1_STR, new PagingRequest());
+    verify(datasetMapper)
+        .list(DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build());
   }
 
   @Test
@@ -117,7 +122,8 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(UUID_1_STR, 1L);
     datasetUsages.put(DOI_1_STR, 2L);
     when(datasetMapper.get(UUID_1)).thenReturn(dataset1);
-    when(datasetMapper.listByDOI(DOI_1_STR, new PagingRequest()))
+    when(datasetMapper.list(
+            DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build()))
         .thenReturn(Collections.singletonList(dataset2));
 
     // when
@@ -128,7 +134,8 @@ class RegistryDatasetServiceImplTest {
     assertFalse(derivedDatasetUsages.isEmpty());
     assertEquals(2, derivedDatasetUsages.size());
     verify(datasetMapper).get(UUID_1);
-    verify(datasetMapper).listByDOI(DOI_1_STR, new PagingRequest());
+    verify(datasetMapper)
+        .list(DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build());
   }
 
   private Dataset prepareDataset(UUID key, DOI doi) {

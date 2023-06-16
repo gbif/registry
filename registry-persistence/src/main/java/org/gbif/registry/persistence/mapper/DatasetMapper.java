@@ -29,7 +29,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
+public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset, DatasetListParams> {
 
   // TODO: merge the others wiht the list?
   /** Obtains a list of all the datasets hosted by, but not published by, the given organization. */
@@ -42,14 +42,6 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
    */
   List<Dataset> listDatasetsEndorsedBy(
       @Param("nodeKey") UUID nodeKey, @Nullable @Param("page") Pageable page);
-
-  /**
-   * Obtains a list of all datasets using the provided filter(s)
-   */
-  List<Dataset> list(@Param("params") DatasetListParams params);
-
-  /** Count all datasets having all non null filters given. */
-  int count(@Param("params") DatasetListParams params);
 
   /** Count of datasets published by an organization that is endorsed by the given node. */
   long countDatasetsEndorsedBy(@Param("nodeKey") UUID nodeKey);

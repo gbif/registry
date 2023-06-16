@@ -31,9 +31,7 @@ import org.gbif.registry.persistence.mapper.params.NodeListParams;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
-
-  int countDatasetsInNetwork(@Param("networkKey") UUID networkKey);
+public interface NetworkMapper extends BaseNetworkEntityMapper<Network, NetworkListParams> {
 
   boolean constituentExists(
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
@@ -49,6 +47,4 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
 
   /** @return The list of networks, with only their key and title populated. */
   List<IptNetworkBriefResponse> listNetworksBrief();
-  List<Network> list(@Param("params") NetworkListParams params);
-  int count(@Param("params") NetworkListParams params);
 }

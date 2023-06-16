@@ -185,7 +185,7 @@
     </if>
   </select>
 
-  <select id="count" resultType="Integer">
+  <select id="count" resultType="Long">
     SELECT COUNT(*)
     <include refid="LIST_FILTER" />
   </select>

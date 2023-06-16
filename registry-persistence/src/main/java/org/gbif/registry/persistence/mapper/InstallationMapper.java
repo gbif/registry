@@ -26,7 +26,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface InstallationMapper extends BaseNetworkEntityMapper<Installation> {
+public interface InstallationMapper extends BaseNetworkEntityMapper<Installation, InstallationListParams> {
 
   long countNonPublishing();
 
@@ -35,10 +35,4 @@ public interface InstallationMapper extends BaseNetworkEntityMapper<Installation
 
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
-
-  /** Obtains a list of all installations filtered optionally by a type. */
-  List<Installation> list(@Param("params")InstallationListParams params);
-
-  /** Count all installations having all non null filters given. */
-  int count(@Param("params")InstallationListParams params);
 }

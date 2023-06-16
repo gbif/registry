@@ -106,7 +106,8 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 @Primary
 @RestController
 @RequestMapping(value = "installation", produces = MediaType.APPLICATION_JSON_VALUE)
-public class InstallationResource extends BaseNetworkEntityResource<Installation>
+public class InstallationResource
+    extends BaseNetworkEntityResource<Installation, InstallationListParams>
     implements InstallationService, MetasyncHistoryService {
 
   private static final Logger LOG = LoggerFactory.getLogger(InstallationResource.class);
@@ -260,9 +261,6 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @GetMapping
   @Override
   public PagingResponse<Installation> list(InstallationRequestSearchParams request) {
-    // TODO: modified
-    // TODO: check page is filled without the params processor
-
     InstallationListParams listParams =
         InstallationListParams.builder()
             .query(request.getQ())
@@ -278,8 +276,8 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
             .page(request.getPage())
             .build();
 
-    long total = installationMapper.countWithFilter(listParams);
-    return pagingResponse(request.getPage(), total, installationMapper.listWithFilter(listParams));
+    long total = installationMapper.count(listParams);
+    return pagingResponse(request.getPage(), total, installationMapper.list(listParams));
   }
 
   @Operation(
@@ -301,10 +299,9 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
     return new PagingResponse<>(
         page,
         new Long(
-            datasetMapper.countWithFilter(
+            datasetMapper.count(
                 DatasetListParams.builder().installationKey(installationKey).build())),
-        datasetMapper.listWithFilter(
-            DatasetListParams.builder().installationKey(installationKey).build()));
+        datasetMapper.list(DatasetListParams.builder().installationKey(installationKey).build()));
   }
 
   @Operation(
@@ -321,8 +318,10 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   @GetMapping("deleted")
   @Override
   public PagingResponse<Installation> listDeleted(Pageable page) {
+    InstallationListParams listParams =
+        InstallationListParams.builder().deleted(true).page(page).build();
     return pagingResponse(
-        page, installationMapper.countDeleted(), installationMapper.deleted(page));
+        page, installationMapper.count(listParams), installationMapper.list(listParams));
   }
 
   @Operation(
@@ -483,7 +482,7 @@ public class InstallationResource extends BaseNetworkEntityResource<Installation
   public PagingResponse<Installation> listByType(InstallationType type, Pageable page) {
     InstallationListParams listParams =
         InstallationListParams.builder().type(type).page(page).build();
-    long total = installationMapper.countWithFilter(listParams);
-    return pagingResponse(page, total, installationMapper.listWithFilter(listParams));
+    long total = installationMapper.count(listParams);
+    return pagingResponse(page, total, installationMapper.list(listParams));
   }
 }

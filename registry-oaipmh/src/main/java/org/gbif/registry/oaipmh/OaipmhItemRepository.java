@@ -194,7 +194,7 @@ public class OaipmhItemRepository implements ItemRepository {
       results.add(toOaipmhItemIdentifier(dataset));
     }
 
-    return new ListItemIdentifiersResult(hasMoreResults, results, datasetList.getTotalSize());
+    return new ListItemIdentifiersResult(hasMoreResults, results, (int) datasetList.getTotalSize());
   }
 
   /** See {@link #getItems(List, int, int, String, Date, Date) getItems} */
@@ -271,7 +271,7 @@ public class OaipmhItemRepository implements ItemRepository {
       // caused by https://github.com/DSpace/xoai/issues/31
       LOG.error("Failed to serialize datasets to DC/EML", e);
     }
-    return new ListItemsResults(hasMoreResults, results, datasetList.getTotalSize());
+    return new ListItemsResults(hasMoreResults, results, (int) datasetList.getTotalSize());
   }
 
   /**
@@ -378,7 +378,7 @@ public class OaipmhItemRepository implements ItemRepository {
     Optional<SetIdentification> setIdentification = OaipmhSetRepository.parseSetName(set);
 
     List<Dataset> datasetList;
-    int datasetCount;
+    long datasetCount;
     if (setIdentification.isPresent()) {
       Country country = null;
       UUID installationKey = null;
@@ -407,8 +407,8 @@ public class OaipmhItemRepository implements ItemRepository {
               .page(new PagingRequest(offset, length))
               .build();
 
-      datasetList = datasetMapper.listWithFilter(listParams);
-      datasetCount = datasetMapper.countWithFilter(listParams);
+      datasetList = datasetMapper.list(listParams);
+      datasetCount = datasetMapper.count(listParams);
     } else {
       DatasetListParams listParams =
           DatasetListParams.builder()
@@ -417,8 +417,8 @@ public class OaipmhItemRepository implements ItemRepository {
               .page(new PagingRequest(offset, length))
               .build();
 
-      datasetList = datasetMapper.listWithFilter(listParams);
-      datasetCount = datasetMapper.countWithFilter(listParams);
+      datasetList = datasetMapper.list(listParams);
+      datasetCount = datasetMapper.count(listParams);
     }
 
     return new DatasetListWithTotalSize(datasetCount, datasetList);
@@ -426,10 +426,10 @@ public class OaipmhItemRepository implements ItemRepository {
 
   private static class DatasetListWithTotalSize {
 
-    private int totalSize;
+    private long totalSize;
     private List<Dataset> list;
 
-    public DatasetListWithTotalSize(int totalSize, List<Dataset> list) {
+    public DatasetListWithTotalSize(long totalSize, List<Dataset> list) {
       this.totalSize = totalSize;
       this.list = list;
     }
@@ -438,7 +438,7 @@ public class OaipmhItemRepository implements ItemRepository {
       return list.size();
     }
 
-    public int getTotalSize() {
+    public long getTotalSize() {
       return totalSize;
     }
 

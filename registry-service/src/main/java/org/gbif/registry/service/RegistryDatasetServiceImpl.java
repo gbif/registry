@@ -46,6 +46,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 import org.slf4j.Logger;
@@ -103,7 +105,9 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
                 new CacheLoader<UUID, Set<UUID>>() {
                   @Override
                   public Set<UUID> load(UUID key) {
-                    return datasetMapper.listDatasetsInNetwork(key, null).stream()
+                    return datasetMapper
+                        .list(DatasetListParams.builder().networkKey(key).build())
+                        .stream()
                         .map(Dataset::getKey)
                         .collect(Collectors.toSet());
                   }
@@ -358,7 +362,9 @@ public class RegistryDatasetServiceImpl implements RegistryDatasetService {
         // validate datasets with DOI
       } else if (DOI.isParsable(datasetKeyOrDoi)) {
         LOG.debug("Identifier [{}] is a valid DOI", datasetKeyOrDoi);
-        List<Dataset> datasets = datasetMapper.listByDOI(datasetKeyOrDoi, new PagingRequest());
+        List<Dataset> datasets =
+            datasetMapper.list(
+                DatasetListParams.builder().doi(datasetKeyOrDoi).page(new PagingRequest()).build());
         // get first not deleted one
         Optional<Dataset> datasetWrapper =
             datasets.stream().filter(d -> d.getDeleted() == null).findFirst();

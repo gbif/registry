@@ -17,6 +17,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.merge.MergeParams;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
@@ -30,6 +31,7 @@ import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.UserRightsMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.grscicoll.GrSciCollEditorAuthorizationFilter;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
@@ -180,7 +182,12 @@ public class AuthPreCheckCreationRequestFilter extends OncePerRequestFilter {
         () -> {
           // get a random organization that is endorsed by this node
           List<Organization> endorsedOrgs =
-              organizationMapper.organizationsEndorsedBy(getScope.apply(NODE), null);
+              organizationMapper.list(
+                  OrganizationListParams.builder()
+                      .endorsedByNodeKey(getScope.apply(NODE))
+                      .isEndorsed(true)
+                      .page(new PagingRequest(0, 1))
+                      .build());
           if (endorsedOrgs != null && !endorsedOrgs.isEmpty()) {
             return endorsedOrgs.get(0).getKey();
           }

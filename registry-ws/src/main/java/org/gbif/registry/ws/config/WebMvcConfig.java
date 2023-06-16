@@ -31,6 +31,8 @@ import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumen
 import org.gbif.registry.ws.provider.networkEntitiesList.DatasetRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.InstallationRequestSearchParamsHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.networkEntitiesList.NetworkRequestSearchParamsHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.networkEntitiesList.NodeRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.OrganizationRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.OrganizationContactsParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
@@ -85,6 +87,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new DatasetRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new OrganizationRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstallationRequestSearchParamsHandlerMethodArgumentResolver());
+    argumentResolvers.add(new NetworkRequestSearchParamsHandlerMethodArgumentResolver());
+    argumentResolvers.add(new NodeRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new OrganizationContactsParamsHandlerMethodArgumentResolver());

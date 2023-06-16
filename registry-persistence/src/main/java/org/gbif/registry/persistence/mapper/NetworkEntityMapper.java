@@ -13,14 +13,9 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.vocabulary.IdentifierType;
 
-import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 

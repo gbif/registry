@@ -390,16 +390,6 @@ public class BaseCollectionEntityService<
     return baseMapper.listMachineTags(targetEntityKey);
   }
 
-  @Override
-  public PagingResponse<T> listByMachineTag(
-      String namespace,
-      @Nullable String name,
-      @Nullable String value,
-      @Nullable Pageable pageable) {
-    pageable = pageable == null ? new PagingRequest() : pageable;
-    return withMyBatis.listByMachineTag(baseMapper, namespace, name, value, pageable);
-  }
-
   /**
    * This method ensures that the caller is authorized to perform the action and then adds the
    * server controlled fields for createdBy and modifiedBy.

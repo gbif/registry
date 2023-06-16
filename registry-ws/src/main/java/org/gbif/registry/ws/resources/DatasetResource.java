@@ -69,6 +69,7 @@ import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
@@ -168,7 +169,7 @@ import static org.gbif.registry.security.UserRoles.IPT_ROLE;
 @Primary
 @RestController
 @RequestMapping(value = "dataset", produces = MediaType.APPLICATION_JSON_VALUE)
-public class DatasetResource extends BaseNetworkEntityResource<Dataset>
+public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetListParams>
     implements DatasetService, DatasetSearchService, DatasetProcessStatusService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DatasetResource.class);
@@ -456,16 +457,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
             description = "The primary type of the dataset.",
             schema = @Schema(implementation = DatasetType.class),
             in = ParameterIn.QUERY,
-            explode = Explode.TRUE),
-        @Parameter(
-            name = "modified",
-            description =
-                "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
-            schema = @Schema(implementation = DatasetType.class),
-            in = ParameterIn.QUERY,
             explode = Explode.TRUE)
       })
-  // TODO: modified into simpleSearchParameters when used in all entities
   @SimpleSearchParameters
   @ApiResponse(responseCode = "200", description = "Dataset search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
@@ -516,23 +509,21 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
             .page(request.getPage())
             .build();
 
-    long total = datasetMapper.countWithFilter(listParams);
-    return pagingResponse(request.getPage(), total, datasetMapper.listWithFilter(listParams));
+    return pagingResponse(
+        request.getPage(), datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Override
   public PagingResponse<Dataset> listByCountry(Country country, DatasetType type, Pageable page) {
     DatasetListParams listParams =
         DatasetListParams.builder().country(country).type(type).page(page).build();
-    long total = datasetMapper.countWithFilter(listParams);
-    return pagingResponse(page, total, datasetMapper.listWithFilter(listParams));
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Override
   public PagingResponse<Dataset> listByType(DatasetType type, Pageable page) {
     DatasetListParams listParams = DatasetListParams.builder().type(type).page(page).build();
-    long total = datasetMapper.countWithFilter(listParams);
-    return pagingResponse(page, total, datasetMapper.listWithFilter(listParams));
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Override
@@ -1101,10 +1092,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @Override
   public PagingResponse<Dataset> listConstituents(
       @PathVariable("key") UUID datasetKey, Pageable page) {
-    return pagingResponse(
-        page,
-        (long) datasetMapper.countConstituents(datasetKey),
-        datasetMapper.listConstituents(datasetKey, page));
+    DatasetListParams listParams =
+        DatasetListParams.builder().parentKey(datasetKey).page(page).build();
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Operation(
@@ -1120,7 +1110,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @GetMapping("{key}/networks")
   @Override
   public List<Network> listNetworks(@PathVariable("key") UUID datasetKey) {
-    return networkMapper.listByDataset(datasetKey);
+    return networkMapper.list(NetworkListParams.builder().datasetKey(datasetKey).build());
   }
 
   // TODO: What for?
@@ -1138,7 +1128,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @GetMapping("constituents")
   @Override
   public PagingResponse<Dataset> listConstituents(Pageable page) {
-    return pagingResponse(page, datasetMapper.countSubdatasets(), datasetMapper.subdatasets(page));
+    DatasetListParams listParams =
+        DatasetListParams.builder().isSubdataset(true).page(page).build();
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Hidden
@@ -1281,7 +1273,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
   @GetMapping("duplicate")
   @Override
   public PagingResponse<Dataset> listDuplicates(Pageable page) {
-    return pagingResponse(page, datasetMapper.countDuplicates(), datasetMapper.duplicates(page));
+    DatasetListParams listParams = DatasetListParams.builder().isDuplicate(true).page(page).build();
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Operation(
@@ -1510,8 +1503,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset>
 
   @Override
   public PagingResponse<Dataset> listByDOI(String doi, Pageable page) {
+    DatasetListParams listParams = DatasetListParams.builder().doi(doi).page(page).build();
     return new PagingResponse<>(
-        page, datasetMapper.countByDOI(doi), datasetMapper.listByDOI(doi, page));
+        page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   @Operation(

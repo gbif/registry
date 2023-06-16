@@ -245,8 +245,7 @@ public class OaipmhSetRepository implements SetRepository {
     if (country == null || !country.getIso2LetterCode().equalsIgnoreCase(subSet)) {
       return false;
     }
-    long count =
-        datasetMapper.countWithFilter(DatasetListParams.builder().country(country).build());
+    long count = datasetMapper.count(DatasetListParams.builder().country(country).build());
     return count > 0;
   }
 
@@ -271,7 +270,7 @@ public class OaipmhSetRepository implements SetRepository {
       return false;
     }
 
-    long count = datasetMapper.countWithFilter(DatasetListParams.builder().installationKey(uuid).build());
+    long count = datasetMapper.count(DatasetListParams.builder().installationKey(uuid).build());
     return count > 0;
   }
 }

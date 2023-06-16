@@ -101,40 +101,6 @@
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <!-- Append safe ordering, omitting deleted entities -->
-  <select id="list" resultType="org.gbif.api.model.registry.Installation"  resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    WHERE i.deleted IS NULL
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <!-- Basic paging search functionality -->
-  <select id="search" resultMap="INSTALLATION_MAP">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="count" resultType="Integer">
-    SELECT COUNT(*)
-    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-  </select>
-
   <!-- TAGS -->
   <insert id="addTag">
     INSERT INTO installation_tag(installation_key,tag_key)
@@ -388,6 +354,8 @@
           i.deleted IS NULL
         </otherwise>
       </choose>
+      <if test="params.from != null" > AND i.modified &gt;= #{params.from}</if>
+      <if test="params.to != null" > AND i.modified &lt; #{params.to}</if>
       <if test="params.type != null" > AND i.type = #{params.type,jdbcType=OTHER}</if>
       <if test="params.identifier != null" >
         AND id.identifier = #{params.identifier,jdbcType=VARCHAR}

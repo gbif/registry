@@ -36,7 +36,9 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.mapper.params.NodeListParams;
+import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.WithMyBatis;
 
@@ -71,23 +73,27 @@ import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 
 @io.swagger.v3.oas.annotations.tags.Tag(
-  name = "Participant nodes",
-  description = "Each of GBIF's formal participants designates and establishes a **node** responsible for " +
-    "coordinating GBIF-related in-country activities.\n\n" +
-    "The nodes API provides CRUD and discovery services for nodes. Its most prominent use on the GBIF " +
-    "portal is to drive the [GBIF network page](https://www.gbif.org/the-gbif-network) and country pages.\n\n" +
-    "Please note deletion of nodes is logical, meaning node entries remain registered forever and only get a " +
-    "deleted timestamp. On the other hand, deletion of a nodes's endpoints, identifiers, tags, " +
-    "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.\n\n" +
-    "Also note, nodes are managed in a different, internal GBIF system, so the usual create-update-delete methods" +
-    "exist but are not documented here.",
-  extensions = @io.swagger.v3.oas.annotations.extensions.Extension(
-    name = "Order", properties = @ExtensionProperty(name = "Order", value = "0300")))
+    name = "Participant nodes",
+    description =
+        "Each of GBIF's formal participants designates and establishes a **node** responsible for "
+            + "coordinating GBIF-related in-country activities.\n\n"
+            + "The nodes API provides CRUD and discovery services for nodes. Its most prominent use on the GBIF "
+            + "portal is to drive the [GBIF network page](https://www.gbif.org/the-gbif-network) and country pages.\n\n"
+            + "Please note deletion of nodes is logical, meaning node entries remain registered forever and only get a "
+            + "deleted timestamp. On the other hand, deletion of a nodes's endpoints, identifiers, tags, "
+            + "machine tags, comments, and metadata descriptions is physical, meaning the entries are permanently removed.\n\n"
+            + "Also note, nodes are managed in a different, internal GBIF system, so the usual create-update-delete methods"
+            + "exist but are not documented here.",
+    extensions =
+        @io.swagger.v3.oas.annotations.extensions.Extension(
+            name = "Order",
+            properties = @ExtensionProperty(name = "Order", value = "0300")))
 @Validated
 @Primary
 @RestController
 @RequestMapping(value = "node", produces = MediaType.APPLICATION_JSON_VALUE)
-public class NodeResource extends BaseNetworkEntityResource<Node> implements NodeService {
+public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams>
+    implements NodeService {
 
   private final NodeMapper nodeMapper;
   private final OrganizationMapper organizationMapper;
@@ -114,14 +120,15 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Operation(
-    operationId = "getNode",
-    summary = "Get details of a single node",
-    description = "Details of a single node.  Also works for deleted nodes.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0200")))
+      operationId = "getNode",
+      summary = "Get details of a single node",
+      description = "Details of a single node.  Also works for deleted nodes.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0200")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Node found and returned")
+  @ApiResponse(responseCode = "200", description = "Node found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/node/{key}")
@@ -139,14 +146,16 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   // Method overridden only for documentation.  Note it is hidden.
   @Hidden
   @Operation(
-    operationId = "createNode",
-    summary = "Create a new node",
-    description = "Creates a new node.  Note endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions must be added in subsequent requests.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0201")))
-  @ApiResponse(
-    responseCode = "201",
-    description = "Node created, new node's UUID returned")
+      operationId = "createNode",
+      summary = "Create a new node",
+      description =
+          "Creates a new node.  Note endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions must be added in subsequent requests.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0201")))
+  @ApiResponse(responseCode = "201", description = "Node created, new node's UUID returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
   @Validated({PrePersist.class, Default.class})
@@ -163,15 +172,17 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   // Method overridden only for documentation.  Note it is hidden.
   @Hidden
   @Operation(
-    operationId = "updateNode",
-    summary = "Update an existing node",
-    description = "Updates the existing node.  Note endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed with this method.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0202")))
+      operationId = "updateNode",
+      summary = "Update an existing node",
+      description =
+          "Updates the existing node.  Note endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions are not changed with this method.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0202")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Node updated")
+  @ApiResponse(responseCode = "204", description = "Node updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -189,15 +200,17 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   // Method overridden only for documentation.  Note it is hidden.
   @Hidden
   @Operation(
-    operationId = "deleteNode",
-    summary = "Delete a node",
-    description = "Marks a node as deleted.  Note endpoints, identifiers, tags, machine tags, comments and " +
-      "metadata descriptions are not changed.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0203")))
+      operationId = "deleteNode",
+      summary = "Delete a node",
+      description =
+          "Marks a node as deleted.  Note endpoints, identifiers, tags, machine tags, comments and "
+              + "metadata descriptions are not changed.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0203")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Node deleted")
+  @ApiResponse(responseCode = "204", description = "Node deleted")
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
@@ -211,37 +224,34 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * supported, such as dataset search.
    */
   @Operation(
-    operationId = "listNodes",
-    summary = "List all nodes",
-    description = "Lists all current nodes (deleted nodes are not listed).",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0100")))
+      operationId = "listNodes",
+      summary = "List all nodes",
+      description = "Lists all current nodes (deleted nodes are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "Node search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Node search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   @Override
   public PagingResponse<Node> list(NodeRequestSearchParams request) {
-    // TODO: modified
-    // TODO: check page is filled without the params processor
-
     NodeListParams listParams =
-      NodeListParams.builder()
-        .query(request.getQ())
-        .deleted(false)
-        .identifier(request.getIdentifier())
-        .identifierType(request.getIdentifierType())
-        .mtNamespace(request.getMachineTagNamespace())
-        .mtName(request.getMachineTagName())
-        .mtValue(request.getMachineTagValue())
-        .page(request.getPage())
-        .build();
+        NodeListParams.builder()
+            .query(request.getQ())
+            .deleted(false)
+            .identifier(request.getIdentifier())
+            .identifierType(request.getIdentifierType())
+            .mtNamespace(request.getMachineTagNamespace())
+            .mtName(request.getMachineTagName())
+            .mtValue(request.getMachineTagValue())
+            .page(request.getPage())
+            .build();
 
-    long total = nodeMapper.countList(listParams);
-    return decorateResponse(pagingResponse(request.getPage(), total, nodeMapper.list(listParams)));
+    return decorateResponse(
+        pagingResponse(
+            request.getPage(), nodeMapper.count(listParams), nodeMapper.list(listParams)));
   }
 
   /** Decorates the Nodes in the response with the Augmenter. */
@@ -274,24 +284,29 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Operation(
-    operationId = "getNodeOrganizations",
-    summary = "List node's organizations",
-    description = "Lists the organizations registered to this node.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0240")))
+      operationId = "getNodeOrganizations",
+      summary = "List node's organizations",
+      description = "Lists the organizations registered to this node.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0240")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of organizations")
+  @ApiResponse(responseCode = "200", description = "List of organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/organization")
   @Override
   public PagingResponse<Organization> endorsedOrganizations(
       @PathVariable("key") UUID nodeKey, Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder()
+            .endorsedByNodeKey(nodeKey)
+            .isEndorsed(true)
+            .page(page)
+            .build();
     return new PagingResponse<>(
-        page,
-        organizationMapper.countOrganizationsEndorsedBy(nodeKey),
-        organizationMapper.organizationsEndorsedBy(nodeKey, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   /**
@@ -300,54 +315,63 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
    * @return
    */
   @Operation(
-    operationId = "getPendingOrganizations2",
-    summary = "List pending organizations",
-    description = "Lists organizations whose endorsement is pending.\n\n" +
-      "Use [getPendingOrganizations](#tag/Organizations/operation/getPendingOrganizations) instead.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0511")))
+      operationId = "getPendingOrganizations2",
+      summary = "List pending organizations",
+      description =
+          "Lists organizations whose endorsement is pending.\n\n"
+              + "Use [getPendingOrganizations](#tag/Organizations/operation/getPendingOrganizations) instead.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0511")))
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of pending organizations")
+  @ApiResponse(responseCode = "200", description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @Deprecated
   @GetMapping("pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().isEndorsed(false).page(page).build();
     return new PagingResponse<>(
-        page,
-        organizationMapper.countPendingEndorsements(null),
-        organizationMapper.pendingEndorsements(null, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(
-    operationId = "getNodePendingOrganizations",
-    summary = "List pending organizations of a node",
-    description = "Lists organizations whose endorsement  by the given node is pending.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0510")))
+      operationId = "getNodePendingOrganizations",
+      summary = "List pending organizations of a node",
+      description = "Lists organizations whose endorsement  by the given node is pending.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0510")))
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of pending organizations")
+  @ApiResponse(responseCode = "200", description = "List of pending organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/pendingEndorsement")
   @Override
   public PagingResponse<Organization> pendingEndorsements(
       @PathVariable("key") UUID nodeKey, Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder()
+            .endorsedByNodeKey(nodeKey)
+            .isEndorsed(false)
+            .page(page)
+            .build();
     return new PagingResponse<>(
-        page,
-        organizationMapper.countPendingEndorsements(nodeKey),
-        organizationMapper.pendingEndorsements(nodeKey, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(
-    operationId = "getNodeByCountry",
-    summary = "Get the node for a country",
-    description = "Gets the country node by ISO 639-1 (2 letter) or ISO 639-2 (3 letter) country code",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0250")))
-  @ApiResponse(
-    responseCode = "200",
-    description = "Country node")
+      operationId = "getNodeByCountry",
+      summary = "Get the node for a country",
+      description =
+          "Gets the country node by ISO 639-1 (2 letter) or ISO 639-2 (3 letter) country code",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0250")))
+  @ApiResponse(responseCode = "200", description = "Country node")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("country/{key}")
   @Nullable
@@ -362,12 +386,13 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Operation(
-    operationId = "getMemberCountries",
-    summary = "List all GBIF member countries",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0251")))
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of countries")
+      operationId = "getMemberCountries",
+      summary = "List all GBIF member countries",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0251")))
+  @ApiResponse(responseCode = "200", description = "List of countries")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("country")
   @Override
@@ -376,12 +401,13 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Operation(
-    operationId = "getActiveCountries",
-    summary = "List all GBIF member countries than are either voting or associate participants",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0252")))
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of countries")
+      operationId = "getActiveCountries",
+      summary = "List all GBIF member countries than are either voting or associate participants",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0252")))
+  @ApiResponse(responseCode = "200", description = "List of countries")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("activeCountries")
   @Override
@@ -390,14 +416,15 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Operation(
-    operationId = "getNodeDatasets",
-    summary = "List all datasets from a node",
-    description = "Lists datasets published by organizations endorsed by the node",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0253")))
+      operationId = "getNodeDatasets",
+      summary = "List all datasets from a node",
+      description = "Lists datasets published by organizations endorsed by the node",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0253")))
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of datasets")
+  @ApiResponse(responseCode = "200", description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/dataset")
   @Override
@@ -434,39 +461,40 @@ public class NodeResource extends BaseNetworkEntityResource<Node> implements Nod
   }
 
   @Operation(
-    operationId = "getNodeInstallations",
-    summary = "List node's installations",
-    description = "Lists installations hosted by organizations endorsed by the node.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0260")))
+      operationId = "getNodeInstallations",
+      summary = "List node's installations",
+      description = "Lists installations hosted by organizations endorsed by the node.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0260")))
   @Docs.DefaultEntityKeyParameter
   @Pageable.OffsetLimitParameters
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of technical installations")
+  @ApiResponse(responseCode = "200", description = "List of technical installations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/installation")
   @Override
   public PagingResponse<Installation> installations(
       @PathVariable("key") UUID nodeKey, Pageable page) {
+    InstallationListParams listParams =
+        InstallationListParams.builder().endorsedByNodeKey(nodeKey).page(page).build();
     return pagingResponse(
-        page,
-        installationMapper.countInstallationsEndorsedBy(nodeKey),
-        installationMapper.listInstallationsEndorsedBy(nodeKey, page));
+        page, installationMapper.count(listParams), installationMapper.list(listParams));
   }
 
   @Operation(
-    operationId = "suggestNodes",
-    summary = "Suggest nodes.",
-    description = "Search that returns up to 20 matching nodes. Results are ordered by relevance. " +
-      "The response is smaller than an node search.",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0103")))
+      operationId = "suggestNodes",
+      summary = "Suggest nodes.",
+      description =
+          "Search that returns up to 20 matching nodes. Results are ordered by relevance. "
+              + "The response is smaller than an node search.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0103")))
   @CommonParameters.QParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Node search successful")
-  @ApiResponse(
-    responseCode = "400",
-    description = "Invalid search query provided")
+  @ApiResponse(responseCode = "200", description = "Node search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("suggest")
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
