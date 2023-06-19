@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import org.gbif.api.annotation.EmptyToNull;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -427,7 +428,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "changeSuggestion")
-  public int createChangeSuggestion(@RequestBody R createSuggestion) {
+  public int createChangeSuggestion(@RequestBody @EmptyToNull R createSuggestion) {
     return changeSuggestionService.createChangeSuggestion(createSuggestion);
   }
 
@@ -444,7 +445,7 @@ public abstract class BaseCollectionEntityResource<
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "changeSuggestion/{key}")
   public void updateChangeSuggestion(
-      @PathVariable("key") int key, @RequestBody R suggestion) {
+      @PathVariable("key") int key, @EmptyToNull @RequestBody R suggestion) {
     checkArgument(key == suggestion.getKey());
     changeSuggestionService.updateChangeSuggestion(suggestion);
   }
@@ -821,7 +822,8 @@ public abstract class BaseCollectionEntityResource<
   @Operation(operationId = "importBatch", summary = "Process a batch of GRSciColl entities")
   @ApiResponse(
       responseCode = "201",
-      description = "Batch created and being handled. URL with the batch information to check its status.",
+      description =
+          "Batch created and being handled. URL with the batch information to check its status.",
       content = @Content)
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
