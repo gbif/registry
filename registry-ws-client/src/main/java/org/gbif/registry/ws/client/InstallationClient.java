@@ -17,11 +17,9 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
-import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
 import org.gbif.api.vocabulary.InstallationType;
@@ -104,4 +102,9 @@ public interface InstallationClient
   @Override
   PagingResponse<MetasyncHistory> listMetasync(
       @PathVariable("installationKey") UUID installationKey, @SpringQueryMap Pageable pageable);
+
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<Installation> list(@SpringQueryMap InstallationRequestSearchParams searchParams);
 }
