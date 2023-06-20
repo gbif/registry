@@ -106,16 +106,17 @@
   </update>
 
   <select id="list" resultMap="NODE_MAP">
-    SELECT <include refid="NODE_FIELDS"/>
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(n.fulltext_search, query), </if>created, n.key)
+      <include refid="NODE_FIELDS"/>
     <include refid="LIST_FILTER"/>
-    ORDER BY <if test="params.query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>created DESC, key
+    ORDER BY <if test="params.query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>created DESC, n.key
     <if test="params.page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
   <select id="count" resultType="Long">
-    SELECT COUNT(*)
+    SELECT COUNT(DISTINCT n.key)
     <include refid="LIST_FILTER"/>
   </select>
 

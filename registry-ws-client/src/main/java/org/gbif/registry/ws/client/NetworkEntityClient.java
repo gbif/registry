@@ -22,6 +22,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.search.RequestSearchParams;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
@@ -50,11 +51,6 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}")
   @Override
   void delete(@PathVariable("key") UUID key);
-
-  @Override
-  default PagingResponse<T> list(@SpringQueryMap Pageable page) {
-    throw new UnsupportedOperationException("Please use the list with parameters service instead");
-  }
 
   @Override
   default void update(@RequestBody T entity) {
@@ -86,7 +82,10 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
 
   @Override
   default PagingResponse<T> search(@RequestParam("q") String query, @SpringQueryMap Pageable page) {
-    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+    RequestSearchParams params = new RequestSearchParams();
+    params.setQ(query);
+    params.setPage(page);
+    return list(params);
   }
 
   @RequestMapping(
@@ -224,7 +223,12 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
       @RequestParam(value = "machineTagName", required = false) String name,
       @RequestParam(value = "machineTagValue", required = false) String value,
       @SpringQueryMap Pageable page) {
-    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+    RequestSearchParams params = new RequestSearchParams();
+    params.setMachineTagNamespace(namespace);
+    params.setMachineTagName(name);
+    params.setMachineTagValue(value);
+    params.setPage(page);
+    return list(params);
   }
 
   @RequestMapping(
@@ -271,12 +275,30 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
       @RequestParam("identifierType") IdentifierType type,
       @RequestParam("identifier") String identifier,
       @SpringQueryMap Pageable page) {
-    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+    RequestSearchParams params = new RequestSearchParams();
+    params.setIdentifierType(type);
+    params.setIdentifier(identifier);
+    params.setPage(page);
+    return list(params);
   }
 
   @Override
   default PagingResponse<T> listByIdentifier(
       @RequestParam("identifier") String identifier, @SpringQueryMap Pageable page) {
-    throw new UnsupportedOperationException("Please use the list with parameters service instead");
+    RequestSearchParams params = new RequestSearchParams();
+    params.setIdentifier(identifier);
+    params.setPage(page);
+    return list(params);
   }
+
+  @Override
+  default PagingResponse<T> list(@SpringQueryMap Pageable page) {
+    RequestSearchParams params = new RequestSearchParams();
+    params.setPage(page);
+    return list(params);
+  }
+
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  PagingResponse<T> list(@SpringQueryMap RequestSearchParams searchParams);
 }

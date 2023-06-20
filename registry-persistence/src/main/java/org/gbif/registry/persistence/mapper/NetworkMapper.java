@@ -14,9 +14,9 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.registry.domain.ws.IptNetworkBriefResponse;
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,14 +24,14 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
-
-import org.gbif.registry.persistence.mapper.params.NetworkListParams;
-import org.gbif.registry.persistence.mapper.params.NodeListParams;
-
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NetworkMapper extends BaseNetworkEntityMapper<Network, NetworkListParams> {
+public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
+
+  List<Network> list(@Param("params") NetworkListParams params);
+
+  long count(@Param("params") NetworkListParams params);
 
   boolean constituentExists(
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
@@ -45,6 +45,8 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network, NetworkL
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
-  /** @return The list of networks, with only their key and title populated. */
+  /**
+   * @return The list of networks, with only their key and title populated.
+   */
   List<IptNetworkBriefResponse> listNetworksBrief();
 }

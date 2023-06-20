@@ -130,16 +130,17 @@
   </update>
 
   <select id="list" resultMap="NETWORK_MAP">
-    SELECT <include refid="NETWORK_FIELDS"/>
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(n.fulltext_search, query), </if>n.created, n.key)
+      <include refid="NETWORK_FIELDS"/>
     <include refid="LIST_FILTER" />
-    ORDER BY <if test="query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>n.created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+    ORDER BY <if test="params.query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>n.created DESC, n.key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
   <select id="count" resultType="Long">
-    SELECT COUNT(*)
+    SELECT COUNT(DISTINCT n.key)
     <include refid="LIST_FILTER"/>
   </select>
 

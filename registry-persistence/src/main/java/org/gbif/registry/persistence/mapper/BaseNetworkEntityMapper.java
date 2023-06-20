@@ -21,16 +21,11 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 /** The BaseNetworkEntityMapper defines a common interface for all our Network entities. */
-public interface BaseNetworkEntityMapper<T extends NetworkEntity, P extends BaseListParams>
+public interface BaseNetworkEntityMapper<T extends NetworkEntity>
     extends NetworkEntityMapper<T>,
         ContactableMapper,
         CommentableMapper,
         MachineTaggableMapper,
         TaggableMapper,
         EndpointableMapper,
-        IdentifiableMapper {
-
-  List<T> list(@Param("params") P params);
-
-  long count(@Param("params") P params);
-}
+        IdentifiableMapper {}

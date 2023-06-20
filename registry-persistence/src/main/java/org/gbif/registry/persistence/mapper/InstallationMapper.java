@@ -14,8 +14,10 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 
 import java.util.List;
@@ -26,7 +28,11 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface InstallationMapper extends BaseNetworkEntityMapper<Installation, InstallationListParams> {
+public interface InstallationMapper extends BaseNetworkEntityMapper<Installation> {
+
+  List<Installation> list(@Param("params") InstallationListParams params);
+
+  long count(@Param("params") InstallationListParams params);
 
   long countNonPublishing();
 

@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.MetaSyncHistoryMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
@@ -72,6 +73,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -212,6 +215,13 @@ public class InstallationResource
     super.update(key, installation);
   }
 
+  @Override
+  protected PagingResponse<Installation> list(BaseListParams params) {
+    InstallationListParams p = InstallationListParams.from(params);
+    return new PagingResponse<>(
+        p.getPage(), installationMapper.count(p), installationMapper.list(p));
+  }
+
   /**
    * Deletes the installation.
    *
@@ -261,9 +271,14 @@ public class InstallationResource
   @GetMapping
   @Override
   public PagingResponse<Installation> list(InstallationRequestSearchParams request) {
+    String q =
+        request.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
+            : request.getQ();
+
     InstallationListParams listParams =
         InstallationListParams.builder()
-            .query(request.getQ())
+            .query(q)
             .type(request.getType())
             .endorsedByNodeKey(request.getEndorsedByNodeKey())
             .organizationKey(request.getOrganizationKey())

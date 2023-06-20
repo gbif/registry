@@ -375,7 +375,8 @@
   </select>
 
   <select id="list" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
+    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(d.fulltext_search, query), </if>d.created, d.key)
+      <include refid="DATASET_FIELDS"/>
     <include refid="LIST_FILTER" />
     ORDER BY <if test="params.query != null" >ts_rank_cd(d.fulltext_search, query) DESC, </if>d.created DESC, d.key
     <if test="params.page != null" >
@@ -384,7 +385,7 @@
   </select>
 
   <select id="count" resultType="Long">
-    SELECT COUNT(*)
+    SELECT COUNT(DISTINCT d.key)
     <include refid="LIST_FILTER" />
   </select>
 

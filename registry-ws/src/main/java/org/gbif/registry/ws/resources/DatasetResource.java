@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import com.google.common.base.CharMatcher;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -68,6 +70,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
@@ -474,6 +477,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       request = new DatasetRequestSearchParams();
     }
 
+    String q =
+        request.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
+            : request.getQ();
+
     Date from =
         request.getModified() != null && request.getModified().lowerEndpoint() != null
             ? Date.from(
@@ -495,7 +503,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
 
     DatasetListParams listParams =
         DatasetListParams.builder()
-            .query(request.getQ())
+            .query(q)
             .country(request.getCountry())
             .type(request.getType())
             .from(from)
@@ -956,6 +964,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     }
 
     update(dataset, old, user);
+  }
+
+  @Override
+  protected PagingResponse<Dataset> list(BaseListParams params) {
+    DatasetListParams p = DatasetListParams.from(params);
+    return new PagingResponse<>(p.getPage(), datasetMapper.count(p), datasetMapper.list(p));
   }
 
   /**

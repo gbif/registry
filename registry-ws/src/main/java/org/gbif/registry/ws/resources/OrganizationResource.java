@@ -38,6 +38,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
+import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
@@ -245,6 +246,13 @@ public class OrganizationResource
     super.update(key, organization);
   }
 
+  @Override
+  protected PagingResponse<Organization> list(BaseListParams params) {
+    OrganizationListParams p = OrganizationListParams.from(params);
+    return new PagingResponse<>(
+        p.getPage(), organizationMapper.count(p), organizationMapper.list(p));
+  }
+
   /**
    * Deletes the organization.
    *
@@ -295,8 +303,9 @@ public class OrganizationResource
 
   @Override
   public PagingResponse<Organization> search(String query, Pageable page) {
+    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
     OrganizationListParams listParams =
-        OrganizationListParams.builder().query(query).page(page).build();
+        OrganizationListParams.builder().query(q).page(page).build();
     long total = organizationMapper.count(listParams);
     return pagingResponse(page, total, organizationMapper.list(listParams));
   }

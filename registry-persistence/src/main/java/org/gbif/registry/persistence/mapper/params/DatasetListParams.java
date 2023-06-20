@@ -23,4 +23,8 @@ public class DatasetListParams extends BaseListParams {
   @Nullable private UUID networkKey;
   @Nullable private Boolean isDuplicate;
   @Nullable private Boolean isSubdataset;
+
+  public static DatasetListParams from(BaseListParams params) {
+    return BaseListParams.copy(DatasetListParams.builder().build(), params);
+  }
 }

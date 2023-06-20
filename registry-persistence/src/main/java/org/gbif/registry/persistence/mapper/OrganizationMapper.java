@@ -15,6 +15,7 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Contact;
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
@@ -35,6 +36,7 @@ import org.apache.ibatis.annotations.Param;
 import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
 
 
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -43,7 +45,11 @@ import org.springframework.stereotype.Repository;
 @Qualifier("organizationChallengeCodeSupportMapper")
 @Repository
 public interface OrganizationMapper
-    extends BaseNetworkEntityMapper<Organization, OrganizationListParams>, ChallengeCodeSupportMapper<UUID> {
+    extends BaseNetworkEntityMapper<Organization>, ChallengeCodeSupportMapper<UUID> {
+
+  List<Organization> list(@Param("params") OrganizationListParams params);
+
+  long count(@Param("params") OrganizationListParams params);
 
   /** Endorse organization by key. */
   void endorse(@Param("key") UUID key);

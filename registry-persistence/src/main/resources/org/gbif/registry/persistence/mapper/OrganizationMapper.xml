@@ -177,16 +177,17 @@
 
   <!-- Basic paging search functionality -->
   <select id="list" resultMap="ORGANIZATION_MAP">
-    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(o.fulltext_search, query), </if>o.created, o.key)
+      <include refid="ORGANIZATION_FIELDS"/>
     <include refid="LIST_FILTER" />
-    ORDER BY <if test="params.query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, key
+    ORDER BY <if test="params.query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, o.key
     <if test="params.page != null" >
       LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
   <select id="count" resultType="Long">
-    SELECT COUNT(*)
+    SELECT COUNT(DISTINCT o.key)
     <include refid="LIST_FILTER" />
   </select>
 
@@ -228,7 +229,7 @@
         AND o.endorsement_approved = #{params.isEndorsed,jdbcType=BOOLEAN}
       </if>
       <if test="params.networkKey != null" >
-        AND dn.network_key = #{params.networkKey,jdbcType=OTHER}
+        AND dn.network_key = #{params.networkKey,jdbcType=OTHER} AND d.deleted IS NULL
       </if>
       <if test="params.identifier != null" >
         AND identifier = #{params.identifier,jdbcType=VARCHAR}

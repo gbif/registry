@@ -79,6 +79,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -117,13 +119,13 @@ import static org.gbif.registry.security.UserRoles.IPT_ROLE;
  */
 @SuppressWarnings("unchecked")
 @Validated
-@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE) // TODO: remove P
 public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P extends BaseListParams>
     implements NetworkEntityService<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseNetworkEntityResource.class);
 
-  private final BaseNetworkEntityMapper<T, P> mapper;
+  private final BaseNetworkEntityMapper<T> mapper;
   private final CommentMapper commentMapper;
   private final MachineTagMapper machineTagMapper;
   private final TagMapper tagMapper;
@@ -135,7 +137,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   private final Class<T> objectClass;
 
   protected BaseNetworkEntityResource(
-      BaseNetworkEntityMapper<T, P> mapper,
+      BaseNetworkEntityMapper<T> mapper,
       MapperServiceLocator mapperServiceLocator,
       Class<T> objectClass,
       EventManager eventManager,
@@ -270,49 +272,27 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Override
   @Deprecated
   public PagingResponse<T> list(Pageable page) {
-    return new PagingResponse<>(
-        page,
-        mapper.count((P) BaseListParams.builder().page(page).build()),
-        mapper.list((P) BaseListParams.builder().page(page).build()));
+    return list(BaseListParams.builder().page(page).build());
   }
 
   @Override
   @Deprecated
   public PagingResponse<T> search(String query, Pageable page) {
-    return new PagingResponse<>(
-        page,
-        mapper.count((P) BaseListParams.builder().query(query).page(page).build()),
-        mapper.list((P) BaseListParams.builder().query(query).page(page).build()));
+    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    return list(BaseListParams.builder().query(q).page(page).build());
   }
 
   @Override
   @Deprecated
   public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
-    return new PagingResponse<>(
-        page,
-        mapper.count(
-            (P)
-                BaseListParams.builder()
-                    .identifierType(type)
-                    .identifier(identifier)
-                    .page(page)
-                    .build()),
-        mapper.list(
-            (P)
-                BaseListParams.builder()
-                    .identifierType(type)
-                    .identifier(identifier)
-                    .page(page)
-                    .build()));
+    return list(
+        BaseListParams.builder().identifierType(type).identifier(identifier).page(page).build());
   }
 
   @Override
   @Deprecated
   public PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
-    return new PagingResponse<>(
-        page,
-        mapper.count((P) BaseListParams.builder().identifier(identifier).page(page).build()),
-        mapper.list((P) BaseListParams.builder().identifier(identifier).page(page).build()));
+    return list(BaseListParams.builder().identifier(identifier).page(page).build());
   }
 
   /**
@@ -583,24 +563,13 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Deprecated
   public PagingResponse<T> listByMachineTag(
       String namespace, String name, String value, Pageable page) {
-    return new PagingResponse<>(
-        page,
-        mapper.count(
-            (P)
-                BaseListParams.builder()
-                    .mtNamespace(namespace)
-                    .mtName(name)
-                    .mtValue(value)
-                    .page(page)
-                    .build()),
-        mapper.list(
-            (P)
-                BaseListParams.builder()
-                    .mtNamespace(namespace)
-                    .mtName(name)
-                    .mtValue(value)
-                    .page(page)
-                    .build()));
+    return list(
+        BaseListParams.builder()
+            .mtNamespace(namespace)
+            .mtName(name)
+            .mtValue(value)
+            .page(page)
+            .build());
   }
 
   /**
@@ -999,4 +968,6 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
     }
     return new PagingResponse<>(page, count, result);
   }
+
+  protected abstract PagingResponse<T> list(BaseListParams params);
 }

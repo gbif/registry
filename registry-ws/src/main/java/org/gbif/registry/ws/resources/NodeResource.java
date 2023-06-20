@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.resources;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -36,6 +39,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.mapper.params.NodeListParams;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
@@ -237,9 +241,14 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @GetMapping
   @Override
   public PagingResponse<Node> list(NodeRequestSearchParams request) {
+    String q =
+        request.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
+            : request.getQ();
+
     NodeListParams listParams =
         NodeListParams.builder()
-            .query(request.getQ())
+            .query(q)
             .deleted(false)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())
@@ -441,6 +450,12 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @Override
   public List<Contact> listContacts(@PathVariable("key") UUID targetEntityKey) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
+  }
+
+  @Override
+  protected PagingResponse<Node> list(BaseListParams params) {
+    NodeListParams p = NodeListParams.from(params);
+    return new PagingResponse<>(p.getPage(), nodeMapper.count(p), nodeMapper.list(p));
   }
 
   @Hidden

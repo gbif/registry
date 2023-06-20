@@ -315,13 +315,14 @@
                           ) t1 LIMIT 25
   </select>
 
-  <select id="count" resultType="Integer">
-    SELECT COUNT(*)
+  <select id="count" resultType="Long">
+    SELECT COUNT(DISTINCT i.key)
     <include refid="LIST_FILTER" />
   </select>
 
   <select id="list" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
+      <include refid="INSTALLATION_FIELDS"/>
     <include refid="LIST_FILTER" />
     ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
     <if test="params.page != null" >
@@ -332,8 +333,8 @@
   <sql id="LIST_FILTER">
     FROM installation i<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query</if>
     <if test="params.identifier != null or params.identifierType != null">
-      INNER JOIN installation_identifier ON installation_key = i.key
-      INNER JOIN identifier id ON identifier_key = i.key
+      INNER JOIN installation_identifier ii ON ii.installation_key = i.key
+      INNER JOIN identifier id ON ii.identifier_key = id.key
     </if>
     <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
       INNER JOIN installation_machine_tag imt ON imt.installation_key = i.key
@@ -379,7 +380,7 @@
         AND o.key=#{params.organizationKey,jdbcType=OTHER}
       </if>
       <if test="params.endorsedByNodeKey != null">
-        AND n.key=#{nodeKey,jdbcType=OTHER}
+        AND n.key=#{params.endorsedByNodeKey,jdbcType=OTHER}
       </if>
     </where>
   </sql>

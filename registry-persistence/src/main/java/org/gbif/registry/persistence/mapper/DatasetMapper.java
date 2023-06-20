@@ -29,7 +29,11 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset, DatasetListParams> {
+public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
+
+  List<Dataset> list(@Param("params") DatasetListParams params);
+
+  long count(@Param("params") DatasetListParams params);
 
   // TODO: merge the others wiht the list?
   /** Obtains a list of all the datasets hosted by, but not published by, the given organization. */

@@ -12,4 +12,8 @@ import lombok.experimental.SuperBuilder;
 public class NetworkListParams extends BaseListParams {
 
   @Nullable private UUID datasetKey;
+
+  public static NetworkListParams from(BaseListParams params) {
+    return BaseListParams.copy(NetworkListParams.builder().build(), params);
+  }
 }
