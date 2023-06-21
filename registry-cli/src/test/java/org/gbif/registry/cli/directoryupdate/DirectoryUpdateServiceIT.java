@@ -18,6 +18,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.cli.util.RegistryCliUtils;
 import org.gbif.registry.database.BaseDBTest;
 import org.gbif.registry.persistence.mapper.NodeMapper;
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -82,7 +83,7 @@ public class DirectoryUpdateServiceIT extends BaseDBTest {
     directoryUpdater.applyUpdates();
 
     NodeMapper nodeMapper = directoryUpdateService.getContext().getBean(NodeMapper.class);
-    int nodesCount = nodeMapper.count();
+    long nodesCount = nodeMapper.count(NodeListParams.builder().build());
     org.gbif.api.model.registry.Node togoNode = nodeMapper.get(TOGO_NODE_UUID);
     Node ugandaNode = nodeMapper.getByCountry(Country.UGANDA);
 
