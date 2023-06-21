@@ -396,8 +396,8 @@
     </if>
     INNER JOIN organization o ON d.publishing_organization_key = o.key
     <if test="params.identifier != null or params.identifierType != null or params.doi != null">
-      INNER JOIN dataset_identifier di ON di.dataset_key = d.key
-      INNER JOIN identifier i ON di.identifier_key = i.key
+      LEFT JOIN dataset_identifier di ON di.dataset_key = d.key
+      LEFT JOIN identifier i ON di.identifier_key = i.key
     </if>
     <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
       INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key
@@ -421,7 +421,7 @@
       <if test="params.from != null" > AND d.modified &gt;= #{params.from}</if>
       <if test="params.to != null" > AND d.modified &lt; #{params.to}</if>
       <if test="params.identifier != null" >
-        AND identifier = #{params.identifier,jdbcType=VARCHAR}
+        AND i.identifier = #{params.identifier,jdbcType=VARCHAR}
       </if>
       <if test="params.identifierType != null" >
         AND i.type=#{params.identifierType,jdbcType=OTHER}
@@ -436,7 +436,7 @@
         AND m.value=#{params.mtValue,jdbcType=VARCHAR}
       </if>
       <if test="params.doi != null">
-        AND (lower(d.doi) = lower(#{params.doi}) OR lower(i.identifier) = lower(#{params.doi}))
+        AND (lower(d.doi) = lower(#{params.doi}) OR (i.type = 'DOI' AND lower(i.identifier) = lower(#{params.doi})))
       </if>
       <if test="params.publishedByOrgKey != null">
         AND o.key=#{params.publishedByOrgKey,jdbcType=OTHER}
