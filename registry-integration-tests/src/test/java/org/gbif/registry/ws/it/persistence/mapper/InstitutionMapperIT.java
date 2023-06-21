@@ -210,43 +210,46 @@ public class InstitutionMapperIT extends BaseItTest {
 
     Pageable page = PAGE.apply(5, 0L);
 
-    assertSearch(InstitutionSearchParams.builder().build(), page, 3);
-    assertSearch(InstitutionSearchParams.builder().code("i1").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().code("I1").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().name("n2").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().code("i2").name("n2").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().code("i1").name("n2").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().page(page).build(), 3);
+    assertSearch(InstitutionSearchParams.builder().code("i1").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().code("I1").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().name("n2").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().code("i2").name("n2").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().code("i1").name("n2").page(page).build(), 0);
     assertSearch(
-        InstitutionSearchParams.builder().fuzzyName("nime of third institution").build(), page, 1);
-    assertSearch(
-        InstitutionSearchParams.builder().query("nime of third institution").build(), page, 0);
-    assertSearch(InstitutionSearchParams.builder().country(Country.DENMARK).build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().country(Country.SPAIN).build(), page, 0);
-    assertSearch(InstitutionSearchParams.builder().city("Odense").build(), page, 1);
-    assertSearch(
-        InstitutionSearchParams.builder().city("Copenhagen").country(Country.DENMARK).build(),
-        page,
+        InstitutionSearchParams.builder().fuzzyName("nime of third institution").page(page).build(),
         1);
     assertSearch(
-        InstitutionSearchParams.builder().city("CPH").country(Country.DENMARK).build(), page, 0);
+        InstitutionSearchParams.builder().query("nime of third institution").page(page).build(), 0);
+    assertSearch(InstitutionSearchParams.builder().country(Country.DENMARK).page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().country(Country.SPAIN).page(page).build(), 0);
+    assertSearch(InstitutionSearchParams.builder().city("Odense").page(page).build(), 1);
+    assertSearch(
+        InstitutionSearchParams.builder()
+            .city("Copenhagen")
+            .country(Country.DENMARK)
+            .page(page)
+            .build(),
+        1);
+    assertSearch(
+        InstitutionSearchParams.builder().city("CPH").country(Country.DENMARK).page(page).build(),
+        0);
 
     // machine tags
-    assertSearch(InstitutionSearchParams.builder().machineTagNamespace("dummy").build(), page, 0);
     assertSearch(
-        InstitutionSearchParams.builder().machineTagName(mt.getName()).build(),
-        page,
+        InstitutionSearchParams.builder().machineTagNamespace("dummy").page(page).build(), 0);
+    assertSearch(
+        InstitutionSearchParams.builder().machineTagName(mt.getName()).page(page).build(),
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().machineTagName(mt.getName()).build(),
-        page,
+        InstitutionSearchParams.builder().machineTagName(mt.getName()).page(page).build(),
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().machineTagValue(mt.getValue()).build(),
-        page,
+        InstitutionSearchParams.builder().machineTagValue(mt.getValue()).page(page).build(),
         1,
         inst1.getKey());
 
@@ -255,32 +258,30 @@ public class InstitutionMapperIT extends BaseItTest {
             .machineTagName(mt.getName())
             .machineTagName(mt.getName())
             .machineTagValue(mt.getValue())
+            .page(page)
             .build(),
-        page,
         1,
         inst1.getKey());
 
     // identifiers
-    assertSearch(InstitutionSearchParams.builder().identifier("dummy").build(), page, 0);
+    assertSearch(InstitutionSearchParams.builder().identifier("dummy").page(page).build(), 0);
     assertSearch(
         InstitutionSearchParams.builder()
             .machineTagName(mt.getName())
             .machineTagName(mt.getName())
             .machineTagValue(mt.getValue())
+            .page(page)
             .build(),
-        page,
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().identifierType(identifier.getType()).build(),
-        page,
+        InstitutionSearchParams.builder().identifierType(identifier.getType()).page(page).build(),
         1,
         inst2.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().identifier(identifier.getIdentifier()).build(),
-        page,
+        InstitutionSearchParams.builder().identifier(identifier.getIdentifier()).page(page).build(),
         1,
         inst2.getKey());
 
@@ -288,26 +289,29 @@ public class InstitutionMapperIT extends BaseItTest {
         InstitutionSearchParams.builder()
             .identifierType(identifier.getType())
             .identifier(identifier.getIdentifier())
+            .page(page)
             .build(),
-        page,
         1,
         inst2.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.IH).build(),
-        page,
+        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.IH).page(page).build(),
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.GBIF_REGISTRY).build(),
-        page,
+        InstitutionSearchParams.builder()
+            .masterSourceType(MasterSourceType.GBIF_REGISTRY)
+            .page(page)
+            .build(),
         1,
         inst2.getKey());
 
     assertSearch(
-        InstitutionSearchParams.builder().masterSourceType(MasterSourceType.GRSCICOLL).build(),
-        page,
+        InstitutionSearchParams.builder()
+            .masterSourceType(MasterSourceType.GRSCICOLL)
+            .page(page)
+            .build(),
         0);
   }
 
@@ -337,13 +341,13 @@ public class InstitutionMapperIT extends BaseItTest {
     institutionMapper.create(inst2);
 
     Pageable page = PAGE.apply(5, 0L);
-    assertSearch(InstitutionSearchParams.builder().query("i1 n1").build(), page, 1, inst1.getKey());
-    assertSearch(InstitutionSearchParams.builder().query("i2 i1").build(), page, 0);
-    assertSearch(InstitutionSearchParams.builder().query("i3").build(), page, 0);
-    assertSearch(InstitutionSearchParams.builder().query("n1").build(), page, 2);
     assertSearch(
-        InstitutionSearchParams.builder().query("dummy address fo ").build(),
-        page,
+        InstitutionSearchParams.builder().query("i1 n1").page(page).build(), 1, inst1.getKey());
+    assertSearch(InstitutionSearchParams.builder().query("i2 i1").page(page).build(), 0);
+    assertSearch(InstitutionSearchParams.builder().query("i3").page(page).build(), 0);
+    assertSearch(InstitutionSearchParams.builder().query("n1").page(page).build(), 2);
+    assertSearch(
+        InstitutionSearchParams.builder().query("dummy address fo ").page(page).build(),
         1,
         inst1.getKey());
 
@@ -366,13 +370,13 @@ public class InstitutionMapperIT extends BaseItTest {
     assertNotNull(contact1.getModified());
 
     institutionMapper.addContactPerson(inst1.getKey(), contact1.getKey());
-    assertSearch(InstitutionSearchParams.builder().query("Name1").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().query("Name0").build(), page, 0);
-    assertSearch(InstitutionSearchParams.builder().query("Surname1").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().query("aa1@aa.com").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().query("aves").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().query("12345").build(), page, 1);
-    assertSearch(InstitutionSearchParams.builder().query("abcde").build(), page, 1);
+    assertSearch(InstitutionSearchParams.builder().query("Name1").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().query("Name0").page(page).build(), 0);
+    assertSearch(InstitutionSearchParams.builder().query("Surname1").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().query("aa1@aa.com").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().query("aves").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().query("12345").page(page).build(), 1);
+    assertSearch(InstitutionSearchParams.builder().query("abcde").page(page).build(), 1);
   }
 
   @Test
@@ -396,9 +400,11 @@ public class InstitutionMapperIT extends BaseItTest {
     institutionMapper.create(inst2);
 
     Pageable page = PAGE.apply(1, 0L);
-    assertSearch(InstitutionSearchParams.builder().query("i1 n1").build(), page, 1, inst1.getKey());
+    assertSearch(
+        InstitutionSearchParams.builder().query("i1 n1").page(page).build(), 1, inst1.getKey());
 
-    InstitutionSearchParams params = InstitutionSearchParams.builder().query("i1").build();
+    InstitutionSearchParams params =
+        InstitutionSearchParams.builder().query("i1").page(page).build();
     List<Institution> institutions = institutionMapper.list(params);
     long count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
@@ -407,7 +413,7 @@ public class InstitutionMapperIT extends BaseItTest {
     // there are 2 insts with i1
     assertEquals(2, count);
 
-    params = InstitutionSearchParams.builder().query("i2").build();
+    params = InstitutionSearchParams.builder().query("i2").page(page).build();
     institutions = institutionMapper.list(params);
     count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
@@ -417,11 +423,12 @@ public class InstitutionMapperIT extends BaseItTest {
     assertEquals(2, count);
 
     assertSearch(
-        InstitutionSearchParams.builder().alternativeCode("i1").build(), page, 1, inst2.getKey());
+        InstitutionSearchParams.builder().alternativeCode("i1").page(page).page(page).build(),
+        1,
+        inst2.getKey());
   }
 
-  private List<Institution> assertSearch(
-      InstitutionSearchParams params, Pageable page, int expected) {
+  private List<Institution> assertSearch(InstitutionSearchParams params, int expected) {
     List<Institution> res = institutionMapper.list(params);
     long count = institutionMapper.count(params);
     assertEquals(expected, count);
@@ -429,9 +436,8 @@ public class InstitutionMapperIT extends BaseItTest {
     return res;
   }
 
-  private void assertSearch(
-      InstitutionSearchParams params, Pageable page, int expected, UUID expectedKey) {
-    List<Institution> res = assertSearch(params, page, expected);
+  private void assertSearch(InstitutionSearchParams params, int expected, UUID expectedKey) {
+    List<Institution> res = assertSearch(params, expected);
     assertEquals(expectedKey, res.get(0).getKey());
   }
 }

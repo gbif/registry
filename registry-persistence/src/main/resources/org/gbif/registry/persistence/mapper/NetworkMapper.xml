@@ -147,8 +147,8 @@
   <sql id="LIST_FILTER">
     FROM network n<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query</if>
     <if test="params.identifier != null or params.identifierType != null">
-      INNER JOIN network_identifier ON network_key = n.key
-      INNER JOIN identifier i ON identifier_key = i.key
+      INNER JOIN network_identifier ni ON ni.network_key = n.key
+      INNER JOIN identifier i ON ni.identifier_key = i.key
     </if>
     <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
       INNER JOIN network_machine_tag nmt ON nmt.network_key = n.key

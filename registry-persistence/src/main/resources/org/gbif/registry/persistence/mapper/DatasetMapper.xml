@@ -395,11 +395,9 @@
       JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     INNER JOIN organization o ON d.publishing_organization_key = o.key
-    <if test="params.identifier != null or params.identifierType != null">
-      INNER JOIN dataset_identifier ON dataset_key = d.key
-    </if>
     <if test="params.identifier != null or params.identifierType != null or params.doi != null">
-      INNER JOIN identifier i ON identifier_key = i.key
+      INNER JOIN dataset_identifier di ON di.dataset_key = d.key
+      INNER JOIN identifier i ON di.identifier_key = i.key
     </if>
     <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
       INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key

@@ -197,8 +197,8 @@
       JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
     </if>
     <if test="params.identifier != null or params.identifierType != null">
-      INNER JOIN organization_identifier ON organization_key = o.key
-      INNER JOIN identifier i ON identifier_key = i.key
+      INNER JOIN organization_identifier oi ON oi.organization_key = o.key
+      INNER JOIN identifier i ON oi.identifier_key = i.key
     </if>
     <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
       INNER JOIN organization_machine_tag omt ON omt.organization_key = o.key
