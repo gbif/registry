@@ -25,10 +25,8 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -83,24 +81,6 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public List<Dataset> listConstituents(
-      @Param("parentKey") UUID parentKey, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public List<Dataset> listDatasetsInNetwork(
-      @Param("networkKey") UUID networkKey, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public List<Dataset> listDatasetsPublishedBy(
-      @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
   public List<Dataset> listDatasetsHostedBy(
       @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page) {
     return null;
@@ -113,66 +93,16 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public List<Dataset> listWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("page") Pageable page) {
+  public List<Dataset> list(@Nullable @Param("params") DatasetListParams params) {
     return null;
   }
 
   @Override
-  public List<Dataset> listWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("installation_key") UUID installationKey,
-      @Nullable @Param("date_from") Date from,
-      @Nullable @Param("date_to") Date to,
-      @Nullable @Param("deleted") Boolean deleted,
-      @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public List<Dataset> listByDOI(@Param("doi") String doi, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countByDOI(@Param("doi") String doi) {
-    return 0L;
-  }
-
-  @Override
-  public int countWithFilter(
-      @Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type) {
-    if (country != null) {
-      Long count = datasetsByCountry.get(country);
-      return count == null ? 0 : count.intValue();
+  public long count(@Nullable @Param("params") DatasetListParams params) {
+    if (params.getCountry() != null) {
+      return datasetsByCountry.get(params.getCountry());
     }
     return 0;
-  }
-
-  @Override
-  public int countWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("installation_key") UUID installationKey,
-      @Nullable @Param("date_from") Date from,
-      @Nullable @Param("date_to") Date to,
-      @Nullable @Param("deleted") Boolean deleted) {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> listDatasetsByInstallation(
-      @Param("installationKey") UUID installationKey, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countDatasetsByInstallation(@Param("installationKey") UUID installationKey) {
-    Long count = datasetsByInstallation.get(installationKey);
-    return count == null ? 0 : count;
   }
 
   @Override
@@ -182,46 +112,6 @@ public class MockDatasetMapper implements DatasetMapper {
 
   @Override
   public long countDatasetsHostedBy(@Param("organizationKey") UUID organizationKey) {
-    return 0;
-  }
-
-  @Override
-  public long countDatasetsPublishedBy(@Param("organizationKey") UUID organizationKey) {
-    return 0;
-  }
-
-  @Override
-  public int countConstituents(@Param("key") UUID datasetKey) {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> deleted(@Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countDeleted() {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> duplicates(@Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countDuplicates() {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> subdatasets(@Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public long countSubdatasets() {
     return 0;
   }
 
@@ -364,23 +254,6 @@ public class MockDatasetMapper implements DatasetMapper {
   }
 
   @Override
-  public long countByMachineTag(
-      @Nullable @Param("namespace") String namespace,
-      @Param("name") String name,
-      @Param("value") String value) {
-    return 0;
-  }
-
-  @Override
-  public List listByMachineTag(
-      @Nullable @Param("namespace") String namespace,
-      @Param("name") String name,
-      @Param("value") String value,
-      Pageable page) {
-    return null;
-  }
-
-  @Override
   public Dataset get(@Param("key") UUID key) {
     return null;
   }
@@ -403,41 +276,6 @@ public class MockDatasetMapper implements DatasetMapper {
 
   @Override
   public void update(Dataset entity) {}
-
-  @Override
-  public List<Dataset> list(@Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public List<Dataset> search(
-      @Nullable @Param("query") String query, @Nullable @Param("page") Pageable page) {
-    return null;
-  }
-
-  @Override
-  public int count() {
-    return 0;
-  }
-
-  @Override
-  public int count(@Nullable @Param("query") String query) {
-    return 0;
-  }
-
-  @Override
-  public long countByIdentifier(
-      @Nullable @Param("type") IdentifierType type, @Param("identifier") String identifier) {
-    return 0;
-  }
-
-  @Override
-  public List<Dataset> listByIdentifier(
-      @Nullable @Param("type") IdentifierType type,
-      @Param("identifier") String identifier,
-      @Param("page") Pageable page) {
-    return null;
-  }
 
   @Override
   public int addTag(@Param("targetEntityKey") UUID entityKey, @Param("tagKey") int tagKey) {

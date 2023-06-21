@@ -47,9 +47,7 @@ public interface CollectionClient
       value = "deleted",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  PagingResponse<CollectionView> listDeleted(
-      @RequestParam(value = "replacedBy", required = false) UUID replacedBy,
-      @SpringQueryMap Pageable page);
+  PagingResponse<CollectionView> listDeleted(@SpringQueryMap CollectionSearchRequest searchRequest);
 
   @RequestMapping(
       method = RequestMethod.GET,

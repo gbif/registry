@@ -19,6 +19,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
@@ -73,6 +74,11 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
   @Override
   PagingResponse<Dataset> listByType(
       @RequestParam("type") DatasetType datasetType, @SpringQueryMap Pageable pageable);
+
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<Dataset> list(@SpringQueryMap DatasetRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -151,7 +157,7 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Dataset> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Dataset> listDeleted(@SpringQueryMap DatasetRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,

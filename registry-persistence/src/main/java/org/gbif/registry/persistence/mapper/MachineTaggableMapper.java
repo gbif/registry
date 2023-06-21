@@ -38,15 +38,4 @@ public interface MachineTaggableMapper<T extends MachineTaggable> {
       @Nullable @Param("name") String name);
 
   List<MachineTag> listMachineTags(@Param("targetEntityKey") UUID targetEntityKey);
-
-  long countByMachineTag(
-      @Param("namespace") String namespace,
-      @Nullable @Param("name") String name,
-      @Nullable @Param("value") String value);
-
-  List<T> listByMachineTag(
-      @Param("namespace") String namespace,
-      @Nullable @Param("name") String name,
-      @Nullable @Param("value") String value,
-      @Param("page") Pageable page);
 }

@@ -19,12 +19,15 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.NodeRequestSearchParams;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
@@ -39,6 +42,8 @@ import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -292,8 +297,8 @@ public class NodeIT extends NetworkEntityIT<Node> {
   }
 
   /**
-   * A test that requires a configured Directory with real spanish data. Jenkins is configured for this,
-   * so we activate this test to make sure Directory connections are working!
+   * A test that requires a configured Directory with real spanish data. Jenkins is configured for
+   * this, so we activate this test to make sure Directory connections are working!
    */
   @ParameterizedTest
   @EnumSource(ServiceType.class)
@@ -352,6 +357,8 @@ public class NodeIT extends NetworkEntityIT<Node> {
         UnsupportedOperationException.class, () -> super.testSimpleSearchContact(serviceType));
   }
 
+  // TODO: list test, create it in the base class??
+
   @Override
   protected Node newEntity(ServiceType serviceType) {
     return testDataFactory.newNode();
@@ -389,5 +396,62 @@ public class NodeIT extends NetworkEntityIT<Node> {
     service.delete(key3);
     assertEquals(1, service.suggest("Great").size(), "Should find only The Great Node");
     assertEquals(2, service.suggest("the").size(), "Should find both nodes");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testList(ServiceType serviceType) {
+    NodeService service = (NodeService) getService(serviceType);
+
+    Node n1 = newEntity(serviceType);
+    n1.setTitle("first node");
+    UUID key1 = getService(serviceType).create(n1);
+
+    Identifier id1 = newTestIdentifier(n1, IdentifierType.DOI, "doi:1");
+    service.addIdentifier(key1, id1);
+    MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
+    service.addMachineTag(key1, mt1);
+
+    Node n2 = newEntity(serviceType);
+    n2.setTitle("second node");
+    UUID key2 = getService(serviceType).create(n2);
+
+    assertResultsOfSize(service.list(new NodeRequestSearchParams()), 2);
+
+    NodeRequestSearchParams searchParams = new NodeRequestSearchParams();
+    searchParams.setQ("node");
+    assertResultsOfSize(service.list(searchParams), 2);
+    searchParams.setQ("second");
+    assertResultsOfSize(service.list(searchParams), 1);
+    searchParams.setQ("third");
+    assertResultsOfSize(service.list(searchParams), 0);
+
+    searchParams = new NodeRequestSearchParams();
+    searchParams.setIdentifierType(id1.getType());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NodeRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NodeRequestSearchParams();
+    searchParams.setMachineTagName(mt1.getName());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NodeRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    searchParams.setMachineTagNamespace(mt1.getNamespace());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NodeRequestSearchParams();
+    searchParams.setModified(
+        Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setModified(
+        Range.closed(
+            LocalDate.now().minus(2, ChronoUnit.MONTHS),
+            LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
   }
 }

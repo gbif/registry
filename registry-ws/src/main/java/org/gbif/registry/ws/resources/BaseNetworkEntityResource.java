@@ -28,6 +28,8 @@ import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
+import org.gbif.api.util.Range;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
@@ -43,6 +45,7 @@ import org.gbif.registry.persistence.mapper.EndpointMapper;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
+import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.service.WithMyBatis;
 
@@ -50,13 +53,17 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.slf4j.Logger;
@@ -84,6 +91,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
@@ -113,9 +121,11 @@ import static org.gbif.registry.security.UserRoles.IPT_ROLE;
  *
  * @param <T> The type of resource that is under CRUD
  */
+@SuppressWarnings("unchecked")
 @Validated
-@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-public class BaseNetworkEntityResource<T extends NetworkEntity> implements NetworkEntityService<T> {
+@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE) // TODO: remove P
+public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P extends BaseListParams>
+    implements NetworkEntityService<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(BaseNetworkEntityResource.class);
 
@@ -148,44 +158,48 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     this.withMyBatis = withMyBatis;
   }
 
-  /**
-   * Documentation for a SearchRequest.
-   */
+  /** Documentation for a SearchRequest. */
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameters(
-    value = {
-      @Parameter(
-        name = "identifierType",
-        description = "An identifier type for the identifier parameter.",
-        schema = @Schema(implementation = IdentifierType.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "identifier",
-        description = "An identifier of the type given by the identifierType parameter, for example a DOI or UUID.",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "machineTagNamespace",
-        description = "Filters for entities with a machine tag in the specified namespace.",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "machineTagName",
-        description = "Filters for entities with a machine tag with the specified name (use in combination with the machineTagNamespace parameter).",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-      @Parameter(
-        name = "machineTagValue",
-        description = "Filters for entities with a machine tag with the specified value (use in combination with the machineTagNamespace and machineTagName parameters).",
-        schema = @Schema(implementation = String.class),
-        in = ParameterIn.QUERY),
-
-      @Parameter(
-        name = "request",
-        hidden = true
-      )
-    })
+      value = {
+        @Parameter(
+            name = "identifierType",
+            description = "An identifier type for the identifier parameter.",
+            schema = @Schema(implementation = IdentifierType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifier",
+            description =
+                "An identifier of the type given by the identifierType parameter, for example a DOI or UUID.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagNamespace",
+            description = "Filters for entities with a machine tag in the specified namespace.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagName",
+            description =
+                "Filters for entities with a machine tag with the specified name (use in combination with the machineTagNamespace parameter).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "machineTagValue",
+            description =
+                "Filters for entities with a machine tag with the specified value (use in combination with the machineTagNamespace and machineTagName parameters).",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "modified",
+            description =
+                "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
+            schema = @Schema(implementation = DatasetType.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(name = "request", hidden = true)
+      })
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @interface SimpleSearchParameters {}
@@ -251,7 +265,7 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   @Hidden // TODO: Not sure if this is supposed to be public API.
   @PostMapping(value = "titles", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  public Map<UUID, String> getTitles(@RequestBody Collection<UUID> keys) {
+  public Map<UUID, String> getTitles(@RequestBody @NotNull Collection<UUID> keys) {
     Map<UUID, String> titles = Maps.newHashMap();
     for (UUID key : keys) {
       titles.put(key, mapper.title(key));
@@ -260,28 +274,29 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
+  @Deprecated
   public PagingResponse<T> list(Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    return withMyBatis.list(mapper, page);
+    return list(BaseListParams.builder().page(page).build());
   }
 
   @Override
+  @Deprecated
   public PagingResponse<T> search(String query, Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    // trim and handle null from given input
     String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
-    return withMyBatis.search(mapper, q, page);
+    return list(BaseListParams.builder().query(q).page(page).build());
   }
 
   @Override
+  @Deprecated
   public PagingResponse<T> listByIdentifier(IdentifierType type, String identifier, Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    return withMyBatis.listByIdentifier(mapper, type, identifier, page);
+    return list(
+        BaseListParams.builder().identifierType(type).identifier(identifier).page(page).build());
   }
 
   @Override
+  @Deprecated
   public PagingResponse<T> listByIdentifier(String identifier, Pageable page) {
-    return listByIdentifier(null, identifier, page);
+    return list(BaseListParams.builder().identifier(identifier).page(page).build());
   }
 
   /**
@@ -327,13 +342,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Comment created
    */
   @Operation(
-    operationId = "addComment",
-    summary = "Add a comment to the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0401")))
+      operationId = "addComment",
+      summary = "Add a comment to the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0401")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Comment added, comment key returned")
+  @ApiResponse(responseCode = "200", description = "Comment added, comment key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/comment", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -361,13 +377,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param commentKey key of Comment to delete
    */
   @Operation(
-    operationId = "deleteComment",
-    summary = "Delete a comment from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0402")))
+      operationId = "deleteComment",
+      summary = "Delete a comment from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0402")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Comment deleted")
+  @ApiResponse(responseCode = "204", description = "Comment deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/comment/{commentKey}")
@@ -381,13 +398,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Operation(
-    operationId = "getComment",
-    summary = "Retrieve all comments of the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0400")))
+      operationId = "getComment",
+      summary = "Retrieve all comments of the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0400")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of comments")
+  @ApiResponse(responseCode = "200", description = "List of comments")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping(value = "{key}/comment")
   @Override
@@ -404,13 +422,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of MachineTag created
    */
   @Operation(
-    operationId = "addMachineTag",
-    summary = "Add a machine tag to the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0441")))
+      operationId = "addMachineTag",
+      summary = "Add a machine tag to the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0441")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Machine tag added, machine tag key returned")
+  @ApiResponse(responseCode = "204", description = "Machine tag added, machine tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/machineTag", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -450,13 +469,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * the action by looking at the namespace.
    */
   @Operation(
-    operationId = "deleteMachineTag",
-    summary = "Delete a machine tag from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0442")))
+      operationId = "deleteMachineTag",
+      summary = "Delete a machine tag from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0442")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Machine tag deleted")
+  @ApiResponse(responseCode = "204", description = "Machine tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/machineTag/{machineTagKey:[0-9]+}")
@@ -472,13 +492,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * authorized to perform the action by looking at the namespace.
    */
   @Operation(
-    operationId = "deleteMachineTagsInNamespace",
-    summary = "Delete all machine tags in a namespace from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0443")))
+      operationId = "deleteMachineTagsInNamespace",
+      summary = "Delete all machine tags in a namespace from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0443")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Machine tags in namespace deleted")
+  @ApiResponse(responseCode = "204", description = "Machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/machineTag/{namespace:.*[^0-9]+.*}")
@@ -499,13 +520,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * that the caller is authorized to perform the action by looking at the namespace.
    */
   @Operation(
-    operationId = "deleteMachineTagInNamespaceName",
-    summary = "Delete all machine tags of a name in a namespace from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0444")))
+      operationId = "deleteMachineTagInNamespaceName",
+      summary = "Delete all machine tags of a name in a namespace from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0444")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Named machine tags in namespace deleted")
+  @ApiResponse(responseCode = "204", description = "Named machine tags in namespace deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/machineTag/{namespace}/{name}")
@@ -524,13 +546,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Operation(
-    operationId = "listMachineTag",
-    summary = "List all machine tags on the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0440")))
+      operationId = "listMachineTag",
+      summary = "List all machine tags on the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0440")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Machine tags list")
+  @ApiResponse(responseCode = "200", description = "Machine tags list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @SuppressWarnings("unchecked")
@@ -541,10 +564,16 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Override
+  @Deprecated
   public PagingResponse<T> listByMachineTag(
       String namespace, String name, String value, Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    return withMyBatis.listByMachineTag(mapper, namespace, name, value, page);
+    return list(
+        BaseListParams.builder()
+            .mtNamespace(namespace)
+            .mtName(name)
+            .mtValue(value)
+            .page(page)
+            .build());
   }
 
   /**
@@ -556,13 +585,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Tag created
    */
   @Operation(
-    operationId = "addTag",
-    summary = "Add a tag to the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0451")))
+      operationId = "addTag",
+      summary = "Add a tag to the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0451")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Tag added, tag key returned")
+  @ApiResponse(responseCode = "200", description = "Tag added, tag key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/tag", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -593,13 +623,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param tagKey key of Tag to delete
    */
   @Operation(
-    operationId = "deleteTag",
-    summary = "Delete a tag from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0452")))
+      operationId = "deleteTag",
+      summary = "Delete a tag from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0452")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Tag deleted")
+  @ApiResponse(responseCode = "204", description = "Tag deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/tag/{tagKey}")
@@ -611,25 +642,32 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Operation(
-    operationId = "getTag",
-    summary = "Retrieve all tags of the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0450")))
+      operationId = "getTag",
+      summary = "Retrieve all tags of the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0450")))
   @Docs.DefaultEntityKeyParameter
   @Parameter(name = "owner", hidden = true)
   @ApiResponse(
-    responseCode = "200",
-    description = "Tag list",
-    content = @Content(
-      schema = @Schema(implementation = Tag.class),
-      examples = @ExampleObject(value = "[\n" +
-        "  {\n" +
-        "    \"key\": 1234,\n" +
-        "    \"name\": \"some name\",\n" +
-        "    \"value\": \"some value\",\n" +
-        "    \"createdBy\": \"MattBlissett\",\n" +
-        "    \"created\": \"2023-01-24T11:45:06.310Z\"\n" +
-        "  }\n" +
-        "]")))
+      responseCode = "200",
+      description = "Tag list",
+      content =
+          @Content(
+              schema = @Schema(implementation = Tag.class),
+              examples =
+                  @ExampleObject(
+                      value =
+                          "[\n"
+                              + "  {\n"
+                              + "    \"key\": 1234,\n"
+                              + "    \"name\": \"some name\",\n"
+                              + "    \"value\": \"some value\",\n"
+                              + "    \"createdBy\": \"MattBlissett\",\n"
+                              + "    \"created\": \"2023-01-24T11:45:06.310Z\"\n"
+                              + "  }\n"
+                              + "]")))
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/tag")
   @Override
@@ -651,13 +689,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Contact created
    */
   @Operation(
-    operationId = "addContact",
-    summary = "Add a contact to the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0412")))
+      operationId = "addContact",
+      summary = "Add a contact to the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0412")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Contact added, contact key returned")
+  @ApiResponse(responseCode = "200", description = "Contact added, contact key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/contact", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -685,13 +724,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param contact updated Contact
    */
   @Operation(
-    operationId = "updateContact",
-    summary = "Update an existing contact on the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0413")))
+      operationId = "updateContact",
+      summary = "Update an existing contact on the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0413")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Contact updated")
+  @ApiResponse(responseCode = "204", description = "Contact updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(
@@ -718,13 +758,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param contactKey key of Contact to delete
    */
   @Operation(
-    operationId = "deleteContact",
-    summary = "Delete a contact from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0414")))
+      operationId = "deleteContact",
+      summary = "Delete a contact from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0414")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Contact deleted")
+  @ApiResponse(responseCode = "204", description = "Contact deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/contact/{contactKey}")
@@ -738,13 +779,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Operation(
-    operationId = "getContact",
-    summary = "Retrieve all contacts of the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0411")))
+      operationId = "getContact",
+      summary = "Retrieve all contacts of the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0411")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of contacts")
+  @ApiResponse(responseCode = "200", description = "List of contacts")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/contact")
   @Override
@@ -761,13 +803,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Endpoint created
    */
   @Operation(
-    operationId = "addEndpoint",
-    summary = "Add an endpoint to the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0421")))
+      operationId = "addEndpoint",
+      summary = "Add an endpoint to the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0421")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Endpoint added, endpoint key returned")
+  @ApiResponse(responseCode = "200", description = "Endpoint added, endpoint key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/endpoint", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -801,13 +844,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param endpointKey key of Endpoint to delete
    */
   @Operation(
-    operationId = "deleteEndpoint",
-    summary = "Delete an endpoint from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0422")))
+      operationId = "deleteEndpoint",
+      summary = "Delete an endpoint from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0422")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Endpoint deleted")
+  @ApiResponse(responseCode = "204", description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/endpoint/{endpointKey}")
@@ -821,13 +865,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Operation(
-    operationId = "getEndpoint",
-    summary = "Retrieve all endpoints of the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0420")))
+      operationId = "getEndpoint",
+      summary = "Retrieve all endpoints of the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0420")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "List of endpoints")
+  @ApiResponse(responseCode = "200", description = "List of endpoints")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/endpoint")
   @Override
@@ -844,13 +889,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @return key of Identifier created
    */
   @Operation(
-    operationId = "addIdentifier",
-    summary = "Add an identifier to the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0431")))
+      operationId = "addIdentifier",
+      summary = "Add an identifier to the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0431")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Identifier added, identifier key returned")
+  @ApiResponse(responseCode = "200", description = "Identifier added, identifier key returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PostMapping(value = "{key}/identifier", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -877,13 +923,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
    * @param identifierKey key of Identifier to delete
    */
   @Operation(
-    operationId = "deleteIdentifier",
-    summary = "Delete an identifier from the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0432")))
+      operationId = "deleteIdentifier",
+      summary = "Delete an identifier from the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0432")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "204",
-    description = "Endpoint deleted")
+  @ApiResponse(responseCode = "204", description = "Endpoint deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/identifier/{identifierKey}")
@@ -897,13 +944,14 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
   }
 
   @Operation(
-    operationId = "getIdentifier",
-    summary = "Retrieve all identifiers of the record",
-    extensions = @Extension(name = "Order", properties = @ExtensionProperty(name = "Order", value = "0430")))
+      operationId = "getIdentifier",
+      summary = "Retrieve all identifiers of the record",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0430")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(
-    responseCode = "200",
-    description = "Identifiers list")
+  @ApiResponse(responseCode = "200", description = "Identifiers list")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @GetMapping("{key}/identifier")
@@ -924,4 +972,22 @@ public class BaseNetworkEntityResource<T extends NetworkEntity> implements Netwo
     }
     return new PagingResponse<>(page, count, result);
   }
+
+  protected String parseQuery(String q) {
+    return q != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(q)) : q;
+  }
+
+  protected Date parseFrom(Range<LocalDate> range) {
+    return range != null && range.lowerEndpoint() != null
+        ? Date.from(range.lowerEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+        : null;
+  }
+
+  protected Date parseTo(Range<LocalDate> range) {
+    return range != null && range.upperEndpoint() != null
+        ? Date.from(range.upperEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+        : null;
+  }
+
+  protected abstract PagingResponse<T> list(BaseListParams params);
 }

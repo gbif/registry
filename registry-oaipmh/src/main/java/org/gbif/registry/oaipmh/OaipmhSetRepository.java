@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.oaipmh;
 
+import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
@@ -28,6 +29,8 @@ import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
 
 import com.google.common.collect.Lists;
+
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 /**
  * Implementation of a XOAI SetRepository for country, installation, dataset_type sets.
@@ -242,7 +245,7 @@ public class OaipmhSetRepository implements SetRepository {
     if (country == null || !country.getIso2LetterCode().equalsIgnoreCase(subSet)) {
       return false;
     }
-    long count = datasetMapper.countWithFilter(country, null);
+    long count = datasetMapper.count(DatasetListParams.builder().country(country).build());
     return count > 0;
   }
 
@@ -267,7 +270,7 @@ public class OaipmhSetRepository implements SetRepository {
       return false;
     }
 
-    long count = datasetMapper.countDatasetsByInstallation(uuid);
+    long count = datasetMapper.count(DatasetListParams.builder().installationKey(uuid).build());
     return count > 0;
   }
 }

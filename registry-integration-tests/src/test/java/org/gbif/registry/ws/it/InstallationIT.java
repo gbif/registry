@@ -14,11 +14,20 @@
 package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
+import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
+import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.util.Range;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -28,6 +37,8 @@ import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -164,6 +175,83 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
             .getResults()
             .size(),
         "Should find only The Great installation");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testList(ServiceType serviceType) {
+    InstallationService service = (InstallationService) getService(serviceType);
+
+    Installation i1 = newEntity(serviceType);
+    i1.setTitle("first installation");
+    i1.setType(InstallationType.EARTHCAPE_INSTALLATION);
+    UUID key1 = getService(serviceType).create(i1);
+
+    Identifier id1 = newTestIdentifier(i1, IdentifierType.DOI, "doi:1");
+    service.addIdentifier(key1, id1);
+    MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
+    service.addMachineTag(key1, mt1);
+
+    Installation i2 = newEntity(serviceType);
+    i2.setTitle("second installation");
+    i2.setType(InstallationType.HTTP_INSTALLATION);
+    UUID key2 = getService(serviceType).create(i2);
+
+    Organization o2 = organizationResource.get(i2.getOrganizationKey());
+
+    assertResultsOfSize(service.list(new InstallationRequestSearchParams()), 2);
+
+    InstallationRequestSearchParams searchParams = new InstallationRequestSearchParams();
+    searchParams.setType(InstallationType.HTTP_INSTALLATION);
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams.setEndorsedByNodeKey(UUID.randomUUID());
+    assertResultsOfSize(service.list(searchParams), 0);
+
+    searchParams.setEndorsedByNodeKey(o2.getEndorsingNodeKey());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setOrganizationKey(i1.getOrganizationKey());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setQ("installation");
+    assertResultsOfSize(service.list(searchParams), 2);
+    searchParams.setQ("second");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setIdentifierType(id1.getType());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setMachineTagName(mt1.getName());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    searchParams.setMachineTagNamespace(mt1.getNamespace());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new InstallationRequestSearchParams();
+    searchParams.setModified(
+      Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setModified(
+      Range.closed(
+        LocalDate.now().minus(2, ChronoUnit.MONTHS),
+        LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
+
+    service.delete(key2);
+    searchParams = new InstallationRequestSearchParams();
+    assertResultsOfSize(service.listDeleted(searchParams), 1);
   }
 
   @Override

@@ -130,30 +130,6 @@
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
 
-  <!--  Note: you can get entities which are deleted -->
-  <select id="listByDOI" resultMap="DATASET_MAP">
-    SELECT DISTINCT ON (d.key) <include refid="DATASET_FIELDS"/>
-    FROM dataset d
-    LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    LEFT JOIN dataset_identifier ON dataset_key = d.key
-    LEFT JOIN identifier i ON identifier_key = i.key AND i.type = 'DOI'
-    WHERE lower(d.doi) = lower(#{doi}) OR lower(i.identifier) = lower(#{doi})
-    ORDER BY d.key, d.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-
-  <select id="countByDOI" resultType="Long">
-    SELECT count(DISTINCT d.key)
-    FROM dataset d
-           LEFT JOIN organization o ON o.key = d.publishing_organization_key
-           LEFT JOIN dataset_identifier ON dataset_key = d.key
-           LEFT JOIN identifier i ON identifier_key = i.key AND i.type = 'DOI'
-    WHERE lower(d.doi) = lower(#{doi}) OR lower(i.identifier) = lower(#{doi})
-  </select>
-
   <select id="title" resultType="String">
     SELECT title
     FROM dataset
@@ -177,72 +153,6 @@
     SET deleted = now()
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
-
-  <!--
-    Append safe ordering, omitting deleted entities
-    Sort order includes key, since created is not a unique sort order, so not robust
-  -->
-  <select id="list" resultType="org.gbif.api.model.registry.Dataset"  resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <!-- Basic paging search functionality -->
-  <select id="search" resultMap="DATASET_MAP">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d
-    <if test="query != null" >
-      JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
-    </if>
-    LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.deleted IS NULL
-    ORDER BY <if test="query != null" >ts_rank_cd(d.fulltext_search, query) DESC, </if>d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="count" resultType="Integer" parameterType="map">
-    SELECT COUNT(*)
-    FROM dataset d
-    <if test="query != null" >
-      JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
-    </if>
-    WHERE deleted IS NULL
-  </select>
-
-  <select id="countWithFilter" resultType="Integer">
-    SELECT COUNT(*)
-    FROM dataset d
-    <if test="country != null" >
-      INNER JOIN organization o ON d.publishing_organization_key = o.key
-    </if>
-    WHERE
-    <choose>
-      <when test="_parameter.containsKey('deleted') and deleted">
-        d.deleted IS NOT NULL
-      </when>
-      <otherwise>
-        d.deleted IS NULL
-      </otherwise>
-    </choose>
-    <if test="type != null" >
-      AND d.type = #{type,jdbcType=OTHER}
-    </if>
-    <if test="country != null" >
-      AND o.country = #{country,jdbcType=OTHER}
-    </if>
-    <if test="_parameter.containsKey('installationKey') and installationKey != null" >
-      AND d.installation_key = #{installationKey}
-    </if>
-    <if test="_parameter.containsKey('dateFrom') and dateFrom != null" > AND d.modified &gt;= #{dateFrom}</if>
-    <if test="_parameter.containsKey('dateTo') and dateTo != null" > AND d.modified &lt; #{dateTo}</if>
-  </select>
 
   <!-- TAGS -->
   <insert id="addTag">
@@ -408,38 +318,6 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (d.key) <include refid="DATASET_FIELDS"/>
-    FROM dataset d
-    INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key
-    INNER JOIN machine_tag m ON dm.machine_tag_key = m.key
-    LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-    ORDER BY d.key, d.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByMachineTag" resultType="Long">
-    SELECT count(DISTINCT d.key)
-    FROM dataset d
-    INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key
-    INNER JOIN machine_tag m ON dm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-  </select>
-
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO dataset_comment(dataset_key,comment_key)
@@ -471,28 +349,6 @@
       dataset_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="listDatasetsInNetwork" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d INNER JOIN dataset_network dn ON dn.dataset_key = d.key LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE dn.network_key = #{networkKey,jdbcType=OTHER} AND d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="listDatasetsPublishedBy" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d
-    INNER JOIN organization o ON d.publishing_organization_key = o.key
-    WHERE o.key = #{organizationKey,jdbcType=OTHER}
-    AND d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
   <select id="listDatasetsHostedBy" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_FIELDS"/>
     FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
@@ -518,46 +374,89 @@
     </if>
   </select>
 
-  <select id="listDatasetsByInstallation" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.installation_key = #{installationKey,jdbcType=OTHER}
-    AND d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+  <select id="list" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(d.fulltext_search, query), </if>d.created, d.key)
+      <include refid="DATASET_FIELDS"/>
+    <include refid="LIST_FILTER" />
+    ORDER BY <if test="params.query != null" >ts_rank_cd(d.fulltext_search, query) DESC, </if>d.created DESC, d.key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
-  <!--
-   Append safe ordering, omitting deleted entities
-   This implementation is exposed as 2 different method signatures but the Interface.
-   It is why _parameter.containsKey(...) must be used in order to avoid "parameter not found" error.
-  -->
-  <select id="listWithFilter" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
+  <select id="count" resultType="Long">
+    SELECT COUNT(DISTINCT d.key)
+    <include refid="LIST_FILTER" />
+  </select>
+
+  <sql id="LIST_FILTER">
     FROM dataset d
+    <if test="params.query != null" >
+      JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query ON <include refid="SIMPLE_SEARCH"/>
+    </if>
     INNER JOIN organization o ON d.publishing_organization_key = o.key
+    <if test="params.identifier != null or params.identifierType != null">
+      INNER JOIN dataset_identifier ON dataset_key = d.key
+    </if>
+    <if test="params.identifier != null or params.identifierType != null or params.doi != null">
+      INNER JOIN identifier i ON identifier_key = i.key
+    </if>
+    <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
+      INNER JOIN dataset_machine_tag dm ON dm.dataset_key = d.key
+      INNER JOIN machine_tag m ON dm.machine_tag_key = m.key
+    </if>
+    <if test="params.networkKey != null">
+      INNER JOIN dataset_network dn ON dn.dataset_key = d.key
+    </if>
     <where>
       <choose>
-        <when test="_parameter.containsKey('deleted') and deleted">
+        <when test="params.deleted != null and params.deleted">
           d.deleted IS NOT NULL
         </when>
         <otherwise>
           d.deleted IS NULL
         </otherwise>
       </choose>
-      <if test="country != null" > AND o.country = #{country}</if>
-      <if test="type != null" > AND d.type = #{type,jdbcType=OTHER}</if>
-      <if test="_parameter.containsKey('installationKey') and installationKey != null" > AND d.installation_key = #{installationKey}</if>
-      <if test="_parameter.containsKey('dateFrom') and dateFrom != null" > AND d.modified &gt;= #{dateFrom}</if>
-      <if test="_parameter.containsKey('dateTo') and dateTo != null" > AND d.modified &lt; #{dateTo}</if>
+      <if test="params.country != null" > AND o.country = #{params.country}</if>
+      <if test="params.type != null" > AND d.type = #{params.type,jdbcType=OTHER}</if>
+      <if test="params.installationKey != null" > AND d.installation_key = #{params.installationKey}</if>
+      <if test="params.from != null" > AND d.modified &gt;= #{params.from}</if>
+      <if test="params.to != null" > AND d.modified &lt; #{params.to}</if>
+      <if test="params.identifier != null" >
+        AND identifier = #{params.identifier,jdbcType=VARCHAR}
+      </if>
+      <if test="params.identifierType != null" >
+        AND i.type=#{params.identifierType,jdbcType=OTHER}
+      </if>
+      <if test="params.mtNamespace != null" >
+        AND m.namespace = #{params.mtNamespace,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtName != null" >
+        AND m.name=#{params.mtName,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtValue != null" >
+        AND m.value=#{params.mtValue,jdbcType=VARCHAR}
+      </if>
+      <if test="params.doi != null">
+        AND (lower(d.doi) = lower(#{params.doi}) OR lower(i.identifier) = lower(#{params.doi}))
+      </if>
+      <if test="params.publishedByOrgKey != null">
+        AND o.key=#{params.publishedByOrgKey,jdbcType=OTHER}
+      </if>
+      <if test="params.parentKey != null">
+        AND d.parent_dataset_key = #{params.parentKey,jdbcType=OTHER}
+      </if>
+      <if test="params.networkKey != null">
+        AND dn.network_key = #{params.networkKey,jdbcType=OTHER}
+      </if>
+      <if test="params.isDuplicate != null and params.isDuplicate">
+        AND d.duplicate_of_dataset_key IS NOT NULL
+      </if>
+      <if test="params.isSubdataset != null and params.isSubdataset">
+        AND d.parent_dataset_key IS NOT NULL
+      </if>
     </where>
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
+  </sql>
 
   <select id="countDatasetsEndorsedBy" resultType="Long">
     SELECT count(*)
@@ -575,77 +474,6 @@
     WHERE d.deleted IS NULL AND o.key = #{organizationKey,jdbcType=OTHER} AND d.publishing_organization_key!=o.key
   </select>
 
-  <select id="countDatasetsPublishedBy" resultType="Long">
-    SELECT count(*)
-    FROM dataset d
-           INNER JOIN organization o ON d.publishing_organization_key = o.key AND o.deleted IS NULL
-    WHERE o.key = #{organizationKey,jdbcType=OTHER}
-      AND d.deleted IS NULL
-  </select>
-
-  <select id="countDatasetsByInstallation" resultType="Long">
-    SELECT count(*)
-    FROM dataset d
-           INNER JOIN installation i ON d.installation_key = i.key AND i.deleted IS NULL AND d.deleted IS NULL
-    WHERE i.key = #{installationKey,jdbcType=OTHER}
-  </select>
-
-  <select id="listConstituents" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.parent_dataset_key = #{parentKey,jdbcType=OTHER}
-    AND d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="deleted" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.deleted IS NOT NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countDeleted" resultType="Long">
-    SELECT count(*)
-    FROM dataset
-    WHERE deleted IS NOT NULL
-  </select>
-
-  <select id="duplicates" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.duplicate_of_dataset_key IS NOT NULL AND d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countDuplicates" resultType="Long">
-    SELECT count(*)
-    FROM dataset
-    WHERE duplicate_of_dataset_key IS NOT NULL AND deleted IS NULL
-  </select>
-
-  <select id="subdatasets" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    WHERE d.parent_dataset_key IS NOT NULL AND d.deleted IS NULL
-    ORDER BY d.created DESC, d.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countSubdatasets" resultType="Long">
-    SELECT count(*)
-    FROM dataset
-    WHERE parent_dataset_key IS NOT NULL AND deleted IS NULL
-  </select>
-
   <select id="withNoEndpoint" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_FIELDS"/>
     FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
@@ -661,31 +489,6 @@
     FROM dataset d
            LEFT JOIN dataset_endpoint de ON de.dataset_key=d.key
     WHERE de.dataset_key IS NULL AND d.deleted IS NULL AND d.external IS false AND d.parent_dataset_key IS NULL
-  </select>
-
-  <select id="listByIdentifier" resultMap="DATASET_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (d.key) <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
-    INNER JOIN dataset_identifier ON dataset_key = d.key
-    INNER JOIN identifier i ON identifier_key = i.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND i.type=#{type,jdbcType=OTHER}
-    </if>
-    ORDER BY d.key, d.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByIdentifier" resultType="Long">
-    SELECT count(DISTINCT d.key)
-    FROM dataset d
-    INNER JOIN dataset_identifier ON dataset_key = d.key
-    INNER JOIN identifier i ON identifier_key = i.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND i.type=#{type,jdbcType=OTHER}
-    </if>
   </select>
 
   <select id="listDistinctCountries" parameterType="org.gbif.api.model.common.paging.Pageable" resultType="org.gbif.api.vocabulary.Country">

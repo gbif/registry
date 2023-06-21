@@ -190,6 +190,21 @@
                         c.created, c.key)
           <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
           <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+    <include refid="LIST_FILTER" />
+    ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
+             <if test="params.fuzzyName != null" >similarity_score DESC, </if>
+             c.created DESC, c.key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
+    </if>
+  </select>
+
+  <select id="count" resultType="Long">
+    SELECT count(DISTINCT c.key)
+    <include refid="LIST_FILTER" />
+  </select>
+
+  <sql id="LIST_FILTER">
     FROM collection c
     LEFT JOIN institution inst ON inst.key = c.institution_key
     <if test="params.query != null" >
@@ -207,195 +222,100 @@
       LEFT JOIN address addr ON addr.key = c.address_key
       LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     </if>
-    WHERE c.deleted IS NULL
-    <if test="params.institutionKey != null" >
-      AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
-    </if>
-    <if test="params.code != null" >
-      AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
-    </if>
-    <if test="params.alternativeCode != null" >
-      AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
-    </if>
-    <if test="params.name != null" >
-      AND c.name = #{params.name,jdbcType=VARCHAR}
-    </if>
-    <if test="params.machineTagNamespace != null" >
-      AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
-    </if>
-    <if test="params.machineTagName != null" >
-      AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
-    </if>
-    <if test="params.machineTagValue != null" >
-      AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
-    </if>
-    <if test="params.identifierType != null" >
-      AND id.type = #{params.identifierType,jdbcType=OTHER}
-    </if>
-    <if test="params.identifier != null" >
-      AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
-    </if>
-    <if test="params.country != null" >
-      AND (addr.country = #{params.country,jdbcType=OTHER} OR mail_addr.country = #{params.country,jdbcType=OTHER})
-    </if>
-    <if test="params.city != null" >
-      AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
-           OR
-           normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
-    </if>
-    <if test="params.fuzzyName != null" >
-      AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
-    </if>
-    <if test="params.contentTypes != null and params.contentTypes.size > 0" >
-      AND c.content_type @> ARRAY
-      <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}
-      </foreach>
-    </if>
-    <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >
-      AND c.preservation_type @> ARRAY
-      <foreach item="item" collection="params.preservationTypes" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}
-      </foreach>
-    </if>
-    <if test="params.accessionStatus != null" >
-      AND c.accession_status = #{params.accessionStatus,jdbcType=OTHER}
-    </if>
-    <if test="params.active != null" >
-      AND c.active = #{params.active,jdbcType=BOOLEAN}
-    </if>
-    <if test="params.personalCollection != null" >
-      AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
-    </if>
-    <if test="params.masterSourceType != null" >
-      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
-    </if>
-    <if test="params.numberSpecimens != null" >
+    <where>
       <choose>
-        <when test="params.numberSpecimens.exactValue != null">
-          AND c.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
+        <when test="params.deleted != null and params.deleted">
+          c.deleted IS NOT NULL
         </when>
         <otherwise>
-          <if test="params.numberSpecimens.lowerBound != null" >
-            AND c.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
-          </if>
-          <if test="params.numberSpecimens.higherBound != null" >
-            AND c.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
-          </if>
+          c.deleted IS NULL
         </otherwise>
       </choose>
-    </if>
-    <if test="params.displayOnNHCPortal != null" >
-      AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-    </if>
-    ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
-             <if test="params.fuzzyName != null" >similarity_score DESC, </if>
-             c.created DESC, c.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="count" resultType="Long">
-    SELECT count(DISTINCT c.key)
-    FROM collection c
-    <if test="params.query != null" >
-      <include refid="FULLTEXT_SEARCH"/>
-    </if>
-    <if test="params.machineTagNamespace != null || params.machineTagName != null || params.machineTagValue != null" >
-      INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
-      INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
-    </if>
-    <if test="params.identifierType != null || params.identifier != null" >
-      INNER JOIN collection_identifier ci on ci.collection_key = c.key
-      INNER JOIN identifier id on id.key = ci.identifier_key
-    </if>
-    <if test="params.country != null || params.city != null">
-      LEFT JOIN address addr ON addr.key = c.address_key
-      LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
-    </if>
-    WHERE c.deleted IS NULL
-    <if test="params.institutionKey != null" >
-      AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
-    </if>
-    <if test="params.code != null" >
-      AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
-    </if>
-    <if test="params.alternativeCode != null" >
-      AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
-    </if>
-    <if test="params.name != null" >
-      AND c.name = #{params.name,jdbcType=VARCHAR}
-    </if>
-    <if test="params.machineTagNamespace != null" >
-      AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
-    </if>
-    <if test="params.machineTagName != null" >
-      AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
-    </if>
-    <if test="params.machineTagValue != null" >
-      AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
-    </if>
-    <if test="params.identifierType != null" >
-      AND id.type = #{params.identifierType,jdbcType=OTHER}
-    </if>
-    <if test="params.identifier != null" >
-      AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
-    </if>
-    <if test="params.country != null">
-      AND (addr.country = #{params.country,jdbcType=OTHER} OR mail_addr.country = #{params.country,jdbcType=OTHER})
-    </if>
-    <if test="params.city != null" >
-      AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
-           OR
-           normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
-    </if>
-    <if test="params.fuzzyName != null" >
-      AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
-    </if>
-    <if test="params.contentTypes != null and params.contentTypes.size > 0" >
-      AND c.content_type @> ARRAY
-      <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}
-      </foreach>
-    </if>
-    <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >
-      AND c.preservation_type @> ARRAY
-      <foreach item="item" collection="params.preservationTypes" open="[" separator="," close="]">
-        #{item,jdbcType=VARCHAR}
-      </foreach>
-    </if>
-    <if test="params.accessionStatus != null" >
-      AND c.accession_status = #{params.accessionStatus,jdbcType=OTHER}
-    </if>
-    <if test="params.active != null" >
-      AND c.active = #{params.active,jdbcType=BOOLEAN}
-    </if>
-    <if test="params.personalCollection != null" >
-      AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
-    </if>
-    <if test="params.masterSourceType != null" >
-      AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
-    </if>
-    <if test="params.numberSpecimens != null" >
-      <choose>
-        <when test="params.numberSpecimens.exactValue != null">
-          AND c.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
-        </when>
-        <otherwise>
-          <if test="params.numberSpecimens.lowerBound != null" >
-            AND c.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
-          </if>
-          <if test="params.numberSpecimens.higherBound != null" >
-            AND c.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
-          </if>
-        </otherwise>
-      </choose>
-    </if>
-    <if test="params.displayOnNHCPortal != null" >
-      AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-    </if>
-  </select>
+      <if test="params.institutionKey != null" >
+        AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
+      </if>
+      <if test="params.code != null" >
+        AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
+      </if>
+      <if test="params.alternativeCode != null" >
+        AND c.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
+      </if>
+      <if test="params.name != null" >
+        AND c.name = #{params.name,jdbcType=VARCHAR}
+      </if>
+      <if test="params.machineTagNamespace != null" >
+        AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
+      </if>
+      <if test="params.machineTagName != null" >
+        AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
+      </if>
+      <if test="params.machineTagValue != null" >
+        AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
+      </if>
+      <if test="params.identifierType != null" >
+        AND id.type = #{params.identifierType,jdbcType=OTHER}
+      </if>
+      <if test="params.identifier != null" >
+        AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
+      </if>
+      <if test="params.country != null" >
+        AND (addr.country = #{params.country,jdbcType=OTHER} OR mail_addr.country = #{params.country,jdbcType=OTHER})
+      </if>
+      <if test="params.city != null" >
+        AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
+        OR
+        normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
+      </if>
+      <if test="params.fuzzyName != null" >
+        AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
+      </if>
+      <if test="params.contentTypes != null and params.contentTypes.size > 0" >
+        AND c.content_type @> ARRAY
+        <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
+      </if>
+      <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >
+        AND c.preservation_type @> ARRAY
+        <foreach item="item" collection="params.preservationTypes" open="[" separator="," close="]">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
+      </if>
+      <if test="params.accessionStatus != null" >
+        AND c.accession_status = #{params.accessionStatus,jdbcType=OTHER}
+      </if>
+      <if test="params.active != null" >
+        AND c.active = #{params.active,jdbcType=BOOLEAN}
+      </if>
+      <if test="params.personalCollection != null" >
+        AND c.personal_collection = #{params.personalCollection,jdbcType=BOOLEAN}
+      </if>
+      <if test="params.masterSourceType != null" >
+        AND c.master_source = #{params.masterSourceType,jdbcType=OTHER}
+      </if>
+      <if test="params.numberSpecimens != null" >
+        <choose>
+          <when test="params.numberSpecimens.exactValue != null">
+            AND c.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
+          </when>
+          <otherwise>
+            <if test="params.numberSpecimens.lowerBound != null" >
+              AND c.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
+            </if>
+            <if test="params.numberSpecimens.higherBound != null" >
+              AND c.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
+            </if>
+          </otherwise>
+        </choose>
+      </if>
+      <if test="params.displayOnNHCPortal != null" >
+        AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
+      </if>
+      <if test="params.replacedBy != null" >
+        AND c.replaced_by = #{params.replacedBy,jdbcType=OTHER}
+      </if>
+    </where>
+  </sql>
 
   <select id="deleted" resultType="CollectionDto"  resultMap="COLLECTION_DTO_MAP">
     SELECT <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode

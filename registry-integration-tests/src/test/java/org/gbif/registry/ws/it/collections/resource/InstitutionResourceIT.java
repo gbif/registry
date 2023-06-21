@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import liquibase.pro.packaged.I;
+
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
@@ -128,13 +130,14 @@ public class InstitutionResourceIT
 
     List<Institution> institutions = Arrays.asList(i1, i2);
 
-    when(institutionService.listDeleted(any(UUID.class), any(Pageable.class)))
+    when(institutionService.listDeleted(any(InstitutionSearchRequest.class)))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    PagingResponse<Institution> result =
-        getClient().listDeleted(UUID.randomUUID(), new PagingRequest());
+    InstitutionSearchRequest request = new InstitutionSearchRequest();
+    request.setReplacedBy(UUID.randomUUID());
+    PagingResponse<Institution> result = getClient().listDeleted(request);
     assertEquals(institutions.size(), result.getResults().size());
   }
 

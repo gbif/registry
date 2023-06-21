@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
@@ -129,11 +128,12 @@ public class CollectionResourceIT
     List<CollectionView> views =
         Arrays.asList(c1, c2).stream().map(CollectionView::new).collect(Collectors.toList());
 
-    when(collectionService.listDeleted(any(UUID.class), any(Pageable.class)))
+    when(collectionService.listDeleted(any(CollectionSearchRequest.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    PagingResponse<CollectionView> result =
-        getClient().listDeleted(UUID.randomUUID(), new PagingRequest());
+    CollectionSearchRequest request = new CollectionSearchRequest();
+    request.setReplacedBy(UUID.randomUUID());
+    PagingResponse<CollectionView> result = getClient().listDeleted(request);
     assertEquals(views.size(), result.getResults().size());
   }
 
