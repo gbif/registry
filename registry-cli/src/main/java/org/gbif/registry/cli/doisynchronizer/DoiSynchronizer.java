@@ -40,6 +40,9 @@ import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -156,7 +159,8 @@ public class DoiSynchronizer {
   private boolean reapplyDatasetDOIStrategy(DOI doi) {
     Objects.requireNonNull(doi, "DOI can't be null");
 
-    List<Dataset> datasetsFromDOI = datasetMapper.listByDOI(doi.getDoiName(), null);
+    List<Dataset> datasetsFromDOI =
+        datasetMapper.list(DatasetListParams.builder().doi(doi.getDoiName()).build());
 
     // check that we have something to work on
     if (datasetsFromDOI.isEmpty()) {

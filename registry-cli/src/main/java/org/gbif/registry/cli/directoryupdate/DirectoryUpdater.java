@@ -24,6 +24,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.cli.common.DirectoryRegistryMapping;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.NodeMapper;
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
 import org.gbif.registry.service.WithMyBatis;
 
 import java.util.HashMap;
@@ -97,7 +98,8 @@ public class DirectoryUpdater {
     }
 
     List<org.gbif.api.model.registry.Node> registryNodes =
-        nodeMapper.list(new PagingRequest(0, DEFAULT_MAX_LIMIT));
+        nodeMapper.list(
+            NodeListParams.builder().page(new PagingRequest(0, DEFAULT_MAX_LIMIT)).build());
     Integer participantId;
     Participant participant;
     Node directoryNode;

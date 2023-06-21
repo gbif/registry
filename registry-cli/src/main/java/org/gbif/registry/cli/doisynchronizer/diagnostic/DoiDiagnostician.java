@@ -29,6 +29,8 @@ import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 
 import java.util.stream.Collectors;
 
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +130,7 @@ public class DoiDiagnostician {
     // Try to load the Dataset from its DOI and alternate identifier
     // deleted datasets are jettisoned
     datasetDiagnosticResult.appendRelatedDataset(
-        datasetMapper.listByDOI(doi.getDoiName(), null).stream()
+        datasetMapper.list(DatasetListParams.builder().doi(doi.getDoiName()).build()).stream()
             .filter(d -> d.getDeleted() != null)
             .collect(Collectors.toList()));
 
