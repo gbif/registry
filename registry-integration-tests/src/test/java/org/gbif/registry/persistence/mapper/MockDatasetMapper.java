@@ -100,7 +100,11 @@ public class MockDatasetMapper implements DatasetMapper {
   @Override
   public long count(@Nullable @Param("params") DatasetListParams params) {
     if (params.getCountry() != null) {
-      return datasetsByCountry.get(params.getCountry());
+      return datasetsByCountry.getOrDefault(params.getCountry(), 0L);
+    }
+    if (params.getInstallationKey() != null) {
+      Long count = datasetsByInstallation.getOrDefault(params.getInstallationKey(), 0L);
+      return count == null ? 0 : count;
     }
     return 0;
   }
