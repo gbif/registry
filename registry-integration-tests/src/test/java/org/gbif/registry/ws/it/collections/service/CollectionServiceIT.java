@@ -629,13 +629,13 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection2.setName("Collection name2");
     UUID key2 = collectionService.create(collection2);
 
-    assertEquals(0, collectionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+    assertEquals(0, collectionService.listDeleted(null).getResults().size());
 
     collectionService.delete(key1);
-    assertEquals(1, collectionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+    assertEquals(1, collectionService.listDeleted(null).getResults().size());
 
     collectionService.delete(key2);
-    assertEquals(2, collectionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+    assertEquals(2, collectionService.listDeleted(null).getResults().size());
 
     Collection collection3 = testData.newEntity();
     collection3.setCode("code3");
@@ -647,9 +647,11 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection4.setName("Collection name4");
     UUID key4 = collectionService.create(collection4);
 
-    assertEquals(0, collectionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
+    CollectionSearchRequest searchRequest = new CollectionSearchRequest();
+    searchRequest.setReplacedBy(key4);
+    assertEquals(0, collectionService.listDeleted(searchRequest).getResults().size());
     collectionService.replace(key3, key4);
-    assertEquals(1, collectionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
+    assertEquals(1, collectionService.listDeleted(searchRequest).getResults().size());
   }
 
   @Test

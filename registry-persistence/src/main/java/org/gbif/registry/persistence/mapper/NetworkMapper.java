@@ -16,6 +16,7 @@ package org.gbif.registry.persistence.mapper;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.registry.domain.ws.IptNetworkBriefResponse;
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +29,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
 
-  int countDatasetsInNetwork(@Param("networkKey") UUID networkKey);
+  List<Network> list(@Param("params") NetworkListParams params);
+
+  long count(@Param("params") NetworkListParams params);
 
   boolean constituentExists(
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
@@ -39,12 +42,11 @@ public interface NetworkMapper extends BaseNetworkEntityMapper<Network> {
   void deleteDatasetConstituent(
       @Param("networkKey") UUID networkKey, @Param("datasetKey") UUID datasetKey);
 
-  /** @return the list of networks a dataset is a constituent of */
-  List<Network> listByDataset(@Param("datasetKey") UUID datasetKey);
-
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
-  /** @return The list of networks, with only their key and title populated. */
+  /**
+   * @return The list of networks, with only their key and title populated.
+   */
   List<IptNetworkBriefResponse> listNetworksBrief();
 }

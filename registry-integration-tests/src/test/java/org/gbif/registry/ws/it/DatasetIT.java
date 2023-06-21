@@ -19,9 +19,12 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Metadata;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
@@ -30,8 +33,10 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
@@ -56,6 +61,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -1155,6 +1162,82 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertResultsOfSize(service.listByType(DatasetType.CHECKLIST, new PagingRequest()), 2);
     assertResultsOfSize(service.listByType(DatasetType.OCCURRENCE, new PagingRequest()), 3);
     assertResultsOfSize(service.listByType(DatasetType.SAMPLING_EVENT, new PagingRequest()), 4);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testList(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+
+    Dataset d1 = newEntity(Country.SPAIN, serviceType);
+    d1.setDescription("first dataset");
+    d1.setType(DatasetType.OCCURRENCE);
+    UUID key1 = getService(serviceType).create(d1);
+    Identifier id1 = newTestIdentifier(d1, IdentifierType.DOI, "doi:1");
+    service.addIdentifier(key1, id1);
+    MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
+    service.addMachineTag(key1, mt1);
+
+    Dataset d2 = newEntity(Country.DENMARK, serviceType);
+    d2.setType(DatasetType.CHECKLIST);
+    d2.setDescription("second dataset");
+    UUID key2 = getService(serviceType).create(d2);
+
+    assertResultsOfSize(service.list(new DatasetRequestSearchParams()), 2);
+
+    DatasetRequestSearchParams searchParams = new DatasetRequestSearchParams();
+    searchParams.setType(DatasetType.OCCURRENCE);
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setType(DatasetType.OCCURRENCE);
+    searchParams.setCountry(Country.SPAIN);
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams.setCountry(Country.BELGIUM);
+    assertResultsOfSize(service.list(searchParams), 0);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setCountry(Country.SPAIN);
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setQ("dataset");
+    assertResultsOfSize(service.list(searchParams), 2);
+    searchParams.setQ("second");
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setIdentifierType(id1.getType());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setMachineTagName(mt1.getName());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    searchParams.setMachineTagNamespace(mt1.getNamespace());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new DatasetRequestSearchParams();
+    searchParams.setModified(
+        Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setModified(
+        Range.closed(
+            LocalDate.now().minus(2, ChronoUnit.MONTHS),
+            LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
+
+    service.delete(key2);
+    searchParams = new DatasetRequestSearchParams();
+    assertResultsOfSize(service.listDeleted(searchParams), 1);
   }
 
   // TODO: 18/05/2020 unstable test

@@ -17,9 +17,13 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.api.model.registry.search.NetworkRequestSearchParams;
+import org.gbif.api.model.registry.search.NodeRequestSearchParams;
+import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
 
@@ -116,4 +120,9 @@ public interface NodeClient extends NetworkEntityClient<Node>, NodeService {
   @ResponseBody
   @Override
   List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String q);
+
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<Node> list(@SpringQueryMap NodeRequestSearchParams searchParams);
 }

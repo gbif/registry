@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service;
 
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Endpoint;
@@ -22,7 +20,6 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Tag;
-import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.persistence.mapper.CommentMapper;
 import org.gbif.registry.persistence.mapper.CommentableMapper;
 import org.gbif.registry.persistence.mapper.ContactMapper;
@@ -38,8 +35,6 @@ import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 
 import java.util.UUID;
-
-import javax.annotation.Nullable;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,40 +79,6 @@ public class WithMyBatis {
     mapper.update(entity);
   }
 
-  /**
-   * The simple search option of the list.
-   *
-   * @param mapper To use for the search
-   * @param query A simple query string such as "Pontaurus"
-   * @param page To support paging
-   * @return A paging response
-   */
-  public <T extends NetworkEntity> PagingResponse<T> search(
-      NetworkEntityMapper<T> mapper, String query, Pageable page) {
-    checkNotNull(page, "To search you must supply a page");
-    long total = mapper.count(query);
-    return new PagingResponse<>(
-        page.getOffset(), page.getLimit(), total, mapper.search(query, page));
-  }
-
-  public <T extends NetworkEntity> PagingResponse<T> list(
-      NetworkEntityMapper<T> mapper, Pageable page) {
-    long total = mapper.count();
-    return new PagingResponse<>(page.getOffset(), page.getLimit(), total, mapper.list(page));
-  }
-
-  public <T extends NetworkEntity> PagingResponse<T> listByIdentifier(
-      NetworkEntityMapper<T> mapper,
-      @Nullable IdentifierType type,
-      String identifier,
-      Pageable page) {
-    checkNotNull(page, "To list by identifier you must supply a page");
-    checkNotNull(identifier, "To list by identifier you must supply an identifier");
-    long total = mapper.countByIdentifier(type, identifier);
-    return new PagingResponse<>(
-        page.getOffset(), page.getLimit(), total, mapper.listByIdentifier(type, identifier, page));
-  }
-
   @Transactional
   public int addComment(
       CommentMapper commentMapper,
@@ -139,23 +100,6 @@ public class WithMyBatis {
     machineTagMapper.createMachineTag(machineTag);
     machineTaggableMapper.addMachineTag(targetEntityKey, machineTag.getKey());
     return machineTag.getKey();
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> PagingResponse<T> listByMachineTag(
-      MachineTaggableMapper mapper,
-      String namespace,
-      @Nullable String name,
-      @Nullable String value,
-      Pageable page) {
-    checkNotNull(page, "To list by machine tag you must supply a page");
-    checkNotNull(namespace, "To list by machine tag you must supply a namespace");
-    long total = mapper.countByMachineTag(namespace, name, value);
-    return new PagingResponse<>(
-        page.getOffset(),
-        page.getLimit(),
-        total,
-        mapper.listByMachineTag(namespace, name, value, page));
   }
 
   @Transactional

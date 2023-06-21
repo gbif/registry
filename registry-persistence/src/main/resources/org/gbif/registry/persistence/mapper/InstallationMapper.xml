@@ -101,40 +101,6 @@
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <!-- Append safe ordering, omitting deleted entities -->
-  <select id="list" resultType="org.gbif.api.model.registry.Installation"  resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    WHERE i.deleted IS NULL
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <!-- Basic paging search functionality -->
-  <select id="search" resultMap="INSTALLATION_MAP">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="count" resultType="Integer">
-    SELECT COUNT(*)
-    FROM installation i<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-  </select>
-
   <!-- TAGS -->
   <insert id="addTag">
     INSERT INTO installation_tag(installation_key,tag_key)
@@ -299,37 +265,6 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN installation_machine_tag im ON im.installation_key = i.key
-    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-    ORDER BY i.key, i.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByMachineTag" resultType="Long">
-    SELECT count(DISTINCT i.key)
-    FROM installation i
-    INNER JOIN installation_machine_tag im ON im.installation_key = i.key
-    INNER JOIN machine_tag m ON im.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR}
-    <if test="name != null" >
-      AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-        AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-  </select>
-
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO installation_comment(installation_key,comment_key)
@@ -354,59 +289,6 @@
       installation_key = #{targetEntityKey,jdbcType=OTHER} AND comment_key = #{commentKey,jdbcType=INTEGER}
   </delete>
 
-  <select id="listInstallationsEndorsedBy" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-    INNER JOIN node n ON o.endorsing_node_key=n.key AND n.deleted IS NULL
-    WHERE i.deleted IS NULL AND n.key=#{nodeKey,jdbcType=OTHER}
-    ORDER BY created DESC, key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countInstallationsEndorsedBy" resultType="Long">
-    SELECT count(*)
-    FROM installation i
-           INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-           INNER JOIN node n ON o.endorsing_node_key=n.key AND n.deleted IS NULL
-    WHERE i.deleted IS NULL AND n.key=#{nodeKey,jdbcType=OTHER}
-  </select>
-
-  <select id="listInstallationsByOrganization" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-    WHERE i.deleted IS NULL AND o.key=#{organizationKey,jdbcType=OTHER}
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countInstallationsByOrganization" resultType="Long">
-    SELECT count(*)
-    FROM installation i
-           INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
-    WHERE i.deleted IS NULL AND o.key=#{organizationKey,jdbcType=OTHER}
-  </select>
-
-  <select id="deleted" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    WHERE i.deleted IS NOT NULL
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countDeleted" resultType="Long">
-    SELECT count(*)
-    FROM installation
-    WHERE deleted IS NOT NULL
-  </select>
-
   <select id="nonPublishing" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
@@ -424,31 +306,6 @@
     WHERE ds.key IS NULL
   </select>
 
-  <select id="listByIdentifier" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (i.key) <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    INNER JOIN installation_identifier ON installation_key = i.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-    ORDER BY i.key, i.created DESC
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByIdentifier" resultType="Long">
-    SELECT count(DISTINCT i.key)
-    FROM installation i
-    INNER JOIN installation_identifier ON installation_key = i.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-      AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-  </select>
-
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">
     SELECT key,title FROM (
@@ -458,25 +315,73 @@
                           ) t1 LIMIT 25
   </select>
 
-  <select id="countWithFilter" resultType="Integer">
-    SELECT COUNT(*)
-    FROM installation i
-    WHERE i.deleted IS NULL
-    <if test="type != null" >
-      AND i.type = #{type,jdbcType=OTHER}
+  <select id="count" resultType="Long">
+    SELECT COUNT(DISTINCT i.key)
+    <include refid="LIST_FILTER" />
+  </select>
+
+  <select id="list" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(i.fulltext_search, query), </if>i.created, i.key)
+      <include refid="INSTALLATION_FIELDS"/>
+    <include refid="LIST_FILTER" />
+    ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>i.created DESC, i.key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
-  <select id="listWithFilter" resultMap="INSTALLATION_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="INSTALLATION_FIELDS"/>
-    FROM installation i
-    <where>
-      i.deleted IS NULL
-      <if test="type != null" > AND i.type = #{type,jdbcType=OTHER}</if>
-    </where>
-    ORDER BY i.created DESC, i.key
-    <if test="page != null" >
-      LIMIT #{page.limit} OFFSET #{page.offset}
+  <sql id="LIST_FILTER">
+    FROM installation i<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    <if test="params.identifier != null or params.identifierType != null">
+      INNER JOIN installation_identifier ii ON ii.installation_key = i.key
+      INNER JOIN identifier id ON ii.identifier_key = id.key
     </if>
-  </select>
+    <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
+      INNER JOIN installation_machine_tag imt ON imt.installation_key = i.key
+      INNER JOIN machine_tag m ON imt.machine_tag_key = m.key
+    </if>
+    <if test="params.organizationKey != null or params.endorsedByNodeKey != null">
+      INNER JOIN organization o ON i.organization_key=o.key AND o.deleted IS NULL
+    </if>
+    <if test="params.endorsedByNodeKey != null">
+      INNER JOIN node n ON o.endorsing_node_key=n.key AND n.deleted IS NULL
+    </if>
+    <where>
+      <choose>
+        <when test="params.deleted != null and params.deleted">
+          i.deleted IS NOT NULL
+        </when>
+        <otherwise>
+          i.deleted IS NULL
+        </otherwise>
+      </choose>
+      <if test="params.from != null" > AND i.modified &gt;= #{params.from}</if>
+      <if test="params.to != null" > AND i.modified &lt; #{params.to}</if>
+      <if test="params.type != null" > AND i.type = #{params.type,jdbcType=OTHER}</if>
+      <if test="params.identifier != null" >
+        AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
+      </if>
+      <if test="params.identifierType != null" >
+        AND id.type=#{params.identifierType,jdbcType=OTHER}
+      </if>
+      <if test="params.mtNamespace != null" >
+        AND m.namespace = #{params.mtNamespace,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtName != null" >
+        AND m.name=#{params.mtName,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtValue != null" >
+        AND m.value=#{params.mtValue,jdbcType=VARCHAR}
+      </if>
+      <if test="params.query != null" >
+        <include refid="SIMPLE_SEARCH"/>
+      </if>
+      <if test="params.organizationKey != null">
+        AND o.key=#{params.organizationKey,jdbcType=OTHER}
+      </if>
+      <if test="params.endorsedByNodeKey != null">
+        AND n.key=#{params.endorsedByNodeKey,jdbcType=OTHER}
+      </if>
+    </where>
+  </sql>
 </mapper>

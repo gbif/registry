@@ -22,6 +22,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.NetworkEntity;
 import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.search.RequestSearchParams;
 import org.gbif.api.service.registry.NetworkEntityService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
@@ -51,11 +52,6 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   void delete(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
-  @Override
-  PagingResponse<T> list(@SpringQueryMap Pageable page);
-
   @Override
   default void update(@RequestBody T entity) {
     updateResource(entity.getKey(), entity);
@@ -84,10 +80,13 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   Map<UUID, String> getTitles(@RequestBody Collection<UUID> collection);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> search(@RequestParam("q") String query, @SpringQueryMap Pageable page);
+  default PagingResponse<T> search(@RequestParam("q") String query, @SpringQueryMap Pageable page) {
+    RequestSearchParams params = new RequestSearchParams();
+    params.setQ(query);
+    params.setPage(page);
+    return list(params);
+  }
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -218,14 +217,19 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   List<MachineTag> listMachineTags(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> listByMachineTag(
+  default PagingResponse<T> listByMachineTag(
       @RequestParam("machineTagNamespace") String namespace,
       @RequestParam(value = "machineTagName", required = false) String name,
       @RequestParam(value = "machineTagValue", required = false) String value,
-      @SpringQueryMap Pageable page);
+      @SpringQueryMap Pageable page) {
+    RequestSearchParams params = new RequestSearchParams();
+    params.setMachineTagNamespace(namespace);
+    params.setMachineTagName(name);
+    params.setMachineTagValue(value);
+    params.setPage(page);
+    return list(params);
+  }
 
   @RequestMapping(
       method = RequestMethod.POST,
@@ -266,17 +270,35 @@ public interface NetworkEntityClient<T extends NetworkEntity> extends NetworkEnt
   @Override
   List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
 
-  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  @ResponseBody
   @Override
-  PagingResponse<T> listByIdentifier(
+  default PagingResponse<T> listByIdentifier(
       @RequestParam("identifierType") IdentifierType type,
       @RequestParam("identifier") String identifier,
-      @SpringQueryMap Pageable page);
+      @SpringQueryMap Pageable page) {
+    RequestSearchParams params = new RequestSearchParams();
+    params.setIdentifierType(type);
+    params.setIdentifier(identifier);
+    params.setPage(page);
+    return list(params);
+  }
+
+  @Override
+  default PagingResponse<T> listByIdentifier(
+      @RequestParam("identifier") String identifier, @SpringQueryMap Pageable page) {
+    RequestSearchParams params = new RequestSearchParams();
+    params.setIdentifier(identifier);
+    params.setPage(page);
+    return list(params);
+  }
+
+  @Override
+  default PagingResponse<T> list(@SpringQueryMap Pageable page) {
+    RequestSearchParams params = new RequestSearchParams();
+    params.setPage(page);
+    return list(params);
+  }
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  @Override
-  PagingResponse<T> listByIdentifier(
-      @RequestParam("identifier") String identifier, @SpringQueryMap Pageable page);
+  PagingResponse<T> list(@SpringQueryMap RequestSearchParams searchParams);
 }

@@ -17,6 +17,8 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.persistence.mapper.params.InstallationListParams;
+import org.gbif.registry.persistence.mapper.params.NodeListParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,11 +31,15 @@ import org.springframework.stereotype.Repository;
 /**
  * For simplicity we keep ContactableMapper part of the BaseNetworkEntityMapper, but this NodeMapper
  * does not implement those mapper methods but will throw exceptions instead ! For a Node all
- * contacts are managed in the GBIF Directory which we only access for reads and cannot
- * manipulate though our Java API.
+ * contacts are managed in the GBIF Directory which we only access for reads and cannot manipulate
+ * though our Java API.
  */
 @Repository
 public interface NodeMapper extends BaseNetworkEntityMapper<Node> {
+
+  List<Node> list(@Param("params") NodeListParams params);
+
+  long count(@Param("params") NodeListParams params);
 
   List<Country> listNodeCountries();
 

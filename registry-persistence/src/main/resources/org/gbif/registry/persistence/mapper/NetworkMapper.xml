@@ -129,39 +129,69 @@
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <!-- Append safe ordering, omitting deleted entities -->
-  <select id="list" resultType="org.gbif.api.model.registry.Network"  resultMap="NETWORK_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="NETWORK_FIELDS"/>
-    FROM network n
-    WHERE n.deleted IS NULL
-    ORDER BY n.created DESC, n.key
-    <if test="page != null" >
-    LIMIT #{page.limit} OFFSET #{page.offset}
+  <select id="list" resultMap="NETWORK_MAP">
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(n.fulltext_search, query), </if>n.created, n.key)
+      <include refid="NETWORK_FIELDS"/>
+    <include refid="LIST_FILTER" />
+    ORDER BY <if test="params.query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>n.created DESC, n.key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
-  <!-- Basic paging search functionality -->
-  <select id="search" resultMap="NETWORK_MAP">
-    SELECT <include refid="NETWORK_FIELDS"/>
-    FROM network n<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
-    </if>
-    ORDER BY <if test="query != null" >ts_rank_cd(n.fulltext_search, query) DESC, </if>n.created DESC, key
-    <if test="page != null" >
-    LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
+  <select id="count" resultType="Long">
+    SELECT COUNT(DISTINCT n.key)
+    <include refid="LIST_FILTER"/>
   </select>
 
-  <select id="count" resultType="Integer">
-    SELECT COUNT(*)
-    FROM network n<if test="query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{query}))),'\s+',':*&amp;','g')||':*') AS query</if>
-    WHERE deleted IS NULL
-    <if test="query != null" >
-      <include refid="SIMPLE_SEARCH"/>
+  <sql id="LIST_FILTER">
+    FROM network n<if test="params.query != null" >, to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*') AS query</if>
+    <if test="params.identifier != null or params.identifierType != null">
+      INNER JOIN network_identifier ON network_key = n.key
+      INNER JOIN identifier i ON identifier_key = i.key
     </if>
-  </select>
+    <if test="params.mtNamespace != null or params.mtName != null or params.mtValue != null">
+      INNER JOIN network_machine_tag nmt ON nmt.network_key = n.key
+      INNER JOIN machine_tag m ON nmt.machine_tag_key = m.key
+    </if>
+    <if test="params.datasetKey != null">
+      INNER JOIN dataset_network dn ON dn.network_key = n.key
+      INNER JOIN dataset d ON d.key = dn.dataset_key
+    </if>
+    <where>
+      <choose>
+        <when test="params.deleted != null and params.deleted">
+          n.deleted IS NOT NULL
+        </when>
+        <otherwise>
+          n.deleted IS NULL
+        </otherwise>
+      </choose>
+      <if test="params.from != null" > AND n.modified &gt;= #{params.from}</if>
+      <if test="params.to != null" > AND n.modified &lt; #{params.to}</if>
+      <if test="params.query != null" >
+        <include refid="SIMPLE_SEARCH"/>
+      </if>
+      <if test="params.identifier != null" >
+        AND i.identifier = #{params.identifier,jdbcType=VARCHAR}
+      </if>
+      <if test="params.identifierType != null" >
+        AND i.type=#{params.identifierType,jdbcType=OTHER}
+      </if>
+      <if test="params.mtNamespace != null" >
+        AND m.namespace = #{params.mtNamespace,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtName != null" >
+        AND m.name=#{params.mtName,jdbcType=VARCHAR}
+      </if>
+      <if test="params.mtValue != null" >
+        AND m.value=#{params.mtValue,jdbcType=VARCHAR}
+      </if>
+      <if test="params.datasetKey != null" >
+        AND dn.dataset_key = #{params.datasetKey,jdbcType=OTHER}
+      </if>
+    </where>
+  </sql>
 
   <!-- TAGS -->
   <insert id="addTag">
@@ -321,38 +351,6 @@
     </if>
   </delete>
 
-  <select id="listByMachineTag" resultMap="NETWORK_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (n.key) <include refid="NETWORK_FIELDS"/>
-    FROM network n
-    INNER JOIN network_machine_tag nm ON nm.network_key = n.key
-    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR} AND n.deleted IS NULL
-    <if test="name != null" >
-          AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-          AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-    ORDER BY n.key, n.created DESC
-    <if test="page != null" >
-    LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countByMachineTag" resultType="Long">
-    SELECT count(DISTINCT n.key)
-    FROM network n
-    INNER JOIN network_machine_tag nm ON nm.network_key = n.key
-    INNER JOIN machine_tag m ON nm.machine_tag_key = m.key
-    WHERE m.namespace = #{namespace,jdbcType=VARCHAR} AND n.deleted IS NULL
-    <if test="name != null" >
-          AND m.name=#{name,jdbcType=VARCHAR}
-      <if test="value != null" >
-          AND m.value=#{value,jdbcType=VARCHAR}
-      </if>
-    </if>
-  </select>
-
   <!-- COMMENTS -->
   <insert id="addComment">
     INSERT INTO network_comment(network_key,comment_key)
@@ -399,41 +397,6 @@
       dataset_key = #{datasetKey,jdbcType=OTHER} AND
       network_key = #{networkKey,jdbcType=OTHER}
   </delete>
-
-  <!-- Append safe ordering, omitting deleted entities -->
-  <select id="listByDataset" resultType="org.gbif.api.model.registry.Network"  resultMap="NETWORK_MAP">
-    SELECT <include refid="NETWORK_FIELDS"/>
-    FROM dataset_network dn
-    JOIN network n ON dn.network_key = n.key
-    JOIN dataset d ON d.key = dn.dataset_key
-    WHERE d.deleted IS NULL AND n.deleted IS NULL AND dn.dataset_key = #{datasetKey,jdbcType=OTHER}
-    ORDER BY n.created DESC, n.key
-  </select>
-
-  <select id="listByIdentifier" resultMap="NETWORK_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT DISTINCT ON (n.key) <include refid="NETWORK_FIELDS"/>
-    FROM network n
-    INNER JOIN network_identifier ON network_key = n.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR} AND n.deleted IS NULL
-    <if test="type != null" >
-           AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-    ORDER BY n.key, n.created DESC
-    <if test="page != null" >
-    LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-  <select id="countByIdentifier" resultType="Long">
-    SELECT count(DISTINCT n.key)
-    FROM network n
-    INNER JOIN network_identifier ON network_key = n.key
-    INNER JOIN identifier ide ON identifier_key = ide.key
-    WHERE identifier = #{identifier,jdbcType=VARCHAR}
-    <if test="type != null" >
-          AND ide.type=#{type,jdbcType=OTHER}
-    </if>
-  </select>
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.KeyTitleResult">

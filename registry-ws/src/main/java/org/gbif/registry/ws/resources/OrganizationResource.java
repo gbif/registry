@@ -17,7 +17,6 @@ import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.ConfirmationKeyParameter;
 import org.gbif.api.model.registry.Dataset;
@@ -28,17 +27,21 @@ import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.search.ContactsSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
+import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.model.registry.view.OrganizationContactView;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.registry.domain.ws.OrganizationRequestSearchParams;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
+import org.gbif.registry.persistence.mapper.params.BaseListParams;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
+import org.gbif.registry.persistence.mapper.params.InstallationListParams;
+import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
 import org.gbif.registry.security.EditorAuthorizationService;
 import org.gbif.registry.security.SecurityContextCheck;
@@ -52,7 +55,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
@@ -113,7 +115,8 @@ import static org.gbif.registry.security.UserRoles.EDITOR_ROLE;
 @Primary
 @RestController
 @RequestMapping(value = "organization", produces = MediaType.APPLICATION_JSON_VALUE)
-public class OrganizationResource extends BaseNetworkEntityResource<Organization>
+public class OrganizationResource
+    extends BaseNetworkEntityResource<Organization, OrganizationListParams>
     implements OrganizationService {
 
   public static final int MINIMUM_PASSWORD_SIZE = 12;
@@ -147,7 +150,7 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   }
 
   @Operation(
-      operationId = "getOrganizatinon",
+      operationId = "getOrganization",
       summary = "Get details of a single publishing organization",
       description =
           "Details of a single publishing organization.  Also works for deleted publishing organizations.",
@@ -241,6 +244,13 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
     super.update(key, organization);
   }
 
+  @Override
+  protected PagingResponse<Organization> list(BaseListParams params) {
+    OrganizationListParams p = OrganizationListParams.from(params);
+    return new PagingResponse<>(
+        p.getPage(), organizationMapper.count(p), organizationMapper.list(p));
+  }
+
   /**
    * Deletes the organization.
    *
@@ -291,9 +301,11 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
 
   @Override
   public PagingResponse<Organization> search(String query, Pageable page) {
-    final OrganizationRequestSearchParams request = new OrganizationRequestSearchParams();
-    request.setQ(query);
-    return list(null, request, page);
+    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().query(q).page(page).build();
+    long total = organizationMapper.count(listParams);
+    return pagingResponse(page, total, organizationMapper.list(listParams));
   }
 
   /**
@@ -327,49 +339,36 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @ApiResponse(responseCode = "200", description = "Organization search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
-  public PagingResponse<Organization> list(
-      @Nullable Country country, @Valid OrganizationRequestSearchParams request, Pageable page) {
-    // Hack: Intercept identifier search
-    if (request.getIdentifierType() != null && request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifierType(), request.getIdentifier(), page);
-    } else if (request.getIdentifier() != null) {
-      return listByIdentifier(request.getIdentifier(), page);
+  @Override
+  public PagingResponse<Organization> list(OrganizationRequestSearchParams request) {
+    return listInternal(request, false);
+  }
+
+  private PagingResponse<Organization> listInternal(
+      OrganizationRequestSearchParams request, Boolean deleted) {
+    if (request == null) {
+      request = new OrganizationRequestSearchParams();
     }
 
-    // Intercept machine tag search
-    if (!Strings.isNullOrEmpty(request.getMachineTagNamespace())
-        || !Strings.isNullOrEmpty(request.getMachineTagName())
-        || !Strings.isNullOrEmpty(request.getMachineTagValue())) {
-      return listByMachineTag(
-          request.getMachineTagNamespace(),
-          request.getMachineTagName(),
-          request.getMachineTagValue(),
-          page);
-    }
+    OrganizationListParams listParams =
+        OrganizationListParams.builder()
+            .query(parseQuery(request.getQ()))
+            .country(request.getCountry())
+            .isEndorsed(request.getIsEndorsed())
+            .networkKey(request.getNetworkKey())
+            .from(parseFrom(request.getModified()))
+            .to(parseTo(request.getModified()))
+            .deleted(deleted)
+            .identifier(request.getIdentifier())
+            .identifierType(request.getIdentifierType())
+            .mtNamespace(request.getMachineTagNamespace())
+            .mtName(request.getMachineTagName())
+            .mtValue(request.getMachineTagValue())
+            .page(request.getPage())
+            .build();
 
-    // short-circuited list all
-    if (country == null
-        && request.getIsEndorsed() == null
-        && Strings.isNullOrEmpty(request.getQ())
-        && request.getNetworkKey() == null) {
-      return list(page);
-    }
-
-    // This uses to Organization Mapper overloaded option of search which will scope (AND) the
-    // query, country and endorsement.
-    String query =
-        request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
-            : request.getQ();
-    long total =
-        organizationMapper.count(query, country, request.getIsEndorsed(), request.getNetworkKey());
-    page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(
-        page.getOffset(),
-        page.getLimit(),
-        total,
-        organizationMapper.search(
-            query, country, request.getIsEndorsed(), request.getNetworkKey(), page));
+    long total = organizationMapper.count(listParams);
+    return pagingResponse(request.getPage(), total, organizationMapper.list(listParams));
   }
 
   @Operation(
@@ -411,10 +410,9 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Dataset> publishedDatasets(
       @PathVariable("key") UUID organizationKey, Pageable page) {
-    return pagingResponse(
-        page,
-        datasetMapper.countDatasetsPublishedBy(organizationKey),
-        datasetMapper.listDatasetsPublishedBy(organizationKey, page));
+    DatasetListParams listParams =
+        DatasetListParams.builder().publishedByOrgKey(organizationKey).page(page).build();
+    return pagingResponse(page, datasetMapper.count(listParams), datasetMapper.list(listParams));
   }
 
   /**
@@ -443,18 +441,18 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @Override
   public PagingResponse<Installation> installations(
       @PathVariable("key") UUID organizationKey, Pageable page) {
+    InstallationListParams listParams =
+        InstallationListParams.builder().organizationKey(organizationKey).page(page).build();
     return pagingResponse(
-        page,
-        installationMapper.countInstallationsByOrganization(organizationKey),
-        installationMapper.listInstallationsByOrganization(organizationKey, page));
+        page, installationMapper.count(listParams), installationMapper.list(listParams));
   }
 
   @Override
   public PagingResponse<Organization> listByCountry(Country country, Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().country(country).page(page).build();
     return pagingResponse(
-        page,
-        organizationMapper.countOrganizationsByCountry(country),
-        organizationMapper.organizationsByCountry(country, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(
@@ -465,14 +463,28 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @SimpleSearchParameters
+  @CommonParameters.QParameter
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "isEndorsed",
+            description = "Whether the organization is endorsed by a node.",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "networkKey",
+            description = "Filter for organizations publishing datasets belonging to a network.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY)
+      })
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "List of deleted organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Organization> listDeleted(Pageable page) {
-    return pagingResponse(
-        page, organizationMapper.countDeleted(), organizationMapper.deleted(page));
+  public PagingResponse<Organization> listDeleted(OrganizationRequestSearchParams searchParams) {
+    return listInternal(searchParams, true);
   }
 
   @Operation(
@@ -489,10 +501,10 @@ public class OrganizationResource extends BaseNetworkEntityResource<Organization
   @GetMapping("pending")
   @Override
   public PagingResponse<Organization> listPendingEndorsement(Pageable page) {
+    OrganizationListParams listParams =
+        OrganizationListParams.builder().isEndorsed(false).page(page).build();
     return pagingResponse(
-        page,
-        organizationMapper.countPendingEndorsements(null),
-        organizationMapper.pendingEndorsements(null, page));
+        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
   }
 
   @Operation(

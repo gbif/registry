@@ -18,9 +18,8 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Grid;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,18 +31,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
 
-  /** Obtains a list of all the constituent datasets that are part of this parent dataset. */
-  List<Dataset> listConstituents(
-      @Param("parentKey") UUID parentKey, @Nullable @Param("page") Pageable page);
+  List<Dataset> list(@Param("params") DatasetListParams params);
 
-  /** Obtains a list of all the constituent datasets that are part of this network. */
-  List<Dataset> listDatasetsInNetwork(
-      @Param("networkKey") UUID networkKey, @Nullable @Param("page") Pageable page);
+  long count(@Param("params") DatasetListParams params);
 
-  /** Obtains a list of all the datasets published by the given organization. */
-  List<Dataset> listDatasetsPublishedBy(
-      @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page);
-
+  // TODO: merge the others wiht the list?
   /** Obtains a list of all the datasets hosted by, but not published by, the given organization. */
   List<Dataset> listDatasetsHostedBy(
       @Param("organizationKey") UUID organizationKey, @Nullable @Param("page") Pageable page);
@@ -55,80 +47,10 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Dataset> listDatasetsEndorsedBy(
       @Param("nodeKey") UUID nodeKey, @Nullable @Param("page") Pageable page);
 
-  /**
-   * Obtains a list of all the datasets filter optionally by a given country and optionally by a
-   * type.
-   */
-  List<Dataset> listWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("page") Pageable page);
-
-  /**
-   * Obtains a list of all datasets using the provided filter(s)
-   *
-   * @param from lower bound dataset modified date (inclusive)
-   * @param to upper bound dataset modified date (exclusive)
-   */
-  List<Dataset> listWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("installationKey") UUID installationKey,
-      @Nullable @Param("dateFrom") Date from,
-      @Nullable @Param("dateTo") Date to,
-      @Nullable @Param("deleted") Boolean deleted,
-      @Nullable @Param("page") Pageable page);
-
-  /** Counts all datasets from a DOI. This counts for dataset.doi and alternate identifiers. */
-  long countByDOI(@Param("doi") String doi);
-
-  /**
-   * Get a Dataset list from a DOI, dataset.dois and alternate identifier are searched. Multiple
-   * datasets could share the same DOI since this is not enforced.
-   */
-  List<Dataset> listByDOI(@Param("doi") String doi, @Nullable @Param("page") Pageable page);
-
-  /** Count all datasets having all non null filters given. */
-  int countWithFilter(
-      @Nullable @Param("country") Country country, @Nullable @Param("type") DatasetType type);
-
-  /** Count all datasets having all non null filters given. */
-  int countWithFilter(
-      @Nullable @Param("country") Country country,
-      @Nullable @Param("type") DatasetType type,
-      @Nullable @Param("installationKey") UUID installationKey,
-      @Nullable @Param("dateFrom") Date from,
-      @Nullable @Param("dateTo") Date to,
-      @Nullable @Param("deleted") Boolean deleted);
-
-  /** Obtains a list of all the datasets hosted by the given installation. */
-  List<Dataset> listDatasetsByInstallation(
-      @Param("installationKey") UUID installationKey, @Nullable @Param("page") Pageable page);
-
-  /** Count of datasets hosted by the given installation. */
-  long countDatasetsByInstallation(@Param("installationKey") UUID installationKey);
-
   /** Count of datasets published by an organization that is endorsed by the given node. */
   long countDatasetsEndorsedBy(@Param("nodeKey") UUID nodeKey);
 
   long countDatasetsHostedBy(@Param("organizationKey") UUID organizationKey);
-
-  long countDatasetsPublishedBy(@Param("organizationKey") UUID organizationKey);
-
-  // sigh - int required by the model object, but the paging is long
-  int countConstituents(@Param("key") UUID datasetKey);
-
-  List<Dataset> deleted(@Nullable @Param("page") Pageable page);
-
-  long countDeleted();
-
-  List<Dataset> duplicates(@Nullable @Param("page") Pageable page);
-
-  long countDuplicates();
-
-  List<Dataset> subdatasets(@Nullable @Param("page") Pageable page);
-
-  long countSubdatasets();
 
   List<Dataset> withNoEndpoint(@Nullable @Param("page") Pageable page);
 

@@ -13,9 +13,12 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+
+import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -42,4 +45,7 @@ public abstract class SearchParams {
   @Nullable MasterSourceType masterSourceType;
   @Nullable RangeParam numberSpecimens;
   @Nullable Boolean displayOnNHCPortal;
+  @Nullable private Boolean deleted;
+  @Nullable private UUID replacedBy;
+  @Nullable private Pageable page;
 }

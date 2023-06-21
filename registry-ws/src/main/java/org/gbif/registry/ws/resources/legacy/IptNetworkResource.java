@@ -23,6 +23,9 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;
@@ -87,6 +90,6 @@ public class IptNetworkResource {
 
   @GetMapping(value = "resource/{key}/networks", produces = MediaType.APPLICATION_JSON_VALUE)
   public List<Network> listResourceNetworks(@PathVariable("key") UUID datasetKey) {
-    return networkMapper.listByDataset(datasetKey);
+    return networkMapper.list(NetworkListParams.builder().datasetKey(datasetKey).build());
   }
 }

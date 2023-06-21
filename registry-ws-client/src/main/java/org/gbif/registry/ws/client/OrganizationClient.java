@@ -19,8 +19,10 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.ContactsSearchParams;
+import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.view.OrganizationContactView;
+import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.Country;
 
@@ -79,7 +81,7 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Organization> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Organization> listDeleted(@SpringQueryMap OrganizationRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -119,6 +121,11 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
   @RequestMapping(method = RequestMethod.DELETE, value = "{key}/endorsement")
   @ResponseBody
   ResponseEntity<Void> revokeEndorsementEndpoint(@PathVariable("key") UUID organizationKey);
+
+  @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<Organization> list(@SpringQueryMap OrganizationRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,
