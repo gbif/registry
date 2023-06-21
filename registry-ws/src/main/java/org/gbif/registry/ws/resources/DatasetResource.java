@@ -1232,6 +1232,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @ApiResponse(responseCode = "200", description = "List of deleted datasets")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
+  @Override
   public PagingResponse<Dataset> listDeleted(@Nullable DatasetRequestSearchParams request) {
     return listInternal(request, true);
   }

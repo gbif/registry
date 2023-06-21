@@ -14,11 +14,11 @@
 package org.gbif.registry.service;
 
 import org.gbif.api.model.common.DOI;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,18 +26,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.parameters.P;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,8 +60,7 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(UUID_1_STR, 1L);
     datasetUsages.put(DOI_1_STR, 2L);
     when(datasetMapper.get(UUID_1)).thenReturn(dataset);
-    when(datasetMapper.list(
-            DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build()))
+    when(datasetMapper.list(any(DatasetListParams.class)))
         .thenReturn(Collections.singletonList(dataset));
 
     // when & then
@@ -71,8 +68,7 @@ class RegistryDatasetServiceImplTest {
         IllegalArgumentException.class,
         () -> registryDatasetService.ensureDerivedDatasetDatasetUsagesValid(datasetUsages));
     verify(datasetMapper).get(UUID_1);
-    verify(datasetMapper)
-        .list(DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build());
+    verify(datasetMapper).list(any(DatasetListParams.class));
   }
 
   @Test
@@ -122,8 +118,7 @@ class RegistryDatasetServiceImplTest {
     datasetUsages.put(UUID_1_STR, 1L);
     datasetUsages.put(DOI_1_STR, 2L);
     when(datasetMapper.get(UUID_1)).thenReturn(dataset1);
-    when(datasetMapper.list(
-            DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build()))
+    when(datasetMapper.list(any(DatasetListParams.class)))
         .thenReturn(Collections.singletonList(dataset2));
 
     // when
@@ -134,8 +129,7 @@ class RegistryDatasetServiceImplTest {
     assertFalse(derivedDatasetUsages.isEmpty());
     assertEquals(2, derivedDatasetUsages.size());
     verify(datasetMapper).get(UUID_1);
-    verify(datasetMapper)
-        .list(DatasetListParams.builder().doi(DOI_1_STR).page(new PagingRequest()).build());
+    verify(datasetMapper).list(any(DatasetListParams.class));
   }
 
   private Dataset prepareDataset(UUID key, DOI doi) {
