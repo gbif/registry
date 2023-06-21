@@ -48,12 +48,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -116,6 +116,16 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
 
   @Override
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
+    return listInternal(searchRequest, false);
+  }
+
+  @NotNull
+  private PagingResponse<Institution> listInternal(
+      InstitutionSearchRequest searchRequest, boolean deleted) {
+    if (searchRequest == null) {
+      searchRequest = new InstitutionSearchRequest();
+    }
+
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     String query =
@@ -144,19 +154,18 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
             .masterSourceType(searchRequest.getMasterSourceType())
             .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
             .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
+            .replacedBy(searchRequest.getReplacedBy())
+            .deleted(deleted)
+            .page(page)
             .build();
 
     long total = institutionMapper.count(params);
-    return new PagingResponse<>(page, total, institutionMapper.list(params, page));
+    return new PagingResponse<>(page, total, institutionMapper.list(params));
   }
 
   @Override
-  public PagingResponse<Institution> listDeleted(@Nullable UUID replacedBy, Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-    return new PagingResponse<>(
-        page,
-        institutionMapper.countDeleted(replacedBy),
-        institutionMapper.deleted(replacedBy, page));
+  public PagingResponse<Institution> listDeleted(InstitutionSearchRequest searchRequest) {
+    return listInternal(searchRequest, true);
   }
 
   @Override

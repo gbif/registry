@@ -399,7 +399,7 @@ public class InstitutionMapperIT extends BaseItTest {
     assertSearch(InstitutionSearchParams.builder().query("i1 n1").build(), page, 1, inst1.getKey());
 
     InstitutionSearchParams params = InstitutionSearchParams.builder().query("i1").build();
-    List<Institution> institutions = institutionMapper.list(params, page);
+    List<Institution> institutions = institutionMapper.list(params);
     long count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
     // it should return the one where the i1 is main code
@@ -408,7 +408,7 @@ public class InstitutionMapperIT extends BaseItTest {
     assertEquals(2, count);
 
     params = InstitutionSearchParams.builder().query("i2").build();
-    institutions = institutionMapper.list(params, page);
+    institutions = institutionMapper.list(params);
     count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
     // it should return the one where the i1 is main code
@@ -422,7 +422,7 @@ public class InstitutionMapperIT extends BaseItTest {
 
   private List<Institution> assertSearch(
       InstitutionSearchParams params, Pageable page, int expected) {
-    List<Institution> res = institutionMapper.list(params, page);
+    List<Institution> res = institutionMapper.list(params);
     long count = institutionMapper.count(params);
     assertEquals(expected, count);
     assertEquals(res.size(), count);

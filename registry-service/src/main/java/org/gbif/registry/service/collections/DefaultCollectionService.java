@@ -50,12 +50,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -131,6 +131,16 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
   @Override
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
+    return listInternal(searchRequest, false);
+  }
+
+  @NotNull
+  private PagingResponse<CollectionView> listInternal(
+      CollectionSearchRequest searchRequest, boolean deleted) {
+    if (searchRequest == null) {
+      searchRequest = new CollectionSearchRequest();
+    }
+
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     String query =
@@ -161,10 +171,13 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .masterSourceType(searchRequest.getMasterSourceType())
             .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
             .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
+            .replacedBy(searchRequest.getReplacedBy())
+            .deleted(deleted)
+            .page(page)
             .build();
 
     long total = collectionMapper.count(params);
-    List<CollectionDto> collectionDtos = collectionMapper.list(params, page);
+    List<CollectionDto> collectionDtos = collectionMapper.list(params);
 
     List<CollectionView> views =
         collectionDtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
@@ -173,15 +186,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   }
 
   @Override
-  public PagingResponse<CollectionView> listDeleted(@Nullable UUID replacedBy, Pageable page) {
-    page = page == null ? new PagingRequest() : page;
-
-    long total = collectionMapper.countDeleted(replacedBy);
-    List<CollectionDto> dtos = collectionMapper.deleted(replacedBy, page);
-    List<CollectionView> views =
-        dtos.stream().map(this::convertToCollectionView).collect(Collectors.toList());
-
-    return new PagingResponse<>(page, total, views);
+  public PagingResponse<CollectionView> listDeleted(CollectionSearchRequest searchRequest) {
+    return listInternal(searchRequest, true);
   }
 
   @Override

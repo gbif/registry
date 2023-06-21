@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import com.google.common.base.CharMatcher;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -93,7 +91,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -1206,11 +1203,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     metadataMapper.delete(metadataKey);
   }
 
-  @Override
-  public PagingResponse<Dataset> listDeleted(Pageable page) {
-    return listDeleted(new DatasetRequestSearchParams());
-  }
-
   @Operation(
       operationId = "getDeletedDatasets",
       summary = "List all deleted datasets",
@@ -1232,21 +1224,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             description = "The primary type of the dataset.",
             schema = @Schema(implementation = DatasetType.class),
             in = ParameterIn.QUERY,
-            explode = Explode.TRUE),
-        @Parameter(
-            name = "modified",
-            description =
-                "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
-            schema = @Schema(implementation = DatasetType.class),
-            in = ParameterIn.QUERY,
             explode = Explode.TRUE)
       })
+  @SimpleSearchParameters
   @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "List of deleted datasets")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
-  public PagingResponse<Dataset> listDeleted(@Nullable @Valid DatasetRequestSearchParams request) {
+  public PagingResponse<Dataset> listDeleted(@Nullable DatasetRequestSearchParams request) {
     return listInternal(request, true);
   }
 

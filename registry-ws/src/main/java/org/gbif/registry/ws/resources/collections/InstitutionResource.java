@@ -23,7 +23,6 @@ import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
@@ -304,11 +303,11 @@ public class InstitutionResource
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
   @ApiResponse(responseCode = "200", description = "List of deleted institution records")
+  @InstitutionSearchParameters
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
-  public PagingResponse<Institution> listDeleted(
-      @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
-    return institutionService.listDeleted(replacedBy, page);
+  public PagingResponse<Institution> listDeleted(InstitutionSearchRequest searchRequest) {
+    return institutionService.listDeleted(searchRequest);
   }
 
   @Operation(

@@ -265,6 +265,10 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
         LocalDate.now().minus(2, ChronoUnit.MONTHS),
         LocalDate.now().minus(1, ChronoUnit.MONTHS)));
     assertResultsOfSize(service.list(searchParams), 0);
+
+    service.delete(key2);
+    searchParams = new OrganizationRequestSearchParams();
+    assertResultsOfSize(service.listDeleted(searchParams), 1);
   }
 
   @ParameterizedTest

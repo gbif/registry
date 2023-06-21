@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.resources;
 
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -28,6 +31,7 @@ import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
+import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;
@@ -259,6 +263,7 @@ public class InstallationResource
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0100")))
   @SimpleSearchParameters
+  @CommonParameters.QParameter
   @Parameter(
       name = "type",
       description = "Filter by the type of installation.",
@@ -269,6 +274,11 @@ public class InstallationResource
   @GetMapping
   @Override
   public PagingResponse<Installation> list(InstallationRequestSearchParams request) {
+    return listInternal(request, false);
+  }
+
+  private PagingResponse<Installation> listInternal(
+      InstallationRequestSearchParams request, boolean deleted) {
     InstallationListParams listParams =
         InstallationListParams.builder()
             .query(parseQuery(request.getQ()))
@@ -277,7 +287,7 @@ public class InstallationResource
             .organizationKey(request.getOrganizationKey())
             .from(parseFrom(request.getModified()))
             .to(parseTo(request.getModified()))
-            .deleted(false)
+            .deleted(deleted)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())
             .mtNamespace(request.getMachineTagNamespace())
@@ -322,16 +332,20 @@ public class InstallationResource
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @SimpleSearchParameters
+  @Parameter(
+      name = "type",
+      description = "Filter by the type of installation.",
+      schema = @Schema(implementation = InstallationType.class),
+      in = ParameterIn.QUERY)
+  @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "List of deleted installations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Installation> listDeleted(Pageable page) {
-    InstallationListParams listParams =
-        InstallationListParams.builder().deleted(true).page(page).build();
-    return pagingResponse(
-        page, installationMapper.count(listParams), installationMapper.list(listParams));
+  public PagingResponse<Installation> listDeleted(InstallationRequestSearchParams searchParams) {
+    return listInternal(searchParams, true);
   }
 
   @Operation(

@@ -1234,6 +1234,10 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
             LocalDate.now().minus(2, ChronoUnit.MONTHS),
             LocalDate.now().minus(1, ChronoUnit.MONTHS)));
     assertResultsOfSize(service.list(searchParams), 0);
+
+    service.delete(key2);
+    searchParams = new DatasetRequestSearchParams();
+    assertResultsOfSize(service.listDeleted(searchParams), 1);
   }
 
   // TODO: 18/05/2020 unstable test

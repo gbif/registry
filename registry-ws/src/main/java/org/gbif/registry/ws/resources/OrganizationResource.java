@@ -340,7 +340,6 @@ public class OrganizationResource
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping
   @Override
-  // TODO: add deleted as in datasets?
   public PagingResponse<Organization> list(OrganizationRequestSearchParams request) {
     return listInternal(request, false);
   }
@@ -464,16 +463,28 @@ public class OrganizationResource
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @SimpleSearchParameters
+  @CommonParameters.QParameter
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "isEndorsed",
+            description = "Whether the organization is endorsed by a node.",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "networkKey",
+            description = "Filter for organizations publishing datasets belonging to a network.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY)
+      })
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "List of deleted organizations")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
   @Override
-  public PagingResponse<Organization> listDeleted(Pageable page) {
-    OrganizationListParams listParams =
-        OrganizationListParams.builder().deleted(true).page(page).build();
-    return pagingResponse(
-        page, organizationMapper.count(listParams), organizationMapper.list(listParams));
+  public PagingResponse<Organization> listDeleted(OrganizationRequestSearchParams searchParams) {
+    return listInternal(searchParams, true);
   }
 
   @Operation(

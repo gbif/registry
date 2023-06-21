@@ -55,7 +55,7 @@ public interface InstallationClient
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Installation> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Installation> listDeleted(@SpringQueryMap InstallationRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,

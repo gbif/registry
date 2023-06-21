@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.service.registry.InstallationService;
@@ -247,6 +248,10 @@ public class InstallationIT extends NetworkEntityIT<Installation> {
         LocalDate.now().minus(2, ChronoUnit.MONTHS),
         LocalDate.now().minus(1, ChronoUnit.MONTHS)));
     assertResultsOfSize(service.list(searchParams), 0);
+
+    service.delete(key2);
+    searchParams = new InstallationRequestSearchParams();
+    assertResultsOfSize(service.listDeleted(searchParams), 1);
   }
 
   @Override

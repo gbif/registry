@@ -219,8 +219,7 @@ public class CollectionMapperIT extends BaseItTest {
     collectionMapper.create(col4);
 
     Pageable page = PAGE.apply(2, 0L);
-    List<CollectionDto> dtos =
-        collectionMapper.list(CollectionSearchParams.builder().build(), page);
+    List<CollectionDto> dtos = collectionMapper.list(CollectionSearchParams.builder().build());
     assertEquals(2, dtos.size());
 
     page = PAGE.apply(5, 0L);
@@ -415,7 +414,7 @@ public class CollectionMapperIT extends BaseItTest {
 
     Pageable page = PAGE.apply(1, 0L);
     CollectionSearchParams params = CollectionSearchParams.builder().query("c1").build();
-    List<CollectionDto> dtos = collectionMapper.list(params, page);
+    List<CollectionDto> dtos = collectionMapper.list(params);
     long count = collectionMapper.count(params);
     assertEquals(1, dtos.size());
     assertEquals(coll1.getKey(), dtos.get(0).getCollection().getKey());
@@ -426,7 +425,7 @@ public class CollectionMapperIT extends BaseItTest {
 
     page = PAGE.apply(1, 0L);
     params = CollectionSearchParams.builder().query("c2").build();
-    dtos = collectionMapper.list(params, page);
+    dtos = collectionMapper.list(params);
     count = collectionMapper.count(params);
     assertEquals(1, dtos.size());
     assertEquals(coll2.getKey(), dtos.get(0).getCollection().getKey());
@@ -441,7 +440,7 @@ public class CollectionMapperIT extends BaseItTest {
 
   private List<CollectionDto> assertSearch(
       CollectionSearchParams params, Pageable page, int expected) {
-    List<CollectionDto> dtos = collectionMapper.list(params, page);
+    List<CollectionDto> dtos = collectionMapper.list(params);
     long count = collectionMapper.count(params);
     assertEquals(expected, count);
     assertEquals(dtos.size(), count);

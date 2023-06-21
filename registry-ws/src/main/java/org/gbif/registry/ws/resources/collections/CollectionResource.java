@@ -323,12 +323,12 @@ public class CollectionResource
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @CollectionSearchParameters
   @ApiResponse(responseCode = "200", description = "List of deleted collection records")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("deleted")
-  public PagingResponse<CollectionView> listDeleted(
-      @RequestParam(value = "replacedBy", required = false) UUID replacedBy, Pageable page) {
-    return collectionService.listDeleted(replacedBy, page);
+  public PagingResponse<CollectionView> listDeleted(CollectionSearchRequest searchRequest) {
+    return collectionService.listDeleted(searchRequest);
   }
 
   @Operation(

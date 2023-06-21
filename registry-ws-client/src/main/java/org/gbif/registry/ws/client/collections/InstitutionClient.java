@@ -47,9 +47,7 @@ public interface InstitutionClient
       value = "deleted",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  PagingResponse<Institution> listDeleted(
-      @RequestParam(value = "replacedBy", required = false) UUID replacedBy,
-      @SpringQueryMap Pageable page);
+  PagingResponse<Institution> listDeleted(@SpringQueryMap InstitutionSearchRequest searchRequest);
 
   @RequestMapping(
       method = RequestMethod.GET,

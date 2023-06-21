@@ -81,7 +81,7 @@ public interface OrganizationClient extends NetworkEntityClient<Organization>, O
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Organization> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Organization> listDeleted(@SpringQueryMap OrganizationRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,

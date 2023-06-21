@@ -14,7 +14,6 @@
 package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
@@ -34,20 +33,12 @@ import org.springframework.stereotype.Repository;
 public interface CollectionMapper
     extends BaseMapper<Collection>, LookupMapper<CollectionMatchedDto> {
 
-  List<CollectionDto> list(
-      @Param("params") CollectionSearchParams searchParams, @Nullable @Param("page") Pageable page);
+  List<CollectionDto> list(@Param("params") CollectionSearchParams searchParams);
 
   long count(@Param("params") CollectionSearchParams searchParams);
 
   /** A simple suggest by title service. */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
-
-  /** @return the collections marked as deleted */
-  List<CollectionDto> deleted(
-      @Nullable @Param("replacedBy") UUID replacedBy, @Param("page") Pageable page);
-
-  /** @return the count of the collections marked as deleted. */
-  long countDeleted(@Nullable @Param("replacedBy") UUID replacedBy);
 
   /**
    * Finds a collection by any of its identifiers.

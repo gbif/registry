@@ -13,18 +13,31 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.service.collections.InstitutionService;
-import org.gbif.api.service.registry.*;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.collections.*;
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.InstitutionType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
@@ -39,7 +52,12 @@ import javax.validation.ValidationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
@@ -417,13 +435,13 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution2.setName("Institution name2");
     UUID key2 = institutionService.create(institution2);
 
-    assertEquals(0, institutionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+    assertEquals(0, institutionService.listDeleted(null).getResults().size());
 
     institutionService.delete(key1);
-    assertEquals(1, institutionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+    assertEquals(1, institutionService.listDeleted(null).getResults().size());
 
     institutionService.delete(key2);
-    assertEquals(2, institutionService.listDeleted(null, DEFAULT_PAGE).getResults().size());
+    assertEquals(2, institutionService.listDeleted(null).getResults().size());
 
     Institution institution3 = testData.newEntity();
     institution3.setCode("code3");
@@ -435,9 +453,11 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution4.setName("Institution name4");
     UUID key4 = institutionService.create(institution4);
 
-    assertEquals(0, institutionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
+    InstitutionSearchRequest searchRequest = new InstitutionSearchRequest();
+    searchRequest.setReplacedBy(key4);
+    assertEquals(0, institutionService.listDeleted(searchRequest).getResults().size());
     institutionService.replace(key3, key4);
-    assertEquals(1, institutionService.listDeleted(key4, DEFAULT_PAGE).getResults().size());
+    assertEquals(1, institutionService.listDeleted(searchRequest).getResults().size());
   }
 
   @Test

@@ -157,7 +157,7 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PagingResponse<Dataset> listDeleted(@SpringQueryMap Pageable pageable);
+  PagingResponse<Dataset> listDeleted(@SpringQueryMap DatasetRequestSearchParams searchParams);
 
   @RequestMapping(
       method = RequestMethod.GET,
@@ -190,6 +190,4 @@ public interface DatasetClient extends NetworkEntityClient<Dataset>, DatasetServ
       @PathVariable("prefix") String prefix,
       @PathVariable("suffix") String suffix,
       @SpringQueryMap Pageable pageable);
-
-  // TODO: list deleted with params
 }
