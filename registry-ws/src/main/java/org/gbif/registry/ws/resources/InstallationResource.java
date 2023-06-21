@@ -73,8 +73,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -271,17 +269,14 @@ public class InstallationResource
   @GetMapping
   @Override
   public PagingResponse<Installation> list(InstallationRequestSearchParams request) {
-    String q =
-        request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
-            : request.getQ();
-
     InstallationListParams listParams =
         InstallationListParams.builder()
-            .query(q)
+            .query(parseQuery(request.getQ()))
             .type(request.getType())
             .endorsedByNodeKey(request.getEndorsedByNodeKey())
             .organizationKey(request.getOrganizationKey())
+            .from(parseFrom(request.getModified()))
+            .to(parseTo(request.getModified()))
             .deleted(false)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())

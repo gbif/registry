@@ -60,9 +60,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
-
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -241,14 +238,11 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @GetMapping
   @Override
   public PagingResponse<Network> list(NetworkRequestSearchParams request) {
-    String q =
-        request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
-            : request.getQ();
-
     NetworkListParams listParams =
         NetworkListParams.builder()
-            .query(q)
+            .query(parseQuery(request.getQ()))
+            .from(parseFrom(request.getModified()))
+            .to(parseTo(request.getModified()))
             .deleted(false)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())

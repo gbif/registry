@@ -48,9 +48,7 @@ import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
-import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -353,39 +351,14 @@ public class OrganizationResource
       request = new OrganizationRequestSearchParams();
     }
 
-    // TODO: move this to base class??
-    Date from =
-        request.getModified() != null && request.getModified().lowerEndpoint() != null
-            ? Date.from(
-                request
-                    .getModified()
-                    .lowerEndpoint()
-                    .atStartOfDay(ZoneId.systemDefault())
-                    .toInstant())
-            : null;
-    Date to =
-        request.getModified() != null && request.getModified().upperEndpoint() != null
-            ? Date.from(
-                request
-                    .getModified()
-                    .upperEndpoint()
-                    .atStartOfDay(ZoneId.systemDefault())
-                    .toInstant())
-            : null;
-
-    String query =
-        request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
-            : request.getQ();
-
     OrganizationListParams listParams =
         OrganizationListParams.builder()
-            .query(query)
+            .query(parseQuery(request.getQ()))
             .country(request.getCountry())
             .isEndorsed(request.getIsEndorsed())
             .networkKey(request.getNetworkKey())
-            .from(from)
-            .to(to)
+            .from(parseFrom(request.getModified()))
+            .to(parseTo(request.getModified()))
             .deleted(deleted)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())

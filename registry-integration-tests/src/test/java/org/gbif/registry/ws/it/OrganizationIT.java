@@ -204,7 +204,7 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     UUID nodeKey = nodeResource.create(node);
 
     Organization o1 = testDataFactory.newOrganization(nodeKey);
-    o1.setDescription("first organization");
+    o1.setTitle("first organization");
     o1.setEndorsementApproved(true);
     o1.setCountry(Country.SPAIN);
     UUID key1 = getService(serviceType).create(o1);
@@ -215,13 +215,12 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     service.addMachineTag(key1, mt1);
 
     Organization o2 = testDataFactory.newOrganization(nodeKey);
-    o2.setDescription("second organization");
+    o2.setTitle("second organization");
     o2.setEndorsementApproved(false);
     o2.setCountry(Country.DENMARK);
     UUID key2 = getService(serviceType).create(o2);
 
     assertResultsOfSize(service.list(new OrganizationRequestSearchParams()), 2);
-
 
     OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
     searchParams.setCountry(Country.SPAIN);

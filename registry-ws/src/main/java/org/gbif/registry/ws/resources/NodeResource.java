@@ -241,14 +241,11 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @GetMapping
   @Override
   public PagingResponse<Node> list(NodeRequestSearchParams request) {
-    String q =
-        request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
-            : request.getQ();
-
     NodeListParams listParams =
         NodeListParams.builder()
-            .query(q)
+            .query(parseQuery(request.getQ()))
+            .from(parseFrom(request.getModified()))
+            .to(parseTo(request.getModified()))
             .deleted(false)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())

@@ -16,11 +16,19 @@ package org.gbif.registry.ws.it;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Network;
+import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.search.NetworkRequestSearchParams;
+import org.gbif.api.model.registry.search.NodeRequestSearchParams;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.NetworkService;
+import org.gbif.api.service.registry.NodeService;
+import org.gbif.api.util.Range;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.identity.service.IdentityService;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -31,6 +39,8 @@ import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -268,6 +278,63 @@ public class NetworkIT extends NetworkEntityIT<Network> {
     service.delete(key3);
     assertEquals(1, service.suggest("Great").size(), "Should find only The Great Network");
     assertEquals(2, service.suggest("the").size(), "Should find both networks");
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testList(ServiceType serviceType) {
+    NetworkService service = (NetworkService) getService(serviceType);
+
+    Network n1 = newEntity(serviceType);
+    n1.setTitle("first network");
+    UUID key1 = getService(serviceType).create(n1);
+
+    Identifier id1 = newTestIdentifier(n1, IdentifierType.DOI, "doi:1");
+    service.addIdentifier(key1, id1);
+    MachineTag mt1 = new MachineTag("ns", "mt1", "mtV1");
+    service.addMachineTag(key1, mt1);
+
+    Network n2 = newEntity(serviceType);
+    n2.setTitle("second network");
+    UUID key2 = getService(serviceType).create(n2);
+
+    assertResultsOfSize(service.list(new NetworkRequestSearchParams()), 2);
+
+    NetworkRequestSearchParams searchParams = new NetworkRequestSearchParams();
+    searchParams.setQ("network");
+    assertResultsOfSize(service.list(searchParams), 2);
+    searchParams.setQ("second");
+    assertResultsOfSize(service.list(searchParams), 1);
+    searchParams.setQ("third");
+    assertResultsOfSize(service.list(searchParams), 0);
+
+    searchParams = new NetworkRequestSearchParams();
+    searchParams.setIdentifierType(id1.getType());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NetworkRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NetworkRequestSearchParams();
+    searchParams.setMachineTagName(mt1.getName());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NetworkRequestSearchParams();
+    searchParams.setIdentifier(id1.getIdentifier());
+    searchParams.setMachineTagNamespace(mt1.getNamespace());
+    assertResultsOfSize(service.list(searchParams), 1);
+
+    searchParams = new NetworkRequestSearchParams();
+    searchParams.setModified(
+      Range.closed(LocalDate.now(), LocalDate.now().plus(1, ChronoUnit.DAYS)));
+    assertResultsOfSize(service.list(searchParams), 2);
+
+    searchParams.setModified(
+      Range.closed(
+        LocalDate.now().minus(2, ChronoUnit.MONTHS),
+        LocalDate.now().minus(1, ChronoUnit.MONTHS)));
+    assertResultsOfSize(service.list(searchParams), 0);
   }
 
   @Override

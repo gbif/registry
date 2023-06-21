@@ -28,6 +28,7 @@ import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.model.registry.Tag;
 import org.gbif.api.service.registry.NetworkEntityService;
+import org.gbif.api.util.Range;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
@@ -52,7 +53,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -967,6 +971,22 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
       page = new PagingRequest();
     }
     return new PagingResponse<>(page, count, result);
+  }
+
+  protected String parseQuery(String q) {
+    return q != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(q)) : q;
+  }
+
+  protected Date parseFrom(Range<LocalDate> range) {
+    return range != null && range.lowerEndpoint() != null
+        ? Date.from(range.lowerEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+        : null;
+  }
+
+  protected Date parseTo(Range<LocalDate> range) {
+    return range != null && range.upperEndpoint() != null
+        ? Date.from(range.upperEndpoint().atStartOfDay(ZoneId.systemDefault()).toInstant())
+        : null;
   }
 
   protected abstract PagingResponse<T> list(BaseListParams params);

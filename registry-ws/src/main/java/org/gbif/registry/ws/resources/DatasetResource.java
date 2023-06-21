@@ -477,37 +477,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       request = new DatasetRequestSearchParams();
     }
 
-    String q =
-        request.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(request.getQ()))
-            : request.getQ();
-
-    Date from =
-        request.getModified() != null && request.getModified().lowerEndpoint() != null
-            ? Date.from(
-                request
-                    .getModified()
-                    .lowerEndpoint()
-                    .atStartOfDay(ZoneId.systemDefault())
-                    .toInstant())
-            : null;
-    Date to =
-        request.getModified() != null && request.getModified().upperEndpoint() != null
-            ? Date.from(
-                request
-                    .getModified()
-                    .upperEndpoint()
-                    .atStartOfDay(ZoneId.systemDefault())
-                    .toInstant())
-            : null;
-
     DatasetListParams listParams =
         DatasetListParams.builder()
-            .query(q)
+            .query(parseQuery(request.getQ()))
             .country(request.getCountry())
             .type(request.getType())
-            .from(from)
-            .to(to)
+            .from(parseFrom(request.getModified()))
+            .to(parseTo(request.getModified()))
             .deleted(deleted)
             .identifier(request.getIdentifier())
             .identifierType(request.getIdentifierType())
