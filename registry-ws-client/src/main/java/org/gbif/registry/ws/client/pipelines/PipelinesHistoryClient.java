@@ -45,31 +45,23 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   @Override
   PagingResponse<PipelineProcess> history(@SpringQueryMap Pageable pageable);
 
-  @GetMapping(
-      value = "{datasetKey}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "{datasetKey}", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   PagingResponse<PipelineProcess> history(
       @PathVariable("datasetKey") UUID datasetKey, @SpringQueryMap Pageable pageable);
 
-  @GetMapping(
-      value = "{datasetKey}/{attempt}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "{datasetKey}/{attempt}", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
   PipelineProcess getPipelineProcess(
       @PathVariable("datasetKey") UUID datasetKey, @PathVariable("attempt") int attempt);
 
-  @PostMapping(
-      value = "process",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "process", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   long createPipelineProcess(@RequestBody PipelineProcessParameters params);
 
-  @PostMapping(
-      value = "process/{processKey}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "process/{processKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
   long addPipelineExecution(
       @PathVariable("processKey") long processKey,
@@ -82,7 +74,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   @GetMapping("execution/{executionKey}/step")
   @Override
   List<PipelineStep> getPipelineStepsByExecutionKey(
-    @PathVariable("executionKey") long executionKey);
+      @PathVariable("executionKey") long executionKey);
 
   @GetMapping("process/running")
   @Override
@@ -100,20 +92,14 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   @Override
   void markPipelineStatusAsAborted(@PathVariable("executionKey") long executionKey);
 
-  @PostMapping(
-      value = "step",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+  @PostMapping(value = "step", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Override
-  long updatePipelineStep(
-      @RequestBody PipelineStep pipelineStep);
+  long updatePipelineStep(@RequestBody PipelineStep pipelineStep);
 
-  @GetMapping(
-      value = "step/{stepKey}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "step/{stepKey}", produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   @Override
-  PipelineStep getPipelineStep(
-      @PathVariable("stepKey") long stepKey);
+  PipelineStep getPipelineStep(@PathVariable("stepKey") long stepKey);
 
   @PostMapping(value = "run")
   @ResponseBody
@@ -155,6 +141,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
       value = "identifier/{datasetKey}/{attempt}/email",
       consumes = MediaType.TEXT_PLAIN_VALUE)
   @Override
+  @Deprecated
   void sendAbsentIndentifiersEmail(
       @PathVariable("datasetKey") UUID datasetKey,
       @PathVariable("attempt") int attempt,
@@ -168,4 +155,13 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   @PostMapping("identifier/{datasetKey}/allow")
   @Override
   void allowAbsentIndentifiers(@PathVariable("datasetKey") UUID datasetKey);
+
+  @PostMapping(
+      value = "identifier/{datasetKey}/{attempt}/notify",
+      consumes = MediaType.TEXT_PLAIN_VALUE)
+  @Override
+  void notifyAbsentIdentifiers(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @PathVariable("attempt") int attempt,
+      @RequestBody String message);
 }

@@ -74,4 +74,6 @@ public interface DatasetMapper extends BaseNetworkEntityMapper<Dataset> {
   List<Installation> listDistinctInstallations(@Nullable @Param("page") Pageable page);
 
   List<Grid> listGrids(@Param("datasetKey") UUID datasetKey);
+
+  Dataset getLightweight(@Param("key") UUID key);
 }

@@ -12,6 +12,10 @@
     <collection property="comments" column="key" select="listComments"/>
   </resultMap>
 
+  <resultMap id="INSTALLATION_MAP_LIGHTWEIGHT" type="org.gbif.api.model.registry.Installation" autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
   <sql id="WRITABLE_INSTALLATION_FIELDS">
     key,organization_key,password,type,title,description,created,created_by,modified,modified_by,disabled
   </sql>
@@ -66,6 +70,12 @@
 
   <!--  Note: you can get entities which are deleted -->
   <select id="get" resultMap="INSTALLATION_MAP">
+    SELECT <include refid="INSTALLATION_FIELDS"/>
+    FROM installation i
+    WHERE i.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getLightweight" resultMap="INSTALLATION_MAP_LIGHTWEIGHT">
     SELECT <include refid="INSTALLATION_FIELDS"/>
     FROM installation i
     WHERE i.key = #{key,jdbcType=OTHER}
