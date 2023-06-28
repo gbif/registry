@@ -15,7 +15,11 @@ package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 
 import java.time.LocalDateTime;
@@ -133,7 +137,6 @@ public interface RegistryPipelinesHistoryTrackingService {
    */
   PipelineProcess get(UUID datasetKey, int attempt);
 
-
   /**
    * Gets running PipelineProcess
    *
@@ -188,9 +191,7 @@ public interface RegistryPipelinesHistoryTrackingService {
    */
   List<PipelineStep> getPipelineStepsByExecutionKey(long executionKey);
 
-  /**
-   * Marks all pipeline execution as finished
-   */
+  /** Marks all pipeline execution as finished */
   void markAllPipelineExecutionAsFinished();
 
   /**
@@ -230,15 +231,18 @@ public interface RegistryPipelinesHistoryTrackingService {
   /**
    * Sends email to data administrator about absent identifiers issue with a dataset
    *
+   * <p>Deprecated: use {@link #notifyAbsentIdentifiers(UUID, int, String)} instead.
+   *
    * @param datasetKey dataset key
    * @param attempt attempt to run
    * @param message with failed metrics and etc info
    */
+  @Deprecated
   void sendAbsentIndentifiersEmail(@NotNull UUID datasetKey, int attempt, @NotNull String message);
 
   /**
-   * Mark failed identifier stage as finished and continue interpretation process for datasets were identifier stage
-   * failed because of a threshold limit
+   * Mark failed identifier stage as finished and continue interpretation process for datasets were
+   * identifier stage failed because of a threshold limit
    *
    * @param datasetKey dataset key
    * @param attempt attempt to run
@@ -246,10 +250,21 @@ public interface RegistryPipelinesHistoryTrackingService {
   void allowAbsentIndentifiers(@NotNull UUID datasetKey, int attempt);
 
   /**
-   * Mark latest failed identifier stage as finished and continue interpretation process for datasets were identifier stage
-   * failed because of a threshold limit
+   * Mark latest failed identifier stage as finished and continue interpretation process for
+   * datasets were identifier stage failed because of a threshold limit
    *
    * @param datasetKey dataset key
    */
   void allowAbsentIndentifiers(@NotNull UUID datasetKey);
+
+  /**
+   * Sends a notification to the data administrators about absent identifiers issues with the
+   * dataset.
+   *
+   * @param datasetKey key of the dataset
+   * @param attempt crawling attempt
+   * @param executionKey key of the pipelines execution
+   * @param message cause of the issue
+   */
+  void notifyAbsentIdentifiers(UUID datasetKey, int attempt, long executionKey, String message);
 }

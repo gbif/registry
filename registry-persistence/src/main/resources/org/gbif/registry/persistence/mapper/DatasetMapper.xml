@@ -16,6 +16,10 @@
     <collection property="networkKeys" column="key" select="listNetworks"/>
   </resultMap>
 
+  <resultMap id="DATASET_MAP_LIGHTWEIGHT" type="org.gbif.api.model.registry.Dataset" autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
   <!-- maps a citation object  -->
   <resultMap id="CITATION_MAP" type="org.gbif.api.model.registry.Citation" autoMapping="false">
     <result property="text" column="citation" />
@@ -120,7 +124,13 @@
   <!--  Note: you can get entities which are deleted -->
   <select id="get" resultMap="DATASET_MAP">
     SELECT <include refid="DATASET_FIELDS"/>
-    FROM dataset d LEFT JOIN organization o ON o.key = d.publishing_organization_key
+    FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE d.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getLightweight" resultMap="DATASET_MAP_LIGHTWEIGHT">
+    SELECT <include refid="DATASET_FIELDS"/>
+    FROM dataset d INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE d.key = #{key,jdbcType=OTHER}
   </select>
 

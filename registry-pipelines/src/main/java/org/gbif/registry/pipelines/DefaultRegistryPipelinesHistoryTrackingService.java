@@ -16,8 +16,12 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.PipelineExecution;
+import org.gbif.api.model.pipelines.PipelineProcess;
+import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
+import org.gbif.api.model.pipelines.RunPipelineResponse;
+import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -39,6 +43,8 @@ import org.gbif.registry.mail.BaseEmailModel;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.pipelines.PipelinesEmailManager;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
+import org.gbif.registry.pipelines.issues.GithubApiService;
+import org.gbif.registry.pipelines.issues.IssueCreator;
 import org.gbif.registry.pipelines.util.PredicateUtils;
 
 import java.io.IOException;
@@ -79,6 +85,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 
 import freemarker.template.TemplateException;
+import retrofit2.Call;
+import retrofit2.HttpException;
+import retrofit2.Response;
+
+import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
+import static org.gbif.registry.pipelines.issues.GithubApiService.IssueComment;
+import static org.gbif.registry.pipelines.issues.GithubApiService.IssueResult;
 
 /** Service that allows to re-run pipeline steps on a specific attempt. */
 @Service
@@ -106,6 +119,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   private final ExecutorService executorService;
   private final EmailSender emailSender;
   private final PipelinesEmailManager pipelinesEmailManager;
+  private final GithubApiService githubApiService;
+  private final IssueCreator issueCreator;
 
   public DefaultRegistryPipelinesHistoryTrackingService(
       @Qualifier("registryObjectMapper") ObjectMapper objectMapper,
@@ -114,6 +129,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       @Lazy DatasetService datasetService,
       @Autowired EmailSender emailSender,
       @Autowired PipelinesEmailManager pipelinesEmailManager,
+      @Autowired GithubApiService githubApiService,
+      @Autowired IssueCreator issueCreator,
       @Value("${pipelines.doAllThreads}") Integer threadPoolSize) {
     this.objectMapper = objectMapper;
     this.publisher = publisher;
@@ -121,6 +138,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     this.datasetService = datasetService;
     this.emailSender = emailSender;
     this.pipelinesEmailManager = pipelinesEmailManager;
+    this.githubApiService = githubApiService;
+    this.issueCreator = issueCreator;
     this.executorService =
         Optional.ofNullable(threadPoolSize)
             .map(Executors::newFixedThreadPool)
@@ -271,22 +290,21 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         .max(Comparator.comparing(PipelineStep::getStarted));
   }
 
-  private PipelineExecution getLastestExecution(PipelineProcess pipelineProcess){
+  private PipelineExecution getLastestExecution(PipelineProcess pipelineProcess) {
     return pipelineProcess.getExecutions().stream()
         .max(Comparator.comparing(PipelineExecution::getCreated))
         .orElseThrow(
-          () ->
-            new IllegalStateException(
-              "Couldn't find las execution for process: " + pipelineProcess));
+            () ->
+                new IllegalStateException(
+                    "Couldn't find las execution for process: " + pipelineProcess));
   }
 
   /**
    * Calculates the general state of a {@link PipelineExecution}. If one the latest steps of a
-   * specific {@link StepType} has a {@link Status#FAILED}, the process is considered
-   * as FAILED. If all the latest steps of all {@link StepType} have the same {@link
-   * Status}, that status used for the {@link PipelineExecution}. If it has step in
-   * {@link Status#RUNNING} it is decided as the process status, otherwise is {@link
-   * Status#COMPLETED}
+   * specific {@link StepType} has a {@link Status#FAILED}, the process is considered as FAILED. If
+   * all the latest steps of all {@link StepType} have the same {@link Status}, that status used for
+   * the {@link PipelineExecution}. If it has step in {@link Status#RUNNING} it is decided as the
+   * process status, otherwise is {@link Status#COMPLETED}
    *
    * @param execution that contains all the steps.
    * @return the calculated status of a {@link PipelineProcess}
@@ -308,7 +326,9 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       // Checks the states by priority
       if (statuses.contains(Status.FAILED) || statuses.contains(Status.ABORTED)) {
         return Status.FAILED;
-      } else if (statuses.contains(Status.RUNNING) || statuses.contains(Status.QUEUED) || statuses.contains(Status.SUBMITTED)) {
+      } else if (statuses.contains(Status.RUNNING)
+          || statuses.contains(Status.QUEUED)
+          || statuses.contains(Status.SUBMITTED)) {
         return Status.RUNNING;
       } else {
         return Status.COMPLETED;
@@ -362,7 +382,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     PipelineExecution lastestExecution = getLastestExecution(process);
     Status status = getStatus(lastestExecution);
 
-    if(markPreviousAttemptAsFailed || (status == Status.FAILED && !lastestExecution.isFinished())){
+    if (markPreviousAttemptAsFailed
+        || (status == Status.FAILED && !lastestExecution.isFinished())) {
       markPipelineStatusAsAborted(lastestExecution.getKey());
     }
 
@@ -424,18 +445,15 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
-    Set<StepType> finalSteps = stepsToSend.entrySet()
-            .stream()
+    Set<StepType> finalSteps =
+        stepsToSend.entrySet().stream()
             .flatMap(x -> x.getValue().getPipelineSteps().stream())
             .map(StepType::valueOf)
             .collect(Collectors.toSet());
 
     // create pipelines execution
     PipelineExecution execution =
-        new PipelineExecution()
-            .setCreatedBy(user)
-            .setRerunReason(reason)
-            .setStepsToRun(finalSteps);
+        new PipelineExecution().setCreatedBy(user).setRerunReason(reason).setStepsToRun(finalSteps);
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
@@ -530,7 +548,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   public PagingResponse<PipelineProcess> getRunningPipelineProcess(Pageable pageable) {
     long count = mapper.getRunningPipelineProcessCount();
     List<PipelineProcess> running = Collections.emptyList();
-    if(count > 0) {
+    if (count > 0) {
       running = mapper.getRunningPipelineProcess(pageable);
     }
 
@@ -567,17 +585,19 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     mapper.addPipelineExecution(pipelineProcessKey, pipelineExecution);
 
-    pipelineExecution.getStepsToRun()
-      .forEach(st -> {
-        PipelineStep step =
-          new PipelineStep()
-            .setType(st)
-            .setState(Status.SUBMITTED)
-            .setStarted(LocalDateTime.now())
-            .setCreatedBy(creator);
+    pipelineExecution
+        .getStepsToRun()
+        .forEach(
+            st -> {
+              PipelineStep step =
+                  new PipelineStep()
+                      .setType(st)
+                      .setState(Status.SUBMITTED)
+                      .setStarted(LocalDateTime.now())
+                      .setCreatedBy(creator);
 
-        mapper.addPipelineStep(pipelineExecution.getKey(), step);
-    });
+              mapper.addPipelineStep(pipelineExecution.getKey(), step);
+            });
 
     return pipelineExecution.getKey();
   }
@@ -659,6 +679,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return new PagingResponse<>(page, count, results);
   }
 
+  @Deprecated
   @Override
   public void sendAbsentIndentifiersEmail(UUID datasetKey, int attempt, String message) {
 
@@ -678,6 +699,52 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       emailSender.send(baseEmailModel);
     } catch (IOException | TemplateException ex) {
       LOG.error(ex.getMessage(), ex);
+    }
+  }
+
+  @Override
+  public void notifyAbsentIdentifiers(
+      UUID datasetKey, int attempt, long executionKey, String message) {
+    // check if there is an open issue for this dataset
+    List<IssueResult> existingIssues =
+        syncCall(
+            githubApiService.listIssues(
+                Collections.singletonList(datasetKey.toString()), "open", 1, 1));
+
+    if (existingIssues.isEmpty()) {
+      LOG.info(
+          "Creating absent identifiers GH issue, datasetKey {}, attmept {}, message: {}",
+          datasetKey,
+          attempt,
+          message);
+
+      // create new one
+      Issue issue =
+          issueCreator.createIdsValidationFailedIssue(datasetKey, attempt, executionKey, message);
+      syncCall(githubApiService.createIssue(issue));
+    } else {
+      IssueResult existing = existingIssues.get(0);
+
+      LOG.info(
+          "Updating absent identifiers GH issue with number {}, datasetKey {}, attmept {}, message: {}",
+          existing.getNumber(),
+          datasetKey,
+          attempt,
+          message);
+
+      // add comment with new cause
+      IssueComment issueComment =
+          issueCreator.createIdsValidationFailedIssueComment(
+              datasetKey, attempt, executionKey, message);
+      syncCall(githubApiService.addIssueComment(existing.getNumber(), issueComment));
+
+      // add labels to the existing issue
+      syncCall(
+          githubApiService.updateIssueLabels(
+              existing.getNumber(),
+              GithubApiService.IssueLabels.builder()
+                  .labels(issueCreator.updateLabels(existing, datasetKey, attempt))
+                  .build()));
     }
   }
 
@@ -703,9 +770,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       if (execution.isPresent()) {
         Set<PipelineStep> steps = execution.get().getSteps();
         Optional<PipelineStep> identifierStep =
-            steps.stream()
-                .filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER)
-                .findAny();
+            steps.stream().filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER).findAny();
 
         if (identifierStep.isPresent() && identifierStep.get().getState() == Status.FAILED) {
           // Update and mark identier as OK
@@ -719,11 +784,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               attempt);
 
           steps.stream()
-              .filter(x-> x.getState() == Status.ABORTED)
-              .forEach(s-> {
-                PipelineStep step = s.setState(Status.SUBMITTED).setFinished(null);
-                mapper.updatePipelineStep(step);
-              });
+              .filter(x -> x.getState() == Status.ABORTED)
+              .forEach(
+                  s -> {
+                    PipelineStep step = s.setState(Status.SUBMITTED).setFinished(null);
+                    mapper.updatePipelineStep(step);
+                  });
 
           // Send message to interpretaton
           PipelinesVerbatimMessage message =
@@ -794,6 +860,19 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       if (dataset != null) {
         process.setDatasetTitle(dataset.getTitle());
       }
+    }
+  }
+
+  private static <T> T syncCall(Call<T> call) {
+    try {
+      Response<T> response = call.execute();
+      if (response.isSuccessful()) {
+        return response.body();
+      }
+      LOG.error("Service responded with an error {}", response);
+      throw new HttpException(response); // Propagates the failed response
+    } catch (IOException ex) {
+      throw new IllegalStateException("Error executing call", ex);
     }
   }
 }
