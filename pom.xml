@@ -127,6 +127,7 @@
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
+    <geojson.version>1.14</geojson.version>
 
     <!-- Test -->
     <junit.version>5.9.1</junit.version>
@@ -503,6 +504,11 @@
         <groupId>io.github.openfeign</groupId>
         <artifactId>feign-jackson</artifactId>
         <version>${feign.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.grundid.opendatalab</groupId>
+        <artifactId>geojson-jackson</artifactId>
+        <version>${geojson.version}</version>
       </dependency>
 
       <dependency>

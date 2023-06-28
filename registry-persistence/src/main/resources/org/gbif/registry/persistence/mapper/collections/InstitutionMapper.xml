@@ -26,6 +26,10 @@
     <result property="alternativeCodes" column="alternative_codes" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
   </resultMap>
 
+  <resultMap id="INSTITUTION_GEOJSON_DTO_MAP" type="InstitutionGeoJsonDto" autoMapping="true">
+    <id property="key" column="key"/>
+  </resultMap>
+
   <sql id="INSTITUTION_WRITE_FIELDS">
     key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
@@ -205,6 +209,22 @@
   <select id="count" resultType="Long">
     SELECT count(DISTINCT i.key)
     <include refid="LIST_FILTER"/>
+  </select>
+
+  <!-- returns only the fields needed for geojson -->
+  <select id="listGeoJson" resultType="InstitutionGeoJsonDto"  resultMap="INSTITUTION_GEOJSON_DTO_MAP" parameterType="Pageable">
+    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(i.fulltext_search, query), </if>
+    <if test="params.fuzzyName != null" >similarity_score, </if> i.key)
+    i.key, i.name, i.latitude, i.longitude
+    <if test="params.fuzzyName != null" >,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+    <include refid="LIST_FILTER"/>
+    AND i.latitude IS NOT NULL AND i.longitude IS NOT NULL
+    ORDER BY <if test="params.query != null" >ts_rank_cd(i.fulltext_search, query) DESC, </if>
+    <if test="params.fuzzyName != null" >similarity_score DESC, </if>
+    i.key
+    <if test="params.page != null" >
+      LIMIT #{params.page.limit} OFFSET #{params.page.offset}
+    </if>
   </select>
 
   <sql id="LIST_FILTER">

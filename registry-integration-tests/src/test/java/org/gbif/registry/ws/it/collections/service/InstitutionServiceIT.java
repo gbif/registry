@@ -41,6 +41,7 @@ import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +50,8 @@ import java.util.UUID;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -58,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
@@ -670,5 +674,46 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     // delete the master source
     institutionService.deleteMasterSourceMetadata(institutionKey);
     assertDoesNotThrow(() -> institutionService.delete(institutionKey));
+  }
+
+  @Test
+  public void listAsGeoJsonTest() {
+    Institution institution1 = testData.newEntity();
+    institution1.setCode("c1");
+    institution1.setName("n1");
+    institution1.setLatitude(new BigDecimal(12));
+    institution1.setLongitude(new BigDecimal(2));
+    UUID key1 = institutionService.create(institution1);
+
+    Institution institution2 = testData.newEntity();
+    institution2.setCode("c2");
+    institution2.setName("n2");
+    institution2.setLatitude(new BigDecimal(23));
+    institution2.setLongitude(new BigDecimal(70));
+    UUID key2 = institutionService.create(institution2);
+
+    Institution institution3 = testData.newEntity();
+    institution3.setCode("c3");
+    institution3.setName("n3");
+    UUID key3 = institutionService.create(institution3);
+
+    assertEquals(
+        2,
+        institutionService
+            .listGeojson(InstitutionSearchRequest.builder().build())
+            .getFeatures()
+            .size());
+    FeatureCollection featuresC1 =
+        institutionService.listGeojson(InstitutionSearchRequest.builder().code("c1").build());
+    assertEquals(1, featuresC1.getFeatures().size());
+    assertTrue(featuresC1.getFeatures().get(0).getGeometry() instanceof Point);
+    assertEquals(2, featuresC1.getFeatures().get(0).getProperties().size());
+    assertEquals("n1", featuresC1.getFeatures().get(0).getProperty("name"));
+    assertEquals(
+        12d,
+        ((Point) featuresC1.getFeatures().get(0).getGeometry()).getCoordinates().getLatitude());
+    assertEquals(
+        2d,
+        ((Point) featuresC1.getFeatures().get(0).getGeometry()).getCoordinates().getLongitude());
   }
 }

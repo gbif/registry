@@ -13,15 +13,12 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
-import liquibase.pro.packaged.I;
-
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
@@ -47,6 +44,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.geojson.Feature;
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -104,6 +104,27 @@ public class InstitutionResourceIT
 
     PagingResponse<Institution> result = getClient().list(req);
     assertEquals(institutions.size(), result.getResults().size());
+  }
+
+  @Test
+  public void listAsGeoJsonTest() {
+    FeatureCollection featureCollection = new FeatureCollection();
+    Feature f1 = new Feature();
+    f1.setGeometry(new Point(12d, 50d));
+    f1.setProperty("name", "n1");
+    f1.setProperty("key", UUID.randomUUID().toString());
+    featureCollection.add(f1);
+    Feature f2 = new Feature();
+    f2.setGeometry(new Point(22d, 51d));
+    f2.setProperty("name", "n2");
+    f2.setProperty("key", UUID.randomUUID().toString());
+    featureCollection.add(f2);
+
+    when(institutionService.listGeojson(any(InstitutionSearchRequest.class)))
+        .thenReturn(featureCollection);
+
+    FeatureCollection result = getClient().listAsGeoJson(new InstitutionSearchRequest());
+    assertEquals(featureCollection.getFeatures().size(), result.getFeatures().size());
   }
 
   @Test

@@ -40,6 +40,7 @@ import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
@@ -53,6 +54,9 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.groups.Default;
 
+import org.geojson.Feature;
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -128,39 +132,43 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
+    InstitutionSearchParams params = buildSearchParams(searchRequest, deleted, page);
+
+    long total = institutionMapper.count(params);
+    return new PagingResponse<>(page, total, institutionMapper.list(params));
+  }
+
+  private InstitutionSearchParams buildSearchParams(
+      InstitutionSearchRequest searchRequest, boolean deleted, Pageable page) {
     String query =
         searchRequest.getQ() != null
             ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
-    InstitutionSearchParams params =
-        InstitutionSearchParams.builder()
-            .query(query)
-            .code(searchRequest.getCode())
-            .name(searchRequest.getName())
-            .alternativeCode(searchRequest.getAlternativeCode())
-            .machineTagNamespace(searchRequest.getMachineTagNamespace())
-            .machineTagName(searchRequest.getMachineTagName())
-            .machineTagValue(searchRequest.getMachineTagValue())
-            .identifierType(searchRequest.getIdentifierType())
-            .identifier(searchRequest.getIdentifier())
-            .country(searchRequest.getCountry())
-            .city(searchRequest.getCity())
-            .fuzzyName(searchRequest.getFuzzyName())
-            .active(searchRequest.getActive())
-            .type(searchRequest.getType())
-            .institutionalGovernance(searchRequest.getInstitutionalGovernance())
-            .disciplines(searchRequest.getDisciplines())
-            .masterSourceType(searchRequest.getMasterSourceType())
-            .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
-            .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
-            .replacedBy(searchRequest.getReplacedBy())
-            .deleted(deleted)
-            .page(page)
-            .build();
-
-    long total = institutionMapper.count(params);
-    return new PagingResponse<>(page, total, institutionMapper.list(params));
+    return InstitutionSearchParams.builder()
+        .query(query)
+        .code(searchRequest.getCode())
+        .name(searchRequest.getName())
+        .alternativeCode(searchRequest.getAlternativeCode())
+        .machineTagNamespace(searchRequest.getMachineTagNamespace())
+        .machineTagName(searchRequest.getMachineTagName())
+        .machineTagValue(searchRequest.getMachineTagValue())
+        .identifierType(searchRequest.getIdentifierType())
+        .identifier(searchRequest.getIdentifier())
+        .country(searchRequest.getCountry())
+        .city(searchRequest.getCity())
+        .fuzzyName(searchRequest.getFuzzyName())
+        .active(searchRequest.getActive())
+        .type(searchRequest.getType())
+        .institutionalGovernance(searchRequest.getInstitutionalGovernance())
+        .disciplines(searchRequest.getDisciplines())
+        .masterSourceType(searchRequest.getMasterSourceType())
+        .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
+        .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
+        .replacedBy(searchRequest.getReplacedBy())
+        .deleted(deleted)
+        .page(page)
+        .build();
   }
 
   @Override
@@ -224,5 +232,24 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
     eventManager.post(CreateCollectionEntityEvent.newInstance(institution));
 
     return institutionKey;
+  }
+
+  @Override
+  public FeatureCollection listGeojson(InstitutionSearchRequest searchRequest) {
+    List<InstitutionGeoJsonDto> dtos =
+        institutionMapper.listGeoJson(buildSearchParams(searchRequest, false, null));
+
+    FeatureCollection featureCollection = new FeatureCollection();
+    dtos.forEach(
+        dto -> {
+          Feature feature = new Feature();
+          feature.setProperty("key", dto.getKey());
+          feature.setProperty("name", dto.getName());
+          feature.setGeometry(
+              new Point(dto.getLongitude().doubleValue(), dto.getLatitude().doubleValue()));
+          featureCollection.add(feature);
+        });
+
+    return featureCollection;
   }
 }
