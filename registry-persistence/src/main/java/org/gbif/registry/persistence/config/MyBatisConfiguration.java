@@ -62,6 +62,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
@@ -158,6 +159,9 @@ public class MyBatisConfiguration {
           .registerAlias("InstitutionMatchedDto", InstitutionMatchedDto.class);
       configuration
           .getTypeAliasRegistry()
+          .registerAlias("InstitutionGeoJsonDto", InstitutionGeoJsonDto.class);
+      configuration
+          .getTypeAliasRegistry()
           .registerAlias("CollectionMatchedDto", CollectionMatchedDto.class);
       configuration
           .getTypeAliasRegistry()
@@ -165,7 +169,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("MasterSourceOrganizationDto", MasterSourceOrganizationDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("OrganizationContactDto", OrganizationContactDto.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("OrganizationContactDto", OrganizationContactDto.class);
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);

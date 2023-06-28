@@ -14,8 +14,8 @@
 package org.gbif.registry.persistence.mapper.collections;
 
 import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 
@@ -48,4 +48,6 @@ public interface InstitutionMapper
 
   void convertToCollection(
       @Param("institutionKey") UUID institutionKey, @Param("collectionKey") UUID collectionKey);
+
+  List<InstitutionGeoJsonDto> listGeoJson(@Param("params") InstitutionSearchParams searchParams);
 }

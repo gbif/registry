@@ -51,6 +51,7 @@ import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.geojson.FeatureCollection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -236,6 +237,23 @@ public class InstitutionResource
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
+  }
+
+  @Operation(
+      operationId = "listInstitutionsGeoJson",
+      summary = "List all institutions in GeoJson format",
+      description =
+          "Lists all current institutions in GeoJson format (deleted institutions are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0101")))
+  @InstitutionSearchParameters
+  @ApiResponse(responseCode = "200", description = "Institution search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("geojson")
+  public FeatureCollection listAsGeoJson(InstitutionSearchRequest searchRequest) {
+    return institutionService.listGeojson(searchRequest);
   }
 
   private String getExportFileHeader(InstitutionSearchRequest searchRequest, ExportFormat format) {

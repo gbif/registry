@@ -18,13 +18,13 @@ import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.geojson.FeatureCollection;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +41,13 @@ public interface InstitutionClient
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   PagingResponse<Institution> list(@SpringQueryMap InstitutionSearchRequest searchRequest);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "geojson",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  FeatureCollection listAsGeoJson(@SpringQueryMap InstitutionSearchRequest searchRequest);
 
   @RequestMapping(
       method = RequestMethod.GET,

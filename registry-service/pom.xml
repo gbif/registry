@@ -64,6 +64,10 @@
       <groupId>com.opencsv</groupId>
       <artifactId>opencsv</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.grundid.opendatalab</groupId>
+      <artifactId>geojson-jackson</artifactId>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>
