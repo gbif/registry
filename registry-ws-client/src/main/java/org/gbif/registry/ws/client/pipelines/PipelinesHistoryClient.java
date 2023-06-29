@@ -163,5 +163,6 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   void notifyAbsentIdentifiers(
       @PathVariable("datasetKey") UUID datasetKey,
       @PathVariable("attempt") int attempt,
+      @PathVariable("executionKey") long executionKey,
       @RequestBody String message);
 }
