@@ -300,4 +300,9 @@ public class MockDatasetMapper implements DatasetMapper {
   public List<Grid> listGrids(UUID datasetKey) {
     return null;
   }
+
+  @Override
+  public Dataset getLightweight(UUID key) {
+    return null;
+  }
 }
