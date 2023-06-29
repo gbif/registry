@@ -55,6 +55,10 @@ pipelines:
   mail:
     from: @mail.from@
     cc: @mail.cc@
+  issues:
+    githubWsUrl: https://test.com/
+    githubUser: test
+    githubPassword: fake
 
 organization:
   surety:
