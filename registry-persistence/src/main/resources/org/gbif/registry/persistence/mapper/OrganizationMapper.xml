@@ -19,6 +19,15 @@
     <collection property="comments" column="key" select="listComments"/>
   </resultMap>
 
+  <resultMap id="ORGANIZATION_MAP_LIGHTWEIGHT" type="org.gbif.api.model.registry.Organization" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="email" column="email" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="phone" column="phone" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
+    <result property="homepage" column="homepage" typeHandler="org.gbif.mybatis.type.UriArrayTypeHandler"/>
+    <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
+  </resultMap>
+
   <resultMap id="ORG_CONTACT_DTO_MAP" type="OrganizationContactDto" autoMapping="true">
     <association property="contact" resultMap="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_MAP" />
   </resultMap>
@@ -109,6 +118,12 @@
 
   <!--  Note: you can get entities which are deleted -->
   <select id="get" resultMap="ORGANIZATION_MAP">
+    SELECT <include refid="ORGANIZATION_FIELDS"/>
+    FROM organization o
+    WHERE o.key = #{key,jdbcType=OTHER}
+  </select>
+
+  <select id="getLightweight" resultMap="ORGANIZATION_MAP_LIGHTWEIGHT">
     SELECT <include refid="ORGANIZATION_FIELDS"/>
     FROM organization o
     WHERE o.key = #{key,jdbcType=OTHER}

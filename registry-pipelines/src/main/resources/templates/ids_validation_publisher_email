@@ -1,0 +1,20 @@
+Hello,
+
+I am contacting you from the GBIF Secretariat about a dataset published by the ${datasetLink} : ${doi}.
+We noticed that the occurrenceIDs were changed. We have temporarily paused the ingestions of this dataset.
+
+As you might already know, when an occurrence record has a new occurrenceID for a given dataset, our system considers it to be a new occurrence.
+This means that it will be given a new gbifid and a new occurrence URL (like this one: https://www.gbif.org/occurrence/1252968762) and the old gbifid and URL will be deprecated.
+
+In this case, this means that the occurrence URLs would be deprecated when ingesting the newest versions of these datasets.
+
+We would like to check with you if those changes were intentional. Do you know if this is the case?
+Please let us know, thanks! We are happy to resume the dataset ingestion.
+
+Note that some users rely on those occurrence URLs and gbifids (like https://bionomia.net for example). In an attempt to improve
+the stability of the occurrence URLs and gbifids, we have implemented a warning system to detect these type of changes in datasets (see this news item).
+If the data publisher can provide us with a list of old and new occurrenceIDs per record, we can avoid the identifier and URL changes. Could that be an option?
+
+Please let us know if you have any question. Thanks!
+
+All the best,

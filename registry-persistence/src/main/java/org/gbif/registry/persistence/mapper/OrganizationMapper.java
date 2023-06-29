@@ -101,4 +101,6 @@ public interface OrganizationMapper
   long countContacts(
       @Nullable @Param("country") List<Country> countries,
       @Nullable @Param("type") List<ContactType> types);
+
+  Organization getLightweight(@Param("key") UUID key);
 }

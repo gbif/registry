@@ -28,7 +28,11 @@ import org.gbif.registry.pipelines.RegistryPipelinesHistoryTrackingService;
 import org.gbif.registry.ws.util.DateUtils;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -128,7 +132,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   @GetMapping("execution/{executionKey}/step")
   @Override
   public List<PipelineStep> getPipelineStepsByExecutionKey(
-    @PathVariable("executionKey") long executionKey) {
+      @PathVariable("executionKey") long executionKey) {
     return historyTrackingService.getPipelineStepsByExecutionKey(executionKey);
   }
 
@@ -155,19 +159,15 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
 
   @GetMapping("step/{stepKey}")
   @Override
-  public PipelineStep getPipelineStep(
-      @PathVariable("stepKey") long stepKey) {
+  public PipelineStep getPipelineStep(@PathVariable("stepKey") long stepKey) {
     return historyTrackingService.getPipelineStep(stepKey);
   }
 
-  /** Update pipeline step*/
-  @PostMapping(
-    value = "step",
-    consumes = MediaType.APPLICATION_JSON_VALUE)
+  /** Update pipeline step */
+  @PostMapping(value = "step", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Secured(ADMIN_ROLE)
   @Override
-  public long updatePipelineStep(
-    @RequestBody PipelineStep pipelineStep) {
+  public long updatePipelineStep(@RequestBody PipelineStep pipelineStep) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return historyTrackingService.updatePipelineStep(pipelineStep, authentication.getName());
   }
@@ -292,6 +292,7 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
       value = "identifier/{datasetKey}/{attempt}/email",
       consumes = MediaType.TEXT_PLAIN_VALUE)
   @Secured(ADMIN_ROLE)
+  @Deprecated
   @Override
   public void sendAbsentIndentifiersEmail(
       @PathVariable("datasetKey") UUID datasetKey,
@@ -313,6 +314,19 @@ public class PipelinesHistoryResource implements PipelinesHistoryService {
   @Override
   public void allowAbsentIndentifiers(@PathVariable("datasetKey") UUID datasetKey) {
     historyTrackingService.allowAbsentIndentifiers(datasetKey);
+  }
+
+  @PostMapping(
+      value = "identifier/{datasetKey}/{attempt}/{executionKey}/notify",
+      consumes = MediaType.TEXT_PLAIN_VALUE)
+  @Secured(ADMIN_ROLE)
+  @Override
+  public void notifyAbsentIdentifiers(
+      @PathVariable("datasetKey") UUID datasetKey,
+      @PathVariable("attempt") int attempt,
+      @PathVariable("executionKey") long executionKey,
+      @RequestBody String message) {
+    historyTrackingService.notifyAbsentIdentifiers(datasetKey, attempt, executionKey, message);
   }
 
   @ExceptionHandler({
