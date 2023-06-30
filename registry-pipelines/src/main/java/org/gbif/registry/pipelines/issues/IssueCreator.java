@@ -289,7 +289,7 @@ public class IssueCreator {
   @SneakyThrows
   private String buildPublisherEmailSection(Dataset dataset) {
     ClassPathResource templateFile =
-        new ClassPathResource("templates/ids_validation_publisher_email");
+        new ClassPathResource("/templates/ids_validation_publisher_email");
 
     String content = new String(Files.readAllBytes(templateFile.getFile().toPath()));
     content =
