@@ -1,5 +1,7 @@
 package org.gbif.registry.pipelines.issues;
 
+import org.apache.commons.io.IOUtils;
+
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.registry.Dataset;
@@ -14,6 +16,7 @@ import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -291,7 +294,7 @@ public class IssueCreator {
     ClassPathResource templateFile =
         new ClassPathResource("/templates/ids_validation_publisher_email");
 
-    String content = new String(Files.readAllBytes(templateFile.getFile().toPath()));
+    String content = IOUtils.toString(templateFile.getInputStream(), StandardCharsets.UTF_8);
     content =
         content.replace(
             "${datasetLink}",
