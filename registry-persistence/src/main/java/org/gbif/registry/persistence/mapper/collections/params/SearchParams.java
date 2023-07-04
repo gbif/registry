@@ -18,6 +18,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -38,7 +39,7 @@ public abstract class SearchParams {
   @Nullable String machineTagValue;
   @Nullable IdentifierType identifierType;
   @Nullable String identifier;
-  @Nullable Country country;
+  @Nullable List<Country> countries;
   @Nullable String city;
   @Nullable String fuzzyName;
   @Nullable Boolean active;

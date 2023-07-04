@@ -36,6 +36,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
@@ -332,7 +333,10 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     List<CollectionView> results =
         collectionService
             .list(
-                CollectionSearchRequest.builder().country(Country.SPAIN).page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .country(Collections.singletonList(Country.SPAIN))
+                    .page(DEFAULT_PAGE)
+                    .build())
             .getResults();
     assertEquals(1, results.size());
     assertEquals(key2, results.get(0).getCollection().getKey());
@@ -341,7 +345,27 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .country(Country.AFGHANISTAN)
+                    .country(Collections.singletonList(Country.AFGHANISTAN))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .country(Arrays.asList(Country.SPAIN, Country.DENMARK))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .gbifRegion(Collections.singletonList(GbifRegion.EUROPE))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()

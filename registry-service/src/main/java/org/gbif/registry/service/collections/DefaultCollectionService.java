@@ -160,7 +160,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .machineTagValue(searchRequest.getMachineTagValue())
             .identifierType(searchRequest.getIdentifierType())
             .identifier(searchRequest.getIdentifier())
-            .country(searchRequest.getCountry())
+            .countries(parseCountries(searchRequest))
             .city(searchRequest.getCity())
             .fuzzyName(searchRequest.getFuzzyName())
             .active(searchRequest.getActive())

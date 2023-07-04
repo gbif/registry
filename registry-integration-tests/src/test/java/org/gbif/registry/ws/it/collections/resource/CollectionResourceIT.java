@@ -27,6 +27,7 @@ import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
@@ -94,7 +95,8 @@ public class CollectionResourceIT
     CollectionSearchRequest req = new CollectionSearchRequest();
     req.setCity("city");
     req.setInstitution(UUID.randomUUID());
-    req.setCountry(Country.DENMARK);
+    req.setCountry(Collections.singletonList(Country.DENMARK));
+    req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
     req.setPersonalCollection(true);
     req.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
     req.setPreservationTypes(

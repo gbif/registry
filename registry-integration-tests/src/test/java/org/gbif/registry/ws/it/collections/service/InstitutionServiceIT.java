@@ -31,6 +31,7 @@ import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.IdType;
@@ -269,16 +270,40 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().country(Country.SPAIN).page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .country(Collections.singletonList(Country.SPAIN))
+                .page(DEFAULT_PAGE)
+                .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .country(Country.AFGHANISTAN)
+                .country(Collections.singletonList(Country.AFGHANISTAN))
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(0, response.getResults().size());
+    response =
+        institutionService.list(
+            InstitutionSearchRequest.builder()
+                .country(Arrays.asList(Country.SPAIN, Country.AFGHANISTAN))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
+    response =
+        institutionService.list(
+            InstitutionSearchRequest.builder()
+                .country(Arrays.asList(Country.SPAIN, Country.DENMARK))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(2, response.getResults().size());
+    response =
+        institutionService.list(
+            InstitutionSearchRequest.builder()
+                .gbifRegion(Collections.singletonList(GbifRegion.EUROPE))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(2, response.getResults().size());
 
     response =
         institutionService.list(

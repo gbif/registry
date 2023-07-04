@@ -21,9 +21,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.OccurrenceMapping;
 import org.gbif.api.model.collections.UserId;
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Commentable;
 import org.gbif.api.model.registry.Dataset;
@@ -40,6 +38,7 @@ import org.gbif.api.model.registry.Taggable;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.util.IdentifierUtils;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
@@ -72,6 +71,7 @@ import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -82,7 +82,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
 import org.elasticsearch.common.Strings;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
@@ -932,5 +931,19 @@ public class BaseCollectionEntityService<
     }
 
     return rangeParam;
+  }
+
+  protected List<Country> parseCountries(SearchRequest searchRequest) {
+    List<Country> countries = new ArrayList<>();
+    if (searchRequest.getCountry() != null && !searchRequest.getCountry().isEmpty()) {
+      countries.addAll(searchRequest.getCountry());
+    }
+    if (searchRequest.getGbifRegion() != null && !searchRequest.getGbifRegion().isEmpty()) {
+      countries.addAll(
+          Arrays.stream(Country.values())
+              .filter(c -> searchRequest.getGbifRegion().contains(c.getGbifRegion()))
+              .collect(Collectors.toList()));
+    }
+    return countries;
   }
 }

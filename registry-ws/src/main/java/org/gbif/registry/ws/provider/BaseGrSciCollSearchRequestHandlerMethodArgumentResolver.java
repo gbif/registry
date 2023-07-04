@@ -17,11 +17,13 @@ import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.springframework.web.context.request.NativeWebRequest;
@@ -72,16 +74,33 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
       }
     }
 
-    String countryParam = webRequest.getParameter("country");
-    if (!Strings.isNullOrEmpty(countryParam)) {
-      Country country = Country.fromIsoCode(countryParam);
+    String[] countryParams = webRequest.getParameterValues("country");
+    if (countryParams != null && countryParams.length > 0) {
+      request.setCountry(new ArrayList<>());
+      for (int i = 0; i < countryParams.length; i++) {
+        String countryParam = countryParams[i];
+        Country country = Country.fromIsoCode(countryParam);
+        if (country == null) {
+          // if nothing found also try by enum name
+          country = VocabularyUtils.lookupEnum(countryParam, Country.class);
+        }
 
-      if (country == null) {
-        // if nothing found also try by enum name
-        country = VocabularyUtils.lookupEnum(countryParam, Country.class);
+        if (country != null) {
+          request.getCountry().add(country);
+        }
       }
+    }
 
-      request.setCountry(country);
+    String[] gbifRegionParams = webRequest.getParameterValues("gbifRegion");
+    if (gbifRegionParams != null && gbifRegionParams.length > 0) {
+      request.setGbifRegion(new ArrayList<>());
+      for (int i = 0; i < gbifRegionParams.length; i++) {
+        String gbifRegionParam = gbifRegionParams[i];
+        GbifRegion gbifRegion = GbifRegion.fromString(gbifRegionParam);
+        if (gbifRegion != null) {
+          request.getGbifRegion().add(gbifRegion);
+        }
+      }
     }
 
     String masterSourceTypeParam = webRequest.getParameter("masterSourceType");
