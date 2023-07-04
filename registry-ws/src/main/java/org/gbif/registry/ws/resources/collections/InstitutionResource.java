@@ -27,6 +27,8 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.util.iterables.Iterables;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
@@ -46,8 +48,10 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -260,8 +264,15 @@ public class InstitutionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
+            searchRequest.getGbifRegion() != null
+                ? searchRequest.getGbifRegion().stream()
+                    .map(GbifRegion::name)
+                    .collect(Collectors.joining("-"))
+                : null,
             searchRequest.getCountry() != null
-                ? searchRequest.getCountry().getIso2LetterCode()
+                ? searchRequest.getCountry().stream()
+                    .map(Country::getIso2LetterCode)
+                    .collect(Collectors.joining("-"))
                 : null,
             searchRequest.getCity(),
             searchRequest.getAlternativeCode(),

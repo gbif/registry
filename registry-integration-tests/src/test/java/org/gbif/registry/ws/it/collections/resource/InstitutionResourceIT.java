@@ -27,6 +27,7 @@ import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
@@ -97,7 +98,8 @@ public class InstitutionResourceIT
     InstitutionSearchRequest req = new InstitutionSearchRequest();
     req.setCity("city");
     req.setContact(UUID.randomUUID());
-    req.setCountry(Country.DENMARK);
+    req.setCountry(Collections.singletonList(Country.DENMARK));
+    req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
     req.setActive(true);
     req.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
     req.setDisciplines(Arrays.asList(Discipline.AGRICULTURAL, Discipline.OCEAN));

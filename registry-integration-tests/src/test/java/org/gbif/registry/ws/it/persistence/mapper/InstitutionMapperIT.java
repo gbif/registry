@@ -221,18 +221,32 @@ public class InstitutionMapperIT extends BaseItTest {
         1);
     assertSearch(
         InstitutionSearchParams.builder().query("nime of third institution").page(page).build(), 0);
-    assertSearch(InstitutionSearchParams.builder().country(Country.DENMARK).page(page).build(), 1);
-    assertSearch(InstitutionSearchParams.builder().country(Country.SPAIN).page(page).build(), 0);
-    assertSearch(InstitutionSearchParams.builder().city("Odense").page(page).build(), 1);
     assertSearch(
         InstitutionSearchParams.builder()
-            .city("Copenhagen")
-            .country(Country.DENMARK)
+            .countries(Collections.singletonList(Country.DENMARK))
             .page(page)
             .build(),
         1);
     assertSearch(
-        InstitutionSearchParams.builder().city("CPH").country(Country.DENMARK).page(page).build(),
+        InstitutionSearchParams.builder()
+            .countries(Collections.singletonList(Country.SPAIN))
+            .page(page)
+            .build(),
+        0);
+    assertSearch(InstitutionSearchParams.builder().city("Odense").page(page).build(), 1);
+    assertSearch(
+        InstitutionSearchParams.builder()
+            .city("Copenhagen")
+            .countries(Collections.singletonList(Country.DENMARK))
+            .page(page)
+            .build(),
+        1);
+    assertSearch(
+        InstitutionSearchParams.builder()
+            .city("CPH")
+            .countries(Collections.singletonList(Country.DENMARK))
+            .page(page)
+            .build(),
         0);
 
     // machine tags

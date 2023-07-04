@@ -155,7 +155,7 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .machineTagValue(searchRequest.getMachineTagValue())
         .identifierType(searchRequest.getIdentifierType())
         .identifier(searchRequest.getIdentifier())
-        .country(searchRequest.getCountry())
+        .countries(parseCountries(searchRequest))
         .city(searchRequest.getCity())
         .fuzzyName(searchRequest.getFuzzyName())
         .active(searchRequest.getActive())

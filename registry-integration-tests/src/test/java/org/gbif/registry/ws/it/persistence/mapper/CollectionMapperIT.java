@@ -235,18 +235,32 @@ public class CollectionMapperIT extends BaseItTest {
         1);
     assertSearch(
         CollectionSearchParams.builder().query("nime of fourth collection").page(page).build(), 0);
-    assertSearch(CollectionSearchParams.builder().country(Country.DENMARK).page(page).build(), 1);
-    assertSearch(CollectionSearchParams.builder().country(Country.SPAIN).page(page).build(), 0);
-    assertSearch(CollectionSearchParams.builder().city("Odense").page(page).build(), 1);
     assertSearch(
         CollectionSearchParams.builder()
-            .city("Copenhagen")
-            .country(Country.DENMARK)
+            .countries(Collections.singletonList(Country.DENMARK))
             .page(page)
             .build(),
         1);
     assertSearch(
-        CollectionSearchParams.builder().city("CPH").country(Country.DENMARK).page(page).build(),
+        CollectionSearchParams.builder()
+            .countries(Collections.singletonList(Country.SPAIN))
+            .page(page)
+            .build(),
+        0);
+    assertSearch(CollectionSearchParams.builder().city("Odense").page(page).build(), 1);
+    assertSearch(
+        CollectionSearchParams.builder()
+            .city("Copenhagen")
+            .countries(Collections.singletonList(Country.DENMARK))
+            .page(page)
+            .build(),
+        1);
+    assertSearch(
+        CollectionSearchParams.builder()
+            .city("CPH")
+            .countries(Collections.singletonList(Country.DENMARK))
+            .page(page)
+            .build(),
         0);
 
     // machine tags

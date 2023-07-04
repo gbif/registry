@@ -28,6 +28,8 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.util.iterables.Iterables;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
@@ -49,6 +51,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -260,8 +263,15 @@ public class CollectionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
+            searchRequest.getGbifRegion() != null
+                ? searchRequest.getGbifRegion().stream()
+                    .map(GbifRegion::name)
+                    .collect(Collectors.joining("-"))
+                : null,
             searchRequest.getCountry() != null
-                ? searchRequest.getCountry().getIso2LetterCode()
+                ? searchRequest.getCountry().stream()
+                    .map(Country::getIso2LetterCode)
+                    .collect(Collectors.joining("-"))
                 : null,
             searchRequest.getCity(),
             searchRequest.getInstitution() != null
