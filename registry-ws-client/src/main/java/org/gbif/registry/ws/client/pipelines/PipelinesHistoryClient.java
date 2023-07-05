@@ -157,7 +157,7 @@ public interface PipelinesHistoryClient extends PipelinesHistoryService {
   void allowAbsentIndentifiers(@PathVariable("datasetKey") UUID datasetKey);
 
   @PostMapping(
-      value = "identifier/{datasetKey}/{attempt}/notify",
+      value = "identifier/{datasetKey}/{attempt}/{executionKey}/notify",
       consumes = MediaType.TEXT_PLAIN_VALUE)
   @Override
   void notifyAbsentIdentifiers(
