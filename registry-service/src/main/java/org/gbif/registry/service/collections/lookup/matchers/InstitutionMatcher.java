@@ -120,8 +120,8 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
             matches.getExplicitMatches(),
             matches.getExactMatches(),
             matches.getFuzzyMatches(),
-            m -> !m.getReasons().contains(DIFFERENT_OWNER),
-            m -> !m.getReasons().contains(DIFFERENT_OWNER),
+            null,
+            null,
             Match.Status.AMBIGUOUS_OWNER));
 
     return matches;
