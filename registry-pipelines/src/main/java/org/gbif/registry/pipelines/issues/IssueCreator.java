@@ -141,12 +141,6 @@ public class IssueCreator {
     long occCount =
         cubeWsClient.count(Collections.singletonMap("datasetKey", datasetKey.toString()));
 
-    PipelineStep validationStep =
-        pipelineProcessMapper.getPipelineStepsByExecutionKey(executionKey).stream()
-            .filter(s -> s.getType() == StepType.VERBATIM_TO_IDENTIFIER)
-            .findFirst()
-            .orElse(null);
-
     StringBuilder body = new StringBuilder();
     body.append(intro)
         .append(
@@ -179,9 +173,6 @@ public class IssueCreator {
         .append("- Cause: ")
         .append(cause)
         .append(NEW_LINE)
-        .append("- Step metrics: ")
-        .append(createMetricsBlock(validationStep))
-        .append(NEW_LINE)
         .append("- Pipelines execution steps: ")
         .append(createApiLink(EXECUTION_LINK_TEMPLATE, null, String.valueOf(executionKey)))
         .append(NEW_LINE)
@@ -197,30 +188,6 @@ public class IssueCreator {
         .append(".");
 
     return body.toString();
-  }
-
-  private String createMetricsBlock(PipelineStep step) {
-    if (step == null) {
-      return "";
-    }
-
-    StringBuilder sb = new StringBuilder();
-    sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
-
-    boolean first = true;
-    for (PipelineStep.MetricInfo m : step.getMetrics()) {
-      if (!first) {
-        sb.append(NEW_LINE);
-      }
-      first = false;
-      sb.append(m.getName());
-      sb.append(": ");
-      sb.append(m.getValue());
-    }
-
-    sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
-
-    return sb.toString();
   }
 
   public static String getCurrentTimestamp() {
