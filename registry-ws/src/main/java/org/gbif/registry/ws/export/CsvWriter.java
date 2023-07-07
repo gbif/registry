@@ -46,6 +46,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.common.Strings;
 import org.supercsv.cellprocessor.FmtBool;
 import org.supercsv.cellprocessor.FmtDate;
 import org.supercsv.cellprocessor.FmtNumber;
@@ -125,9 +126,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Creates an CsvWriter/exporter of DownloadStatistics.
-   */
+  /** Creates an CsvWriter/exporter of DownloadStatistics. */
   public static CsvWriter<DownloadStatistics> downloadStatisticsCsvWriter(
       Iterable<DownloadStatistics> pager, ExportFormat preference) {
 
@@ -147,9 +146,7 @@ public class CsvWriter<T> {
         .build();
   }
 
-  /**
-   * Creates an CsvWriter/exporter of DatasetSearchResult.
-   */
+  /** Creates an CsvWriter/exporter of DatasetSearchResult. */
   public static CsvWriter<DatasetSearchResult> datasetSearchResultCsvWriter(
       Iterable<DatasetSearchResult> pager, ExportFormat preference) {
     return CsvWriter.<DatasetSearchResult>builder()
@@ -219,9 +216,7 @@ public class CsvWriter<T> {
         .build();
   }
 
-  /**
-   * Creates an CsvWriter/exporter of DatasetOccurrenceDownloadUsage.
-   */
+  /** Creates an CsvWriter/exporter of DatasetOccurrenceDownloadUsage. */
   public static CsvWriter<DatasetOccurrenceDownloadUsage> datasetOccurrenceDownloadUsageCsvWriter(
       Iterable<DatasetOccurrenceDownloadUsage> pager, ExportFormat preference) {
     return CsvWriter.<DatasetOccurrenceDownloadUsage>builder()
@@ -246,9 +241,7 @@ public class CsvWriter<T> {
         .build();
   }
 
-  /**
-   * Creates an CsvWriter/exporter of Collection.
-   */
+  /** Creates an CsvWriter/exporter of Collection. */
   public static CsvWriter<CollectionView> collections(
       Iterable<CollectionView> pager, ExportFormat preference) {
     return CsvWriter.<CollectionView>builder()
@@ -258,6 +251,8 @@ public class CsvWriter<T> {
               "collection.code",
               "collection.name",
               "collection.description",
+              "collection.address",
+              "collection.address",
               "collection.address",
               "collection.contentTypes",
               "collection.active",
@@ -304,6 +299,8 @@ public class CsvWriter<T> {
               "name",
               "description",
               "country",
+              "city",
+              "province",
               "content_types",
               "active",
               "personal_collection",
@@ -349,6 +346,8 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // name: String
               new CleanStringProcessor(), // description: String
               new CountryAddressProcessor(), // address: extract the country
+              new CityAddressProcessor(), // address: extract the city
+              new ProvinceAddressProcessor(), // address: extract the province
               new ListCollectionContentTypeProcessor(), // contentTypes: List
               new Optional(new FmtBool("true", "false")), // active: boolean
               new Optional(new FmtBool("true", "false")), // personalCollection: boolean
@@ -394,9 +393,7 @@ public class CsvWriter<T> {
         .build();
   }
 
-  /**
-   * Creates an CsvWriter/exporter of Collection.
-   */
+  /** Creates an CsvWriter/exporter of Collection. */
   public static CsvWriter<Institution> institutions(
       Iterable<Institution> pager, ExportFormat preference) {
     return CsvWriter.<Institution>builder()
@@ -406,6 +403,8 @@ public class CsvWriter<T> {
               "code",
               "name",
               "description",
+              "address",
+              "address",
               "address",
               "type",
               "active",
@@ -450,6 +449,8 @@ public class CsvWriter<T> {
               "name",
               "description",
               "country",
+              "city",
+              "province",
               "type",
               "active",
               "email",
@@ -493,6 +494,8 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // name: String
               new CleanStringProcessor(), // description: String
               new CountryAddressProcessor(), // address: extract the country
+              new CityAddressProcessor(), // address: extract the city
+              new ProvinceAddressProcessor(), // address: extract the province
               new Optional(new ParseEnum(InstitutionType.class)), // type:InstitutionType
               new Optional(new FmtBool("true", "false")), // active: boolean
               new ListStringProcessor(), // email: List<String>
@@ -537,9 +540,7 @@ public class CsvWriter<T> {
         .build();
   }
 
-  /**
-   * Null aware UUID processor.
-   */
+  /** Null aware UUID processor. */
   public static class UUIDProcessor implements CellProcessor {
     @Override
     public String execute(Object value, CsvContext csvContext) {
@@ -547,9 +548,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List of UUIDs processor.
-   */
+  /** Null aware List of UUIDs processor. */
   public static class ListUUIDProcessor implements CellProcessor {
     @Override
     public String execute(Object value, CsvContext csvContext) {
@@ -560,9 +559,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware UUID processor.
-   */
+  /** Null aware UUID processor. */
   public static class DOIProcessor implements CellProcessor {
     @Override
     public String execute(Object value, CsvContext csvContext) {
@@ -570,9 +567,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware Country processor.
-   */
+  /** Null aware Country processor. */
   public static class CountryProcessor implements CellProcessor {
     @Override
     public String execute(Object value, CsvContext csvContext) {
@@ -581,9 +576,8 @@ public class CsvWriter<T> {
   }
 
   /**
-   * Produces a String instance clean of delimiter.
-   * If the value is null an empty string is returned.
-   * Borrowed from Occurrence Downloads!!.
+   * Produces a String instance clean of delimiter. If the value is null an empty string is
+   * returned. Borrowed from Occurrence Downloads!!.
    */
   public static class CleanStringProcessor implements CellProcessor {
 
@@ -602,9 +596,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List of CollectionContentTypes processor.
-   */
+  /** Null aware List of CollectionContentTypes processor. */
   public static class ListCollectionContentTypeProcessor implements CellProcessor {
 
     public static String toString(List<CollectionContentType> value) {
@@ -619,9 +611,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List of PreservationType processor.
-   */
+  /** Null aware List of PreservationType processor. */
   public static class ListPreservationTypeProcessor implements CellProcessor {
 
     public static String toString(List<PreservationType> value) {
@@ -636,9 +626,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<String> processor.
-   */
+  /** Null aware List<String> processor. */
   public static class ListStringProcessor implements CellProcessor {
 
     public static String toString(List<String> value) {
@@ -653,9 +641,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware Uri processor.
-   */
+  /** Null aware Uri processor. */
   public static class UriProcessor implements CellProcessor {
     @Override
     public String execute(Object value, CsvContext csvContext) {
@@ -663,18 +649,14 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Joins elements using as a delimiter.
-   */
+  /** Joins elements using as a delimiter. */
   public static String notNullJoiner(String delimiter, String... elements) {
     return Arrays.stream(elements)
         .filter(s -> s != null && !s.isEmpty())
         .collect(Collectors.joining(delimiter));
   }
 
-  /**
-   * Null aware Uri processor.
-   */
+  /** Null aware Uri processor. */
   public static class AddressProcessor implements CellProcessor {
 
     public static String toString(Address address) {
@@ -695,7 +677,8 @@ public class CsvWriter<T> {
   }
 
   /**
-   * Extracts the Country value of an Address and checks any other address in the  context for its country value.
+   * Extracts the Country value of an Address and checks any other address in the context for its
+   * country value.
    */
   public static class CountryAddressProcessor implements CellProcessor {
 
@@ -730,8 +713,78 @@ public class CsvWriter<T> {
   }
 
   /**
-   * Null aware List<Tags> processor.
+   * Extracts the City value of an Address and checks any other address in the context for its city
+   * value.
    */
+  public static class CityAddressProcessor implements CellProcessor {
+
+    public static String getCity(Address address) {
+      return !Strings.isNullOrEmpty(address.getCity()) ? address.getCity() : null;
+    }
+
+    public static String nextAddressObject(CsvContext csvContext) {
+      for (int i = csvContext.getColumnNumber(); i < csvContext.getRowSource().size(); i++) {
+        Object next = csvContext.getRowSource().get(i);
+        if (next != null && csvContext.getRowSource().get(i) instanceof Address) {
+          return getCity(((Address) next));
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      if (value != null) {
+        String city = getCity((Address) value);
+        if (city != null) {
+          return city;
+        } else {
+          String nextCity = nextAddressObject(csvContext);
+          return nextCity != null ? nextCity : "";
+        }
+      } else {
+        return java.util.Optional.ofNullable(nextAddressObject(csvContext)).orElse("");
+      }
+    }
+  }
+
+  /**
+   * Extracts the Province value of an Address and checks any other address in the context for its
+   * province value.
+   */
+  public static class ProvinceAddressProcessor implements CellProcessor {
+
+    public static String getProvince(Address address) {
+      return !Strings.isNullOrEmpty(address.getProvince()) ? address.getProvince() : null;
+    }
+
+    public static String nextAddressObject(CsvContext csvContext) {
+      for (int i = csvContext.getColumnNumber(); i < csvContext.getRowSource().size(); i++) {
+        Object next = csvContext.getRowSource().get(i);
+        if (next != null && csvContext.getRowSource().get(i) instanceof Address) {
+          return getProvince(((Address) next));
+        }
+      }
+      return null;
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      if (value != null) {
+        String province = getProvince((Address) value);
+        if (province != null) {
+          return province;
+        } else {
+          String nextProvince = nextAddressObject(csvContext);
+          return nextProvince != null ? nextProvince : "";
+        }
+      } else {
+        return java.util.Optional.ofNullable(nextAddressObject(csvContext)).orElse("");
+      }
+    }
+  }
+
+  /** Null aware List<Tags> processor. */
   public static class ListTagsProcessor implements CellProcessor {
 
     public static String toString(List<Tag> value) {
@@ -746,9 +799,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<Identifier> processor.
-   */
+  /** Null aware List<Identifier> processor. */
   public static class ListIdentifierProcessor implements CellProcessor {
 
     public static String toString(List<Identifier> value) {
@@ -763,9 +814,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<MachineTag> processor.
-   */
+  /** Null aware List<MachineTag> processor. */
   public static class ListMachineTagProcessor implements CellProcessor {
 
     public static String toString(List<MachineTag> value) {
@@ -785,9 +834,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<Person> processor.
-   */
+  /** Null aware List<Person> processor. */
   public static class ListContactProcessor implements CellProcessor {
 
     public static String toString(List<Contact> value) {
@@ -814,9 +861,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<AlternativeCode> processor.
-   */
+  /** Null aware List<AlternativeCode> processor. */
   public static class ListAlternativeCodeProcessor implements CellProcessor {
 
     public static String toString(List<AlternativeCode> value) {
@@ -831,9 +876,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<Comment> processor.
-   */
+  /** Null aware List<Comment> processor. */
   public static class ListCommentProcessor implements CellProcessor {
 
     public static String toString(List<Comment> value) {
@@ -848,9 +891,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware Map<String, Integer> processor.
-   */
+  /** Null aware Map<String, Integer> processor. */
   public static class CollectionSummaryProcessor implements CellProcessor {
 
     public static String toString(Map<String, Integer> value) {
@@ -865,9 +906,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<OccurrenceMapping> processor.
-   */
+  /** Null aware List<OccurrenceMapping> processor. */
   public static class ListOccurrenceMappingsProcessor implements CellProcessor {
 
     public static String toString(List<OccurrenceMapping> value) {
@@ -890,9 +929,7 @@ public class CsvWriter<T> {
     }
   }
 
-  /**
-   * Null aware List<Discipline> processor.
-   */
+  /** Null aware List<Discipline> processor. */
   public static class ListDisciplinesProcessor implements CellProcessor {
 
     public static String toString(List<Discipline> value) {
