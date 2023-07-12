@@ -26,10 +26,13 @@ import org.gbif.registry.persistence.mapper.IdentifiableMapper;
 import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.ibatis.annotations.Param;
+
+import org.gbif.registry.persistence.mapper.params.Count;
 
 /** Generic mapper for CRUD operations. Initially implemented for collections. */
 public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable & Commentable>
@@ -62,4 +65,6 @@ public interface BaseMapper<T extends Taggable & Identifiable & MachineTaggable 
       @Param("targetEntityKey") UUID targetEntityKey);
 
   List<T> findByMasterSource(@Param("source") Source source, @Param("sourceId") String sourceId);
+
+  void updateCounts(@Param("counts") Collection<Count> counts);
 }

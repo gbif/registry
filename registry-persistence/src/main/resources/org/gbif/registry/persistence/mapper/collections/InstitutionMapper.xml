@@ -43,7 +43,7 @@
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
     i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source,
-    i.master_sync_metadata_key, i.display_on_NHCPortal
+    i.master_sync_metadata_key, i.display_on_NHCPortal, i.occurrence_count, i.type_specimen_count
   </sql>
 
   <sql id="INSTITUTION_PARAMS_CREATE">
@@ -329,6 +329,36 @@
           </otherwise>
         </choose>
       </if>
+      <if test="params.occurrenceCount != null" >
+        <choose>
+          <when test="params.occurrenceCount.exactValue != null">
+            AND i.occurrence_count = #{params.occurrenceCount.exactValue,jdbcType=INTEGER}
+          </when>
+          <otherwise>
+            <if test="params.occurrenceCount.lowerBound != null" >
+              AND i.occurrence_count >= #{params.occurrenceCount.lowerBound,jdbcType=INTEGER}
+            </if>
+            <if test="params.occurrenceCount.higherBound != null" >
+              AND i.occurrence_count &lt;= #{params.occurrenceCount.higherBound,jdbcType=INTEGER}
+            </if>
+          </otherwise>
+        </choose>
+      </if>
+      <if test="params.typeSpecimenCount != null" >
+        <choose>
+          <when test="params.typeSpecimenCount.exactValue != null">
+            AND i.type_specimen_count = #{params.typeSpecimenCount.exactValue,jdbcType=INTEGER}
+          </when>
+          <otherwise>
+            <if test="params.typeSpecimenCount.lowerBound != null" >
+              AND i.type_specimen_count >= #{params.typeSpecimenCount.lowerBound,jdbcType=INTEGER}
+            </if>
+            <if test="params.typeSpecimenCount.higherBound != null" >
+              AND i.type_specimen_count &lt;= #{params.typeSpecimenCount.higherBound,jdbcType=INTEGER}
+            </if>
+          </otherwise>
+        </choose>
+      </if>
       <if test="params.displayOnNHCPortal != null" >
         AND i.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
       </if>
@@ -359,6 +389,19 @@
       AND replaced_by = #{replacedBy,jdbcType=OTHER}
     </if>
   </select>
+
+  <update id="updateCounts">
+    UPDATE institution
+    SET occurrence_count = aux.occ_count,
+        type_specimen_count = aux.ts_count
+    FROM
+      ( VALUES
+      <foreach item="item" collection="counts" open="" separator="," close="">
+        (#{item.key,jdbcType=OTHER}, #{item.occurrenceCount,jdbcType=INTEGER}, #{item.typeSpecimenCount,jdbcType=INTEGER})
+      </foreach>
+      ) AS aux (entity_key, occ_count, ts_count)
+    WHERE key = aux.entity_key::uuid
+  </update>
 
   <!-- LOOKUP -->
   <sql id="LOOKUP_MATCH_FIELDS">

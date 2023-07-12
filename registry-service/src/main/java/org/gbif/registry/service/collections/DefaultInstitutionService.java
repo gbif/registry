@@ -163,9 +163,11 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .institutionalGovernance(searchRequest.getInstitutionalGovernance())
         .disciplines(searchRequest.getDisciplines())
         .masterSourceType(searchRequest.getMasterSourceType())
-        .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
+        .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
         .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
         .replacedBy(searchRequest.getReplacedBy())
+        .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
+        .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
         .deleted(deleted)
         .page(page)
         .build();
