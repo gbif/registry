@@ -321,7 +321,8 @@ public class InstallationResource
         new Long(
             datasetMapper.count(
                 DatasetListParams.builder().installationKey(installationKey).build())),
-        datasetMapper.list(DatasetListParams.builder().installationKey(installationKey).build()));
+        datasetMapper.list(
+            DatasetListParams.builder().installationKey(installationKey).page(page).build()));
   }
 
   @Operation(
