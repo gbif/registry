@@ -62,11 +62,12 @@ public class CountsUpdaterService {
   @Scheduled(cron = "${grscicoll.counts.cron:* * 8-9 * * 1-5}")
   @Transactional
   public void scheduleUpdateCounts() {
-    log.info("Updating GRSciColl counts");
     updateCounts();
   }
 
   private void updateCounts() {
+    log.info("Updating GRSciColl counts");
+
     long institutionsCount = institutionMapper.count(InstitutionSearchParams.builder().build());
     long collectionsCount = collectionMapper.count(CollectionSearchParams.builder().build());
     long facetCount = Math.max(institutionsCount, collectionsCount);
