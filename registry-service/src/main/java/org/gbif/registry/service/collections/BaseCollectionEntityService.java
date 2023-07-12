@@ -104,7 +104,7 @@ import static org.gbif.registry.service.collections.utils.MasterSourceUtils.INST
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isLockableEntity;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
-import static org.gbif.registry.service.collections.utils.SearchUtils.NUMBER_SPECIMENS_RANGE;
+import static org.gbif.registry.service.collections.utils.SearchUtils.INTEGER_RANGE;
 import static org.gbif.registry.service.collections.utils.SearchUtils.WILDCARD_SEARCH;
 
 @Validated
@@ -905,13 +905,13 @@ public class BaseCollectionEntityService<
     }
   }
 
-  protected RangeParam parseNumberSpecimensParameter(String numberSpecimens) {
-    if (Strings.isNullOrEmpty(numberSpecimens)) {
+  protected RangeParam parseIntegerRangeParameter(String param) {
+    if (Strings.isNullOrEmpty(param)) {
       return null;
     }
 
     RangeParam rangeParam = new RangeParam();
-    Matcher matcher = NUMBER_SPECIMENS_RANGE.matcher(numberSpecimens);
+    Matcher matcher = INTEGER_RANGE.matcher(param);
     if (matcher.matches()) {
       String lowerString = matcher.group(1);
       if (!lowerString.equals(WILDCARD_SEARCH)) {
@@ -924,9 +924,9 @@ public class BaseCollectionEntityService<
       }
     } else {
       try {
-        rangeParam.setExactValue(Integer.valueOf(numberSpecimens));
+        rangeParam.setExactValue(Integer.valueOf(param));
       } catch (Exception ex) {
-        log.info("Invalid numberSpecimens range {}", numberSpecimens, ex);
+        log.info("Invalid range {}", param, ex);
       }
     }
 

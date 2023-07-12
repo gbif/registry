@@ -97,6 +97,7 @@
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
+    <gbif-occurrence.version>0.193.0-SNAPSHOT</gbif-occurrence.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -349,6 +350,11 @@
         <groupId>org.gbif.metrics</groupId>
         <artifactId>metrics-ws-client</artifactId>
         <version>${gbif-metrics.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.occurrence</groupId>
+        <artifactId>occurrence-ws-client</artifactId>
+        <version>${gbif-occurrence.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

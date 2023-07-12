@@ -165,6 +165,10 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-doi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.occurrence</groupId>
+      <artifactId>occurrence-ws-client</artifactId>
+    </dependency>
 
     <!-- Third party dependencies -->
     <dependency>

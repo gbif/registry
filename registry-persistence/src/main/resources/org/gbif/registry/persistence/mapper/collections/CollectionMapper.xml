@@ -47,7 +47,8 @@
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
     c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
-    c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal
+    c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal,
+    c.occurrence_count, c.type_specimen_count
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -316,6 +317,36 @@
           </otherwise>
         </choose>
       </if>
+      <if test="params.occurrenceCount != null" >
+        <choose>
+          <when test="params.occurrenceCount.exactValue != null">
+            AND c.occurrence_count = #{params.occurrenceCount.exactValue,jdbcType=INTEGER}
+          </when>
+          <otherwise>
+            <if test="params.occurrenceCount.lowerBound != null" >
+              AND c.occurrence_count >= #{params.occurrenceCount.lowerBound,jdbcType=INTEGER}
+            </if>
+            <if test="params.occurrenceCount.higherBound != null" >
+              AND c.occurrence_count &lt;= #{params.occurrenceCount.higherBound,jdbcType=INTEGER}
+            </if>
+          </otherwise>
+        </choose>
+      </if>
+      <if test="params.typeSpecimenCount != null" >
+        <choose>
+          <when test="params.typeSpecimenCount.exactValue != null">
+            AND c.type_specimen_count = #{params.typeSpecimenCount.exactValue,jdbcType=INTEGER}
+          </when>
+          <otherwise>
+            <if test="params.typeSpecimenCount.lowerBound != null" >
+              AND c.type_specimen_count >= #{params.typeSpecimenCount.lowerBound,jdbcType=INTEGER}
+            </if>
+            <if test="params.typeSpecimenCount.higherBound != null" >
+              AND c.type_specimen_count &lt;= #{params.typeSpecimenCount.higherBound,jdbcType=INTEGER}
+            </if>
+          </otherwise>
+        </choose>
+      </if>
       <if test="params.displayOnNHCPortal != null" >
         AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
       </if>
@@ -347,6 +378,19 @@
       AND replaced_by = #{replacedBy,jdbcType=OTHER}
     </if>
   </select>
+
+  <update id="updateCounts">
+    UPDATE collection
+    SET occurrence_count = aux.occ_count,
+        type_specimen_count = aux.ts_count
+    FROM
+    ( VALUES
+    <foreach item="item" collection="counts" open="" separator="," close="">
+      (#{item.key,jdbcType=OTHER}, #{item.occurrenceCount,jdbcType=INTEGER}, #{item.typeSpecimenCount,jdbcType=INTEGER})
+    </foreach>
+    ) as aux (entity_key, occ_count, ts_count)
+    WHERE key = aux.entity_key::uuid
+  </update>
 
   <!-- new model contacts -->
   <select id="listContactPersons" resultMap="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_MAP">

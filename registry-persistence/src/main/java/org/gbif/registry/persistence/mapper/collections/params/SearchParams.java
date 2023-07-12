@@ -48,5 +48,7 @@ public abstract class SearchParams {
   @Nullable Boolean displayOnNHCPortal;
   @Nullable private Boolean deleted;
   @Nullable private UUID replacedBy;
+  @Nullable RangeParam occurrenceCount;
+  @Nullable RangeParam typeSpecimenCount;
   @Nullable private Pageable page;
 }

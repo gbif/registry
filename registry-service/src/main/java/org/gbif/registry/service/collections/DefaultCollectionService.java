@@ -169,9 +169,11 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .accessionStatus(searchRequest.getAccessionStatus())
             .personalCollection(searchRequest.getPersonalCollection())
             .masterSourceType(searchRequest.getMasterSourceType())
-            .numberSpecimens(parseNumberSpecimensParameter(searchRequest.getNumberSpecimens()))
+            .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
             .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
             .replacedBy(searchRequest.getReplacedBy())
+            .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
+            .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
             .deleted(deleted)
             .page(page)
             .build();

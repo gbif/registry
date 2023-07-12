@@ -1,0 +1,16 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="125" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE institution ADD COLUMN occurrence_count int DEFAULT 0;
+        ALTER TABLE institution ADD COLUMN type_specimen_count int DEFAULT 0;
+        ALTER TABLE collection ADD COLUMN occurrence_count int DEFAULT 0;
+        ALTER TABLE collection ADD COLUMN type_specimen_count int DEFAULT 0;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

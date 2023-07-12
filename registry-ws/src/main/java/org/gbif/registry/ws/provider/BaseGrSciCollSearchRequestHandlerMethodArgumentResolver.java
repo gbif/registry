@@ -114,18 +114,7 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
 
     String numberSpecimensParam = webRequest.getParameter("numberSpecimens");
     if (!Strings.isNullOrEmpty(numberSpecimensParam)) {
-      boolean rangeMatch = SearchUtils.NUMBER_SPECIMENS_RANGE.matcher(numberSpecimensParam).find();
-      boolean numberMatch = true;
-      try {
-        Integer.parseInt(numberSpecimensParam);
-      } catch (NumberFormatException ex) {
-        numberMatch = false;
-      }
-      if (!rangeMatch && !numberMatch) {
-        throw new IllegalArgumentException(
-            "Invalid numberSpecimens parameter. Only a number or a range is accepted: "
-                + numberSpecimensParam);
-      }
+      validateIntegerRange(numberSpecimensParam, "numberSpecimens");
       request.setNumberSpecimens(numberSpecimensParam);
     }
 
@@ -137,6 +126,32 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
         throw new IllegalArgumentException(
             "Invalid boolean for displayOnNHCPortal: " + displayOnNHCPortal);
       }
+    }
+
+    String occurrenceCountParam = webRequest.getParameter("occurrenceCount");
+    if (!Strings.isNullOrEmpty(occurrenceCountParam)) {
+      validateIntegerRange(occurrenceCountParam, "occurrenceCount");
+      request.setOccurrenceCount(occurrenceCountParam);
+    }
+
+    String typeSpecimenCountParam = webRequest.getParameter("typeSpecimenCount");
+    if (!Strings.isNullOrEmpty(typeSpecimenCountParam)) {
+      validateIntegerRange(typeSpecimenCountParam, "typeSpecimen");
+      request.setTypeSpecimenCount(typeSpecimenCountParam);
+    }
+  }
+
+  private static void validateIntegerRange(String param, String paramName) {
+    boolean rangeMatch = SearchUtils.INTEGER_RANGE.matcher(param).find();
+    boolean numberMatch = true;
+    try {
+      Integer.parseInt(param);
+    } catch (NumberFormatException ex) {
+      numberMatch = false;
+    }
+    if (!rangeMatch && !numberMatch) {
+      throw new IllegalArgumentException(
+          "Invalid " + paramName + " parameter.Only a number or a range is accepted: " + param);
     }
   }
 }

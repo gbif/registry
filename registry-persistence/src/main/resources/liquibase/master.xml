@@ -130,5 +130,5 @@
   <include file="liquibase/122-pipelines-execution-finished-column.xml" />
   <include file="liquibase/123-grscicoll-batches.xml" />
   <include file="liquibase/124-increase-abbreviation-organization-size.xml" />
-
+  <include file="liquibase/125-occurrence-counts-grscicoll.xml" />
 </databaseChangeLog>
