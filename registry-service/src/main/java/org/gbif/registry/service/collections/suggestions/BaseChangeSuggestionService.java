@@ -111,7 +111,9 @@ public abstract class BaseChangeSuggestionService<
               "deleted",
               "key",
               "convertedToCollection",
-              "masterSource"));
+              "masterSource",
+              "occurrenceCount",
+              "typeSpecimenCount"));
 
   private static final String CONTACTS_FIELD_NAME = "contactPersons";
 
