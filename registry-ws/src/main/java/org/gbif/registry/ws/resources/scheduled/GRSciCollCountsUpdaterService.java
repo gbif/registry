@@ -34,14 +34,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Endpoint(id = "grscicollCounts")
 @Slf4j
-public class CountsUpdaterService {
+public class GRSciCollCountsUpdaterService {
 
   private final InstitutionMapper institutionMapper;
   private final CollectionMapper collectionMapper;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
 
   @Autowired
-  public CountsUpdaterService(
+  public GRSciCollCountsUpdaterService(
       InstitutionMapper institutionMapper,
       CollectionMapper collectionMapper,
       @Value("${api.root.url}") String apiRootUrl) {
@@ -59,7 +59,7 @@ public class CountsUpdaterService {
     updateCounts();
   }
 
-  @Scheduled(cron = "${grscicoll.counts.cron:* * 8-9 * * 1-5}")
+  @Scheduled(cron = "${grscicoll.counts.cron:0 0 8 * * 1-5}")
   @Transactional
   public void scheduleUpdateCounts() {
     updateCounts();
