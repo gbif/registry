@@ -34,7 +34,7 @@
   </resultMap>
 
   <sql id="DATASET_OCCURRENCE_DOWNLOAD_FIELDS">
-    dod.download_key,dod.dataset_key,dod.dataset_title,dod.dataset_doi,dod.dataset_citation,dod.number_records,o.country
+    dod.download_key,dod.dataset_key,dod.dataset_title,dod.dataset_doi,dod.dataset_citation,dod.number_records
   </sql>
 
   <sql id="ORGANIZATION_OCCURRENCE_DOWNLOAD_FIELDS">
@@ -56,7 +56,7 @@
   </select>
 
   <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
+    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
     FROM dataset_occurrence_download dod
     INNER JOIN occurrence_download od ON dod.download_key = od.key
     INNER JOIN dataset d ON d.key = dod.dataset_key
