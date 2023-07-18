@@ -72,7 +72,9 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
     PagingRequest pagingRequest = new PagingRequest(0, USAGES_PAGE_SIZE);
 
     while (response == null || !response.isEmpty()) {
-      response = datasetOccurrenceDownloadMapper.listByDownload(download.getKey(), pagingRequest);
+      response =
+          datasetOccurrenceDownloadMapper.listByDownload(
+              download.getKey(), null, null, null, pagingRequest);
       usages.addAll(response);
       pagingRequest.nextPage();
     }
