@@ -16,6 +16,9 @@ package org.gbif.registry.persistence.mapper;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.vocabulary.DatasetUsageSortField;
+import org.gbif.api.vocabulary.SortOrder;
+import org.gbif.registry.persistence.mapper.params.OrganizationOccurrenceDownloadDto;
 
 import java.util.List;
 import java.util.Map;
@@ -42,9 +45,18 @@ public interface DatasetOccurrenceDownloadMapper {
    * avoid massive repetition, and high memory use for complex queries.
    */
   List<DatasetOccurrenceDownloadUsage> listByDownload(
-      @Param("downloadKey") String downloadKey, @Nullable @Param("page") Pageable page);
+      @Param("downloadKey") String downloadKey,
+      @Param("datasetTitle") String datasetTitle,
+      @Param("sortBy") DatasetUsageSortField sortBy,
+      @Param("sortOrder") SortOrder sortOrder,
+      @Nullable @Param("page") Pageable page);
 
   void createOrUpdateUsages(
       @Param("downloadKey") String downloadKey,
       @Param("citationMap") Map<UUID, Long> downloadDataset);
+
+  List<OrganizationOccurrenceDownloadDto> listOrganizationsByDownload(
+      @Param("downloadKey") String downloadKey,
+      @Param("organizationTitle") String organizationTitle,
+      @Nullable @Param("page") Pageable page);
 }

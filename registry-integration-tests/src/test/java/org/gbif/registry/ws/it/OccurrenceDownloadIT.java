@@ -22,11 +22,27 @@ import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.Dataset;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.Installation;
+import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
+import org.gbif.api.service.registry.DatasetService;
+import org.gbif.api.service.registry.InstallationService;
+import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
+import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.CountryUsageSortField;
+import org.gbif.api.vocabulary.DatasetUsageSortField;
 import org.gbif.api.vocabulary.Extension;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OrganizationUsageSortField;
+import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.search.test.EsManageServer;
+import org.gbif.registry.test.TestDataFactory;
 import org.gbif.registry.ws.client.OccurrenceDownloadClient;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -37,7 +53,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.validation.ValidationException;
@@ -71,20 +89,37 @@ public class OccurrenceDownloadIT extends BaseItTest {
   @RegisterExtension
   protected TestCaseDatabaseInitializer databaseRule = new TestCaseDatabaseInitializer();
 
+  private TestDataFactory testDataFactory;
   private final OccurrenceDownloadService occurrenceDownloadResource;
   private final OccurrenceDownloadClient occurrenceDownloadClient;
+
+  // The following services are required to create dataset instances
+  private final DatasetService datasetService;
+  private final OrganizationService organizationService;
+  private final NodeService nodeService;
+  private final InstallationService installationService;
 
   @Autowired
   public OccurrenceDownloadIT(
       OccurrenceDownloadService occurrenceDownloadResource,
+      OrganizationService organizationService,
+      DatasetService datasetService,
+      NodeService nodeService,
+      InstallationService installationService,
       SimplePrincipalProvider simplePrincipalProvider,
       EsManageServer esServer,
       @LocalServerPort int localServerPort,
+      TestDataFactory testDataFactory,
       KeyStore keyStore) {
     super(simplePrincipalProvider, esServer);
     this.occurrenceDownloadResource = occurrenceDownloadResource;
+    this.organizationService = organizationService;
+    this.datasetService = datasetService;
+    this.nodeService = nodeService;
+    this.installationService = installationService;
     this.occurrenceDownloadClient =
         prepareClient(localServerPort, keyStore, OccurrenceDownloadClient.class);
+    this.testDataFactory = testDataFactory;
   }
 
   /**
@@ -440,5 +475,127 @@ public class OccurrenceDownloadIT extends BaseItTest {
     assertNotNull(occurrenceDownload2.getModified());
     assertEquals(200L, occurrenceDownload2.getSize());
     assertEquals(600L, occurrenceDownload2.getTotalRecords());
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testDownloadUsages(ServiceType serviceType) {
+    OccurrenceDownloadService service =
+        getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+
+    Download occurrenceDownload = getTestInstancePredicateDownload();
+    service.create(occurrenceDownload);
+
+    // endorsing node for the organization
+    UUID nodeKey = nodeService.create(testDataFactory.newNode());
+
+    // publishing organization (required field)
+    Organization o = testDataFactory.newOrganization(nodeKey);
+    o.setCountry(Country.DENMARK);
+    UUID organizationKey = organizationService.create(o);
+
+    Installation i = testDataFactory.newInstallation(organizationKey);
+    UUID installationKey = installationService.create(i);
+    Dataset dataset = testDataFactory.newDataset(organizationKey, installationKey);
+    dataset.setKey(datasetService.create(dataset));
+
+    Dataset dataset2 = testDataFactory.newDataset(organizationKey, installationKey);
+    dataset2.setTitle("title2");
+    dataset2.setKey(datasetService.create(dataset2));
+
+    Organization o2 = testDataFactory.newOrganization(nodeKey);
+    o2.setCountry(Country.SPAIN);
+    UUID organization2Key = organizationService.create(o2);
+
+    Dataset dataset3 = testDataFactory.newDataset(organization2Key, installationKey);
+    dataset3.setTitle("title3");
+    dataset3.setKey(datasetService.create(dataset3));
+
+    Map<UUID, Long> usages = new HashMap<>();
+    usages.put(dataset.getKey(), 1000L);
+    usages.put(dataset2.getKey(), 500L);
+    usages.put(dataset3.getKey(), 5300L);
+    service.createUsages(occurrenceDownload.getKey(), usages);
+
+    PagingResponse<DatasetOccurrenceDownloadUsage> datasetUsages =
+        service.listDatasetUsages(
+            occurrenceDownload.getKey(), null, null, null, new PagingRequest());
+    assertEquals(3, datasetUsages.getResults().size());
+    assertEquals(3, datasetUsages.getCount());
+    datasetUsages =
+        service.listDatasetUsages(
+            occurrenceDownload.getKey(), dataset.getTitle(), null, null, new PagingRequest());
+    assertEquals(1, datasetUsages.getResults().size());
+    datasetUsages =
+        service.listDatasetUsages(
+            occurrenceDownload.getKey(),
+            null,
+            DatasetUsageSortField.RECORD_COUNT,
+            SortOrder.DESC,
+            new PagingRequest());
+    assertEquals(dataset3.getKey(), datasetUsages.getResults().get(0).getDatasetKey());
+    datasetUsages =
+        service.listDatasetUsages(
+            occurrenceDownload.getKey(),
+            null,
+            DatasetUsageSortField.RECORD_COUNT,
+            SortOrder.ASC,
+            new PagingRequest());
+    assertEquals(dataset2.getKey(), datasetUsages.getResults().get(0).getDatasetKey());
+
+    PagingResponse<OrganizationOccurrenceDownloadUsage> organizationUsages =
+        service.listOrganizationUsages(
+            occurrenceDownload.getKey(), null, null, null, new PagingRequest());
+    assertEquals(2, organizationUsages.getResults().size());
+    assertEquals(2, organizationUsages.getCount());
+    organizationUsages =
+        service.listOrganizationUsages(
+            occurrenceDownload.getKey(),
+            null,
+            OrganizationUsageSortField.COUNTRY_CODE,
+            null,
+            new PagingRequest());
+    assertEquals(o.getKey(), organizationUsages.getResults().get(0).getOrganizationKey());
+    organizationUsages =
+        service.listOrganizationUsages(
+            occurrenceDownload.getKey(),
+            null,
+            OrganizationUsageSortField.RECORD_COUNT,
+            SortOrder.DESC,
+            new PagingRequest());
+    assertEquals(o2.getKey(), organizationUsages.getResults().get(0).getOrganizationKey());
+
+    organizationUsages =
+        service.listOrganizationUsages(
+            occurrenceDownload.getKey(),
+            null,
+            OrganizationUsageSortField.RECORD_COUNT,
+            SortOrder.ASC,
+            new PagingRequest());
+    assertEquals(o.getKey(), organizationUsages.getResults().get(0).getOrganizationKey());
+
+    PagingResponse<CountryOccurrenceDownloadUsage> countryUsages =
+        service.listCountryUsages(occurrenceDownload.getKey(), null, null, new PagingRequest());
+    assertEquals(2, countryUsages.getResults().size());
+    assertEquals(2, countryUsages.getCount());
+
+    countryUsages =
+        service.listCountryUsages(
+            occurrenceDownload.getKey(),
+            CountryUsageSortField.COUNTRY_CODE,
+            SortOrder.DESC,
+            new PagingRequest());
+    assertEquals(
+        Country.SPAIN.getIso2LetterCode(),
+        countryUsages.getResults().get(0).getPublishingCountryCode());
+    countryUsages =
+        service.listCountryUsages(
+            occurrenceDownload.getKey(),
+            CountryUsageSortField.RECORD_COUNT,
+            null,
+            new PagingRequest());
+    assertEquals(
+        Country.DENMARK.getIso2LetterCode(),
+        countryUsages.getResults().get(0).getPublishingCountryCode());
   }
 }

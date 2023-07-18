@@ -9,6 +9,7 @@
     <result property="datasetDOI" column="dataset_doi"/>
     <result property="datasetCitation" column="dataset_citation"/>
     <result property="numberRecords" column="number_records"/>
+    <result property="publishingCountryCode" column="country"/>
     <association property="download" javaType="org.gbif.api.model.occurrence.Download" resultMap="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_MAP"/>
   </resultMap>
 
@@ -19,11 +20,25 @@
     <result property="datasetDOI" column="dataset_doi"/>
     <result property="datasetCitation" column="dataset_citation"/>
     <result property="numberRecords" column="number_records"/>
+    <result property="publishingCountryCode" column="country"/>
     <!-- The download is null -->
   </resultMap>
 
+  <resultMap id="ORGANIZATION_OCCURRENCE_MAP" type="OrganizationOccurrenceDownloadDto" autoMapping="false">
+    <id property="downloadKey" column="download_key"/>
+    <id property="datasetKey" column="dataset_key"/>
+    <result property="organizationKey" column="orgKey"/>
+    <result property="organizationTitle" column="orgTitle"/>
+    <result property="numberRecords" column="number_records"/>
+    <result property="publishingCountryCode" column="country"/>
+  </resultMap>
+
   <sql id="DATASET_OCCURRENCE_DOWNLOAD_FIELDS">
-    download_key,dataset_key,dataset_title,dataset_doi,dataset_citation,number_records
+    dod.download_key,dod.dataset_key,dod.dataset_title,dod.dataset_doi,dod.dataset_citation,dod.number_records,o.country
+  </sql>
+
+  <sql id="ORGANIZATION_OCCURRENCE_DOWNLOAD_FIELDS">
+    dod.download_key,dod.dataset_key,dod.number_records,o.key AS orgKey,o.title AS orgTitle,o.country
   </sql>
 
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
@@ -39,9 +54,57 @@
 
   <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
-    FROM dataset_occurrence_download JOIN occurrence_download ON download_key = key
-    WHERE download_key = #{downloadKey,jdbcType=OTHER}
-    ORDER BY created DESC, key
+    FROM dataset_occurrence_download dod
+    INNER JOIN occurrence_download od ON dod.download_key = od.key
+    INNER JOIN dataset d ON d.key = dod.dataset_key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
+    <if test="datasetTitle != null" >
+      AND d.title = #{datasetTitle,jdbcType=VARCHAR}
+    </if>
+    ORDER BY
+    <if test="sortBy != null">
+      <choose>
+        <when test="sortBy.name.equals('DATASET_TITLE')">
+          d.title
+        </when>
+        <when test="sortBy.name.equals('COUNTRY_CODE')">
+          o.country
+        </when>
+        <when test="sortBy.name.equals('RECORD_COUNT')">
+          dod.number_records
+        </when>
+        <otherwise/>
+      </choose>
+      <if test="sortOrder != null">
+        <choose>
+          <when test="sortOrder.name.equals('DESC')">
+            DESC
+          </when>
+          <otherwise>
+            ASC
+          </otherwise>
+        </choose>
+      </if>
+      ,
+    </if>
+    od.created DESC, od.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="listOrganizationsByDownload" resultMap="ORGANIZATION_OCCURRENCE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT <include refid="ORGANIZATION_OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM dataset_occurrence_download dod
+    INNER JOIN occurrence_download od ON dod.download_key = od.key
+    INNER JOIN dataset d on d.key = dod.dataset_key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
+    <if test="organizationTitle != null" >
+      AND o.title = #{organizationTitle,jdbcType=VARCHAR}
+    </if>
+    ORDER BY od.created DESC, od.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>

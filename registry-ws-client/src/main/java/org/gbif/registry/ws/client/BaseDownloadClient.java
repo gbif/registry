@@ -17,7 +17,9 @@ import org.gbif.api.annotation.PartialDate;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
 
@@ -25,6 +27,11 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import org.gbif.api.vocabulary.CountryUsageSortField;
+import org.gbif.api.vocabulary.DatasetUsageSortField;
+import org.gbif.api.vocabulary.OrganizationUsageSortField;
+import org.gbif.api.vocabulary.SortOrder;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
@@ -93,6 +100,44 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   @Override
   PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
       @PathVariable("key") String key, @SpringQueryMap Pageable page);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/datasets",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
+      @PathVariable("key") String key,
+      @RequestParam(value = "datasetTitle", required = false) String datasetTitle,
+      @RequestParam(value = "sortBy", required = false) DatasetUsageSortField sortBy,
+      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
+      @SpringQueryMap Pageable page);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/organizations",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<OrganizationOccurrenceDownloadUsage> listOrganizationUsages(
+      @PathVariable("key") String key,
+      @RequestParam(value = "organizationTitle", required = false) String organizationTitle,
+      @RequestParam(value = "sortBy", required = false) OrganizationUsageSortField sortBy,
+      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
+      @SpringQueryMap Pageable page);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "{key}/countries",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  PagingResponse<CountryOccurrenceDownloadUsage> listCountryUsages(
+      @PathVariable("key") String key,
+      @RequestParam(value = "sortBy", required = false) CountryUsageSortField sortBy,
+      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
+      @SpringQueryMap Pageable page);
 
   @RequestMapping(method = RequestMethod.GET, value = "{key}/citation")
   @Override

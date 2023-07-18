@@ -56,6 +56,8 @@
     </association>
 
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
+    <association property="numberOrganizations" column="key" select="COUNT_ORGANIZATIONS" fetchType="eager"/>
+    <association property="numberPublishingCountries" column="key" select="COUNT_PUBLISHING_COUNTRIES" fetchType="eager"/>
   </resultMap>
 
   <resultMap id="DOWNLOADS_STATISTICS_COUNT_MAP" type="org.gbif.api.model.common.search.Facet$Count" autoMapping="true">
@@ -78,6 +80,22 @@
 
   <select id="COUNT_DATASETS" resultType="Integer">
     SELECT COUNT(*) FROM dataset_occurrence_download WHERE download_key = #{key,jdbcType=VARCHAR}
+  </select>
+
+  <select id="COUNT_ORGANIZATIONS" resultType="Integer">
+    SELECT COUNT(DISTINCT o.key)
+    FROM dataset_occurrence_download dod
+    INNER JOIN dataset d ON dod.dataset_key= d.key
+    INNER JOIN organization o ON d.publishing_organization_key = o.key
+    WHERE dod.download_key = #{key,jdbcType=VARCHAR}
+  </select>
+
+  <select id="COUNT_PUBLISHING_COUNTRIES" resultType="Integer">
+    SELECT COUNT(DISTINCT o.country)
+    FROM dataset_occurrence_download dod
+    INNER JOIN dataset d ON dod.dataset_key= d.key
+    INNER JOIN organization o ON d.publishing_organization_key = o.key
+    WHERE dod.download_key = #{key,jdbcType=VARCHAR}
   </select>
 
   <!--

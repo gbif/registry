@@ -19,23 +19,31 @@ import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.Facet;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.occurrence.DownloadType;
+import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
 import org.gbif.api.service.common.IdentityAccessService;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.CountryUsageSortField;
+import org.gbif.api.vocabulary.DatasetUsageSortField;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.OrganizationUsageSortField;
+import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
+import org.gbif.registry.persistence.mapper.params.OrganizationOccurrenceDownloadDto;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.registry.ws.util.DateUtils;
@@ -50,8 +58,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -60,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
@@ -89,6 +100,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -443,6 +455,24 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0131")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "datasetTitle",
+            description = "Title of the dataset to filter by.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = String.class)),
+        @Parameter(
+            name = "sortBy",
+            description = "Field to sort the results by.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = DatasetUsageSortField.class)),
+        @Parameter(
+            name = "sortOrder",
+            description = "Sort order. Only taken into account when sortBy is used.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = SortOrder.class))
+      })
   @DownloadKeyParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(
@@ -450,10 +480,15 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       description = "Dataset usage within an occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/datasets")
-  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesByKey(
-      @PathVariable("key") String key, Pageable page) {
+  @Override
+  public PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsages(
+      @PathVariable("key") String key,
+      @RequestParam(value = "datasetTitle", required = false) String datasetTitle,
+      @RequestParam(value = "sortBy", required = false) DatasetUsageSortField sortBy,
+      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
+      Pageable page) {
     Download download = get(key);
-    return listDatasetUsagesInternal(key, page, download);
+    return listDatasetUsagesInternal(key, page, download, datasetTitle, sortBy, sortOrder);
   }
 
   @Tag(name = "Occurrence downloads")
@@ -495,12 +530,212 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   private PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesInternal(
       String key, Pageable page, Download download) {
+    return listDatasetUsagesInternal(key, page, download, null, null, null);
+  }
+
+  private PagingResponse<DatasetOccurrenceDownloadUsage> listDatasetUsagesInternal(
+      String key,
+      Pageable page,
+      Download download,
+      String datasetTitle,
+      DatasetUsageSortField sortBy,
+      SortOrder sortOrder) {
     if (download != null) {
+      page = page != null ? page : new PagingRequest();
       List<DatasetOccurrenceDownloadUsage> usages =
-          datasetOccurrenceDownloadMapper.listByDownload(key, page);
+          datasetOccurrenceDownloadMapper.listByDownload(
+              key, Strings.emptyToNull(datasetTitle), sortBy, sortOrder, page);
       final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
       clearSensitiveData(authentication, usages);
       return new PagingResponse<>(page, download.getNumberDatasets(), usages);
+    }
+    throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
+  }
+
+  @Tag(name = "Organization usages occurrence downloads")
+  @Operation(
+      operationId = "listOrganizationUsagesByDownloadKey",
+      summary = "Lists organizations present in a download",
+      description =
+          "Shows the organizations with occurrences present in the given occurrence download.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0131")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "organizationTitle",
+            description = "Title of the organization to filter by.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = String.class)),
+        @Parameter(
+            name = "sortBy",
+            description = "Field to sort the results by.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = OrganizationUsageSortField.class)),
+        @Parameter(
+            name = "sortOrder",
+            description = "Sort order. Only taken into account when sortBy is used.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = SortOrder.class))
+      })
+  @DownloadKeyParameter
+  @Pageable.OffsetLimitParameters
+  @ApiResponse(
+      responseCode = "200",
+      description = "Organization usage within an occurrence download information.")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping("{key}/organizations")
+  @Override
+  public PagingResponse<OrganizationOccurrenceDownloadUsage> listOrganizationUsages(
+      @PathVariable("key") String downloadKey,
+      @RequestParam(value = "organizationTitle", required = false) String organizationTitle,
+      @RequestParam(value = "sortBy", required = false) OrganizationUsageSortField sortBy,
+      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
+      Pageable page) {
+    Download download = get(downloadKey);
+    if (download != null) {
+      page = page != null ? page : new PagingRequest();
+
+      List<OrganizationOccurrenceDownloadDto> dtos =
+          datasetOccurrenceDownloadMapper.listOrganizationsByDownload(
+              downloadKey, Strings.emptyToNull(organizationTitle), page);
+
+      Map<UUID, OrganizationOccurrenceDownloadUsage> orgsMap = new HashMap<>();
+      for (OrganizationOccurrenceDownloadDto dto : dtos) {
+        OrganizationOccurrenceDownloadUsage usage =
+            orgsMap.computeIfAbsent(
+                dto.getOrganizationKey(),
+                k -> {
+                  OrganizationOccurrenceDownloadUsage newUsage =
+                      new OrganizationOccurrenceDownloadUsage();
+                  newUsage.setDownloadKey(dto.getDownloadKey());
+                  newUsage.setOrganizationKey(dto.getOrganizationKey());
+                  newUsage.setOrganizationTitle(dto.getOrganizationTitle());
+                  newUsage.setPublishingCountryCode(dto.getPublishingCountryCode());
+                  return newUsage;
+                });
+
+        usage.setNumberRecords(usage.getNumberRecords() + dto.getNumberRecords());
+      }
+
+      // we sort it manually because we group the DB results manually
+      Supplier<Comparator<OrganizationOccurrenceDownloadUsage>> comparatorSupplier =
+          () -> {
+            Comparator<OrganizationOccurrenceDownloadUsage> comparator;
+            if (sortBy == OrganizationUsageSortField.ORGANIZATION_TITLE) {
+              comparator =
+                  Comparator.comparing(OrganizationOccurrenceDownloadUsage::getOrganizationTitle);
+            } else if (sortBy == OrganizationUsageSortField.COUNTRY_CODE) {
+              comparator =
+                  Comparator.comparing(
+                      OrganizationOccurrenceDownloadUsage::getPublishingCountryCode);
+            } else if (sortBy == OrganizationUsageSortField.RECORD_COUNT) {
+              comparator =
+                  Comparator.comparing(OrganizationOccurrenceDownloadUsage::getNumberRecords);
+            } else {
+              comparator =
+                  Comparator.comparing(OrganizationOccurrenceDownloadUsage::getOrganizationKey);
+            }
+
+            if (sortOrder == SortOrder.DESC) {
+              comparator = comparator.reversed();
+            }
+
+            return comparator;
+          };
+
+      return new PagingResponse<>(
+          page,
+          (long) orgsMap.keySet().size(),
+          orgsMap.values().stream().sorted(comparatorSupplier.get()).collect(Collectors.toList()));
+    }
+    throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
+  }
+
+  @Tag(name = "Country usages occurrence downloads")
+  @Operation(
+      operationId = "listCountryUsagesByDownloadKey",
+      summary = "Lists countries present in a download",
+      description =
+          "Shows the countries with occurrences present in the given occurrence download.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0131")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "sortBy",
+            description = "Field to sort the results by.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = CountryUsageSortField.class)),
+        @Parameter(
+            name = "sortOrder",
+            description = "Sort order. Only taken into account when sortBy is used.",
+            in = ParameterIn.QUERY,
+            schema = @Schema(implementation = SortOrder.class))
+      })
+  @DownloadKeyParameter
+  @Pageable.OffsetLimitParameters
+  @ApiResponse(
+      responseCode = "200",
+      description = "Country usage within an occurrence download information.")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping("{key}/countries")
+  @Override
+  public PagingResponse<CountryOccurrenceDownloadUsage> listCountryUsages(
+      @PathVariable("key") String downloadKey,
+      @RequestParam(value = "sortBy", required = false) CountryUsageSortField sortBy,
+      @RequestParam(value = "sortOrder", required = false) SortOrder sortOrder,
+      Pageable page) {
+    Download download = get(downloadKey);
+    if (download != null) {
+      page = page != null ? page : new PagingRequest();
+
+      List<OrganizationOccurrenceDownloadDto> dtos =
+          datasetOccurrenceDownloadMapper.listOrganizationsByDownload(downloadKey, null, page);
+
+      Map<String, CountryOccurrenceDownloadUsage> countriesMap = new HashMap<>();
+      for (OrganizationOccurrenceDownloadDto dto : dtos) {
+        CountryOccurrenceDownloadUsage usage =
+            countriesMap.computeIfAbsent(
+                dto.getPublishingCountryCode(),
+                k -> {
+                  CountryOccurrenceDownloadUsage newUsage = new CountryOccurrenceDownloadUsage();
+                  newUsage.setDownloadKey(dto.getDownloadKey());
+                  newUsage.setPublishingCountryCode(dto.getPublishingCountryCode());
+                  return newUsage;
+                });
+
+        usage.setNumberRecords(usage.getNumberRecords() + dto.getNumberRecords());
+      }
+
+      // we sort it manually because we group the DB results manually
+      Supplier<Comparator<CountryOccurrenceDownloadUsage>> comparatorSupplier =
+          () -> {
+            Comparator<CountryOccurrenceDownloadUsage> comparator;
+            if (sortBy == CountryUsageSortField.RECORD_COUNT) {
+              comparator = Comparator.comparing(CountryOccurrenceDownloadUsage::getNumberRecords);
+            } else {
+              comparator =
+                  Comparator.comparing(CountryOccurrenceDownloadUsage::getPublishingCountryCode);
+            }
+
+            if (sortOrder == SortOrder.DESC) {
+              comparator = comparator.reversed();
+            }
+
+            return comparator;
+          };
+
+      return new PagingResponse<>(
+          page,
+          (long) countriesMap.keySet().size(),
+          countriesMap.values().stream()
+              .sorted(comparatorSupplier.get())
+              .collect(Collectors.toList()));
     }
     throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
   }
