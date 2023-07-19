@@ -337,6 +337,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       })
   @interface DatasetSearchParameters {}
 
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameter(
+    name = "metadataKey",
+    description = "Key for the *metadata document* (not a dataset UUID).",
+    in = ParameterIn.PATH)
+  @interface MetadataDocumentKeyParameter {}
+
   @Operation(
       operationId = "searchDatasets",
       summary = "Search across all datasets.",
@@ -533,7 +541,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       operationId = "getDocuments",
       summary = "Retrieve GBIF metadata document of the dataset",
       description =
-          "Gets a GBIF generated EML document overlaying GBIF information with any existing metadata document data.",
+          "Gets a GBIF-generated EML document overlaying GBIF information with any existing metadata document data.",
       extensions =
           @Extension(
               name = "Order",
@@ -1139,7 +1147,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0302")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "List of source metadata documents")
+  @ApiResponse(
+      responseCode = "200",
+      description = "List of source metadata documents including their metadata document keys")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}/metadata")
   @Override
@@ -1155,22 +1165,22 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0303")))
+  @MetadataDocumentKeyParameter
   @ApiResponse(responseCode = "200", description = "Metadata about a metadata document")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("metadata/{key}")
+  @GetMapping("metadata/{metadataKey}")
   @Override
-  @NullToNotFound("/dataset/metadata/{key}")
-  public Metadata getMetadata(@PathVariable int key) {
-    return metadataMapper.get(key);
+  @NullToNotFound("/dataset/metadata/{metadataKey}")
+  public Metadata getMetadata(@PathVariable int metadataKey) {
+    return metadataMapper.get(metadataKey);
   }
 
   @Override
   @NullToNotFound
-  public InputStream getMetadataDocument(int key) {
-    return new ByteArrayInputStream(getMetadataDocumentAsBytes(key));
+  public InputStream getMetadataDocument(int metadataKey) {
+    return new ByteArrayInputStream(getMetadataDocumentAsBytes(metadataKey));
   }
 
-  // TODO: 05/04/2020 change API to return byte[]?
   @Operation(
       operationId = "getMetadataDocument",
       summary = "Retrieve a source metadata document of the dataset",
@@ -1178,13 +1188,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0304")))
-  @Docs.DefaultEntityKeyParameter
+  @MetadataDocumentKeyParameter
   @ApiResponse(responseCode = "200", description = "Source metadata document in XML format")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping(value = "metadata/{key}/document", produces = MediaType.APPLICATION_XML_VALUE)
-  @NullToNotFound("/dataset/metadata/{key}/document")
-  public byte[] getMetadataDocumentAsBytes(@PathVariable int key) {
-    return registryDatasetService.getMetadataDocument(key);
+  @GetMapping(value = "metadata/{metadataKey}/document", produces = MediaType.APPLICATION_XML_VALUE)
+  @NullToNotFound("/dataset/metadata/{metadataKey}/document")
+  public byte[] getMetadataDocumentAsBytes(@PathVariable int metadataKey) {
+    return registryDatasetService.getMetadataDocument(metadataKey);
   }
 
   @Operation(
@@ -1194,12 +1204,13 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0305")))
+  @MetadataDocumentKeyParameter
   @ApiResponse(responseCode = "204", description = "Metadata document deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @DeleteMapping("metadata/{key}")
+  @DeleteMapping("metadata/{metadataKey}")
   @Override
-  public void deleteMetadata(@PathVariable("key") int metadataKey) {
+  public void deleteMetadata(@PathVariable("metadataKey") int metadataKey) {
     metadataMapper.delete(metadataKey);
   }
 
