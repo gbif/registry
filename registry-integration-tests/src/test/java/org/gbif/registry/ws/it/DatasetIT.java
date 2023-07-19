@@ -1166,6 +1166,18 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
 
   @ParameterizedTest
   @EnumSource(ServiceType.class)
+  public void testListLimits(ServiceType serviceType) {
+    DatasetService service = (DatasetService) getService(serviceType);
+
+    // test high limit
+    DatasetRequestSearchParams searchParams = new DatasetRequestSearchParams();
+    searchParams.setLimit(301);
+    assertThrows(IllegalArgumentException.class, () -> service.list(searchParams));
+    assertThrows(IllegalArgumentException.class, () -> service.listDeleted(searchParams));
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
   public void testList(ServiceType serviceType) {
     DatasetService service = (DatasetService) getService(serviceType);
 
