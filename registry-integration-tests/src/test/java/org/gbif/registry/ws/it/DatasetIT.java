@@ -51,6 +51,7 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
+import org.gbif.registry.ws.provider.networkEntitiesList.BaseRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
@@ -1162,18 +1163,6 @@ class DatasetIT extends NetworkEntityIT<Dataset> {
     assertResultsOfSize(service.listByType(DatasetType.CHECKLIST, new PagingRequest()), 2);
     assertResultsOfSize(service.listByType(DatasetType.OCCURRENCE, new PagingRequest()), 3);
     assertResultsOfSize(service.listByType(DatasetType.SAMPLING_EVENT, new PagingRequest()), 4);
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testListLimits(ServiceType serviceType) {
-    DatasetService service = (DatasetService) getService(serviceType);
-
-    // test high limit
-    DatasetRequestSearchParams searchParams = new DatasetRequestSearchParams();
-    searchParams.setLimit(301);
-    assertThrows(IllegalArgumentException.class, () -> service.list(searchParams));
-    assertThrows(IllegalArgumentException.class, () -> service.listDeleted(searchParams));
   }
 
   @ParameterizedTest

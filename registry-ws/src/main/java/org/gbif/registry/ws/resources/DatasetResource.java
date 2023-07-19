@@ -474,11 +474,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       request = new DatasetRequestSearchParams();
     }
 
-    // A high limit might cause outages due to the high amount of data to be loaded
-    if (request.getPage().getLimit() > 300) {
-      throw new IllegalArgumentException("The maximum limit allowed is 300");
-    }
-
     DatasetListParams listParams =
         DatasetListParams.builder()
             .query(parseQuery(request.getQ()))

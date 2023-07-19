@@ -29,6 +29,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 public abstract class BaseRequestSearchParamsHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
 
+  public static final int MAX_PAGE_SIZE = 1000;
+
   public Object fillCommonParams(RequestSearchParams params, NativeWebRequest webRequest) {
 
     params.setIdentifier(webRequest.getParameter(RequestSearchParams.IDENTIFIER_PARAM));
@@ -45,7 +47,7 @@ public abstract class BaseRequestSearchParamsHandlerMethodArgumentResolver
         .ifPresent(v -> params.setModified(SearchTypeValidator.parseDateRange(v)));
 
     // page
-    Pageable page = PageableProvider.getPagingRequest(webRequest, Integer.MAX_VALUE);
+    Pageable page = PageableProvider.getPagingRequest(webRequest, MAX_PAGE_SIZE);
     params.setLimit(page.getLimit());
     params.setOffset(page.getOffset());
 
