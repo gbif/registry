@@ -34,10 +34,12 @@ import com.google.common.base.Strings;
 public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
 
+  public static final int MAX_PAGE_SIZE = 1000;
+
   protected <T extends SearchRequest> void fillSearchRequestParams(
       T request, NativeWebRequest webRequest) {
     // page
-    Pageable page = PageableProvider.getPagingRequest(webRequest, Integer.MAX_VALUE);
+    Pageable page = PageableProvider.getPagingRequest(webRequest, MAX_PAGE_SIZE);
     request.setLimit(page.getLimit());
     request.setOffset(page.getOffset());
 
