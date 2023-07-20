@@ -59,4 +59,12 @@ public interface DatasetOccurrenceDownloadMapper {
       @Param("downloadKey") String downloadKey,
       @Param("organizationTitle") String organizationTitle,
       @Nullable @Param("page") Pageable page);
+
+  int countOrganizationsByDownload(
+      @Param("downloadKey") String downloadKey,
+      @Param("organizationTitle") String organizationTitle);
+
+  int countCountriesByDownload(
+      @Param("downloadKey") String downloadKey,
+      @Param("organizationTitle") String organizationTitle);
 }

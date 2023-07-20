@@ -113,6 +113,30 @@
     </if>
   </select>
 
+  <select id="countOrganizationsByDownload" resultType="Integer">
+    SELECT COUNT(DISTINCT o.key)
+    FROM dataset_occurrence_download dod
+    INNER JOIN occurrence_download od ON dod.download_key = od.key
+    INNER JOIN dataset d on d.key = dod.dataset_key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
+    <if test="organizationTitle != null" >
+      AND o.title = #{organizationTitle,jdbcType=VARCHAR}
+    </if>
+  </select>
+
+  <select id="countCountriesByDownload" resultType="Integer">
+    SELECT COUNT(DISTINCT o.country)
+    FROM dataset_occurrence_download dod
+    INNER JOIN occurrence_download od ON dod.download_key = od.key
+    INNER JOIN dataset d on d.key = dod.dataset_key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
+    <if test="organizationTitle != null" >
+      AND o.title = #{organizationTitle,jdbcType=VARCHAR}
+    </if>
+  </select>
+
   <select id="countByDataset" resultType="Integer" parameterType="map">
     SELECT COUNT(DISTINCT download_key)
     FROM dataset_occurrence_download JOIN occurrence_download od ON download_key = od.key
