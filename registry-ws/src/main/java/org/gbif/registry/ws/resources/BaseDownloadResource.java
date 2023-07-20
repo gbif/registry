@@ -646,9 +646,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             return comparator;
           };
 
+      int count =
+          datasetOccurrenceDownloadMapper.countOrganizationsByDownload(
+              downloadKey, Strings.emptyToNull(organizationTitle));
+
       return new PagingResponse<>(
           page,
-          (long) orgsMap.keySet().size(),
+          (long) count,
           orgsMap.values().stream().sorted(comparatorSupplier.get()).collect(Collectors.toList()));
     }
     throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
@@ -730,9 +734,11 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
             return comparator;
           };
 
+      int count = datasetOccurrenceDownloadMapper.countCountriesByDownload(downloadKey, null);
+
       return new PagingResponse<>(
           page,
-          (long) countriesMap.keySet().size(),
+          (long) count,
           countriesMap.values().stream()
               .sorted(comparatorSupplier.get())
               .collect(Collectors.toList()));
