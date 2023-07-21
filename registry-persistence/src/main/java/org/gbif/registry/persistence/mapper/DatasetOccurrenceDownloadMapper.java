@@ -15,10 +15,13 @@ package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.occurrence.DownloadType;
+import org.gbif.api.model.registry.CountryOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
+import org.gbif.api.vocabulary.CountryUsageSortField;
 import org.gbif.api.vocabulary.DatasetUsageSortField;
+import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
-import org.gbif.registry.persistence.mapper.params.OrganizationOccurrenceDownloadDto;
 
 import java.util.List;
 import java.util.Map;
@@ -55,16 +58,22 @@ public interface DatasetOccurrenceDownloadMapper {
       @Param("downloadKey") String downloadKey,
       @Param("citationMap") Map<UUID, Long> downloadDataset);
 
-  List<OrganizationOccurrenceDownloadDto> listOrganizationsByDownload(
+  List<OrganizationOccurrenceDownloadUsage> listOrganizationsByDownload(
       @Param("downloadKey") String downloadKey,
       @Param("organizationTitle") String organizationTitle,
+      @Param("sortBy") OrganizationUsageSortField sortBy,
+      @Param("sortOrder") SortOrder sortOrder,
+      @Nullable @Param("page") Pageable page);
+
+  List<CountryOccurrenceDownloadUsage> listCountriesByDownload(
+      @Param("downloadKey") String downloadKey,
+      @Param("sortBy") CountryUsageSortField sortBy,
+      @Param("sortOrder") SortOrder sortOrder,
       @Nullable @Param("page") Pageable page);
 
   int countOrganizationsByDownload(
       @Param("downloadKey") String downloadKey,
       @Param("organizationTitle") String organizationTitle);
 
-  int countCountriesByDownload(
-      @Param("downloadKey") String downloadKey,
-      @Param("organizationTitle") String organizationTitle);
+  int countCountriesByDownload(@Param("downloadKey") String downloadKey);
 }

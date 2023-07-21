@@ -548,6 +548,28 @@ public class OccurrenceDownloadIT extends BaseItTest {
             occurrenceDownload.getKey(), null, null, null, new PagingRequest());
     assertEquals(2, organizationUsages.getResults().size());
     assertEquals(2, organizationUsages.getCount());
+
+    organizationUsages =
+        service.listOrganizationUsages(
+            occurrenceDownload.getKey(),
+            null,
+            OrganizationUsageSortField.COUNTRY_CODE,
+            null,
+            new PagingRequest(0, 1));
+    assertEquals(1, organizationUsages.getResults().size());
+    assertEquals(2, organizationUsages.getCount());
+
+    organizationUsages =
+        service.listOrganizationUsages(
+            occurrenceDownload.getKey(),
+            null,
+            OrganizationUsageSortField.COUNTRY_CODE,
+            SortOrder.DESC,
+            new PagingRequest(1, 1));
+    assertEquals(1, organizationUsages.getResults().size());
+    assertEquals(2, organizationUsages.getCount());
+    assertEquals(o.getKey(), organizationUsages.getResults().get(0).getOrganizationKey());
+
     organizationUsages =
         service.listOrganizationUsages(
             occurrenceDownload.getKey(),
@@ -578,6 +600,18 @@ public class OccurrenceDownloadIT extends BaseItTest {
         service.listCountryUsages(occurrenceDownload.getKey(), null, null, new PagingRequest());
     assertEquals(2, countryUsages.getResults().size());
     assertEquals(2, countryUsages.getCount());
+
+    countryUsages =
+        service.listCountryUsages(
+            occurrenceDownload.getKey(),
+            CountryUsageSortField.COUNTRY_CODE,
+            SortOrder.DESC,
+            new PagingRequest(1, 1));
+    assertEquals(1, countryUsages.getResults().size());
+    assertEquals(2, countryUsages.getCount());
+    assertEquals(
+        Country.DENMARK.getIso2LetterCode(),
+        countryUsages.getResults().get(0).getPublishingCountryCode());
 
     countryUsages =
         service.listCountryUsages(
