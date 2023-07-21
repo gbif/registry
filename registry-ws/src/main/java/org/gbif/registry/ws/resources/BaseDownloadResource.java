@@ -43,7 +43,6 @@ import org.gbif.registry.doi.DoiIssuingService;
 import org.gbif.registry.doi.DownloadDoiDataCiteHandlingService;
 import org.gbif.registry.persistence.mapper.DatasetOccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
-import org.gbif.registry.persistence.mapper.params.OrganizationOccurrenceDownloadDto;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.provider.PartialDate;
 import org.gbif.registry.ws.util.DateUtils;
@@ -58,10 +57,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -70,7 +67,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletResponse;
@@ -598,62 +594,15 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     if (download != null) {
       page = page != null ? page : new PagingRequest();
 
-      List<OrganizationOccurrenceDownloadDto> dtos =
+      List<OrganizationOccurrenceDownloadUsage> results =
           datasetOccurrenceDownloadMapper.listOrganizationsByDownload(
-              downloadKey, Strings.emptyToNull(organizationTitle), page);
-
-      Map<UUID, OrganizationOccurrenceDownloadUsage> orgsMap = new HashMap<>();
-      for (OrganizationOccurrenceDownloadDto dto : dtos) {
-        OrganizationOccurrenceDownloadUsage usage =
-            orgsMap.computeIfAbsent(
-                dto.getOrganizationKey(),
-                k -> {
-                  OrganizationOccurrenceDownloadUsage newUsage =
-                      new OrganizationOccurrenceDownloadUsage();
-                  newUsage.setDownloadKey(dto.getDownloadKey());
-                  newUsage.setOrganizationKey(dto.getOrganizationKey());
-                  newUsage.setOrganizationTitle(dto.getOrganizationTitle());
-                  newUsage.setPublishingCountryCode(dto.getPublishingCountryCode());
-                  return newUsage;
-                });
-
-        usage.setNumberRecords(usage.getNumberRecords() + dto.getNumberRecords());
-      }
-
-      // we sort it manually because we group the DB results manually
-      Supplier<Comparator<OrganizationOccurrenceDownloadUsage>> comparatorSupplier =
-          () -> {
-            Comparator<OrganizationOccurrenceDownloadUsage> comparator;
-            if (sortBy == OrganizationUsageSortField.ORGANIZATION_TITLE) {
-              comparator =
-                  Comparator.comparing(OrganizationOccurrenceDownloadUsage::getOrganizationTitle);
-            } else if (sortBy == OrganizationUsageSortField.COUNTRY_CODE) {
-              comparator =
-                  Comparator.comparing(
-                      OrganizationOccurrenceDownloadUsage::getPublishingCountryCode);
-            } else if (sortBy == OrganizationUsageSortField.RECORD_COUNT) {
-              comparator =
-                  Comparator.comparing(OrganizationOccurrenceDownloadUsage::getNumberRecords);
-            } else {
-              comparator =
-                  Comparator.comparing(OrganizationOccurrenceDownloadUsage::getOrganizationKey);
-            }
-
-            if (sortOrder == SortOrder.DESC) {
-              comparator = comparator.reversed();
-            }
-
-            return comparator;
-          };
+              downloadKey, Strings.emptyToNull(organizationTitle), sortBy, sortOrder, page);
 
       int count =
           datasetOccurrenceDownloadMapper.countOrganizationsByDownload(
               downloadKey, Strings.emptyToNull(organizationTitle));
 
-      return new PagingResponse<>(
-          page,
-          (long) count,
-          orgsMap.values().stream().sorted(comparatorSupplier.get()).collect(Collectors.toList()));
+      return new PagingResponse<>(page, (long) count, results);
     }
     throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
   }
@@ -698,50 +647,13 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     if (download != null) {
       page = page != null ? page : new PagingRequest();
 
-      List<OrganizationOccurrenceDownloadDto> dtos =
-          datasetOccurrenceDownloadMapper.listOrganizationsByDownload(downloadKey, null, page);
+      List<CountryOccurrenceDownloadUsage> results =
+          datasetOccurrenceDownloadMapper.listCountriesByDownload(
+              downloadKey, sortBy, sortOrder, page);
 
-      Map<String, CountryOccurrenceDownloadUsage> countriesMap = new HashMap<>();
-      for (OrganizationOccurrenceDownloadDto dto : dtos) {
-        CountryOccurrenceDownloadUsage usage =
-            countriesMap.computeIfAbsent(
-                dto.getPublishingCountryCode(),
-                k -> {
-                  CountryOccurrenceDownloadUsage newUsage = new CountryOccurrenceDownloadUsage();
-                  newUsage.setDownloadKey(dto.getDownloadKey());
-                  newUsage.setPublishingCountryCode(dto.getPublishingCountryCode());
-                  return newUsage;
-                });
+      int count = datasetOccurrenceDownloadMapper.countCountriesByDownload(downloadKey);
 
-        usage.setNumberRecords(usage.getNumberRecords() + dto.getNumberRecords());
-      }
-
-      // we sort it manually because we group the DB results manually
-      Supplier<Comparator<CountryOccurrenceDownloadUsage>> comparatorSupplier =
-          () -> {
-            Comparator<CountryOccurrenceDownloadUsage> comparator;
-            if (sortBy == CountryUsageSortField.RECORD_COUNT) {
-              comparator = Comparator.comparing(CountryOccurrenceDownloadUsage::getNumberRecords);
-            } else {
-              comparator =
-                  Comparator.comparing(CountryOccurrenceDownloadUsage::getPublishingCountryCode);
-            }
-
-            if (sortOrder == SortOrder.DESC) {
-              comparator = comparator.reversed();
-            }
-
-            return comparator;
-          };
-
-      int count = datasetOccurrenceDownloadMapper.countCountriesByDownload(downloadKey, null);
-
-      return new PagingResponse<>(
-          page,
-          (long) count,
-          countriesMap.values().stream()
-              .sorted(comparatorSupplier.get())
-              .collect(Collectors.toList()));
+      return new PagingResponse<>(page, (long) count, results);
     }
     throw new WebApplicationException("Download was not found", HttpStatus.NOT_FOUND);
   }

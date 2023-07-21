@@ -24,21 +24,22 @@
     <!-- The download is null -->
   </resultMap>
 
-  <resultMap id="ORGANIZATION_OCCURRENCE_MAP" type="OrganizationOccurrenceDownloadDto" autoMapping="false">
+  <resultMap id="ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage" autoMapping="false">
     <id property="downloadKey" column="download_key"/>
-    <id property="datasetKey" column="dataset_key"/>
-    <result property="organizationKey" column="orgKey"/>
-    <result property="organizationTitle" column="orgTitle"/>
-    <result property="numberRecords" column="number_records"/>
-    <result property="publishingCountryCode" column="country"/>
+    <id property="organizationKey" column="organizationKey"/>
+    <result property="organizationTitle" column="organizationTitle"/>
+    <result property="numberRecords" column="numberRecords"/>
+    <result property="publishingCountryCode" column="publishingCountryCode"/>
+  </resultMap>
+
+  <resultMap id="COUNTRY_OCCURRENCE_DOWNLOAD_MAP" type="org.gbif.api.model.registry.CountryOccurrenceDownloadUsage" autoMapping="false">
+    <id property="downloadKey" column="download_key"/>
+    <id property="publishingCountryCode" column="publishingCountryCode"/>
+    <result property="numberRecords" column="numberRecords"/>
   </resultMap>
 
   <sql id="DATASET_OCCURRENCE_DOWNLOAD_FIELDS">
     dod.download_key,dod.dataset_key,dod.dataset_title,dod.dataset_doi,dod.dataset_citation,dod.number_records
-  </sql>
-
-  <sql id="ORGANIZATION_OCCURRENCE_DOWNLOAD_FIELDS">
-    dod.download_key,dod.dataset_key,dod.number_records,o.key AS orgKey,o.title AS orgTitle,o.country
   </sql>
 
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
@@ -97,8 +98,10 @@
     </if>
   </select>
 
-  <select id="listOrganizationsByDownload" resultMap="ORGANIZATION_OCCURRENCE_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT <include refid="ORGANIZATION_OCCURRENCE_DOWNLOAD_FIELDS"/>
+  <select id="listOrganizationsByDownload" resultMap="ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP"
+          parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT o.key AS organizationKey, o.title AS organizationTitle, o.country AS publishingCountryCode, dod.download_key,
+    sum(dod.number_records) AS numberRecords
     FROM dataset_occurrence_download dod
     INNER JOIN occurrence_download od ON dod.download_key = od.key
     INNER JOIN dataset d on d.key = dod.dataset_key
@@ -107,7 +110,75 @@
     <if test="organizationTitle != null" >
       AND o.title = #{organizationTitle,jdbcType=VARCHAR}
     </if>
-    ORDER BY od.created DESC, od.key
+    GROUP BY o.key, o.title, o.country, dod.download_key, od.created, od.key
+    ORDER BY
+    <if test="sortBy != null">
+      <choose>
+        <when test="sortBy.name.equals('ORGANIZATION_TITLE')">
+          o.title
+        </when>
+        <when test="sortBy.name.equals('COUNTRY_CODE')">
+          o.country
+        </when>
+        <when test="sortBy.name.equals('RECORD_COUNT')">
+          numberRecords
+        </when>
+        <otherwise/>
+      </choose>
+      <if test="sortOrder != null">
+        <choose>
+          <when test="sortOrder.name.equals('DESC')">
+            DESC
+          </when>
+          <otherwise>
+            ASC
+          </otherwise>
+        </choose>
+      </if>
+      ,
+    </if>
+    od.created DESC, od.key, o.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
+  <select id="listCountriesByDownload" resultMap="COUNTRY_OCCURRENCE_DOWNLOAD_MAP"
+          parameterType="org.gbif.api.model.common.paging.Pageable">
+    SELECT o.country AS publishingCountryCode, dod.download_key, sum(dod.number_records) AS numberRecords
+    FROM dataset_occurrence_download dod
+    INNER JOIN occurrence_download od ON dod.download_key = od.key
+    INNER JOIN dataset d on d.key = dod.dataset_key
+    INNER JOIN organization o ON o.key = d.publishing_organization_key
+    WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
+    GROUP BY o.country,dod.download_key,od.created,od.key
+    ORDER BY
+    <if test="sortBy != null">
+      <choose>
+        <when test="sortBy.name.equals('COUNTRY_CODE')">
+          o.country
+        </when>
+        <when test="sortBy.name.equals('RECORD_COUNT')">
+          numberRecords
+        </when>
+        <otherwise/>
+      </choose>
+      <if test="sortOrder != null">
+        <choose>
+          <when test="sortOrder.name.equals('DESC')">
+            DESC
+          </when>
+          <otherwise>
+            ASC
+          </otherwise>
+        </choose>
+      </if>
+      ,
+    </if>
+    od.created DESC, od.key
+    <if test="sortBy != null and sortBy.name.equals('RECORD_COUNT')">
+      ,o.country
+    </if>
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -132,9 +203,6 @@
     INNER JOIN dataset d on d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
-    <if test="organizationTitle != null" >
-      AND o.title = #{organizationTitle,jdbcType=VARCHAR}
-    </if>
   </select>
 
   <select id="countByDataset" resultType="Integer" parameterType="map">

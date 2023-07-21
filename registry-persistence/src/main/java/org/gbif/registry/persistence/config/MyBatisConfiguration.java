@@ -86,8 +86,6 @@ import org.gbif.registry.persistence.mapper.handler.UserIdsTypeHandler;
 import java.net.URI;
 import java.util.UUID;
 
-import org.gbif.registry.persistence.mapper.params.OrganizationOccurrenceDownloadDto;
-
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -128,10 +126,6 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Metadata", Metadata.class);
       configuration.getTypeAliasRegistry().registerAlias("Download", Download.class);
       configuration.getTypeAliasRegistry().registerAlias("DownloadRequest", DownloadRequest.class);
-      configuration
-          .getTypeAliasRegistry()
-          .registerAlias(
-              "OrganizationOccurrenceDownloadDto", OrganizationOccurrenceDownloadDto.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
