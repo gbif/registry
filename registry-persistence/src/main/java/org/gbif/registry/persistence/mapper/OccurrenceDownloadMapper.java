@@ -36,6 +36,8 @@ public interface OccurrenceDownloadMapper {
 
   Download get(@Param("key") String key);
 
+  Download getWithCounts(@Param("key") String key);
+
   Download getByDOI(@Param("doi") DOI doi);
 
   void update(Download entity);

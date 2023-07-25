@@ -56,6 +56,61 @@
     </association>
 
     <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
+  </resultMap>
+
+  <resultMap id="OCCURRENCE_DOWNLOAD_WITH_COUNTS_MAP" type="org.gbif.api.model.occurrence.Download" autoMapping="false">
+    <id property="key" column="key"/>
+    <result property="doi" column="doi" />
+    <result property="license" column="license"/>
+    <result property="status" column="status"/>
+    <result property="downloadLink" column="download_link"/>
+    <result property="size" column="size"/>
+    <result property="totalRecords" column="total_records"/>
+    <result property="created" column="created"/>
+    <result property="modified" column="modified"/>
+    <result property="eraseAfter" column="erase_after"/>
+    <result property="erasureNotification" column="erasure_notification"/>
+    <result property="source" column="source"/>
+
+    <association property="request" javaType="org.gbif.api.model.occurrence.DownloadRequest">
+      <result property="notificationAddressesAsString" column="notification_addresses"/>
+      <result property="sendNotification" column="send_notification"/>
+      <result property="creator" column="created_by" />
+      <result property="format" column="format"/>
+      <result property="type" column="type"/>
+      <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+      <discriminator javaType="string" column="format">
+        <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="SIMPLE_CSV" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="SIMPLE_PARQUET" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="SIMPLE_WITH_VERBATIM_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="IUCN" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="MAP_OF_LIFE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+        <case value="BIONOMIA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
+          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+        </case>
+      </discriminator>
+    </association>
+
+    <association property="numberDatasets" column="key" select="COUNT_DATASETS" fetchType="eager"/>
     <association property="numberOrganizations" column="key" select="COUNT_ORGANIZATIONS" fetchType="eager"/>
     <association property="numberPublishingCountries" column="key" select="COUNT_PUBLISHING_COUNTRIES" fetchType="eager"/>
   </resultMap>
@@ -146,6 +201,13 @@
   </sql>
 
   <select id="get" resultType="org.gbif.api.model.occurrence.Download" resultMap="OCCURRENCE_DOWNLOAD_MAP">
+    SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM occurrence_download
+    WHERE key = #{key,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getWithCounts" resultType="org.gbif.api.model.occurrence.Download"
+          resultMap="OCCURRENCE_DOWNLOAD_WITH_COUNTS_MAP">
     SELECT <include refid="OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM occurrence_download
     WHERE key = #{key,jdbcType=VARCHAR}
