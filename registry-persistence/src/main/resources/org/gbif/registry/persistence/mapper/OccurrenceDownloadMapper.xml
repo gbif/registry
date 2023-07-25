@@ -137,7 +137,7 @@
     SELECT COUNT(*) FROM dataset_occurrence_download WHERE download_key = #{key,jdbcType=VARCHAR}
   </select>
 
-  <select id="COUNT_ORGANIZATIONS" resultType="Integer">
+  <select id="COUNT_ORGANIZATIONS" resultType="Long">
     SELECT COUNT(DISTINCT o.key)
     FROM dataset_occurrence_download dod
     INNER JOIN dataset d ON dod.dataset_key= d.key
@@ -145,7 +145,7 @@
     WHERE dod.download_key = #{key,jdbcType=VARCHAR}
   </select>
 
-  <select id="COUNT_PUBLISHING_COUNTRIES" resultType="Integer">
+  <select id="COUNT_PUBLISHING_COUNTRIES" resultType="Long">
     SELECT COUNT(DISTINCT o.country)
     FROM dataset_occurrence_download dod
     INNER JOIN dataset d ON dod.dataset_key= d.key
