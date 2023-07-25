@@ -237,7 +237,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
 
   @Override
   public Download get(String keyOrDoi) {
-    Download download = getByKey(keyOrDoi);
+    Download download = getByKey(keyOrDoi, false);
 
     if (download == null && DOI.isParsable(keyOrDoi)) { // maybe it's a DOI?
       DOI doi = new DOI(keyOrDoi);
@@ -265,10 +265,17 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound(useUrlMapping = true)
-  public Download getByKey(@NotNull @PathVariable("key") String key) {
+  public Download getByKey(
+      @NotNull @PathVariable("key") String key,
+      @RequestParam(value = "statistics",required = false) Boolean statistics) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    Download download = occurrenceDownloadMapper.get(key);
+    Download download;
+    if (Boolean.TRUE.equals(statistics)) {
+      download = occurrenceDownloadMapper.getWithCounts(key);
+    } else {
+      download = occurrenceDownloadMapper.get(key);
+    }
     clearSensitiveData(authentication, download);
     assertDownloadType(download);
 
@@ -697,7 +704,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("{key}/citation")
   @NullToNotFound(useUrlMapping = true)
   public String getCitationByKey(@NotNull @PathVariable("key") String key) {
-    Download download = getByKey(key);
+    Download download = getByKey(key, false);
     return getCitationInternal(download);
   }
 
