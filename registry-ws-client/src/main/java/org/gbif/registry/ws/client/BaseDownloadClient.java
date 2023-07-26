@@ -22,16 +22,15 @@ import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.model.registry.OrganizationOccurrenceDownloadUsage;
 import org.gbif.api.service.registry.OccurrenceDownloadService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.CountryUsageSortField;
+import org.gbif.api.vocabulary.DatasetUsageSortField;
+import org.gbif.api.vocabulary.OrganizationUsageSortField;
+import org.gbif.api.vocabulary.SortOrder;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import org.gbif.api.vocabulary.CountryUsageSortField;
-import org.gbif.api.vocabulary.DatasetUsageSortField;
-import org.gbif.api.vocabulary.OrganizationUsageSortField;
-import org.gbif.api.vocabulary.SortOrder;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
@@ -73,7 +72,13 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   PagingResponse<Download> listByUser(
       @PathVariable("user") String user,
       @SpringQueryMap Pageable pageable,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status);
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "from", required = false) Date from,
+      @RequestParam(
+              value = "statistics",
+              required = false,
+              defaultValue = "true") // true by default to keep backwards compatibility
+          Boolean statistics);
 
   @RequestMapping(
       method = RequestMethod.GET,

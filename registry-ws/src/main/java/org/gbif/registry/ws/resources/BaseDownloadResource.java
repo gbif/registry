@@ -267,7 +267,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @NullToNotFound(useUrlMapping = true)
   public Download getByKey(
       @NotNull @PathVariable("key") String key,
-      @RequestParam(value = "statistics",required = false) Boolean statistics) {
+      @RequestParam(value = "statistics", required = false) Boolean statistics) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     Download download;
@@ -358,13 +358,28 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public PagingResponse<Download> listByUser(
       @PathVariable String user,
       Pageable page,
-      @RequestParam(value = "status", required = false) Set<Download.Status> status) {
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "from", required = false) Date from,
+      @RequestParam(
+              value = "statistics",
+              required = false,
+              defaultValue = "true") // true by default to keep backwards compatibility
+          Boolean statistics) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
-    return new PagingResponse<>(
-        page,
-        (long) occurrenceDownloadMapper.countByUser(user, status, downloadType),
-        occurrenceDownloadMapper.listByUser(user, page, status, downloadType));
+
+    long count;
+    List<Download> downloads;
+    if (Boolean.FALSE.equals(statistics)) {
+      downloads =
+          occurrenceDownloadMapper.listByUserLightweight(user, page, status, downloadType, from);
+      count = occurrenceDownloadMapper.countByUserLightweight(user, status, downloadType, from);
+    } else {
+      downloads = occurrenceDownloadMapper.listByUser(user, page, status, downloadType, from);
+      count = occurrenceDownloadMapper.countByUser(user, status, downloadType, from);
+    }
+
+    return new PagingResponse<>(page, count, downloads);
   }
 
   /**
