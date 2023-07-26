@@ -68,6 +68,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -206,6 +207,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
     Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
     assertNotNull(occurrenceDownload2);
     assertEquals(occurrenceDownload.getRequest(), occurrenceDownload2.getRequest());
+    assertNull(occurrenceDownload2.getNumberOrganizations());
+    assertNull(occurrenceDownload2.getNumberPublishingCountries());
   }
 
   /** Tests the create and get(key) methods for null predicate. */
@@ -291,7 +294,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
       }
       assertTrue(
           service
-                  .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null)
+                  .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null, null, true)
                   .getResults()
                   .size()
               > 0,
@@ -317,7 +320,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     }
     assertTrue(
         service
-                .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null)
+                .listByUser(TestConstants.TEST_ADMIN, new PagingRequest(3, 5), null, null, true)
                 .getResults()
                 .size()
             > 0,
@@ -425,7 +428,9 @@ public class OccurrenceDownloadIT extends BaseItTest {
                 .listByUser(
                     TestConstants.TEST_ADMIN,
                     new PagingRequest(0, 5),
-                    Download.Status.EXECUTING_STATUSES)
+                    Download.Status.EXECUTING_STATUSES,
+                    null,
+                    true)
                 .getResults()
                 .size()
             > 0,

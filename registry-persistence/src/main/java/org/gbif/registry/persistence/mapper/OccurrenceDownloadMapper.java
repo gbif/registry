@@ -60,16 +60,31 @@ public interface OccurrenceDownloadMapper {
       @Param("newCreator") String newCreator,
       @Param("notificationAddressesAsString") String notificationAddressesAsString);
 
-  List<Download> listByUser(
+  List<Download> listByUserLightweight(
       @Param("creator") String creator,
       @Nullable @Param("page") Pageable page,
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type);
+      @Nullable @Param("type") DownloadType type,
+      @Nullable @Param("from") Date from);
 
-  int countByUser(
+  int countByUserLightweight(
       @Param("creator") String creator,
       @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type);
+      @Nullable @Param("type") DownloadType type,
+      @Nullable @Param("from") Date from);
+
+  List<Download> listByUser(
+    @Param("creator") String creator,
+    @Nullable @Param("page") Pageable page,
+    @Param("status") Set<Download.Status> status,
+    @Nullable @Param("type") DownloadType type,
+    @Nullable @Param("from") Date from);
+
+  int countByUser(
+    @Param("creator") String creator,
+    @Param("status") Set<Download.Status> status,
+    @Nullable @Param("type") DownloadType type,
+    @Nullable @Param("from") Date from);
 
   List<Download> listByEraseAfter(
       @Nullable @Param("page") Pageable page,

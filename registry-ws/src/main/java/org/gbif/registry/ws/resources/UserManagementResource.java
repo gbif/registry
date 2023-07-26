@@ -268,7 +268,7 @@ public class UserManagementResource {
 
     // get all downloads before erase
     List<Download> downloads =
-        occurrenceDownloadMapper.listByUser(user.getUserName(), null, null, null);
+        occurrenceDownloadMapper.listByUser(user.getUserName(), null, null, null, null);
 
     // erase user from downloads
     occurrenceDownloadMapper.updateNotificationAddresses(oldUsername, newUsername, "{}");
