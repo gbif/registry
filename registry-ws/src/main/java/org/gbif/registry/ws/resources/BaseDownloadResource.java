@@ -402,7 +402,6 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Override
   public long countByUser(
       @PathVariable String user,
-      Pageable page,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false) Date from) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

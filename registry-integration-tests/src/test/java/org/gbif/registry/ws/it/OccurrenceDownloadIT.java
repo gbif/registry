@@ -439,7 +439,6 @@ public class OccurrenceDownloadIT extends BaseItTest {
     long count =
         service.countByUser(
             TestConstants.TEST_ADMIN,
-            new PagingRequest(0, 5),
             Download.Status.EXECUTING_STATUSES,
             null);
     assertEquals(downloads.getResults().size(), count);
