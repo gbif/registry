@@ -368,18 +368,46 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
 
-    long count;
+    long count = occurrenceDownloadMapper.countByUser(user, status, downloadType, from);
+
     List<Download> downloads;
     if (Boolean.FALSE.equals(statistics)) {
       downloads =
           occurrenceDownloadMapper.listByUserLightweight(user, page, status, downloadType, from);
-      count = occurrenceDownloadMapper.countByUserLightweight(user, status, downloadType, from);
     } else {
       downloads = occurrenceDownloadMapper.listByUser(user, page, status, downloadType, from);
-      count = occurrenceDownloadMapper.countByUser(user, status, downloadType, from);
     }
 
     return new PagingResponse<>(page, count, downloads);
+  }
+
+  @Tag(name = "Occurrence downloads")
+  @Operation(
+      operationId = "countOccurrenceDownloadsByUser",
+      summary = "Counts all downloads from a user",
+      description = "Retrieves the counts of occurrence downloads done by the user.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0121")))
+  @Parameter(
+      name = "user",
+      description = "Username (administrator account required to see other users).",
+      in = ParameterIn.PATH)
+  @Pageable.OffsetLimitParameters
+  @ApiResponse(responseCode = "200", description = "Occurrence downloads count.")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @GetMapping("user/{user}/count")
+  @Override
+  public long countByUser(
+      @PathVariable String user,
+      Pageable page,
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "from", required = false) Date from) {
+    final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    checkUserIsInSecurityContext(user, authentication);
+    return occurrenceDownloadMapper.countByUser(user, status, downloadType, from);
   }
 
   /**

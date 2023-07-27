@@ -67,12 +67,6 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("type") DownloadType type,
       @Nullable @Param("from") Date from);
 
-  int countByUserLightweight(
-      @Param("creator") String creator,
-      @Param("status") Set<Download.Status> status,
-      @Nullable @Param("type") DownloadType type,
-      @Nullable @Param("from") Date from);
-
   List<Download> listByUser(
     @Param("creator") String creator,
     @Nullable @Param("page") Pageable page,

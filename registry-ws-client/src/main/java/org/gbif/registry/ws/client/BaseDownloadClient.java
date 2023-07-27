@@ -82,6 +82,18 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(
       method = RequestMethod.GET,
+      value = "user/{user}/count",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  long countByUser(
+      @PathVariable("user") String user,
+      @SpringQueryMap Pageable pageable,
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "from", required = false) Date from);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
       value = "internal/eraseAfter",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
