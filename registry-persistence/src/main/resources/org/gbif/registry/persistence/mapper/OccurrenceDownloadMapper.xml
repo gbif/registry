@@ -215,11 +215,6 @@
     </if>
   </select>
 
-  <select id="countByUserLightweight" resultType="Integer">
-    SELECT COUNT(*)
-    <include refid="LIST_BY_USER_COMMON" />
-  </select>
-
   <sql id="LIST_BY_USER_COMMON">
     FROM occurrence_download
     WHERE created_by = #{creator,jdbcType=VARCHAR}

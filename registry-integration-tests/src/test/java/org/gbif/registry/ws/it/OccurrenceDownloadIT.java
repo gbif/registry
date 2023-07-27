@@ -423,18 +423,26 @@ public class OccurrenceDownloadIT extends BaseItTest {
     for (int i = 1; i <= 5; i++) {
       service.create(getTestInstancePredicateDownload());
     }
+
+    PagingResponse<Download> downloads =
+        service.listByUser(
+            TestConstants.TEST_ADMIN,
+            new PagingRequest(0, 5),
+            Download.Status.EXECUTING_STATUSES,
+            null,
+            true);
+
     assertTrue(
-        service
-                .listByUser(
-                    TestConstants.TEST_ADMIN,
-                    new PagingRequest(0, 5),
-                    Download.Status.EXECUTING_STATUSES,
-                    null,
-                    true)
-                .getResults()
-                .size()
-            > 0,
+        downloads.getResults().size() > 0,
         "List by user and status operation should return 5 records");
+
+    long count =
+        service.countByUser(
+            TestConstants.TEST_ADMIN,
+            new PagingRequest(0, 5),
+            Download.Status.EXECUTING_STATUSES,
+            null);
+    assertEquals(downloads.getResults().size(), count);
   }
 
   /** Tests the status update of {@link Download}. */
