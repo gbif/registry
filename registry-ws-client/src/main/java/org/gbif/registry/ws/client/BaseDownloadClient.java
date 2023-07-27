@@ -88,7 +88,6 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   @Override
   long countByUser(
       @PathVariable("user") String user,
-      @SpringQueryMap Pageable pageable,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false) Date from);
 
