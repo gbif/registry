@@ -274,6 +274,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
     // All numbers are compare to 2 different values because this each run twice: one for the WS and
     // once for the MyBatis layer
     assertEquals(3, resultSize, "A total of 3 records must be returned");
+    assertEquals(resultSize, service.count(null, null));
     assertEquals(
         3L, numberOfPredicateDownloads, "A total of 3 PredicateDownloads must be returned");
   }

@@ -65,6 +65,16 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
 
   @RequestMapping(
       method = RequestMethod.GET,
+      value = "count",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  @Override
+  long count(
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "source", required = false) String source);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
       value = "user/{user}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
