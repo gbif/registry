@@ -331,6 +331,16 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
         occurrenceDownloadMapper.list(page, status, downloadType, source));
   }
 
+  @Hidden // Admin method hidden
+  @GetMapping("/count")
+  @Secured(ADMIN_ROLE)
+  @Override
+  public long count(
+      @RequestParam(value = "status", required = false) Set<Download.Status> status,
+      @RequestParam(value = "source", required = false) String source) {
+    return occurrenceDownloadMapper.count(status, downloadType, source);
+  }
+
   /**
    * Lists all the downloads. Users will see only their own downloads; an admin user can see other
    * users' downloads.
