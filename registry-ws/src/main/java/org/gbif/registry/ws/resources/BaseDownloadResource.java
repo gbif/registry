@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
@@ -124,6 +126,7 @@ import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensiti
  * The result is manually moved from the Registry OpenAPI document to the
  * Occurrence OpenAPI document.
  */
+@Slf4j
 public class BaseDownloadResource implements OccurrenceDownloadService {
 
   private final OccurrenceDownloadMapper occurrenceDownloadMapper;
@@ -375,6 +378,14 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
               required = false,
               defaultValue = "true") // true by default to keep backwards compatibility
           Boolean statistics) {
+
+    log.debug(
+        "List downloads for user {}, status {}, from {} and statistics {}",
+        user,
+        status,
+        from,
+        statistics);
+
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
 
