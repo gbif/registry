@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.common.DOI;
@@ -107,12 +105,14 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
@@ -265,6 +265,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0110")))
+  @Parameter(
+      name = "statistics",
+      description = "If true it also shows number of organizations and countries.",
+      in = ParameterIn.QUERY)
   @DownloadKeyParameter
   @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
@@ -360,10 +364,28 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0120")))
-  @Parameter(
-      name = "user",
-      description = "Username (administrator account required to see other users).",
-      in = ParameterIn.PATH)
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "user",
+            description = "Username (administrator account required to see other users).",
+            in = ParameterIn.PATH),
+        @Parameter(
+            name = "status",
+            description = "List of statuses to filter by.",
+            schema = @Schema(implementation = Download.Status.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "from",
+            description = "Date time in ISO format to filter downloads by its creation date.",
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "statistics",
+            description =
+                "If true it returns the counts of datasets, organizations and countries. By default it's true to maintain backwards compatibility.",
+            in = ParameterIn.QUERY)
+      })
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "Occurrence download information.")
   @Docs.DefaultUnsuccessfulReadResponses
@@ -415,10 +437,23 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0121")))
-  @Parameter(
-      name = "user",
-      description = "Username (administrator account required to see other users).",
-      in = ParameterIn.PATH)
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "user",
+            description = "Username (administrator account required to see other users).",
+            in = ParameterIn.PATH),
+        @Parameter(
+            name = "status",
+            description = "List of statuses to filter by.",
+            schema = @Schema(implementation = Download.Status.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "from",
+            description = "Date time in ISO format to filter downloads by its creation date.",
+            in = ParameterIn.QUERY)
+      })
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "Occurrence downloads count.")
   @Docs.DefaultUnsuccessfulReadResponses
