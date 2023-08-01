@@ -49,6 +49,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
 
 import java.security.AccessControlException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
@@ -419,6 +420,8 @@ public class OccurrenceDownloadIT extends BaseItTest {
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testListByUserAndStatus(ServiceType serviceType) {
+    LocalDateTime.now().atOffset(ZoneOffset.UTC).toString();
+
     OccurrenceDownloadService service =
         getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
     for (int i = 1; i <= 5; i++) {
@@ -430,7 +433,7 @@ public class OccurrenceDownloadIT extends BaseItTest {
             TestConstants.TEST_ADMIN,
             new PagingRequest(0, 5),
             Download.Status.EXECUTING_STATUSES,
-            null,
+            LocalDateTime.now().minusMinutes(30),
             true);
 
     assertTrue(
@@ -441,8 +444,25 @@ public class OccurrenceDownloadIT extends BaseItTest {
         service.countByUser(
             TestConstants.TEST_ADMIN,
             Download.Status.EXECUTING_STATUSES,
-            null);
+            LocalDateTime.now().minusMinutes(30));
     assertEquals(downloads.getResults().size(), count);
+
+    assertEquals(
+        0,
+        service
+            .listByUser(
+                TestConstants.TEST_ADMIN,
+                new PagingRequest(0, 5),
+                Download.Status.EXECUTING_STATUSES,
+                LocalDateTime.now(),
+                true)
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        service.countByUser(
+            TestConstants.TEST_ADMIN, Download.Status.EXECUTING_STATUSES, LocalDateTime.now()));
   }
 
   /** Tests the status update of {@link Download}. */
