@@ -27,12 +27,14 @@ import org.gbif.api.vocabulary.DatasetUsageSortField;
 import org.gbif.api.vocabulary.OrganizationUsageSortField;
 import org.gbif.api.vocabulary.SortOrder;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.cloud.openfeign.SpringQueryMap;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,7 +85,9 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
       @PathVariable("user") String user,
       @SpringQueryMap Pageable pageable,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "from", required = false) Date from,
+      @RequestParam(value = "from", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime from,
       @RequestParam(
               value = "statistics",
               required = false,
@@ -99,7 +103,9 @@ public interface BaseDownloadClient extends OccurrenceDownloadService {
   long countByUser(
       @PathVariable("user") String user,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "from", required = false) Date from);
+      @RequestParam(value = "from", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime from);
 
   @RequestMapping(
       method = RequestMethod.GET,

@@ -59,6 +59,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
@@ -81,6 +82,7 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -372,7 +374,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
       @PathVariable String user,
       Pageable page,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "from", required = false) Date from,
+      @RequestParam(value = "from", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime from,
       @RequestParam(
               value = "statistics",
               required = false,
@@ -424,7 +428,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   public long countByUser(
       @PathVariable String user,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
-      @RequestParam(value = "from", required = false) Date from) {
+      @RequestParam(value = "from", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime from) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     checkUserIsInSecurityContext(user, authentication);
     return occurrenceDownloadMapper.countByUser(user, status, downloadType, from);

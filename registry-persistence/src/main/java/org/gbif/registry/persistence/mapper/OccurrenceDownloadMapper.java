@@ -20,6 +20,7 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.occurrence.DownloadType;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -65,20 +66,20 @@ public interface OccurrenceDownloadMapper {
       @Nullable @Param("page") Pageable page,
       @Param("status") Set<Download.Status> status,
       @Nullable @Param("type") DownloadType type,
-      @Nullable @Param("from") Date from);
+      @Nullable @Param("from") LocalDateTime from);
 
   List<Download> listByUser(
     @Param("creator") String creator,
     @Nullable @Param("page") Pageable page,
     @Param("status") Set<Download.Status> status,
     @Nullable @Param("type") DownloadType type,
-    @Nullable @Param("from") Date from);
+    @Nullable @Param("from") LocalDateTime from);
 
   int countByUser(
     @Param("creator") String creator,
     @Param("status") Set<Download.Status> status,
     @Nullable @Param("type") DownloadType type,
-    @Nullable @Param("from") Date from);
+    @Nullable @Param("from") LocalDateTime from);
 
   List<Download> listByEraseAfter(
       @Nullable @Param("page") Pageable page,
