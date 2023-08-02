@@ -14,31 +14,20 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.EndorsementStatus;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.search.KeyTitleResult;
-import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 
 import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.Null;
 
 import org.apache.ibatis.annotations.Param;
-
-import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
-
-
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
-import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 
@@ -92,15 +81,6 @@ public interface OrganizationMapper
 
   /** A simple suggest by title service. */
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
-
-  List<OrganizationContactDto> searchContacts(
-      @Nullable @Param("country") List<Country> countries,
-      @Nullable @Param("type") List<ContactType> types,
-      @Nullable @Param("page") Pageable page);
-
-  long countContacts(
-      @Nullable @Param("country") List<Country> countries,
-      @Nullable @Param("type") List<ContactType> types);
 
   Organization getLightweight(@Param("key") UUID key);
 }

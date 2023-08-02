@@ -25,19 +25,14 @@ import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
 import org.gbif.api.model.registry.PostPersist;
 import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.search.ContactsSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
-import org.gbif.api.model.registry.view.OrganizationContactView;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.dto.OrganizationContactDto;
 import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.InstallationListParams;
@@ -48,12 +43,10 @@ import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.surety.OrganizationEndorsementService;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -85,7 +78,6 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
@@ -651,69 +643,5 @@ public class OrganizationResource
     }
 
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-  }
-
-  @Operation(
-      operationId = "searchOrganizationsContacts",
-      summary = "Searches contacts among all organizations",
-      description = "Lists all contacts that meet the filter parameters",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0100")))
-  @Parameters(
-      value = {
-        @Parameter(
-            name = "country",
-            description = "Country of the organization",
-            schema = @Schema(implementation = Country.class),
-            in = ParameterIn.QUERY,
-            explode = Explode.TRUE),
-        @Parameter(
-            name = "type",
-            description = "Contact type",
-            schema = @Schema(implementation = ContactType.class),
-            in = ParameterIn.QUERY,
-            explode = Explode.TRUE),
-        @Parameter(
-            name = "gbifRegion",
-            description = "GBIF region",
-            schema = @Schema(implementation = GbifRegion.class),
-            in = ParameterIn.QUERY,
-            explode = Explode.TRUE)
-      })
-  @Pageable.OffsetLimitParameters
-  @ApiResponse(responseCode = "200", description = "Contacts search successful")
-  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
-  @GetMapping("contacts")
-  @Override
-  public PagingResponse<OrganizationContactView> searchContacts(ContactsSearchParams params) {
-    if (params.getGbifRegion() != null && !params.getGbifRegion().isEmpty()) {
-      params
-          .getCountry()
-          .addAll(
-              Arrays.stream(Country.values())
-                  .filter(c -> params.getGbifRegion().contains(c.getGbifRegion()))
-                  .collect(Collectors.toList()));
-    }
-
-    List<OrganizationContactDto> dtos =
-        organizationMapper.searchContacts(params.getCountry(), params.getType(), params.getPage());
-
-    List<OrganizationContactView> views =
-        dtos.stream()
-            .map(
-                dto ->
-                    new OrganizationContactView(
-                        dto.getContact(),
-                        dto.getOrganizationKey(),
-                        dto.getOrganizationCountry(),
-                        dto.getOrganizationTitle()))
-            .collect(Collectors.toList());
-
-    return pagingResponse(
-        params.getPage(),
-        organizationMapper.countContacts(params.getCountry(), params.getType()),
-        views);
   }
 }

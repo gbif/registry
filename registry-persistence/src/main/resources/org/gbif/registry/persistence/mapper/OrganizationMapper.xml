@@ -28,10 +28,6 @@
     <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
   </resultMap>
 
-  <resultMap id="ORG_CONTACT_DTO_MAP" type="OrganizationContactDto" autoMapping="true">
-    <association property="contact" resultMap="org.gbif.registry.persistence.mapper.ContactMapper.CONTACT_MAP" />
-  </resultMap>
-
   <sql id="WRITABLE_ORGANIZATION_FIELDS">
     key,endorsing_node_key,password,title,abbreviation,description,language,email,
     phone,homepage,logo_url,address,city,province,country,postal_code,latitude,longitude,created,created_by,
@@ -507,54 +503,6 @@
                             UNION ALL
                             (SELECT key,title FROM organization WHERE title ilike '%'||#{q}||'%' AND NOT title ilike #{q}||'%' AND deleted IS NULL ORDER BY title LIMIT 25)
                           ) t1 LIMIT 25
-  </select>
-
-  <select id="searchContacts" resultMap="ORG_CONTACT_DTO_MAP">
-    SELECT c.key,oc.type,oc.is_primary AS primary,c.user_id,c.first_name,c.last_name,c.description,c.position,c.email,
-    c.phone,c.homepage,c.organization,c.address,c.city,c.province,c.country,c.postal_code,c.created,c.created_by,c.modified,c.modified_by,
-    o.key AS organizationKey, o.country AS organizationCountry, o.title AS organizationTitle
-    FROM contact c
-    INNER JOIN organization_contact oc ON oc.contact_key = c.key
-    INNER JOIN organization o ON o.key = oc.organization_key
-    <where>
-      <if test="country != null and country.size > 0">
-        o.country IN
-        <foreach item="item" collection="country" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
-      <if test="type != null and type.size > 0">
-        AND oc.type IN
-        <foreach item="item" collection="type" open="(" separator="," close=")">
-          #{item,jdbcType=OTHER}
-        </foreach>
-      </if>
-    </where>
-    ORDER BY created DESC
-    <if test="page != null">
-      LIMIT #{page.limit} OFFSET #{page.offset}
-    </if>
-  </select>
-
-  <select id="countContacts" resultType="Long">
-    SELECT COUNT(*)
-    FROM contact c
-    INNER JOIN organization_contact oc ON oc.contact_key = c.key
-    INNER JOIN organization o ON o.key = oc.organization_key
-    <where>
-      <if test="country != null and country.size > 0">
-        o.country IN
-        <foreach item="item" collection="country" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
-      <if test="type != null and type.size > 0">
-        AND oc.type IN
-        <foreach item="item" collection="type" open="(" separator="," close=")">
-          #{item,jdbcType=OTHER}
-        </foreach>
-      </if>
-    </where>
   </select>
 
 </mapper>
