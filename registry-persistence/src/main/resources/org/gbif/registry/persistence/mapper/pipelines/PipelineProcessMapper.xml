@@ -341,6 +341,12 @@
     WHERE finished = false;
   </update>
 
+  <update id="markPipelineExecutionAsRunning">
+    UPDATE pipeline_execution
+    SET finished = false
+    WHERE key = #{pipelineExecutionKey,jdbcType=BIGINT};
+  </update>
+
   <select id="getRunningPipelineProcessCount" resultType="Long">
     SELECT COUNT(1)
     FROM pipeline_execution pe
