@@ -195,7 +195,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
             name = "modified",
             description =
                 "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
-            schema = @Schema(implementation = DatasetType.class),
+            schema = @Schema(implementation = Range.class),
             in = ParameterIn.QUERY,
             explode = Explode.TRUE),
         @Parameter(name = "request", hidden = true)
