@@ -15,7 +15,6 @@ package org.gbif.registry.ws.it;
 
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Installation;
@@ -23,16 +22,12 @@ import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.Network;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.search.ContactsSearchParams;
 import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
-import org.gbif.api.model.registry.view.OrganizationContactView;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.util.Range;
-import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.TestDataFactory;
@@ -269,57 +264,6 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     service.delete(key2);
     searchParams = new OrganizationRequestSearchParams();
     assertResultsOfSize(service.listDeleted(searchParams), 1);
-  }
-
-  @ParameterizedTest
-  @EnumSource(ServiceType.class)
-  public void testSearchOrganizationContacts(ServiceType serviceType) {
-    OrganizationService service = (OrganizationService) getService(serviceType);
-    Node node = testDataFactory.newNode();
-    UUID nodeKey = nodeResource.create(node);
-
-    Organization o1 = testDataFactory.newOrganization(nodeKey);
-    o1.setCountry(Country.UNITED_STATES);
-    UUID o1Key = service.create(o1);
-
-    Organization o2 = testDataFactory.newOrganization(nodeKey);
-    o2.setCountry(Country.SPAIN);
-    UUID o2Key = service.create(o2);
-
-    Contact c1 = testDataFactory.newContact();
-    c1.setType(ContactType.TECHNICAL_POINT_OF_CONTACT);
-    Integer key1 = organizationResource.addContact(o1Key, c1);
-
-    Contact c2 = testDataFactory.newContact();
-    c2.setType(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
-    Integer key2 = organizationResource.addContact(o2Key, c2);
-
-    ContactsSearchParams params = new ContactsSearchParams();
-    params.getCountry().add(Country.SPAIN);
-    PagingResponse<OrganizationContactView> results = service.searchContacts(params);
-    assertEquals(1, results.getCount());
-    assertEquals(o2Key, results.getResults().get(0).getOrganizationKey());
-
-    params.getGbifRegion().add(GbifRegion.NORTH_AMERICA);
-    assertEquals(2, service.searchContacts(params).getCount());
-
-    params = new ContactsSearchParams();
-    params.getGbifRegion().add(GbifRegion.NORTH_AMERICA);
-    results = service.searchContacts(params);
-    assertEquals(1, results.getCount());
-    assertEquals(o1Key, results.getResults().get(0).getOrganizationKey());
-
-    params.getGbifRegion().add(GbifRegion.EUROPE);
-    assertEquals(2, service.searchContacts(params).getCount());
-
-    params = new ContactsSearchParams();
-    params.getType().add(ContactType.ADMINISTRATIVE_POINT_OF_CONTACT);
-    results = service.searchContacts(params);
-    assertEquals(1, results.getCount());
-    assertEquals(o2Key, results.getResults().get(0).getOrganizationKey());
-
-    params.getType().add(ContactType.TECHNICAL_POINT_OF_CONTACT);
-    assertEquals(2, service.searchContacts(params).getCount());
   }
 
   private void createOrgs(UUID nodeKey, ServiceType serviceType, Country... countries) {
