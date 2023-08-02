@@ -1005,8 +1005,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @Tag(name = "Occurrence download statistics")
   @Operation(
       operationId = "getDownloadedStatistics",
-      summary = "Summarize downloads",
-      description = "Summarizes downloads",
+      summary = "Provides summarized download statistics",
+      description = "Filters for downloads matching the provided criteria, then provide counts by year, month and " +
+        "dataset of the total number of downloads, and the total number of records included in those downloads.",
       extensions =
           @Extension(
               name = "Order",
