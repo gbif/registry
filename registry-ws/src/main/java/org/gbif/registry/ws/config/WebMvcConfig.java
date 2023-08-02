@@ -34,7 +34,6 @@ import org.gbif.registry.ws.provider.networkEntitiesList.InstallationRequestSear
 import org.gbif.registry.ws.provider.networkEntitiesList.NetworkRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.NodeRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.OrganizationRequestSearchParamsHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.OrganizationContactsParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.server.processor.ParamNameProcessor;
@@ -91,7 +90,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new NodeRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
-    argumentResolvers.add(new OrganizationContactsParamsHandlerMethodArgumentResolver());
   }
 
   @Override
