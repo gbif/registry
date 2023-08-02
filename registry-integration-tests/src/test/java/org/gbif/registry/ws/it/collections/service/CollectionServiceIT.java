@@ -370,6 +370,17 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+    assertEquals(
+        0,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .country(Collections.singletonList(Country.SPAIN))
+                    .gbifRegion(Collections.singletonList(GbifRegion.ASIA))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
 
     // city
     results =

@@ -933,11 +933,8 @@ public class BaseCollectionEntityService<
     return rangeParam;
   }
 
-  protected List<Country> parseCountries(SearchRequest searchRequest) {
+  protected List<Country> parseGbifRegion(SearchRequest searchRequest) {
     List<Country> countries = new ArrayList<>();
-    if (searchRequest.getCountry() != null && !searchRequest.getCountry().isEmpty()) {
-      countries.addAll(searchRequest.getCountry());
-    }
     if (searchRequest.getGbifRegion() != null && !searchRequest.getGbifRegion().isEmpty()) {
       countries.addAll(
           Arrays.stream(Country.values())

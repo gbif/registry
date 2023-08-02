@@ -40,6 +40,7 @@ public abstract class SearchParams {
   @Nullable IdentifierType identifierType;
   @Nullable String identifier;
   @Nullable List<Country> countries;
+  @Nullable List<Country> regionCountries;
   @Nullable String city;
   @Nullable String fuzzyName;
   @Nullable Boolean active;

@@ -304,6 +304,14 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(2, response.getResults().size());
+    response =
+        institutionService.list(
+            InstitutionSearchRequest.builder()
+                .country(Collections.singletonList(Country.SPAIN))
+                .gbifRegion(Collections.singletonList(GbifRegion.ASIA))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(0, response.getResults().size());
 
     response =
         institutionService.list(
