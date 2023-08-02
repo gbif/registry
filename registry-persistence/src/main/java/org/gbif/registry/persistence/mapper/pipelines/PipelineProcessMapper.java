@@ -175,4 +175,11 @@ public interface PipelineProcessMapper {
    * @param pipelineExecutionKey key of the process
    */
   void markPipelineExecutionIfFinished(@Param("pipelineExecutionKey") long pipelineExecutionKey);
+
+  /**
+   * When interpretation is allowed for failed identifiers, execution must have running status
+   *
+   * @param pipelineExecutionKey key of the process
+   */
+  void markPipelineExecutionAsRunning(@Param("pipelineExecutionKey") long pipelineExecutionKey);
 }

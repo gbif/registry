@@ -768,7 +768,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           process.getExecutions().stream().max(Comparator.comparingLong(PipelineExecution::getKey));
 
       if (execution.isPresent()) {
-        Set<PipelineStep> steps = execution.get().getSteps();
+        PipelineExecution pipelineExecution = execution.get();
+        Set<PipelineStep> steps = pipelineExecution.getSteps();
         Optional<PipelineStep> identifierStep =
             steps.stream().filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER).findAny();
 
@@ -791,6 +792,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
                     mapper.updatePipelineStep(step);
                   });
 
+          mapper.markPipelineExecutionAsRunning(pipelineExecution.getKey());
+
           // Send message to interpretaton
           PipelinesVerbatimMessage message =
               objectMapper.readValue(pipelineStep.getMessage(), PipelinesVerbatimMessage.class);
@@ -808,7 +811,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               attempt);
         } else {
           LOG.warn(
-              "Execution ID - {} doesn't contain failed identifier step", execution.get().getKey());
+              "Execution ID - {} doesn't contain failed identifier step", pipelineExecution.getKey());
         }
       }
     } catch (IOException ex) {
