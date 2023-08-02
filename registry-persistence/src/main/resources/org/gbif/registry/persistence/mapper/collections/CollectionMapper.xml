@@ -219,7 +219,7 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
-    <if test="params.countries != null || params.city != null">
+    <if test="params.countries != null || params.regionCountries != null || params.city != null">
       LEFT JOIN address addr ON addr.key = c.address_key
       LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     </if>
@@ -268,6 +268,17 @@
           <foreach item="item" collection="params.countries" open="(" separator="," close=")">
             #{item,jdbcType=VARCHAR}
           </foreach>
+        )
+      </if>
+      <if test="params.regionCountries != null and params.regionCountries.size > 0">
+        AND (addr.country IN
+        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
+        OR mail_addr.country IN
+        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
         )
       </if>
       <if test="params.city != null" >
