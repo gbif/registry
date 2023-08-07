@@ -192,13 +192,18 @@ public abstract class BaseChangeSuggestionService<
     // send email
     if (Boolean.TRUE.equals(collectionsMailConfigurationProperties.getEnabled())) {
       try {
-        T suggestedEntity = readJson(dto.getSuggestedEntity(), clazz);
+        String entityName = null;
+        if (dto.getSuggestedEntity() != null) {
+          entityName = readJson(dto.getSuggestedEntity(), clazz).getName();
+        } else if (dto.getEntityKey() != null) {
+          entityName = crudService.get(dto.getEntityKey()).getName();
+        }
 
         BaseEmailModel emailModel =
             emailManager.generateNewChangeSuggestionEmailModel(
                 dto.getKey(),
                 dto.getEntityType(),
-                suggestedEntity.getName(),
+                entityName,
                 dto.getCountryScope(),
                 dto.getEntityKey(),
                 dto.getType(),
