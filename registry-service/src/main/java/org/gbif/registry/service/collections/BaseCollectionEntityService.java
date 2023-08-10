@@ -460,6 +460,10 @@ public class BaseCollectionEntityService<
         && !IdentifierUtils.isValidCitesIdentifier(identifier.getIdentifier())) {
       throw new IllegalArgumentException("Invalid CITES identifier");
     }
+    if (identifier.getType() == IdentifierType.WIKIDATA
+        && !IdentifierUtils.isValidWikidataIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid Wikidata identifier");
+    }
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})

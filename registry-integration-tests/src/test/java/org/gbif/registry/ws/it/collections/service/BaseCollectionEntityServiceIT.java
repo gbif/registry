@@ -276,6 +276,13 @@ public abstract class BaseCollectionEntityServiceIT<
 
     collectionEntityService.deleteIdentifier(key, identifierKey);
     assertEquals(0, collectionEntityService.listIdentifiers(key).size());
+
+    // add invalid wikidata identifier
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            collectionEntityService.addIdentifier(
+                key, new Identifier(IdentifierType.WIKIDATA, "foo")));
   }
 
   @Test
