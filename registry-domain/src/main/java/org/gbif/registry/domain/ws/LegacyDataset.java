@@ -20,7 +20,9 @@ import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Language;
@@ -73,6 +75,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   private String serviceTypes;
   private String serviceUrls;
   private DOI datasetDoi;
+  private String rawSubtype;
 
   // created from combination of fields after injection
   private Contact primaryContact;
@@ -139,6 +142,17 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     } catch (IllegalArgumentException e) {
       LOG.debug("Publishing organization key is not a valid UUID: {}", organizationKey);
     }
+  }
+
+  @XmlTransient
+  @Nullable
+  public String getRawSubtype() {
+    return rawSubtype;
+  }
+
+  @ParamName(LegacyResourceConstants.SUBTYPE_PARAM)
+  public void setRawSubtype(String rawSubtype) {
+    this.rawSubtype = rawSubtype;
   }
 
   /**
@@ -634,6 +648,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     addArchiveEndpoint();
     addDataPackageEndpoint();
     setType(resolveType());
+    setSubtype(resolveSubtype());
   }
 
   /**
@@ -809,6 +824,18 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
       }
     }
     return DatasetType.METADATA;
+  }
+
+  /**
+   * Return the DatasetSubtype from the string.
+   */
+  public DatasetSubtype resolveSubtype() {
+    try {
+      return VocabularyUtils.lookupEnum(rawSubtype, DatasetSubtype.class);
+    } catch (Exception e) {
+      LOG.error("Failed to resolve subtype", e);
+      return null;
+    }
   }
 
   /**
