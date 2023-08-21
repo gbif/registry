@@ -14,11 +14,8 @@
 package org.gbif.registry.persistence.mapper;
 
 import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.registry.persistence.mapper.params.BaseListParams;
 
-import java.util.List;
 
-import org.apache.ibatis.annotations.Param;
 
 /** The BaseNetworkEntityMapper defines a common interface for all our Network entities. */
 public interface BaseNetworkEntityMapper<T extends NetworkEntity>

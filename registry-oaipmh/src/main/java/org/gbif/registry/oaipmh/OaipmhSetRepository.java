@@ -13,11 +13,11 @@
  */
 package org.gbif.registry.oaipmh;
 
-import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,8 +29,6 @@ import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.SetRepository;
 
 import com.google.common.collect.Lists;
-
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 /**
  * Implementation of a XOAI SetRepository for country, installation, dataset_type sets.

@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.vocabulary.Country;
@@ -34,6 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;

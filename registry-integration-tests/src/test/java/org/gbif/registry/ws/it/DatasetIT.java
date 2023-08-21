@@ -51,7 +51,6 @@ import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
 import org.gbif.registry.ws.client.NodeClient;
 import org.gbif.registry.ws.client.OrganizationClient;
-import org.gbif.registry.ws.provider.networkEntitiesList.BaseRequestSearchParamsHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.resources.DatasetResource;
 import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;

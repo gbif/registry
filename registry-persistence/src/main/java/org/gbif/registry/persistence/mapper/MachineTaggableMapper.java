@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper;
 
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.model.registry.MachineTaggable;
 
