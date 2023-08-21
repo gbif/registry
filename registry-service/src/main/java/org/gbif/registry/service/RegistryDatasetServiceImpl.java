@@ -32,6 +32,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.MetadataMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.handler.ByteArrayWrapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,8 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
-
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;

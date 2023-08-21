@@ -27,6 +27,7 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DerivedDatasetMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.net.URI;
 import java.text.MessageFormat;
@@ -38,9 +39,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.collections.CollectionUtils;
-
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,8 +46,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Iterators;
-
-import javax.xml.crypto.Data;
 
 import static org.gbif.registry.service.util.ServiceUtils.pagingResponse;
 
