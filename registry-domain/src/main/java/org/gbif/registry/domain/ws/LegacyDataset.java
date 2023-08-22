@@ -831,9 +831,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
    */
   public DatasetSubtype resolveSubtype() {
     try {
-      DatasetSubtype datasetSubtype = VocabularyUtils.lookupEnum(rawSubtype, DatasetSubtype.class);
-      LOG.debug("Resolving subtype [{}] from source [{}]", datasetSubtype, rawSubtype);
-      return datasetSubtype;
+      return VocabularyUtils.lookupEnum(rawSubtype, DatasetSubtype.class);
     } catch (Exception e) {
       LOG.error("Failed to resolve subtype", e);
       return null;
