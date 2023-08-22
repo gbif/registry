@@ -181,6 +181,7 @@ public class LegacyDatasetResource {
       existing.setLogoUrl(dataset.getLogoUrl());
       existing.setLanguage(dataset.getLanguage());
       existing.setInstallationKey(dataset.getInstallationKey());
+      existing.setSubtype(dataset.getSubtype());
 
       existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 
