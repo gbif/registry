@@ -857,6 +857,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     dataset.setLogoUrl(getLogoUrl());
     dataset.setHomepage(getHomepage());
     dataset.setType(getType());
+    dataset.setSubtype(getSubtype());
     dataset.setDoi(datasetDoi);
     return dataset;
   }
@@ -880,7 +881,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         && Objects.equal(primaryContact, that.primaryContact)
         && Objects.equal(emlEndpoint, that.emlEndpoint)
         && Objects.equal(archiveEndpoint, that.archiveEndpoint)
-        && Objects.equal(dataPackageEndpoint, that.dataPackageEndpoint);
+        && Objects.equal(dataPackageEndpoint, that.dataPackageEndpoint)
+        && Objects.equal(rawSubtype, that.rawSubtype);
   }
 
   @Generated
@@ -900,7 +902,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         primaryContact,
         emlEndpoint,
         archiveEndpoint,
-        dataPackageEndpoint);
+        dataPackageEndpoint,
+        rawSubtype);
   }
 
   @Generated
@@ -920,6 +923,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         .add("emlEndpoint", emlEndpoint)
         .add("archiveEndpoint", archiveEndpoint)
         .add("dataPackageEndpoint", dataPackageEndpoint)
+        .add("rawSubtype", rawSubtype)
         .toString();
   }
 }
