@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Tests the {@link InstitutionMergeService}. */
 public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
@@ -130,6 +131,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     toConvert.setCode("tco");
     toConvert.setName("to convert");
     toConvert.setDescription("desc");
+    toConvert.setActive(true);
     institutionService.create(toConvert);
 
     Institution another = new Institution();
@@ -146,6 +148,7 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
 
     Collection newCollection = collectionService.get(newCollectionKey);
     assertEquals(another.getKey(), newCollection.getInstitutionKey());
+    assertTrue(newCollection.isActive());
   }
 
   @Test
