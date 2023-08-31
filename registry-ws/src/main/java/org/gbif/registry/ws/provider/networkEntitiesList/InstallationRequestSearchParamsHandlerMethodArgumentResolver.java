@@ -13,17 +13,11 @@
  */
 package org.gbif.registry.ws.provider.networkEntitiesList;
 
-import com.google.common.base.Strings;
-
-import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
-import org.gbif.api.model.registry.search.OrganizationRequestSearchParams;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
-
-import org.gbif.api.vocabulary.DatasetType;
-
 import org.gbif.api.vocabulary.InstallationType;
+
+import java.util.UUID;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -31,8 +25,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.google.common.base.Strings;
 
 @SuppressWarnings("NullableProblems")
 public class InstallationRequestSearchParamsHandlerMethodArgumentResolver

@@ -13,13 +13,7 @@
  */
 package org.gbif.registry.ws.resources;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
 
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
@@ -37,7 +31,6 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.model.registry.search.NodeRequestSearchParams;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.directory.Augmenter;
 import org.gbif.registry.events.EventManager;

@@ -20,7 +20,9 @@ import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
+import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.api.vocabulary.Language;
@@ -73,6 +75,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   private String serviceTypes;
   private String serviceUrls;
   private DOI datasetDoi;
+  private String rawSubtype;
 
   // created from combination of fields after injection
   private Contact primaryContact;
@@ -139,6 +142,17 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     } catch (IllegalArgumentException e) {
       LOG.debug("Publishing organization key is not a valid UUID: {}", organizationKey);
     }
+  }
+
+  @XmlTransient
+  @Nullable
+  public String getRawSubtype() {
+    return rawSubtype;
+  }
+
+  @ParamName(LegacyResourceConstants.SUBTYPE_PARAM)
+  public void setRawSubtype(String rawSubtype) {
+    this.rawSubtype = rawSubtype;
   }
 
   /**
@@ -634,6 +648,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     addArchiveEndpoint();
     addDataPackageEndpoint();
     setType(resolveType());
+    setSubtype(resolveSubtype());
   }
 
   /**
@@ -812,6 +827,18 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
+   * Return the DatasetSubtype from the string.
+   */
+  public DatasetSubtype resolveSubtype() {
+    try {
+      return VocabularyUtils.lookupEnum(rawSubtype, DatasetSubtype.class);
+    } catch (Exception e) {
+      LOG.error("Failed to resolve subtype", e);
+      return null;
+    }
+  }
+
+  /**
    * Return a new GBIF API Dataset instance, derived from the LegacyDataset. Needed because of:
    * http://dev.gbif.org/issues/browse/REG-459
    *
@@ -830,6 +857,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
     dataset.setLogoUrl(getLogoUrl());
     dataset.setHomepage(getHomepage());
     dataset.setType(getType());
+    dataset.setSubtype(getSubtype());
     dataset.setDoi(datasetDoi);
     return dataset;
   }
@@ -853,7 +881,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         && Objects.equal(primaryContact, that.primaryContact)
         && Objects.equal(emlEndpoint, that.emlEndpoint)
         && Objects.equal(archiveEndpoint, that.archiveEndpoint)
-        && Objects.equal(dataPackageEndpoint, that.dataPackageEndpoint);
+        && Objects.equal(dataPackageEndpoint, that.dataPackageEndpoint)
+        && Objects.equal(rawSubtype, that.rawSubtype);
   }
 
   @Generated
@@ -873,7 +902,8 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         primaryContact,
         emlEndpoint,
         archiveEndpoint,
-        dataPackageEndpoint);
+        dataPackageEndpoint,
+        rawSubtype);
   }
 
   @Generated
@@ -893,6 +923,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         .add("emlEndpoint", emlEndpoint)
         .add("archiveEndpoint", archiveEndpoint)
         .add("dataPackageEndpoint", dataPackageEndpoint)
+        .add("rawSubtype", rawSubtype)
         .toString();
   }
 }
