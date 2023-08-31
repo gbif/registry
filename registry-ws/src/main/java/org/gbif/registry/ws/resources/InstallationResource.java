@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.resources;
 
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.Explode;
 
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
@@ -31,7 +29,6 @@ import org.gbif.api.model.registry.search.InstallationRequestSearchParams;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MetasyncHistoryService;
-import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.StartMetasyncMessage;

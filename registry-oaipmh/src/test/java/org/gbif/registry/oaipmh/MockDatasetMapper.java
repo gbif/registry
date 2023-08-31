@@ -26,7 +26,6 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.util.List;

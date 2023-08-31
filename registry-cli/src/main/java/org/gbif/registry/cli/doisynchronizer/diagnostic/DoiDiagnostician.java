@@ -26,10 +26,9 @@ import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.util.stream.Collectors;
-
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

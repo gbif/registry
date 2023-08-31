@@ -361,6 +361,7 @@ public class IptResource {
         // (A crawl will be triggered and EML read, unless the EML is not modified.)
         existing.setModifiedBy(user);
         existing.setType(dataset.getType());
+        existing.setSubtype(dataset.getSubtype());
         existing.setInstallationKey(dataset.getInstallationKey());
         existing.setPublishingOrganizationKey(dataset.getPublishingOrganizationKey());
 

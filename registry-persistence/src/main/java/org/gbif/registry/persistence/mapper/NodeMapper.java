@@ -17,7 +17,6 @@ import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.persistence.mapper.params.InstallationListParams;
 import org.gbif.registry.persistence.mapper.params.NodeListParams;
 
 import java.util.List;

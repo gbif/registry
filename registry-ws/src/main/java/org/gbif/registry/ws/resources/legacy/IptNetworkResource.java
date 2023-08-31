@@ -16,6 +16,7 @@ package org.gbif.registry.ws.resources.legacy;
 import org.gbif.api.model.registry.Network;
 import org.gbif.registry.domain.ws.IptNetworkBriefResponse;
 import org.gbif.registry.persistence.mapper.NetworkMapper;
+import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,9 +24,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
-
-import org.gbif.registry.persistence.mapper.params.NetworkListParams;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.CacheControl;

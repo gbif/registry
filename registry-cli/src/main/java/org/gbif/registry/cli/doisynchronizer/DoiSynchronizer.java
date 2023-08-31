@@ -30,6 +30,7 @@ import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DoiMapper;
 import org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper;
 import org.gbif.registry.persistence.mapper.UserMapper;
+import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,9 +41,6 @@ import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-
-import org.gbif.registry.persistence.mapper.params.DatasetListParams;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
