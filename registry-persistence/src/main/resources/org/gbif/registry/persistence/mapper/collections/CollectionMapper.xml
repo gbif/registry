@@ -186,13 +186,36 @@
 
   <!-- Basic paging search functionality -->
   <select id="list" resultType="CollectionDto" resultMap="COLLECTION_DTO_MAP" parameterType="Pageable">
-    SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(c.fulltext_search, query), </if>
-                        <if test="params.fuzzyName != null">similarity_score, </if>
-                        c.created, c.key)
-          <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode
-          <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
-    <include refid="LIST_FILTER" />
-    ORDER BY <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
+    SELECT * FROM(
+      SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(c.fulltext_search, query), </if>
+                          <if test="params.fuzzyName != null">similarity_score, </if>
+                          c.created, c.key)
+            <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode, c.fulltext_search
+            <if test="params.query != null" >,query</if>
+            <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+      <include refid="LIST_FILTER" />
+    ) AS c
+    ORDER BY
+    <if test="params.sortBy != null and params.query == null">
+      <choose>
+        <when test="params.sortBy.name.equals('NUMBER_SPECIMENS')">
+          c.number_specimens
+        </when>
+        <otherwise/>
+      </choose>
+      <if test="params.sortOrder != null">
+        <choose>
+          <when test="params.sortOrder.name.equals('DESC')">
+            DESC
+          </when>
+          <otherwise>
+            ASC
+          </otherwise>
+        </choose>
+      </if>
+      NULLS LAST,
+    </if>
+    <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
     <if test="params.page != null" >

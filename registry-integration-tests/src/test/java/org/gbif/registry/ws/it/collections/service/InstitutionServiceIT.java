@@ -19,6 +19,7 @@ import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -29,10 +30,12 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.CollectionsSortField;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
@@ -387,6 +390,31 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
                     .build())
             .getResults()
             .size());
+
+    assertEquals(
+        institution1.getKey(),
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .get(0)
+            .getKey());
+
+    assertEquals(
+        institution2.getKey(),
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
+                    .sortOrder(SortOrder.DESC)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .get(0)
+            .getKey());
 
     institutionService.delete(key2);
     assertEquals(

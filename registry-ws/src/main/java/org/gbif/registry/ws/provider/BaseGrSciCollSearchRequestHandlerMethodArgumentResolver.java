@@ -16,9 +16,11 @@ package org.gbif.registry.ws.provider;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.CollectionsSortField;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
@@ -127,6 +129,24 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
       } catch (Exception e) {
         throw new IllegalArgumentException(
             "Invalid boolean for displayOnNHCPortal: " + displayOnNHCPortal);
+      }
+    }
+
+    String sortByParam = webRequest.getParameter("sortBy");
+    if (!Strings.isNullOrEmpty(sortByParam)) {
+      try {
+        request.setSortBy(CollectionsSortField.valueOf(sortByParam));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid sort by parameter: " + sortByParam);
+      }
+    }
+
+    String sortOrderParam = webRequest.getParameter("sortOrder");
+    if (!Strings.isNullOrEmpty(sortOrderParam)) {
+      try {
+        request.setSortOrder(SortOrder.valueOf(sortOrderParam));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid sort order parameter: " + sortOrderParam);
       }
     }
 

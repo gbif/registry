@@ -176,6 +176,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
             .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
             .deleted(deleted)
+            .sortBy(searchRequest.getSortBy())
+            .sortOrder(searchRequest.getSortOrder())
             .page(page)
             .build();
 
