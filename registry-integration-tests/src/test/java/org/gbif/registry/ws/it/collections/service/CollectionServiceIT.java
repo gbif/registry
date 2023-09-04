@@ -34,10 +34,12 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.CollectionsSortField;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.IdType;
@@ -457,6 +459,33 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                     .build())
             .getResults()
             .size());
+
+    assertEquals(
+      collection1.getKey(),
+      collectionService
+        .list(
+          CollectionSearchRequest.builder()
+            .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
+            .page(DEFAULT_PAGE)
+            .build())
+        .getResults()
+        .get(0)
+        .getCollection()
+        .getKey());
+
+    assertEquals(
+      collection2.getKey(),
+      collectionService
+        .list(
+          CollectionSearchRequest.builder()
+            .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
+            .sortOrder(SortOrder.DESC)
+            .page(DEFAULT_PAGE)
+            .build())
+        .getResults()
+        .get(0)
+        .getCollection()
+        .getKey());
 
     collectionService.delete(key2);
     assertEquals(

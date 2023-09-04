@@ -14,8 +14,10 @@
 package org.gbif.registry.persistence.mapper.collections.params;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.vocabulary.CollectionsSortField;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 
 import java.util.List;
@@ -51,5 +53,9 @@ public abstract class SearchParams {
   @Nullable private UUID replacedBy;
   @Nullable RangeParam occurrenceCount;
   @Nullable RangeParam typeSpecimenCount;
+  @Nullable
+  CollectionsSortField sortBy;
+  @Nullable
+  SortOrder sortOrder;
   @Nullable private Pageable page;
 }
