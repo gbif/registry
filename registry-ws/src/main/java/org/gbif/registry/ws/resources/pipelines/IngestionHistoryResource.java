@@ -13,22 +13,20 @@
  */
 package org.gbif.registry.ws.resources.pipelines;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.IngestionProcess;
 import org.gbif.api.service.pipelines.IngestionHistoryService;
 import org.gbif.registry.pipelines.RegistryIngestionHistoryService;
-
-import java.util.UUID;
-
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import io.swagger.v3.oas.annotations.Hidden;
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.UUID;
 
 @Hidden // TODO: Document?
 @RestController
@@ -44,15 +42,20 @@ public class IngestionHistoryResource implements IngestionHistoryService {
 
   @Override
   @GetMapping
-  public PagingResponse<IngestionProcess> history(Pageable pageable) {
-    return ingestionHistoryService.ingestionHistory(pageable);
+  public PagingResponse<IngestionProcess> history(
+      @RequestParam(value = "finishReason", required = false) @Nullable
+          List<FinishReason> finishReasons,
+      Pageable pageable) {
+    return ingestionHistoryService.ingestionHistory(finishReasons, pageable);
   }
 
   @Override
   @GetMapping("{datasetKey}")
   public PagingResponse<IngestionProcess> history(
-      @PathVariable("datasetKey") UUID datasetKey, Pageable pageable) {
-    return ingestionHistoryService.ingestionHistory(datasetKey, pageable);
+      @PathVariable("datasetKey") UUID datasetKey,
+      @RequestParam(value = "finishReason", required = false) @Nullable List<FinishReason> finishReasons,
+      Pageable pageable) {
+    return ingestionHistoryService.ingestionHistory(datasetKey, finishReasons, pageable);
   }
 
   @Override
