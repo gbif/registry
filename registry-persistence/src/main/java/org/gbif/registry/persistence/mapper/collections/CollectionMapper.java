@@ -63,4 +63,6 @@ public interface CollectionMapper
    */
   List<MasterSourceOrganizationDto> findByDatasetOrganizationAsMasterSource(
       @Param("organizationKey") UUID organizationKey);
+
+  List<UUID> getAllKeys();
 }

@@ -28,11 +28,9 @@ import org.gbif.registry.persistence.mapper.params.Count;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,9 +79,9 @@ public class GRSciCollCountsUpdaterService {
   private void updateCounts() {
     log.info("Updating GRSciColl counts");
 
-    long institutionsCount = institutionMapper.count(InstitutionSearchParams.builder().build());
-    long collectionsCount = collectionMapper.count(CollectionSearchParams.builder().build());
-    long facetCount = Math.max(institutionsCount, collectionsCount);
+    List<UUID> institutionKeys = institutionMapper.getAllKeys();
+    List<UUID> collectionKeys = collectionMapper.getAllKeys();
+    long facetCount = Math.max(institutionKeys.size(), collectionKeys.size());
 
     OccurrenceSearchRequest request = new OccurrenceSearchRequest();
     request.setLimit(0);
@@ -93,8 +91,32 @@ public class GRSciCollCountsUpdaterService {
     SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceCountsResponse =
         occurrenceWsSearchClient.search(request);
 
-    Map<UUID, Count> institutionsCounts = new HashMap<>();
-    Map<UUID, Count> collectionsCounts = new HashMap<>();
+    // all entities are initialised to zero because the occurrence response doesn't return values
+    // with count zero and if they used to have records we need to update them to zero
+    Map<UUID, Count> institutionsCounts =
+        institutionKeys.stream()
+            .collect(
+                Collectors.toMap(
+                    k -> k,
+                    k -> {
+                      Count c = new Count();
+                      c.setKey(k);
+                      c.setOccurrenceCount(0);
+                      c.setTypeSpecimenCount(0);
+                      return c;
+                    }));
+    Map<UUID, Count> collectionsCounts =
+        collectionKeys.stream()
+            .collect(
+                Collectors.toMap(
+                    k -> k,
+                    k -> {
+                      Count c = new Count();
+                      c.setKey(k);
+                      c.setOccurrenceCount(0);
+                      c.setTypeSpecimenCount(0);
+                      return c;
+                    }));
 
     Function<OccurrenceSearchParameter, Map<UUID, Count>> mapCountsSupplier =
         p -> {
