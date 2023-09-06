@@ -437,6 +437,10 @@
     WHERE key = aux.entity_key::uuid
   </update>
 
+  <select id="getAllKeys" resultType="java.util.UUID">
+    SELECT key FROM institution WHERE deleted IS NULL
+  </select>
+
   <!-- LOOKUP -->
   <sql id="LOOKUP_MATCH_FIELDS">
     i.key, i.name, i.code, i.address_key, i.mailing_address_key, akeys(i.alternative_codes) AS alternative_codes, i.active

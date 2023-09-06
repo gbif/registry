@@ -426,6 +426,10 @@
     WHERE key = aux.entity_key::uuid
   </update>
 
+  <select id="getAllKeys" resultType="java.util.UUID">
+    SELECT key FROM collection WHERE deleted IS NULL
+  </select>
+
   <!-- new model contacts -->
   <select id="listContactPersons" resultMap="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_MAP">
     SELECT <include refid="org.gbif.registry.persistence.mapper.collections.CollectionContactMapper.CONTACT_READ_FIELDS"/>

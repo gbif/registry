@@ -50,4 +50,6 @@ public interface InstitutionMapper
       @Param("institutionKey") UUID institutionKey, @Param("collectionKey") UUID collectionKey);
 
   List<InstitutionGeoJsonDto> listGeoJson(@Param("params") InstitutionSearchParams searchParams);
+
+  List<UUID> getAllKeys();
 }
