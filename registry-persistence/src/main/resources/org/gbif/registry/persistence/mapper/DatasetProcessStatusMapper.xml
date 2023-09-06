@@ -104,6 +104,14 @@
   <select id="list" resultMap="DATASET_PROCESS_STATUS_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
     FROM crawl_history
+    <where>
+      <if test="finishReasons != null and finishReasons.size > 0">
+        finish_reason IN
+        <foreach item="item" collection="finishReasons" open="(" separator="," close=")">
+          #{item,jdbcType=OTHER}
+        </foreach>
+      </if>
+    </where>
     ORDER BY started_crawling DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -113,12 +121,26 @@
   <select id="count" resultType="Integer">
     SELECT COUNT(*)
     FROM crawl_history
+    <where>
+      <if test="finishReasons != null and finishReasons.size > 0">
+        finish_reason IN
+        <foreach item="item" collection="finishReasons" open="(" separator="," close=")">
+          #{item,jdbcType=OTHER}
+        </foreach>
+      </if>
+    </where>
   </select>
 
   <select id="listByDataset" resultMap="DATASET_PROCESS_STATUS_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_PROCESS_STATUS_FIELDS"/>
     FROM crawl_history
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    <if test="finishReasons != null and finishReasons.size > 0">
+      AND finish_reason IN
+      <foreach item="item" collection="finishReasons" open="(" separator="," close=")">
+        #{item,jdbcType=OTHER}
+      </foreach>
+    </if>
     ORDER BY attempt DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
@@ -129,6 +151,12 @@
     SELECT COUNT(*)
     FROM crawl_history
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
+    <if test="finishReasons != null and finishReasons.size > 0">
+      AND finish_reason IN
+      <foreach item="item" collection="finishReasons" open="(" separator="," close=")">
+        #{item,jdbcType=OTHER}
+      </foreach>
+    </if>
   </select>
 
 
