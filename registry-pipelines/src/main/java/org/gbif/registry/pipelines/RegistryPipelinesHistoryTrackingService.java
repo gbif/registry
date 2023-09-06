@@ -231,7 +231,7 @@ public interface RegistryPipelinesHistoryTrackingService {
   /**
    * Sends email to data administrator about absent identifiers issue with a dataset
    *
-   * <p>Deprecated: use {@link #notifyAbsentIdentifiers(UUID, int, String)} instead.
+   * <p>Deprecated: use {@link #notifyAbsentIdentifiers(UUID, int, long, String)} instead.
    *
    * @param datasetKey dataset key
    * @param attempt attempt to run

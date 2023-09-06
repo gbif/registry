@@ -16,20 +16,21 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
+import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.IngestionProcess;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultRegistryIngestionHistoryService implements RegistryIngestionHistoryService {
@@ -48,23 +49,25 @@ public class DefaultRegistryIngestionHistoryService implements RegistryIngestion
   }
 
   @Override
-  public PagingResponse<IngestionProcess> ingestionHistory(Pageable pageable) {
+  public PagingResponse<IngestionProcess> ingestionHistory(
+      @Nullable List<FinishReason> finishReasons, Pageable pageable) {
     List<IngestionProcess> ingestions =
-        datasetProcessStatusMapper.list(pageable).stream()
+        datasetProcessStatusMapper.list(finishReasons, pageable).stream()
             .map(this::toIngestionProcess)
             .collect(Collectors.toList());
 
-    long count = datasetProcessStatusMapper.count();
+    long count = datasetProcessStatusMapper.count(finishReasons);
 
     return new PagingResponse<>(pageable, count, ingestions);
   }
 
   @Override
-  public PagingResponse<IngestionProcess> ingestionHistory(UUID datasetKey, Pageable pageable) {
+  public PagingResponse<IngestionProcess> ingestionHistory(
+      UUID datasetKey, @Nullable List<FinishReason> finishReasons, Pageable pageable) {
     // get datasets process statuses
     List<DatasetProcessStatus> datasetProcessStatuses =
-        datasetProcessStatusMapper.listByDataset(datasetKey, pageable);
-    long count = datasetProcessStatusMapper.countByDataset(datasetKey);
+        datasetProcessStatusMapper.listByDataset(datasetKey, finishReasons, pageable);
+    long count = datasetProcessStatusMapper.countByDataset(datasetKey, finishReasons);
 
     if (datasetProcessStatuses.isEmpty()) {
       return new PagingResponse<>(pageable, count);

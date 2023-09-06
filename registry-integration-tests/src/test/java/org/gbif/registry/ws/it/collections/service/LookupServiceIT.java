@@ -389,20 +389,14 @@ public class LookupServiceIT extends BaseServiceIT {
     LookupResult result = lookupService.lookup(params);
 
     // Should
-    assertEquals(Match.MatchType.NONE, result.getInstitutionMatch().getMatchType());
-    assertEquals(Match.Status.AMBIGUOUS_OWNER, result.getInstitutionMatch().getStatus());
+    // https://github.com/gbif/registry/issues/496 we accept matches with different owner but we
+    // flag them
+    assertEquals(Match.MatchType.EXACT, result.getInstitutionMatch().getMatchType());
+    assertEquals(Match.Status.ACCEPTED, result.getInstitutionMatch().getStatus());
+    assertTrue(result.getInstitutionMatch().getReasons().contains(Match.Reason.DIFFERENT_OWNER));
     assertEquals(Match.MatchType.NONE, result.getCollectionMatch().getMatchType());
     assertNull(result.getCollectionMatch().getStatus());
-    assertEquals(1, result.getAlternativeMatches().getInstitutionMatches().size());
-
-    Match<InstitutionMatched> alternative =
-        result.getAlternativeMatches().getInstitutionMatches().get(0);
-    assertEquals(Match.MatchType.EXACT, alternative.getMatchType());
-    assertEquals(i2.getKey(), alternative.getEntityMatched().getKey());
-    assertEquals(3, alternative.getReasons().size());
-    assertTrue(alternative.getReasons().contains(Match.Reason.CODE_MATCH));
-    assertTrue(alternative.getReasons().contains(Match.Reason.IDENTIFIER_MATCH));
-    assertTrue(alternative.getReasons().contains(Match.Reason.DIFFERENT_OWNER));
+    assertEquals(0, result.getAlternativeMatches().getInstitutionMatches().size());
   }
 
   @Test

@@ -13,26 +13,27 @@
  */
 package org.gbif.registry.persistence.mapper;
 
+import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.crawler.DatasetProcessStatus;
-
-import java.util.List;
-import java.util.UUID;
+import org.gbif.api.model.crawler.FinishReason;
+import org.springframework.stereotype.Repository;
 
 import javax.annotation.Nullable;
-
-import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.UUID;
 
 /** Mapper that perform operations on {@link DatasetProcessStatus} instances. */
 @Repository
 public interface DatasetProcessStatusMapper {
 
-  int count();
+  int count(@Nullable @Param("finishReasons") List<FinishReason> finishReasons);
 
   int countAborted();
 
-  int countByDataset(@Param("datasetKey") UUID datasetKey);
+  int countByDataset(
+      @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("finishReasons") List<FinishReason> finishReasons);
 
   void create(DatasetProcessStatus datasetProcessStatus);
 
@@ -40,10 +41,14 @@ public interface DatasetProcessStatusMapper {
 
   DatasetProcessStatus get(@Param("datasetKey") UUID datasetKey, @Param("attempt") int attempt);
 
-  List<DatasetProcessStatus> list(@Nullable @Param("page") Pageable page);
+  List<DatasetProcessStatus> list(
+      @Nullable @Param("finishReasons") List<FinishReason> finishReasons,
+      @Nullable @Param("page") Pageable page);
 
   List<DatasetProcessStatus> listByDataset(
-      @Param("datasetKey") UUID datasetKey, @Nullable @Param("page") Pageable page);
+      @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("finishReasons") List<FinishReason> finishReasons,
+      @Nullable @Param("page") Pageable page);
 
   List<DatasetProcessStatus> listAborted(@Nullable @Param("page") Pageable page);
 }

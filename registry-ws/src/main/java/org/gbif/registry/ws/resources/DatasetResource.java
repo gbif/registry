@@ -1456,7 +1456,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Override
   public PagingResponse<DatasetProcessStatus> listDatasetProcessStatus(Pageable page) {
     return new PagingResponse<>(
-        page, (long) datasetProcessStatusMapper.count(), datasetProcessStatusMapper.list(page));
+        page,
+        (long) datasetProcessStatusMapper.count(null),
+        datasetProcessStatusMapper.list(null, page));
   }
 
   @Hidden
@@ -1485,8 +1487,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       @PathVariable UUID key, Pageable page) {
     return new PagingResponse<>(
         page,
-        (long) datasetProcessStatusMapper.countByDataset(key),
-        datasetProcessStatusMapper.listByDataset(key, page));
+        (long) datasetProcessStatusMapper.countByDataset(key, null),
+        datasetProcessStatusMapper.listByDataset(key, null, page));
   }
 
   @Override

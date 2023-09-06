@@ -15,15 +15,20 @@ package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.IngestionProcess;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
 
 public interface RegistryIngestionHistoryService {
 
-  PagingResponse<IngestionProcess> ingestionHistory(Pageable pageable);
+  PagingResponse<IngestionProcess> ingestionHistory(
+      @Nullable List<FinishReason> finishReasons, Pageable pageable);
 
-  PagingResponse<IngestionProcess> ingestionHistory(UUID datasetKey, Pageable pageable);
+  PagingResponse<IngestionProcess> ingestionHistory(
+      UUID datasetKey, @Nullable List<FinishReason> finishReasons, Pageable pageable);
 
   IngestionProcess getIngestionProcess(UUID datasetKey, int attempt);
 }
