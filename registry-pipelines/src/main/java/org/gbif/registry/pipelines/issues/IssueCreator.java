@@ -13,41 +13,56 @@
  */
 package org.gbif.registry.pipelines.issues;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.gbif.api.model.common.search.SearchResponse;
+import org.gbif.api.model.occurrence.Occurrence;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.metrics.ws.client.CubeWsClient;
+import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-
-import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Sets;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
-import lombok.SneakyThrows;
-
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
 
 @Component
+@Slf4j
 public class IssueCreator {
   private static final String IDS_VALIDATION_FAILED_TITLE =
       "Identifiers validation failed for dataset %s";
@@ -81,7 +96,10 @@ public class IssueCreator {
   private final String registryUrl;
   private final String apiRootUrl;
   private final CubeWsClient cubeWsClient;
+  private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final PipelineProcessMapper pipelineProcessMapper;
+  private final IssuesConfig issuesConfig;
+  private final ObjectMapper objectMapper;
 
   @Autowired
   public IssueCreator(
@@ -89,12 +107,16 @@ public class IssueCreator {
       OrganizationMapper organizationMapper,
       InstallationMapper installationMapper,
       PipelineProcessMapper pipelineProcessMapper,
+      IssuesConfig issuesConfig,
+      ObjectMapper objectMapper,
       @Value("${pipelines.registryUrl}") String registryUrl,
       @Value("${api.root.url}") String apiRootUrl) {
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
     this.pipelineProcessMapper = pipelineProcessMapper;
+    this.issuesConfig = issuesConfig;
+    this.objectMapper = objectMapper;
     this.registryUrl = registryUrl;
     this.apiRootUrl = apiRootUrl;
     this.cubeWsClient =
@@ -102,6 +124,11 @@ public class IssueCreator {
             .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .withUrl(apiRootUrl)
             .build(CubeWsClient.class);
+    this.occurrenceWsSearchClient =
+        new ClientBuilder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+            .withUrl(apiRootUrl)
+            .build(OccurrenceWsSearchClient.class);
   }
 
   public Issue createIdsValidationFailedIssue(
@@ -116,6 +143,9 @@ public class IssueCreator {
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
     Installation installation = installationMapper.getLightweight(dataset.getInstallationKey());
 
+    List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
+    List<String> oldIds = readIdentifiersFromES(datasetKey);
+
     String body =
         buildIssueBody(
             ISSUE_BODY_INTRO,
@@ -125,7 +155,9 @@ public class IssueCreator {
             cause,
             dataset,
             organization,
-            installation);
+            installation,
+            newIds,
+            oldIds);
     return Issue.builder()
         .title(String.format(IDS_VALIDATION_FAILED_TITLE, dataset.getTitle()))
         .body(body)
@@ -149,7 +181,9 @@ public class IssueCreator {
       String cause,
       Dataset dataset,
       Organization organization,
-      Installation installation) {
+      Installation installation,
+      List<String> newIds,
+      List<String> oldIds) {
 
     long occCount =
         cubeWsClient.count(Collections.singletonMap("datasetKey", datasetKey.toString()));
@@ -189,6 +223,10 @@ public class IssueCreator {
         .append("- Pipelines execution steps: ")
         .append(createApiLink(EXECUTION_LINK_TEMPLATE, null, String.valueOf(executionKey)))
         .append(NEW_LINE)
+        .append(createIdsBlock(newIds, true))
+        .append(NEW_LINE)
+        .append(createIdsBlock(oldIds, false))
+        .append(NEW_LINE)
         .append(buildPublisherEmailSection(dataset))
         .append(NEW_LINE)
         .append(NEW_LINE)
@@ -215,6 +253,9 @@ public class IssueCreator {
       throw new IllegalArgumentException("Dataset not found for key: " + datasetKey);
     }
 
+    List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
+    List<String> oldIds = readIdentifiersFromES(datasetKey);
+
     Organization organization =
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
     Installation installation = installationMapper.getLightweight(dataset.getInstallationKey());
@@ -228,7 +269,9 @@ public class IssueCreator {
             cause,
             dataset,
             organization,
-            installation);
+            installation,
+            newIds,
+            oldIds);
 
     return GithubApiService.IssueComment.builder().body(body).build();
   }
@@ -297,5 +340,92 @@ public class IssueCreator {
         .append(NEW_LINE);
 
     return sb.toString();
+  }
+
+  private String createIdsBlock(List<String> ids, boolean newIds) {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append(newIds ? "New" : "Old").append(" IDs sample:").append(NEW_LINE);
+    sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
+
+    boolean first = true;
+    for (String newId : ids) {
+      if (!first) {
+        sb.append(NEW_LINE);
+      }
+      first = false;
+      sb.append(newId);
+    }
+
+    sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
+
+    return sb.toString();
+  }
+
+  @SneakyThrows
+  private List<String> readIdentifiersFromAvro(UUID datasetKey, int attempt) {
+    FileSystem fs =
+        FileSystem.get(
+            URI.create(issuesConfig.hdfsPrefix), getHdfsConfiguration(issuesConfig.hdfsSiteConfig));
+
+    org.apache.hadoop.fs.Path identifiersPath =
+        new org.apache.hadoop.fs.Path(
+            "data/ingest/" + datasetKey + "/" + attempt + "/occurrence/identifier");
+    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
+
+    List<String> identifiers = new ArrayList<>();
+    while (iterator.hasNext() && identifiers.size() < 10) {
+      LocatedFileStatus fileStatus = iterator.next();
+      if (fileStatus.isFile()) {
+        try (BufferedReader br =
+            new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath()), UTF_8))) {
+          br.lines()
+              .map(x -> x.replace("\u0000", ""))
+              .filter(s -> !Strings.isNullOrEmpty(s))
+              .map(
+                  l -> {
+                    try {
+                      JsonNode tree = objectMapper.readTree(l);
+                      return tree.get("id").get("string").asText();
+                    } catch (JsonProcessingException e) {
+                      return null;
+                    }
+                  })
+              .filter(s -> !Strings.isNullOrEmpty(s))
+              .limit(10)
+              .forEach(identifiers::add);
+        }
+      }
+    }
+
+    return identifiers;
+  }
+
+  private List<String> readIdentifiersFromES(UUID datasetKey) {
+    OccurrenceSearchRequest request = new OccurrenceSearchRequest();
+    request.setLimit(10);
+    request.addDatasetKeyFilter(datasetKey);
+    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
+        occurrenceWsSearchClient.search(request);
+    return response.getResults().stream()
+        .map(o -> o.getVerbatimField(DwcTerm.occurrenceID))
+        .collect(Collectors.toList());
+  }
+
+  @SneakyThrows
+  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
+    Configuration config = new Configuration();
+
+    // check if the hdfs-site.xml is provided
+    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+      File hdfsSite = new File(hdfsSiteConfig);
+      if (hdfsSite.exists() && hdfsSite.isFile()) {
+        log.info("using hdfs-site.xml");
+        config.addResource(hdfsSite.toURI().toURL());
+      } else {
+        log.warn("hdfs-site.xml does not exist");
+      }
+    }
+    return config;
   }
 }
