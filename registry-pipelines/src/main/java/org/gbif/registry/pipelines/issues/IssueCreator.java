@@ -64,6 +64,8 @@ public class IssueCreator {
   private static final String EXECUTION_LINK_TEMPLATE = "%s/pipelines/history/execution/%s/step";
   private static final String COUNTRY_LABEL_TEMPLATE = "Country %s";
   private static final String ATTEMPT_LABEL_TEMPLATE = "Attempt %s";
+  private static final String PUBLISHER_LABEL_TEMPLATE = "pub: %s";
+  private static final String INSTALLATION_LABEL_TEMPLATE = "inst: %s";
   private static final UnaryOperator<String> PORTAL_URL_NORMALIZER =
       url -> {
         if (url != null && url.endsWith("/")) {
@@ -132,6 +134,8 @@ public class IssueCreator {
                 datasetKey.toString(),
                 String.format(ATTEMPT_LABEL_TEMPLATE, attempt),
                 String.format(COUNTRY_LABEL_TEMPLATE, organization.getCountry()),
+                String.format(PUBLISHER_LABEL_TEMPLATE, organization.getKey()),
+                String.format(INSTALLATION_LABEL_TEMPLATE, installation.getKey()),
                 getCurrentTimestamp()))
         .build();
   }
@@ -239,6 +243,7 @@ public class IssueCreator {
 
     Organization organization =
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
+    Installation installation = installationMapper.getLightweight(dataset.getInstallationKey());
 
     Set<String> existingLabels =
         issueResult.getLabels().stream()
@@ -246,6 +251,8 @@ public class IssueCreator {
             .collect(Collectors.toSet());
     existingLabels.add(String.format(ATTEMPT_LABEL_TEMPLATE, attempt));
     existingLabels.add(String.format(COUNTRY_LABEL_TEMPLATE, organization.getCountry()));
+    existingLabels.add(String.format(PUBLISHER_LABEL_TEMPLATE, organization.getKey()));
+    existingLabels.add(String.format(INSTALLATION_LABEL_TEMPLATE, installation.getKey()));
     existingLabels.add(IssueCreator.getCurrentTimestamp());
 
     return existingLabels;
