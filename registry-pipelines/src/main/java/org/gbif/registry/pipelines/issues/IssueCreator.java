@@ -13,42 +13,59 @@
  */
 package org.gbif.registry.pipelines.issues;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.AvroFSInput;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
+import org.gbif.api.model.common.search.SearchResponse;
+import org.gbif.api.model.occurrence.Occurrence;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.metrics.ws.client.CubeWsClient;
+import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-
-import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import com.google.common.collect.Sets;
-
-import lombok.SneakyThrows;
+import java.io.File;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
 
 @Component
+@Slf4j
 public class IssueCreator {
+
+  private static final int NUM_SAMPLE_IDS = 10;
   private static final String IDS_VALIDATION_FAILED_TITLE =
       "Identifiers validation failed for dataset %s";
 
@@ -81,7 +98,9 @@ public class IssueCreator {
   private final String registryUrl;
   private final String apiRootUrl;
   private final CubeWsClient cubeWsClient;
+  private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final PipelineProcessMapper pipelineProcessMapper;
+  private final IssuesConfig issuesConfig;
 
   @Autowired
   public IssueCreator(
@@ -89,12 +108,15 @@ public class IssueCreator {
       OrganizationMapper organizationMapper,
       InstallationMapper installationMapper,
       PipelineProcessMapper pipelineProcessMapper,
+      IssuesConfig issuesConfig,
+      ObjectMapper objectMapper,
       @Value("${pipelines.registryUrl}") String registryUrl,
       @Value("${api.root.url}") String apiRootUrl) {
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
     this.pipelineProcessMapper = pipelineProcessMapper;
+    this.issuesConfig = issuesConfig;
     this.registryUrl = registryUrl;
     this.apiRootUrl = apiRootUrl;
     this.cubeWsClient =
@@ -102,6 +124,11 @@ public class IssueCreator {
             .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .withUrl(apiRootUrl)
             .build(CubeWsClient.class);
+    this.occurrenceWsSearchClient =
+        new ClientBuilder()
+            .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
+            .withUrl(apiRootUrl)
+            .build(OccurrenceWsSearchClient.class);
   }
 
   public Issue createIdsValidationFailedIssue(
@@ -116,6 +143,9 @@ public class IssueCreator {
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
     Installation installation = installationMapper.getLightweight(dataset.getInstallationKey());
 
+    List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
+    List<String> oldIds = readIdentifiersFromES(datasetKey);
+
     String body =
         buildIssueBody(
             ISSUE_BODY_INTRO,
@@ -125,7 +155,9 @@ public class IssueCreator {
             cause,
             dataset,
             organization,
-            installation);
+            installation,
+            newIds,
+            oldIds);
     return Issue.builder()
         .title(String.format(IDS_VALIDATION_FAILED_TITLE, dataset.getTitle()))
         .body(body)
@@ -149,7 +181,9 @@ public class IssueCreator {
       String cause,
       Dataset dataset,
       Organization organization,
-      Installation installation) {
+      Installation installation,
+      List<String> newIds,
+      List<String> oldIds) {
 
     long occCount =
         cubeWsClient.count(Collections.singletonMap("datasetKey", datasetKey.toString()));
@@ -189,6 +223,10 @@ public class IssueCreator {
         .append("- Pipelines execution steps: ")
         .append(createApiLink(EXECUTION_LINK_TEMPLATE, null, String.valueOf(executionKey)))
         .append(NEW_LINE)
+        .append(createIdsBlock(newIds, true))
+        .append(NEW_LINE)
+        .append(createIdsBlock(oldIds, false))
+        .append(NEW_LINE)
         .append(buildPublisherEmailSection(dataset))
         .append(NEW_LINE)
         .append(NEW_LINE)
@@ -215,6 +253,9 @@ public class IssueCreator {
       throw new IllegalArgumentException("Dataset not found for key: " + datasetKey);
     }
 
+    List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
+    List<String> oldIds = readIdentifiersFromES(datasetKey);
+
     Organization organization =
         organizationMapper.getLightweight(dataset.getPublishingOrganizationKey());
     Installation installation = installationMapper.getLightweight(dataset.getInstallationKey());
@@ -228,7 +269,9 @@ public class IssueCreator {
             cause,
             dataset,
             organization,
-            installation);
+            installation,
+            newIds,
+            oldIds);
 
     return GithubApiService.IssueComment.builder().body(body).build();
   }
@@ -297,5 +340,97 @@ public class IssueCreator {
         .append(NEW_LINE);
 
     return sb.toString();
+  }
+
+  private String createIdsBlock(List<String> ids, boolean newIds) {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
+    sb.append(newIds ? "New" : "Old").append(" IDs sample:").append(NEW_LINE).append(NEW_LINE);
+
+    boolean first = true;
+    for (String newId : ids) {
+      if (!first) {
+        sb.append(NEW_LINE);
+      }
+      first = false;
+      sb.append(newId);
+    }
+
+    sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
+
+    return sb.toString();
+  }
+
+  @SneakyThrows
+  private List<String> readIdentifiersFromAvro(UUID datasetKey, int attempt) {
+    FileSystem fs =
+        FileSystem.get(
+            URI.create(issuesConfig.hdfsPrefix), getHdfsConfiguration(issuesConfig.hdfsSiteConfig));
+
+    org.apache.hadoop.fs.Path identifiersPath =
+        new org.apache.hadoop.fs.Path(
+            issuesConfig.hdfsPrefix
+                + "/data/ingest/"
+                + datasetKey
+                + "/"
+                + attempt
+                + "/occurrence/identifier");
+    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
+
+    List<String> identifiers = new ArrayList<>();
+    while (iterator.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
+      LocatedFileStatus fileStatus = iterator.next();
+      if (fileStatus.isFile()) {
+
+        DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+        try (DataFileReader<GenericRecord> dataFileReader =
+            new DataFileReader<>(
+                new AvroFSInput(
+                    fs.open(fileStatus.getPath()),
+                    fs.getContentSummary(fileStatus.getPath()).getLength()),
+                datumReader)) {
+
+          GenericRecord record = null;
+          while (dataFileReader.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
+            record = dataFileReader.next(record);
+            if (record.get("id") != null) {
+              identifiers.add(record.get("id").toString());
+            }
+          }
+        }
+      }
+    }
+
+    return identifiers;
+  }
+
+  private List<String> readIdentifiersFromES(UUID datasetKey) {
+    OccurrenceSearchRequest request = new OccurrenceSearchRequest();
+    request.setLimit(NUM_SAMPLE_IDS);
+    request.addDatasetKeyFilter(datasetKey);
+    SearchResponse<Occurrence, OccurrenceSearchParameter> response =
+        occurrenceWsSearchClient.search(request);
+    return response.getResults().stream()
+        .map(o -> o.getVerbatimField(DwcTerm.occurrenceID))
+        .filter(v -> !Strings.isNullOrEmpty(v))
+        .collect(Collectors.toList());
+  }
+
+  @SneakyThrows
+  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
+    Configuration config = new Configuration();
+
+    // check if the hdfs-site.xml is provided
+    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+      File hdfsSite = new File(hdfsSiteConfig);
+      if (hdfsSite.exists() && hdfsSite.isFile()) {
+        log.info("using hdfs-site.xml");
+        config.addResource(hdfsSite.toURI().toURL());
+      } else {
+        log.warn("hdfs-site.xml does not exist");
+      }
+    }
+    return config;
   }
 }

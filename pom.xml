@@ -129,6 +129,11 @@
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
     <geojson.version>1.14</geojson.version>
+    <avro.version>1.8.2</avro.version>
+
+    <!-- Hadoop -->
+    <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
+    <hadoop-core.version>2.6.0-mr1-cdh5.16.2</hadoop-core.version>
 
     <!-- Test -->
     <junit.version>5.9.1</junit.version>
@@ -606,6 +611,45 @@
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-client-sniffer</artifactId>
         <version>${elasticsearch.version}</version>
+      </dependency>
+
+      <!-- Hadoop -->
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-hdfs</artifactId>
+        <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-core</artifactId>
+        <version>${hadoop-core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>${avro.version}</version>
       </dependency>
 
       <!-- CSV exports -->
