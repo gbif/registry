@@ -51,6 +51,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -376,30 +377,35 @@ public class IssueCreator {
                 + "/"
                 + attempt
                 + "/occurrence/identifier");
-    RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
 
     List<String> identifiers = new ArrayList<>();
-    while (iterator.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
-      LocatedFileStatus fileStatus = iterator.next();
-      if (fileStatus.isFile()) {
+    try {
+      RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
+      while (iterator.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
+        LocatedFileStatus fileStatus = iterator.next();
+        if (fileStatus.isFile()) {
 
-        DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
-        try (DataFileReader<GenericRecord> dataFileReader =
-            new DataFileReader<>(
-                new AvroFSInput(
-                    fs.open(fileStatus.getPath()),
-                    fs.getContentSummary(fileStatus.getPath()).getLength()),
-                datumReader)) {
+          DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+          try (DataFileReader<GenericRecord> dataFileReader =
+              new DataFileReader<>(
+                  new AvroFSInput(
+                      fs.open(fileStatus.getPath()),
+                      fs.getContentSummary(fileStatus.getPath()).getLength()),
+                  datumReader)) {
 
-          GenericRecord record = null;
-          while (dataFileReader.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
-            record = dataFileReader.next(record);
-            if (record.get("id") != null) {
-              identifiers.add(record.get("id").toString());
+            GenericRecord record = null;
+            while (dataFileReader.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
+              record = dataFileReader.next(record);
+              if (record.get("id") != null) {
+                identifiers.add(record.get("id").toString());
+              }
             }
           }
         }
       }
+    } catch (FileNotFoundException ex) {
+      throw new IllegalArgumentException(
+          "Identifier avro files not found for dataset " + datasetKey + " and attempt " + attempt);
     }
 
     return identifiers;
