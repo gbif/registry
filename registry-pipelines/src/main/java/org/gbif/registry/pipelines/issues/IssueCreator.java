@@ -13,15 +13,18 @@
  */
 package org.gbif.registry.pipelines.issues;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -47,9 +50,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -58,12 +59,13 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
 
 @Component
 @Slf4j
 public class IssueCreator {
+
+  private static final int NUM_SAMPLE_IDS = 10;
   private static final String IDS_VALIDATION_FAILED_TITLE =
       "Identifiers validation failed for dataset %s";
 
@@ -99,7 +101,6 @@ public class IssueCreator {
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final PipelineProcessMapper pipelineProcessMapper;
   private final IssuesConfig issuesConfig;
-  private final ObjectMapper objectMapper;
 
   @Autowired
   public IssueCreator(
@@ -116,7 +117,6 @@ public class IssueCreator {
     this.installationMapper = installationMapper;
     this.pipelineProcessMapper = pipelineProcessMapper;
     this.issuesConfig = issuesConfig;
-    this.objectMapper = objectMapper;
     this.registryUrl = registryUrl;
     this.apiRootUrl = apiRootUrl;
     this.cubeWsClient =
@@ -345,8 +345,8 @@ public class IssueCreator {
   private String createIdsBlock(List<String> ids, boolean newIds) {
     StringBuilder sb = new StringBuilder();
 
-    sb.append(newIds ? "New" : "Old").append(" IDs sample:").append(NEW_LINE);
     sb.append(NEW_LINE).append(CODE_BLOCK_SEPARATOR).append(NEW_LINE);
+    sb.append(newIds ? "New" : "Old").append(" IDs sample:").append(NEW_LINE).append(NEW_LINE);
 
     boolean first = true;
     for (String newId : ids) {
@@ -370,30 +370,34 @@ public class IssueCreator {
 
     org.apache.hadoop.fs.Path identifiersPath =
         new org.apache.hadoop.fs.Path(
-            "data/ingest/" + datasetKey + "/" + attempt + "/occurrence/identifier");
+            issuesConfig.hdfsPrefix
+                + "/data/ingest/"
+                + datasetKey
+                + "/"
+                + attempt
+                + "/occurrence/identifier");
     RemoteIterator<LocatedFileStatus> iterator = fs.listFiles(identifiersPath, false);
 
     List<String> identifiers = new ArrayList<>();
-    while (iterator.hasNext() && identifiers.size() < 10) {
+    while (iterator.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
       LocatedFileStatus fileStatus = iterator.next();
       if (fileStatus.isFile()) {
-        try (BufferedReader br =
-            new BufferedReader(new InputStreamReader(fs.open(fileStatus.getPath()), UTF_8))) {
-          br.lines()
-              .map(x -> x.replace("\u0000", ""))
-              .filter(s -> !Strings.isNullOrEmpty(s))
-              .map(
-                  l -> {
-                    try {
-                      JsonNode tree = objectMapper.readTree(l);
-                      return tree.get("id").get("string").asText();
-                    } catch (JsonProcessingException e) {
-                      return null;
-                    }
-                  })
-              .filter(s -> !Strings.isNullOrEmpty(s))
-              .limit(10)
-              .forEach(identifiers::add);
+
+        DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+        try (DataFileReader<GenericRecord> dataFileReader =
+            new DataFileReader<>(
+                new AvroFSInput(
+                    fs.open(fileStatus.getPath()),
+                    fs.getContentSummary(fileStatus.getPath()).getLength()),
+                datumReader)) {
+
+          GenericRecord record = null;
+          while (dataFileReader.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
+            record = dataFileReader.next(record);
+            if (record.get("id") != null) {
+              identifiers.add(record.get("id").toString());
+            }
+          }
         }
       }
     }
@@ -403,12 +407,13 @@ public class IssueCreator {
 
   private List<String> readIdentifiersFromES(UUID datasetKey) {
     OccurrenceSearchRequest request = new OccurrenceSearchRequest();
-    request.setLimit(10);
+    request.setLimit(NUM_SAMPLE_IDS);
     request.addDatasetKeyFilter(datasetKey);
     SearchResponse<Occurrence, OccurrenceSearchParameter> response =
         occurrenceWsSearchClient.search(request);
     return response.getResults().stream()
         .map(o -> o.getVerbatimField(DwcTerm.occurrenceID))
+        .filter(v -> !Strings.isNullOrEmpty(v))
         .collect(Collectors.toList());
   }
 
