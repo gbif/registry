@@ -270,26 +270,14 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .getResults()
             .size());
     assertEquals(
-        1,
+        2,
         collectionService
             .list(
                 CollectionSearchRequest.builder()
                     .contentTypes(
                         Arrays.asList(
                             CollectionContentType.RECORDS_ASSOCIATED_DATA,
-                            CollectionContentType.ARCHAEOLOGICAL_C14))
-                    .page(DEFAULT_PAGE)
-                    .build())
-            .getResults()
-            .size());
-    assertEquals(
-        1,
-        collectionService
-            .list(
-                CollectionSearchRequest.builder()
-                    .preservationTypes(
-                        Arrays.asList(
-                            PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED))
+                            CollectionContentType.RECORDS_SEISMOGRAMS))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()

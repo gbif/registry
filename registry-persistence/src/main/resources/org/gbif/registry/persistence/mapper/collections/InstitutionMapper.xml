@@ -337,7 +337,7 @@
         AND i.institutional_governance = #{params.institutionalGovernance,jdbcType=OTHER}
       </if>
       <if test="params.disciplines != null and params.disciplines.size > 0" >
-        AND i.discipline @> ARRAY
+        AND i.discipline &amp;&amp; ARRAY
         <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}
         </foreach>
