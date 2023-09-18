@@ -62,7 +62,8 @@ public class DerivedDatasetCreationRequest implements Serializable {
   private URI sourceUrl;
 
   @Schema(
-    description = "" // TODO
+    description = "A future date should you wish to delay the registration of the DOI, " +
+      "for example for embargoed materials."
   )
   private Date registrationDate;
 
