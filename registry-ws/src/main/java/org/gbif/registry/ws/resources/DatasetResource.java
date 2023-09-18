@@ -1108,15 +1108,15 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     return networkMapper.list(NetworkListParams.builder().datasetKey(datasetKey).build());
   }
 
-  // TODO: What for?
+  @Hidden
   @Operation(
       operationId = "getAllConstituents",
-      summary = "Retrieve all constituent datasets",
+      summary = "List all constituent datasets",
       description = "Lists datasets that are a constituent of any dataset.",
       extensions =
           @Extension(
               name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0230")))
+              properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "List of datasets")
   @Docs.DefaultUnsuccessfulReadResponses
@@ -1220,7 +1220,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
       extensions =
           @Extension(
               name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0500")))
+              properties = @ExtensionProperty(name = "Order", value = "0505")))
   @Parameters(
       value = {
         @Parameter(
@@ -1238,7 +1238,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             explode = Explode.TRUE)
       })
   @SimpleSearchParameters
-  @CommonParameters.QParameter
   @Pageable.OffsetLimitParameters
   @ApiResponse(responseCode = "200", description = "List of deleted datasets")
   @Docs.DefaultUnsuccessfulReadResponses
