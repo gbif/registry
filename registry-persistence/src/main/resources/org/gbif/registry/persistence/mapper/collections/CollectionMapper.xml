@@ -313,13 +313,13 @@
         AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
       </if>
       <if test="params.contentTypes != null and params.contentTypes.size > 0" >
-        AND c.content_type @> ARRAY
+        AND c.content_type &amp;&amp; ARRAY
         <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >
-        AND c.preservation_type @> ARRAY
+        AND c.preservation_type &amp;&amp; ARRAY
         <foreach item="item" collection="params.preservationTypes" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}
         </foreach>

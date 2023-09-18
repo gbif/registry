@@ -240,17 +240,17 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .getResults()
             .size());
     assertEquals(
-        2,
+        1,
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .disciplines(Collections.singletonList(Discipline.OCEAN))
+                    .disciplines(Collections.singletonList(Discipline.AGRICULTURAL))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
             .size());
     assertEquals(
-        1,
+        2,
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
