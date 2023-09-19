@@ -518,7 +518,15 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
     } else {
+      // TODO: Move ENUMs from pipelines to gbif-api project
       message.getInterpretTypes().remove("IDENTIFIER_ABSENT");
+      message.getInterpretTypes().add("METADATA");
+      message.getInterpretTypes().add("BASIC");
+      message.getInterpretTypes().add("TEMPORAL");
+      message.getInterpretTypes().add("TAXONOMY");
+      message.getInterpretTypes().add("LOCATION");
+      message.getInterpretTypes().add("GRSCICOLL");
+      message.getInterpretTypes().add("CLUSTERING");
     }
 
     return message;
