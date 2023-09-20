@@ -16,12 +16,9 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -518,15 +515,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
     } else {
-      // TODO: Move ENUMs from pipelines to gbif-api project
-      message.getInterpretTypes().remove("IDENTIFIER_ABSENT");
-      message.getInterpretTypes().add("METADATA");
-      message.getInterpretTypes().add("BASIC");
-      message.getInterpretTypes().add("TEMPORAL");
-      message.getInterpretTypes().add("TAXONOMY");
-      message.getInterpretTypes().add("LOCATION");
-      message.getInterpretTypes().add("GRSCICOLL");
-      message.getInterpretTypes().add("CLUSTERING");
+      message.getInterpretTypes().remove(RecordType.IDENTIFIER_ABSENT.name());
+      message.getInterpretTypes().add(RecordType.METADATA.name());
+      message.getInterpretTypes().add(RecordType.BASIC.name());
+      message.getInterpretTypes().add(RecordType.TEMPORAL.name());
+      message.getInterpretTypes().add(RecordType.TAXONOMY.name());
+      message.getInterpretTypes().add(RecordType.LOCATION.name());
+      message.getInterpretTypes().add(RecordType.GRSCICOLL.name());
+      message.getInterpretTypes().add(RecordType.CLUSTERING.name());
     }
 
     return message;
