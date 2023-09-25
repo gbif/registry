@@ -16,12 +16,9 @@ package org.gbif.registry.pipelines;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.pipelines.PipelineExecution;
-import org.gbif.api.model.pipelines.PipelineProcess;
-import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.pipelines.*;
+import org.gbif.api.model.pipelines.InterpretationType.RecordType;
 import org.gbif.api.model.pipelines.PipelineStep.Status;
-import org.gbif.api.model.pipelines.RunPipelineResponse;
-import org.gbif.api.model.pipelines.StepType;
 import org.gbif.api.model.pipelines.ws.SearchResult;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
@@ -220,38 +217,28 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   /** Utility method to run batch jobs on all dataset elements */
   private void doOnAllDatasets(
       Consumer<UUID> onDataset, List<UUID> datasetsToExclude, List<UUID> datasetsToInclude) {
-    Consumer<List<UUID>> rerunFn =
-        datasetKeys ->
-            datasetKeys.stream()
-                .filter(PredicateUtils.not(datasetsToExclude::contains))
-                .forEach(
-                    datasetKey ->
-                        CompletableFuture.runAsync(
-                            () -> {
-                              try {
-                                LOG.info("trying to rerun dataset {}", datasetKey);
-                                onDataset.accept(datasetKey);
-                              } catch (Exception ex) {
-                                LOG.error(
-                                    "Error processing dataset {} while rerunning all datasets: {}",
-                                    datasetKey,
-                                    ex.getMessage());
-                              }
-                            },
-                            executorService));
 
-    if (datasetsToInclude != null && !datasetsToInclude.isEmpty()) {
-      rerunFn.accept(datasetsToInclude);
-    } else {
-      PagingRequest pagingRequest = new PagingRequest(0, PAGE_SIZE);
-      PagingResponse<Dataset> response;
-      do {
-        response = datasetService.list(pagingRequest);
-        rerunFn.accept(
-            response.getResults().stream().map(Dataset::getKey).collect(Collectors.toList()));
-        pagingRequest.addOffset(response.getResults().size());
-      } while (!response.isEndOfRecords());
+    if (datasetsToInclude == null || datasetsToInclude.isEmpty()) {
+      throw new RuntimeException("datasetsToExclude can't be null or empty");
     }
+
+    datasetsToInclude.stream()
+        .filter(PredicateUtils.not(datasetsToExclude::contains))
+        .forEach(
+            datasetKey ->
+                CompletableFuture.runAsync(
+                    () -> {
+                      try {
+                        LOG.info("trying to rerun dataset {}", datasetKey);
+                        onDataset.accept(datasetKey);
+                      } catch (Exception ex) {
+                        LOG.error(
+                            "Error processing dataset {} while rerunning all datasets: {}",
+                            datasetKey,
+                            ex.getMessage());
+                      }
+                    },
+                    executorService));
   }
 
   private Set<StepType> prioritizeSteps(Set<StepType> steps, Dataset dataset) {
@@ -518,7 +505,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (interpretTypes != null && !interpretTypes.isEmpty()) {
       message.setInterpretTypes(interpretTypes);
     } else {
-      message.getInterpretTypes().remove("IDENTIFIER_ABSENT");
+      message.getInterpretTypes().remove(RecordType.IDENTIFIER_ABSENT.name());
+      message.getInterpretTypes().add(RecordType.METADATA.name());
+      message.getInterpretTypes().add(RecordType.BASIC.name());
+      message.getInterpretTypes().add(RecordType.TEMPORAL.name());
+      message.getInterpretTypes().add(RecordType.TAXONOMY.name());
+      message.getInterpretTypes().add(RecordType.LOCATION.name());
+      message.getInterpretTypes().add(RecordType.GRSCICOLL.name());
+      message.getInterpretTypes().add(RecordType.CLUSTERING.name());
     }
 
     return message;
