@@ -42,6 +42,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.MachineTagService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
@@ -251,6 +252,7 @@ public abstract class BaseMergeServiceIT<
     org.setTitle("organization");
     org.setLanguage(Language.ABKHAZIAN);
     org.setPassword("testtttt");
+    org.setCountry(Country.DENMARK);
     organizationService.create(org);
 
     Installation installation = new Installation();
@@ -283,6 +285,7 @@ public abstract class BaseMergeServiceIT<
     org.setTitle("organization");
     org.setLanguage(Language.ABKHAZIAN);
     org.setPassword("testtttt");
+    org.setCountry(Country.DENMARK);
     organizationService.create(org);
 
     return org;

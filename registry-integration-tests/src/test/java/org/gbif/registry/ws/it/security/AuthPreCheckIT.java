@@ -181,6 +181,7 @@ public class AuthPreCheckIT extends BaseItTest {
     organization.setTitle("title");
     organization.setLanguage(Language.ABKHAZIAN);
     organization.setEndorsingNodeKey(NODE_KEY);
+    organization.setCountry(Country.DENMARK);
     ORG_KEY = organizationService.create(organization);
     organizationService.confirmEndorsement(ORG_KEY);
 

@@ -10,6 +10,7 @@
     <result property="address" column="address" typeHandler="org.gbif.mybatis.type.StringArrayTypeHandler"/>
     <result property="homepage" column="homepage" typeHandler="org.gbif.mybatis.type.UriArrayTypeHandler"/>
     <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
+    <result property="country" column="country" typeHandler="CountryNotNullTypeHandler" />
     <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
     <collection property="contacts" column="key" select="listContacts"/>
     <collection property="endpoints" column="key" select="listEndpoints"/>
@@ -74,7 +75,7 @@
     address = #{address,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     city = #{city,jdbcType=VARCHAR},
     province = #{province,jdbcType=VARCHAR},
-    country = upper(#{country,jdbcType=CHAR}),
+    country = upper(#{country,jdbcType=CHAR,typeHandler=CountryNotNullTypeHandler}),
     postal_code = #{postalCode,jdbcType=VARCHAR},
     latitude = #{latitude,jdbcType=DOUBLE},
     longitude = #{longitude,jdbcType=DOUBLE},
@@ -98,7 +99,7 @@
     #{address,jdbcType=ARRAY, typeHandler=org.gbif.mybatis.type.StringArrayTypeHandler},
     #{city,jdbcType=VARCHAR},
     #{province,jdbcType=VARCHAR},
-    #{country,jdbcType=CHAR},
+    #{country,jdbcType=CHAR,typeHandler=CountryNotNullTypeHandler},
     #{postalCode,jdbcType=VARCHAR},
     #{latitude,jdbcType=DOUBLE},
     #{longitude,jdbcType=DOUBLE},

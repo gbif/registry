@@ -875,6 +875,7 @@ public class LookupServiceIT extends BaseServiceIT {
     org.setTitle("organization");
     org.setLanguage(Language.ABKHAZIAN);
     org.setPassword("testtttt");
+    org.setCountry(Country.DENMARK);
     organizationService.create(org);
 
     Installation installation = new Installation();
