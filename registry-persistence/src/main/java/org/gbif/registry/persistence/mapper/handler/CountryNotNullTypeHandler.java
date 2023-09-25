@@ -12,10 +12,12 @@ public class CountryNotNullTypeHandler extends BaseEnumTypeHandler<String, Count
   public static class CountryNotNullConverter implements EnumConverter<String, Country> {
     public CountryNotNullConverter() {}
 
+    @Override
     public String fromEnum(Country value) {
       return value != null ? value.getIso2LetterCode() : null;
     }
 
+    @Override
     public Country toEnum(String key) {
       if (key == null) {
         return null;
