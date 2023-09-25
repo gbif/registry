@@ -132,4 +132,5 @@
   <include file="liquibase/124-increase-abbreviation-organization-size.xml" />
   <include file="liquibase/125-occurrence-counts-grscicoll.xml" />
   <include file="liquibase/126-wikidata-ncbi-identifier-types.xml" />
+  <include file="liquibase/127-organization-country-not-null.xml" />
 </databaseChangeLog>

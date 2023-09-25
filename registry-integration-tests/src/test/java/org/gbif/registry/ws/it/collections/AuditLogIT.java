@@ -42,6 +42,7 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.InstallationType;
@@ -133,6 +134,7 @@ public class AuditLogIT extends BaseItTest {
     org.setTitle("organization");
     org.setLanguage(Language.ABKHAZIAN);
     org.setPassword("testtttt");
+    org.setCountry(Country.DENMARK);
     organizationService.create(org);
 
     Installation installation = new Installation();

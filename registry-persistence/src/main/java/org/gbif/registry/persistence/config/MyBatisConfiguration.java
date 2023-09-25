@@ -70,6 +70,7 @@ import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollecti
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
 import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.ExtensionArrayTypeHandler;
@@ -171,6 +172,9 @@ public class MyBatisConfiguration {
 
       configuration.getTypeAliasRegistry().registerAlias("UriTypeHandler", UriTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("UuidTypeHandler", UuidTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("CountryNotNullTypeHandler", CountryNotNullTypeHandler.class);
       configuration.getTypeAliasRegistry().registerAlias("DerivedDataset", DerivedDataset.class);
       configuration
           .getTypeAliasRegistry()

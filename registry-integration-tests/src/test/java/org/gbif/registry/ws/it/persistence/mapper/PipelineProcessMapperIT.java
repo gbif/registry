@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Installation;
 import org.gbif.api.model.registry.Node;
 import org.gbif.api.model.registry.Organization;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.api.vocabulary.Language;
@@ -469,6 +470,7 @@ public class PipelineProcessMapperIT extends BaseItTest {
     org.setLanguage(Language.ABKHAZIAN);
     org.setPassword("testtttt");
     org.setCreatedBy("test");
+    org.setCountry(Country.DENMARK);
     organizationMapper.create(org);
 
     Installation installation = new Installation();
