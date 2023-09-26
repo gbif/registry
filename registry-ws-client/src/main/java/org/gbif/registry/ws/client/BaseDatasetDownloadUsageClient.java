@@ -25,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 public interface BaseDatasetDownloadUsageClient extends DatasetOccurrenceDownloadUsageService {
@@ -36,5 +37,8 @@ public interface BaseDatasetDownloadUsageClient extends DatasetOccurrenceDownloa
   @ResponseBody
   @Override
   PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
-      @PathVariable("datasetKey") UUID datasetKey, @SpringQueryMap Pageable pageable);
+      @PathVariable("datasetKey") UUID datasetKey,
+      @RequestParam(value = "showDownloadDetails", required = false, defaultValue = "true")
+          Boolean showDownloadDetails,
+      @SpringQueryMap Pageable pageable);
 }

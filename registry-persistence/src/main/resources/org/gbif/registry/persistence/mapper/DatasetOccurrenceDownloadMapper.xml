@@ -56,6 +56,20 @@
     </if>
   </select>
 
+  <select id="listByDatasetWithoutDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="map">
+    SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
+    FROM dataset_occurrence_download dod
+    JOIN occurrence_download od ON dod.download_key = od.key
+    WHERE dod.dataset_key = #{datasetKey,jdbcType=OTHER}
+    <if test="type != null">
+      AND od.type = #{type,jdbcType=OTHER}
+    </if>
+    ORDER BY od.created DESC, od.key
+    <if test="page != null" >
+      LIMIT #{page.limit} OFFSET #{page.offset}
+    </if>
+  </select>
+
   <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
     FROM dataset_occurrence_download dod
