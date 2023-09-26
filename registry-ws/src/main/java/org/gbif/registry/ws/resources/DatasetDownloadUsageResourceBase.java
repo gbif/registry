@@ -14,6 +14,7 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.occurrence.DownloadType;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -27,6 +28,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -50,25 +52,40 @@ public abstract class DatasetDownloadUsageResourceBase
   }
 
   @Operation(
-    operationId = "getDatasetDownloadActivity",
-    summary = "List the downloads activity of a dataset.",
-    description = "Lists the downloads in which data from a dataset has been included.")
+      operationId = "getDatasetDownloadActivity",
+      summary = "List the downloads activity of a dataset.",
+      description = "Lists the downloads in which data from a dataset has been included.")
+  @Parameter(name = "datasetKey", description = "The key of the dataset.", in = ParameterIn.PATH)
   @Parameter(
-    name = "datasetKey",
-    description = "The key of the dataset.",
-    in = ParameterIn.PATH)
+      name = "showDownloadDetails",
+      description = "Flag to indicate if we want the download details in the response.",
+      in = ParameterIn.QUERY)
   @Pageable.OffsetLimitParameters
   @ApiResponse(
-    responseCode = "200",
-    description = "Dataset found and download information returned")
+      responseCode = "200",
+      description = "Dataset found and download information returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{datasetKey}")
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
-      @PathVariable UUID datasetKey, Pageable page) {
+      @PathVariable UUID datasetKey,
+      @RequestParam(value = "showDownloadDetails", required = false, defaultValue = "true")
+          Boolean showDownloadDetails,
+      Pageable page) {
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    List<DatasetOccurrenceDownloadUsage> usages =
-        datasetOccurrenceDownloadMapper.listByDataset(datasetKey, downloadType, page);
+
+    if (Boolean.TRUE.equals(showDownloadDetails) && page.getLimit() > 100) {
+      page = new PagingRequest(page.getOffset(), 100);
+    }
+
+    List<DatasetOccurrenceDownloadUsage> usages = null;
+    if (Boolean.FALSE.equals(showDownloadDetails)) {
+      usages =
+          datasetOccurrenceDownloadMapper.listByDatasetWithoutDownload(
+              datasetKey, downloadType, page);
+    } else {
+      usages = datasetOccurrenceDownloadMapper.listByDataset(datasetKey, downloadType, page);
+    }
     clearSensitiveData(authentication, usages);
     return new PagingResponse<>(
         page,

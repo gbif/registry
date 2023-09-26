@@ -41,6 +41,11 @@ public interface DatasetOccurrenceDownloadMapper {
       @Param("type") DownloadType type,
       @Nullable @Param("page") Pageable page);
 
+  List<DatasetOccurrenceDownloadUsage> listByDatasetWithoutDownload(
+    @Param("datasetKey") UUID datasetKey,
+    @Param("type") DownloadType type,
+    @Nullable @Param("page") Pageable page);
+
   int countByDataset(@Param("datasetKey") UUID datasetKey, @Param("type") DownloadType type);
 
   /**

@@ -141,7 +141,7 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
     assertEquals(
         1,
         datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
+            .listByDataset(testDataset.getKey(), true, new PagingRequest(0, 3))
             .getResults()
             .size(),
         "List operation should return 1 record");
@@ -153,7 +153,7 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
     occurrenceDownloadService.createUsages(occurrenceDownload.getKey(), datasetCitation);
     List<DatasetOccurrenceDownloadUsage> usages =
         datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset.getKey(), new PagingRequest(0, 3))
+            .listByDataset(testDataset.getKey(), true, new PagingRequest(0, 3))
             .getResults();
     assertEquals(1, usages.size(), "List operation should return 1 record");
     assertEquals(2000L, usages.get(0).getNumberRecords());
@@ -191,21 +191,21 @@ public class DatasetOccurrenceDownloadIT extends BaseItTest {
     assertEquals(
         1,
         datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset1.getKey(), new PagingRequest(0, 3))
+            .listByDataset(testDataset1.getKey(), true, new PagingRequest(0, 3))
             .getResults()
             .size(),
         "List operation should return 1 record");
     assertEquals(
         1,
         datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset2.getKey(), new PagingRequest(0, 3))
+            .listByDataset(testDataset2.getKey(), true, new PagingRequest(0, 3))
             .getResults()
             .size(),
         "List operation should return 1 record");
     assertEquals(
         1,
         datasetOccurrenceDownloadUsageService
-            .listByDataset(testDataset3.getKey(), new PagingRequest(0, 3))
+            .listByDataset(testDataset3.getKey(), true, new PagingRequest(0, 3))
             .getResults()
             .size(),
         "List operation should return 1 record");
