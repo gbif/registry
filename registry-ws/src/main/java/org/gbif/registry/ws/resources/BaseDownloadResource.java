@@ -285,6 +285,11 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     } else {
       download = occurrenceDownloadMapper.get(key);
     }
+
+    if (download == null) {
+      return null;
+    }
+
     clearSensitiveData(authentication, download);
     assertDownloadType(download);
 
