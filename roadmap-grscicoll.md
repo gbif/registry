@@ -1,4 +1,4 @@
-# GRSciColl Catalogue priority roadmap 2023
+# Global Registry of Scientific Collection 2023/2024 Roadmap
 
 This roadmap builds in the [2021 roadmap](https://github.com/gbif/registry/blob/dev/roadmap-grscicoll-2021.md) as well as the efforts in 2022 to build a community of editors an mediators.
 
