@@ -35,5 +35,8 @@ public class MatchersTest {
     assertNull(
         BaseMatcher.parseUUID(
             "https://www.gbif.org/grscicoll/collection/685298f2-bc1-4e44-b2d5-d9760574644e"));
+    assertNull(
+      BaseMatcher.parseUUID(
+        "https://scientific-collections.gbif.org/institution/685298f2-bc1-4e44-b2d5-d9760574644e"));
   }
 }

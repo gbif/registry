@@ -54,11 +54,14 @@ public abstract class DatasetDownloadUsageResourceBase
   @Operation(
       operationId = "getDatasetDownloadActivity",
       summary = "List the downloads activity of a dataset.",
-      description = "Lists the downloads in which data from a dataset has been included.")
+      description =
+          "Lists the downloads in which data from a dataset has been included. "
+              + "The limit is set to a maximum of 100 results unless you set the showDownloadDetails parameter to false.")
   @Parameter(name = "datasetKey", description = "The key of the dataset.", in = ParameterIn.PATH)
   @Parameter(
       name = "showDownloadDetails",
-      description = "Flag to indicate if we want the download details in the response.",
+      description =
+          "Flag to indicate if we want the download details in the response. It defaults to true to keep backwards compatibility.",
       in = ParameterIn.QUERY)
   @Pageable.OffsetLimitParameters
   @ApiResponse(
