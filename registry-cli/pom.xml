@@ -47,19 +47,6 @@
       </extension>
     </extensions>
     <plugins>
-      <!-- Override default configuration to fix compilation error:
-      Failed to load existing service definition files: java.nio.file.NoSuchFileException:
-      .../registry-spring-boot/registry-spring-boot-cli/target/classes/META-INF/services/org.gbif.cli.Command -->
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration combine.self="override">
-          <source>1.8</source>
-          <target>1.8</target>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-        </configuration>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>

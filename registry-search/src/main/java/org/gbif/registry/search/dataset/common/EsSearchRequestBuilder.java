@@ -13,6 +13,10 @@
  */
 package org.gbif.registry.search.dataset.common;
 
+import org.elasticsearch.geometry.Geometry;
+import org.elasticsearch.geometry.utils.StandardValidator;
+import org.elasticsearch.geometry.utils.WellKnownText;
+
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchConstants;
 import org.gbif.api.model.common.search.SearchParameter;
@@ -21,6 +25,7 @@ import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,12 +43,6 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.geo.ShapeRelation;
-import org.elasticsearch.common.geo.builders.CoordinatesBuilder;
-import org.elasticsearch.common.geo.builders.LineStringBuilder;
-import org.elasticsearch.common.geo.builders.MultiPolygonBuilder;
-import org.elasticsearch.common.geo.builders.PointBuilder;
-import org.elasticsearch.common.geo.builders.PolygonBuilder;
-import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.GeoShapeQueryBuilder;
 import org.elasticsearch.index.query.Operator;
@@ -60,11 +59,6 @@ import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Polygon;
-import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.WKTReader;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -88,7 +82,6 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   // this instance is created only once and reused for all searches
   private final HighlightBuilder highlightBuilder =
       new HighlightBuilder()
-          .forceSource(true)
           .preTags(PRE_HL_TAG)
           .postTags(POST_HL_TAG)
           .encoder("html")
@@ -496,77 +489,12 @@ public class EsSearchRequestBuilder<P extends SearchParameter> {
   }
 
   public static GeoShapeQueryBuilder buildGeoShapeQuery(String wkt) {
-    Geometry geometry;
     try {
-      geometry = new WKTReader().read(wkt);
-    } catch (ParseException e) {
+      Geometry geometry =  WellKnownText.fromWKT(StandardValidator.instance(true), true, wkt);
+      return QueryBuilders.geoShapeQuery("coordinate", geometry).relation(ShapeRelation.WITHIN);
+    } catch (IOException | ParseException e) {
       throw new IllegalArgumentException(e.getMessage(), e);
     }
-
-    Function<Polygon, PolygonBuilder> polygonToBuilder =
-        polygon -> {
-          PolygonBuilder polygonBuilder =
-              new PolygonBuilder(
-                  new CoordinatesBuilder()
-                      .coordinates(
-                          normalizePolygonCoordinates(polygon.getExteriorRing().getCoordinates())));
-          for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
-            polygonBuilder.hole(
-                new LineStringBuilder(
-                    new CoordinatesBuilder()
-                        .coordinates(
-                            normalizePolygonCoordinates(
-                                polygon.getInteriorRingN(i).getCoordinates()))));
-          }
-          return polygonBuilder;
-        };
-
-    String type =
-        "LinearRing".equals(geometry.getGeometryType())
-            ? "LINESTRING"
-            : geometry.getGeometryType().toUpperCase();
-
-    ShapeBuilder shapeBuilder = null;
-    if (("POINT").equals(type)) {
-      shapeBuilder = new PointBuilder(geometry.getCoordinate().x, geometry.getCoordinate().y);
-    } else if ("LINESTRING".equals(type)) {
-      shapeBuilder = new LineStringBuilder(Arrays.asList(geometry.getCoordinates()));
-    } else if ("POLYGON".equals(type)) {
-      shapeBuilder = polygonToBuilder.apply((Polygon) geometry);
-    } else if ("MULTIPOLYGON".equals(type)) {
-      // multipolygon
-      MultiPolygonBuilder multiPolygonBuilder = new MultiPolygonBuilder();
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
-        multiPolygonBuilder.polygon(polygonToBuilder.apply((Polygon) geometry.getGeometryN(i)));
-      }
-      shapeBuilder = multiPolygonBuilder;
-    } else {
-      throw new IllegalArgumentException(type + " shape is not supported");
-    }
-
-    try {
-      return QueryBuilders.geoShapeQuery("coordinate", shapeBuilder).relation(ShapeRelation.WITHIN);
-    } catch (IOException e) {
-      throw new IllegalStateException(e.getMessage(), e);
-    }
-  }
-
-  /** Eliminates consecutive duplicates. The order is preserved. */
-  @VisibleForTesting
-  static Coordinate[] normalizePolygonCoordinates(Coordinate[] coordinates) {
-    List<Coordinate> normalizedCoordinates = new ArrayList<>();
-
-    // we always have to keep the fist and last coordinates
-    int i = 0;
-    normalizedCoordinates.add(i++, coordinates[0]);
-
-    for (int j = 1; j < coordinates.length; j++) {
-      if (!coordinates[j - 1].equals(coordinates[j])) {
-        normalizedCoordinates.add(i++, coordinates[j]);
-      }
-    }
-
-    return normalizedCoordinates.toArray(new Coordinate[0]);
   }
 
   @VisibleForTesting

@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
@@ -39,8 +38,10 @@ import org.elasticsearch.client.NodeSelector;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.xcontent.XContentFactory;
+import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -136,12 +137,9 @@ public class EsClient implements Closeable {
             }
           });
       settingsBuilder.loadFromSource(CharStreams.toString(settingsFileReader), XContentType.JSON);
-
-      CreateIndexRequest createIndexRequest = new CreateIndexRequest();
-      createIndexRequest
-          .index(indexName)
-          .settings(settingsBuilder.build())
-          .mapping(recordType, CharStreams.toString(mappingFileReader), XContentType.JSON);
+      CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName)
+                                                .settings(settingsBuilder)
+                                                .mapping(CharStreams.toString(mappingFileReader), XContentType.JSON);
       restHighLevelClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
     } catch (IOException ex) {
       throw new IllegalStateException(ex);

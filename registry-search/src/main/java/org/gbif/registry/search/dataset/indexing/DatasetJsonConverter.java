@@ -464,7 +464,7 @@ public class DatasetJsonConverter {
                               .subAggregation(
                                   AggregationBuilders.dateHistogram("eventDateSingle")
                                       .field("eventDateSingle")
-                                      .dateHistogramInterval(new DateHistogramInterval("3650d")))));
+                                      .calendarInterval(new DateHistogramInterval("3650d")))));
 
       org.elasticsearch.action.search.SearchResponse searchResponse =
           occurrenceEsClient.search(

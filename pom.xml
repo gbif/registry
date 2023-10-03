@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>56</version>
+    <version>58-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
@@ -74,6 +74,9 @@
   </modules>
 
   <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <jdkLevel>17</jdkLevel>
     <!-- Spring -->
     <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
     <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
@@ -105,7 +108,7 @@
     <commons-io.version>2.11.0</commons-io.version>
     <commons-logging.version>1.2</commons-logging.version>
     <cache2k.version>2.0.0.Final</cache2k.version>
-    <elasticsearch.version>7.9.1</elasticsearch.version>
+    <elasticsearch.version>8.10.2</elasticsearch.version>
     <feign.version>10.11</feign.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
     <guava.version>18.0</guava.version>
@@ -590,6 +593,11 @@
       <dependency>
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>7.17.4</version>
+      </dependency>
+      <dependency>
+        <groupId>co.elastic.clients</groupId>
+        <artifactId>elasticsearch-java</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
       <dependency>
