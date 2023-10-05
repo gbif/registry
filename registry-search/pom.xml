@@ -14,6 +14,7 @@
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
 
+    <deeplearning4j.version>1.0.0-M2.1</deeplearning4j.version>
     <sonar.coverage.jacoco.xmlReportPaths>
       ${project.basedir}/../registry-integration-tests/target/site/jacoco-aggregate/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
@@ -121,6 +122,52 @@
     <dependency>
       <groupId>org.cache2k</groupId>
       <artifactId>cache2k-api</artifactId>
+    </dependency>
+
+    <!-- Deeplearning4j NLP Module (if needed) -->
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>bom</artifactId>
+      <version>0.23.0</version>
+      <type>pom</type>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>api</artifactId>
+      <version>0.23.0</version>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.tensorflow</groupId>
+      <artifactId>tensorflow-engine</artifactId>
+      <version>0.23.0</version>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-model-zoo</artifactId>
+      <version>0.23.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-nlp</artifactId>
+      <version>${deeplearning4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-zoo</artifactId>
+      <version>${deeplearning4j.version}</version>
+    </dependency>
+
+    <!-- Deeplearning4j UI Module (if needed) -->
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-ui</artifactId>
+      <version>${deeplearning4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-api</artifactId>
+      <version>${deeplearning4j.version}</version>
     </dependency>
 
     <dependency>
