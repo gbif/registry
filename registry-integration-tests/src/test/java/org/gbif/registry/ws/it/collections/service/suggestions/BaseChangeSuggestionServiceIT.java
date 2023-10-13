@@ -586,6 +586,30 @@ public abstract class BaseChangeSuggestionServiceIT<
     assertEquals(2, applied.getContactPersons().size());
     assertTrue(applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals("11")));
     assertTrue(applied.getContactPersons().stream().anyMatch(c -> c.getFirstName().equals("22")));
+
+
+    entity = collectionEntityService.get(entityKey);
+
+    // suggestion to change contact1
+    entity.getContactPersons().stream()
+      .filter(c -> c.getKey().equals(contact1.getKey()))
+      .findFirst()
+      .get()
+      .setModifiedBy("11");
+
+    R suggestion3 = createEmptyChangeSuggestion();
+    suggestion3.setSuggestedEntity(entity);
+    suggestion3.setType(Type.UPDATE);
+    suggestion3.setEntityKey(entityKey);
+    suggestion3.setProposerEmail(PROPOSER);
+    suggestion3.setComments(Collections.singletonList("contact1"));
+
+    // When
+    int sugg3Key = changeSuggestionService.createChangeSuggestion(suggestion3);
+
+    // Then
+    suggestion3 = changeSuggestionService.getChangeSuggestion(sugg3Key);
+    assertEquals(0, suggestion3.getChanges().size());
   }
 
   protected void assertCreatedSuggestion(R created) {
