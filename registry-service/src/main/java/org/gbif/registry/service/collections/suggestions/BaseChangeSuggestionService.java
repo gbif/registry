@@ -537,7 +537,7 @@ public abstract class BaseChangeSuggestionService<
             .forEach(
                 sugg -> {
                   Contact current = currentContactsMap.get(sugg.getKey());
-                  if (current != null && !current.lenientEquals(sugg)) {
+                  if (current == null || !current.lenientEquals(sugg)) {
                     // contact has changed
                     changes.add(createChangeDto(field, sugg, current, Contact.class));
                   }
