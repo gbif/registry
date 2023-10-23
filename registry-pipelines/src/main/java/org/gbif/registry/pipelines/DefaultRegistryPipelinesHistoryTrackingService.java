@@ -381,6 +381,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
     // Performs the messaging and updates the status onces the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
+    StringBuilder errorMessage = new StringBuilder();
 
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
@@ -392,48 +393,40 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
       PipelineStep step = latestStepOpt.get();
       if (step.getMessage() == null || step.getMessage().isEmpty()) {
-        String m =
-            "Unable to use pipeline step "
-                + stepName
-                + " with key "
-                + step.getKey()
-                + " to rerun pipelines because the message body is empty. Please try running it from the step before or the previous attempt";
+        errorMessage
+          .append("Unable to use pipeline step ")
+          .append(stepName)
+          .append(" with key ")
+          .append(step.getKey())
+          .append(" to rerun pipelines because the message body is empty. Please try running it from the step before or the previous attempt\n");
+      } else {
+        try {
+          PipelineBasedMessage message = null;
 
-        LOG.warn(m);
-        return RunPipelineResponse.builder()
-            .setSteps(steps)
-            .setStepsFailed(steps)
-            .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
-            .setMessage(m)
-            .build();
-      }
-
-      try {
-        PipelineBasedMessage message = null;
-
-        if (stepName == StepType.INTERPRETED_TO_INDEX
+          if (stepName == StepType.INTERPRETED_TO_INDEX
             || stepName == StepType.HDFS_VIEW
             || stepName == StepType.FRAGMENTER) {
-          message = createInterpretedMessage(prefix, step.getMessage(), stepName);
-        } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
-          message = createVerbatimMessage(prefix, step.getMessage(), interpretTypes);
-        } else if (stepName == StepType.DWCA_TO_VERBATIM) {
-          message = createMessage(step.getMessage(), PipelinesDwcaMessage.class);
-        } else if (stepName == StepType.ABCD_TO_VERBATIM) {
-          message = createMessage(step.getMessage(), PipelinesAbcdMessage.class);
-        } else if (stepName == StepType.XML_TO_VERBATIM) {
-          message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
-        } else if (stepName == StepType.EVENTS_VERBATIM_TO_INTERPRETED) {
-          message = createMessage(step.getMessage(), PipelinesEventsMessage.class);
-        } else if (stepName == StepType.EVENTS_INTERPRETED_TO_INDEX) {
-          message = createMessage(step.getMessage(), PipelinesEventsInterpretedMessage.class);
-        }
+            message = createInterpretedMessage(prefix, step.getMessage(), stepName);
+          } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
+            message = createVerbatimMessage(prefix, step.getMessage(), interpretTypes);
+          } else if (stepName == StepType.DWCA_TO_VERBATIM) {
+            message = createMessage(step.getMessage(), PipelinesDwcaMessage.class);
+          } else if (stepName == StepType.ABCD_TO_VERBATIM) {
+            message = createMessage(step.getMessage(), PipelinesAbcdMessage.class);
+          } else if (stepName == StepType.XML_TO_VERBATIM) {
+            message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
+          } else if (stepName == StepType.EVENTS_VERBATIM_TO_INTERPRETED) {
+            message = createMessage(step.getMessage(), PipelinesEventsMessage.class);
+          } else if (stepName == StepType.EVENTS_INTERPRETED_TO_INDEX) {
+            message = createMessage(step.getMessage(), PipelinesEventsInterpretedMessage.class);
+          }
 
-        if (message != null) {
-          stepsToSend.put(stepName, message);
+          if (message != null) {
+            stepsToSend.put(stepName, message);
+          }
+        } catch (IOException ex) {
+          LOG.warn("Error reading message", ex);
         }
-      } catch (IOException ex) {
-        LOG.warn("Error reading message", ex);
       }
     }
 
@@ -442,7 +435,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .setSteps(steps)
           .setStepsFailed(steps)
           .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
-          .setMessage("No steps found. Probably there is no steps of this type in the DB")
+          .setMessage(errorMessage.length() > 0 ? errorMessage.toString() : "No steps found. Probably there is no steps of this type in the DB")
           .build();
     }
 
