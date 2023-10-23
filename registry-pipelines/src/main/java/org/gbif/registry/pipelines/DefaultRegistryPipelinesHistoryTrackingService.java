@@ -396,9 +396,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         errorMessage
           .append("Unable to use pipeline step ")
           .append(stepName)
-          .append(" with key ")
-          .append(step.getKey())
-          .append(" to rerun pipelines because the message body is empty. Please try running it from the step before or the previous attempt\n");
+          .append(", attempt ")
+          .append(attempt)
+          .append(", execution key ")
+          .append(lastestExecution.getKey())
+          .append(", to rerun pipelines because the message body is empty. Please try running it from the step before or the previous attempt\n");
       } else {
         try {
           PipelineBasedMessage message = null;
