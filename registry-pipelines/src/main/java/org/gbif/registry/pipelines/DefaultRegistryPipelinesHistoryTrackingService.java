@@ -98,9 +98,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   private static final Logger LOG =
       LoggerFactory.getLogger(DefaultRegistryPipelinesHistoryTrackingService.class);
 
-  // Used to iterate over all datasets
-  private static final int PAGE_SIZE = 200;
-
   private static final Comparator<Endpoint> ENDPOINT_COMPARATOR =
       Ordering.compound(
           Lists.newArrayList(
@@ -394,6 +391,23 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       }
 
       PipelineStep step = latestStepOpt.get();
+      if (step.getMessage() == null || step.getMessage().isEmpty()) {
+        String m =
+            "Unable to use pipeline step "
+                + stepName
+                + " with key "
+                + step.getKey()
+                + " to rerun pipelines because the message body is empty. Please try running it from the step before or the previous attempt";
+
+        LOG.warn(m);
+        return RunPipelineResponse.builder()
+            .setSteps(steps)
+            .setStepsFailed(steps)
+            .setResponseStatus(RunPipelineResponse.ResponseStatus.ERROR)
+            .setMessage(m)
+            .build();
+      }
+
       try {
         PipelineBasedMessage message = null;
 
