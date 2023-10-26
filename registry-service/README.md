@@ -19,7 +19,7 @@ The overall matching process for each entity is as follows:
 
 If the code is not provided and the identifier matches it's considered a exact match. Also, when the institution match is
 exact or explicit, the collection match will be exact if it belongs to the institution matched and some field matches
-like the code.
+like the code (even if the identifier doesn't match).
 
 The identifier match also includes the matches by key (UUID) - e.g.: `institutionId=1a69e6fc-4a8d-44d5-90a6-a7dc7a1aa7c7`.
 

@@ -13,9 +13,9 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
