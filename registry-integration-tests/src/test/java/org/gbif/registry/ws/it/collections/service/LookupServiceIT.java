@@ -14,51 +14,30 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.lookup.CollectionMatched;
-import org.gbif.api.model.collections.lookup.InstitutionMatched;
-import org.gbif.api.model.collections.lookup.LookupParams;
-import org.gbif.api.model.collections.lookup.LookupResult;
-import org.gbif.api.model.collections.lookup.Match;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.lookup.*;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.NodeType;
-import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
 import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link LookupService}. */
 public class LookupServiceIT extends BaseServiceIT {
@@ -820,6 +799,43 @@ public class LookupServiceIT extends BaseServiceIT {
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
     assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
     assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+  }
+
+  @Test
+  public void exactCollectionMatchByInstitutionBelongingAndIdMatchTest() {
+    // State
+    LookupParams params = new LookupParams();
+    params.setInstitutionCode(i5.getCode());
+    params.setInstitutionId(i5.getKey().toString());
+    params.setCollectionId(c6.getKey().toString());
+    params.setCollectionCode(c6.getCode());
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
+    assertEquals(i5.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.EXACT, collectionMatch.getMatchType());
+    assertEquals(c6.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(3, collectionMatch.getReasons().size());
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.KEY_MATCH));
+    assertTrue(collectionMatch.getReasons().contains(Match.Reason.CODE_MATCH));
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+
+    assertEquals(1, result.getAlternativeMatches().getCollectionMatches().size());
+    assertEquals(
+        c7.getKey(),
+        result.getAlternativeMatches().getCollectionMatches().get(0).getEntityMatched().getKey());
   }
 
   @Test

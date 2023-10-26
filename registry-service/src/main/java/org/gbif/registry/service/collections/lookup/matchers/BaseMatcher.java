@@ -71,8 +71,13 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
       }
 
       // if there is no unique match we try with the country if provided
+      // https://github.com/gbif/registry/issues/533 added the identifier match because in the case
+      // of collections there might be cases where an exact match haven't match the identifier because it belongs to the
+      // institution matched
       Optional<Match<R>> uniqueMatch =
-          findUniqueMatch(filteredMatched, Arrays.asList(isCountryMatch(), isActiveMatch()));
+          findUniqueMatch(
+              filteredMatched,
+              Arrays.asList(isIdentifierMatch(), isCountryMatch(), isActiveMatch()));
       if (uniqueMatch.isPresent()) {
         Match<R> acceptedMatch = uniqueMatch.get();
         acceptedMatch.setStatus(Match.Status.ACCEPTED);
