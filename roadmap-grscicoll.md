@@ -70,7 +70,7 @@ We aim to have meetings every four months for a year and assess whether the freq
 
 ## Areas not covered in this the current roadmap
 
-This is a non exhaustive list of items that are not part of our immediate priorities in 2021 but that we aim to address in the longer term (possibly starting end 2021):
+This is a non exhaustive list of items that are not part of our immediate priorities but that we aim to address in the longer term:
 
 *   Explore adding DOIs or similar to institutions and collections [[REG-320](https://github.com/gbif/registry/issues/320)]
 *   Explore synchronization with the NCBI BioCollections [[REG-307](https://github.com/gbif/registry/issues/307)] 
