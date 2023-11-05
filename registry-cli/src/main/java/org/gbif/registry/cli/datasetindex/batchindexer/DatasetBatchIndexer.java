@@ -31,17 +31,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.elasticsearch.action.DocWriteRequest;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.xcontent.XContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /** A builder that will clear and build a new dataset index by paging over the given service. */
@@ -85,7 +82,6 @@ public class DatasetBatchIndexer {
     Stopwatch stopwatch = Stopwatch.createStarted();
     esClient.createIndex(
         indexName,
-        IndexingConstants.DATASET_RECORD_TYPE,
         config.getIndexingSettings(),
         IndexingConstants.MAPPING_FILE,
         IndexingConstants.SETTINGS_FILE);
@@ -121,26 +117,22 @@ public class DatasetBatchIndexer {
       String indexName,
       EsClient esClient) {
     try {
-      BulkRequest bulkRequest = new BulkRequest();
+      BulkRequest.Builder bulkRequestBuilder = new BulkRequest.Builder();
+
       pagingResponse
           .getResults()
           .forEach(
               dataset -> {
                 ObjectNode jsonNode = datasetJsonConverter.convert(dataset);
-                bulkRequest.add(
-                    new IndexRequest()
-                        .index(indexName)
-                        .source(jsonNode.toString(), XContentType.JSON)
-                        .opType(DocWriteRequest.OpType.INDEX)
-                        .id(dataset.getKey().toString()));
+                bulkRequestBuilder.operations(op -> op.index(idx -> idx.index(indexName)
+                                                                       .id(dataset.getKey().toString())
+                                                                       .document(jsonNode)));
               });
-      // Batching updates to Es proves quicker with batches of 100 - 1000 showing similar
-      // performance
       log.info(
           "Indexing {} datasets until at offset {}",
           pagingResponse.getLimit(),
           pagingResponse.getOffset());
-      return esClient.bulk(bulkRequest);
+      return esClient.bulk(bulkRequestBuilder.build());
     } catch (Exception ex) {
       log.error("Error indexing page", ex);
       throw new RuntimeException(ex);
@@ -171,8 +163,8 @@ public class DatasetBatchIndexer {
         job -> {
           try {
             BulkResponse bulkResponse = job.get();
-            if (bulkResponse.hasFailures()) {
-              log.error("Error in indexing job {}", bulkResponse.buildFailureMessage());
+            if (bulkResponse.errors()) {
+              log.error("Error in indexing job {}", bulkResponse);
             }
           } catch (InterruptedException | ExecutionException ex) {
             log.error("Error executing job", ex);

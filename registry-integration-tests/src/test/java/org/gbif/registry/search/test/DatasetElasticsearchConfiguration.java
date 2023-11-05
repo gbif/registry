@@ -25,6 +25,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ResourceLoader;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+
 @Configuration
 public class DatasetElasticsearchConfiguration {
 
@@ -70,7 +72,17 @@ public class DatasetElasticsearchConfiguration {
       @Value("${elasticsearch.mock}") boolean mockEs) {
     return mockEs
         ? Mockito.mock(RestHighLevelClient.class)
-        : EsClient.provideEsClient(esClientConfiguration);
+        : EsClient.provideRestHighLevelClient(esClientConfiguration);
+  }
+
+  @Bean
+  @Primary
+  public ElasticsearchClient elasticsearchClient(
+    @Qualifier("registryJavaEsClientConfig") EsClient.EsClientConfiguration esClientConfiguration,
+    @Value("${elasticsearch.mock}") boolean mockEs) {
+    return mockEs
+      ? Mockito.mock(ElasticsearchClient.class)
+      : EsClient.provideEsClient(esClientConfiguration);
   }
 
   @Bean(name = "occurrenceEsClient")
@@ -79,6 +91,6 @@ public class DatasetElasticsearchConfiguration {
       @Value("${elasticsearch.mock}") boolean mockEs) {
     return mockEs
         ? Mockito.mock(RestHighLevelClient.class)
-        : EsClient.provideEsClient(esClientConfiguration);
+        : EsClient.provideRestHighLevelClient(esClientConfiguration);
   }
 }

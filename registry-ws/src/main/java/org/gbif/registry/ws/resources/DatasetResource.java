@@ -72,6 +72,7 @@ import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.NetworkListParams;
 import org.gbif.registry.persistence.service.MapperServiceLocator;
+import org.gbif.registry.search.dataset.indexing.Text2Embedding;
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.ws.export.CsvWriter;
@@ -200,6 +201,8 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   // The messagePublisher can be optional
   private final MessagePublisher messagePublisher;
 
+  private final Text2Embedding text2Embedding;
+
   public DatasetResource(
       MapperServiceLocator mapperServiceLocator,
       EventManager eventManager,
@@ -231,6 +234,7 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
     this.messagePublisher = messagePublisher;
     this.withMyBatis = withMyBatis;
     this.emlWriter = EMLWriter.newInstance(false);
+    text2Embedding = new Text2Embedding();
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -1525,6 +1529,12 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   public PagingResponse<Dataset> listByDOI(
       @PathVariable("prefix") String prefix, @PathVariable("suffix") String suffix, Pageable page) {
     return listByDOI(new DOI(prefix, suffix).getDoiName(), page);
+  }
+
+
+  @GetMapping("search/embedding")
+  public Float[] getEmbedding(@RequestParam("text") String text) {
+    return text2Embedding.predict(text);
   }
 
   /** Encapsulates the params to pass in the body for the crawAll method. */

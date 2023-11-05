@@ -176,6 +176,11 @@
       <groupId>com.squareup.retrofit2</groupId>
       <artifactId>converter-jackson</artifactId>
     </dependency>
+    <dependency>
+      <groupId>jakarta.json</groupId>
+      <artifactId>jakarta.json-api</artifactId>
+      <version>2.0.1</version>
+    </dependency>
 
     <!-- GBIF dependencies -->
     <dependency>
@@ -216,12 +221,24 @@
           <artifactId>spring-cloud-starter-zookeeper</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.springframework.e</groupId>
+          <artifactId>spring-cloud-starter-zookeeper</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.springframework.cloud</groupId>
           <artifactId>spring-cloud-starter-zookeeper-config</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.springframework.cloud</groupId>
           <artifactId>spring-cloud-starter-zookeeper-discovery</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework.data</groupId>
+          <artifactId>spring-data-elasticsearch</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>protobuf-java</artifactId>
+          <groupId>com.google.protobuf</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -316,11 +333,23 @@
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
+      <version>2.12.3</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>2.12.3</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>

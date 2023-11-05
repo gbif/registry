@@ -48,6 +48,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.SAXParserFactory;
@@ -113,6 +114,8 @@ public class DatasetJsonConverter {
 
   private final String occurrenceIndex;
 
+  private final Text2Embedding  text2Embedding;
+
   private Long occurrenceCount;
 
   private Long nameUsagesCount;
@@ -136,13 +139,13 @@ public class DatasetJsonConverter {
       GbifWsClient gbifWsClient,
       @Autowired(required = false) ChecklistbankPersistenceService checklistbankPersistenceService,
       @Qualifier("apiMapper") ObjectMapper mapper,
-      @Qualifier("occurrenceEsClient") RestHighLevelClient occurrenceEsClient,
       @Value("${elasticsearch.occurrence.index}") String occurrenceIndex) {
     this.gbifWsClient = gbifWsClient;
     this.checklistbankPersistenceService = checklistbankPersistenceService;
     this.mapper = mapper;
-    this.occurrenceEsClient = occurrenceEsClient;
+    this.occurrenceEsClient = null;
     this.occurrenceIndex = occurrenceIndex;
+    text2Embedding = new Text2Embedding();
     consumers.add(this::maintenanceFieldsTransforms);
     consumers.add(this::addTitles);
     consumers.add(this::enumTransforms);
@@ -152,13 +155,11 @@ public class DatasetJsonConverter {
   public static DatasetJsonConverter create(
       GbifWsClient gbifWsClient,
       ChecklistbankPersistenceService checklistbankPersistenceService,
-      RestHighLevelClient occurrenceEsClient,
       String occurrenceIndex) {
     return new DatasetJsonConverter(
         gbifWsClient,
         checklistbankPersistenceService,
         JacksonObjectMapper.get(),
-        occurrenceEsClient,
         occurrenceIndex);
   }
 
@@ -173,6 +174,7 @@ public class DatasetJsonConverter {
       addTaxonKeys(dataset, datasetAsJson);
     }
     addMachineTags(dataset, datasetAsJson);
+    addEmbedding(dataset, datasetAsJson);
     // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
   }
@@ -195,6 +197,15 @@ public class DatasetJsonConverter {
   @SneakyThrows
   public String convertAsJsonString(Dataset dataset) {
     return mapper.writeValueAsString(convert(dataset));
+  }
+
+  private void addEmbedding(Dataset dataset, ObjectNode datasetNode) {
+    if (dataset.getTitle() != null && !dataset.getTitle().isEmpty()) {
+      Float[] embedding = text2Embedding.predict(dataset.getTitle());
+      datasetNode.putArray("text_embedding").addAll(IntStream.range(0, embedding.length)
+                                                              .mapToObj(i -> mapper.convertValue(embedding[i], JsonNode.class))
+                                                              .collect(Collectors.toList()));
+    }
   }
 
   private void addTitles(ObjectNode dataset) {

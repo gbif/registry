@@ -23,9 +23,18 @@ import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.registry.search.dataset.DatasetEsFieldMapper;
 import org.gbif.registry.search.dataset.DatasetEsResponseParser;
 import org.gbif.registry.search.dataset.common.EsSearchRequestBuilder;
+import org.gbif.registry.search.dataset.indexing.Text2Embedding;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+
+import co.elastic.clients.elasticsearch._types.KnnQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+
+import co.elastic.clients.elasticsearch.core.knn_search.KnnSearchQuery;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
@@ -47,7 +56,11 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
 
   private final DatasetEsResponseParser esResponseParser = DatasetEsResponseParser.create();
   private final RestHighLevelClient restHighLevelClient;
+
+  private final ElasticsearchClient elasticsearchClient;
   private final String index;
+
+  private final Text2Embedding text2Embedding;
 
   private final EsSearchRequestBuilder<DatasetSearchParameter> esSearchRequestBuilder =
       new EsSearchRequestBuilder<>(new DatasetEsFieldMapper());
@@ -55,9 +68,12 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
   @Autowired
   public DatasetSearchServiceEs(
       @Value("${elasticsearch.registry.index}") String index,
-      RestHighLevelClient restHighLevelClient) {
+      RestHighLevelClient restHighLevelClient,
+      ElasticsearchClient elasticsearchClient) {
     this.index = index;
     this.restHighLevelClient = restHighLevelClient;
+    this.elasticsearchClient = elasticsearchClient;
+    this.text2Embedding = new Text2Embedding();
   }
 
   @Override
@@ -71,6 +87,19 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }
+  }
+
+  public  SearchResponse<DatasetSearchResult, DatasetSearchParameter> embeddingSearch(DatasetSearchRequest datasetSearchRequest) {
+
+    co.elastic.clients.elasticsearch.core.SearchRequest searchRequest = new co.elastic.clients.elasticsearch.core.SearchRequest.Builder()
+      .index(this.index)
+      .size(datasetSearchRequest.getLimit())
+      .from(Long.valueOf(datasetSearchRequest.getOffset()).intValue())
+      .knn(new KnnQuery.Builder().k(10)
+             .numCandidates(datasetSearchRequest.getLimit())
+             .queryVector(Arrays.asList(text2Embedding.predict(datasetSearchRequest.getQ()))).build())
+      .build();
+    elasticsearchClient.search(searchRequest);
   }
 
   @Override

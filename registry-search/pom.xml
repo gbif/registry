@@ -104,8 +104,29 @@
       <artifactId>elasticsearch-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch</artifactId>
+      <groupId>co.elastic.clients</groupId>
+      <artifactId>elasticsearch-java</artifactId>
+      <version>8.10.2</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.json</groupId>
+      <artifactId>jakarta.json-api</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.12.3</version>
     </dependency>
     <dependency>
       <groupId>org.elasticsearch</groupId>
@@ -142,32 +163,9 @@
       <version>0.23.0</version>
     </dependency>
     <dependency>
-      <groupId>ai.djl.pytorch</groupId>
-      <artifactId>pytorch-model-zoo</artifactId>
+      <groupId>ai.djl.tensorflow</groupId>
+      <artifactId>tensorflow-model-zoo</artifactId>
       <version>0.23.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.deeplearning4j</groupId>
-      <artifactId>deeplearning4j-nlp</artifactId>
-      <version>${deeplearning4j.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.deeplearning4j</groupId>
-      <artifactId>deeplearning4j-zoo</artifactId>
-      <version>${deeplearning4j.version}</version>
-    </dependency>
-
-    <!-- Deeplearning4j UI Module (if needed) -->
-    <dependency>
-      <groupId>org.deeplearning4j</groupId>
-      <artifactId>deeplearning4j-ui</artifactId>
-      <version>${deeplearning4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.nd4j</groupId>
-      <artifactId>nd4j-api</artifactId>
-      <version>${deeplearning4j.version}</version>
     </dependency>
 
     <dependency>
