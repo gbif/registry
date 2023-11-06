@@ -14,6 +14,7 @@
 package org.gbif.registry.search.dataset.indexing;
 
 import java.io.Closeable;
+import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -41,15 +42,14 @@ public class Text2Embedding implements Closeable {
 
   @SneakyThrows
   public Text2Embedding() {
-    String modelUrl =
-      "https://storage.googleapis.com/tfhub-modules/google/universal-sentence-encoder/4.tar.gz";
+    String modelUrl = "/Users/xrc439/Downloads/all-mpnet-base-v2/";
 
     criteria =
       Criteria.builder()
         .optApplication(Application.NLP.TEXT_EMBEDDING)
         .setTypes(String.class, float[].class)
-        .optModelUrls(modelUrl)
-        .optEngine("TensorFlow")
+        .optModelPath(Paths.get(modelUrl))
+        .optEngine("PyTorch")
         .optProgress(new ProgressBar())
         .optTranslator(new MyTranslator())
         .build();

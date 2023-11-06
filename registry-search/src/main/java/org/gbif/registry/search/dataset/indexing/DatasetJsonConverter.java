@@ -174,7 +174,7 @@ public class DatasetJsonConverter {
       addTaxonKeys(dataset, datasetAsJson);
     }
     addMachineTags(dataset, datasetAsJson);
-    addEmbedding(dataset, datasetAsJson);
+    addEmbeddings(dataset, datasetAsJson);
     // addOccurrenceCoverage(dataset, datasetAsJson);
     return datasetAsJson;
   }
@@ -199,13 +199,18 @@ public class DatasetJsonConverter {
     return mapper.writeValueAsString(convert(dataset));
   }
 
-  private void addEmbedding(Dataset dataset, ObjectNode datasetNode) {
-    if (dataset.getTitle() != null && !dataset.getTitle().isEmpty()) {
-      Float[] embedding = text2Embedding.predict(dataset.getTitle());
-      datasetNode.putArray("text_embedding").addAll(IntStream.range(0, embedding.length)
-                                                              .mapToObj(i -> mapper.convertValue(embedding[i], JsonNode.class))
-                                                              .collect(Collectors.toList()));
+  private void addEmbedding(String value, String field, ObjectNode datasetNode) {
+    if (value != null && !value.isEmpty()) {
+      Float[] embedding = text2Embedding.predict(value);
+        datasetNode.putArray("field").addAll(IntStream.range(0, embedding.length)
+          .mapToObj(i -> mapper.convertValue(embedding[i], JsonNode.class))
+          .collect(Collectors.toList()));
     }
+  }
+
+  private void addEmbeddings(Dataset dataset, ObjectNode datasetNode) {
+    addEmbedding(dataset.getTitle(), "title_embedding", datasetNode);
+    addEmbedding(dataset.getDescription(), "description_embedding", datasetNode);
   }
 
   private void addTitles(ObjectNode dataset) {

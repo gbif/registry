@@ -32,9 +32,6 @@ import java.util.List;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 
 import co.elastic.clients.elasticsearch._types.KnnQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-
-import co.elastic.clients.elasticsearch.core.knn_search.KnnSearchQuery;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
@@ -99,7 +96,8 @@ public class DatasetSearchServiceEs implements DatasetSearchService {
              .numCandidates(datasetSearchRequest.getLimit())
              .queryVector(Arrays.asList(text2Embedding.predict(datasetSearchRequest.getQ()))).build())
       .build();
-    elasticsearchClient.search(searchRequest);
+    //elasticsearchClient.search(searchRequest);
+    return null;
   }
 
   @Override
