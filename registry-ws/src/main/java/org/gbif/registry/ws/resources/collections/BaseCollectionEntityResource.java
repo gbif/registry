@@ -480,8 +480,9 @@ public abstract class BaseCollectionEntityResource<
       @RequestParam(value = "type", required = false) Type type,
       @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
       @RequestParam(value = "entityKey", required = false) UUID entityKey,
+      Country country,
       Pageable page) {
-    return changeSuggestionService.list(status, type, proposerEmail, entityKey, page);
+    return changeSuggestionService.list(status, type, proposerEmail, entityKey, country, page);
   }
 
   @Operation(
