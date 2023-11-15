@@ -133,4 +133,5 @@
   <include file="liquibase/125-occurrence-counts-grscicoll.xml" />
   <include file="liquibase/126-wikidata-ncbi-identifier-types.xml" />
   <include file="liquibase/127-organization-country-not-null.xml" />
+  <include file="liquibase/128-suggestions-country.xml" />
 </databaseChangeLog>
