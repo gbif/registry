@@ -203,17 +203,18 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     return !Strings.isNullOrEmpty(value) ? value.trim() : null;
   }
 
-  protected List<T> getDbMatches(String codeParam, String identifierParam, UUID datasetKey) {
+  protected List<T> getDbMatches(String codeParam, String parentCodeParam, String identifierParam, UUID datasetKey) {
     String code = cleanString(codeParam);
+    String parentCode = cleanString(parentCodeParam);
     String identifier = cleanString(identifierParam);
 
-    if (code == null && identifier == null) {
+    if (code == null && identifier == null && datasetKey == null) {
       return Collections.emptyList();
     }
 
     UUID key = parseUUID(identifier);
 
-    return getLookupMapper().lookup(code, identifier, key, datasetKey);
+    return getLookupMapper().lookup(code, parentCode, identifier, key, datasetKey);
   }
 
   protected Match<R> createMatch(
