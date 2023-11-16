@@ -21,18 +21,12 @@ import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.service.collections.lookup.Matches;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.util.*;
 
 import static org.gbif.api.model.collections.lookup.Match.Reason.INST_COLL_MISMATCH;
 
@@ -53,7 +47,11 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
     Matches<CollectionMatched> matches = new Matches<>();
 
     List<CollectionMatchedDto> dbMatches =
-        getDbMatches(params.getCollectionCode(), params.getCollectionId(), params.getDatasetKey());
+        getDbMatches(
+            params.getCollectionCode(),
+            params.getInstitutionCode(),
+            params.getCollectionId(),
+            params.getDatasetKey());
 
     // the queries may return duplicates because a collection can match with several fields
     Map<UUID, CollectionMatchedDto> dtosMap = new HashMap<>();
@@ -110,10 +108,19 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
       if (institutionMatched.getEntityMatched().getKey().equals(dto.getInstitutionKey())
               && institutionMatched.getMatchType() == Match.MatchType.EXACT
           || institutionMatched.getMatchType() == Match.MatchType.EXPLICIT_MAPPING) {
-        Match<CollectionMatched> match = Match.exact(toEntityMatched(dto), getMatchReasons(dto));
-        match.addReason(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED);
-        exactMatches.add(match);
-        return match;
+
+        if (dto.isExplicitMapping()) {
+          Match<CollectionMatched> match =
+              Match.explicitMapping(toEntityMatched(dto), getMatchReasons(dto));
+          match.addReason(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED);
+          explicitMatches.add(match);
+          return match;
+        } else {
+          Match<CollectionMatched> match = Match.exact(toEntityMatched(dto), getMatchReasons(dto));
+          match.addReason(Match.Reason.BELONGS_TO_INSTITUTION_MATCHED);
+          exactMatches.add(match);
+          return match;
+        }
       }
     }
 

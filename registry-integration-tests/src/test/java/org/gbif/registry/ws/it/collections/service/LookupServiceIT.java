@@ -451,7 +451,6 @@ public class LookupServiceIT extends BaseServiceIT {
     params.setDatasetKey(d1.getKey());
     params.setInstitutionCode(i1.getCode());
     params.setCollectionCode(c5.getCode());
-    params.setDatasetKey(d1.getKey());
 
     // When
     LookupResult result = lookupService.lookup(params);
@@ -536,7 +535,6 @@ public class LookupServiceIT extends BaseServiceIT {
     params.setInstitutionId(occMappingI22.getIdentifier());
     params.setCollectionCode(occMappingC2.getCode());
     params.setCollectionId(occMappingC22.getIdentifier());
-    params.setDatasetKey(d1.getKey());
 
     // When
     LookupResult result = lookupService.lookup(params);
@@ -551,6 +549,39 @@ public class LookupServiceIT extends BaseServiceIT {
     Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
     assertEquals(Match.MatchType.NONE, collectionMatch.getMatchType());
     assertEquals(Match.Status.AMBIGUOUS_EXPLICIT_MAPPINGS, collectionMatch.getStatus());
+  }
+
+  @Test
+  public void explicitMappingsWithParentCodeTest() {
+    // State
+    Dataset d1 = createDataset();
+
+    OccurrenceMapping occMappingC1 = new OccurrenceMapping();
+    occMappingC1.setDatasetKey(d1.getKey());
+    occMappingC1.setParentCode(i1.getCode());
+    collectionService.addOccurrenceMapping(c1.getKey(), occMappingC1);
+
+    LookupParams params = new LookupParams();
+    params.setDatasetKey(d1.getKey());
+    params.setInstitutionCode(i1.getCode());
+    params.setInstitutionId(i1.getKey().toString());
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXACT, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(2, institutionMatch.getReasons().size());
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+
+    assertNotNull(result.getCollectionMatch());
+    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+    assertEquals(Match.MatchType.EXPLICIT_MAPPING, collectionMatch.getMatchType());
+    assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
+    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
   }
 
   @Test

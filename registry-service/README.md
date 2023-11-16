@@ -39,6 +39,7 @@ when there are more than 1 possible combination within a dataset. This allows us
 - All the occurrences from the dataset X have to be mapped to the institution I
 - All the occurrences from the dataset X and code Y have to be mapped to the institution I
 - All the occurrences from the dataset X, code Y and identifier Z have to be mapped to the institution I
+- For collections only, all the occurrences from the dataset X and parentCode Y(this is the institution code) have to be mapped to the collection C
 
 There can be as many combinations as needed.
 
