@@ -501,15 +501,17 @@ public abstract class BaseChangeSuggestionService<
       @Nullable Type type,
       @Nullable String proposerEmail,
       @Nullable UUID entityKey,
+      @Nullable Country country,
       @Nullable Pageable pageable) {
     Pageable page = pageable == null ? new PagingRequest() : pageable;
 
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status, type, collectionEntityType, proposerEmail, entityKey, page);
+            status, type, collectionEntityType, proposerEmail, entityKey, country, page);
 
     long count =
-        changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey);
+        changeSuggestionMapper.count(
+            status, type, collectionEntityType, proposerEmail, entityKey, country);
 
     List<R> changeSuggestions =
         dtos.stream().map(this::dtoToChangeSuggestion).collect(Collectors.toList());

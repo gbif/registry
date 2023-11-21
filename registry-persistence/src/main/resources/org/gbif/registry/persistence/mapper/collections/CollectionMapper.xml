@@ -523,6 +523,7 @@
           INNER JOIN occurrence_mapping om ON om.key = com.occurrence_mapping_key
           WHERE c.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
           <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
+          <if test="parentCode != null"> AND (om.parent_code IS NULL OR om.parent_code = #{parentCode,jdbcType=VARCHAR})</if>
           <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
       </if>
     </trim>) AS matches
