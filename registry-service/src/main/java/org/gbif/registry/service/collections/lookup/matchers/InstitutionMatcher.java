@@ -58,7 +58,7 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
 
     List<InstitutionMatchedDto> dbMatches =
         getDbMatches(
-            params.getInstitutionCode(), params.getInstitutionId(), params.getDatasetKey());
+            params.getInstitutionCode(), null, params.getInstitutionId(), params.getDatasetKey());
 
     // the queries may return duplicates because we retrieve the list of identifiers in the same
     // query. Also, if an institution matches with several fields it will be duplicated

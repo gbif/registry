@@ -50,8 +50,5 @@ public class ChangeSuggestionDto {
   private String nameNewInstitutionConvertedCollection;
   private Date modified;
   private String modifiedBy;
-
-  // this field is not persisted in the DB. It stores the country that has to be taken into account
-  // to check the user permissions
   private Country countryScope;
 }

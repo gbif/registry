@@ -26,6 +26,7 @@ public interface LookupMapper<T extends EntityMatchedDto> {
 
   List<T> lookup(
       @Nullable @Param("code") String code,
+      @Nullable @Param("parentCode") String parentCode,
       @Nullable @Param("identifier") String identifier,
       @Nullable @Param("key") UUID key,
       @Nullable @Param("datasetKey") UUID datasetKey);
