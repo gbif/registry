@@ -6,7 +6,7 @@
   <changeSet id="128" author="mlopez" runInTransaction="false">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-        ALTER TABLE change_suggestion ADD COLUMN entity_country CHAR(2) CHECK (assert_min_length(entity_country, 2));
+        ALTER TABLE occurrence_mapping ADD COLUMN parent_code varchar CHECK (assert_min_length(code, 1));
       ]]>
     </sql>
   </changeSet>
