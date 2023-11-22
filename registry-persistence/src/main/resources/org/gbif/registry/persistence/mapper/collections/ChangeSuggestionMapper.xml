@@ -7,20 +7,19 @@
     <id property="key" column="key"/>
     <result property="comments" column="comments" typeHandler="StringArrayTypeHandler"/>
     <result property="changes" column="changes" typeHandler="SuggestedChangesTypeHandler"/>
-    <result property="countryScope" column="entity_country"/>
   </resultMap>
 
   <sql id="SUGGESTION_WRITE_FIELDS">
     entity_type, entity_key, type, status, proposed, proposed_by, proposer_email, changes, comments,
     suggested_entity, merge_target_key, institution_converted_collection, name_new_institution_converted_collection,
-    modified, modified_by, entity_country
+    modified, modified_by
   </sql>
 
   <sql id="SUGGESTION_READ_FIELDS">
     cs.key, cs.entity_type, cs.entity_key, cs.type, cs.status, cs.proposed, cs.proposed_by, cs.proposer_email, cs. applied,
     cs.applied_by, cs.discarded_by, cs.discarded, cs.suggested_entity, cs.comments,
     cs.merge_target_key, cs.changes, cs.institution_converted_collection, cs.name_new_institution_converted_collection,
-    cs.modified, cs.modified_by, cs.entity_country
+    cs.modified, cs.modified_by
   </sql>
 
   <sql id="SUGGESTION_PARAMS_CREATE">
@@ -38,8 +37,7 @@
     #{institutionConvertedCollection,jdbcType=OTHER},
     #{nameNewInstitutionConvertedCollection,jdbcType=VARCHAR},
     now(), <!-- modified -->
-    #{modifiedBy,jdbcType=VARCHAR},
-    #{countryScope,jdbcType=VARCHAR}
+    #{modifiedBy,jdbcType=VARCHAR}
   </sql>
 
   <sql id="SUGGESTION_PARAMS_UPDATE">
@@ -53,8 +51,7 @@
     discarded_by = #{discardedBy,jdbcType=INTEGER},
     applied = #{applied,jdbcType=OTHER},
     applied_by = #{appliedBy,jdbcType=INTEGER},
-    entity_key = #{entityKey,jdbcType=INTEGER},
-    entity_country = #{countryScope,jdbcType=VARCHAR}
+    entity_key = #{entityKey,jdbcType=INTEGER}
   </sql>
 
   <insert id="create" parameterType="ChangeSuggestionDto" useGeneratedKeys="true" keyProperty="key">
@@ -97,9 +94,6 @@
       <if test="entityKey != null">
         AND cs.entity_key = #{entityKey,jdbcType=OTHER}
       </if>
-      <if test="country != null">
-        AND cs.entity_country = #{country,jdbcType=VARCHAR}
-      </if>
     </where>
     ORDER BY cs.proposed DESC
     <if test="page != null">
@@ -125,9 +119,6 @@
       </if>
       <if test="entityKey != null">
         AND cs.entity_key = #{entityKey,jdbcType=OTHER}
-      </if>
-      <if test="country != null">
-        AND cs.entity_country = #{country,jdbcType=VARCHAR}
       </if>
     </where>
   </select>
