@@ -28,7 +28,6 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 
-import com.fasterxml.jackson.databind.JsonNode;
 
 import lombok.SneakyThrows;
 
@@ -49,7 +48,7 @@ public class Text2Embedding implements Closeable {
         .optApplication(Application.NLP.TEXT_EMBEDDING)
         .setTypes(String.class, float[].class)
         .optModelPath(Paths.get(modelUrl))
-        .optEngine("PyTorch")
+        .optEngine("TensorFlow")
         .optProgress(new ProgressBar())
         .optTranslator(new MyTranslator())
         .build();

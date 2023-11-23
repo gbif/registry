@@ -149,26 +149,23 @@
     <dependency>
       <groupId>ai.djl</groupId>
       <artifactId>bom</artifactId>
-      <version>0.24.0</version>
+      <version>0.25.0</version>
       <type>pom</type>
     </dependency>
     <dependency>
       <groupId>ai.djl</groupId>
       <artifactId>api</artifactId>
-      <version>0.24.0</version>
+      <version>0.25.0</version>
     </dependency>
     <dependency>
-      <groupId>ai.djl.pytorch</groupId>
-      <artifactId>pytorch-engine</artifactId>
-      <version>0.24.0</version>
-      <scope>runtime</scope>
+      <groupId>ai.djl.tensorflow</groupId>
+      <artifactId>tensorflow-engine</artifactId>
+      <version>0.25.0</version>
     </dependency>
     <dependency>
-      <groupId>ai.djl.pytorch</groupId>
-      <artifactId>pytorch-native-cpu</artifactId>
-      <classifier>osx-aarch64</classifier>
-      <version>2.0.1</version>
-      <scope>runtime</scope>
+      <groupId>ai.djl.tensorflow</groupId>
+      <artifactId>tensorflow-native-cpu</artifactId>
+      <version>2.10.1</version>
     </dependency>
     <dependency>
       <groupId>ai.djl.pytorch</groupId>
@@ -177,9 +174,24 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>ai.djl.pytorch</groupId>
-      <artifactId>pytorch-model-zoo</artifactId>
-      <version>0.24.0</version>
+      <groupId>ai.djl.tensorflow</groupId>
+      <artifactId>tensorflow-model-zoo</artifactId>
+      <version>0.25.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.tensorflow</groupId>
+      <artifactId>tensorflow</artifactId>
+      <version>1.15.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.tensorflow</groupId>
+      <artifactId>tensorflow</artifactId>
+      <version>1.15.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <artifactId>tensorflow-platform</artifactId>
+      <version>1.12.0-1.4.4</version>
     </dependency>
 
     <dependency>

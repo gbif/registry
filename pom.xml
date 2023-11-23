@@ -71,6 +71,7 @@
     <module>registry-security</module>
     <module>registry-ws-client</module>
     <module>registry-examples</module>
+    <module>registry-llm</module>
   </modules>
 
   <properties>

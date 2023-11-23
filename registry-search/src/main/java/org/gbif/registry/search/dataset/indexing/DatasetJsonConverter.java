@@ -202,7 +202,7 @@ public class DatasetJsonConverter {
   private void addEmbedding(String value, String field, ObjectNode datasetNode) {
     if (value != null && !value.isEmpty()) {
       Float[] embedding = text2Embedding.predict(value);
-        datasetNode.putArray("field").addAll(IntStream.range(0, embedding.length)
+        datasetNode.putArray(field).addAll(IntStream.range(0, embedding.length)
           .mapToObj(i -> mapper.convertValue(embedding[i], JsonNode.class))
           .collect(Collectors.toList()));
     }
