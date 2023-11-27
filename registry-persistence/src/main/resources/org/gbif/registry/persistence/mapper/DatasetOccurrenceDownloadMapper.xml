@@ -50,7 +50,7 @@
     <if test="type != null">
       AND od.type = #{type,jdbcType=OTHER}
     </if>
-    ORDER BY od.created DESC, od.key
+    ORDER BY od.created DESC, od.key DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -64,7 +64,7 @@
     <if test="type != null">
       AND od.type = #{type,jdbcType=OTHER}
     </if>
-    ORDER BY od.created DESC, od.key
+    ORDER BY od.created DESC, od.key DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -106,7 +106,7 @@
       </if>
       ,
     </if>
-    od.created DESC, od.key
+    od.created DESC, od.key DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
