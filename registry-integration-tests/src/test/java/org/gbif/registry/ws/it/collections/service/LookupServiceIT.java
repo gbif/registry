@@ -561,6 +561,11 @@ public class LookupServiceIT extends BaseServiceIT {
     occMappingC1.setParentCode(i1.getCode());
     collectionService.addOccurrenceMapping(c1.getKey(), occMappingC1);
 
+    OccurrenceMapping occMappingC2 = new OccurrenceMapping();
+    occMappingC2.setDatasetKey(d1.getKey());
+    occMappingC2.setParentCode(i2.getCode());
+    collectionService.addOccurrenceMapping(c2.getKey(), occMappingC2);
+
     LookupParams params = new LookupParams();
     params.setDatasetKey(d1.getKey());
     params.setInstitutionCode(i1.getCode());

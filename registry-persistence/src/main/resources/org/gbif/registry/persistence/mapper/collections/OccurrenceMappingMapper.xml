@@ -3,13 +3,14 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper">
 
   <sql id="OCCURRENCE_MAPPING_FIELDS">
-    key, code, identifier, dataset_key, created_by, created
+    key, code, parent_code, identifier, dataset_key, created_by, created
   </sql>
 
   <insert id="createOccurrenceMapping" useGeneratedKeys="true" keyProperty="key">
-    INSERT INTO occurrence_mapping(code, identifier, dataset_key, created_by, created)
+    INSERT INTO occurrence_mapping(code, parent_code, identifier, dataset_key, created_by, created)
     VALUES(
     #{code,jdbcType=VARCHAR},
+    #{parentCode,jdbcType=VARCHAR},
     #{identifier,jdbcType=VARCHAR},
     #{datasetKey,jdbcType=OTHER},
     #{createdBy,jdbcType=VARCHAR},
