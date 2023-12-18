@@ -13,7 +13,7 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import org.gbif.api.model.predicate.Predicate;
+import org.gbif.api.model.occurrence.predicate.Predicate;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
