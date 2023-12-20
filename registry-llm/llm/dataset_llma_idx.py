@@ -1,3 +1,4 @@
+from llama_index import StorageContext, load_index_from_storage
 import logging
 import sys
 import json
@@ -8,8 +9,10 @@ from llama_cpp import Llama
 from llama_index.llms.llama_utils import messages_to_prompt, completion_to_prompt
 from llama_index.indices.service_context import ServiceContext
 from llama_index.indices.struct_store import JSONQueryEngine
-from llama_index import GPTVectorStoreIndex, download_loader, TreeIndex, SimpleDirectoryReader
+from llama_index import GPTVectorStoreIndex, download_loader, TreeIndex, SimpleDirectoryReader, LLMPredictor, PromptHelper
 import requests
+
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)  # Change INFO to DEBUG if you want more extensive logging
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
@@ -28,21 +31,20 @@ llm = LlamaCPP(
     generate_kwargs={},
     # kwargs to pass to __init__()
     # set to at least 1 to use GPU
-    model_kwargs={"n_gpu_layers": 1},
+    model_kwargs={"n_gpu_layers": 9},
     verbose=True,
 )
 
-reader = SimpleDirectoryReader(input_dir="data")
+llm_predictor = LLMPredictor(llm=llm)
 
-service_context = ServiceContext.from_defaults(llm=llm, embed_model="local")
+prompt_helper = PromptHelper(num_output=256, chunk_size_limit=1000)
 
+service_context = ServiceContext.from_defaults(embed_model="local", chunk_size=512, llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
+storage_context = StorageContext.from_defaults(persist_dir="storage")
+index = load_index_from_storage(storage_context, service_context=service_context)
 
-index = GPTVectorStoreIndex.from_documents(reader.load_data(), service_context=service_context)
-
-index.storage_context.persist()
-
-query_engine = index.as_query_engine()
-response = query_engine.query("Which GBIF datasets are hosted by the organization 'European Environment Agency'?")
+query_engine = index.as_query_engine(service_context=service_context, streaming=True)
+response = query_engine.query("What GBIF datasets are hosted by of the organization 'European Environment Agency'?")
 
 print(response)
