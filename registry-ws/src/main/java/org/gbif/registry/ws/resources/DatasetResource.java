@@ -283,13 +283,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             in = ParameterIn.QUERY,
             explode = Explode.FALSE),
         @Parameter(
-            name = "country",
-            description =
-                "The 2-letter country code (as per ISO-3166-1) of the country publishing the dataset.",
-            schema = @Schema(implementation = Country.class),
-            in = ParameterIn.QUERY,
-            explode = Explode.FALSE),
-        @Parameter(
             name = "continent",
             description = "Not implemented.",
             schema = @Schema(implementation = Continent.class),

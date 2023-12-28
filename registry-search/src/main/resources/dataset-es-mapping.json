@@ -136,8 +136,6 @@
     "programmeAcronym": {"type": "keyword", "copy_to": "all"},
     "keyword": {"type": "keyword", "copy_to": "all"},
     "doi": {"type": "keyword", "copy_to": "all"},
-    "institutionKey": {"type": "keyword"},
-    "collectionKey": {"type": "keyword"},
     "installationKey": {"type": "keyword"},
     "publishingOrganizationKey": {"type": "keyword"},
     "publishingOrganizationTitle": {"type": "text", "copy_to": "all"},

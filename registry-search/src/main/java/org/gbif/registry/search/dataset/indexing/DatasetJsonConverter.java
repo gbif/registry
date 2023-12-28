@@ -88,11 +88,6 @@ public class DatasetJsonConverter {
 
   private static final int MAX_FACET_LIMIT = 1200000;
 
-  // Collections
-  private static final String PROCESSING_NAMESPACE = "processing.gbif.org";
-  private static final String INSTITUTION_TAG_NAME = "institutionCode";
-  private static final String COLLECTION_TAG_NAME = "collectionCode";
-
   // Gridded datasets
   private static final String GRIDDED_DATASET_NAMESPACE = "griddedDataSet.jwaller.gbif.org";
   private static final String GRIDDED_DATASET_NAME = "griddedDataset";
@@ -405,27 +400,6 @@ public class DatasetJsonConverter {
   }
 
   private void addMachineTags(Dataset dataset, ObjectNode datasetObjectNode) {
-    datasetObjectNode
-        .putArray("institutionKey")
-        .addAll(
-            dataset.getMachineTags().stream()
-                .filter(
-                    mt ->
-                        PROCESSING_NAMESPACE.equals(mt.getNamespace())
-                            && INSTITUTION_TAG_NAME.equals(mt.getName()))
-                .map(v -> new TextNode(v.getValue().split(":")[0]))
-                .collect(Collectors.toList()));
-    datasetObjectNode
-        .putArray("collectionKey")
-        .addAll(
-            dataset.getMachineTags().stream()
-                .filter(
-                    mt ->
-                        PROCESSING_NAMESPACE.equals(mt.getNamespace())
-                            && COLLECTION_TAG_NAME.equals(mt.getName()))
-                .map(v -> new TextNode(v.getValue().split(":")[0]))
-                .collect(Collectors.toList()));
-
     // Gridded dataset
     dataset.getMachineTags().stream()
         .filter(
