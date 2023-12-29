@@ -590,6 +590,43 @@ public class LookupServiceIT extends BaseServiceIT {
   }
 
   @Test
+  public void explicitMappingsWithCatalogueNumberTest() {
+    // State
+    Dataset d1 = createDataset();
+
+    OccurrenceMapping occMappingI1 = new OccurrenceMapping();
+    occMappingI1.setDatasetKey(d1.getKey());
+    occMappingI1.setCatalogueNumbers(Collections.singletonList("cat1"));
+    institutionService.addOccurrenceMapping(i1.getKey(), occMappingI1);
+
+    OccurrenceMapping occMappingI2 = new OccurrenceMapping();
+    occMappingI2.setDatasetKey(d1.getKey());
+    occMappingI2.setCode(i2.getCode());
+    institutionService.addOccurrenceMapping(i2.getKey(), occMappingI2);
+
+    LookupParams params = new LookupParams();
+    params.setDatasetKey(d1.getKey());
+    params.setCatalogueNumber("cat1");
+    params.setVerbose(true);
+
+    // When
+    LookupResult result = lookupService.lookup(params);
+
+    // Should
+    assertNotNull(result.getInstitutionMatch());
+    Match<InstitutionMatched> institutionMatch = result.getInstitutionMatch();
+    assertEquals(Match.MatchType.EXPLICIT_MAPPING, institutionMatch.getMatchType());
+    assertEquals(i1.getKey(), institutionMatch.getEntityMatched().getKey());
+    assertEquals(Match.Status.ACCEPTED, institutionMatch.getStatus());
+
+//    assertNotNull(result.getCollectionMatch());
+//    Match<CollectionMatched> collectionMatch = result.getCollectionMatch();
+//    assertEquals(Match.MatchType.EXPLICIT_MAPPING, collectionMatch.getMatchType());
+//    assertEquals(c1.getKey(), collectionMatch.getEntityMatched().getKey());
+//    assertEquals(Match.Status.ACCEPTED, collectionMatch.getStatus());
+  }
+
+  @Test
   public void countryMatchTest() {
     // State
     // we create an institution with duplicated code

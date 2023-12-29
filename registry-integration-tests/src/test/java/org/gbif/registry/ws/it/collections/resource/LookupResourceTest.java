@@ -13,29 +13,23 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
-import org.gbif.api.model.collections.lookup.AlternativeMatches;
-import org.gbif.api.model.collections.lookup.CollectionMatched;
-import org.gbif.api.model.collections.lookup.InstitutionMatched;
-import org.gbif.api.model.collections.lookup.LookupParams;
-import org.gbif.api.model.collections.lookup.LookupResult;
-import org.gbif.api.model.collections.lookup.Match;
+import org.gbif.api.model.collections.lookup.*;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.registry.ws.client.collections.LookupClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.registry.ws.it.fixtures.TestConstants;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.net.URI;
-import java.util.Collections;
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
+
+import java.net.URI;
+import java.util.Collections;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -65,6 +59,7 @@ public class LookupResourceTest extends BaseResourceIT {
     String ownerInstitutionCode = "owner";
     String collectionCode = "c1";
     String collectionId = "cid1";
+    String catalogueNumber = "cat23525";
     Country country = Country.DENMARK;
     boolean verbose = true;
 
@@ -76,6 +71,7 @@ public class LookupResourceTest extends BaseResourceIT {
     params.setCollectionCode(collectionCode);
     params.setCollectionId(collectionId);
     params.setCountry(country);
+    params.setCatalogueNumber(catalogueNumber);
     params.setVerbose(verbose);
 
     LookupResult result = new LookupResult();
@@ -109,6 +105,7 @@ public class LookupResourceTest extends BaseResourceIT {
             ownerInstitutionCode,
             collectionCode,
             collectionId,
+            catalogueNumber,
             country,
             verbose);
     assertEquals(result.getInstitutionMatch(), resultReturned.getInstitutionMatch());

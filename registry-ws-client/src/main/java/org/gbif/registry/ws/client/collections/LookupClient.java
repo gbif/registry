@@ -16,13 +16,12 @@ package org.gbif.registry.ws.client.collections;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.lookup.LookupResult;
 import org.gbif.api.vocabulary.Country;
-
-import java.util.UUID;
-
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.UUID;
 
 @RequestMapping("grscicoll/lookup")
 public interface LookupClient {
@@ -36,6 +35,7 @@ public interface LookupClient {
           String ownerInstitutionCode,
       @RequestParam(value = "collectionCode", required = false) @Trim String collectionCode,
       @RequestParam(value = "collectionId", required = false) @Trim String collectionId,
+      @RequestParam(value = "catalogueNumber", required = false) @Trim String catalogueNumber,
       @RequestParam(value = "country") Country country,
       @RequestParam(value = "verbose", required = false) boolean verbose);
 }

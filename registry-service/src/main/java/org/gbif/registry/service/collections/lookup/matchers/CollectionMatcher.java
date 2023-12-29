@@ -51,7 +51,8 @@ public class CollectionMatcher extends BaseMatcher<CollectionMatchedDto, Collect
             params.getCollectionCode(),
             params.getInstitutionCode(),
             params.getCollectionId(),
-            params.getDatasetKey());
+            params.getDatasetKey(),
+            params.getCatalogueNumber());
 
     // the queries may return duplicates because a collection can match with several fields
     Map<UUID, CollectionMatchedDto> dtosMap = new HashMap<>();

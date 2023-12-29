@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
+import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.gbif.api.model.collections.lookup.InstitutionMatched;
 import org.gbif.api.model.collections.lookup.LookupParams;
 import org.gbif.api.model.collections.lookup.Match;
@@ -20,23 +22,14 @@ import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.service.collections.lookup.Matches;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.UnaryOperator;
-import java.util.regex.Pattern;
-
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Strings;
+import java.net.URI;
+import java.util.*;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 import static org.gbif.api.model.collections.lookup.Match.Reason.DIFFERENT_OWNER;
 
@@ -58,7 +51,11 @@ public class InstitutionMatcher extends BaseMatcher<InstitutionMatchedDto, Insti
 
     List<InstitutionMatchedDto> dbMatches =
         getDbMatches(
-            params.getInstitutionCode(), null, params.getInstitutionId(), params.getDatasetKey());
+            params.getInstitutionCode(),
+            null,
+            params.getInstitutionId(),
+            params.getDatasetKey(),
+            params.getCatalogueNumber());
 
     // the queries may return duplicates because we retrieve the list of identifiers in the same
     // query. Also, if an institution matches with several fields it will be duplicated

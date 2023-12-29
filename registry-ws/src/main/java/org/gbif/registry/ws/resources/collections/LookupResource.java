@@ -128,6 +128,7 @@ public class LookupResource {
       @Nullable @RequestParam(value = "collectionCode", required = false) @Trim
           String collectionCode,
       @Nullable @RequestParam(value = "collectionId", required = false) @Trim String collectionId,
+      @Nullable @RequestParam(value = "catalogueNumber", required = false) @Trim String catalogueNumber,
       @Nullable Country country,
       @Nullable @RequestParam(value = "verbose", required = false) boolean verbose) {
 
@@ -140,6 +141,7 @@ public class LookupResource {
     params.setCollectionId(collectionId);
     params.setCountry(country);
     params.setVerbose(verbose);
+    params.setCatalogueNumber(catalogueNumber);
 
     return lookupService.lookup(params);
   }

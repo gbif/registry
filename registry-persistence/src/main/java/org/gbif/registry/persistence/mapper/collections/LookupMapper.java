@@ -13,14 +13,12 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.apache.ibatis.annotations.Param;
 import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
-
-import org.apache.ibatis.annotations.Param;
 
 public interface LookupMapper<T extends EntityMatchedDto> {
 
@@ -29,5 +27,6 @@ public interface LookupMapper<T extends EntityMatchedDto> {
       @Nullable @Param("parentCode") String parentCode,
       @Nullable @Param("identifier") String identifier,
       @Nullable @Param("key") UUID key,
-      @Nullable @Param("datasetKey") UUID datasetKey);
+      @Nullable @Param("datasetKey") UUID datasetKey,
+      @Nullable @Param("catalogueNumber") String catalogueNumber);
 }

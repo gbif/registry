@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service.collections.lookup.matchers;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import org.gbif.api.model.collections.lookup.EntityMatched;
 import org.gbif.api.model.collections.lookup.Match;
 import org.gbif.api.vocabulary.Country;
@@ -20,30 +22,14 @@ import org.gbif.registry.persistence.mapper.collections.LookupMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.BaseEntityMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.EntityMatchedDto;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-
-import static org.gbif.api.model.collections.lookup.Match.Reason.ALTERNATIVE_CODE_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.CODE_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.COUNTRY_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.IDENTIFIER_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.KEY_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.Reason.NAME_MATCH;
-import static org.gbif.api.model.collections.lookup.Match.exact;
-import static org.gbif.api.model.collections.lookup.Match.explicitMapping;
-import static org.gbif.api.model.collections.lookup.Match.fuzzy;
+import static org.gbif.api.model.collections.lookup.Match.Reason.*;
+import static org.gbif.api.model.collections.lookup.Match.*;
 
 /** Base matcher that contains common methods for the GrSciColl matchers. */
 public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMatched> {
@@ -72,7 +58,8 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
 
       // if there is no unique match we try with the country if provided
       // https://github.com/gbif/registry/issues/533 added the identifier match because in the case
-      // of collections there might be cases where an exact match haven't match the identifier because it belongs to the
+      // of collections there might be cases where an exact match haven't match the identifier
+      // because it belongs to the
       // institution matched
       Optional<Match<R>> uniqueMatch =
           findUniqueMatch(
@@ -203,10 +190,16 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
     return !Strings.isNullOrEmpty(value) ? value.trim() : null;
   }
 
-  protected List<T> getDbMatches(String codeParam, String parentCodeParam, String identifierParam, UUID datasetKey) {
+  protected List<T> getDbMatches(
+      String codeParam,
+      String parentCodeParam,
+      String identifierParam,
+      UUID datasetKey,
+      String catalogueNumberParam) {
     String code = cleanString(codeParam);
     String parentCode = cleanString(parentCodeParam);
     String identifier = cleanString(identifierParam);
+    String catalogueNumber = cleanString(catalogueNumberParam);
 
     if (code == null && identifier == null && datasetKey == null) {
       return Collections.emptyList();
@@ -214,7 +207,7 @@ public abstract class BaseMatcher<T extends EntityMatchedDto, R extends EntityMa
 
     UUID key = parseUUID(identifier);
 
-    return getLookupMapper().lookup(code, parentCode, identifier, key, datasetKey);
+    return getLookupMapper().lookup(code, parentCode, identifier, key, datasetKey, catalogueNumber);
   }
 
   protected Match<R> createMatch(

@@ -504,6 +504,7 @@
         WHERE i.deleted is null AND om.dataset_key = #{datasetKey,jdbcType=OTHER}
         <if test="code != null"> AND (om.code IS NULL OR om.code = #{code,jdbcType=VARCHAR})</if>
         <if test="identifier != null"> AND (om.identifier IS NULL OR om.identifier = #{identifier,jdbcType=VARCHAR})</if>
+        <if test="catalogueNumber != null"> AND (om.catalogue_numbers IS NULL OR om.catalogue_numbers @> ARRAY[#{catalogueNumber,jdbcType=VARCHAR}]::text[])</if>
       </if>
     </trim>) AS matches
     LEFT JOIN institution_identifier ii ON ii.institution_key = matches.key
