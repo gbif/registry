@@ -45,13 +45,7 @@ import org.gbif.api.service.registry.DatasetProcessStatusService;
 import org.gbif.api.service.registry.DatasetSearchService;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.util.iterables.Iterables;
-import org.gbif.api.vocabulary.Continent;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetSubtype;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.api.vocabulary.*;
 import org.gbif.common.messaging.api.MessagePublisher;
 import org.gbif.common.messaging.api.messages.Platform;
 import org.gbif.common.messaging.api.messages.StartCrawlMessage;
@@ -238,13 +232,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Parameters(
       value = {
         @Parameter(
-            name = "country",
-            description =
-                "The 2-letter country code (as per ISO-3166-1) of the country publishing the dataset.",
-            schema = @Schema(implementation = Country.class),
-            in = ParameterIn.QUERY,
-            explode = Explode.FALSE),
-        @Parameter(
             name = "type",
             description = "The primary type of the dataset.",
             schema = @Schema(implementation = DatasetType.class),
@@ -257,24 +244,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             in = ParameterIn.QUERY,
             explode = Explode.TRUE),
         @Parameter(
-            name = "license",
-            description = "The dataset's licence.",
-            schema = @Schema(implementation = License.class),
-            in = ParameterIn.QUERY,
-            explode = Explode.TRUE),
-        @Parameter(
-            name = "identifier",
-            description = "An identifier such as a DOI or UUID.",
-            schema = @Schema(implementation = String.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "keyword",
-            description =
-                "Filters datasets by a case insensitive plain text keyword. The search is done on the merged "
-                    + "collection of tags, the dataset keywordCollections and temporalCoverages.",
-            schema = @Schema(implementation = String.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
             name = "publishingOrg",
             description = "Filters datasets by their publishing organization UUID key",
             schema = @Schema(implementation = UUID.class),
@@ -285,9 +254,11 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             schema = @Schema(implementation = UUID.class),
             in = ParameterIn.QUERY),
         @Parameter(
-            name = "endorsingNodeKey",
-            description = "Node key that endorsed this dataset's publisher",
-            schema = @Schema(implementation = UUID.class),
+            name = "keyword",
+            description =
+                "Filters datasets by a case insensitive plain text keyword. The search is done on the merged "
+                    + "collection of tags, the dataset keywordCollections and temporalCoverages.",
+            schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "decade",
@@ -305,14 +276,6 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             in = ParameterIn.QUERY,
             explode = Explode.FALSE),
         @Parameter(
-            name = "projectId",
-            description =
-                "Filter or facet based on the project ID of a given dataset. A dataset can have a project id if "
-                    + "it is the result of a project. multiple datasets can have the same project id.",
-            schema = @Schema(implementation = String.class),
-            in = ParameterIn.QUERY,
-            example = "AA003-AA003311F"),
-        @Parameter(
             name = "hostingCountry",
             description =
                 "Filters datasets by their hosting organization's country given as a ISO 639-1 (2 letter) country code",
@@ -327,10 +290,63 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
             deprecated = true,
             explode = Explode.FALSE),
         @Parameter(
+            name = "license",
+            description = "The dataset's licence.",
+            schema = @Schema(implementation = License.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "projectId",
+            description =
+                "Filter or facet based on the project ID of a given dataset. A dataset can have a project id if "
+                    + "it is the result of a project. multiple datasets can have the same project id.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            example = "AA003-AA003311F"),
+        @Parameter(
+            name = "taxonKey",
+            description = "A taxon key from the GBIF backbone.",
+            schema = @Schema(implementation = Integer.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "recordCount",
+            description =
+                "Number of records of the dataset. Accepts ranges and a '*' can be used as a wildcard.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            example = "100,*"),
+        @Parameter(
+            name = "modifiedDate",
+            description =
+                "Date when the dataset was modified the last time. Accepts ranges and a '*' can be used as a wildcard.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            example = "2022-05-01,*"),
+        @Parameter(
+            name = "doi",
+            description = "A DOI identifier.",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
             name = "networkKey",
             description = "Network associated to a dataset",
             schema = @Schema(implementation = UUID.class),
             in = ParameterIn.QUERY),
+        @Parameter(
+          name = "endorsingNodeKey",
+          description = "Node key that endorsed this dataset's publisher",
+          schema = @Schema(implementation = UUID.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "installationKey",
+          description = "Key of the installation that hosts the dataset.",
+          schema = @Schema(implementation = UUID.class),
+          in = ParameterIn.QUERY),
+        @Parameter(
+          name = "endpointType",
+          description = "Type of the endpoint of the dataset.",
+          schema = @Schema(implementation = EndpointType.class),
+          in = ParameterIn.QUERY),
         @Parameter(name = "request", hidden = true),
         @Parameter(name = "searchRequest", hidden = true),
         @Parameter(name = "suggestRequest", hidden = true)
@@ -340,9 +356,9 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
   @Target({ElementType.METHOD, ElementType.TYPE})
   @Retention(RetentionPolicy.RUNTIME)
   @Parameter(
-    name = "metadataKey",
-    description = "Key for the *metadata document* (not a dataset UUID).",
-    in = ParameterIn.PATH)
+      name = "metadataKey",
+      description = "Key for the *metadata document* (not a dataset UUID).",
+      in = ParameterIn.PATH)
   @interface MetadataDocumentKeyParameter {}
 
   @Operation(
