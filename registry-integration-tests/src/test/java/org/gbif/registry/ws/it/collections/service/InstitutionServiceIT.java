@@ -19,7 +19,6 @@ import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.UserId;
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -147,6 +146,30 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             InstitutionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
+
+    // subset of institutions
+    assertEquals(
+        2,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .institutionKeys(Arrays.asList(institution1.getKey(), institution2.getKey()))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .query(institution1.getCode())
+                    .institutionKeys(Arrays.asList(institution1.getKey(), institution2.getKey()))
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .size());
 
     // code and name params
     assertEquals(

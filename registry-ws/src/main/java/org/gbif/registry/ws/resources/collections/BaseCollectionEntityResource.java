@@ -13,15 +13,24 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import com.google.common.base.Preconditions;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.SneakyThrows;
 import org.gbif.api.annotation.EmptyToNull;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
-import org.gbif.api.model.collections.Batch;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.duplicates.DuplicatesRequest;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.merge.MergeParams;
@@ -33,25 +42,30 @@ import org.gbif.api.model.collections.view.BatchView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.resources.Docs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -63,42 +77,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StreamUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.google.common.base.Preconditions;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import lombok.SneakyThrows;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -192,15 +170,24 @@ public abstract class BaseCollectionEntityResource<
             name = "country",
             description = "Filters by country given as a ISO 639-1 (2 letter) country code.",
             schema = @Schema(implementation = Country.class),
-            in = ParameterIn.QUERY),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "gbifRegion",
+            description = "Filters by a gbif region",
+            schema = @Schema(implementation = GbifRegion.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
         @Parameter(
             name = "city",
-            description = "TODO",
+            description =
+                "Filters by the city of the address. It searches in both the physical and the mailing address.",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "fuzzyName",
-            description = "TODO",
+            description =
+                "It searches by name fuzzily so the parameter doesn't have to be the exact name",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
@@ -215,13 +202,48 @@ public abstract class BaseCollectionEntityResource<
             in = ParameterIn.QUERY),
         @Parameter(
             name = "numberSpecimens",
-            description = "TODO",
+            description =
+                "Number of specimens. It supports ranges and a '*' can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "displayOnNHCPortal",
-            description = "TODO",
+            description = "Flag to show this record in the NHC portal",
             schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "replacedBy",
+            description = "Key of the entity that replaced another entity",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "occurrenceCount",
+            description =
+                "Count of occurrences linked. It supports ranges and a '*' can be used as a wildcard",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "typeSpecimenCount",
+            description =
+                "Count of type specimens linked. It supports ranges and a '*' can be used as a wildcard",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "institutionKey",
+            description = "Keys of institutions to filter by",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "sortBy",
+            description =
+                "Field to sort the results by. It only supports the fields contained in the enum.",
+            schema = @Schema(implementation = CollectionsSortField.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "sortOrder",
+            description = "Sort order to use with the sortBy parameter",
+            schema = @Schema(implementation = SortOrder.class),
             in = ParameterIn.QUERY),
         @Parameter(name = "searchRequest", hidden = true)
       })

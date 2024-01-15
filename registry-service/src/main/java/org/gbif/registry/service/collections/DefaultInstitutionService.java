@@ -169,6 +169,7 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .replacedBy(searchRequest.getReplacedBy())
         .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
         .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+        .institutionKeys(searchRequest.getInstitutionKeys())
         .deleted(deleted)
         .sortBy(searchRequest.getSortBy())
         .sortOrder(searchRequest.getSortOrder())

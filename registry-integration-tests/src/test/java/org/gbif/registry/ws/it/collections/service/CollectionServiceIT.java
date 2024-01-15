@@ -449,31 +449,31 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .size());
 
     assertEquals(
-      collection1.getKey(),
-      collectionService
-        .list(
-          CollectionSearchRequest.builder()
-            .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
-            .page(DEFAULT_PAGE)
-            .build())
-        .getResults()
-        .get(0)
-        .getCollection()
-        .getKey());
+        collection1.getKey(),
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .get(0)
+            .getCollection()
+            .getKey());
 
     assertEquals(
-      collection2.getKey(),
-      collectionService
-        .list(
-          CollectionSearchRequest.builder()
-            .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
-            .sortOrder(SortOrder.DESC)
-            .page(DEFAULT_PAGE)
-            .build())
-        .getResults()
-        .get(0)
-        .getCollection()
-        .getKey());
+        collection2.getKey(),
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
+                    .sortOrder(SortOrder.DESC)
+                    .page(DEFAULT_PAGE)
+                    .build())
+            .getResults()
+            .get(0)
+            .getCollection()
+            .getKey());
 
     collectionService.delete(key2);
     assertEquals(
@@ -532,6 +532,31 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(0, response.getResults().size());
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .institutionKeys(Collections.singletonList(institutionKey1))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(2, response.getResults().size());
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .institutionKeys(Arrays.asList(institutionKey1, institutionKey2))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(3, response.getResults().size());
+
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .query(collection1.getCode())
+                .institutionKeys(Arrays.asList(institutionKey1, institutionKey2))
+                .page(DEFAULT_PAGE)
+                .build());
+    assertEquals(1, response.getResults().size());
   }
 
   @Test
