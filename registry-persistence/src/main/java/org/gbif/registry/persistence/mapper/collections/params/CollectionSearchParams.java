@@ -29,7 +29,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class CollectionSearchParams extends SearchParams {
 
-  @Nullable UUID institutionKey;
   @Nullable List<CollectionContentType> contentTypes;
   @Nullable List<PreservationType> preservationTypes;
   @Nullable AccessionStatus accessionStatus;
