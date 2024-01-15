@@ -136,7 +136,7 @@ public class CollectionResource
       value = {
         @Parameter(
             name = "institution",
-            description = "A key for the institution.",
+            description = "A key for the institution. Deprecated: use institutionKey instead.",
             schema = @Schema(implementation = UUID.class),
             in = ParameterIn.QUERY,
             deprecated = true),
