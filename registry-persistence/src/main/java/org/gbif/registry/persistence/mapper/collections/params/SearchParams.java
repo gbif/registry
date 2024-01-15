@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.Null;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -53,6 +54,7 @@ public abstract class SearchParams {
   @Nullable private UUID replacedBy;
   @Nullable RangeParam occurrenceCount;
   @Nullable RangeParam typeSpecimenCount;
+  @Nullable List<UUID> institutionKeys;
   @Nullable
   CollectionsSortField sortBy;
   @Nullable

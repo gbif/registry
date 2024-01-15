@@ -255,9 +255,6 @@
           c.deleted IS NULL
         </otherwise>
       </choose>
-      <if test="params.institutionKey != null" >
-        AND c.institution_key = #{params.institutionKey,jdbcType=OTHER}
-      </if>
       <if test="params.code != null" >
         AND lower(c.code) = lower(#{params.code,jdbcType=VARCHAR})
       </if>
@@ -386,6 +383,12 @@
       </if>
       <if test="params.replacedBy != null" >
         AND c.replaced_by = #{params.replacedBy,jdbcType=OTHER}
+      </if>
+      <if test="params.institutionKeys != null and params.institutionKeys.size > 0" >
+        AND c.institution_key IN
+        <foreach item="item" collection="params.institutionKeys" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
       </if>
     </where>
   </sql>

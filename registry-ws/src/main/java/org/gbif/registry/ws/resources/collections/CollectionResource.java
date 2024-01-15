@@ -138,7 +138,8 @@ public class CollectionResource
             name = "institution",
             description = "A key for the institution.",
             schema = @Schema(implementation = UUID.class),
-            in = ParameterIn.QUERY),
+            in = ParameterIn.QUERY,
+            deprecated = true),
         @Parameter(
             name = "contentTypes",
             description =

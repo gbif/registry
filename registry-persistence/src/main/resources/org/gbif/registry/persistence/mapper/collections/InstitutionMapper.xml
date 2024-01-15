@@ -399,6 +399,12 @@
       <if test="params.replacedBy != null" >
         AND i.replaced_by = #{params.replacedBy,jdbcType=OTHER}
       </if>
+      <if test="params.institutionKeys != null and params.institutionKeys.size > 0" >
+        AND i.key IN
+        <foreach item="item" collection="params.institutionKeys" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
+      </if>
     </where>
   </sql>
 
