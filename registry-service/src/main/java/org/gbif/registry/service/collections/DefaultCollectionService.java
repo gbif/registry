@@ -45,6 +45,8 @@ import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchP
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -148,9 +150,16 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
+    Set<UUID> institutionKeys = new HashSet<>();
+    if (searchRequest.getInstitution() != null) {
+      institutionKeys.add(searchRequest.getInstitution());
+    }
+    if (searchRequest.getInstitutionKeys() != null) {
+      institutionKeys.addAll(searchRequest.getInstitutionKeys());
+    }
+
     CollectionSearchParams params =
         CollectionSearchParams.builder()
-            .institutionKey(searchRequest.getInstitution())
             .query(query)
             .code(searchRequest.getCode())
             .name(searchRequest.getName())
@@ -176,6 +185,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
             .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
             .deleted(deleted)
+            .institutionKeys(new ArrayList<>(institutionKeys))
             .sortBy(searchRequest.getSortBy())
             .sortOrder(searchRequest.getSortOrder())
             .page(page)

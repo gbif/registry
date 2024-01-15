@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.provider;
 
+
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
@@ -160,6 +161,19 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     if (!Strings.isNullOrEmpty(typeSpecimenCountParam)) {
       validateIntegerRange(typeSpecimenCountParam, "typeSpecimen");
       request.setTypeSpecimenCount(typeSpecimenCountParam);
+    }
+
+    String[] institutionKeysParams = webRequest.getParameterValues("institutionKey");
+    if (institutionKeysParams != null && institutionKeysParams.length > 0) {
+      request.setInstitutionKeys(new ArrayList<>());
+      for (String keyParam : institutionKeysParams) {
+        try {
+          request.getInstitutionKeys().add(UUID.fromString(keyParam));
+        } catch (Exception ex) {
+          throw new IllegalArgumentException(
+              "Invalid UUID for institution key parameter: " + keyParam);
+        }
+      }
     }
   }
 
