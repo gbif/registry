@@ -18,7 +18,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
-import org.gbif.api.model.occurrence.predicate.EqualsPredicate;
+import org.gbif.api.model.predicate.EqualsPredicate;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 
