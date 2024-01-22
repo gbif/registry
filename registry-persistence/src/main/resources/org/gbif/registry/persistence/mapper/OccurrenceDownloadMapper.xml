@@ -23,34 +23,41 @@
       <result property="creator" column="created_by" />
       <result property="format" column="format"/>
       <result property="type" column="type"/>
-      <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
       <discriminator javaType="string" column="format">
         <case value="DWCA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_CSV" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_PARQUET" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SIMPLE_WITH_VERBATIM_AVRO" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="SPECIES_LIST" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
-        </case>
-        <case value="IUCN" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
-          <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="MAP_OF_LIFE" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
         </case>
         <case value="BIONOMIA" resultType="org.gbif.api.model.occurrence.PredicateDownloadRequest">
           <result property="predicate" column="filter" typeHandler="org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler" />
+          <result property="verbatimExtensions" column="verbatim_extensions" typeHandler="ExtensionArrayTypeHandler"/>
+        </case>
+        <case value="SQL_TSV_ZIP" resultType="org.gbif.api.model.occurrence.SqlDownloadRequest">
+          <result property="sql" column="filter" />
         </case>
       </discriminator>
     </association>
@@ -133,7 +140,7 @@
     #{doi,jdbcType=VARCHAR},
     #{license,jdbcType=OTHER},
     <choose>
-      <when test="request.format.name().equals('SQL')"> #{request.sql,jdbcType=VARCHAR},</when>
+      <when test="request.format.name().equals('SQL_TSV_ZIP')"> #{request.sql,jdbcType=VARCHAR},</when>
       <otherwise>#{request.predicate,jdbcType=VARCHAR,typeHandler=org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler},</otherwise>
     </choose>
     #{status,jdbcType=OTHER},
@@ -149,7 +156,10 @@
     #{eraseAfter,jdbcType=TIMESTAMP},
     #{erasureNotification,jdbcType=TIMESTAMP},
     #{request.type,jdbcType=OTHER},
-    #{request.verbatimExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},
+    <choose>
+      <when test="request.format.name().equals('SQL_TSV_ZIP')">NULL,</when>
+      <otherwise>#{request.verbatimExtensions,jdbcType=ARRAY,typeHandler=ExtensionArrayTypeHandler},</otherwise>
+    </choose>
     #{source,jdbcType=VARCHAR}
   </sql>
 
