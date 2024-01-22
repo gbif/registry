@@ -96,7 +96,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
   private static final Set<String> DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES =
       ImmutableSet.of(
-          EndpointType.CAMTRAP_DP_v_0_4.name(), LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE);
+          EndpointType.CAMTRAP_DP.name(), LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE);
 
   /** Default constructor. */
   public LegacyDataset() {
@@ -758,7 +758,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
         String url = serviceUrlsTokenizer.nextToken();
         if (type != null && url != null && DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES.contains(type)) {
           // create endpoint
-          Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP_v_0_4);
+          Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP);
           if (endpoint != null) {
             // set it
             dataPackageEndpoint = endpoint;
