@@ -136,4 +136,5 @@
   <include file="liquibase/128-parent-code-occurrence-mapping.xml" />
   <include file="liquibase/129-duplicate-dataset-key-constraint.xml" />
   <include file="liquibase/130-sql-download-types.xml" />
+  <include file="liquibase/131-rename-camtrap-dp-endpoint-type.xml" />
 </databaseChangeLog>
