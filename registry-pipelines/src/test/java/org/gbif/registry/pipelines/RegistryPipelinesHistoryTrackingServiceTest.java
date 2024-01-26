@@ -40,7 +40,8 @@ class RegistryPipelinesHistoryTrackingServiceTest {
     PipelineStep s1 =
         new PipelineStep()
             .setType(StepType.ABCD_TO_VERBATIM)
-            .setStarted(LocalDateTime.now().minusMinutes(100));
+            .setStarted(LocalDateTime.now().minusMinutes(100))
+            .setMessage("adwadawd");
 
     PipelineStep s2 =
         new PipelineStep()
