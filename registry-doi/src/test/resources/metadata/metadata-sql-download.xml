@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd" xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <identifier identifierType="DOI">10.1234/sql-download</identifier>
+  <creators>
+    <creator>
+      <creatorName nameType="Organizational">GBIF.org</creatorName>
+    </creator>
+  </creators>
+  <titles>
+    <title>Occurrence Download</title>
+  </titles>
+  <publisher>The Global Biodiversity Information Facility</publisher>
+  <publicationYear>2024</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset"></resourceType>
+  <subjects>
+    <subject xml:lang="eng">GBIF</subject>
+    <subject xml:lang="eng">biodiversity</subject>
+    <subject xml:lang="eng">species occurrences</subject>
+  </subjects>
+  <dates>
+    <date dateType="Created">2024-02-13</date>
+    <date dateType="Updated">2024-02-14</date>
+  </dates>
+  <alternateIdentifiers>
+    <alternateIdentifier alternateIdentifierType="GBIF">2</alternateIdentifier>
+  </alternateIdentifiers>
+  <relatedIdentifiers>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/5679</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/klimbim</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="URL" relationType="HasMetadata">https://api.gbif-dev.org/v1/occurrence/download/2</relatedIdentifier>
+  </relatedIdentifiers>
+  <sizes>
+    <size>100</size>
+  </sizes>
+  <formats>
+    <format>text/tab-separated-values</format>
+    <format>application/zip</format>
+  </formats>
+  <rightsList>
+    <rights rightsURI="http://creativecommons.org/licenses/by-nc/4.0/legalcode">Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0</rights>
+  </rightsList>
+  <descriptions>
+    <description descriptionType="Abstract" xml:lang="eng">
+      A dataset containing 10 records in GBIF matching the query:
+      SELECT datasetkey, COUNT(*) FROM occurrence GROUP BY datasetkey
+
+      The dataset's 10 records were derived from 2 constituent datasets:
+      101 records from my title.
+      2002 records from my title #2.
+
+      Data from some individual datasets included in this download may be licensed under less restrictive terms.</description>
+  </descriptions>
+</resource>

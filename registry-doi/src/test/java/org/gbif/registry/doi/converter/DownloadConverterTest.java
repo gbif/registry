@@ -33,7 +33,8 @@ import com.google.common.io.Resources;
 import static org.gbif.registry.doi.converter.DataCiteConverterTestCommon.getXmlMetadataFromFile;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage1;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDatasetOccurrenceDownloadUsage2;
-import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareDownload;
+import static org.gbif.registry.doi.converter.DownloadTestDataProvider.preparePredicateDownload;
+import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareSqlDownload;
 import static org.gbif.registry.doi.converter.DownloadTestDataProvider.prepareUser;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,27 +49,49 @@ import static org.mockito.Mockito.when;
 public class DownloadConverterTest {
 
   @Test
-  public void testConvertDownload() throws Exception {
+  public void testConvertPredicateDownload() throws Exception {
     // given
     DatasetOccurrenceDownloadUsage du1 = prepareDatasetOccurrenceDownloadUsage1();
     DatasetOccurrenceDownloadUsage du2 = prepareDatasetOccurrenceDownloadUsage2();
-    Download download = prepareDownload();
+    Download download = preparePredicateDownload();
     GbifUser user = prepareUser();
     // mock title lookup API
     TitleLookupService tl = mock(TitleLookupService.class);
     when(tl.getSpeciesName(anyString())).thenReturn("Abies alba Mill.");
-    final String expected = getXmlMetadataFromFile("metadata/metadata-download.xml");
+    final String expected = getXmlMetadataFromFile("metadata/metadata-predicate-download.xml");
 
     // when
     DataCiteMetadata metadata =
-        DownloadConverter.convert(download, user, Arrays.asList(du1, du2), tl, "http://api.gbif-dev.org/v1");
+      DownloadConverter.convert(download, user, Arrays.asList(du1, du2), tl, "http://api.gbif-dev.org/v1");
     String actualXmlMetadata = DataCiteValidator.toXml(download.getDoi(), metadata);
 
     // then
     assertThat(
-        actualXmlMetadata,
-        CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
+      actualXmlMetadata,
+      CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
     verify(tl, atLeastOnce()).getSpeciesName(anyString());
+  }
+
+  @Test
+  public void testConvertSqlDownload() throws Exception {
+    // given
+    DatasetOccurrenceDownloadUsage du1 = prepareDatasetOccurrenceDownloadUsage1();
+    DatasetOccurrenceDownloadUsage du2 = prepareDatasetOccurrenceDownloadUsage2();
+    Download download = prepareSqlDownload();
+    GbifUser user = prepareUser();
+    // mock title lookup API
+    TitleLookupService tl = mock(TitleLookupService.class);
+    final String expected = getXmlMetadataFromFile("metadata/metadata-sql-download.xml");
+
+    // when
+    DataCiteMetadata metadata =
+      DownloadConverter.convert(download, user, Arrays.asList(du1, du2), tl, "http://api.gbif-dev.org/v1");
+    String actualXmlMetadata = DataCiteValidator.toXml(download.getDoi(), metadata);
+
+    // then
+    assertThat(
+      actualXmlMetadata,
+      CompareMatcher.isIdenticalTo(expected).normalizeWhitespace().ignoreWhitespace());
   }
 
   @Test
