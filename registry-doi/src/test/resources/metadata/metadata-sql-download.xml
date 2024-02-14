@@ -28,6 +28,7 @@
     <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/5679</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/klimbim</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="URL" relationType="HasMetadata">https://api.gbif-dev.org/v1/occurrence/download/2</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="URL" relationType="HasMetadata">https://api.gbif-dev.org/v1/occurrence/download/2/datasets</relatedIdentifier>
   </relatedIdentifiers>
   <sizes>
     <size>100</size>
@@ -44,9 +45,7 @@
       A dataset containing 10 records in GBIF matching the query:
       SELECT datasetkey, COUNT(*) FROM occurrence GROUP BY datasetkey
 
-      The dataset's 10 records were derived from 2 constituent datasets:
-      101 records from my title.
-      2002 records from my title #2.
+      The dataset's 10 records were derived from 2 constituent datasets; see https://api.gbif-dev.org/v1/occurrence/download/2/datasets/export for details.
 
       Data from some individual datasets included in this download may be licensed under less restrictive terms.</description>
   </descriptions>
