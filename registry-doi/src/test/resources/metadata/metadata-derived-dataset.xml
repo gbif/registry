@@ -13,8 +13,8 @@
   <publicationYear>2020</publicationYear>
   <resourceType resourceTypeGeneral="Dataset"/>
   <relatedIdentifiers>
-    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.21373/abcdef</relatedIdentifier>
-    <relatedIdentifier relatedIdentifierType="DOI" relationType="References">10.21373/fedcba</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.21373/abcdef</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.21373/fedcba</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.21373/dl.abcdef</relatedIdentifier>
   </relatedIdentifiers>
 </resource>

@@ -331,7 +331,7 @@ public final class DownloadConverter {
         if (du.getDatasetDOI() != null) {
           relatedIdentifiersBuilder.addRelatedIdentifier(
               RelatedIdentifier.builder()
-                  .withRelationType(RelationType.REFERENCES)
+                  .withRelationType(RelationType.IS_DERIVED_FROM)
                   .withValue(du.getDatasetDOI().getDoiName())
                   .withRelatedIdentifierType(RelatedIdentifierType.DOI)
                   .build());
