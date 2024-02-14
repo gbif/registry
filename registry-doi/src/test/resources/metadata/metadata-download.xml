@@ -27,12 +27,15 @@
   <relatedIdentifiers>
     <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/5679</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/klimbim</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="URL" relationType="HasMetadata">https://api.gbif-dev.org/v1/occurrence/download/1</relatedIdentifier>
   </relatedIdentifiers>
   <sizes>
     <size>100</size>
   </sizes>
   <formats>
     <format>Darwin Core Archive</format>
+    <format>text/tab-separated-values</format>
+    <format>application/zip</format>
   </formats>
   <rightsList>
     <rights rightsURI="http://creativecommons.org/licenses/by-nc/4.0/legalcode">Creative Commons Attribution Non Commercial (CC-BY-NC) 4.0</rights>
