@@ -304,10 +304,8 @@ public class DoiUpdaterListenerIT extends BaseDBTest {
     final DOI doi = newDoi();
     ChangeDoiMessage msg = prepareMessage(doi, "REGISTERED");
     String fullXmlMetadata = msg.getMetadata();
-    String truncateXmlMetadataWithoutDescription =
-        DownloadConverter.truncateDescription(doi, msg.getMetadata(), msg.getTarget());
     String truncatedXmlMetadataWithoutDescriptionAndRelatedIdentifiers =
-        DownloadConverter.truncateConstituents(doi, msg.getMetadata(), msg.getTarget());
+        DownloadConverter.truncateConstituents(doi, msg.getMetadata());
     prepareNewDoi(doi);
 
     // first attempt - fail, pretending the response too long, then truncate 'descriptions'
@@ -325,7 +323,6 @@ public class DoiUpdaterListenerIT extends BaseDBTest {
 
     // then
     verify(doiServiceSpy).register(doi, TEST_TARGET, fullXmlMetadata);
-    verify(doiServiceSpy).register(doi, TEST_TARGET, truncateXmlMetadataWithoutDescription);
     verify(doiServiceSpy)
         .register(doi, TEST_TARGET, truncatedXmlMetadataWithoutDescriptionAndRelatedIdentifiers);
 

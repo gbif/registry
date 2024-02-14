@@ -51,17 +51,14 @@ import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.HumanPredicateBuilder;
 import org.gbif.occurrence.query.TitleLookupService;
 
-import java.net.URI;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
+import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_DATASETS_EXPORT_METADATA;
+import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_DATASETS_METADATA;
 import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_METADATA;
 import static org.gbif.registry.doi.util.DataCiteConstants.AVRO_FORMAT;
 import static org.gbif.registry.doi.util.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
@@ -97,6 +94,9 @@ public final class DownloadConverter {
 
     DataCiteMetadata.Builder<Void> builder = DataCiteMetadata.builder();
 
+    String cleanApiRoot = apiRoot.replace("http:", "https:") + // Ensure HTTPS
+      (apiRoot.endsWith("/") ? "" : "/");
+
     // Required fields
     convertIdentifier(builder, download);
     convertCreators(builder, creator);
@@ -107,9 +107,9 @@ public final class DownloadConverter {
 
     // Optional and recommended fields
     convertDates(builder, download);
-    convertDescriptions(builder, download, usedDatasets, titleLookup);
+    convertDescriptions(builder, download, usedDatasets, titleLookup, cleanApiRoot);
     convertAlternateIdentifiers(builder, download);
-    convertRelatedIdentifiers(builder, download, usedDatasets, apiRoot);
+    convertRelatedIdentifiers(builder, download, usedDatasets, cleanApiRoot);
     convertRightsList(builder, download);
     convertSubjects(builder);
     convertFormats(builder, download);
@@ -220,7 +220,8 @@ public final class DownloadConverter {
       DataCiteMetadata.Builder<Void> builder,
       Download download,
       List<DatasetOccurrenceDownloadUsage> usedDatasets,
-      TitleLookupService titleLookup) {
+      TitleLookupService titleLookup,
+      String apiRoot) {
 
     DownloadFormat format = download.getRequest().getFormat();
 
@@ -229,12 +230,12 @@ public final class DownloadConverter {
       // Grouped summaries
       case SPECIES_LIST:
         totalRecordsDescriptionFormat = "A dataset listing the %s species recorded in GBIF matching the query:\n%s\n\n";
-        constituentDatasetsDescriptionFormat = "The dataset's %s records were derived from %s constituent datasets:\n";
+        constituentDatasetsDescriptionFormat = "The dataset's %s records were derived from %s constituent datasets; see "+API_DOWNLOAD_DATASETS_EXPORT_METADATA+" for details.\n";
         break;
 
       case SQL_TSV_ZIP:
         totalRecordsDescriptionFormat = "A dataset containing %s records in GBIF matching the query:\n%s\n\n";
-        constituentDatasetsDescriptionFormat = "The dataset's %s records were derived from %s constituent datasets:\n";
+        constituentDatasetsDescriptionFormat = "The dataset's %s records were derived from %s constituent datasets; see "+API_DOWNLOAD_DATASETS_EXPORT_METADATA+" for details.\n";
         break;
 
       // Plain species occurrence records
@@ -247,7 +248,7 @@ public final class DownloadConverter {
       case SIMPLE_PARQUET:
       default:
         totalRecordsDescriptionFormat = "A dataset containing %s species occurrences available in GBIF matching the query:\n%s\n\n";
-        constituentDatasetsDescriptionFormat = "The dataset includes %s records from %s constituent datasets:\n";
+        constituentDatasetsDescriptionFormat = "The dataset includes %s records from %s constituent datasets; see "+API_DOWNLOAD_DATASETS_EXPORT_METADATA+" for details.\n";
     }
 
     builder.withDescriptions(
@@ -260,8 +261,8 @@ public final class DownloadConverter {
                         String.format(totalRecordsDescriptionFormat, download.getTotalRecords(), getFilterQuery(download, titleLookup)))
                     .addContent(
                         String.format(
-                            constituentDatasetsDescriptionFormat, download.getTotalRecords(), download.getNumberDatasets()))
-                    .addContent(getDescriptionDatasetOccurrenceDownloadUsage(usedDatasets))
+                            constituentDatasetsDescriptionFormat, download.getTotalRecords(), download.getNumberDatasets(), apiRoot, download.getKey()))
+                    .addContent(usedDatasets.isEmpty() ? "" : "\n" + LICENSE_INFO)
                     .build())
             .build());
   }
@@ -325,71 +326,23 @@ public final class DownloadConverter {
             .build());
   }
 
-  private static DataCiteMetadata truncateDescriptionDCM(DOI doi, String xml, URI target)
-      throws InvalidMetadataException {
+  /** Removes all constituent relations from the metadata, keeping the GBIF API metadata. */
+  public static String truncateConstituents(DOI doi, String xml)
+    throws InvalidMetadataException {
     try {
       final DataCiteMetadata dm = DataCiteValidator.fromXml(xml);
-      final String description =
-          Joiner.on("\n").join(dm.getDescriptions().getDescription().get(0).getContent());
-      final String truncatedDescriptionContent =
-          StringUtils.substringBefore(description, "constituent datasets:")
-              + String.format(
-                  "constituent datasets:\nPlease see %s for full list of all constituents.",
-                  target);
-
-      final Descriptions truncatedDescription =
-          Descriptions.builder()
-              .withDescription(
-                  Description.builder()
-                      .withDescriptionType(DescriptionType.ABSTRACT)
-                      .withLang(ENGLISH)
-                      .withContent(truncatedDescriptionContent)
-                      .build())
-              .build();
-
-      dm.setDescriptions(truncatedDescription);
-
-      return dm;
-    } catch (JAXBException e) {
-      throw new InvalidMetadataException("Failed to deserialize datacite xml for DOI " + doi, e);
-    }
-  }
-
-  public static String truncateDescription(DOI doi, String xml, URI target)
-      throws InvalidMetadataException {
-    DataCiteMetadata dm = truncateDescriptionDCM(doi, xml, target);
-    return DataCiteValidator.toXml(doi, dm);
-  }
-
-  /** Removes all constituent relations and description entries from the metadata. */
-  public static String truncateConstituents(DOI doi, String xml, URI target)
-      throws InvalidMetadataException {
-    DataCiteMetadata dm = truncateDescriptionDCM(doi, xml, target);
-    // also remove constituent relations
-    dm.setRelatedIdentifiers(null);
-    return DataCiteValidator.toXml(doi, dm);
-  }
-
-  private static String getDescriptionDatasetOccurrenceDownloadUsage(
-      List<DatasetOccurrenceDownloadUsage> usedDatasets) {
-    final StringBuilder result = new StringBuilder();
-
-    if (!usedDatasets.isEmpty()) {
-      for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
-        if (!Strings.isNullOrEmpty(du.getDatasetTitle())) {
-          result
-              .append(" ")
-              .append(du.getNumberRecords())
-              .append(" records from ")
-              .append(du.getDatasetTitle())
-              .append(".\n");
+      final RelatedIdentifiers.Builder relatedIdentifiersBuilder = RelatedIdentifiers.builder();
+      for (RelatedIdentifier identifier : dm.getRelatedIdentifiers().getRelatedIdentifier()) {
+        if (RelationType.HAS_METADATA.equals(identifier.getRelationType())) {
+          relatedIdentifiersBuilder.addRelatedIdentifier(identifier);
         }
       }
-      result.append("\n");
-      result.append(LICENSE_INFO);
-    }
+      dm.setRelatedIdentifiers(relatedIdentifiersBuilder.build());
 
-    return result.toString();
+      return DataCiteValidator.toXml(doi, dm);
+    } catch (JAXBException e) {
+      throw new InvalidMetadataException("Failed to deserialize DataCite XML for DOI " + doi, e);
+    }
   }
 
   private static RelatedIdentifiers getRelatedIdentifiersDatasetOccurrenceDownloadUsage(
@@ -409,12 +362,15 @@ public final class DownloadConverter {
     }
 
     // Link to GBIF's API for additional metadata
-    String cleanApiRoot = apiRoot.replace("http:", "https:") + // Ensure HTTPS
-      (apiRoot.endsWith("/") ? "" : "/");
     relatedIdentifiersBuilder.addRelatedIdentifier(RelatedIdentifier.builder()
       .withRelatedIdentifierType(RelatedIdentifierType.URL)
       .withRelationType(RelationType.HAS_METADATA)
-      .withValue(String.format(API_DOWNLOAD_METADATA, cleanApiRoot, download.getKey()))
+      .withValue(String.format(API_DOWNLOAD_METADATA, apiRoot, download.getKey()))
+      .build());
+    relatedIdentifiersBuilder.addRelatedIdentifier(RelatedIdentifier.builder()
+      .withRelatedIdentifierType(RelatedIdentifierType.URL)
+      .withRelationType(RelationType.HAS_METADATA)
+      .withValue(String.format(API_DOWNLOAD_DATASETS_METADATA, apiRoot, download.getKey()))
       .build());
 
     return relatedIdentifiersBuilder.build();

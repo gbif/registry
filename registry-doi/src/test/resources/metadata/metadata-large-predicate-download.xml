@@ -25,8 +25,6 @@
     <alternateIdentifier alternateIdentifierType="GBIF">1</alternateIdentifier>
   </alternateIdentifiers>
   <relatedIdentifiers>
-    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/5679</relatedIdentifier>
-    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsDerivedFrom">10.1234/klimbim</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="URL" relationType="HasMetadata">https://api.gbif-dev.org/v1/occurrence/download/1</relatedIdentifier>
     <relatedIdentifier relatedIdentifierType="URL" relationType="HasMetadata">https://api.gbif-dev.org/v1/occurrence/download/1/datasets</relatedIdentifier>
   </relatedIdentifiers>

@@ -70,7 +70,6 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       return;
     }
 
-    boolean descriptionTruncated = false;
     for (int retry = 1; retry <= MAX_RETRY; retry++) {
       try {
         switch (msg.getStatus()) {
@@ -106,32 +105,21 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
               DOI_SMTP,
               "Metadata of length {} is exceeding max DataCite limit in attempt #{} "
                   + "while updating {} to {} with target {}. "
-                  + "Trying again {}",
+                  + "Trying again with relatedIdentifiers removed.",
               msg.getMetadata().length(),
               retry,
               msg.getDoi(),
               msg.getStatus(),
               msg.getTarget(),
-              descriptionTruncated
-                  ? "without constituent information"
-                  : "with truncated description",
               e);
           try {
             String truncatedXml;
-            if (descriptionTruncated) {
-              LOG.warn(
-                  "Truncating all constituent relations as last resort from metadata for DOI {}",
-                  msg.getDoi());
-              truncatedXml =
-                  DownloadConverter.truncateConstituents(
-                      msg.getDoi(), msg.getMetadata(), msg.getTarget());
-            } else {
-              LOG.debug("Original metadata for DOI {}:\n\n{}", msg.getDoi(), msg.getMetadata());
-              truncatedXml =
-                  DownloadConverter.truncateDescription(
-                      msg.getDoi(), msg.getMetadata(), msg.getTarget());
-              descriptionTruncated = true;
-            }
+            LOG.warn(
+                "Truncating all constituent relations as last resort from metadata for DOI {}",
+                msg.getDoi());
+            truncatedXml =
+                DownloadConverter.truncateConstituents(
+                    msg.getDoi(), msg.getMetadata());
             msg =
                 new ChangeDoiMessage(msg.getStatus(), msg.getDoi(), truncatedXml, msg.getTarget());
           } catch (InvalidMetadataException e1) {
@@ -140,7 +128,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
         } else {
           LOG.warn(
               DOI_SMTP,
-              "DOI http {} exception updating {} to {} with target {}. Attempt #{}",
+              "DOI HTTP {} exception updating {} to {} with target {}. Attempt #{}",
               e.getStatus(),
               msg.getDoi(),
               msg.getStatus(),
@@ -250,13 +238,13 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
           doiService.update(doi, target);
         }
         doiService.update(doi, xml);
-        LOG.info("Updated doi {} with target {}", doi, target);
+        LOG.info("Updated DOI {} with target {}", doi, target);
         break;
       case NEW:
       case DELETED:
       case RESERVED:
         doiService.register(doi, target, xml);
-        LOG.info("Registered doi {} with target {}", doi, target);
+        LOG.info("Registered DOI {} with target {}", doi, target);
         break;
       case FAILED:
         registered = retryRegisterOrUpdate(doi, target, xml);
@@ -291,10 +279,10 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       // for the moment we only deal with REGISTERED status
       if (DoiStatus.REGISTERED == doiServiceData.getStatus()) {
         doiService.update(doi, xml);
-        LOG.info("Updated doi {} with target {}", doi, target);
+        LOG.info("Updated DOI {} with target {}", doi, target);
       } else {
         LOG.info(
-            "Failed to update doi {} with target {}. Only doi with state REGISTERED can be retried. DataCite status: {}. ",
+            "Failed to update DOI {} with target {}. Only DOI with state REGISTERED can be retried. DataCite status: {}. ",
             doi,
             target,
             doiServiceData.getStatus());
@@ -302,7 +290,7 @@ public class DoiUpdateListener extends AbstractMessageCallback<ChangeDoiMessage>
       }
     } else {
       doiService.register(doi, target, xml);
-      LOG.info("Registered doi {} with target {}", doi, target);
+      LOG.info("Registered DOI {} with target {}", doi, target);
     }
     return true;
   }
