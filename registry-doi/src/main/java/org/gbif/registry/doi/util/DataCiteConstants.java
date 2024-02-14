@@ -30,4 +30,12 @@ public final class DataCiteConstants {
       "Data from some individual datasets included in this download may be licensed under less restrictive terms.";
   public static final String ENGLISH = Language.ENGLISH.getIso3LetterCode();
   public static final String DWCA_FORMAT = "Darwin Core Archive";
+  public static final String ZIP_FORMAT = "application/zip";
+  // https://www.iana.org/assignments/media-types/text/tab-separated-values
+  public static final String TSV_FORMAT = "text/tab-separated-values";
+  // Not yet a registered type: https://issues.apache.org/jira/browse/AVRO-488
+  public static final String AVRO_FORMAT = "Avro";
+  // Not yet a registered type: https://issues.apache.org/jira/browse/PARQUET-1889
+  public static final String PARQUET_FORMAT = "Parquet"; // "application/vnd.apache.parquet";
+  public static final String API_DOWNLOAD_METADATA = "%soccurrence/download/%s";
 }

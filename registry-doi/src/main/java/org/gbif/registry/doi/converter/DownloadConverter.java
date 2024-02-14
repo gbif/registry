@@ -16,7 +16,9 @@ package org.gbif.registry.doi.converter;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
+import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
@@ -60,12 +62,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
+import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_METADATA;
+import static org.gbif.registry.doi.util.DataCiteConstants.AVRO_FORMAT;
 import static org.gbif.registry.doi.util.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
 import static org.gbif.registry.doi.util.DataCiteConstants.DOWNLOAD_TITLE;
 import static org.gbif.registry.doi.util.DataCiteConstants.DWCA_FORMAT;
 import static org.gbif.registry.doi.util.DataCiteConstants.ENGLISH;
 import static org.gbif.registry.doi.util.DataCiteConstants.GBIF_PUBLISHER;
 import static org.gbif.registry.doi.util.DataCiteConstants.LICENSE_INFO;
+import static org.gbif.registry.doi.util.DataCiteConstants.PARQUET_FORMAT;
+import static org.gbif.registry.doi.util.DataCiteConstants.TSV_FORMAT;
+import static org.gbif.registry.doi.util.DataCiteConstants.ZIP_FORMAT;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 
@@ -73,12 +80,13 @@ public final class DownloadConverter {
 
   private DownloadConverter() {}
 
-  /** Convert a download and its dataset usages into a datacite metadata instance. */
+  /** Convert a download and its dataset usages into a Datacite metadata instance. */
   public static DataCiteMetadata convert(
       Download download,
       GbifUser creator,
       List<DatasetOccurrenceDownloadUsage> usedDatasets,
-      TitleLookupService titleLookup) {
+      TitleLookupService titleLookup,
+      String apiRoot) {
     Preconditions.checkNotNull(
         download.getDoi(), "Download DOI required to build valid DOI metadata");
     Preconditions.checkNotNull(
@@ -101,10 +109,10 @@ public final class DownloadConverter {
     convertDates(builder, download);
     convertDescriptions(builder, download, usedDatasets, titleLookup);
     convertAlternateIdentifiers(builder, download);
-    convertRelatedIdentifiers(builder, usedDatasets);
+    convertRelatedIdentifiers(builder, download, usedDatasets, apiRoot);
     convertRightsList(builder, download);
     convertSubjects(builder);
-    convertFormats(builder);
+    convertFormats(builder, download);
     convertSizes(builder, download);
 
     return builder.build();
@@ -114,8 +122,42 @@ public final class DownloadConverter {
     builder.withSizes(Sizes.builder().addSize(Long.toString(download.getSize())).build());
   }
 
-  private static void convertFormats(DataCiteMetadata.Builder<Void> builder) {
-    builder.withFormats(Formats.builder().withFormat(DWCA_FORMAT).build());
+  private static void convertFormats(DataCiteMetadata.Builder<Void> builder, Download download) {
+    DownloadFormat format = download.getRequest().getFormat();
+
+    switch (format) {
+      // Darwin core archive
+      case DWCA:
+        builder.withFormats(Formats.builder().withFormat(DWCA_FORMAT).addFormat(TSV_FORMAT).addFormat(ZIP_FORMAT).build());
+        break;
+
+      // Zipped TSV files
+      case SPECIES_LIST:
+      case SIMPLE_CSV:
+      case SQL_TSV_ZIP:
+        builder.withFormats(Formats.builder().withFormat(TSV_FORMAT).addFormat(ZIP_FORMAT).build());
+        break;
+
+      // Zipped Avro files
+      case BIONOMIA:
+      case MAP_OF_LIFE:
+      case SIMPLE_WITH_VERBATIM_AVRO:
+        builder.withFormats(Formats.builder().withFormat(AVRO_FORMAT).addFormat(ZIP_FORMAT).build());
+        break;
+
+      // Single Avro file
+      case SIMPLE_AVRO:
+        builder.withFormats(Formats.builder().withFormat(AVRO_FORMAT).build());
+        break;
+
+      // Parquet
+      case SIMPLE_PARQUET:
+        builder.withFormats(Formats.builder().withFormat(PARQUET_FORMAT).addFormat(ZIP_FORMAT).build());
+        break;
+
+      // Leave unspecified
+      default:
+    }
   }
 
   private static void convertRightsList(DataCiteMetadata.Builder<Void> builder, Download download) {
@@ -135,9 +177,10 @@ public final class DownloadConverter {
   }
 
   private static void convertRelatedIdentifiers(
-      DataCiteMetadata.Builder<Void> builder, List<DatasetOccurrenceDownloadUsage> usedDatasets) {
+      DataCiteMetadata.Builder<Void> builder, Download download, List<DatasetOccurrenceDownloadUsage> usedDatasets,
+      String apiRoot) {
     builder.withRelatedIdentifiers(
-        getRelatedIdentifiersDatasetOccurrenceDownloadUsage(usedDatasets));
+        getRelatedIdentifiersDatasetOccurrenceDownloadUsage(usedDatasets, download, apiRoot));
   }
 
   private static void convertAlternateIdentifiers(
@@ -178,6 +221,35 @@ public final class DownloadConverter {
       Download download,
       List<DatasetOccurrenceDownloadUsage> usedDatasets,
       TitleLookupService titleLookup) {
+
+    DownloadFormat format = download.getRequest().getFormat();
+
+    String totalRecordsDescriptionFormat, constituentDatasetsDescriptionFormat;
+    switch (format) {
+      // Grouped summaries
+      case SPECIES_LIST:
+        totalRecordsDescriptionFormat = "A dataset listing the %s species recorded in GBIF matching the query:\n%s\n\n";
+        constituentDatasetsDescriptionFormat = "The dataset's %s records were derived from %s constituent datasets:\n";
+        break;
+
+      case SQL_TSV_ZIP:
+        totalRecordsDescriptionFormat = "A dataset containing %s records in GBIF matching the query:\n%s\n\n";
+        constituentDatasetsDescriptionFormat = "The dataset's %s records were derived from %s constituent datasets:\n";
+        break;
+
+      // Plain species occurrence records
+      case BIONOMIA:
+      case DWCA:
+      case MAP_OF_LIFE:
+      case SIMPLE_AVRO:
+      case SIMPLE_CSV:
+      case SIMPLE_WITH_VERBATIM_AVRO:
+      case SIMPLE_PARQUET:
+      default:
+        totalRecordsDescriptionFormat = "A dataset containing %s species occurrences available in GBIF matching the query:\n%s\n\n";
+        constituentDatasetsDescriptionFormat = "The dataset includes %s records from %s constituent datasets:\n";
+    }
+
     builder.withDescriptions(
         Descriptions.builder()
             .addDescription(
@@ -185,13 +257,10 @@ public final class DownloadConverter {
                     .withDescriptionType(DescriptionType.ABSTRACT)
                     .withLang(ENGLISH)
                     .addContent(
-                        String.format(
-                            "A dataset containing %s species occurrences available in GBIF matching the query:\n%s\n\n",
-                            download.getTotalRecords(), getFilterQuery(download, titleLookup)))
+                        String.format(totalRecordsDescriptionFormat, download.getTotalRecords(), getFilterQuery(download, titleLookup)))
                     .addContent(
                         String.format(
-                            "The dataset includes %s records from %s constituent datasets:\n",
-                            download.getTotalRecords(), download.getNumberDatasets()))
+                            constituentDatasetsDescriptionFormat, download.getTotalRecords(), download.getNumberDatasets()))
                     .addContent(getDescriptionDatasetOccurrenceDownloadUsage(usedDatasets))
                     .build())
             .build());
@@ -324,7 +393,7 @@ public final class DownloadConverter {
   }
 
   private static RelatedIdentifiers getRelatedIdentifiersDatasetOccurrenceDownloadUsage(
-      List<DatasetOccurrenceDownloadUsage> usedDatasets) {
+      List<DatasetOccurrenceDownloadUsage> usedDatasets, Download download, String apiRoot) {
     final RelatedIdentifiers.Builder relatedIdentifiersBuilder = RelatedIdentifiers.builder();
     if (!usedDatasets.isEmpty()) {
       for (DatasetOccurrenceDownloadUsage du : usedDatasets) {
@@ -339,16 +408,33 @@ public final class DownloadConverter {
       }
     }
 
+    // Link to GBIF's API for additional metadata
+    String cleanApiRoot = apiRoot.replace("http:", "https:") + // Ensure HTTPS
+      (apiRoot.endsWith("/") ? "" : "/");
+    relatedIdentifiersBuilder.addRelatedIdentifier(RelatedIdentifier.builder()
+      .withRelatedIdentifierType(RelatedIdentifierType.URL)
+      .withRelationType(RelationType.HAS_METADATA)
+      .withValue(String.format(API_DOWNLOAD_METADATA, cleanApiRoot, download.getKey()))
+      .build());
+
     return relatedIdentifiersBuilder.build();
   }
 
   /**
-   * Tries to get the human readable version of the download query, if fails returns the raw query.
+   * Tries to get the human-readable version of the download query, if fails returns the raw query.
+   *
+   * For SQL downloads just returns the SQL.
    */
   private static String getFilterQuery(Download d, TitleLookupService titleLookup) {
     try {
-      return new HumanPredicateBuilder(titleLookup)
+      if (d.getRequest() instanceof PredicateDownloadRequest) {
+        return new HumanPredicateBuilder(titleLookup)
           .humanFilterString(((PredicateDownloadRequest) d.getRequest()).getPredicate());
+      } else if (d.getRequest() instanceof SqlDownloadRequest) {
+        return ((SqlDownloadRequest) d.getRequest()).getSql();
+      } else {
+        return "(Query can be viewed on the landing page)";
+      }
     } catch (Exception e) {
       return "(Query is too complex. Can be viewed on the landing page)";
     }

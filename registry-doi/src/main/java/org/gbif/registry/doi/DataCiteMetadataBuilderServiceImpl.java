@@ -36,6 +36,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.Lists;
@@ -46,14 +47,17 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
   // Page size to iterate over dataset usages
   private static final int USAGES_PAGE_SIZE = 400;
 
+  private final String apiRoot;
   private final OrganizationMapper organizationMapper;
   private final DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper;
   private final TitleLookupService titleLookupService;
 
   public DataCiteMetadataBuilderServiceImpl(
+      @Value("${api.root.url}") String apiRoot,
       OrganizationMapper organizationMapper,
       DatasetOccurrenceDownloadMapper datasetOccurrenceDownloadMapper,
       TitleLookupService titleLookupService) {
+    this.apiRoot = apiRoot;
     this.organizationMapper = organizationMapper;
     this.datasetOccurrenceDownloadMapper = datasetOccurrenceDownloadMapper;
     this.titleLookupService = titleLookupService;
@@ -79,7 +83,7 @@ public class DataCiteMetadataBuilderServiceImpl implements DataCiteMetadataBuild
       pagingRequest.nextPage();
     }
 
-    return DownloadConverter.convert(download, user, usages, titleLookupService);
+    return DownloadConverter.convert(download, user, usages, titleLookupService, apiRoot);
   }
 
   @Override

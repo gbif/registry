@@ -61,7 +61,7 @@ public class DownloadConverterTest {
 
     // when
     DataCiteMetadata metadata =
-        DownloadConverter.convert(download, user, Arrays.asList(du1, du2), tl);
+        DownloadConverter.convert(download, user, Arrays.asList(du1, du2), tl, "http://api.gbif-dev.org/v1");
     String actualXmlMetadata = DataCiteValidator.toXml(download.getDoi(), metadata);
 
     // then
