@@ -304,16 +304,14 @@ public class DoiUpdaterListenerIT extends BaseDBTest {
     final DOI doi = newDoi();
     ChangeDoiMessage msg = prepareMessage(doi, "REGISTERED");
     String fullXmlMetadata = msg.getMetadata();
-    String truncatedXmlMetadataWithoutDescriptionAndRelatedIdentifiers =
+    String truncatedXmlMetadataWithoutRelatedIdentifiers =
         DownloadConverter.truncateConstituents(doi, msg.getMetadata());
     prepareNewDoi(doi);
 
-    // first attempt - fail, pretending the response too long, then truncate 'descriptions'
-    // second attempt - fail, pretending the response still too long, then truncate
+    // first attempt - fail, pretending the response still too long, then truncate
     // 'relatedIdentifiers'
-    // third attempt - success, everything is ok
+    // second attempt - success, everything is ok
     doThrow(new DoiHttpException(413))
-        .doThrow(new DoiHttpException(413))
         .doCallRealMethod()
         .when(doiServiceSpy)
         .register(any(DOI.class), any(URI.class), anyString());
@@ -324,7 +322,7 @@ public class DoiUpdaterListenerIT extends BaseDBTest {
     // then
     verify(doiServiceSpy).register(doi, TEST_TARGET, fullXmlMetadata);
     verify(doiServiceSpy)
-        .register(doi, TEST_TARGET, truncatedXmlMetadataWithoutDescriptionAndRelatedIdentifiers);
+        .register(doi, TEST_TARGET, truncatedXmlMetadataWithoutRelatedIdentifiers);
 
     assertEquals(new DoiData(REGISTERED, TEST_TARGET), getActualInDb(doi));
     assertEquals(new DoiData(REGISTERED, TEST_TARGET), getActualInDataCite(doi));
