@@ -116,7 +116,7 @@ public final class DerivedDatasetConverter {
               .withRelatedIdentifiers()
               .addRelatedIdentifier(
                   RelatedIdentifier.builder()
-                      .withRelationType(RelationType.REFERENCES)
+                      .withRelationType(RelationType.IS_DERIVED_FROM)
                       .withValue(du.getDatasetDOI().getDoiName())
                       .withRelatedIdentifierType(RelatedIdentifierType.DOI)
                       .build());
