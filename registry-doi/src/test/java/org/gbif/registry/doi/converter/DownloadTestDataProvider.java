@@ -18,6 +18,7 @@ import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadFormat;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
+import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.predicate.EqualsPredicate;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
@@ -29,7 +30,7 @@ import java.util.UUID;
 
 public class DownloadTestDataProvider {
 
-  static Download prepareDownload() {
+  static Download preparePredicateDownload() {
     Download download = new Download();
     download.setCreated(Date.from(LocalDateTime.of(2019, 10, 2, 0, 0).toInstant(ZoneOffset.UTC)));
     download.setModified(Date.from(LocalDateTime.of(2019, 10, 3, 0, 0).toInstant(ZoneOffset.UTC)));
@@ -42,8 +43,27 @@ public class DownloadTestDataProvider {
     PredicateDownloadRequest downloadRequest = new PredicateDownloadRequest();
     downloadRequest.setCreator("dev@gbif.org");
     downloadRequest.setPredicate(
-        new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "3", false));
+      new EqualsPredicate(OccurrenceSearchParameter.TAXON_KEY, "3", false));
     downloadRequest.setFormat(DownloadFormat.DWCA);
+    download.setRequest(downloadRequest);
+
+    return download;
+  }
+
+  static Download prepareSqlDownload() {
+    Download download = new Download();
+    download.setCreated(Date.from(LocalDateTime.of(2024, 2, 13, 0, 0).toInstant(ZoneOffset.UTC)));
+    download.setModified(Date.from(LocalDateTime.of(2024, 2, 14, 0, 0).toInstant(ZoneOffset.UTC)));
+    download.setDoi(new DOI("10.1234/SQL-DOWNLOAD"));
+    download.setKey("2");
+    download.setNumberDatasets(2L);
+    download.setSize(100);
+    download.setStatus(Download.Status.SUCCEEDED);
+    download.setTotalRecords(10);
+    SqlDownloadRequest downloadRequest = new SqlDownloadRequest();
+    downloadRequest.setCreator("dev@gbif.org");
+    downloadRequest.setSql("SELECT datasetkey, COUNT(*) FROM occurrence GROUP BY datasetkey");
+    downloadRequest.setFormat(DownloadFormat.SQL_TSV_ZIP);
     download.setRequest(downloadRequest);
 
     return download;

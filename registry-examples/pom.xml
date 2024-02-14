@@ -8,8 +8,6 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>registry-examples</artifactId>
-  <packaging>jar</packaging>
-
   <name>GBIF Registry Examples</name>
   <description>This project has examples demonstrating how to implement the registry web service client</description>
 
