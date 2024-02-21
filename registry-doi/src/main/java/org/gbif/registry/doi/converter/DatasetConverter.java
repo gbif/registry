@@ -57,6 +57,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -353,24 +355,31 @@ public final class DatasetConverter {
   }
 
   /**
-   * Transforms a Contact into a Datacite Creator.
+   * Transforms a Contact into a DataCite Creator.
    *
    * @return Creator instance or null if it is not possible to build one
    */
   private static Optional<Creator> toDataCiteCreator(Contact contact) {
-    final String creatorNameValue = ContactAdapter.formatContactName(contact);
+    String creatorNameValue = ContactAdapter.formatContactName(contact);
+    boolean isOrganization = false;
 
     // CreatorName is mandatory
-    if (Strings.isNullOrEmpty(creatorNameValue)) {
-      return Optional.empty();
+    if (StringUtils.isEmpty(creatorNameValue)) {
+      // set organization name instead
+      if (StringUtils.isNotEmpty(contact.getOrganization())) {
+        creatorNameValue = contact.getOrganization();
+        isOrganization = true;
+      } else {
+        return Optional.empty();
+      }
     }
 
     final Creator.Builder<Void> creatorBuilder = Creator.builder();
 
     creatorBuilder.withCreatorName(CreatorName.builder().withValue(creatorNameValue).build());
 
-    // affiliation is optional
-    if (!Strings.isNullOrEmpty(contact.getOrganization())) {
+    // affiliation is optional (skip for organizations)
+    if (StringUtils.isNotEmpty(contact.getOrganization()) && !isOrganization) {
       creatorBuilder.withAffiliation(
           Affiliation.builder().withValue(contact.getOrganization()).build());
     }
