@@ -34,6 +34,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class DatasetConverterTest {
 
   @Test
+  public void testOrganizationCreator() throws Exception {
+    // given
+    DOI doi = new DOI("10.15468/449gg9");
+    Organization publisher = preparePublisher("National Museum of Natural History, Luxembourg", UUID.randomUUID());
+    Dataset dataset = DatasetTestDataProvider.prepareFullDatasetNameIdentifierIssue(doi);
+    String expectedMetadataXml = getXmlMetadataFromFile("metadata/metadata-dataset-organization-creator.xml");
+
+    // when
+    DataCiteMetadata actualMetadata = DatasetConverter.convert(dataset, publisher);
+    String actualMetadataXml = DataCiteValidator.toXml(doi, actualMetadata);
+
+    // then
+    assertThat(
+        actualMetadataXml,
+        CompareMatcher.isIdenticalTo(expectedMetadataXml).ignoreWhitespace().normalizeWhitespace());
+  }
+
+  @Test
   public void testConvertDataset() throws Exception {
     // given
     DOI doi = new DOI("10.1234/21373");
@@ -79,9 +97,13 @@ public class DatasetConverterTest {
   }
 
   private Organization preparePublisher() {
+    return preparePublisher("X-Publisher", UUID.randomUUID());
+  }
+
+  private Organization preparePublisher(String title, UUID key) {
     final Organization publisher = new Organization();
-    publisher.setTitle("X-Publisher");
-    publisher.setKey(UUID.randomUUID());
+    publisher.setTitle(title);
+    publisher.setKey(key);
 
     return publisher;
   }

@@ -20,10 +20,12 @@ import org.gbif.api.model.registry.eml.KeywordCollection;
 import org.gbif.api.model.registry.eml.geospatial.BoundingBox;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.ContactType;
+import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.api.vocabulary.License;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -36,6 +38,68 @@ import java.util.Set;
 import java.util.UUID;
 
 public class DatasetTestDataProvider {
+
+  static Dataset prepareFullDatasetNameIdentifierIssue(DOI doi) {
+    Dataset dataset = new Dataset();
+    dataset.setKey(UUID.fromString("9ed0adc4-0a7a-49df-9054-e26e9a7dbc8d"));
+    dataset.setType(DatasetType.OCCURRENCE);
+    dataset.setTitle("EU Habitat directive species monitoring MECDD, Recorder-Lux database");
+    dataset.setPubDate(Date.from(LocalDateTime.of(2024, 2, 28, 0, 0).toInstant(ZoneOffset.UTC)));
+    dataset.setCreated(Date.from(LocalDateTime.of(2022, 2, 28, 0, 0).toInstant(ZoneOffset.UTC)));
+    dataset.setModified(Date.from(LocalDateTime.of(2024, 1, 9, 0, 0).toInstant(ZoneOffset.UTC)));
+    dataset.setCreatedBy("75642970-f855-11dd-8235-b8a03c50a862");
+    dataset.setLanguage(Language.ENGLISH);
+    dataset.setDataLanguage(Language.ENGLISH);
+    dataset.setLicense(License.CC0_1_0);
+
+    KeywordCollection kc1 = new KeywordCollection();
+    Set<String> keywords1 = new HashSet<>();
+    keywords1.add("Occurrence");
+    kc1.setThesaurus("GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml");
+    kc1.setKeywords(keywords1);
+    dataset.getKeywordCollections().add(kc1);
+
+    Contact contact1 = new Contact();
+    contact1.setKey(5125087);
+    contact1.setType(ContactType.ORIGINATOR);
+    contact1.setPrimary(true);
+    contact1.addHomepage(URI.create("https://mecdd.gouvernement.lu/en.html"));
+    contact1.setOrganization("Ministry of the Environment, Climate and Sustainable Development");
+    contact1.addAddress("4 Place de l'Europe");
+    contact1.setCity("Luxembourg");
+    contact1.setCountry(Country.LUXEMBOURG);
+    contact1.setPostalCode("1499");
+    contact1.setCreatedBy("crawler.gbif.org");
+    contact1.setModifiedBy("crawler.gbif.org");
+    contact1.setCreated(new Date());
+    contact1.setModified(new Date());
+    dataset.getContacts().add(contact1);
+
+    Contact contact2 = new Contact();
+    contact2.setFirstName("Claude");
+    contact2.setLastName("Pepin");
+    contact2.setType(ContactType.USER);
+    contact2.setOrganization("National Museum of Natural History Luxembourg");
+    dataset.getContacts().add(contact2);
+
+    // add a contributor with no name
+    Contact contact4 = new Contact();
+    contact4.setType(ContactType.METADATA_AUTHOR);
+    contact4.setOrganization("DataCite");
+    dataset.getContacts().add(contact4);
+
+    dataset.setDoi(doi);
+    dataset.setDescription("some description");
+    List<GeospatialCoverage> geos = new ArrayList<>();
+    dataset.setGeographicCoverages(geos);
+    GeospatialCoverage g1 = new GeospatialCoverage();
+    geos.add(g1);
+    g1.setDescription("Grand Duchy of Luxembourg");
+    g1.setBoundingBox(new BoundingBox(49.45, 50.184, 5.713, 6.52));
+
+
+    return dataset;
+  }
 
   static Dataset prepareFullDataset(DOI doi) {
     Dataset dataset = new Dataset();
@@ -92,12 +156,6 @@ public class DatasetTestDataProvider {
     contact22.setOrganization("DataCite");
     contact22.setType(ContactType.METADATA_AUTHOR);
     dataset.getContacts().add(contact22);
-
-    // add an author with no name
-    Contact contact3 = new Contact();
-    contact3.setType(ContactType.ORIGINATOR);
-    contact3.setOrganization("GBIF");
-    dataset.getContacts().add(contact3);
 
     // add a contributor with no name
     Contact contact4 = new Contact();
