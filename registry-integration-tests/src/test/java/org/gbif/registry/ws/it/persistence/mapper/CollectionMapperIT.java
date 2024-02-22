@@ -102,7 +102,7 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setIndexHerbariorumRecord(true);
     collection.setNumberSpecimens(12);
     collection.setTaxonomicCoverage("taxonomic coverage");
-    collection.setGeography("geography");
+    collection.setGeographicCoverage("geography");
     collection.setNotes("notes for testing");
     collection.setIncorporatedCollections(Arrays.asList("col1", "col2"));
     collection.setImportantCollectors(Arrays.asList("collector 1", "collector 2"));

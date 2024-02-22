@@ -94,7 +94,7 @@ public class CollectionConverterTest {
             .startsWith(dataset.getTaxonomicCoverages().get(0).getDescription()));
     assertTrue(
         convertedCollection
-            .getGeography()
+            .getGeographicCoverage()
             .startsWith(dataset.getGeographicCoverages().get(0).getDescription()));
     assertTrue(
         convertedCollection.getIdentifiers().stream()

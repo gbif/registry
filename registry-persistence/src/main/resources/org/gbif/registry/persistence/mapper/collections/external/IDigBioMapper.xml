@@ -40,7 +40,7 @@
 
   <select id="getCollections" resultMap="COLLECTION_MAP">
     SELECT distinct on (c."key") c."key" collection_key, c.code collection_code, c.name collection_name, c.alternative_codes coll_alt_codes,
-      c.homepage, c.catalog_url, c.description, c.number_specimens, c.taxonomic_coverage, c.geography geographicRange,
+      c.homepage, c.catalog_url, c.description, c.number_specimens, c.taxonomic_coverage, c.geographic_coverage geographicRange,
       concat(cc.first_name, ' ', cc.last_name) contact, cc.position[1] contactPosition, cc.email[1] contactEmail,
       addr.address physical_address, addr.city physical_city, addr.province physical_state, addr.postal_code physical_zip,
       mail_addr.address mailing_address, mail_addr.city mailing_city, mail_addr.province mailing_state, mail_addr.postal_code mailing_zip,

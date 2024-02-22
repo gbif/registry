@@ -63,7 +63,7 @@ public class FileFields {
     public static final String ACCESSION_STATUS = "ACCESSION_STATUS";
     public static final String INSTITUTION_KEY = "INSTITUTION_KEY";
     public static final String TAXONOMIC_COVERAGE = "TAXONOMIC_COVERAGE";
-    public static final String GEOGRAPHY = "GEOGRAPHY";
+    public static final String GEOGRAPHIC_COVERAGE = "GEOGRAPHIC_COVERAGE";
     public static final String NOTES = "NOTES";
     public static final String INCORPORATED_COLLECTIONS = "INCORPORATED_COLLECTIONS";
     public static final String IMPORTANT_COLLECTIONS = "IMPORTANT_COLLECTIONS";
@@ -81,7 +81,7 @@ public class FileFields {
             ACCESSION_STATUS,
             INSTITUTION_KEY,
             TAXONOMIC_COVERAGE,
-            GEOGRAPHY,
+            GEOGRAPHIC_COVERAGE,
             NOTES,
             INCORPORATED_COLLECTIONS,
             IMPORTANT_COLLECTIONS,

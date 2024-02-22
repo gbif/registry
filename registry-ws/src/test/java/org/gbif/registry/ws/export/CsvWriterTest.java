@@ -267,7 +267,7 @@ public class CsvWriterTest {
     collection.setModifiedBy("me");
     collection.setModified(new Date());
     collection.setDescription("Collections description" + consecutive);
-    collection.setGeography("Geo" + consecutive);
+    collection.setGeographicCoverage("Geo" + consecutive);
     collection.setHomepage(new URI("http://coll" + consecutive + ".org"));
     collection.setImportantCollectors(Collections.singletonList("Collector" + consecutive));
     collection.setIncorporatedCollections(Collections.singletonList("Coll1." + consecutive));
@@ -398,7 +398,7 @@ public class CsvWriterTest {
         CsvWriter.ListMachineTagProcessor.toString(collectionView.getCollection().getMachineTags()),
         line[33]);
     assertEquals(collectionView.getCollection().getTaxonomicCoverage(), line[34]);
-    assertEquals(collectionView.getCollection().getGeography(), line[35]);
+    assertEquals(collectionView.getCollection().getGeographicCoverage(), line[35]);
     assertEquals(collectionView.getCollection().getNotes(), line[36]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(
