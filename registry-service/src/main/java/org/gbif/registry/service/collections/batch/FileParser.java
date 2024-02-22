@@ -356,8 +356,8 @@ public class FileParser {
         errors);
     collection.setTaxonomicCoverage(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.TAXONOMIC_COVERAGE)));
-    collection.setGeography(
-        extractValue(values, headersIndex.get(FileFields.CollectionFields.GEOGRAPHY)));
+    collection.setGeographicCoverage(
+        extractValue(values, headersIndex.get(FileFields.CollectionFields.GEOGRAPHIC_COVERAGE)));
     collection.setNotes(extractValue(values, headersIndex.get(FileFields.CollectionFields.NOTES)));
     parseStringList(
             extractValue(

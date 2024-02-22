@@ -38,7 +38,7 @@
     key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
-    taxonomic_coverage, geography, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
+    taxonomic_coverage, geographic_coverage, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
     master_source, division, department, display_on_NHCPortal
   </sql>
 
@@ -46,7 +46,7 @@
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
-    c.taxonomic_coverage, c.geography, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
+    c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
     c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal,
     c.occurrence_count, c.type_specimen_count
   </sql>
@@ -77,7 +77,7 @@
     #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     #{numberSpecimens,jdbcType=INTEGER},
     #{taxonomicCoverage,jdbcType=VARCHAR},
-    #{geography,jdbcType=VARCHAR},
+    #{geographicCoverage,jdbcType=VARCHAR},
     #{notes,jdbcType=VARCHAR},
     #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -113,7 +113,7 @@
     index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     number_specimens = #{numberSpecimens,jdbcType=INTEGER},
     taxonomic_coverage = #{taxonomicCoverage,jdbcType=VARCHAR},
-    geography = #{geography,jdbcType=VARCHAR},
+    geographic_coverage = #{geographicCoverage,jdbcType=VARCHAR},
     notes = #{notes,jdbcType=VARCHAR},
     incorporated_collections = #{incorporatedCollections,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     important_collectors = #{importantCollectors,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},

@@ -281,7 +281,7 @@ public class CsvWriter<T> {
               "collection.numberSpecimens",
               "collection.machineTags",
               "collection.taxonomicCoverage",
-              "collection.geography",
+              "collection.geographicCoverage",
               "collection.notes",
               "collection.incorporatedCollections",
               "collection.importantCollectors",
@@ -328,7 +328,7 @@ public class CsvWriter<T> {
               "number_specimens",
               "machine_tags",
               "taxonomic_coverage",
-              "geography",
+              "geographic_coverage",
               "notes",
               "incorporated_collections",
               "important_collectors",
@@ -376,7 +376,7 @@ public class CsvWriter<T> {
               new Optional(new ParseInt()), // numberSpecimens: int
               new ListMachineTagProcessor(), // machineTags: List
               new CleanStringProcessor(), // taxonomicCoverage: String
-              new CleanStringProcessor(), // geography: String
+              new CleanStringProcessor(), // geographicCoverage: String
               new CleanStringProcessor(), // notes: String
               new ListStringProcessor(), // incorporatedCollections: List
               new ListStringProcessor(), // importantCollectors: List

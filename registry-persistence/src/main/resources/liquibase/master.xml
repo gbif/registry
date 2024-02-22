@@ -137,4 +137,5 @@
   <include file="liquibase/129-duplicate-dataset-key-constraint.xml" />
   <include file="liquibase/130-rename-camtrap-dp-endpoint-type.xml" />
   <include file="liquibase/131-sql-download-types.xml" />
+  <include file="liquibase/132-geographic-coverage-grscicoll.xml" />
 </databaseChangeLog>

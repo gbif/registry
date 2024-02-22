@@ -164,7 +164,7 @@ public class CollectionConverter {
             .map(g -> g.getDescription().trim())
             .collect(Collectors.joining("."));
     geographicCoverage = normalizePunctuationSigns(geographicCoverage).trim();
-    existingCollection.setGeography(geographicCoverage);
+    existingCollection.setGeographicCoverage(geographicCoverage);
 
     existingCollection.setIncorporatedCollections(
         dataset.getCollections().stream()
