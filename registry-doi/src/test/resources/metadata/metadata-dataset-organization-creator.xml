@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<resource
+    xmlns="http://datacite.org/schema/kernel-4"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd">
+  <identifier identifierType="DOI">10.15468/449gg9</identifier>
+  <creators>
+    <creator>
+      <creatorName>Ministry of the Environment, Climate and Sustainable Development</creatorName>
+    </creator>
+  </creators>
+  <titles>
+    <title>EU Habitat directive species monitoring MECDD, Recorder-Lux database</title>
+  </titles>
+  <publisher>National Museum of Natural History, Luxembourg</publisher>
+  <publicationYear>2024</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset">OCCURRENCE</resourceType>
+  <subjects>
+    <subject subjectScheme="GBIF Dataset Type Vocabulary: http://rs.gbif.org/vocabulary/gbif/dataset_type.xml">Occurrence</subject>
+  </subjects>
+  <contributors>
+    <contributor contributorType="RelatedPerson">
+      <contributorName>Claude Pepin</contributorName>
+      <affiliation>National Museum of Natural History Luxembourg</affiliation>
+    </contributor>
+  </contributors>
+  <dates>
+    <date dateType="Created">2022-02-28</date>
+    <date dateType="Updated">2024-01-09</date>
+  </dates>
+  <language>eng</language>
+  <alternateIdentifiers>
+    <alternateIdentifier alternateIdentifierType="UUID">9ed0adc4-0a7a-49df-9054-e26e9a7dbc8d</alternateIdentifier>
+  </alternateIdentifiers>
+  <relatedIdentifiers/>
+  <rightsList>
+    <rights rightsURI="http://creativecommons.org/publicdomain/zero/1.0/legalcode">Public Domain (CC0 1.0)</rights>
+  </rightsList>
+  <descriptions>
+    <description descriptionType="Abstract">some description</description>
+  </descriptions>
+  <geoLocations>
+    <geoLocation>
+      <geoLocationPlace
+          xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">Grand Duchy of Luxembourg
+      </geoLocationPlace>
+      <geoLocationBox>
+        <westBoundLongitude>5.713</westBoundLongitude>
+        <eastBoundLongitude>6.52</eastBoundLongitude>
+        <southBoundLatitude>49.45</southBoundLatitude>
+        <northBoundLatitude>50.184</northBoundLatitude>
+      </geoLocationBox>
+    </geoLocation>
+  </geoLocations>
+</resource>
