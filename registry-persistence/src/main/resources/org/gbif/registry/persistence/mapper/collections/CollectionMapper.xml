@@ -13,6 +13,8 @@
     <result property="importantCollectors" column="important_collectors" typeHandler="StringArrayTypeHandler"/>
     <result property="collectionSummary" column="collection_summary" typeHandler="CollectionSummaryTypeHandler"/>
     <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
+    <result property="catalogUrls" column="catalog_url" typeHandler="UriArrayTypeHandler"/>
+    <result property="apiUrls" column="api_url" typeHandler="UriArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contactPersons" column="key" select="listContactPersons"/>
@@ -63,8 +65,8 @@
     #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
-    #{catalogUrl,jdbcType=VARCHAR},
-    #{apiUrl,jdbcType=VARCHAR},
+    #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
+    #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     #{preservationTypes,jdbcType=ARRAY,typeHandler=PreservationTypeArrayTypeHandler},
     #{accessionStatus,jdbcType=OTHER},
     #{institutionKey,jdbcType=OTHER},
@@ -100,8 +102,8 @@
     email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
-    catalog_url = #{catalogUrl,jdbcType=VARCHAR},
-    api_url = #{apiUrl,jdbcType=VARCHAR},
+    catalog_url = #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
+    api_url = #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     preservation_type = #{preservationTypes,jdbcType=ARRAY,typeHandler=PreservationTypeArrayTypeHandler},
     accession_status = #{accessionStatus,jdbcType=OTHER},
     institution_key = #{institutionKey,jdbcType=OTHER},

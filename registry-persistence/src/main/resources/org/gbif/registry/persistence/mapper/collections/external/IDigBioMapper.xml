@@ -12,6 +12,7 @@
 
   <resultMap id="COLLECTION_MAP" type="IDigBioCollectionDto" autoMapping="true">
     <id property="collectionKey" column="collection_key"/>
+    <result property="catalogUrls" column="catalog_url" typeHandler="StringArrayTypeHandler"/>
     <result property="collectionAlternativeCodes" column="coll_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>
     <result property="institutionAlternativeCodes" column="inst_alt_codes" typeHandler="AlternativeCodesTypeHandler"/>
   </resultMap>

@@ -1,0 +1,18 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="133" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE institution ALTER COLUMN type TYPE enum_institution_type[] USING NULLIF(ARRAY[type], '{null}');
+        ALTER TABLE institution ALTER COLUMN institutional_governance TYPE enum_institution_governance[] USING NULLIF(ARRAY[institutional_governance], '{null}');
+        ALTER TABLE institution ALTER COLUMN catalog_url TYPE varchar[] USING NULLIF(ARRAY[catalog_url], '{null}');
+        ALTER TABLE institution ALTER COLUMN api_url TYPE varchar[] USING NULLIF(ARRAY[api_url], '{null}');
+        ALTER TABLE collection ALTER COLUMN catalog_url TYPE varchar[] USING NULLIF(ARRAY[catalog_url], '{null}');
+        ALTER TABLE collection ALTER COLUMN api_url TYPE varchar[] USING NULLIF(ARRAY[api_url], '{null}');
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

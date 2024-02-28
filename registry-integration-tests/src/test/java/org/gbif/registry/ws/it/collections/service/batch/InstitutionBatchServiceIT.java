@@ -61,7 +61,8 @@ public class InstitutionBatchServiceIT extends BaseBatchServiceIT<Institution> {
 
   @Override
   void assertUpdatedEntity(Institution updated) {
-    assertEquals(InstitutionType.HERBARIUM, updated.getType());
+    assertEquals(1, updated.getTypes().size());
+    assertEquals(InstitutionType.HERBARIUM, updated.getTypes().get(0));
     assertEquals(2, updated.getDisciplines().size());
   }
 }

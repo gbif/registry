@@ -87,8 +87,8 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     newCollection.setEmail(institutionToConvert.getEmail());
     newCollection.setPhone(institutionToConvert.getPhone());
     newCollection.setHomepage(institutionToConvert.getHomepage());
-    newCollection.setCatalogUrl(institutionToConvert.getCatalogUrl());
-    newCollection.setApiUrl(institutionToConvert.getApiUrl());
+    newCollection.setCatalogUrls(institutionToConvert.getCatalogUrls());
+    newCollection.setApiUrls(institutionToConvert.getApiUrls());
     newCollection.setActive(institutionToConvert.isActive());
 
     if (institutionToConvert.getAddress() != null) {

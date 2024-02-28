@@ -56,7 +56,7 @@ public class CollectionChangeSuggestionServiceIT
   int updateEntity(Collection entity) {
     entity.setCode(UUID.randomUUID().toString());
     entity.setActive(true);
-    entity.setApiUrl(URI.create("http://test.com"));
+    entity.setApiUrls(Collections.singletonList(URI.create("http://test.com")));
     entity.setIdentifiers(Collections.singletonList(new Identifier(IdentifierType.LSID, "test")));
     entity.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode(UUID.randomUUID().toString(), "test")));

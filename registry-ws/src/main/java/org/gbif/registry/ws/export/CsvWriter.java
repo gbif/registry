@@ -39,6 +39,7 @@ import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.io.Writer;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -260,8 +261,8 @@ public class CsvWriter<T> {
               "collection.email",
               "collection.phone",
               "collection.homepage",
-              "collection.catalogUrl",
-              "collection.apiUrl",
+              "collection.catalogUrls",
+              "collection.apiUrls",
               "collection.preservationTypes",
               "collection.accessionStatus",
               "institutionName",
@@ -354,8 +355,8 @@ public class CsvWriter<T> {
               new ListStringProcessor(), // email: List
               new ListStringProcessor(), // phone: List
               new UriProcessor(), // homepage: URI
-              new UriProcessor(), // catalogUrl: URI
-              new UriProcessor(), // apiUrl: URI
+              new ListUriProcessor(), // catalogUrl: URI
+              new ListUriProcessor(), // apiUrl: URI
               new ListPreservationTypeProcessor(), // preservationTypes: List
               new Optional(
                   new ParseEnum(AccessionStatus.class)), // accessionStatus: AccessionStatus
@@ -393,6 +394,7 @@ public class CsvWriter<T> {
   }
 
   /** Creates an CsvWriter/exporter of Collection. */
+  // TODO: processor for new multivalue fields
   public static CsvWriter<Institution> institutions(
       Iterable<Institution> pager, ExportFormat preference) {
     return CsvWriter.<Institution>builder()
@@ -405,14 +407,14 @@ public class CsvWriter<T> {
               "country",
               "city",
               "province",
-              "type",
+              "types",
               "active",
               "email",
               "phone",
               "homepage",
-              "catalogUrl",
-              "apiUrl",
-              "institutionalGovernance",
+              "catalogUrls",
+              "apiUrls",
+              "institutionalGovernances",
               "disciplines",
               "latitude",
               "longitude",
@@ -495,17 +497,15 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // address: extract the country
               new CleanStringProcessor(), // address: extract the city
               new CleanStringProcessor(), // address: extract the province
-              new Optional(new ParseEnum(InstitutionType.class)), // type:InstitutionType
+              new Optional(new ListInstitutionTypeProcessor()), // type:InstitutionType
               new Optional(new FmtBool("true", "false")), // active: boolean
               new ListStringProcessor(), // email: List<String>
               new ListStringProcessor(), // phone: List<String>
               new UriProcessor(), // homepage: URI
-              new UriProcessor(), // catalogUrl: URI
-              new UriProcessor(), // apiUrl: URI
+              new ListUriProcessor(), // catalogUrl: URI
+              new ListUriProcessor(), // apiUrl: URI
               new Optional(
-                  new ParseEnum(
-                      InstitutionGovernance
-                          .class)), // institutionalGovernance:InstitutionGovernance
+                  new ListInstitutionGovernanceProcessor()), // institutionalGovernance:InstitutionGovernance
               new ListDisciplinesProcessor(), // disciplines:List
               new Optional(new FmtNumber("###.####")), // latitude: BigDecimal
               new Optional(new FmtNumber("###.####")), // longitude: BigDecimal
@@ -637,6 +637,19 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<String>) value) : "";
+    }
+  }
+
+  /** Null aware List<URI> processor. */
+  public static class ListUriProcessor implements CellProcessor {
+
+    public static String toString(List<URI> value) {
+      return value.stream().map(URI::toString).collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? toString((List<URI>) value) : "";
     }
   }
 
@@ -830,6 +843,34 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<Discipline>) value) : "";
+    }
+  }
+
+  /** Null aware List<Discipline> processor. */
+  public static class ListInstitutionTypeProcessor implements CellProcessor {
+
+    public static String toString(List<InstitutionType> value) {
+      return value.stream().map(InstitutionType::name).collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? toString((List<InstitutionType>) value) : "";
+    }
+  }
+
+  /** Null aware List<Discipline> processor. */
+  public static class ListInstitutionGovernanceProcessor implements CellProcessor {
+
+    public static String toString(List<InstitutionGovernance> value) {
+      return value.stream()
+          .map(InstitutionGovernance::name)
+          .collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? toString((List<InstitutionGovernance>) value) : "";
     }
   }
 }

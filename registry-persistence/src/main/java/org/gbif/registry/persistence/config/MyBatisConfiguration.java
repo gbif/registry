@@ -26,10 +26,10 @@ import org.gbif.api.model.occurrence.Download;
 import org.gbif.api.model.occurrence.DownloadRequest;
 import org.gbif.api.model.occurrence.PredicateDownloadRequest;
 import org.gbif.api.model.occurrence.SqlDownloadRequest;
-import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.predicate.Predicate;
 import org.gbif.api.model.registry.Citation;
 import org.gbif.api.model.registry.Comment;
 import org.gbif.api.model.registry.Contact;
@@ -75,6 +75,8 @@ import org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
 import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.ExtensionArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.InstitutionGovernanceArrayTypeHandler;
+import org.gbif.registry.persistence.mapper.handler.InstitutionTypeArrayTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
 import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
@@ -128,11 +130,11 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Download", Download.class);
       configuration.getTypeAliasRegistry().registerAlias("DownloadRequest", DownloadRequest.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
+          .getTypeAliasRegistry()
+          .registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("SqlDownloadRequest", SqlDownloadRequest.class);
+          .getTypeAliasRegistry()
+          .registerAlias("SqlDownloadRequest", SqlDownloadRequest.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("DatasetOccurrenceDownload", DatasetOccurrenceDownloadUsage.class);
@@ -222,6 +224,12 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("InstitutionTypeArrayTypeHandler", InstitutionTypeArrayTypeHandler.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);

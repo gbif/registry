@@ -38,6 +38,8 @@ import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -163,6 +165,8 @@ public class IDigBioMapperIT extends BaseItTest {
     col1.setKey(UUID.randomUUID());
     col1.setCode("c1");
     col1.setName("n1");
+    col1.setCatalogUrls(
+        Arrays.asList(URI.create("http://test.com"), URI.create("http://test2.com")));
     col1.setDescription("desc1");
     col1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("CC", "test")));
     col1.setInstitutionKey(i1.getKey());
@@ -197,6 +201,7 @@ public class IDigBioMapperIT extends BaseItTest {
     IDigBioCollectionDto collDto = colls.get(0);
     assertNotNull(collDto.getContact());
     assertEquals(uniqueNameUUIDMt.getValue(), collDto.getUniqueNameUUID());
+    assertEquals(2, collDto.getCatalogUrls().size());
   }
 
   @Test

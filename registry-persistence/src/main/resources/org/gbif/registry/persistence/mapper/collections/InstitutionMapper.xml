@@ -10,6 +10,10 @@
     <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
+    <result property="types" column="type" typeHandler="InstitutionTypeArrayTypeHandler"/>
+    <result property="institutionalGovernances" column="institutional_governance" typeHandler="InstitutionGovernanceArrayTypeHandler"/>
+    <result property="catalogUrls" column="catalog_url" typeHandler="UriArrayTypeHandler"/>
+    <result property="apiUrls" column="api_url" typeHandler="UriArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
     <association property="mailingAddress" column="mailing_address_key" select="listAddress" />
     <collection property="contactPersons" column="key" select="listContactPersons"/>
@@ -51,14 +55,14 @@
     #{code,jdbcType=VARCHAR},
     #{name,jdbcType=VARCHAR},
     #{description,jdbcType=VARCHAR},
-    #{type,jdbcType=OTHER},
+    #{types,jdbcType=ARRAY,typeHandler=InstitutionTypeArrayTypeHandler},
     #{active,jdbcType=BOOLEAN},
     #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
-    #{catalogUrl,jdbcType=VARCHAR},
-    #{apiUrl,jdbcType=VARCHAR},
-    #{institutionalGovernance,jdbcType=OTHER},
+    #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
+    #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
+    #{institutionalGovernances,jdbcType=ARRAY,typeHandler=InstitutionGovernanceArrayTypeHandler},
     #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
     #{latitude,jdbcType=NUMERIC},
     #{longitude,jdbcType=NUMERIC},
@@ -85,14 +89,14 @@
     code = #{code,jdbcType=VARCHAR},
     name = #{name,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
-    type = #{type,jdbcType=OTHER},
+    type = #{types,jdbcType=ARRAY,typeHandler=InstitutionTypeArrayTypeHandler},
     active = #{active,jdbcType=BOOLEAN},
     email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
-    catalog_url = #{catalogUrl,jdbcType=VARCHAR},
-    api_url = #{apiUrl,jdbcType=VARCHAR},
-    institutional_governance = #{institutionalGovernance,jdbcType=OTHER},
+    catalog_url = #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
+    api_url = #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
+    institutional_governance = #{institutionalGovernances,jdbcType=ARRAY,typeHandler=InstitutionGovernanceArrayTypeHandler},
     discipline = #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
     latitude = #{latitude,jdbcType=NUMERIC},
     longitude = #{longitude,jdbcType=NUMERIC},
@@ -331,10 +335,10 @@
         AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
       </if>
       <if test="params.type != null" >
-        AND i.type = #{params.type,jdbcType=OTHER}
+        AND i.type @> ARRAY[#{params.type,jdbcType=OTHER}]::enum_institution_type[]
       </if>
       <if test="params.institutionalGovernance != null" >
-        AND i.institutional_governance = #{params.institutionalGovernance,jdbcType=OTHER}
+        AND i.institutional_governance @> ARRAY[#{params.institutionalGovernance,jdbcType=OTHER}]::enum_institution_governance[]
       </if>
       <if test="params.disciplines != null and params.disciplines.size > 0" >
         AND i.discipline &amp;&amp; ARRAY
