@@ -98,8 +98,9 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution1.setCode("c1");
     institution1.setName("n1");
     institution1.setActive(true);
-    institution1.setType(InstitutionType.HERBARIUM);
-    institution1.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
+    institution1.setTypes(Collections.singletonList(InstitutionType.HERBARIUM));
+    institution1.setInstitutionalGovernances(
+        Collections.singletonList(InstitutionGovernance.ACADEMIC_FEDERAL));
     institution1.setDisciplines(Collections.singletonList(Discipline.OCEAN));
     Address address = new Address();
     address.setAddress("dummy address");

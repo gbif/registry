@@ -189,10 +189,12 @@ public class FileParser {
     parseStringList(
             extractValue(values, headersIndex.get(FileFields.InstitutionFields.ADDITIONAL_NAMES)))
         .ifPresent(institution::setAdditionalNames);
-    Optional.ofNullable(
-            extractValue(values, headersIndex.get(FileFields.InstitutionFields.INSTITUTION_TYPE)))
-        .map(InstitutionType::valueOf)
-        .ifPresent(institution::setType);
+    handleParserResult(
+        parseListValues(
+            extractValue(values, headersIndex.get(FileFields.InstitutionFields.INSTITUTION_TYPE)),
+            s -> parseEnum(s, InstitutionType::valueOf)),
+        institution::setTypes,
+        errors);
     handleParserResult(
         parseBoolean(extractValue(values, headersIndex.get(ACTIVE))),
         institution::setActive,
@@ -202,20 +204,24 @@ public class FileParser {
         institution::setHomepage,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(CATALOG_URL))),
-        institution::setCatalogUrl,
+        parseListValues(
+            extractValue(values, headersIndex.get(CATALOG_URL)), FileParsingUtils::parseUri),
+        institution::setCatalogUrls,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(API_URL))), institution::setApiUrl, errors);
+        parseListValues(
+            extractValue(values, headersIndex.get(API_URL)), FileParsingUtils::parseUri),
+        institution::setApiUrls,
+        errors);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(LOGO_URL))),
         institution::setLogoUrl,
         errors);
     handleParserResult(
-        parseEnum(
+        parseListValues(
             extractValue(values, headersIndex.get(INSTITUTIONAL_GOVERNANCE)),
-            InstitutionGovernance::valueOf),
-        institution::setInstitutionalGovernance,
+            s -> parseEnum(s, InstitutionGovernance::valueOf)),
+        institution::setInstitutionalGovernances,
         errors);
     handleParserResult(
         parseListValues(
@@ -306,11 +312,15 @@ public class FileParser {
         collection::setHomepage,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(CATALOG_URL))),
-        collection::setCatalogUrl,
+        parseListValues(
+            extractValue(values, headersIndex.get(CATALOG_URL)), FileParsingUtils::parseUri),
+        collection::setCatalogUrls,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(API_URL))), collection::setApiUrl, errors);
+        parseListValues(
+            extractValue(values, headersIndex.get(API_URL)), FileParsingUtils::parseUri),
+        collection::setApiUrls,
+        errors);
     handleParserResult(
         parseListValues(
             extractValue(values, headersIndex.get(FileFields.CollectionFields.PRESERVATION_TYPES)),
