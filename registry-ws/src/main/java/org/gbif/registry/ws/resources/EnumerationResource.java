@@ -14,8 +14,15 @@
 package org.gbif.registry.ws.resources;
 
 import org.gbif.api.annotation.NullToNotFound;
+import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
 import org.gbif.api.model.literature.LiteratureType;
+import org.gbif.api.model.literature.search.LiteratureSearchParameter;
+import org.gbif.api.model.occurrence.DownloadFormat;
+import org.gbif.api.model.occurrence.geo.DistanceUnit;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.model.pipelines.PipelineStep;
+import org.gbif.api.model.registry.EndorsementStatus;
+import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Extension;
@@ -188,8 +195,19 @@ public class EnumerationResource {
         new CachingMetadataReaderFactory(resourcePatternResolver);
 
     List<Class<? extends Serializable>> classes =
-        Arrays.asList(
-            Country.class, PreservationType.class, PipelineStep.class, LiteratureType.class);
+      Arrays.asList(
+        Country.class, // org.gbif.api.vocabulary
+        PreservationType.class, // org.gbif.api.vocabulary.collections
+        PipelineStep.class, // org.gbif.api.model.pipelines
+        LiteratureType.class, // org.gbif.api.model.literature
+        LiteratureSearchParameter.class, // org.gbif.api.model.literature.search
+        OccurrenceSearchParameter.class, // org.gbif.api.model.occurrence.search
+        DownloadFormat.class, // org.gbif.api.model.occurrence
+        DistanceUnit.class, // org.gbif.api.model.occurrence.geo
+        DatasetSearchParameter.class, // org.gbif.api.model.registry.search
+        EndorsementStatus.class, // org.gbif.api.model.registry
+        NameUsageSearchParameter.class // org.gbif.api.model.checklistbank.search
+      );
 
     ImmutableSortedMap<String, Enum<?>[]> result;
     try {
