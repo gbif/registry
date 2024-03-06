@@ -29,7 +29,7 @@
     <guava.version>18.0</guava.version>
 
     <sonar.coverage.jacoco.xmlReportPaths>
-      ${project.basedir}/../registry-integration-tests/target/site/jacoco-aggregate/jacoco.xml
+      ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
