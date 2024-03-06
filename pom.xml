@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>56</version>
+    <version>57-SNAPSHOT</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
