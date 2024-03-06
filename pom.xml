@@ -163,7 +163,7 @@
     <sonar.exclusions>**/*Stub.java</sonar.exclusions>
     <sonar.cpd.exclusions>**/*Stub.java</sonar.cpd.exclusions>
     <sonar.coverage.exclusions>**/*Stub.java</sonar.coverage.exclusions>
-    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-it/jacoco.xml,${project.basedir}/target/site/jacoco-ut/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
