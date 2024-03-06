@@ -12,6 +12,10 @@
 
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
+
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.basedir}/../registry-integration-tests/target/site/jacoco-aggregate/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <dependencies>
