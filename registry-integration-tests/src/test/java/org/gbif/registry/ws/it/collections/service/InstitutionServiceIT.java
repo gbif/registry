@@ -13,12 +13,7 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -29,42 +24,24 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.CollectionsSortField;
-import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.SortOrder;
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.IdType;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.MasterSourceType;
-import org.gbif.api.vocabulary.collections.Source;
+import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.*;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
-
-import org.geojson.FeatureCollection;
-import org.geojson.Point;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
@@ -101,7 +78,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution1.setTypes(Collections.singletonList(InstitutionType.HERBARIUM));
     institution1.setInstitutionalGovernances(
         Collections.singletonList(InstitutionGovernance.ACADEMIC_FEDERAL));
-    institution1.setDisciplines(Collections.singletonList(Discipline.OCEAN));
+    institution1.setDisciplines(Collections.singletonList("Archaeology"));
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -116,7 +93,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution2.setCode("c2");
     institution2.setName("n2");
     institution2.setActive(false);
-    institution2.setDisciplines(Arrays.asList(Discipline.OCEAN, Discipline.AGRICULTURAL));
+    institution2.setDisciplines(Arrays.asList("Archaeology", "Anthropology"));
     institution2.setNumberSpecimens(200);
     Address address2 = new Address();
     address2.setAddress("dummy address2");
@@ -268,7 +245,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .disciplines(Collections.singletonList(Discipline.AGRICULTURAL))
+                    .disciplines(Collections.singletonList("Anthropology"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -278,7 +255,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .disciplines(Arrays.asList(Discipline.OCEAN, Discipline.AGRICULTURAL))
+                    .disciplines(Arrays.asList("Archaeology", "Anthropology"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -800,5 +777,25 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(
         2d,
         ((Point) featuresC1.getFeatures().get(0).getGeometry()).getCoordinates().getLongitude());
+  }
+
+  @Test
+  public void vocabConceptsTest() {
+    Institution institution1 = testData.newEntity();
+    institution1.setCode("c1");
+    institution1.setName("n1");
+    institution1.setDisciplines(Collections.singletonList("foo"));
+    assertThrows(IllegalArgumentException.class, () -> institutionService.create(institution1));
+
+    institution1.setDisciplines(Arrays.asList("Archaeology", "Historic"));
+    UUID key = institutionService.create(institution1);
+    Institution created = institutionService.get(key);
+
+    assertEquals(2, created.getDisciplines().size());
+    assertTrue(created.getDisciplines().contains("Archaeology"));
+    assertTrue(created.getDisciplines().contains("Historic"));
+
+    created.getDisciplines().add("foo");
+    assertThrows(IllegalArgumentException.class, () -> institutionService.update(created));
   }
 }

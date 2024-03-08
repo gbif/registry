@@ -1,0 +1,16 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="134" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+        -- TODO: migrate old enum to new vocabs when we know the mapping
+        -- TODO: migrate current column instead of creating a new one?
+        ALTER TABLE institution ADD COLUMN disciplines text[];
+        ALTER TABLE collection ADD COLUMN content_types text[];
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

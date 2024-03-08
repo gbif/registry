@@ -59,6 +59,7 @@ import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,7 +98,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
       OrganizationMapper organizationMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      Validator validator) {
+      Validator validator,
+      @Value("${api.root.url}") String apiRootUrl) {
     super(
         institutionMapper,
         addressMapper,
@@ -112,7 +114,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         commentMapper,
         Institution.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        apiRootUrl);
     this.institutionMapper = institutionMapper;
     this.organizationMapper = organizationMapper;
     this.validator = validator;

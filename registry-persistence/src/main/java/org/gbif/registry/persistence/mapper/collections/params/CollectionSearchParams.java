@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class CollectionSearchParams extends SearchParams {
 
-  @Nullable List<CollectionContentType> contentTypes;
+  @Nullable List<String> contentTypes;
   @Nullable List<PreservationType> preservationTypes;
   @Nullable AccessionStatus accessionStatus;
   @Nullable Boolean personalCollection;

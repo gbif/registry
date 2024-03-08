@@ -13,28 +13,14 @@
  */
 package org.gbif.registry.service.collections;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.request.SearchRequest;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.PostPersist;
-import org.gbif.api.model.registry.PrePersist;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.util.IdentifierUtils;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
@@ -45,43 +31,18 @@ import org.gbif.api.vocabulary.TagNamespace;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
-import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
-import org.gbif.registry.events.collections.DeleteCollectionEntityEvent;
-import org.gbif.registry.events.collections.EventType;
-import org.gbif.registry.events.collections.MasterSourceMetadataAddedEvent;
-import org.gbif.registry.events.collections.ReplaceEntityEvent;
-import org.gbif.registry.events.collections.SubEntityCollectionEvent;
-import org.gbif.registry.events.collections.UpdateCollectionEntityEvent;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.BaseMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
-import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.events.collections.*;
+import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.params.RangeParam;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-
-import org.elasticsearch.common.Strings;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.vocabulary.client.ConceptClient;
+import org.gbif.ws.client.ClientBuilder;
+import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
@@ -92,18 +53,19 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import lombok.extern.slf4j.Slf4j;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.CONTACTS_FIELD_NAME;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.INSTITUTION_LOCKABLE_FIELDS;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isLockableEntity;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.isSourceableField;
+import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
 import static org.gbif.registry.service.collections.utils.SearchUtils.INTEGER_RANGE;
 import static org.gbif.registry.service.collections.utils.SearchUtils.WILDCARD_SEARCH;
 
@@ -129,6 +91,7 @@ public class BaseCollectionEntityService<
   protected final CommentMapper commentMapper;
   protected final EventManager eventManager;
   protected final WithMyBatis withMyBatis;
+  protected final ConceptClient conceptClient;
 
   protected BaseCollectionEntityService(
       BaseMapper<T> baseMapper,
@@ -144,7 +107,8 @@ public class BaseCollectionEntityService<
       CommentMapper commentMapper,
       Class<T> objectClass,
       EventManager eventManager,
-      WithMyBatis withMyBatis) {
+      WithMyBatis withMyBatis,
+      String apiUrl) {
     this.baseMapper = baseMapper;
     this.addressMapper = addressMapper;
     this.contactMapper = contactMapper;
@@ -159,6 +123,13 @@ public class BaseCollectionEntityService<
     this.objectClass = objectClass;
     this.eventManager = eventManager;
     this.withMyBatis = withMyBatis;
+    this.conceptClient =
+        new ClientBuilder()
+            .withObjectMapper(
+                JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                    .registerModule(new JavaTimeModule()))
+            .withUrl(apiUrl)
+            .build(ConceptClient.class);
   }
 
   @Override
@@ -474,6 +445,9 @@ public class BaseCollectionEntityService<
     checkArgument(entity.getKey() == null, "Unable to create an entity which already has a key");
     preCreate(entity);
 
+    // check vocabulary values are valid
+    Vocabularies.checkVocabsValues(conceptClient, entity);
+
     if (entity.getAddress() != null) {
       addressMapper.create(entity.getAddress());
     }
@@ -529,6 +503,9 @@ public class BaseCollectionEntityService<
     if (lockFields && isLockableEntity(entityOld)) {
       lockFields(entityOld, entity);
     }
+
+    // check vocabulary values are valid
+    Vocabularies.checkVocabsValues(conceptClient, entity);
 
     // update mailing address
     updateAddress(entity.getMailingAddress(), entityOld.getMailingAddress());

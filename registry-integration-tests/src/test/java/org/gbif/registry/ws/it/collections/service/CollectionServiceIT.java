@@ -111,10 +111,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setActive(true);
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
-    collection1.setContentTypes(
-        Arrays.asList(
-            CollectionContentType.RECORDS_ASSOCIATED_DATA,
-            CollectionContentType.ARCHAEOLOGICAL_C14));
+    collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
     collection1.setPreservationTypes(
         Arrays.asList(PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED));
     Address address = new Address();
@@ -131,8 +128,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection2.setCode("c2");
     collection2.setName("n2");
     collection2.setActive(false);
-    collection2.setContentTypes(
-        Collections.singletonList(CollectionContentType.RECORDS_ASSOCIATED_DATA));
+    collection2.setContentTypes(Collections.singletonList("Archaeological"));
     collection2.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
     collection2.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
     collection2.setPersonalCollection(false);
@@ -263,8 +259,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .contentTypes(
-                        Collections.singletonList(CollectionContentType.RECORDS_ASSOCIATED_DATA))
+                    .contentTypes(Collections.singletonList("Archaeological"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -274,10 +269,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .contentTypes(
-                        Arrays.asList(
-                            CollectionContentType.RECORDS_ASSOCIATED_DATA,
-                            CollectionContentType.RECORDS_SEISMOGRAMS))
+                    .contentTypes(Arrays.asList("Archaeological", "Biological"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -961,5 +953,25 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     // delete the master source
     collectionService.deleteMasterSourceMetadata(collectionKey);
     assertDoesNotThrow(() -> collectionService.delete(collectionKey));
+  }
+
+  @Test
+  public void vocabConceptsTest() {
+    Collection collection1 = testData.newEntity();
+    collection1.setCode("c1");
+    collection1.setName("n1");
+    collection1.setContentTypes(Collections.singletonList("foo"));
+    assertThrows(IllegalArgumentException.class, () -> collectionService.create(collection1));
+
+    collection1.setContentTypes(Arrays.asList("Archaeological", "C14"));
+    UUID key = collectionService.create(collection1);
+    Collection created = collectionService.get(key);
+
+    assertEquals(2, created.getContentTypes().size());
+    assertTrue(created.getContentTypes().contains("Archaeological"));
+    assertTrue(created.getContentTypes().contains("C14"));
+
+    created.getContentTypes().add("foo");
+    assertThrows(IllegalArgumentException.class, () -> collectionService.update(created));
   }
 }

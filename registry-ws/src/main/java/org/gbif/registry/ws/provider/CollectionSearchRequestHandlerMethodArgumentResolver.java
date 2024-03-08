@@ -60,10 +60,7 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
 
     String[] contentTypes = webRequest.getParameterValues("contentType");
     if (contentTypes != null && contentTypes.length > 0) {
-      searchRequest.setContentTypes(
-          Arrays.stream(contentTypes)
-              .map(v -> VocabularyUtils.lookupEnum(v, CollectionContentType.class))
-              .collect(Collectors.toList()));
+      searchRequest.setContentTypes(Arrays.asList(contentTypes));
     }
 
     String[] preservationTypes = webRequest.getParameterValues("preservationType");

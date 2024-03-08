@@ -223,12 +223,8 @@ public class FileParser {
             s -> parseEnum(s, InstitutionGovernance::valueOf)),
         institution::setInstitutionalGovernances,
         errors);
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(DISCIPLINES)),
-            s -> parseEnum(s, Discipline::valueOf)),
-        institution::setDisciplines,
-        errors);
+    parseStringList(extractValue(values, headersIndex.get(DISCIPLINES)))
+        .ifPresent(institution::setDisciplines);
     handleParserResult(
         parseBigDecimal(extractValue(values, headersIndex.get(LATITUDE))),
         institution::setLatitude,
@@ -284,12 +280,9 @@ public class FileParser {
     collection.setCode(extractValue(values, headersIndex.get(CODE)));
     collection.setName(extractValue(values, headersIndex.get(NAME)));
     collection.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.CONTENT_TYPES)),
-            s -> parseEnum(s, CollectionContentType::valueOf)),
-        collection::setContentTypes,
-        errors);
+    parseStringList(
+            extractValue(values, headersIndex.get(FileFields.CollectionFields.CONTENT_TYPES)))
+        .ifPresent(collection::setContentTypes);
     handleParserResult(
         parseBoolean(extractValue(values, headersIndex.get(ACTIVE))),
         collection::setActive,
