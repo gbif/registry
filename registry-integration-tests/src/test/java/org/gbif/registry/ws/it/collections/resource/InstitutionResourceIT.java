@@ -102,7 +102,7 @@ public class InstitutionResourceIT
     req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
     req.setActive(true);
     req.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
-    req.setDisciplines(Arrays.asList(Discipline.AGRICULTURAL, Discipline.OCEAN));
+    req.setDisciplines(Arrays.asList("Archaeology", "Anthropology"));
 
     PagingResponse<Institution> result = getClient().list(req);
     assertEquals(institutions.size(), result.getResults().size());

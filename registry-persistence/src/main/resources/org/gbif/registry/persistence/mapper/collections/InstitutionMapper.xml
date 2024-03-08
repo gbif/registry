@@ -7,7 +7,7 @@
     <id property="key" column="key"/>
     <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
     <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
-    <result property="disciplines" column="discipline" typeHandler="DisciplineArrayTypeHandler"/>
+    <result property="disciplines" column="disciplines" typeHandler="StringArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
     <result property="types" column="type" typeHandler="InstitutionTypeArrayTypeHandler"/>
@@ -35,7 +35,7 @@
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
-    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, discipline,
+    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, disciplines,
     latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
     taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
     created_by, modified_by, created, modified, alternative_codes, master_source, display_on_NHCPortal
@@ -43,7 +43,7 @@
 
   <sql id="INSTITUTION_READ_FIELDS">
     i.key, i.code, i.name, i.description, i.type, i.active, i.email, i.phone, i.homepage, i.catalog_url, i.api_url,
-    i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
+    i.institutional_governance, i.disciplines, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
     i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
     i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source,
@@ -63,7 +63,7 @@
     #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     #{institutionalGovernances,jdbcType=ARRAY,typeHandler=InstitutionGovernanceArrayTypeHandler},
-    #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
+    #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{latitude,jdbcType=NUMERIC},
     #{longitude,jdbcType=NUMERIC},
     #{mailingAddress.key,jdbcType=INTEGER},
@@ -97,7 +97,7 @@
     catalog_url = #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     api_url = #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     institutional_governance = #{institutionalGovernances,jdbcType=ARRAY,typeHandler=InstitutionGovernanceArrayTypeHandler},
-    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=DisciplineArrayTypeHandler},
+    disciplines = #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     latitude = #{latitude,jdbcType=NUMERIC},
     longitude = #{longitude,jdbcType=NUMERIC},
     mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
@@ -341,9 +341,9 @@
         AND i.institutional_governance @> ARRAY[#{params.institutionalGovernance,jdbcType=OTHER}]::enum_institution_governance[]
       </if>
       <if test="params.disciplines != null and params.disciplines.size > 0" >
-        AND i.discipline &amp;&amp; ARRAY
+        AND i.disciplines &amp;&amp; ARRAY
         <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}
+          #{item,jdbcType=VARCHAR}::text
         </foreach>
       </if>
       <if test="params.active != null" >

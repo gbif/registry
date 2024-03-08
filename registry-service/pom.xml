@@ -50,6 +50,10 @@
       <groupId>org.gbif</groupId>
       <artifactId>gbif-metadata-profile-dc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.gbif.vocabulary</groupId>
+      <artifactId>vocabulary-rest-ws-client</artifactId>
+    </dependency>
 
     <!-- Third-party dependencies -->
     <dependency>

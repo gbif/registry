@@ -7,7 +7,7 @@
     <id property="key" column="key"/>
     <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
     <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
-    <result property="contentTypes" column="content_type" typeHandler="CollectionContentTypeArrayTypeHandler"/>
+    <result property="contentTypes" column="content_types" typeHandler="StringArrayTypeHandler"/>
     <result property="preservationTypes" column="preservation_type" typeHandler="PreservationTypeArrayTypeHandler"/>
     <result property="incorporatedCollections" column="incorporated_collections" typeHandler="StringArrayTypeHandler"/>
     <result property="importantCollectors" column="important_collectors" typeHandler="StringArrayTypeHandler"/>
@@ -37,7 +37,7 @@
   <resultMap id="MASTER_SOURCE_ORG_DTO_MAP" type="MasterSourceOrganizationDto" autoMapping="true" />
 
   <sql id="COLLECTION_WRITE_FIELDS">
-    key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
+    key, code, name, description, content_types, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
     taxonomic_coverage, geographic_coverage, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
@@ -45,7 +45,7 @@
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
-    c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
+    c.key, c.code, c.name, c.description, c.content_types, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
     c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
@@ -58,7 +58,7 @@
     #{code,jdbcType=VARCHAR},
     #{name,jdbcType=VARCHAR},
     #{description,jdbcType=VARCHAR},
-    #{contentTypes,jdbcType=ARRAY,typeHandler=CollectionContentTypeArrayTypeHandler},
+    #{contentTypes,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{active,jdbcType=BOOLEAN},
     #{personalCollection,jdbcType=BOOLEAN},
     #{doi,jdbcType=VARCHAR},
@@ -95,7 +95,7 @@
     code = #{code,jdbcType=VARCHAR},
     name = #{name,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
-    content_type = #{contentTypes,jdbcType=ARRAY,typeHandler=CollectionContentTypeArrayTypeHandler},
+    content_types = #{contentTypes,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     active = #{active,jdbcType=BOOLEAN},
     personal_collection = #{personalCollection,jdbcType=BOOLEAN},
     doi = #{doi,jdbcType=VARCHAR},
@@ -312,9 +312,9 @@
         AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
       </if>
       <if test="params.contentTypes != null and params.contentTypes.size > 0" >
-        AND c.content_type &amp;&amp; ARRAY
+        AND c.content_types &amp;&amp; ARRAY
         <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}
+          #{item,jdbcType=VARCHAR}::text
         </foreach>
       </if>
       <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >

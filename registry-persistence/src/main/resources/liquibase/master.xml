@@ -139,4 +139,5 @@
   <include file="liquibase/131-sql-download-types.xml" />
   <include file="liquibase/132-geographic-coverage-grscicoll.xml" />
   <include file="liquibase/133-multiple-values-grscicoll.xml" />
+  <include file="liquibase/134-vocabs-grscicoll.xml" />
 </databaseChangeLog>

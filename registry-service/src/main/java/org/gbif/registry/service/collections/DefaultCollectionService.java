@@ -59,6 +59,7 @@ import javax.validation.groups.Default;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,7 +99,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
       OrganizationMapper organizationMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      Validator validator) {
+      Validator validator,
+      @Value("${api.root.url}") String apiRootUrl) {
     super(
         collectionMapper,
         addressMapper,
@@ -113,7 +115,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
         commentMapper,
         Collection.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        apiRootUrl);
     this.collectionMapper = collectionMapper;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;

@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.export;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -21,43 +23,23 @@ import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetSubtype;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import org.junit.jupiter.api.Test;
-
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-
-import lombok.SneakyThrows;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -261,8 +243,7 @@ public class CsvWriterTest {
     collection.setCatalogUrls(
         Collections.singletonList(new URI("http://cat" + consecutive + ".org")));
     collection.setCode("COL" + consecutive);
-    collection.setContentTypes(
-        Collections.singletonList(CollectionContentType.ARCHAEOLOGICA_WOODEN_ARTIFACTS));
+    collection.setContentTypes(Collections.singletonList("Archaeological"));
     collection.setCreatedBy("me");
     collection.setCreated(new Date());
     collection.setModifiedBy("me");
@@ -346,8 +327,7 @@ public class CsvWriterTest {
     assertEquals(collectionView.getCollection().getAddress().getCity(), line[5]);
     assertEquals(collectionView.getCollection().getAddress().getProvince(), line[6]);
     assertEquals(
-        CsvWriter.ListCollectionContentTypeProcessor.toString(
-            collectionView.getCollection().getContentTypes()),
+        CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getContentTypes()),
         line[7]); //
     assertEquals(collectionView.getCollection().isActive(), Boolean.parseBoolean(line[8]));
     assertEquals(
@@ -458,7 +438,7 @@ public class CsvWriterTest {
     institution.setHomepage(new URI("http://inst" + consecutive + ".org/l"));
     institution.setCode("INST" + consecutive);
     institution.setAdditionalNames(Collections.singletonList("Additional name" + consecutive));
-    institution.setDisciplines(Collections.singletonList(Discipline.SPACE));
+    institution.setDisciplines(Collections.singletonList("Archaeology"));
     institution.setConvertedToCollection(UUID.randomUUID());
     institution.setLatitude(new BigDecimal(40));
     institution.setLongitude(new BigDecimal(90));
@@ -556,8 +536,7 @@ public class CsvWriterTest {
     assertEquals(institution.getCatalogUrls().get(0).toString(), line[12]);
     assertEquals(institution.getApiUrls().get(0).toString(), line[13]);
     assertEquals(institution.getInstitutionalGovernances().get(0).name(), line[14]);
-    assertEquals(
-        CsvWriter.ListDisciplinesProcessor.toString(institution.getDisciplines()), line[15]);
+    assertEquals(CsvWriter.ListStringProcessor.toString(institution.getDisciplines()), line[15]);
     assertEquals(institution.getLatitude().toString(), line[16]);
     assertEquals(institution.getLongitude().toString(), line[17]);
     assertEquals(CsvWriter.AddressProcessor.toString(institution.getMailingAddress()), line[18]);

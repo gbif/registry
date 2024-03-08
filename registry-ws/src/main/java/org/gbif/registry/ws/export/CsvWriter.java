@@ -13,30 +13,33 @@
  */
 package org.gbif.registry.ws.export;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import lombok.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.supercsv.cellprocessor.*;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.io.CsvBeanWriter;
+import org.supercsv.io.ICsvBeanWriter;
+import org.supercsv.io.dozer.CsvDozerBeanWriter;
+import org.supercsv.prefs.CsvPreference;
+import org.supercsv.util.CsvContext;
 
 import java.io.Writer;
 import java.net.URI;
@@ -46,26 +49,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.supercsv.cellprocessor.FmtBool;
-import org.supercsv.cellprocessor.FmtDate;
-import org.supercsv.cellprocessor.FmtNumber;
-import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.ParseEnum;
-import org.supercsv.cellprocessor.ParseInt;
-import org.supercsv.cellprocessor.ParseLong;
-import org.supercsv.cellprocessor.ift.CellProcessor;
-import org.supercsv.io.CsvBeanWriter;
-import org.supercsv.io.ICsvBeanWriter;
-import org.supercsv.io.dozer.CsvDozerBeanWriter;
-import org.supercsv.prefs.CsvPreference;
-import org.supercsv.util.CsvContext;
-
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
 
 @Data
 @Builder
@@ -348,7 +331,7 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // address: extract the country
               new CleanStringProcessor(), // address: extract the city
               new CleanStringProcessor(), // address: extract the province
-              new ListCollectionContentTypeProcessor(), // contentTypes: List
+              new ListStringProcessor(), // contentTypes: List
               new Optional(new FmtBool("true", "false")), // active: boolean
               new Optional(new FmtBool("true", "false")), // personalCollection: boolean
               new DOIProcessor(), // doi: DOI
@@ -506,7 +489,7 @@ public class CsvWriter<T> {
               new ListUriProcessor(), // apiUrl: URI
               new Optional(
                   new ListInstitutionGovernanceProcessor()), // institutionalGovernance:InstitutionGovernance
-              new ListDisciplinesProcessor(), // disciplines:List
+              new ListStringProcessor(), // disciplines:List
               new Optional(new FmtNumber("###.####")), // latitude: BigDecimal
               new Optional(new FmtNumber("###.####")), // longitude: BigDecimal
               new AddressProcessor(), // mailingAddress: Address
@@ -592,21 +575,6 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext context) {
       return value != null ? CleanStringProcessor.cleanString((String) value) : "";
-    }
-  }
-
-  /** Null aware List of CollectionContentTypes processor. */
-  public static class ListCollectionContentTypeProcessor implements CellProcessor {
-
-    public static String toString(List<CollectionContentType> value) {
-      return value.stream()
-          .map(CollectionContentType::name)
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<CollectionContentType>) value) : "";
     }
   }
 
@@ -830,19 +798,6 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<OccurrenceMapping>) value) : "";
-    }
-  }
-
-  /** Null aware List<Discipline> processor. */
-  public static class ListDisciplinesProcessor implements CellProcessor {
-
-    public static String toString(List<Discipline> value) {
-      return value.stream().map(Discipline::name).collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<Discipline>) value) : "";
     }
   }
 
