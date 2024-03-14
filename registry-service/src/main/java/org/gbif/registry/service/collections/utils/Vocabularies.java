@@ -56,7 +56,7 @@ public class Vocabularies {
 
   private static void checkConcept(
       ConceptClient conceptClient, String vocabName, String conceptValue, StringJoiner errors) {
-    ConceptView conceptFound = conceptClient.get(vocabName, conceptValue, false, false);
+    ConceptView conceptFound = conceptClient.getFromLatestRelease(vocabName, conceptValue, false, false);
 
     if (conceptFound == null) {
       errors.add(conceptValue + " is not a concept of the " + vocabName + " vocabulary");

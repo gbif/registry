@@ -35,17 +35,15 @@
   </resultMap>
 
   <sql id="INSTITUTION_WRITE_FIELDS">
-    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance, disciplines,
-    latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, geographic_description,
-    taxonomic_description, number_specimens, index_herbariorum_record, logo_url, cites_permit_number,
-    created_by, modified_by, created, modified, alternative_codes, master_source, display_on_NHCPortal
+    key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance,
+    disciplines, latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, number_specimens,
+    logo_url, created_by, modified_by, created, modified, alternative_codes, master_source, display_on_NHCPortal
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
     i.key, i.code, i.name, i.description, i.type, i.active, i.email, i.phone, i.homepage, i.catalog_url, i.api_url,
     i.institutional_governance, i.disciplines, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
-    i.additional_names, i.founding_date, i.geographic_description, i.taxonomic_description, i.number_specimens,
-    i.index_herbariorum_record, i.logo_url, i.cites_permit_number, i.created_by, i.modified_by,
+    i.additional_names, i.founding_date, i.number_specimens, i.logo_url, i.created_by, i.modified_by,
     i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source,
     i.master_sync_metadata_key, i.display_on_NHCPortal, i.occurrence_count, i.type_specimen_count
   </sql>
@@ -70,12 +68,8 @@
     #{address.key,jdbcType=INTEGER},
     #{additionalNames,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{foundingDate,jdbcType=INTEGER},
-    #{geographicDescription,jdbcType=VARCHAR},
-    #{taxonomicDescription,jdbcType=VARCHAR},
     #{numberSpecimens,jdbcType=INTEGER},
-    #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     #{logoUrl,jdbcType=VARCHAR},
-    #{citesPermitNumber,jdbcType=VARCHAR},
     #{createdBy,jdbcType=VARCHAR},
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
@@ -104,12 +98,8 @@
     address_key = #{address.key,jdbcType=INTEGER},
     additional_names = #{additionalNames,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     founding_date = #{foundingDate,jdbcType=INTEGER},
-    geographic_description = #{geographicDescription,jdbcType=VARCHAR},
-    taxonomic_description = #{taxonomicDescription,jdbcType=VARCHAR},
     number_specimens = #{numberSpecimens,jdbcType=INTEGER},
-    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     logo_url = #{logoUrl,jdbcType=VARCHAR},
-    cites_permit_number = #{citesPermitNumber,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->

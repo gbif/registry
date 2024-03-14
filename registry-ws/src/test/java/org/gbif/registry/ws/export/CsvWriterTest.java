@@ -289,7 +289,6 @@ public class CsvWriterTest {
 
     collection.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
     collection.setCollectionSummary(Collections.singletonMap("count", consecutive));
-    collection.setIndexHerbariorumRecord(false);
     collection.setPersonalCollection(false);
     collection.setReplacedBy(UUID.randomUUID());
     collection.setNotes("Note" + consecutive);
@@ -372,8 +371,6 @@ public class CsvWriterTest {
     assertEquals(
         CsvWriter.ListContactProcessor.toString(collectionView.getCollection().getContactPersons()),
         line[30]);
-    assertEquals(
-        collectionView.getCollection().isIndexHerbariorumRecord(), Boolean.parseBoolean(line[31]));
     assertEquals(collectionView.getCollection().getNumberSpecimens(), Integer.parseInt(line[32]));
     assertEquals(
         CsvWriter.ListMachineTagProcessor.toString(collectionView.getCollection().getMachineTags()),
@@ -443,8 +440,6 @@ public class CsvWriterTest {
     institution.setLatitude(new BigDecimal(40));
     institution.setLongitude(new BigDecimal(90));
     institution.setTypes(Collections.singletonList(InstitutionType.BOTANICAL_GARDEN));
-    institution.setCitesPermitNumber("permit" + consecutive);
-    institution.setTaxonomicDescription("Taxa description " + consecutive);
     institution.setInstitutionalGovernances(
         Collections.singletonList(InstitutionGovernance.ACADEMIC_NON_PROFIT));
     institution.setCreatedBy("me");
@@ -452,7 +447,6 @@ public class CsvWriterTest {
     institution.setModifiedBy("me");
     institution.setModified(new Date());
     institution.setDescription("Institution description" + consecutive);
-    institution.setGeographicDescription("Geo description" + consecutive);
     institution.setHomepage(new URI("http://coll" + consecutive + ".org"));
     institution.setFoundingDate(2010);
 
@@ -494,7 +488,6 @@ public class CsvWriterTest {
     tag.setKey(consecutive);
     institution.setTags(Collections.singletonList(tag));
 
-    institution.setIndexHerbariorumRecord(false);
     institution.setReplacedBy(UUID.randomUUID());
 
     return institution;
@@ -544,12 +537,8 @@ public class CsvWriterTest {
     assertEquals(
         CsvWriter.ListStringProcessor.toString(institution.getAdditionalNames()), line[20]);
     assertEquals(Integer.toString(institution.getFoundingDate()), line[21]);
-    assertEquals(institution.getGeographicDescription(), line[22]);
-    assertEquals(institution.getTaxonomicDescription(), line[23]);
     assertEquals(Integer.toString(institution.getNumberSpecimens()), line[24]);
-    assertEquals(institution.isIndexHerbariorumRecord(), Boolean.parseBoolean(line[25]));
     assertEquals(institution.getLogoUrl().toString(), line[26]);
-    assertEquals(institution.getCitesPermitNumber(), line[27]);
     assertEquals(institution.getCreatedBy(), line[28]);
     assertEquals(institution.getModifiedBy(), line[29]);
     assertEquals(dateFormat.format(institution.getCreated()), line[30]);

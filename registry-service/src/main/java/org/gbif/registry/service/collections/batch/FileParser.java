@@ -13,15 +13,18 @@
  */
 package org.gbif.registry.service.collections.batch;
 
+import com.google.common.base.Strings;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.PreservationType;
@@ -33,76 +36,23 @@ import org.gbif.registry.service.collections.batch.model.ParserResult;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import com.google.common.base.Strings;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ACTIVE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ADDRESS;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ALT_CODES;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.API_URL;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CATALOG_URL;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CITY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CODE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.COUNTRY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.DESCRIPTION;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.EMAIL;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.HOMEPAGE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.IDENTIFIERS;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_ADDRESS;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_CITY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_COUNTRY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_POSTAL_CODE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_PROVINCE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.NAME;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.NUMBER_SPECIMENS;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.PHONE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.POSTAL_CODE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.PROVINCE;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.FAX;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.FIRST_NAME;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.LAST_NAME;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.POSITION;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.DISCIPLINES;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.FOUNDING_DATE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.GEOGRAPHIC_DESCRIPTION;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.INSTITUTIONAL_GOVERNANCE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.LATITUDE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.LOGO_URL;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.LONGITUDE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.TAXONOMIC_DESCRIPTION;
+import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.*;
+import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.*;
+import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.isContactField;
 import static org.gbif.registry.service.collections.batch.FileFields.isEntityField;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseAddress;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseAlternativeCodes;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseBigDecimal;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseBoolean;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseCollectionsSummary;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseCountry;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseEnum;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseIdentifiers;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseInteger;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseListValues;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseStringList;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUUID;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUri;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUserIds;
+import static org.gbif.registry.service.collections.batch.FileParsingUtils.*;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {
@@ -255,10 +205,6 @@ public class FileParser {
         parseInteger(extractValue(values, headersIndex.get(FOUNDING_DATE))),
         institution::setFoundingDate,
         errors);
-    institution.setGeographicDescription(
-        extractValue(values, headersIndex.get(GEOGRAPHIC_DESCRIPTION)));
-    institution.setTaxonomicDescription(
-        extractValue(values, headersIndex.get(TAXONOMIC_DESCRIPTION)));
     handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(NUMBER_SPECIMENS))),
         institution::setNumberSpecimens,

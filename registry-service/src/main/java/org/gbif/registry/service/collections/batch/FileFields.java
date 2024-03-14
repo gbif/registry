@@ -37,8 +37,6 @@ public class FileFields {
     public static final String LATITUDE = "LATITUDE";
     public static final String LONGITUDE = "LONGITUDE";
     public static final String FOUNDING_DATE = "FOUNDING_DATE";
-    public static final String GEOGRAPHIC_DESCRIPTION = "GEOGRAPHIC_DESCRIPTION";
-    public static final String TAXONOMIC_DESCRIPTION = "TAXONOMIC_DESCRIPTION";
 
     protected static final List<String> ALL_FIELDS =
         Arrays.asList(
@@ -49,9 +47,7 @@ public class FileFields {
             DISCIPLINES,
             LATITUDE,
             LONGITUDE,
-            FOUNDING_DATE,
-            GEOGRAPHIC_DESCRIPTION,
-            TAXONOMIC_DESCRIPTION);
+            FOUNDING_DATE);
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
