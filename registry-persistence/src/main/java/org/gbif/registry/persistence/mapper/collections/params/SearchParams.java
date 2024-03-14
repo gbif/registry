@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.CollectionsSortField;
 import org.gbif.api.vocabulary.Country;
@@ -20,14 +22,9 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
-
-import javax.annotation.Nullable;
-import javax.validation.constraints.Null;
-
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder

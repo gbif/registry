@@ -261,7 +261,6 @@ public class CsvWriter<T> {
               "collection.tags",
               "collection.identifiers",
               "collection.contactPersons",
-              "collection.indexHerbariorumRecord",
               "collection.numberSpecimens",
               "collection.machineTags",
               "collection.taxonomicCoverage",
@@ -308,7 +307,6 @@ public class CsvWriter<T> {
               "tags",
               "identifiers",
               "contactPersons",
-              "index_herbariorum_record",
               "number_specimens",
               "machine_tags",
               "taxonomic_coverage",
@@ -356,7 +354,6 @@ public class CsvWriter<T> {
               new ListTagsProcessor(), // tags: List
               new ListIdentifierProcessor(), // identifiers: List
               new ListContactProcessor(), // contactPersons: List
-              new Optional(new FmtBool("true", "false")), // indexHerbariorumRecord: boolean
               new Optional(new ParseInt()), // numberSpecimens: int
               new ListMachineTagProcessor(), // machineTags: List
               new CleanStringProcessor(), // taxonomicCoverage: String
@@ -405,12 +402,8 @@ public class CsvWriter<T> {
               "address",
               "additionalNames",
               "foundingDate",
-              "geographicDescription",
-              "taxonomicDescription",
               "numberSpecimens",
-              "indexHerbariorumRecord",
               "logoUrl",
-              "citesPermitNumber",
               "createdBy",
               "modifiedBy",
               "created",
@@ -450,12 +443,8 @@ public class CsvWriter<T> {
               "address",
               "additional_names",
               "founding_date",
-              "geographic_description",
-              "taxonomic_description",
               "number_specimens",
-              "index_herbariorum_record",
               "logo_url",
-              "cites_permit_number",
               "created_by",
               "modified_by",
               "created",
@@ -496,12 +485,8 @@ public class CsvWriter<T> {
               new AddressProcessor(), // address: Address
               new ListStringProcessor(), // additionalNames: List<String>
               new Optional(new ParseInt()), // foundingDate: Date
-              new CleanStringProcessor(), // geographicDescription: String
-              new CleanStringProcessor(), // taxonomicDescription: String
               new Optional(new ParseInt()), // numberSpecimens: int
-              new Optional(new FmtBool("true", "false")), // indexHerbariorumRecord: boolean
               new UriProcessor(), // logoUrl: URI
-              new CleanStringProcessor(), // citesPermitNumber: String
               null, // createdBy: String
               null, // modifiedBy: String
               new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601), // created: Date

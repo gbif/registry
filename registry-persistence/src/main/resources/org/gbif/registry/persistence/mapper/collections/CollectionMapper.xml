@@ -39,7 +39,7 @@
   <sql id="COLLECTION_WRITE_FIELDS">
     key, code, name, description, content_types, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
-    created_by, modified_by, created, modified, index_herbariorum_record, number_specimens,
+    created_by, modified_by, created, modified, number_specimens,
     taxonomic_coverage, geographic_coverage, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
     master_source, division, department, display_on_NHCPortal
   </sql>
@@ -47,7 +47,7 @@
   <sql id="COLLECTION_READ_FIELDS">
     c.key, c.code, c.name, c.description, c.content_types, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
-    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.index_herbariorum_record, c.number_specimens,
+    c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.number_specimens,
     c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
     c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal,
     c.occurrence_count, c.type_specimen_count
@@ -76,7 +76,6 @@
     #{modifiedBy,jdbcType=VARCHAR},
     now(), <!-- created -->
     now(), <!-- modified -->
-    #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     #{numberSpecimens,jdbcType=INTEGER},
     #{taxonomicCoverage,jdbcType=VARCHAR},
     #{geographicCoverage,jdbcType=VARCHAR},
@@ -112,7 +111,6 @@
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
-    index_herbariorum_record = #{indexHerbariorumRecord,jdbcType=BOOLEAN},
     number_specimens = #{numberSpecimens,jdbcType=INTEGER},
     taxonomic_coverage = #{taxonomicCoverage,jdbcType=VARCHAR},
     geographic_coverage = #{geographicCoverage,jdbcType=VARCHAR},
