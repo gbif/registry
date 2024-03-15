@@ -272,7 +272,10 @@ public class CsvWriter<T> {
               "collection.alternativeCodes",
               "collection.comments",
               "collection.occurrenceMappings",
-              "collection.replacedBy"
+              "collection.replacedBy",
+              "collection.featuredImageUrl",
+              "collection.featuredImageLicense",
+              "collection.temporalCoverage"
             })
         .header(
             new String[] {
@@ -318,7 +321,10 @@ public class CsvWriter<T> {
               "alternative_codes",
               "comments",
               "occurrence_mappings",
-              "replaced_by"
+              "replaced_by",
+              "featuredImageUrl",
+              "featuredImageLicense",
+              "temporalCoverage"
             })
         .processors(
             new CellProcessor[] {
@@ -365,7 +371,10 @@ public class CsvWriter<T> {
               new ListAlternativeCodeProcessor(), // alternativeCodes: List
               new ListCommentProcessor(), // comments: List
               new ListOccurrenceMappingsProcessor(), // occurrenceMappings: List
-              new UUIDProcessor() // replacedBy: UUID
+              new UUIDProcessor(), // replacedBy: UUID
+              new UriProcessor(), // featuredImageUrl : URI
+              new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
+              new CleanStringProcessor() // temporalCoverage: String
             })
         .forClass(CollectionView.class)
         .preference(preference)
@@ -417,7 +426,9 @@ public class CsvWriter<T> {
               "comments",
               "occurrenceMappings",
               "replacedBy",
-              "convertedToCollection"
+              "convertedToCollection",
+              "featuredImageUrl",
+              "featuredImageLicense"
             })
         .header(
             new String[] {
@@ -458,7 +469,9 @@ public class CsvWriter<T> {
               "comments",
               "occurrence_mappings",
               "replaced_by",
-              "converted_to_collection"
+              "converted_to_collection",
+              "featuredImageUrl",
+              "featuredImageLicense"
             })
         .processors(
             new CellProcessor[] {
@@ -500,7 +513,9 @@ public class CsvWriter<T> {
               new ListCommentProcessor(), // comments: List<Comment>
               new ListOccurrenceMappingsProcessor(), // occurrenceMappings: List<OccurrenceMapping>
               new UUIDProcessor(), // replacedBy: UUID
-              new UUIDProcessor() // convertedToCollection: UUID
+              new UUIDProcessor(), // convertedToCollection: UUID
+              new UriProcessor(), // featuredImageUrl : URI
+              new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
             })
         .preference(preference)
         .pager(pager)

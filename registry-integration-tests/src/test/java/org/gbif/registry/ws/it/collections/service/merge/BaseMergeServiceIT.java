@@ -14,60 +14,29 @@
 package org.gbif.registry.ws.it.collections.service.merge;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.OccurrenceMappeable;
-import org.gbif.api.model.collections.OccurrenceMapping;
-import org.gbif.api.model.collections.UserId;
-import org.gbif.api.model.registry.Commentable;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.service.collections.OccurrenceMappingService;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.IdentifierService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.MachineTagService;
-import org.gbif.api.service.registry.NodeService;
-import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.NodeType;
-import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.service.registry.*;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class BaseMergeServiceIT<
         T extends
