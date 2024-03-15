@@ -24,6 +24,7 @@ import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
@@ -125,17 +126,7 @@ public class FileParser {
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Institution institution = new Institution();
-    handleParserResult(
-        parseUUID(extractValue(values, headersIndex.get(KEY))), institution::setKey, errors);
-    institution.setCode(extractValue(values, headersIndex.get(CODE)));
-    institution.setName(extractValue(values, headersIndex.get(NAME)));
-    institution.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
-    parseStringList(extractValue(values, headersIndex.get(EMAIL))).ifPresent(institution::setEmail);
-    parseStringList(extractValue(values, headersIndex.get(PHONE))).ifPresent(institution::setPhone);
-    handleParserResult(
-        parseAlternativeCodes(extractValue(values, headersIndex.get(ALT_CODES))),
-        institution::setAlternativeCodes,
-        errors);
+    createBaseEntityFromValues(values, headersIndex, institution, errors);
     parseStringList(
             extractValue(values, headersIndex.get(FileFields.InstitutionFields.ADDITIONAL_NAMES)))
         .ifPresent(institution::setAdditionalNames);
@@ -144,10 +135,6 @@ public class FileParser {
             extractValue(values, headersIndex.get(FileFields.InstitutionFields.INSTITUTION_TYPE)),
             s -> parseEnum(s, InstitutionType::valueOf)),
         institution::setTypes,
-        errors);
-    handleParserResult(
-        parseBoolean(extractValue(values, headersIndex.get(ACTIVE))),
-        institution::setActive,
         errors);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(HOMEPAGE))),
@@ -184,34 +171,12 @@ public class FileParser {
         institution::setLongitude,
         errors);
     handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(ADDRESS)),
-            extractValue(values, headersIndex.get(CITY)),
-            extractValue(values, headersIndex.get(PROVINCE)),
-            extractValue(values, headersIndex.get(POSTAL_CODE)),
-            extractValue(values, headersIndex.get(COUNTRY))),
-        institution::setAddress,
-        errors);
-    handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(MAIL_ADDRESS)),
-            extractValue(values, headersIndex.get(MAIL_CITY)),
-            extractValue(values, headersIndex.get(MAIL_PROVINCE)),
-            extractValue(values, headersIndex.get(MAIL_POSTAL_CODE)),
-            extractValue(values, headersIndex.get(MAIL_COUNTRY))),
-        institution::setMailingAddress,
-        errors);
-    handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(FOUNDING_DATE))),
         institution::setFoundingDate,
         errors);
     handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(NUMBER_SPECIMENS))),
         institution::setNumberSpecimens,
-        errors);
-    handleParserResult(
-        parseIdentifiers(extractValue(values, headersIndex.get(IDENTIFIERS))),
-        institution::setIdentifiers,
         errors);
 
     return ParsedData.<Institution>builder().entity(institution).errors(errors).build();
@@ -221,18 +186,10 @@ public class FileParser {
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Collection collection = new Collection();
-    handleParserResult(
-        parseUUID(extractValue(values, headersIndex.get(KEY))), collection::setKey, errors);
-    collection.setCode(extractValue(values, headersIndex.get(CODE)));
-    collection.setName(extractValue(values, headersIndex.get(NAME)));
-    collection.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
+    createBaseEntityFromValues(values, headersIndex, collection, errors);
     parseStringList(
             extractValue(values, headersIndex.get(FileFields.CollectionFields.CONTENT_TYPES)))
         .ifPresent(collection::setContentTypes);
-    handleParserResult(
-        parseBoolean(extractValue(values, headersIndex.get(ACTIVE))),
-        collection::setActive,
-        errors);
     handleParserResult(
         parseBoolean(
             extractValue(
@@ -244,8 +201,6 @@ public class FileParser {
             extractValue(values, headersIndex.get(FileFields.CollectionFields.DOI))),
         collection::setDoi,
         errors);
-    parseStringList(extractValue(values, headersIndex.get(EMAIL))).ifPresent(collection::setEmail);
-    parseStringList(extractValue(values, headersIndex.get(PHONE))).ifPresent(collection::setPhone);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(HOMEPAGE))),
         collection::setHomepage,
@@ -278,28 +233,6 @@ public class FileParser {
         collection::setInstitutionKey,
         errors);
     handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(ADDRESS)),
-            extractValue(values, headersIndex.get(CITY)),
-            extractValue(values, headersIndex.get(PROVINCE)),
-            extractValue(values, headersIndex.get(POSTAL_CODE)),
-            extractValue(values, headersIndex.get(COUNTRY))),
-        collection::setAddress,
-        errors);
-    handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(MAIL_ADDRESS)),
-            extractValue(values, headersIndex.get(MAIL_CITY)),
-            extractValue(values, headersIndex.get(MAIL_PROVINCE)),
-            extractValue(values, headersIndex.get(MAIL_POSTAL_CODE)),
-            extractValue(values, headersIndex.get(MAIL_COUNTRY))),
-        collection::setMailingAddress,
-        errors);
-    handleParserResult(
-        parseIdentifiers(extractValue(values, headersIndex.get(IDENTIFIERS))),
-        collection::setIdentifiers,
-        errors);
-    handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(NUMBER_SPECIMENS))),
         collection::setNumberSpecimens,
         errors);
@@ -321,16 +254,63 @@ public class FileParser {
             extractValue(values, headersIndex.get(FileFields.CollectionFields.COLLECTION_SUMMARY))),
         collection::setCollectionSummary,
         errors);
-    handleParserResult(
-        parseAlternativeCodes(extractValue(values, headersIndex.get(ALT_CODES))),
-        collection::setAlternativeCodes,
-        errors);
     collection.setDepartment(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.DEPARTMENT)));
     collection.setDivision(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.DIVISION)));
+    collection.setTemporalCoverage(
+        extractValue(values, headersIndex.get(FileFields.CollectionFields.TEMPORAL_COVERAGE)));
 
     return ParsedData.<Collection>builder().entity(collection).errors(errors).build();
+  }
+
+  private static <T extends CollectionEntity> void createBaseEntityFromValues(
+      String[] values, Map<String, Integer> headersIndex, T entity, List<String> errors) {
+    handleParserResult(
+        parseUUID(extractValue(values, headersIndex.get(KEY))), entity::setKey, errors);
+    entity.setCode(extractValue(values, headersIndex.get(CODE)));
+    entity.setName(extractValue(values, headersIndex.get(NAME)));
+    entity.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
+    parseStringList(extractValue(values, headersIndex.get(EMAIL))).ifPresent(entity::setEmail);
+    parseStringList(extractValue(values, headersIndex.get(PHONE))).ifPresent(entity::setPhone);
+    handleParserResult(
+        parseAlternativeCodes(extractValue(values, headersIndex.get(ALT_CODES))),
+        entity::setAlternativeCodes,
+        errors);
+    handleParserResult(
+        parseBoolean(extractValue(values, headersIndex.get(ACTIVE))), entity::setActive, errors);
+    handleParserResult(
+        parseAddress(
+            extractValue(values, headersIndex.get(ADDRESS)),
+            extractValue(values, headersIndex.get(CITY)),
+            extractValue(values, headersIndex.get(PROVINCE)),
+            extractValue(values, headersIndex.get(POSTAL_CODE)),
+            extractValue(values, headersIndex.get(COUNTRY))),
+        entity::setAddress,
+        errors);
+    handleParserResult(
+        parseAddress(
+            extractValue(values, headersIndex.get(MAIL_ADDRESS)),
+            extractValue(values, headersIndex.get(MAIL_CITY)),
+            extractValue(values, headersIndex.get(MAIL_PROVINCE)),
+            extractValue(values, headersIndex.get(MAIL_POSTAL_CODE)),
+            extractValue(values, headersIndex.get(MAIL_COUNTRY))),
+        entity::setMailingAddress,
+        errors);
+    handleParserResult(
+        parseIdentifiers(extractValue(values, headersIndex.get(IDENTIFIERS))),
+        entity::setIdentifiers,
+        errors);
+    handleParserResult(
+        parseUri(extractValue(values, headersIndex.get(FEATURED_IMAGE_URL))),
+        entity::setFeaturedImageUrl,
+        errors);
+    handleParserResult(
+        parseEnum(
+            extractValue(values, headersIndex.get(FEATURED_IMAGE_LICENSE)),
+            v -> License.fromString(v).orElse(null)),
+        entity::setFeaturedImageLicense,
+        errors);
   }
 
   static String extractValue(String[] values, Integer index) {

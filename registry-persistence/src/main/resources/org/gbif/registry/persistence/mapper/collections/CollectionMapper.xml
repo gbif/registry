@@ -41,7 +41,7 @@
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, number_specimens,
     taxonomic_coverage, geographic_coverage, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
-    master_source, division, department, display_on_NHCPortal
+    master_source, division, department, display_on_NHCPortal, featured_image_url, featured_image_license, temporal_coverage
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
@@ -50,7 +50,7 @@
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.number_specimens,
     c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
     c.replaced_by, c.master_source, c.master_sync_metadata_key, c.division, c.department, c.display_on_NHCPortal,
-    c.occurrence_count, c.type_specimen_count
+    c.occurrence_count, c.type_specimen_count, c.featured_image_url, c.featured_image_license, c.temporal_coverage
   </sql>
 
   <sql id="COLLECTION_PARAMS_CREATE">
@@ -87,7 +87,10 @@
     #{masterSource,jdbcType=OTHER},
     #{division,jdbcType=VARCHAR},
     #{department,jdbcType=VARCHAR},
-    #{displayOnNHCPortal,jdbcType=BOOLEAN}
+    #{displayOnNHCPortal,jdbcType=BOOLEAN},
+    #{featuredImageUrl,jdbcType=VARCHAR},
+    #{featuredImageLicense,jdbcType=OTHER},
+    #{temporalCoverage,jdbcType=VARCHAR}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -121,7 +124,10 @@
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
     division = #{division,jdbcType=VARCHAR},
     department = #{department,jdbcType=VARCHAR},
-    display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+    display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN},
+    featured_image_url = #{featuredImageUrl,jdbcType=VARCHAR},
+    featured_image_license = #{featuredImageLicense,jdbcType=OTHER},
+    temporal_coverage = #{temporalCoverage,jdbcType=VARCHAR}
     <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 

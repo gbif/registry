@@ -37,7 +37,8 @@
   <sql id="INSTITUTION_WRITE_FIELDS">
     key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance,
     disciplines, latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, number_specimens,
-    logo_url, created_by, modified_by, created, modified, alternative_codes, master_source, display_on_NHCPortal
+    logo_url, created_by, modified_by, created, modified, alternative_codes, master_source, display_on_NHCPortal,
+    featured_image_url, featured_image_license
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
@@ -45,7 +46,8 @@
     i.institutional_governance, i.disciplines, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.number_specimens, i.logo_url, i.created_by, i.modified_by,
     i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source,
-    i.master_sync_metadata_key, i.display_on_NHCPortal, i.occurrence_count, i.type_specimen_count
+    i.master_sync_metadata_key, i.display_on_NHCPortal, i.occurrence_count, i.type_specimen_count,
+    i.featured_image_url, i.featured_image_license
   </sql>
 
   <sql id="INSTITUTION_PARAMS_CREATE">
@@ -76,7 +78,9 @@
     now(), <!-- modified -->
     #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
     #{masterSource,jdbcType=OTHER},
-    #{displayOnNHCPortal,jdbcType=BOOLEAN}
+    #{displayOnNHCPortal,jdbcType=BOOLEAN},
+    #{featuredImageUrl,jdbcType=VARCHAR},
+    #{featuredImageLicense,jdbcType=OTHER}
   </sql>
 
   <sql id="INSTITUTION_PARAMS_UPDATE">
@@ -104,7 +108,9 @@
     modified = now(), <!-- modified -->
     deleted = null, <!-- if we're updating it can't be deleted -->
     alternative_codes = #{alternativeCodes,jdbcType=OTHER,typeHandler=AlternativeCodesTypeHandler}::hstore,
-    display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN}
+    display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN},
+    featured_image_url = #{featuredImageUrl,jdbcType=VARCHAR},
+    featured_image_license = #{featuredImageLicense,jdbcType=OTHER}
     <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 

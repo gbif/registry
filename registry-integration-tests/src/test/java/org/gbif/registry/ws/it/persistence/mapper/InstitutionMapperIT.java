@@ -19,6 +19,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
@@ -95,6 +96,8 @@ public class InstitutionMapperIT extends BaseItTest {
     institution.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode("CODE2", "another code")));
     institution.setDisplayOnNHCPortal(true);
+    institution.setFeaturedImageUrl(URI.create("http://test.com"));
+    institution.setFeaturedImageLicense(License.CC0_1_0);
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");

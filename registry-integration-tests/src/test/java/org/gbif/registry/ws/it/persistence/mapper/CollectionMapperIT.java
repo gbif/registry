@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
@@ -39,6 +40,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -99,7 +101,6 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setModifiedBy("test");
     collection.setEmail(Collections.singletonList("test@test.com"));
     collection.setPhone(Collections.singletonList("1234"));
-    collection.setIndexHerbariorumRecord(true);
     collection.setNumberSpecimens(12);
     collection.setTaxonomicCoverage("taxonomic coverage");
     collection.setGeographicCoverage("geography");
@@ -112,6 +113,9 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setDivision("division");
     collection.setDepartment("department");
     collection.setDisplayOnNHCPortal(true);
+    collection.setFeaturedImageUrl(URI.create("http://test.com"));
+    collection.setFeaturedImageLicense(License.CC0_1_0);
+    collection.setTemporalCoverage("temporal coverage");
 
     List<PreservationType> preservationTypes = new ArrayList<>();
     preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);

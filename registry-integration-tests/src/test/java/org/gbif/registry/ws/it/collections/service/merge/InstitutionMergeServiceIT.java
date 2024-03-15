@@ -25,18 +25,13 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.UUID;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link InstitutionMergeService}. */
 public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
@@ -166,7 +161,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     toReplace.setDescription("description");
     toReplace.getEmail().add("a@a.com");
     toReplace.getEmail().add("b@a.com");
-    toReplace.setGeographicDescription("replaced geo");
     return toReplace;
   }
 
@@ -176,7 +170,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
     replacement.setCode("c2");
     replacement.setName("n2");
     replacement.getEmail().add("a@a.com");
-    replacement.setGeographicDescription("geo");
     return replacement;
   }
 
@@ -184,8 +177,6 @@ public class InstitutionMergeServiceIT extends BaseMergeServiceIT<Institution> {
   void extraAsserts(Institution replaced, Institution replacement, Institution replacementUpdated) {
     assertEquals(replacementUpdated.getKey(), replaced.getReplacedBy());
     assertEquals(2, replacementUpdated.getEmail().size());
-    assertEquals(
-        replacement.getGeographicDescription(), replacementUpdated.getGeographicDescription());
     assertEquals(replaced.getDescription(), replacementUpdated.getDescription());
   }
 }
