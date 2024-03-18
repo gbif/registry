@@ -97,7 +97,7 @@
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>0.194.0</gbif-occurrence.version>
+    <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
