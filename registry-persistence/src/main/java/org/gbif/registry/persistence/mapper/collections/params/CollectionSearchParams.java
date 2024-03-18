@@ -18,7 +18,6 @@ import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
