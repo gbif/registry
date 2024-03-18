@@ -90,14 +90,14 @@
     <gbif-common-ws.version>1.26</gbif-common-ws.version>
     <gbif-directory.version>1.12</gbif-directory.version>
     <gbif-doi.version>2.17</gbif-doi.version>
-    <gbif-download-query-tools.version>1.50.1</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.51.0</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.1</gbif-metadata-profile.version>
     <gbif-metrics.version>1.2</gbif-metrics.version>
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>0.194.0</gbif-occurrence.version>
+    <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
     <gbif-vocabulary.version>1.0.3</gbif-vocabulary.version>
 
     <!-- Third party -->

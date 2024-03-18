@@ -22,8 +22,6 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
-import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.persistence.mapper.params.Count;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;

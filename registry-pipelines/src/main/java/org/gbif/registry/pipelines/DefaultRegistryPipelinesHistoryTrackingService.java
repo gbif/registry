@@ -14,7 +14,6 @@
 package org.gbif.registry.pipelines;
 
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.pipelines.*;
 import org.gbif.api.model.pipelines.InterpretationType.RecordType;
