@@ -1,2 +1,13 @@
-The GBIF dataset "{title}" has the following attributes: key: {key}, decades: {decades}, doi: {doi}, keywords: {keywords}, license: {license}, logoUrl: {logoUrl}, publishing country: {publishingCountry}, record count: {recordCount}, dataset type: {type}, dataset subtype: {subtype}, occurrence records count: {occurrenceCount}, literature records count: {literatureCount}, publishing organization: "{publishingOrganization[title]}" which is endorsed by the GBIF node "{publishingOrganization[endorsingNode][title]}", hosting organization: "{hostingOrganization[title]}" which is endorsed by the GBIF node "{hostingOrganization[endorsingNode][title]}", description: {description}
+The GBIF dataset "{title}" has the following attributes:
+key: {key}, decades: {decades}, doi: {doi},
+keywords: {keywords}, license: {license},
+logoUrl: {logoUrl}, publishing country: {publishingCountry},
+record count: {recordCount}, dataset type: {type},
+dataset subtype: {subtype}, occurrence records count: {occurrenceCount},
+literature records count: {literatureCount},
+publishing organization: "{publishingOrganization[title]}"
+   which is endorsed by the GBIF node "{publishingOrganization[endorsingNode][title]}",
+hosting organization: "{hostingOrganization[title]}"
+   which is endorsed by the GBIF node "{hostingOrganization[endorsingNode][title]}",
+description: {description}
 

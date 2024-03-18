@@ -1,1 +1,3 @@
-{"query": "{datasetSearch(limit: 10, offset: 0) { results { key decades description doi hostingOrganizationKey hostingOrganizationTitle keywords license logoUrl publishingCountry publishingOrganizationKey publishingOrganizationTitle recordCount title type subtype occurrenceCount literatureCount publishingOrganization { title description abbreviation endorsingNode { title }} hostingOrganization { title description abbreviation endorsingNode { title }}}}}"}
+{
+  "query": "{datasetSearch(limit: 10, offset: 0) { results { key decades description doi hostingOrganizationKey hostingOrganizationTitle keywords license logoUrl publishingCountry publishingOrganizationKey publishingOrganizationTitle recordCount title type subtype occurrenceCount literatureCount publishingOrganization { title description abbreviation endorsingNode { title }} hostingOrganization { title description abbreviation endorsingNode { title }}}}}",
+}
