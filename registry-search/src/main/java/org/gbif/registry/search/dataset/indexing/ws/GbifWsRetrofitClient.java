@@ -19,6 +19,7 @@ import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -47,8 +48,6 @@ import org.springframework.stereotype.Component;
 import lombok.SneakyThrows;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import static org.gbif.registry.search.dataset.indexing.ws.SearchParameterProvider.getParameterFromFacetedRequest;
 
 /** Retrofit {@link GbifApiService} client. */
 @Component
@@ -187,7 +186,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   public SearchResponse<NameUsage, NameUsageSearchParameter> speciesSearch(
       NameUsageSearchRequest searchRequest) {
     return syncCallWithResponse(
-            gbifApiService.speciesSearch(getParameterFromFacetedRequest(searchRequest)))
+            gbifApiService.speciesSearch(SearchParameterProvider.getParameterFromFacetedRequest(searchRequest)))
         .body();
   }
 
@@ -195,7 +194,7 @@ public class GbifWsRetrofitClient implements GbifWsClient {
   public SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
       OccurrenceSearchRequest searchRequest) {
     return syncCallWithResponse(
-            gbifApiService.occurrenceSearch(getParameterFromFacetedRequest(searchRequest)))
+            gbifApiService.occurrenceSearch(SearchParameterProvider.getParameterFromFacetedRequest(searchRequest)))
         .body();
   }
 

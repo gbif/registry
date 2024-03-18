@@ -247,7 +247,7 @@ public class DatasetJsonConverter {
     // Contribution of occurrence records
     dataset.put(
         "occurrencePercentage",
-        new Double(
+         Double.valueOf(
             BigDecimal.valueOf(occurrencePercentage)
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
@@ -267,7 +267,7 @@ public class DatasetJsonConverter {
     // Contribution of NameUsages
     dataset.put(
         "nameUsagesPercentage",
-        new Double(
+        Double.valueOf(
             BigDecimal.valueOf(nameUsagesPercentage)
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
@@ -275,7 +275,7 @@ public class DatasetJsonConverter {
     // How much a dataset contributes in terms of records to GBIF data
     dataset.put(
         "dataScore",
-        new Double(
+        Double.valueOf(
             BigDecimal.valueOf((1 - occurrencePercentage) + (1 - nameUsagesPercentage))
                 .setScale(scale, RoundingMode.HALF_UP)
                 .doubleValue()));
@@ -290,7 +290,7 @@ public class DatasetJsonConverter {
         .ifPresent(
             p ->
                 dataset.put(
-                    "maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKOWN.toString()));
+                    "maintenanceUpdateFrequency", MaintenanceUpdateFrequency.UNKNOWN.toString()));
   }
 
   private void enumTransforms(ObjectNode dataset) {
