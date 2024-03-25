@@ -38,15 +38,39 @@ public class SearchTestConfiguration {
       InstallationService installationService,
       OrganizationService organizationService,
       DatasetService datasetService,
-      NetworkService networkService) {
+      NetworkService networkService,
+      OccurrenceWsSearchClient occurrenceWsSearchClient,
+      SpeciesResourceClient speciesResourceClient,
+      CubeWsClient cubeWsClient,
+      DatasetMetricsClient datasetMetricsClient) {
       return new GbifWsWrapperClient(installationService,
                                       organizationService,
                                       datasetService,
                                       networkService,
-                                      Mockito.mock(OccurrenceWsSearchClient.class),
-                                      Mockito.mock(SpeciesResourceClient.class),
-                                      Mockito.mock(CubeWsClient.class),
-                                      Mockito.mock(DatasetMetricsClient.class));
+                                      occurrenceWsSearchClient,
+                                      speciesResourceClient,
+                                      cubeWsClient,
+                                      datasetMetricsClient);
+  }
+
+  @Bean
+  public OccurrenceWsSearchClient occurrenceWsSearchClient() {
+    return Mockito.mock(OccurrenceWsSearchClient.class);
+  }
+
+  @Bean
+  public SpeciesResourceClient speciesResourceClient() {
+    return Mockito.mock(SpeciesResourceClient.class);
+  }
+
+  @Bean
+  public CubeWsClient cubeWsClient() {
+    return Mockito.mock(CubeWsClient.class);
+  }
+
+  @Bean
+  public DatasetMetricsClient datasetMetricsClient() {
+    return Mockito.mock(DatasetMetricsClient.class);
   }
 
 }
