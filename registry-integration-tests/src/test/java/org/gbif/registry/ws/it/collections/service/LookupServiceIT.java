@@ -13,8 +13,8 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
-import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.lookup.*;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionService;
@@ -27,14 +27,15 @@ import org.gbif.api.vocabulary.*;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.lookup.LookupService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.*;

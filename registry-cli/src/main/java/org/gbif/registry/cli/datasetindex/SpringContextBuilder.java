@@ -26,7 +26,7 @@ import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPers
 import org.gbif.registry.search.dataset.indexing.es.EsClient;
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifApiServiceConfig;
-import org.gbif.registry.search.dataset.indexing.ws.GbifWsRetrofitClient;
+import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
 import org.gbif.registry.search.dataset.indexing.ws.JacksonObjectMapper;
 import org.gbif.registry.ws.client.DatasetClient;
 import org.gbif.registry.ws.client.InstallationClient;
@@ -93,7 +93,7 @@ public class SpringContextBuilder {
         "DatasetIndexConfiguration", DatasetIndexConfiguration.class, () -> configuration);
     ctx.register(DatasetBatchIndexer.class);
     ctx.register(GbifApiServiceConfig.class);
-    ctx.register(GbifWsRetrofitClient.class);
+    ctx.register(GbifWsWrapperClient.class);
     ctx.register(JacksonObjectMapper.class);
     ctx.register(EsConfiguration.class);
     ctx.register(EsClient.class);

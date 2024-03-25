@@ -98,6 +98,7 @@
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
+    <checklistbank.version>2.125</checklistbank.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -360,6 +361,11 @@
         <groupId>org.gbif.occurrence</groupId>
         <artifactId>occurrence-ws-client</artifactId>
         <version>${gbif-occurrence.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.checklistbank</groupId>
+        <artifactId>checklistbank-ws-client</artifactId>
+        <version>${checklistbank.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

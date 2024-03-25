@@ -18,6 +18,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -33,8 +34,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import lombok.experimental.UtilityClass;
-
-import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 
 import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.DEFAULT_SEARCH_PARAM_VALUE;
 import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.PARAM_FACET;

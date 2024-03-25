@@ -14,12 +14,11 @@
 package org.gbif.registry.search.dataset.indexing.ws;
 
 import org.gbif.api.model.checklistbank.DatasetMetrics;
-import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
 import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
+import org.gbif.api.model.checklistbank.search.NameUsageSearchResult;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
-import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchResponse;
 import org.gbif.api.model.occurrence.Occurrence;
 import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
@@ -32,11 +31,13 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
+import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
+import org.gbif.metrics.ws.client.CubeWsClient;
+import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.cache2k.Cache;
@@ -44,15 +45,12 @@ import org.cache2k.Cache2kBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
-import lombok.SneakyThrows;
-import retrofit2.Call;
-import retrofit2.Response;
+import org.springframework.util.LinkedMultiValueMap;
 
 /** Retrofit {@link GbifApiService} client. */
 @Component
 @Lazy
-public class GbifWsRetrofitClient implements GbifWsClient {
+public class GbifWsWrapperClient implements GbifWsClient {
 
   // Uses a cache for installations to avoid too many external calls
   Cache<String, Installation> installationCache =
@@ -72,12 +70,15 @@ public class GbifWsRetrofitClient implements GbifWsClient {
           .loader(this::loadOrganization)
           .build();
 
-  private final GbifApiService gbifApiService;
-
   private final InstallationService installationService;
   private final OrganizationService organizationService;
   private final DatasetService datasetService;
   private final NetworkService networkService;
+  private final OccurrenceWsSearchClient occurrenceWsSearchClient;
+  private final SpeciesResourceClient speciesResourceClient;
+  private final CubeWsClient cubeWsClient;
+
+  private final DatasetMetricsClient datasetMetricsClient;
 
   /**
    * Factory method, only need the api base url.
@@ -85,24 +86,23 @@ public class GbifWsRetrofitClient implements GbifWsClient {
    * @param apiBaseUrl GBIF Api base url, for example: https://api.gbif-dev.orf/v1/ .
    */
   @Autowired
-  public GbifWsRetrofitClient(
-      GbifApiService gbifApiService,
+  public GbifWsWrapperClient(
       InstallationService installationService,
       OrganizationService organizationService,
       DatasetService datasetService,
-      NetworkService networkService) {
-    this.gbifApiService = gbifApiService;
+      NetworkService networkService,
+      OccurrenceWsSearchClient occurrenceWsSearchClient,
+      SpeciesResourceClient speciesResourceClient,
+      CubeWsClient cubeWsClient,
+      DatasetMetricsClient datasetMetricsClient) {
     this.installationService = installationService;
     this.organizationService = organizationService;
     this.datasetService = datasetService;
     this.networkService = networkService;
-  }
-
-  private Map<String, String> toQueryMap(PagingRequest pagingRequest) {
-    Map<String, String> params = new HashMap<>();
-    params.put("offset", Long.toString(pagingRequest.getOffset()));
-    params.put("limit", Long.toString(pagingRequest.getLimit()));
-    return params;
+    this.occurrenceWsSearchClient = occurrenceWsSearchClient;
+    this.speciesResourceClient = speciesResourceClient;
+    this.cubeWsClient = cubeWsClient;
+    this.datasetMetricsClient = datasetMetricsClient;
   }
 
   @Override
@@ -169,50 +169,35 @@ public class GbifWsRetrofitClient implements GbifWsClient {
 
   @Override
   public Long getDatasetRecordCount(String datasetKey) {
-    return syncCallWithResponse(gbifApiService.getDatasetRecordCount(datasetKey)).body();
+    LinkedMultiValueMap<String,String> params = new LinkedMultiValueMap<>();
+    params.add("datasetKey", datasetKey);
+    return cubeWsClient.get(params);
   }
 
   @Override
   public Long getOccurrenceRecordCount() {
-    return syncCallWithResponse(gbifApiService.getOccurrenceRecordCount()).body();
+    return cubeWsClient.get(new LinkedMultiValueMap<>());
   }
 
   @Override
   public DatasetMetrics getDatasetSpeciesMetrics(String datasetKey) {
-    return syncCallWithResponse(gbifApiService.getDatasetSpeciesMetrics(datasetKey)).body();
+    return datasetMetricsClient.get(UUID.fromString(datasetKey));
   }
 
   @Override
-  public SearchResponse<NameUsage, NameUsageSearchParameter> speciesSearch(
+  public SearchResponse<NameUsageSearchResult, NameUsageSearchParameter> speciesSearch(
       NameUsageSearchRequest searchRequest) {
-    return syncCallWithResponse(
-            gbifApiService.speciesSearch(SearchParameterProvider.getParameterFromFacetedRequest(searchRequest)))
-        .body();
+    return speciesResourceClient.search(searchRequest);
   }
 
   @Override
   public SearchResponse<Occurrence, OccurrenceSearchParameter> occurrenceSearch(
       OccurrenceSearchRequest searchRequest) {
-    return syncCallWithResponse(
-            gbifApiService.occurrenceSearch(SearchParameterProvider.getParameterFromFacetedRequest(searchRequest)))
-        .body();
+    return occurrenceWsSearchClient.search(searchRequest);
   }
 
   @Override
   public List<Network> getNetworks(UUID datasetKey) {
     return datasetService.listNetworks(datasetKey);
-  }
-
-  /**
-   * Performs a synchronous call to {@link Call} instance.
-   *
-   * @param call to be executed
-   * @param <T> content of the response object
-   * @return {@link Response} with content, throws a {@link RuntimeException} when IOException was
-   *     thrown from execute method
-   */
-  @SneakyThrows
-  private static <T> Response<T> syncCallWithResponse(Call<T> call) {
-    return call.execute();
   }
 }
