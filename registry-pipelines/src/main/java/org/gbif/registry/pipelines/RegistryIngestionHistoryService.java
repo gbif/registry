@@ -18,9 +18,10 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.IngestionProcess;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.UUID;
+
+import javax.annotation.Nullable;
 
 public interface RegistryIngestionHistoryService {
 

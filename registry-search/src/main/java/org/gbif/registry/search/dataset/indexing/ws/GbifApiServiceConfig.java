@@ -13,7 +13,12 @@
  */
 package org.gbif.registry.search.dataset.indexing.ws;
 
-import java.util.concurrent.TimeUnit;
+
+import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
+import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
+import org.gbif.metrics.ws.client.CubeWsClient;
+import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
+import org.gbif.ws.client.ClientBuilder;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,31 +27,47 @@ import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Configuration
 public class GbifApiServiceConfig {
 
   @Bean
-  public GbifApiService gbifApiService(
+  public OccurrenceWsSearchClient occurrenceWsSearchClient(
       @Value("${api.root.url}") String apiBaseUrl,
       @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new ClientBuilder()
+            .withObjectMapper(objectMapper)
+            .withUrl(apiBaseUrl)
+            .build(OccurrenceWsSearchClient.class);
+  }
 
-    OkHttpClient okHttpClient =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(2, TimeUnit.MINUTES)
-            .readTimeout(5, TimeUnit.MINUTES)
-            .writeTimeout(1, TimeUnit.MINUTES)
-            .build();
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .baseUrl(apiBaseUrl)
-            .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-            .client(okHttpClient)
-            .build();
-    return retrofit.create(GbifApiService.class);
+  @Bean
+  public CubeWsClient cubeWsClient(
+    @Value("${api.root.url}") String apiBaseUrl,
+    @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new ClientBuilder()
+      .withObjectMapper(objectMapper)
+      .withUrl(apiBaseUrl)
+      .build(CubeWsClient.class);
+  }
+
+  @Bean
+  public DatasetMetricsClient datasetMetricsClient(
+    @Value("${api.root.url}") String apiBaseUrl,
+    @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new ClientBuilder()
+      .withObjectMapper(objectMapper)
+      .withUrl(apiBaseUrl)
+      .build(DatasetMetricsClient.class);
+  }
+
+  @Bean
+  public SpeciesResourceClient speciesResourceClient(
+    @Value("${api.root.url}") String apiBaseUrl,
+    @Qualifier("apiMapper") ObjectMapper objectMapper) {
+    return new ClientBuilder()
+      .withObjectMapper(objectMapper)
+      .withUrl(apiBaseUrl)
+      .build(SpeciesResourceClient.class);
   }
 }

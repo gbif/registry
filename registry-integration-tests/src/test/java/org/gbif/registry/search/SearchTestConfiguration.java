@@ -13,28 +13,21 @@
  */
 package org.gbif.registry.search;
 
-import org.gbif.api.model.checklistbank.DatasetMetrics;
-import org.gbif.api.model.checklistbank.NameUsage;
-import org.gbif.api.model.checklistbank.search.NameUsageSearchParameter;
-import org.gbif.api.model.common.search.SearchResponse;
-import org.gbif.api.model.occurrence.Occurrence;
-import org.gbif.api.model.occurrence.search.OccurrenceSearchParameter;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.registry.search.dataset.indexing.ws.GbifApiService;
+import org.gbif.checklistbank.ws.client.DatasetMetricsClient;
+import org.gbif.checklistbank.ws.client.SpeciesResourceClient;
+import org.gbif.metrics.ws.client.CubeWsClient;
+import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
-import org.gbif.registry.search.dataset.indexing.ws.GbifWsRetrofitClient;
+import org.gbif.registry.search.dataset.indexing.ws.GbifWsWrapperClient;
 
-import java.util.Map;
-
+import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
-import retrofit2.Call;
-import retrofit2.mock.Calls;
 
 @Configuration(proxyBeanMethods = false)
 public class SearchTestConfiguration {
@@ -46,38 +39,14 @@ public class SearchTestConfiguration {
       OrganizationService organizationService,
       DatasetService datasetService,
       NetworkService networkService) {
-    return new GbifWsRetrofitClient(
-        gbifApiService(), installationService, organizationService, datasetService, networkService);
+      return new GbifWsWrapperClient(installationService,
+                                      organizationService,
+                                      datasetService,
+                                      networkService,
+                                      Mockito.mock(OccurrenceWsSearchClient.class),
+                                      Mockito.mock(SpeciesResourceClient.class),
+                                      Mockito.mock(CubeWsClient.class),
+                                      Mockito.mock(DatasetMetricsClient.class));
   }
 
-  public GbifApiService gbifApiService() {
-    return new GbifApiService() {
-      @Override
-      public Call<Long> getDatasetRecordCount(String datasetKey) {
-        return Calls.response(1L);
-      }
-
-      @Override
-      public Call<Long> getOccurrenceRecordCount() {
-        return Calls.response(1L);
-      }
-
-      @Override
-      public Call<DatasetMetrics> getDatasetSpeciesMetrics(String datasetKey) {
-        return Calls.response(new DatasetMetrics());
-      }
-
-      @Override
-      public Call<SearchResponse<NameUsage, NameUsageSearchParameter>> speciesSearch(
-          Map<String, Object> options) {
-        return Calls.response(new SearchResponse<>());
-      }
-
-      @Override
-      public Call<SearchResponse<Occurrence, OccurrenceSearchParameter>> occurrenceSearch(
-          Map<String, Object> options) {
-        return Calls.response(new SearchResponse<>());
-      }
-    };
-  }
 }
