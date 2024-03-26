@@ -48,10 +48,6 @@
       <artifactId>gbif-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.metrics</groupId>
-      <artifactId>metrics-ws-client</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-ws-client</artifactId>
     </dependency>

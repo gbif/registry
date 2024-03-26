@@ -63,6 +63,8 @@ import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.util.LinkedMultiValueMap;
+
 import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
 
 @Component
@@ -190,7 +192,7 @@ public class IssueCreator {
       List<String> oldIds) {
 
     long occCount =
-        cubeWsClient.count(Collections.singletonMap("datasetKey", datasetKey.toString()));
+        cubeWsClient.get(new LinkedMultiValueMap<>(Collections.singletonMap("datasetKey", Collections.singletonList(datasetKey.toString()))));
 
     StringBuilder body = new StringBuilder();
     body.append(intro)

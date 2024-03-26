@@ -55,10 +55,6 @@
       <artifactId>registry-service</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.gbif.metrics</groupId>
-      <artifactId>metrics-ws-client</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.gbif</groupId>
       <artifactId>gbif-metadata-profile-eml</artifactId>
     </dependency>
