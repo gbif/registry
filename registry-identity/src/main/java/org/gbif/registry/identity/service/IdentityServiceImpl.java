@@ -208,7 +208,12 @@ public class IdentityServiceImpl extends BaseIdentityAccessService implements Id
   @Override
   @Nullable
   public GbifUser authenticate(String username, String password) {
-    if (Strings.isNullOrEmpty(username) || password == null) {
+    if (Strings.isNullOrEmpty(username) || Strings.isNullOrEmpty(password)) {
+      return null;
+    }
+
+    // Avoid DOS route with an attacker trying extremely long passwords.
+    if (!PASSWORD_LENGTH_RANGE.contains(password.length())) {
       return null;
     }
 

@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>3.96.0-SNAPSHOT</version>
+    <version>3.96.2-SNAPSHOT</version>
   </parent>
   <artifactId>registry-ws</artifactId>
   <name>GBIF Registry Webservices</name>
@@ -12,6 +12,10 @@
   <properties>
     <main.basedir>${project.parent.basedir}</main.basedir>
     <start-class>org.gbif.registry.ws.RegistryWsApplication</start-class>
+
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <dependencies>
