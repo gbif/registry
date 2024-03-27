@@ -26,7 +26,6 @@ import org.gbif.occurrence.ws.client.OccurrenceWsSearchClient;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
@@ -55,15 +54,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.util.LinkedMultiValueMap;
 
 import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
 
@@ -105,7 +102,6 @@ public class IssueCreator {
   private final String apiRootUrl;
   private final CubeWsClient cubeWsClient;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
-  private final PipelineProcessMapper pipelineProcessMapper;
   private final IssuesConfig issuesConfig;
 
   @Autowired
@@ -113,15 +109,12 @@ public class IssueCreator {
       DatasetMapper datasetMapper,
       OrganizationMapper organizationMapper,
       InstallationMapper installationMapper,
-      PipelineProcessMapper pipelineProcessMapper,
       IssuesConfig issuesConfig,
-      ObjectMapper objectMapper,
       @Value("${pipelines.registryUrl}") String registryUrl,
       @Value("${api.root.url}") String apiRootUrl) {
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;
     this.installationMapper = installationMapper;
-    this.pipelineProcessMapper = pipelineProcessMapper;
     this.issuesConfig = issuesConfig;
     this.registryUrl = registryUrl;
     this.apiRootUrl = apiRootUrl;
