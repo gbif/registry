@@ -13,38 +13,40 @@
  */
 package org.gbif.registry.pipelines.issues;
 
+import feign.Feign;
+import feign.codec.Encoder;
+import feign.form.spring.SpringFormEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-
-/** Lightweight client for the Github API. */
+/** Lightweight client for the GitHub API. */
 @Configuration
 public class GithubClientConfig {
 
   @Bean
-  public GithubApiService githubApiService(IssuesConfig config) {
-    ObjectMapper mapper =
-        new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  public Encoder feignFormEncoder() {
+    return new SpringFormEncoder(new SpringEncoder(messageConverters()));
+  }
 
-    OkHttpClient okHttpClient =
-        new OkHttpClient.Builder()
-            .cache(null)
-            .addInterceptor(
-                new BasicAuthInterceptor(config.getGithubUser(), config.getGithubPassword()))
-            .build();
+  @Bean
+  public GithubApiClient githubApiClient(IssuesConfig config) {
 
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .client(okHttpClient)
-            .baseUrl(config.getGithubWsUrl())
-            .addConverterFactory(JacksonConverterFactory.create(mapper))
-            .build();
-    return retrofit.create(GithubApiService.class);
+    return Feign.builder()
+        .encoder(feignFormEncoder())
+        .target(GithubApiClient.class, config.getGithubWsUrl());
+  }
+
+  @Bean
+  public ObjectFactory<HttpMessageConverters> messageConverters() {
+    List<HttpMessageConverter<?>> converters = new ArrayList<>();
+    converters.add(new MappingJackson2HttpMessageConverter());
+    return () -> new HttpMessageConverters(converters);
   }
 }

@@ -20,30 +20,27 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Builder;
 import lombok.Data;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
 
-public interface GithubApiService {
-  @POST("issues")
-  Call<Void> createIssue(@Body Issue issue);
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
 
-  @GET("issues")
-  Call<List<IssueResult>> listIssues(
-      @Query("labels") List<String> labels,
-      @Query("state") String state,
-      @Query("page") int page,
-      @Query("per_page") int perPage);
+@FeignClient(name = "githubApiClient", configuration = GithubClientConfig.class)
+public interface GithubApiClient {
+  @PostMapping("/issues")
+  void createIssue(@RequestBody Issue issue);
 
-  @PATCH("issues/{id}")
-  Call<Void> updateIssueLabels(@Path("id") long id, @Body IssueLabels issueLabels);
+  @GetMapping("/issues")
+  List<IssueResult> listIssues(
+      @RequestParam("labels") List<String> labels,
+      @RequestParam("state") String state,
+      @RequestParam("page") int page,
+      @RequestParam("per_page") int perPage);
 
-  @POST("issues/{id}/comments")
-  Call<Void> addIssueComment(@Path("id") long id, @Body IssueComment issueComment);
+  @PatchMapping("/issues/{id}")
+  void updateIssueLabels(@PathVariable("id") long id, @RequestBody IssueLabels issueLabels);
+
+  @PostMapping("/issues/{id}/comments")
+  void addIssueComment(@PathVariable("id") long id, @RequestBody IssueComment issueComment);
 
   @Data
   @Builder

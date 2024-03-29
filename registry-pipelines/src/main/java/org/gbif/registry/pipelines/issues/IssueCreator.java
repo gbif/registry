@@ -62,7 +62,7 @@ import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import static org.gbif.registry.pipelines.issues.GithubApiService.Issue;
+import static org.gbif.registry.pipelines.issues.GithubApiClient.Issue;
 
 @Component
 @Slf4j
@@ -103,6 +103,7 @@ public class IssueCreator {
   private final CubeWsClient cubeWsClient;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final IssuesConfig issuesConfig;
+  private static final String DATASET_NOT_FOUND_FOR_KEY = "Dataset not found for key: ";
 
   @Autowired
   public IssueCreator(
@@ -135,7 +136,7 @@ public class IssueCreator {
     Dataset dataset = datasetMapper.getLightweight(datasetKey);
 
     if (dataset == null) {
-      throw new IllegalArgumentException("Dataset not found for key: " + datasetKey);
+      throw new IllegalArgumentException(DATASET_NOT_FOUND_FOR_KEY + datasetKey);
     }
 
     Organization organization =
@@ -244,12 +245,12 @@ public class IssueCreator {
     return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
   }
 
-  public GithubApiService.IssueComment createIdsValidationFailedIssueComment(
+  public GithubApiClient.IssueComment createIdsValidationFailedIssueComment(
       UUID datasetKey, int attempt, long executionKey, String cause) {
     Dataset dataset = datasetMapper.getLightweight(datasetKey);
 
     if (dataset == null) {
-      throw new IllegalArgumentException("Dataset not found for key: " + datasetKey);
+      throw new IllegalArgumentException(DATASET_NOT_FOUND_FOR_KEY + datasetKey);
     }
 
     List<String> newIds = readIdentifiersFromAvro(datasetKey, attempt);
@@ -272,15 +273,15 @@ public class IssueCreator {
             newIds,
             oldIds);
 
-    return GithubApiService.IssueComment.builder().body(body).build();
+    return GithubApiClient.IssueComment.builder().body(body).build();
   }
 
   public Set<String> updateLabels(
-      GithubApiService.IssueResult issueResult, UUID datasetKey, int attempt) {
+      GithubApiClient.IssueResult issueResult, UUID datasetKey, int attempt) {
     Dataset dataset = datasetMapper.getLightweight(datasetKey);
 
     if (dataset == null) {
-      throw new IllegalArgumentException("Dataset not found for key: " + datasetKey);
+      throw new IllegalArgumentException(DATASET_NOT_FOUND_FOR_KEY + datasetKey);
     }
 
     Organization organization =
@@ -289,7 +290,7 @@ public class IssueCreator {
 
     Set<String> existingLabels =
         issueResult.getLabels().stream()
-            .map(GithubApiService.IssueResult.Label::getName)
+            .map(GithubApiClient.IssueResult.Label::getName)
             .collect(Collectors.toSet());
     existingLabels.add(String.format(ATTEMPT_LABEL_TEMPLATE, attempt));
     existingLabels.add(String.format(COUNTRY_LABEL_TEMPLATE, organization.getCountry()));
@@ -391,11 +392,11 @@ public class IssueCreator {
                       fs.getContentSummary(fileStatus.getPath()).getLength()),
                   datumReader)) {
 
-            GenericRecord record = null;
+            GenericRecord genericRecord = null;
             while (dataFileReader.hasNext() && identifiers.size() < NUM_SAMPLE_IDS) {
-              record = dataFileReader.next(record);
-              if (record.get("id") != null) {
-                identifiers.add(record.get("id").toString());
+              genericRecord = dataFileReader.next(genericRecord);
+              if (genericRecord.get("id") != null) {
+                identifiers.add(genericRecord.get("id").toString());
               }
             }
           }
