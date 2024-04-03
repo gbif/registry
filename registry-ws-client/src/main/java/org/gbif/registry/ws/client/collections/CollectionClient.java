@@ -15,23 +15,18 @@ package org.gbif.registry.ws.client.collections;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.springframework.cloud.openfeign.SpringQueryMap;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 @RequestMapping("grscicoll/collection")
 public interface CollectionClient
@@ -40,6 +35,33 @@ public interface CollectionClient
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   PagingResponse<CollectionView> list(@SpringQueryMap CollectionSearchRequest searchRequest);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "latimerCore",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  PagingResponse<ObjectGroup> listAsLatimerCore(
+      @SpringQueryMap CollectionSearchRequest searchRequest);
+
+  @RequestMapping(
+      method = RequestMethod.GET,
+      value = "latimerCore/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  ObjectGroup getAsLatimerCore(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+      method = RequestMethod.POST,
+      value = "latimerCore",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  UUID createFromLatimerCore(@RequestBody ObjectGroup objectGroup);
+
+  @RequestMapping(
+      method = RequestMethod.PUT,
+      value = "latimerCore/{key}",
+      consumes = MediaType.APPLICATION_JSON_VALUE)
+  void updateFromLatimerCore(@PathVariable("key") UUID key, @RequestBody ObjectGroup objectGroup);
 
   @RequestMapping(
       method = RequestMethod.GET,

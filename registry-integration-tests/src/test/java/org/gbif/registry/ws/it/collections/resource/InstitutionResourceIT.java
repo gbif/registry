@@ -15,6 +15,7 @@ package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
@@ -28,7 +29,6 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -39,12 +39,6 @@ import org.gbif.registry.service.collections.suggestions.InstitutionChangeSugges
 import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
@@ -53,9 +47,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class InstitutionResourceIT
@@ -106,6 +107,43 @@ public class InstitutionResourceIT
 
     PagingResponse<Institution> result = getClient().list(req);
     assertEquals(institutions.size(), result.getResults().size());
+  }
+
+  @Test
+  public void listAndGetAsLatimerCoreTest() {
+    OrganisationalUnit o1 = new OrganisationalUnit();
+    o1.setOrganisationalUnitName("Test");
+    o1.setOrganisationalUnitType("Institution");
+    OrganisationalUnit o2 = new OrganisationalUnit();
+    o2.setOrganisationalUnitName("Test2");
+    o2.setOrganisationalUnitType("Institution");
+    List<OrganisationalUnit> orgs = Arrays.asList(o1, o2);
+
+    when(institutionService.listAsLatimerCore(any(InstitutionSearchRequest.class)))
+        .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(orgs.size()), orgs));
+
+    PagingResponse<OrganisationalUnit> result =
+        getClient().listAsLatimerCore(new InstitutionSearchRequest());
+    assertEquals(orgs.size(), result.getResults().size());
+
+    when(institutionService.getAsLatimerCore(any(UUID.class))).thenReturn(o1);
+    OrganisationalUnit organisationalUnitReturned = getClient().getAsLatimerCore(UUID.randomUUID());
+    assertEquals(o1, organisationalUnitReturned);
+  }
+
+  @Test
+  public void createAndUpdateLatimerCoreTest() {
+    OrganisationalUnit o1 = new OrganisationalUnit();
+    o1.setOrganisationalUnitName("Test");
+    o1.setOrganisationalUnitType("Institution");
+    UUID key = UUID.randomUUID();
+
+    when(institutionService.createFromLatimerCore(o1)).thenReturn(key);
+
+    assertEquals(key, getClient().createFromLatimerCore(o1));
+
+    doNothing().when(institutionService).updateFromLatimerCore(o1);
+    assertDoesNotThrow(() -> getClient().updateFromLatimerCore(key, o1));
   }
 
   @Test
