@@ -14,6 +14,9 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.latimercore.ContactDetail;
+import org.gbif.api.model.collections.latimercore.MeasurementOrFact;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -27,6 +30,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.*;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
+import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
@@ -736,6 +740,139 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     // delete the master source
     institutionService.deleteMasterSourceMetadata(institutionKey);
     assertDoesNotThrow(() -> institutionService.delete(institutionKey));
+  }
+
+  @Test
+  public void listAndGetAsLatimerCoreTest() {
+    Institution institution1 = testData.newEntity();
+    institution1.setCode("c1");
+    institution1.setName("n1");
+    institution1.setLatitude(new BigDecimal(12));
+    institution1.setLongitude(new BigDecimal(2));
+    institution1.getApiUrls().add(URI.create("http://aa.com"));
+    UUID key1 = institutionService.create(institution1);
+
+    Institution institution2 = testData.newEntity();
+    institution2.setCode("c2");
+    institution2.setName("n2");
+    institution2.setLatitude(new BigDecimal(23));
+    institution2.setLongitude(new BigDecimal(70));
+    UUID key2 = institutionService.create(institution2);
+
+    Institution institution3 = testData.newEntity();
+    institution3.setCode("c3");
+    institution3.setName("n3");
+    UUID key3 = institutionService.create(institution3);
+
+    PagingResponse<OrganisationalUnit> organisationalUnits =
+        institutionService.listAsLatimerCore(InstitutionSearchRequest.builder().build());
+    assertEquals(3, organisationalUnits.getResults().size());
+
+    OrganisationalUnit organisationalUnit = institutionService.getAsLatimerCore(key1);
+    assertEquals(institution1.getName(), organisationalUnit.getOrganisationalUnitName());
+    assertTrue(
+        organisationalUnit.getIdentifier().stream()
+            .anyMatch(
+                i ->
+                    institution1.getCode().equals(i.getIdentifierValue())
+                        && i.getIdentifierType()
+                            .equals(LatimerCoreConverter.IdentifierTypes.INSTITUTION_CODE)));
+    assertTrue(
+        organisationalUnit.getMeasurementOrFact().stream()
+            .anyMatch(
+                m ->
+                    LatimerCoreConverter.MeasurementOrFactTypes.LATITUDE.equals(
+                            m.getMeasurementType())
+                        && institution1.getLatitude().intValue()
+                            == new BigDecimal(m.getMeasurementValue()).intValue()));
+    assertEquals(key1, LatimerCoreConverter.getInstitutionKey(organisationalUnit).orElse(null));
+    assertTrue(
+        organisationalUnit.getReference().stream()
+            .anyMatch(
+                r ->
+                    r.getResourceIRI().equals(institution1.getApiUrls().get(0))
+                        && r.getReferenceType().equals(LatimerCoreConverter.References.API)
+                        && r.getReferenceName()
+                            .equals(LatimerCoreConverter.References.INSTITUTION_COLLECTION_API)));
+  }
+
+  @Test
+  public void createAndUpdateLatimerCoreTest() {
+    OrganisationalUnit organisationalUnit = new OrganisationalUnit();
+    organisationalUnit.setOrganisationalUnitName("OU");
+
+    org.gbif.api.model.collections.latimercore.Address address =
+        new org.gbif.api.model.collections.latimercore.Address();
+    address.setStreetAddress("street");
+    address.setAddressCountry(Country.SPAIN);
+    address.setAddressType(LatimerCoreConverter.PHYSICAL);
+    organisationalUnit.getAddress().add(address);
+
+    org.gbif.api.model.collections.latimercore.Address mailingAddress =
+        new org.gbif.api.model.collections.latimercore.Address();
+    mailingAddress.setStreetAddress("st.");
+    mailingAddress.setAddressCountry(Country.DENMARK);
+    mailingAddress.setAddressType(LatimerCoreConverter.MAILING);
+    organisationalUnit.getAddress().add(mailingAddress);
+
+    org.gbif.api.model.collections.latimercore.Identifier identifier =
+        new org.gbif.api.model.collections.latimercore.Identifier();
+    identifier.setIdentifierType(LatimerCoreConverter.IdentifierTypes.INSTITUTION_CODE);
+    identifier.setIdentifierValue("I1");
+    organisationalUnit.getIdentifier().add(identifier);
+
+    ContactDetail contactDetail = new ContactDetail();
+    contactDetail.setContactDetailCategory(LatimerCoreConverter.EMAIL);
+    contactDetail.setContactDetailValue("aa@aa.com");
+    organisationalUnit.getContactDetail().add(contactDetail);
+
+    MeasurementOrFact measurementOrFact = new MeasurementOrFact();
+    measurementOrFact.setMeasurementType(LatimerCoreConverter.MeasurementOrFactTypes.YEAR_FOUNDED);
+    measurementOrFact.setMeasurementValue("1900");
+    organisationalUnit.getMeasurementOrFact().add(measurementOrFact);
+
+    UUID key1 = institutionService.createFromLatimerCore(organisationalUnit);
+    Institution institution = institutionService.get(key1);
+    assertEquals(organisationalUnit.getOrganisationalUnitName(), institution.getName());
+    assertEquals(address.getAddressCountry(), institution.getAddress().getCountry());
+    assertEquals(address.getStreetAddress(), institution.getAddress().getAddress());
+    assertEquals(identifier.getIdentifierValue(), institution.getCode());
+    assertEquals(contactDetail.getContactDetailValue(), institution.getEmail().get(0));
+    assertEquals(measurementOrFact.getMeasurementValue(), institution.getFoundingDate().toString());
+
+    organisationalUnit.getIdentifier().get(0).setIdentifierValue("I2");
+    MeasurementOrFact descriptionMoF = new MeasurementOrFact();
+    descriptionMoF.setMeasurementType(
+        LatimerCoreConverter.MeasurementOrFactTypes.INSTITUTION_DESCRIPTION);
+    descriptionMoF.setMeasurementFactText("Description.");
+    organisationalUnit.getMeasurementOrFact().add(descriptionMoF);
+
+    // the key is not set
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> institutionService.updateFromLatimerCore(organisationalUnit));
+
+    org.gbif.api.model.collections.latimercore.Identifier keyId =
+        new org.gbif.api.model.collections.latimercore.Identifier();
+    keyId.setIdentifierType(LatimerCoreConverter.IdentifierTypes.INSTITUTION_GRSCICOLL_KEY);
+    keyId.setIdentifierValue(key1.toString());
+    organisationalUnit.getIdentifier().add(keyId);
+
+    institutionService.updateFromLatimerCore(organisationalUnit);
+
+    Institution updatedInstitution = institutionService.get(key1);
+    assertEquals(organisationalUnit.getOrganisationalUnitName(), updatedInstitution.getName());
+    assertEquals(address.getAddressCountry(), updatedInstitution.getAddress().getCountry());
+    assertEquals(address.getStreetAddress(), updatedInstitution.getAddress().getAddress());
+    assertEquals(
+        mailingAddress.getAddressCountry(), updatedInstitution.getMailingAddress().getCountry());
+    assertEquals(
+        mailingAddress.getStreetAddress(), updatedInstitution.getMailingAddress().getAddress());
+    assertEquals(identifier.getIdentifierValue(), updatedInstitution.getCode());
+    assertEquals(contactDetail.getContactDetailValue(), updatedInstitution.getEmail().get(0));
+    assertEquals(
+        measurementOrFact.getMeasurementValue(), updatedInstitution.getFoundingDate().toString());
+    assertEquals(descriptionMoF.getMeasurementFactText(), updatedInstitution.getDescription());
   }
 
   @Test

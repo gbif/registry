@@ -13,12 +13,23 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.SourceableField;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
@@ -39,7 +50,14 @@ import org.gbif.registry.service.collections.suggestions.InstitutionChangeSugges
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.resources.Docs;
+import org.geojson.FeatureCollection;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -51,34 +69,6 @@ import java.lang.annotation.Target;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.geojson.FeatureCollection;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
@@ -168,6 +158,24 @@ public class InstitutionResource
     return institutionService.get(key);
   }
 
+  @Operation(
+      operationId = "getInstitutionAsLatimerCore",
+      summary = "Get details of a single institution in Latimer Core format",
+      description =
+          "Details of a single institution in Latimer Core format.  Also works for deleted institutions.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0200")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "200", description = "Institution found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping("latimerCore/{key}")
+  @NullToNotFound("/grscicoll/institution/latimerCore/{key}")
+  public OrganisationalUnit getAsLatimerCore(@PathVariable UUID key) {
+    return institutionService.getAsLatimerCore(key);
+  }
+
   // Method overridden only for documentation.
   @Operation(
       operationId = "createInstitution",
@@ -187,6 +195,23 @@ public class InstitutionResource
     return super.create(institution);
   }
 
+  @Operation(
+      operationId = "createInstitutionFromLatimerCore",
+      summary = "Create a new institution posted in Latimer Core format",
+      description = "Creates a new institution.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0201")))
+  @ApiResponse(
+      responseCode = "201",
+      description = "Institution created, new institution's UUID returned")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(value = "latimerCore", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public UUID createFromLatimerCore(@RequestBody @Trim OrganisationalUnit organisationalUnit) {
+    return institutionService.createFromLatimerCore(organisationalUnit);
+  }
+
   // Method overridden only for documentation.
   @Operation(
       operationId = "updateInstitution",
@@ -204,6 +229,24 @@ public class InstitutionResource
   @Override
   public void update(@PathVariable("key") UUID key, @RequestBody @Trim Institution institution) {
     super.update(key, institution);
+  }
+
+  @Operation(
+      operationId = "updateInstitutionFromLatimerCore",
+      summary = "Update an existing institution sent in Latimer Core format",
+      description = "Updates the existing institution.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0202")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "204", description = "Institution updated")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "latimerCore/{key}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public void updateFromLatimerCore(
+      @PathVariable("key") UUID key, @RequestBody @Trim OrganisationalUnit organisationalUnit) {
+    institutionService.updateFromLatimerCore(organisationalUnit);
   }
 
   // Method overridden only for documentation.
@@ -240,6 +283,23 @@ public class InstitutionResource
   @GetMapping
   public PagingResponse<Institution> list(InstitutionSearchRequest searchRequest) {
     return institutionService.list(searchRequest);
+  }
+
+  @Operation(
+      operationId = "listInstitutionsAsLatimerCore",
+      summary = "List institutions in Latimer Core format",
+      description = "Lists all current institutions (deleted institutions are not listed).",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0100")))
+  @InstitutionSearchParameters
+  @ApiResponse(responseCode = "200", description = "Institution search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("latimerCore")
+  public PagingResponse<OrganisationalUnit> listAsLatimerCore(
+      InstitutionSearchRequest searchRequest) {
+    return institutionService.listAsLatimerCore(searchRequest);
   }
 
   @Operation(

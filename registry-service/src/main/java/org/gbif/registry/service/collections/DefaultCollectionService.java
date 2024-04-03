@@ -13,9 +13,12 @@
  */
 package org.gbif.registry.service.collections;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.Pageable;
@@ -29,35 +32,13 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
-import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validator;
-import javax.validation.groups.Default;
-
-import org.jetbrains.annotations.NotNull;
+import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
@@ -66,13 +47,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.security.UserRoles.*;
 
 @Validated
 @Service
@@ -137,6 +122,19 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   @Override
   public PagingResponse<CollectionView> list(CollectionSearchRequest searchRequest) {
     return listInternal(searchRequest, false);
+  }
+
+  @Override
+  public PagingResponse<ObjectGroup> listAsLatimerCore(CollectionSearchRequest searchRequest) {
+    PagingResponse<CollectionView> results = listInternal(searchRequest, false);
+
+    List<ObjectGroup> objectGroups =
+        results.getResults().stream()
+            .map(c -> LatimerCoreConverter.toObjectGroup(c, conceptClient))
+            .collect(Collectors.toList());
+
+    return new PagingResponse<>(
+        results.getOffset(), results.getLimit(), results.getCount(), objectGroups);
   }
 
   @NotNull
@@ -206,6 +204,60 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
   @Override
   public PagingResponse<CollectionView> listDeleted(CollectionSearchRequest searchRequest) {
     return listInternal(searchRequest, true);
+  }
+
+  @Override
+  public ObjectGroup getAsLatimerCore(@NotNull UUID key) {
+    return LatimerCoreConverter.toObjectGroup(getCollectionView(key), conceptClient);
+  }
+
+  @Override
+  public UUID createFromLatimerCore(@NotNull @Valid ObjectGroup objectGroup) {
+    Collection convertedCollection = LatimerCoreConverter.fromObjectGroup(objectGroup);
+    UUID key = create(convertedCollection);
+
+    // create contacts
+    convertedCollection.getContactPersons().forEach(c -> addContactPerson(key, c));
+
+    return key;
+  }
+
+  @Override
+  public void updateFromLatimerCore(@NotNull @Valid ObjectGroup objectGroup) {
+    UUID key =
+        LatimerCoreConverter.getCollectionKey(objectGroup)
+            .orElseThrow(() -> new IllegalArgumentException("GRSciColl key is required"));
+
+    Collection collection = collectionMapper.get(key);
+
+    Collection convertedCollection = LatimerCoreConverter.fromObjectGroup(objectGroup);
+    if (collection.getAddress() != null && convertedCollection.getAddress() != null) {
+      convertedCollection.getAddress().setKey(collection.getAddress().getKey());
+    }
+
+    if (collection.getMailingAddress() != null && convertedCollection.getMailingAddress() != null) {
+      convertedCollection.getMailingAddress().setKey(collection.getMailingAddress().getKey());
+    }
+
+    update(convertedCollection);
+
+    // update contacts
+    List<Integer> oldContacts =
+        collection.getContactPersons().stream().map(Contact::getKey).collect(Collectors.toList());
+    convertedCollection
+        .getContactPersons()
+        .forEach(
+            c -> {
+              if (c.getKey() != null) {
+                updateContactPerson(key, c);
+                oldContacts.remove(c.getKey());
+              } else {
+                addContactPerson(key, c);
+              }
+            });
+
+    // delete contacts
+    oldContacts.forEach(c -> removeContactPerson(key, c));
   }
 
   @Override
