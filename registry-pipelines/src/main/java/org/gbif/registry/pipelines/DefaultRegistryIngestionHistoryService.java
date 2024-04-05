@@ -23,14 +23,16 @@ import org.gbif.api.model.registry.Dataset;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.DatasetProcessStatusMapper;
 import org.gbif.registry.persistence.mapper.pipelines.PipelineProcessMapper;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class DefaultRegistryIngestionHistoryService implements RegistryIngestionHistoryService {

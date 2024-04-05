@@ -56,11 +56,11 @@ import org.dspace.xoai.dataprovider.model.Set;
 import org.dspace.xoai.dataprovider.repository.ItemRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.LinkedMultiValueMap;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
 
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.COUNTRY;
 import static org.gbif.registry.oaipmh.OaipmhSetRepository.SetType.DATASET_TYPE;
@@ -297,8 +297,9 @@ public class OaipmhItemRepository implements ItemRepository {
     ReadBuilder readBuilder = new ReadBuilder();
     readBuilder.at(OccurrenceCube.DATASET_KEY, dataset.getKey());
     try {
-      Long occurrenceCount =
-          metricsClient.count(ImmutableMap.of("datasetKey", dataset.getKey().toString()));
+      LinkedMultiValueMap<String,String> params = new LinkedMultiValueMap<>();
+      params.add("datasetKey", dataset.getKey().toString());
+      long occurrenceCount = metricsClient.get(params);
       if (occurrenceCount > 0) {
         additionalProperties.put(DublinCoreWriter.ADDITIONAL_PROPERTY_OCC_COUNT, occurrenceCount);
       }

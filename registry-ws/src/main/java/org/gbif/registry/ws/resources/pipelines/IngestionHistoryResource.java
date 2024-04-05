@@ -13,20 +13,23 @@
  */
 package org.gbif.registry.ws.resources.pipelines;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.crawler.FinishReason;
 import org.gbif.api.model.pipelines.IngestionProcess;
 import org.gbif.api.service.pipelines.IngestionHistoryService;
 import org.gbif.registry.pipelines.RegistryIngestionHistoryService;
+
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.UUID;
+import io.swagger.v3.oas.annotations.Hidden;
 
 @Hidden // TODO: Document?
 @RestController
