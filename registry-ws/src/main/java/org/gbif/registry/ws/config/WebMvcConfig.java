@@ -13,42 +13,29 @@
  */
 package org.gbif.registry.ws.config;
 
-import org.gbif.registry.domain.ws.ErrorResponse;
-import org.gbif.registry.domain.ws.IptEntityResponse;
-import org.gbif.registry.domain.ws.LegacyDataset;
-import org.gbif.registry.domain.ws.LegacyDatasetResponse;
-import org.gbif.registry.domain.ws.LegacyDatasetResponseListWrapper;
-import org.gbif.registry.domain.ws.LegacyEndpoint;
-import org.gbif.registry.domain.ws.LegacyEndpointResponse;
-import org.gbif.registry.domain.ws.LegacyEndpointResponseListWrapper;
-import org.gbif.registry.domain.ws.LegacyInstallation;
-import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
-import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponseListWrapper;
-import org.gbif.registry.domain.ws.LegacyOrganizationResponse;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.networkEntitiesList.DatasetRequestSearchParamsHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.networkEntitiesList.InstallationRequestSearchParamsHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.networkEntitiesList.NetworkRequestSearchParamsHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.networkEntitiesList.NodeRequestSearchParamsHandlerMethodArgumentResolver;
-import org.gbif.registry.ws.provider.networkEntitiesList.OrganizationRequestSearchParamsHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.networkEntitiesList.*;
+import org.gbif.vocabulary.client.ConceptClient;
+import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.gbif.ws.server.processor.ParamNameProcessor;
 import org.gbif.ws.server.provider.CountryHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -62,11 +49,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+import java.util.*;
 
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -182,5 +165,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
         IptEntityResponse.class,
         ErrorResponse.class);
     return marshaller;
+  }
+
+  @Bean
+  public ConceptClient conceptClient(@Value("${api.root.url}") String apiRootUrl) {
+    return new ClientBuilder()
+        .withObjectMapper(
+            JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                .registerModule(new JavaTimeModule()))
+        .withUrl(apiRootUrl)
+        .build(ConceptClient.class);
   }
 }

@@ -7,12 +7,10 @@
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
         ALTER TABLE institution DROP COLUMN index_herbariorum_record;
-        -- TODO: migrate descriptions to the main description
         ALTER TABLE institution DROP COLUMN geographic_description;
         ALTER TABLE institution DROP COLUMN taxonomic_description;
         ALTER TABLE institution DROP COLUMN cites_permit_number;
         ALTER TABLE collection DROP COLUMN index_herbariorum_record;
-        -- TODO: delete importantCollectors when descriptors are implemented
       ]]>
     </sql>
   </changeSet>

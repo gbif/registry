@@ -29,7 +29,6 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
@@ -102,7 +101,7 @@ public class InstitutionResourceIT
     req.setCountry(Collections.singletonList(Country.DENMARK));
     req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
     req.setActive(true);
-    req.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
+    req.setInstitutionalGovernance(Collections.singletonList("Academic"));
     req.setDisciplines(Arrays.asList("Archaeology", "Anthropology"));
 
     PagingResponse<Institution> result = getClient().list(req);

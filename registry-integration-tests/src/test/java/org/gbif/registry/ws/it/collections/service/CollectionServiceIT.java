@@ -32,7 +32,9 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
-import org.gbif.api.vocabulary.collections.*;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
@@ -88,8 +90,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
     collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
-    collection1.setPreservationTypes(
-        Arrays.asList(PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED));
+    collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleCryopreserved"));
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -105,8 +106,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection2.setName("n2");
     collection2.setActive(false);
     collection2.setContentTypes(Collections.singletonList("Archaeological"));
-    collection2.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
-    collection2.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection2.setPreservationTypes(Collections.singletonList("SampleDried"));
+    collection2.setAccessionStatus("Institutional");
     collection2.setPersonalCollection(false);
     collection2.setNumberSpecimens(200);
     Address address2 = new Address();
@@ -215,7 +216,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .accessionStatus(AccessionStatus.INSTITUTIONAL)
+                    .accessionStatus("Institutional")
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -225,7 +226,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .accessionStatus(AccessionStatus.PROJECT)
+                    .accessionStatus("Project")
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -255,7 +256,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .preservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED))
+                    .preservationTypes(Collections.singletonList("SampleDried"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -536,8 +537,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
     collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
-    collection1.setPreservationTypes(
-        Arrays.asList(PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED));
+    collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleFluidPreserved"));
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -554,8 +554,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection2.setName("n2");
     collection2.setActive(false);
     collection2.setContentTypes(Collections.singletonList("Archaeological"));
-    collection2.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
-    collection2.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection2.setPreservationTypes(Collections.singletonList("SampleDried"));
+    collection2.setAccessionStatus("Institutional");
     collection2.setPersonalCollection(false);
     collection2.setNumberSpecimens(200);
     Address address2 = new Address();

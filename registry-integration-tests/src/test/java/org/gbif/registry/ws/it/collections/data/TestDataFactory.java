@@ -40,11 +40,11 @@ public class TestDataFactory {
 
     public static final String NAME = "name";
     public static final String DESCRIPTION = "dummy description";
-    public static final AccessionStatus ACCESSION_STATUS = AccessionStatus.INSTITUTIONAL;
+    public static final String ACCESSION_STATUS = "Institutional";
     public static final String CODE_UPDATED = "code2";
     public static final String NAME_UPDATED = "name2";
     public static final String DESCRIPTION_UPDATED = "dummy description updated";
-    public static final AccessionStatus ACCESSION_STATUS_UPDATED = AccessionStatus.PROJECT;
+    public static final String ACCESSION_STATUS_UPDATED = "Project";
 
     private CollectionTestData() {}
 
@@ -56,8 +56,7 @@ public class TestDataFactory {
       collection.setDescription(DESCRIPTION);
       collection.setActive(true);
       collection.setAccessionStatus(ACCESSION_STATUS);
-      collection.setPreservationTypes(
-          Collections.singletonList(PreservationType.SAMPLE_CRYOPRESERVED));
+      collection.setPreservationTypes(Collections.singletonList("SampleCryopreserved"));
       return collection;
     }
 

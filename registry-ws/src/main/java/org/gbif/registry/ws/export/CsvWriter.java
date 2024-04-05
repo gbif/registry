@@ -29,10 +29,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -344,9 +340,8 @@ public class CsvWriter<T> {
               new UriProcessor(), // homepage: URI
               new ListUriProcessor(), // catalogUrl: URI
               new ListUriProcessor(), // apiUrl: URI
-              new ListPreservationTypeProcessor(), // preservationTypes: List
-              new Optional(
-                  new ParseEnum(AccessionStatus.class)), // accessionStatus: AccessionStatus
+              new ListStringProcessor(), // preservationTypes: List
+              new Optional(new CleanStringProcessor()), // accessionStatus: AccessionStatus
               null, // institutionCode: String
               new CleanStringProcessor(), // institutionName: String
               new UUIDProcessor(), // institutionKey: UUID
@@ -482,7 +477,7 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // address: extract the country
               new CleanStringProcessor(), // address: extract the city
               new CleanStringProcessor(), // address: extract the province
-              new Optional(new ListInstitutionTypeProcessor()), // type:InstitutionType
+              new Optional(new ListStringProcessor()), // type:InstitutionType
               new Optional(new FmtBool("true", "false")), // active: boolean
               new ListStringProcessor(), // email: List<String>
               new ListStringProcessor(), // phone: List<String>
@@ -490,7 +485,7 @@ public class CsvWriter<T> {
               new ListUriProcessor(), // catalogUrl: URI
               new ListUriProcessor(), // apiUrl: URI
               new Optional(
-                  new ListInstitutionGovernanceProcessor()), // institutionalGovernance:InstitutionGovernance
+                  new ListStringProcessor()), // institutionalGovernance:InstitutionGovernance
               new ListStringProcessor(), // disciplines:List
               new Optional(new FmtNumber("###.####")), // latitude: BigDecimal
               new Optional(new FmtNumber("###.####")), // longitude: BigDecimal
@@ -575,21 +570,6 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext context) {
       return value != null ? CleanStringProcessor.cleanString((String) value) : "";
-    }
-  }
-
-  /** Null aware List of PreservationType processor. */
-  public static class ListPreservationTypeProcessor implements CellProcessor {
-
-    public static String toString(List<PreservationType> value) {
-      return value.stream()
-          .map(PreservationType::name)
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<PreservationType>) value) : "";
     }
   }
 
@@ -798,34 +778,6 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<OccurrenceMapping>) value) : "";
-    }
-  }
-
-  /** Null aware List<Discipline> processor. */
-  public static class ListInstitutionTypeProcessor implements CellProcessor {
-
-    public static String toString(List<InstitutionType> value) {
-      return value.stream().map(InstitutionType::name).collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<InstitutionType>) value) : "";
-    }
-  }
-
-  /** Null aware List<Discipline> processor. */
-  public static class ListInstitutionGovernanceProcessor implements CellProcessor {
-
-    public static String toString(List<InstitutionGovernance> value) {
-      return value.stream()
-          .map(InstitutionGovernance::name)
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<InstitutionGovernance>) value) : "";
     }
   }
 }

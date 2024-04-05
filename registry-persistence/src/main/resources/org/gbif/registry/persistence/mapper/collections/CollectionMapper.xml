@@ -7,8 +7,8 @@
     <id property="key" column="key"/>
     <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
     <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
-    <result property="contentTypes" column="content_types" typeHandler="StringArrayTypeHandler"/>
-    <result property="preservationTypes" column="preservation_type" typeHandler="PreservationTypeArrayTypeHandler"/>
+    <result property="contentTypes" column="content_type" typeHandler="StringArrayTypeHandler"/>
+    <result property="preservationTypes" column="preservation_type" typeHandler="StringArrayTypeHandler"/>
     <result property="incorporatedCollections" column="incorporated_collections" typeHandler="StringArrayTypeHandler"/>
     <result property="importantCollectors" column="important_collectors" typeHandler="StringArrayTypeHandler"/>
     <result property="collectionSummary" column="collection_summary" typeHandler="CollectionSummaryTypeHandler"/>
@@ -37,7 +37,7 @@
   <resultMap id="MASTER_SOURCE_ORG_DTO_MAP" type="MasterSourceOrganizationDto" autoMapping="true" />
 
   <sql id="COLLECTION_WRITE_FIELDS">
-    key, code, name, description, content_types, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
+    key, code, name, description, content_type, active, personal_collection, doi, email, phone, homepage, catalog_url, api_url,
     preservation_type, accession_status, institution_key, mailing_address_key, address_key,
     created_by, modified_by, created, modified, number_specimens,
     taxonomic_coverage, geographic_coverage, notes, incorporated_collections, important_collectors, collection_summary, alternative_codes,
@@ -45,7 +45,7 @@
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
-    c.key, c.code, c.name, c.description, c.content_types, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
+    c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection, c.doi, c.email, c.phone, c.homepage,
     c.catalog_url, c.api_url, c.preservation_type, c.accession_status, c.institution_key, c.mailing_address_key,
     c.address_key, c.created_by, c.modified_by, c.created, c.modified, c.deleted, c.number_specimens,
     c.taxonomic_coverage, c.geographic_coverage, c.notes, c.incorporated_collections, c.important_collectors, c.collection_summary, c.alternative_codes,
@@ -67,8 +67,8 @@
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
-    #{preservationTypes,jdbcType=ARRAY,typeHandler=PreservationTypeArrayTypeHandler},
-    #{accessionStatus,jdbcType=OTHER},
+    #{preservationTypes,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{accessionStatus,jdbcType=VARCHAR},
     #{institutionKey,jdbcType=OTHER},
     #{mailingAddress.key,jdbcType=INTEGER},
     #{address.key,jdbcType=INTEGER},
@@ -97,7 +97,7 @@
     code = #{code,jdbcType=VARCHAR},
     name = #{name,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
-    content_types = #{contentTypes,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    content_type = #{contentTypes,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     active = #{active,jdbcType=BOOLEAN},
     personal_collection = #{personalCollection,jdbcType=BOOLEAN},
     doi = #{doi,jdbcType=VARCHAR},
@@ -106,8 +106,8 @@
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     api_url = #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
-    preservation_type = #{preservationTypes,jdbcType=ARRAY,typeHandler=PreservationTypeArrayTypeHandler},
-    accession_status = #{accessionStatus,jdbcType=OTHER},
+    preservation_type = #{preservationTypes,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    accession_status = #{accessionStatus,jdbcType=VARCHAR},
     institution_key = #{institutionKey,jdbcType=OTHER},
     mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
     address_key = #{address.key,jdbcType=INTEGER},
@@ -316,7 +316,7 @@
         AND similar_name(c.name, #{params.fuzzyName,jdbcType=VARCHAR})
       </if>
       <if test="params.contentTypes != null and params.contentTypes.size > 0" >
-        AND c.content_types &amp;&amp; ARRAY
+        AND c.content_type &amp;&amp; ARRAY
         <foreach item="item" collection="params.contentTypes" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}::text
         </foreach>
@@ -324,11 +324,11 @@
       <if test="params.preservationTypes != null and params.preservationTypes.size > 0" >
         AND c.preservation_type &amp;&amp; ARRAY
         <foreach item="item" collection="params.preservationTypes" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}
+          #{item,jdbcType=VARCHAR}::text
         </foreach>
       </if>
       <if test="params.accessionStatus != null" >
-        AND c.accession_status = #{params.accessionStatus,jdbcType=OTHER}
+        AND c.accession_status = #{params.accessionStatus,jdbcType=VARCHAR}
       </if>
       <if test="params.active != null" >
         AND c.active = #{params.active,jdbcType=BOOLEAN}

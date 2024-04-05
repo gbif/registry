@@ -28,7 +28,9 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
-import org.gbif.api.vocabulary.collections.*;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -79,9 +81,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution1.setCode("c1");
     institution1.setName("n1");
     institution1.setActive(true);
-    institution1.setTypes(Collections.singletonList(InstitutionType.HERBARIUM));
-    institution1.setInstitutionalGovernances(
-        Collections.singletonList(InstitutionGovernance.ACADEMIC_FEDERAL));
+    institution1.setTypes(Collections.singletonList("Herbarium"));
+    institution1.setInstitutionalGovernances(Collections.singletonList("Academic"));
     institution1.setDisciplines(Collections.singletonList("Archaeology"));
     Address address = new Address();
     address.setAddress("dummy address");
@@ -229,7 +230,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .type(InstitutionType.HERBARIUM)
+                    .type(Collections.singletonList("Herbarium"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -239,7 +240,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .institutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL)
+                    .institutionalGovernance(Collections.singletonList("Academic"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()

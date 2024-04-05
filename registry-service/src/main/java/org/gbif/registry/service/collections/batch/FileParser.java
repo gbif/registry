@@ -25,10 +25,6 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
 import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
@@ -130,12 +126,9 @@ public class FileParser {
     parseStringList(
             extractValue(values, headersIndex.get(FileFields.InstitutionFields.ADDITIONAL_NAMES)))
         .ifPresent(institution::setAdditionalNames);
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(FileFields.InstitutionFields.INSTITUTION_TYPE)),
-            s -> parseEnum(s, InstitutionType::valueOf)),
-        institution::setTypes,
-        errors);
+    parseStringList(
+            extractValue(values, headersIndex.get(FileFields.InstitutionFields.INSTITUTION_TYPE)))
+        .ifPresent(institution::setTypes);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(HOMEPAGE))),
         institution::setHomepage,
@@ -154,12 +147,8 @@ public class FileParser {
         parseUri(extractValue(values, headersIndex.get(LOGO_URL))),
         institution::setLogoUrl,
         errors);
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(INSTITUTIONAL_GOVERNANCE)),
-            s -> parseEnum(s, InstitutionGovernance::valueOf)),
-        institution::setInstitutionalGovernances,
-        errors);
+    parseStringList(extractValue(values, headersIndex.get(INSTITUTIONAL_GOVERNANCE)))
+        .ifPresent(institution::setInstitutionalGovernances);
     parseStringList(extractValue(values, headersIndex.get(DISCIPLINES)))
         .ifPresent(institution::setDisciplines);
     handleParserResult(
@@ -215,18 +204,11 @@ public class FileParser {
             extractValue(values, headersIndex.get(API_URL)), FileParsingUtils::parseUri),
         collection::setApiUrls,
         errors);
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.PRESERVATION_TYPES)),
-            s -> parseEnum(s, PreservationType::valueOf)),
-        collection::setPreservationTypes,
-        errors);
-    handleParserResult(
-        parseEnum(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.ACCESSION_STATUS)),
-            AccessionStatus::valueOf),
-        collection::setAccessionStatus,
-        errors);
+    parseStringList(
+            extractValue(values, headersIndex.get(FileFields.CollectionFields.PRESERVATION_TYPES)))
+        .ifPresent(collection::setPreservationTypes);
+    collection.setAccessionStatus(
+        extractValue(values, headersIndex.get(FileFields.CollectionFields.ACCESSION_STATUS)));
     handleParserResult(
         parseUUID(
             extractValue(values, headersIndex.get(FileFields.CollectionFields.INSTITUTION_KEY))),

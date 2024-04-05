@@ -100,9 +100,8 @@ public class CollectionResourceIT
     req.setCountry(Collections.singletonList(Country.DENMARK));
     req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
     req.setPersonalCollection(true);
-    req.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
-    req.setPreservationTypes(
-        Arrays.asList(PreservationType.SAMPLE_CRYOPRESERVED, PreservationType.SAMPLE_DRIED));
+    req.setAccessionStatus("Institutional");
+    req.setPreservationTypes(Arrays.asList("SampleCryopreserved", "SampleDried"));
     PagingResponse<CollectionView> result = getClient().list(req);
     assertEquals(views.size(), result.getResults().size());
   }

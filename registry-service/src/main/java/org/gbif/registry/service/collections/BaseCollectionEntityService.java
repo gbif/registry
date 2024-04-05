@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.service.collections;
 
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.Address;
@@ -41,8 +40,6 @@ import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
-import org.gbif.ws.client.ClientBuilder;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
@@ -108,7 +105,7 @@ public class BaseCollectionEntityService<
       Class<T> objectClass,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      String apiUrl) {
+      ConceptClient conceptClient) {
     this.baseMapper = baseMapper;
     this.addressMapper = addressMapper;
     this.contactMapper = contactMapper;
@@ -123,13 +120,7 @@ public class BaseCollectionEntityService<
     this.objectClass = objectClass;
     this.eventManager = eventManager;
     this.withMyBatis = withMyBatis;
-    this.conceptClient =
-        new ClientBuilder()
-            .withObjectMapper(
-                JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
-                    .registerModule(new JavaTimeModule()))
-            .withUrl(apiUrl)
-            .build(ConceptClient.class);
+    this.conceptClient = conceptClient;
   }
 
   @Override
