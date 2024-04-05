@@ -19,8 +19,6 @@ import org.gbif.registry.oaipmh.OaipmhSetRepository;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
 import org.gbif.registry.service.RegistryDatasetService;
-import org.gbif.ws.client.ClientBuilder;
-import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -45,7 +43,6 @@ import org.dspace.xoai.model.oaipmh.Granularity;
 import org.dspace.xoai.services.api.DateProvider;
 import org.dspace.xoai.services.impl.SimpleResumptionTokenFormat;
 import org.dspace.xoai.services.impl.UTCDateProvider;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -158,15 +155,6 @@ public class RegistryOaipmhConfiguration {
       CubeWsClient metricsClient) {
     return new OaipmhItemRepository(
         datasetService, datasetMapper, organizationMapper, metricsClient);
-  }
-
-  @Bean
-  public CubeWsClient occurrenceMetricsClient(@Value("${api.root.url}") String url) {
-    ClientBuilder clientBuilder = new ClientBuilder();
-    clientBuilder.withObjectMapper(
-        JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport());
-    clientBuilder.withUrl(url);
-    return clientBuilder.build(CubeWsClient.class);
   }
 
   @Bean

@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.96.0-SNAPSHOT</version>
+  <version>3.96.2-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -93,12 +93,12 @@
     <gbif-download-query-tools.version>1.51.0</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.1</gbif-metadata-profile.version>
-    <gbif-metrics.version>1.2</gbif-metrics.version>
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
     <gbif-vocabulary.version>1.0.3</gbif-vocabulary.version>
+    <checklistbank.version>2.125</checklistbank.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -353,14 +353,14 @@
         <version>${gbif-directory.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.gbif.metrics</groupId>
-        <artifactId>metrics-ws-client</artifactId>
-        <version>${gbif-metrics.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.gbif.occurrence</groupId>
         <artifactId>occurrence-ws-client</artifactId>
         <version>${gbif-occurrence.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.gbif.checklistbank</groupId>
+        <artifactId>checklistbank-ws-client</artifactId>
+        <version>${checklistbank.version}</version>
       </dependency>
       <dependency>
         <groupId>org.gbif</groupId>

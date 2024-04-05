@@ -13,10 +13,12 @@
  */
 package org.gbif.registry.search.dataset.indexing.ws;
 
+import org.gbif.api.model.checklistbank.search.NameUsageSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.search.FacetedSearchRequest;
 import org.gbif.api.model.common.search.SearchParameter;
 import org.gbif.api.model.common.search.SearchRequest;
+import org.gbif.api.model.occurrence.search.OccurrenceSearchRequest;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -47,7 +49,15 @@ import static org.gbif.registry.search.dataset.indexing.ws.WebserviceParameter.P
 @UtilityClass
 public class SearchParameterProvider {
 
-  public static <P extends SearchParameter, R extends FacetedSearchRequest<P>>
+  public static ProxyRetrofitQueryMap getParameterFromFacetedRequest(NameUsageSearchRequest nameUsageSearchRequest) {
+    return getParameterFromSearchRequest(nameUsageSearchRequest);
+  }
+
+  public static ProxyRetrofitQueryMap getParameterFromFacetedRequest(OccurrenceSearchRequest occurrenceSearchRequest) {
+    return getParameterFromSearchRequest(occurrenceSearchRequest);
+  }
+
+  private static <P extends SearchParameter, R extends FacetedSearchRequest<P>>
       ProxyRetrofitQueryMap getParameterFromFacetedRequest(@Nullable R searchRequest) {
     // The searchRequest is transformed in a parameter map
     ProxyRetrofitQueryMap parameters = getParameterFromSearchRequest(searchRequest);
@@ -85,7 +95,7 @@ public class SearchParameterProvider {
     return parameters;
   }
 
-  public static <P extends SearchParameter> ProxyRetrofitQueryMap getParameterFromSearchRequest(
+  private static <P extends SearchParameter> ProxyRetrofitQueryMap getParameterFromSearchRequest(
       @Nullable SearchRequest<P> searchRequest) {
 
     // The searchRequest is transformed in a parameter map
