@@ -39,11 +39,11 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearch
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -89,7 +89,7 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
       EventManager eventManager,
       WithMyBatis withMyBatis,
       Validator validator,
-      @Value("${api.root.url}") String apiRootUrl) {
+      ConceptClient conceptClient) {
     super(
         institutionMapper,
         addressMapper,
@@ -105,7 +105,7 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         Institution.class,
         eventManager,
         withMyBatis,
-        apiRootUrl);
+        conceptClient);
     this.institutionMapper = institutionMapper;
     this.organizationMapper = organizationMapper;
     this.validator = validator;
@@ -175,10 +175,7 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
     InstitutionSearchParams params = buildSearchParams(searchRequest, deleted, page);
 
     long total = institutionMapper.count(params);
-    PagingResponse<Institution> results =
-        new PagingResponse<>(page, total, institutionMapper.list(params));
-
-    return results;
+    return new PagingResponse<>(page, total, institutionMapper.list(params));
   }
 
   private InstitutionSearchParams buildSearchParams(
@@ -203,8 +200,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .city(searchRequest.getCity())
         .fuzzyName(searchRequest.getFuzzyName())
         .active(searchRequest.getActive())
-        .type(searchRequest.getType())
-        .institutionalGovernance(searchRequest.getInstitutionalGovernance())
+        .types(searchRequest.getType())
+        .institutionalGovernances(searchRequest.getInstitutionalGovernance())
         .disciplines(searchRequest.getDisciplines())
         .masterSourceType(searchRequest.getMasterSourceType())
         .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))

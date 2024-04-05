@@ -26,10 +26,6 @@ import org.gbif.api.model.occurrence.DownloadStatistics;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.vocabulary.*;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringWriter;
@@ -256,7 +252,7 @@ public class CsvWriterTest {
     collection.setKey(UUID.randomUUID());
     collection.setName("Collection" + consecutive);
     collection.setMailingAddress(address);
-    collection.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
+    collection.setPreservationTypes(Collections.singletonList("SampleDried"));
     collection.setTaxonomicCoverage("world");
 
     collection.setActive(true);
@@ -287,7 +283,7 @@ public class CsvWriterTest {
     tag.setKey(consecutive);
     collection.setTags(Collections.singletonList(tag));
 
-    collection.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection.setAccessionStatus("Institutional");
     collection.setCollectionSummary(Collections.singletonMap("count", consecutive));
     collection.setPersonalCollection(false);
     collection.setReplacedBy(UUID.randomUUID());
@@ -342,10 +338,10 @@ public class CsvWriterTest {
     assertEquals(collectionView.getCollection().getCatalogUrls().toString(), line[14]);
     assertEquals(collectionView.getCollection().getApiUrls().toString(), line[15]);
     assertEquals(
-        CsvWriter.ListPreservationTypeProcessor.toString(
+        CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getPreservationTypes()),
         line[16]);
-    assertEquals(collectionView.getCollection().getAccessionStatus().name(), line[17]);
+    assertEquals(collectionView.getCollection().getAccessionStatus(), line[17]);
     assertEquals(collectionView.getInstitutionName(), line[18]);
     assertEquals(collectionView.getInstitutionCode(), line[19]);
     assertEquals(collectionView.getCollection().getInstitutionKey().toString(), line[20]);
@@ -439,9 +435,8 @@ public class CsvWriterTest {
     institution.setConvertedToCollection(UUID.randomUUID());
     institution.setLatitude(new BigDecimal(40));
     institution.setLongitude(new BigDecimal(90));
-    institution.setTypes(Collections.singletonList(InstitutionType.BOTANICAL_GARDEN));
-    institution.setInstitutionalGovernances(
-        Collections.singletonList(InstitutionGovernance.ACADEMIC_NON_PROFIT));
+    institution.setTypes(Collections.singletonList("BotanicalGarden"));
+    institution.setInstitutionalGovernances(Collections.singletonList("Academic"));
     institution.setCreatedBy("me");
     institution.setCreated(new Date());
     institution.setModifiedBy("me");
@@ -521,14 +516,14 @@ public class CsvWriterTest {
     assertEquals(institution.getMailingAddress().getCountry().getIso2LetterCode(), line[4]);
     assertEquals(institution.getMailingAddress().getCity(), line[5]);
     assertEquals(institution.getMailingAddress().getProvince(), line[6]);
-    assertEquals(institution.getTypes().get(0).name(), line[7]); //
+    assertEquals(institution.getTypes().get(0), line[7]); //
     assertEquals(institution.isActive(), Boolean.parseBoolean(line[8]));
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getEmail()), line[9]);
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getPhone()), line[10]);
     assertEquals(institution.getHomepage().toString(), line[11]);
     assertEquals(institution.getCatalogUrls().get(0).toString(), line[12]);
     assertEquals(institution.getApiUrls().get(0).toString(), line[13]);
-    assertEquals(institution.getInstitutionalGovernances().get(0).name(), line[14]);
+    assertEquals(institution.getInstitutionalGovernances().get(0), line[14]);
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getDisciplines()), line[15]);
     assertEquals(institution.getLatitude().toString(), line[16]);
     assertEquals(institution.getLongitude().toString(), line[17]);

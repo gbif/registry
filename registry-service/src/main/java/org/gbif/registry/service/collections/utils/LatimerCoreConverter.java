@@ -6,7 +6,8 @@ import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.latimercore.Address;
 import org.gbif.api.model.collections.latimercore.*;
 import org.gbif.api.model.collections.view.CollectionView;
-import org.gbif.api.vocabulary.collections.*;
+import org.gbif.api.vocabulary.collections.IdType;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
 
@@ -136,7 +137,7 @@ public class LatimerCoreConverter {
         .forEach(
             t ->
                 addMeasurementOrFactText(
-                    t.name(),
+                    t,
                     MeasurementOrFactTypes.INSTITUTION_TYPE,
                     organisationalUnit.getMeasurementOrFact()));
     addMeasurementOrFactText(
@@ -256,7 +257,7 @@ public class LatimerCoreConverter {
               if (MeasurementOrFactTypes.INSTITUTION_DESCRIPTION.equals(m.getMeasurementType())) {
                 institution.setDescription(m.getMeasurementFactText());
               } else if (MeasurementOrFactTypes.INSTITUTION_TYPE.equals(m.getMeasurementType())) {
-                institution.getTypes().add(InstitutionType.valueOf(m.getMeasurementFactText()));
+                institution.getTypes().add(m.getMeasurementFactText());
               } else if (MeasurementOrFactTypes.INSTITUTION_STATUS.equals(m.getMeasurementType())) {
                 institution.setActive(ACTIVE.equals(m.getMeasurementFactText()));
               } else if (MeasurementOrFactTypes.INSTITUTION_GOVERNANCE_TYPE.equals(
@@ -329,7 +330,7 @@ public class LatimerCoreConverter {
         .forEach(
             ct -> {
               ConceptView conceptView =
-                  conceptClient.get("CollectionContentType", ct, false, false);
+                  conceptClient.getFromLatestRelease("CollectionContentType", ct, false, false);
               if (conceptView != null
                   && conceptView.getConcept().getTags().stream()
                       .anyMatch(t -> t.getName().equals("ltc:discipline"))) {
@@ -359,9 +360,7 @@ public class LatimerCoreConverter {
     }
 
     objectGroup.setIsCurrentCollection(collection.isActive());
-    collection.getPreservationTypes().stream()
-        .map(PreservationType::name)
-        .forEach(v -> objectGroup.getPreservationMethod().add(v));
+    collection.getPreservationTypes().forEach(v -> objectGroup.getPreservationMethod().add(v));
 
     if (collection.getAddress() != null) {
       objectGroup.getAddress().add(toLatimerCoreAddress(collection.getAddress(), PHYSICAL));
@@ -372,7 +371,7 @@ public class LatimerCoreConverter {
 
     if (collection.getAccessionStatus() != null) {
       addCollectionStatusHistory(
-          collection.getAccessionStatus().name(), CollectionStatuses.ACCESSION_STATUS, objectGroup);
+          collection.getAccessionStatus(), CollectionStatuses.ACCESSION_STATUS, objectGroup);
     }
     if (Boolean.TRUE.equals(collection.isPersonalCollection())) {
       addCollectionStatusHistory(
@@ -551,9 +550,7 @@ public class LatimerCoreConverter {
 
     collection.setActive(
         Boolean.TRUE.equals(objectGroup.getIsCurrentCollection()) ? Boolean.TRUE : Boolean.FALSE);
-    objectGroup
-        .getPreservationMethod()
-        .forEach(p -> collection.getPreservationTypes().add(PreservationType.valueOf(p)));
+    objectGroup.getPreservationMethod().forEach(p -> collection.getPreservationTypes().add(p));
 
     objectGroup
         .getAddress()
@@ -571,7 +568,7 @@ public class LatimerCoreConverter {
         .forEach(
             s -> {
               if (CollectionStatuses.ACCESSION_STATUS.equals(s.getStatusType())) {
-                collection.setAccessionStatus(AccessionStatus.valueOf(s.getStatus()));
+                collection.setAccessionStatus(s.getStatus());
               } else if (CollectionStatuses.OWNERSHIP.equals(s.getStatusType())) {
                 collection.setPersonalCollection(true);
               }

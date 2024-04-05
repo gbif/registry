@@ -39,8 +39,8 @@ import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchP
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,21 +71,21 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
   @Autowired
   protected DefaultCollectionService(
-      CollectionMapper collectionMapper,
-      AddressMapper addressMapper,
-      MachineTagMapper machineTagMapper,
-      TagMapper tagMapper,
-      IdentifierMapper identifierMapper,
-      CommentMapper commentMapper,
-      OccurrenceMappingMapper occurrenceMappingMapper,
-      CollectionContactMapper contactMapper,
-      MasterSourceSyncMetadataMapper metadataMapper,
-      DatasetMapper datasetMapper,
-      OrganizationMapper organizationMapper,
-      EventManager eventManager,
-      WithMyBatis withMyBatis,
-      Validator validator,
-      @Value("${api.root.url}") String apiRootUrl) {
+          CollectionMapper collectionMapper,
+          AddressMapper addressMapper,
+          MachineTagMapper machineTagMapper,
+          TagMapper tagMapper,
+          IdentifierMapper identifierMapper,
+          CommentMapper commentMapper,
+          OccurrenceMappingMapper occurrenceMappingMapper,
+          CollectionContactMapper contactMapper,
+          MasterSourceSyncMetadataMapper metadataMapper,
+          DatasetMapper datasetMapper,
+          OrganizationMapper organizationMapper,
+          EventManager eventManager,
+          WithMyBatis withMyBatis,
+          Validator validator,
+          ConceptClient conceptClient) {
     super(
         collectionMapper,
         addressMapper,
@@ -101,7 +101,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
         Collection.class,
         eventManager,
         withMyBatis,
-        apiRootUrl);
+        conceptClient);
     this.collectionMapper = collectionMapper;
     this.datasetMapper = datasetMapper;
     this.organizationMapper = organizationMapper;

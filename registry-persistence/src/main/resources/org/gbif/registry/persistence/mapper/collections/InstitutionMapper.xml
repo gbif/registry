@@ -7,11 +7,11 @@
     <id property="key" column="key"/>
     <result property="email" column="email" typeHandler="StringArrayTypeHandler"/>
     <result property="phone" column="phone" typeHandler="StringArrayTypeHandler"/>
-    <result property="disciplines" column="disciplines" typeHandler="StringArrayTypeHandler"/>
+    <result property="disciplines" column="discipline" typeHandler="StringArrayTypeHandler"/>
     <result property="additionalNames" column="additional_names" typeHandler="StringArrayTypeHandler"/>
     <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
-    <result property="types" column="type" typeHandler="InstitutionTypeArrayTypeHandler"/>
-    <result property="institutionalGovernances" column="institutional_governance" typeHandler="InstitutionGovernanceArrayTypeHandler"/>
+    <result property="types" column="type" typeHandler="StringArrayTypeHandler"/>
+    <result property="institutionalGovernances" column="institutional_governance" typeHandler="StringArrayTypeHandler"/>
     <result property="catalogUrls" column="catalog_url" typeHandler="UriArrayTypeHandler"/>
     <result property="apiUrls" column="api_url" typeHandler="UriArrayTypeHandler"/>
     <association property="address" column="address_key" select="listAddress" />
@@ -36,14 +36,14 @@
 
   <sql id="INSTITUTION_WRITE_FIELDS">
     key, code, name, description, type, active, email, phone, homepage, catalog_url, api_url, institutional_governance,
-    disciplines, latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, number_specimens,
+    discipline, latitude, longitude, mailing_address_key, address_key, additional_names, founding_date, number_specimens,
     logo_url, created_by, modified_by, created, modified, alternative_codes, master_source, display_on_NHCPortal,
     featured_image_url, featured_image_license
   </sql>
 
   <sql id="INSTITUTION_READ_FIELDS">
     i.key, i.code, i.name, i.description, i.type, i.active, i.email, i.phone, i.homepage, i.catalog_url, i.api_url,
-    i.institutional_governance, i.disciplines, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
+    i.institutional_governance, i.discipline, i.latitude, i.longitude, i.mailing_address_key, i.address_key,
     i.additional_names, i.founding_date, i.number_specimens, i.logo_url, i.created_by, i.modified_by,
     i.created, i.modified, i.deleted, i.alternative_codes, i.replaced_by, i.converted_to_collection, i.master_source,
     i.master_sync_metadata_key, i.display_on_NHCPortal, i.occurrence_count, i.type_specimen_count,
@@ -55,14 +55,14 @@
     #{code,jdbcType=VARCHAR},
     #{name,jdbcType=VARCHAR},
     #{description,jdbcType=VARCHAR},
-    #{types,jdbcType=ARRAY,typeHandler=InstitutionTypeArrayTypeHandler},
+    #{types,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{active,jdbcType=BOOLEAN},
     #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{homepage,jdbcType=VARCHAR},
     #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
-    #{institutionalGovernances,jdbcType=ARRAY,typeHandler=InstitutionGovernanceArrayTypeHandler},
+    #{institutionalGovernances,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{latitude,jdbcType=NUMERIC},
     #{longitude,jdbcType=NUMERIC},
@@ -87,15 +87,15 @@
     code = #{code,jdbcType=VARCHAR},
     name = #{name,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
-    type = #{types,jdbcType=ARRAY,typeHandler=InstitutionTypeArrayTypeHandler},
+    type = #{types,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     active = #{active,jdbcType=BOOLEAN},
     email = #{email,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     phone = #{phone,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     homepage = #{homepage,jdbcType=VARCHAR},
     catalog_url = #{catalogUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
     api_url = #{apiUrls,jdbcType=ARRAY,typeHandler=UriArrayTypeHandler},
-    institutional_governance = #{institutionalGovernances,jdbcType=ARRAY,typeHandler=InstitutionGovernanceArrayTypeHandler},
-    disciplines = #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    institutional_governance = #{institutionalGovernances,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    discipline = #{disciplines,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     latitude = #{latitude,jdbcType=NUMERIC},
     longitude = #{longitude,jdbcType=NUMERIC},
     mailing_address_key = #{mailingAddress.key,jdbcType=INTEGER},
@@ -330,14 +330,20 @@
       <if test="params.fuzzyName != null" >
         AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
       </if>
-      <if test="params.type != null" >
-        AND i.type @> ARRAY[#{params.type,jdbcType=OTHER}]::enum_institution_type[]
+      <if test="params.types != null and params.types.size > 0" >
+        AND i.type &amp;&amp; ARRAY
+        <foreach item="item" collection="params.types" open="[" separator="," close="]">
+          #{item,jdbcType=VARCHAR}::text
+        </foreach>
       </if>
-      <if test="params.institutionalGovernance != null" >
-        AND i.institutional_governance @> ARRAY[#{params.institutionalGovernance,jdbcType=OTHER}]::enum_institution_governance[]
+      <if test="params.institutionalGovernances != null and params.institutionalGovernances.size > 0" >
+        AND i.institutional_governance &amp;&amp; ARRAY
+        <foreach item="item" collection="params.institutionalGovernances" open="[" separator="," close="]">
+          #{item,jdbcType=VARCHAR}::text
+        </foreach>
       </if>
       <if test="params.disciplines != null and params.disciplines.size > 0" >
-        AND i.disciplines &amp;&amp; ARRAY
+        AND i.discipline &amp;&amp; ARRAY
         <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}::text
         </foreach>

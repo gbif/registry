@@ -6,10 +6,12 @@
   <changeSet id="135" author="mlopez" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-        -- TODO: migrate old enum to new vocabs when we know the mapping
-        -- TODO: migrate current column instead of creating a new one?
-        ALTER TABLE institution ADD COLUMN disciplines text[];
-        ALTER TABLE collection ADD COLUMN content_types text[];
+        ALTER TABLE institution ALTER COLUMN discipline TYPE text[] USING discipline::text[];
+        ALTER TABLE institution ALTER COLUMN type TYPE text[] USING type::text[];
+        ALTER TABLE institution ALTER COLUMN institutional_governance TYPE text[] USING NULLIF(ARRAY[institutional_governance], '{null}');
+        ALTER TABLE collection ALTER COLUMN content_type TYPE text[] USING content_type::text[];
+        ALTER TABLE collection ALTER COLUMN accession_status TYPE text USING accession_status::text;
+        ALTER TABLE collection ALTER COLUMN preservation_type TYPE text[] USING preservation_type::text[];
       ]]>
     </sql>
   </changeSet>
