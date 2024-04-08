@@ -60,7 +60,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -267,6 +266,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   @VisibleForTesting
   Optional<PipelineStep> getLatestSuccessfulStep(PipelineProcess pipelineProcess, StepType step) {
     return pipelineProcess.getExecutions().stream()
+        .filter(ex-> !ex.getStepsToRun().isEmpty())
         .sorted(Comparator.comparing(PipelineExecution::getCreated).reversed())
         .flatMap(ex -> ex.getSteps().stream())
         .filter(s -> step.equals(s.getType()))
@@ -430,11 +430,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
-    Set<StepType> finalSteps =
-        stepsToSend.entrySet().stream()
-            .flatMap(x -> x.getValue().getPipelineSteps().stream())
-            .map(StepType::valueOf)
-            .collect(Collectors.toSet());
+    Set<StepType> finalSteps = PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend.keySet());
 
     // create pipelines execution
     PipelineExecution execution =
