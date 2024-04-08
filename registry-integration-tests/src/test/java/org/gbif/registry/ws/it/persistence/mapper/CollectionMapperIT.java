@@ -63,11 +63,11 @@ public class CollectionMapperIT extends BaseItTest {
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer("collection");
 
-  private CollectionMapper collectionMapper;
-  private AddressMapper addressMapper;
-  private MachineTagMapper machineTagMapper;
-  private IdentifierMapper identifierMapper;
-  private CollectionContactMapper contactMapper;
+  private final CollectionMapper collectionMapper;
+  private final AddressMapper addressMapper;
+  private final MachineTagMapper machineTagMapper;
+  private final IdentifierMapper identifierMapper;
+  private final CollectionContactMapper contactMapper;
 
   @Autowired
   public CollectionMapperIT(
@@ -94,7 +94,7 @@ public class CollectionMapperIT extends BaseItTest {
 
     Collection collection = new Collection();
     collection.setKey(key);
-    collection.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection.setAccessionStatus("Institutional");
     collection.setCode("CODE");
     collection.setName("NAME");
     collection.setCreatedBy("test");
@@ -117,9 +117,9 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setFeaturedImageLicense(License.CC0_1_0);
     collection.setTemporalCoverage("temporal coverage");
 
-    List<PreservationType> preservationTypes = new ArrayList<>();
-    preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
-    preservationTypes.add(PreservationType.SAMPLE_CRYOPRESERVED);
+    List<String> preservationTypes = new ArrayList<>();
+    preservationTypes.add("StorageControlledAtmosphere");
+    preservationTypes.add("SampleCryopreserved");
     collection.setPreservationTypes(preservationTypes);
 
     Address address = new Address();
@@ -141,7 +141,7 @@ public class CollectionMapperIT extends BaseItTest {
 
     // update entity
     collection.setDescription("dummy description");
-    preservationTypes.add(PreservationType.SAMPLE_DRIED);
+    preservationTypes.add("SampleDried");
     collection.setPreservationTypes(preservationTypes);
     collectionMapper.update(collection);
     collectionStored = collectionMapper.get(key);

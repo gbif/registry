@@ -35,6 +35,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganiza
 import org.gbif.registry.service.RegistryDatasetService;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
+import org.gbif.vocabulary.client.ConceptClient;
 
 import java.util.List;
 import java.util.UUID;
@@ -62,6 +63,7 @@ public class MasterSourceSynchronizer {
   private final CollectionMapper collectionMapper;
   private final CollectionsEmailManager emailManager;
   private final EmailSender emailSender;
+  private final ConceptClient conceptClient;
 
   @Autowired
   public MasterSourceSynchronizer(
@@ -72,7 +74,8 @@ public class MasterSourceSynchronizer {
       CollectionMapper collectionMapper,
       CollectionsEmailManager emailManager,
       EmailSender emailSender,
-      EventManager eventManager) {
+      EventManager eventManager,
+      ConceptClient conceptClient) {
     this.collectionService = collectionService;
     this.institutionService = institutionService;
     this.organizationService = organizationService;
@@ -80,6 +83,7 @@ public class MasterSourceSynchronizer {
     this.collectionMapper = collectionMapper;
     this.emailManager = emailManager;
     this.emailSender = emailSender;
+    this.conceptClient = conceptClient;
     eventManager.register(this);
   }
 
@@ -289,7 +293,8 @@ public class MasterSourceSynchronizer {
   private void updateCollection(
       Dataset dataset, Organization publishingOrganization, Collection existingCollection) {
     Collection convertedCollection =
-        CollectionConverter.convertFromDataset(dataset, publishingOrganization, existingCollection);
+        CollectionConverter.convertFromDataset(
+            dataset, publishingOrganization, existingCollection, conceptClient);
 
     // create new identifiers
     if (convertedCollection.getIdentifiers().stream().anyMatch(i -> i.getKey() == null)) {
