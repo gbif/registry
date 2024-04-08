@@ -1,13 +1,27 @@
 package org.gbif.registry.service.collections.utils;
 
-import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
-import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.collections.latimercore.Address;
-import org.gbif.api.model.collections.latimercore.*;
+import org.gbif.api.model.collections.latimercore.CollectionStatusHistory;
+import org.gbif.api.model.collections.latimercore.ContactDetail;
+import org.gbif.api.model.collections.latimercore.GeographicContext;
+import org.gbif.api.model.collections.latimercore.Identifier;
+import org.gbif.api.model.collections.latimercore.MeasurementOrFact;
+import org.gbif.api.model.collections.latimercore.ObjectClassification;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
+import org.gbif.api.model.collections.latimercore.Person;
+import org.gbif.api.model.collections.latimercore.PersonRole;
+import org.gbif.api.model.collections.latimercore.Reference;
+import org.gbif.api.model.collections.latimercore.ResourceRelationship;
+import org.gbif.api.model.collections.latimercore.Role;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.vocabulary.collections.IdType;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
 
@@ -19,7 +33,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.common.Strings;
+
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LatimerCoreConverter {
 
   public static final String DELIMITER = "\\|";
@@ -33,6 +54,7 @@ public class LatimerCoreConverter {
   public static final String PART_OF = "part of";
   public static final String TAXONOMIC_SCOPE = "Taxonomic scope";
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class IdentifierTypes {
     public static final String INSTITUTION_CODE = "Institution code";
     public static final String INSTITUTION_GRSCICOLL_KEY = "Institution GRSciColl key";
@@ -43,6 +65,7 @@ public class LatimerCoreConverter {
     public static final String CONTACT_GRSCICOLL_KEY = "Contact GRSciColl key";
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class MeasurementOrFactTypes {
     public static final String INSTITUTION_DESCRIPTION = "Institution description";
     public static final String INSTITUTION_TYPE = "Institution type";
@@ -60,6 +83,7 @@ public class LatimerCoreConverter {
     public static final String CONTACT_NOTE = "Contact note";
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class References {
     public static final String WEBSITE = "Website";
     public static final String API = "API";
@@ -74,6 +98,7 @@ public class LatimerCoreConverter {
     public static final String COLLECTION_API = "Collection API";
   }
 
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class CollectionStatuses {
     public static final String ACCESSION_STATUS = "Accession status";
     public static final String OWNERSHIP = "Ownership";
@@ -149,7 +174,7 @@ public class LatimerCoreConverter {
         .forEach(
             ig ->
                 addMeasurementOrFactText(
-                    ig.name(),
+                    ig,
                     MeasurementOrFactTypes.INSTITUTION_GOVERNANCE_TYPE,
                     organisationalUnit.getMeasurementOrFact()));
     institution
@@ -262,9 +287,7 @@ public class LatimerCoreConverter {
                 institution.setActive(ACTIVE.equals(m.getMeasurementFactText()));
               } else if (MeasurementOrFactTypes.INSTITUTION_GOVERNANCE_TYPE.equals(
                   m.getMeasurementType())) {
-                institution
-                    .getInstitutionalGovernances()
-                    .add(InstitutionGovernance.valueOf(m.getMeasurementFactText()));
+                institution.getInstitutionalGovernances().add(m.getMeasurementFactText());
               } else if (MeasurementOrFactTypes.RESEARCH_DISCIPLINE.equals(
                   m.getMeasurementType())) {
                 institution.getDisciplines().add(m.getMeasurementFactText());
@@ -330,7 +353,8 @@ public class LatimerCoreConverter {
         .forEach(
             ct -> {
               ConceptView conceptView =
-                  conceptClient.getFromLatestRelease("CollectionContentType", ct, false, false);
+                  conceptClient.getFromLatestRelease(
+                      Vocabularies.COLLECTION_CONTENT_TYPE, ct, false, false);
               if (conceptView != null
                   && conceptView.getConcept().getTags().stream()
                       .anyMatch(t -> t.getName().equals("ltc:discipline"))) {

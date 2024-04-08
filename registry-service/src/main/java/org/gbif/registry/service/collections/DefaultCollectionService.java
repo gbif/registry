@@ -71,21 +71,21 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
   @Autowired
   protected DefaultCollectionService(
-          CollectionMapper collectionMapper,
-          AddressMapper addressMapper,
-          MachineTagMapper machineTagMapper,
-          TagMapper tagMapper,
-          IdentifierMapper identifierMapper,
-          CommentMapper commentMapper,
-          OccurrenceMappingMapper occurrenceMappingMapper,
-          CollectionContactMapper contactMapper,
-          MasterSourceSyncMetadataMapper metadataMapper,
-          DatasetMapper datasetMapper,
-          OrganizationMapper organizationMapper,
-          EventManager eventManager,
-          WithMyBatis withMyBatis,
-          Validator validator,
-          ConceptClient conceptClient) {
+      CollectionMapper collectionMapper,
+      AddressMapper addressMapper,
+      MachineTagMapper machineTagMapper,
+      TagMapper tagMapper,
+      IdentifierMapper identifierMapper,
+      CommentMapper commentMapper,
+      OccurrenceMappingMapper occurrenceMappingMapper,
+      CollectionContactMapper contactMapper,
+      MasterSourceSyncMetadataMapper metadataMapper,
+      DatasetMapper datasetMapper,
+      OrganizationMapper organizationMapper,
+      EventManager eventManager,
+      WithMyBatis withMyBatis,
+      Validator validator,
+      ConceptClient conceptClient) {
     super(
         collectionMapper,
         addressMapper,
@@ -281,7 +281,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     checkArgument(publishingOrganization != null, "Publishing organization not found");
 
     Collection collection =
-        CollectionConverter.convertFromDataset(dataset, publishingOrganization, collectionCode);
+        CollectionConverter.convertFromDataset(
+            dataset, publishingOrganization, collectionCode, conceptClient);
 
     preCreate(collection);
 
