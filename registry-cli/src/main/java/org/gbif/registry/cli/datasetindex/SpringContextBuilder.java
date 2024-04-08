@@ -20,6 +20,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexer;
 import org.gbif.registry.cli.datasetindex.batchindexer.DatasetBatchIndexerConfiguration;
 import org.gbif.registry.cli.datasetindex.indexupdater.DatasetIndexUpdaterConfiguration;
+import org.gbif.registry.pipelines.issues.GithubApiClient;
 import org.gbif.registry.search.dataset.indexing.DatasetJsonConverter;
 import org.gbif.registry.search.dataset.indexing.EsDatasetRealtimeIndexer;
 import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPersistenceServiceImpl;
@@ -230,6 +231,11 @@ public class SpringContextBuilder {
     @Bean
     public NetworkService networkService(ClientBuilder clientBuilder) {
       return clientBuilder.build(NetworkClient.class);
+    }
+
+    @Bean
+    public GithubApiClient githubApiClient(ClientBuilder clientBuilder){
+      return clientBuilder.build(GithubApiClient.class);
     }
   }
 
