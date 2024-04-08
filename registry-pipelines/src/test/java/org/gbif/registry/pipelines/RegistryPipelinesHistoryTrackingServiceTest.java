@@ -19,6 +19,7 @@ import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.pipelines.StepType;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +57,7 @@ class RegistryPipelinesHistoryTrackingServiceTest {
     execution.addStep(s1);
     execution.addStep(s2);
     execution.addStep(s3);
+    execution.setStepsToRun(Collections.singleton(StepType.ABCD_TO_VERBATIM));
 
     PipelineProcess process = new PipelineProcess();
     process.addExecution(execution);
