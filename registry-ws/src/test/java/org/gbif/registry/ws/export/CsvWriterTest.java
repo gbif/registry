@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.export;
 
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -23,19 +21,37 @@ import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
-import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.Comment;
+import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
+import org.gbif.api.model.registry.Identifier;
+import org.gbif.api.model.registry.MachineTag;
+import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
-import org.gbif.api.vocabulary.*;
-import org.junit.jupiter.api.Test;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetSubtype;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.License;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+
+import lombok.SneakyThrows;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -335,8 +351,11 @@ public class CsvWriterTest {
         CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getPhone()),
         line[12]);
     assertEquals(collectionView.getCollection().getHomepage().toString(), line[13]);
-    assertEquals(collectionView.getCollection().getCatalogUrls().toString(), line[14]);
-    assertEquals(collectionView.getCollection().getApiUrls().toString(), line[15]);
+    assertEquals(
+        CsvWriter.ListUriProcessor.toString(collectionView.getCollection().getCatalogUrls()),
+        line[14]);
+    assertEquals(
+        CsvWriter.ListUriProcessor.toString(collectionView.getCollection().getApiUrls()), line[15]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getPreservationTypes()),
@@ -367,38 +386,38 @@ public class CsvWriterTest {
     assertEquals(
         CsvWriter.ListContactProcessor.toString(collectionView.getCollection().getContactPersons()),
         line[30]);
-    assertEquals(collectionView.getCollection().getNumberSpecimens(), Integer.parseInt(line[32]));
+    assertEquals(collectionView.getCollection().getNumberSpecimens(), Integer.parseInt(line[31]));
     assertEquals(
         CsvWriter.ListMachineTagProcessor.toString(collectionView.getCollection().getMachineTags()),
-        line[33]);
-    assertEquals(collectionView.getCollection().getTaxonomicCoverage(), line[34]);
-    assertEquals(collectionView.getCollection().getGeographicCoverage(), line[35]);
-    assertEquals(collectionView.getCollection().getNotes(), line[36]);
+        line[32]);
+    assertEquals(collectionView.getCollection().getTaxonomicCoverage(), line[33]);
+    assertEquals(collectionView.getCollection().getGeographicCoverage(), line[34]);
+    assertEquals(collectionView.getCollection().getNotes(), line[35]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getIncorporatedCollections()),
-        line[37]);
+        line[36]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getImportantCollectors()),
-        line[38]);
+        line[37]);
     assertEquals(
         CsvWriter.CollectionSummaryProcessor.toString(
             collectionView.getCollection().getCollectionSummary()),
-        line[39]);
+        line[38]);
     assertEquals(
         CsvWriter.ListAlternativeCodeProcessor.toString(
             collectionView.getCollection().getAlternativeCodes()),
-        line[40]);
+        line[39]);
     assertEquals(
         CsvWriter.ListCommentProcessor.toString(collectionView.getCollection().getComments()),
-        line[41]);
+        line[40]);
     assertEquals(
         CsvWriter.ListOccurrenceMappingsProcessor.toString(
             collectionView.getCollection().getOccurrenceMappings()),
-        line[42]);
+        line[41]);
     assertEquals(
-        collectionView.getCollection().getReplacedBy().toString(), line[43].replace("\r", ""));
+        collectionView.getCollection().getReplacedBy().toString(), line[42].replace("\r", ""));
   }
 
   /** Generates test instances of Institution. */
@@ -516,14 +535,16 @@ public class CsvWriterTest {
     assertEquals(institution.getMailingAddress().getCountry().getIso2LetterCode(), line[4]);
     assertEquals(institution.getMailingAddress().getCity(), line[5]);
     assertEquals(institution.getMailingAddress().getProvince(), line[6]);
-    assertEquals(institution.getTypes().get(0), line[7]); //
+    assertEquals(CsvWriter.ListStringProcessor.toString(institution.getTypes()), line[7]); //
     assertEquals(institution.isActive(), Boolean.parseBoolean(line[8]));
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getEmail()), line[9]);
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getPhone()), line[10]);
     assertEquals(institution.getHomepage().toString(), line[11]);
-    assertEquals(institution.getCatalogUrls().get(0).toString(), line[12]);
-    assertEquals(institution.getApiUrls().get(0).toString(), line[13]);
-    assertEquals(institution.getInstitutionalGovernances().get(0), line[14]);
+    assertEquals(CsvWriter.ListUriProcessor.toString(institution.getCatalogUrls()), line[12]);
+    assertEquals(CsvWriter.ListUriProcessor.toString(institution.getApiUrls()), line[13]);
+    assertEquals(
+        CsvWriter.ListStringProcessor.toString(institution.getInstitutionalGovernances()),
+        line[14]);
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getDisciplines()), line[15]);
     assertEquals(institution.getLatitude().toString(), line[16]);
     assertEquals(institution.getLongitude().toString(), line[17]);
@@ -532,29 +553,29 @@ public class CsvWriterTest {
     assertEquals(
         CsvWriter.ListStringProcessor.toString(institution.getAdditionalNames()), line[20]);
     assertEquals(Integer.toString(institution.getFoundingDate()), line[21]);
-    assertEquals(Integer.toString(institution.getNumberSpecimens()), line[24]);
-    assertEquals(institution.getLogoUrl().toString(), line[26]);
-    assertEquals(institution.getCreatedBy(), line[28]);
-    assertEquals(institution.getModifiedBy(), line[29]);
-    assertEquals(dateFormat.format(institution.getCreated()), line[30]);
-    assertEquals(dateFormat.format(institution.getModified()), line[31]);
+    assertEquals(Integer.toString(institution.getNumberSpecimens()), line[22]);
+    assertEquals(institution.getLogoUrl().toString(), line[23]);
+    assertEquals(institution.getCreatedBy(), line[24]);
+    assertEquals(institution.getModifiedBy(), line[25]);
+    assertEquals(dateFormat.format(institution.getCreated()), line[26]);
+    assertEquals(dateFormat.format(institution.getModified()), line[27]);
     assertEquals(
-        Optional.ofNullable(institution.getDeleted()).map(dateFormat::format).orElse(""), line[32]);
-    assertEquals(CsvWriter.ListTagsProcessor.toString(institution.getTags()), line[33]);
+        Optional.ofNullable(institution.getDeleted()).map(dateFormat::format).orElse(""), line[28]);
+    assertEquals(CsvWriter.ListTagsProcessor.toString(institution.getTags()), line[29]);
     assertEquals(
-        CsvWriter.ListIdentifierProcessor.toString(institution.getIdentifiers()), line[34]);
+        CsvWriter.ListIdentifierProcessor.toString(institution.getIdentifiers()), line[30]);
     assertEquals(
-        CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[35]);
+        CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[31]);
     assertEquals(
-        CsvWriter.ListMachineTagProcessor.toString(institution.getMachineTags()), line[36]);
+        CsvWriter.ListMachineTagProcessor.toString(institution.getMachineTags()), line[32]);
     assertEquals(
         CsvWriter.ListAlternativeCodeProcessor.toString(institution.getAlternativeCodes()),
-        line[37]);
-    assertEquals(CsvWriter.ListCommentProcessor.toString(institution.getComments()), line[38]);
+        line[33]);
+    assertEquals(CsvWriter.ListCommentProcessor.toString(institution.getComments()), line[34]);
     assertEquals(
         CsvWriter.ListOccurrenceMappingsProcessor.toString(institution.getOccurrenceMappings()),
-        line[39]);
-    assertEquals(institution.getReplacedBy().toString(), line[40]);
-    assertEquals(institution.getConvertedToCollection().toString(), line[41].replace("\r", ""));
+        line[35]);
+    assertEquals(institution.getReplacedBy().toString(), line[36]);
+    assertEquals(institution.getConvertedToCollection().toString(), line[37].replace("\r", ""));
   }
 }
