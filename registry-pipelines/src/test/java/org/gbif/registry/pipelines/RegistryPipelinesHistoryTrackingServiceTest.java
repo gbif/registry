@@ -20,6 +20,7 @@ import org.gbif.api.model.pipelines.StepType;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,8 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class RegistryPipelinesHistoryTrackingServiceTest {
@@ -51,8 +54,8 @@ class RegistryPipelinesHistoryTrackingServiceTest {
 
     PipelineStep s3 =
         new PipelineStep()
-          .setType(StepType.ABCD_TO_VERBATIM)
-          .setStarted(LocalDateTime.now().minusMinutes(60));
+            .setType(StepType.ABCD_TO_VERBATIM)
+            .setStarted(LocalDateTime.now().minusMinutes(60));
 
     execution.addStep(s1);
     execution.addStep(s2);
@@ -62,7 +65,25 @@ class RegistryPipelinesHistoryTrackingServiceTest {
     PipelineProcess process = new PipelineProcess();
     process.addExecution(execution);
 
-    PipelineStep step1 = trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM).get();
+    PipelineStep step1 =
+        trackingService.getLatestSuccessfulStep(process, StepType.ABCD_TO_VERBATIM).get();
     assertEquals(s1, step1);
+  }
+
+  @Test
+  void getStepTypesFragmenterTest() {
+    Set<StepType> result =
+        trackingService.getStepTypes(Collections.singleton(StepType.ABCD_TO_VERBATIM));
+
+    assertTrue(result.contains(StepType.FRAGMENTER));
+  }
+
+  @Test
+  void getStepTypesTest() {
+
+    Set<StepType> result =
+        trackingService.getStepTypes(Collections.singleton(StepType.VERBATIM_TO_INTERPRETED));
+
+    assertFalse(result.contains(StepType.FRAGMENTER));
   }
 }
