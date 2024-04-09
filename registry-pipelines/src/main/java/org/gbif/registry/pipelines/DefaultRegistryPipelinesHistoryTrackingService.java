@@ -76,6 +76,7 @@ import org.gbif.registry.pipelines.util.PredicateUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -126,6 +127,15 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           Lists.newArrayList(
               Collections.reverseOrder(new EndpointPriorityComparator()),
               EndpointCreatedComparator.INSTANCE));
+
+  private static final Set<StepType> INCLUDE_FRAGMENTER = new HashSet<>(Arrays.asList(
+    StepType.DWCA_TO_VERBATIM,
+    StepType.XML_TO_VERBATIM,
+    StepType.ABCD_TO_VERBATIM,
+    StepType.FRAGMENTER
+  ));
+
+  private ObjectMapper objectMapper;
   /** The messagePublisher can be optional. */
   private final MessagePublisher publisher;
 
@@ -136,7 +146,6 @@ public class DefaultRegistryPipelinesHistoryTrackingService
   private final PipelinesEmailManager pipelinesEmailManager;
   private final GithubApiClient githubApiClient;
   private final IssueCreator issueCreator;
-  private final ObjectMapper objectMapper;
   private static final String DATASET_KEY_CANNOT_BE_NULL = "DatasetKey can't be null";
 
   public DefaultRegistryPipelinesHistoryTrackingService(
@@ -421,11 +430,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
           .build();
     }
 
-    Set<StepType> finalSteps = PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend.keySet());
-
     // create pipelines execution
     PipelineExecution execution =
-        new PipelineExecution().setCreatedBy(user).setRerunReason(reason).setStepsToRun(finalSteps);
+        new PipelineExecution()
+            .setCreatedBy(user)
+            .setRerunReason(reason)
+            .setStepsToRun(getStepTypes(stepsToSend.keySet()));
 
     long executionKey = addPipelineExecution(process.getKey(), execution, user);
 
@@ -499,6 +509,16 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     } catch (IOException ex) {
       LOG.warn("Error reading message", ex);
     }
+  }
+
+  @VisibleForTesting
+  protected Set<StepType> getStepTypes(Set<StepType> stepsToSend) {
+    Set<StepType> finalSteps =
+        PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend);
+    if (stepsToSend.stream().noneMatch(INCLUDE_FRAGMENTER::contains)) {
+      finalSteps.remove(StepType.FRAGMENTER);
+    }
+    return finalSteps;
   }
 
   private <T extends PipelineBasedMessage> T createMessage(String jsonMessage, Class<T> targetClass)
