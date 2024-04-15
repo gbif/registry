@@ -35,8 +35,8 @@ public final class DataCiteConstants {
   public static final String TSV_FORMAT = "text/tab-separated-values";
   // Not yet a registered type: https://issues.apache.org/jira/browse/AVRO-488
   public static final String AVRO_FORMAT = "Avro";
-  // Not yet a registered type: https://issues.apache.org/jira/browse/PARQUET-1889
-  public static final String PARQUET_FORMAT = "Parquet"; // "application/vnd.apache.parquet";
+  // https://www.iana.org/assignments/media-types/application/vnd.apache.parquet
+  public static final String PARQUET_FORMAT = "application/vnd.apache.parquet";
   public static final String API_DOWNLOAD_METADATA = "%soccurrence/download/%s";
   public static final String API_DOWNLOAD_DATASETS_METADATA = "%soccurrence/download/%s/datasets";
   public static final String API_DOWNLOAD_DATASETS_EXPORT_METADATA = "%soccurrence/download/%s/datasets/export";
