@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+import org.gbif.api.vocabulary.collections.Source;
+
 @Getter
 @SuperBuilder
 public class CollectionSearchParams extends SearchParams {
@@ -32,4 +34,6 @@ public class CollectionSearchParams extends SearchParams {
   @Nullable List<PreservationType> preservationTypes;
   @Nullable AccessionStatus accessionStatus;
   @Nullable Boolean personalCollection;
+  @Nullable String sourceId;
+  @Nullable Source source;
 }

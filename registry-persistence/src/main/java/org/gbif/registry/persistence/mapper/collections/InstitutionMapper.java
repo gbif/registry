@@ -13,8 +13,11 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
+import org.apache.ibatis.annotations.Select;
+
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;

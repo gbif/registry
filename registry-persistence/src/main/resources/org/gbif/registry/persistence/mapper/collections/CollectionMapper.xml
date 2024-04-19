@@ -390,6 +390,12 @@
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
+      <if test="params.source != null">
+        AND m.source = #{params.source}
+      </if>
+      <if test="params.sourceId != null">
+        AND m.source_id = #{params.sourceId}
+      </if>
     </where>
   </sql>
 

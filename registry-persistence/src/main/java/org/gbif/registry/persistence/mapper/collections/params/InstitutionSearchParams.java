@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+import org.gbif.api.vocabulary.collections.Source;
+
 @Getter
 @SuperBuilder
 public class InstitutionSearchParams extends SearchParams {
@@ -31,4 +33,6 @@ public class InstitutionSearchParams extends SearchParams {
   @Nullable InstitutionType type;
   @Nullable InstitutionGovernance institutionalGovernance;
   @Nullable List<Discipline> disciplines;
+  @Nullable String sourceId;
+  @Nullable Source source;
 }
