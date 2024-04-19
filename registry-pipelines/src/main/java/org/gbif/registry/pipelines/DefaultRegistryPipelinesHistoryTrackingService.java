@@ -617,6 +617,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     pipelineStep.setStarted(LocalDateTime.now());
     pipelineStep.setCreatedBy(user);
 
+    LOG.info("Update pipelines step: {}, state: {}", pipelineStep.getKey(), pipelineStep.getState());
+
     mapper.updatePipelineStep(pipelineStep);
     return pipelineStep.getKey();
   }
