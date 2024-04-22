@@ -171,7 +171,7 @@ public class CollectionResource
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
-            name = "source",
+            name = "sourc",
             description = "Source attribute of MasterSourceMetadata",
             schema = @Schema(implementation = Source.class),
             in = ParameterIn.QUERY)
