@@ -13,37 +13,29 @@
  */
 package org.gbif.registry.pipelines.issues;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import lombok.Builder;
 import lombok.Data;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.PATCH;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+import org.springframework.web.bind.annotation.*;
 
-public interface GithubApiService {
-  @POST("issues")
-  Call<Void> createIssue(@Body Issue issue);
+public interface GithubApiClient {
+  @PostMapping("/issues")
+  void createIssue(@RequestBody Issue issue);
 
-  @GET("issues")
-  Call<List<IssueResult>> listIssues(
-      @Query("labels") List<String> labels,
-      @Query("state") String state,
-      @Query("page") int page,
-      @Query("per_page") int perPage);
+  @GetMapping("/issues")
+  List<IssueResult> listIssues(
+      @RequestParam("labels") List<String> labels,
+      @RequestParam("state") String state,
+      @RequestParam("page") int page,
+      @RequestParam("per_page") int perPage);
 
-  @PATCH("issues/{id}")
-  Call<Void> updateIssueLabels(@Path("id") long id, @Body IssueLabels issueLabels);
+  @PatchMapping("/issues/{id}")
+  void updateIssueLabels(@PathVariable("id") long id, @RequestBody IssueLabels issueLabels);
 
-  @POST("issues/{id}/comments")
-  Call<Void> addIssueComment(@Path("id") long id, @Body IssueComment issueComment);
+  @PostMapping("/issues/{id}/comments")
+  void addIssueComment(@PathVariable("id") long id, @RequestBody IssueComment issueComment);
 
   @Data
   @Builder
