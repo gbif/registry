@@ -101,6 +101,7 @@ public class CollectionResourceIT
     req.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
     req.setPreservationTypes(
         Arrays.asList(PreservationType.SAMPLE_CRYOPRESERVED, PreservationType.SAMPLE_DRIED));
+
     PagingResponse<CollectionView> result = getClient().list(req);
     assertEquals(views.size(), result.getResults().size());
   }

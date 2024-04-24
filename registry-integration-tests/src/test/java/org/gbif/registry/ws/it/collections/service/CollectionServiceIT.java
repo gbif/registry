@@ -144,17 +144,31 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection2.setAddress(address2);
     UUID key2 = collectionService.create(collection2);
 
+    Collection collection3 = testData.newEntity();
+    collection3.setCode("c3");
+    collection3.setName("n3");
+    MasterSourceMetadata sourceMetadata = new MasterSourceMetadata();
+    sourceMetadata.setCreatedBy("test");
+    sourceMetadata.setSourceId("test-123");
+    sourceMetadata.setSource(Source.IH_IRN);
+    collection3.setMasterSourceMetadata(sourceMetadata);
+    UUID key3 = collectionService.create(collection3);
+    collectionService.addMasterSourceMetadata(key3,sourceMetadata);
+
     // query param
     PagingResponse<CollectionView> response =
         collectionService.list(
             CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
-    assertEquals(2, response.getResults().size());
+    assertEquals(3, response.getResults().size());
+
+    response = collectionService.list(CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+    assertEquals(1,response.getResults().size());
 
     // empty queries are ignored and return all elements
     response =
         collectionService.list(
             CollectionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
-    assertEquals(2, response.getResults().size());
+    assertEquals(3, response.getResults().size());
 
     response =
         collectionService.list(
@@ -169,7 +183,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     assertEquals(key2, response.getResults().get(0).getCollection().getKey());
 
     assertEquals(
-        2,
+        3,
         collectionService
             .list(CollectionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
             .getResults()
@@ -193,13 +207,13 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .getResults()
             .size());
     assertEquals(
-        2,
+        3,
         collectionService
             .list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
-        2,
+        3,
         collectionService
             .list(CollectionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
             .getResults()
@@ -233,13 +247,13 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .getResults()
             .size());
     assertEquals(
-        1,
+        2,
         collectionService
             .list(CollectionSearchRequest.builder().active(true).page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
-        1,
+        2,
         collectionService
             .list(
                 CollectionSearchRequest.builder()
@@ -399,7 +413,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .size());
 
     assertEquals(
-        1,
+        2,
         collectionService
             .list(
                 CollectionSearchRequest.builder()

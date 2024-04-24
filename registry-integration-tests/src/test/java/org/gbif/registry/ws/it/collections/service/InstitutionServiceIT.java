@@ -124,16 +124,31 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution2.setAddress(address2);
     UUID key2 = institutionService.create(institution2);
 
+    Institution institution3 = testData.newEntity();
+    institution3.setCode("c3");
+    institution3.setName("n3");
+    institution3.setActive(true);
+
+    MasterSourceMetadata sourceMetadata = new MasterSourceMetadata();
+    sourceMetadata.setCreatedBy("test");
+    sourceMetadata.setSourceId("test-123");
+    sourceMetadata.setSource(Source.IH_IRN);
+    institution3.setMasterSourceMetadata(sourceMetadata);
+    UUID key3 = institutionService.create(institution3);
+    institutionService.addMasterSourceMetadata(key3,sourceMetadata);
+
     PagingResponse<Institution> response =
         institutionService.list(
             InstitutionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
-    assertEquals(2, response.getResults().size());
+    assertEquals(3, response.getResults().size());
 
+    response = institutionService.list(InstitutionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+    assertEquals(1,response.getResults().size());
     // empty queries are ignored and return all elements
     response =
         institutionService.list(
             InstitutionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
-    assertEquals(2, response.getResults().size());
+    assertEquals(3, response.getResults().size());
 
     response =
         institutionService.list(
@@ -201,7 +216,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
 
     // query param
     assertEquals(
-        2,
+        3,
         institutionService
             .list(InstitutionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
             .getResults()
@@ -225,19 +240,19 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .getResults()
             .size());
     assertEquals(
-        2,
+        3,
         institutionService
             .list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
-        2,
+        3,
         institutionService
             .list(InstitutionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
             .getResults()
             .size());
     assertEquals(
-        1,
+        2,
         institutionService
             .list(InstitutionSearchRequest.builder().active(true).page(DEFAULT_PAGE).build())
             .getResults()
@@ -362,7 +377,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .size());
 
     assertEquals(
-        1,
+        2,
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
