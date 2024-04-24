@@ -17,6 +17,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
@@ -28,12 +29,14 @@ import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
+import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
@@ -63,11 +66,12 @@ public class CollectionMapperIT extends BaseItTest {
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer("collection");
 
-  private final CollectionMapper collectionMapper;
-  private final AddressMapper addressMapper;
-  private final MachineTagMapper machineTagMapper;
-  private final IdentifierMapper identifierMapper;
-  private final CollectionContactMapper contactMapper;
+  private CollectionMapper collectionMapper;
+  private AddressMapper addressMapper;
+  private MachineTagMapper machineTagMapper;
+  private IdentifierMapper identifierMapper;
+  private CollectionContactMapper contactMapper;
+  private MasterSourceSyncMetadataMapper metadataMapper;
 
   @Autowired
   public CollectionMapperIT(
@@ -77,13 +81,15 @@ public class CollectionMapperIT extends BaseItTest {
       IdentifierMapper identifierMapper,
       CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      MasterSourceSyncMetadataMapper metadataMapper) {
     super(principalProvider, esServer);
     this.collectionMapper = collectionMapper;
     this.addressMapper = addressMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
     this.contactMapper = contactMapper;
+    this.metadataMapper = metadataMapper;
   }
 
   @Test
@@ -222,13 +228,30 @@ public class CollectionMapperIT extends BaseItTest {
     col4.setModifiedBy("test");
     collectionMapper.create(col4);
 
+    Collection col5 = new Collection();
+    col5.setKey(UUID.randomUUID());
+    col5.setCode("c5");
+    col5.setName("name of fifth collection");
+    col5.setCreatedBy("test");
+    col5.setModifiedBy("test");
+    collectionMapper.create(col5);
+
+    MasterSourceMetadata masterSourceMetadata = new MasterSourceMetadata();
+    masterSourceMetadata.setSource(Source.IH_IRN);
+    masterSourceMetadata.setKey(123456);
+    masterSourceMetadata.setSourceId("test-123");
+    masterSourceMetadata.setCreatedBy("test");
+    metadataMapper.create(masterSourceMetadata);
+    collectionMapper.addMasterSourceMetadata(col5.getKey(),masterSourceMetadata.getKey(),MasterSourceType.GRSCICOLL);
+
     Pageable page = PAGE.apply(2, 0L);
     List<CollectionDto> dtos =
         collectionMapper.list(CollectionSearchParams.builder().page(page).build());
     assertEquals(2, dtos.size());
 
     page = PAGE.apply(5, 0L);
-    assertSearch(CollectionSearchParams.builder().page(page).build(), 4);
+    assertSearch(CollectionSearchParams.builder().sourceId("test-123").source(Source.IH_IRN).build(),1,col5.getKey());
+    assertSearch(CollectionSearchParams.builder().page(page).build(), 5);
     assertSearch(CollectionSearchParams.builder().code("c1").page(page).build(), 1);
     assertSearch(CollectionSearchParams.builder().code("C1").page(page).build(), 1);
     assertSearch(CollectionSearchParams.builder().name("n2").page(page).build(), 1);
@@ -344,7 +367,7 @@ public class CollectionMapperIT extends BaseItTest {
             .masterSourceType(MasterSourceType.GRSCICOLL)
             .page(page)
             .build(),
-        0);
+        1);
   }
 
   @Test

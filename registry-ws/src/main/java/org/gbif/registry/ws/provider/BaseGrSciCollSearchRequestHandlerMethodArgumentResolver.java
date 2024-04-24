@@ -19,6 +19,7 @@ import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -167,6 +168,16 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
               "Invalid UUID for institution key parameter: " + keyParam);
         }
       }
+    }
+
+    String sourceParam = webRequest.getParameter("source");
+    if (!Strings.isNullOrEmpty(sourceParam)) {
+      request.setSource(Source.valueOf(Source.class,"sourceParam"));
+    }
+
+    String sourceIdParam = webRequest.getParameter("sourceId");
+    if (!Strings.isNullOrEmpty(sourceIdParam)) {
+      request.setSourceId(sourceIdParam);
     }
   }
 

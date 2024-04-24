@@ -16,6 +16,7 @@ package org.gbif.registry.persistence.mapper.collections.params;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.List;
 
@@ -32,4 +33,6 @@ public class CollectionSearchParams extends SearchParams {
   @Nullable List<String> preservationTypes;
   @Nullable String accessionStatus;
   @Nullable Boolean personalCollection;
+  @Nullable String sourceId;
+  @Nullable Source source;
 }
