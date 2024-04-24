@@ -32,6 +32,7 @@ import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.merge.InstitutionMergeService;
@@ -146,7 +147,17 @@ public class InstitutionResource
                 "Discipline of a GrSciColl institution. Accepts multiple values, for example "
                     + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
             schema = @Schema(implementation = Discipline.class),
-            in = ParameterIn.QUERY)
+            in = ParameterIn.QUERY),
+        @Parameter(
+           name = "sourceId",
+           description = "sourceId of MasterSourceMetadata",
+           schema = @Schema(implementation = String.class),
+           in = ParameterIn.QUERY),
+        @Parameter(
+          name = "source",
+          description = "Source attribute of MasterSourceMetadata",
+          schema = @Schema(implementation = Source.class),
+          in = ParameterIn.QUERY)
       })
   @SearchRequestParameters
   @interface InstitutionSearchParameters {}

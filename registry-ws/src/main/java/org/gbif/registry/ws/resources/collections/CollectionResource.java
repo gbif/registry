@@ -32,6 +32,7 @@ import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
@@ -163,6 +164,16 @@ public class CollectionResource
             name = "personalCollection",
             description = "Flag for personal GRSciColl collections",
             schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "sourceId",
+            description = "sourceId of MasterSourceMetadata",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "source",
+            description = "Source attribute of MasterSourceMetadata",
+            schema = @Schema(implementation = Source.class),
             in = ParameterIn.QUERY)
       })
   @SearchRequestParameters
