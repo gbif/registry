@@ -30,7 +30,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.PreservationType;
-import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -102,8 +101,6 @@ public class CollectionResourceIT
     req.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
     req.setPreservationTypes(
         Arrays.asList(PreservationType.SAMPLE_CRYOPRESERVED, PreservationType.SAMPLE_DRIED));
-    req.setSource(Source.DATASET);
-    req.setSourceId("12345");
 
     PagingResponse<CollectionView> result = getClient().list(req);
     assertEquals(views.size(), result.getResults().size());

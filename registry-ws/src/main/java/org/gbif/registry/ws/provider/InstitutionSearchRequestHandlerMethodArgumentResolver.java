@@ -18,7 +18,6 @@ import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.google.common.base.Strings;
 
 @SuppressWarnings("NullableProblems")
 public class InstitutionSearchRequestHandlerMethodArgumentResolver
@@ -63,13 +61,6 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
               .map(v -> VocabularyUtils.lookupEnum(v, Discipline.class))
               .collect(Collectors.toList()));
     }
-
-    String sourceParam = webRequest.getParameter("source");
-    if (!Strings.isNullOrEmpty(sourceParam))
-      searchRequest.setSource(VocabularyUtils.lookupEnum(sourceParam, Source.class));
-
-    String sourceIdParam = webRequest.getParameter("sourceId");
-    if (!Strings.isNullOrEmpty(sourceIdParam)) searchRequest.setSourceId(sourceIdParam);
 
     return searchRequest;
   }

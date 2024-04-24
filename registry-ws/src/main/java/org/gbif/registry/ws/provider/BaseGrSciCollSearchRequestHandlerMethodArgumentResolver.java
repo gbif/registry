@@ -23,6 +23,7 @@ import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
 
@@ -174,6 +175,16 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
               "Invalid UUID for institution key parameter: " + keyParam);
         }
       }
+    }
+
+    String sourceParam = webRequest.getParameter("source");
+    if (!Strings.isNullOrEmpty(sourceParam)) {
+      request.setSource(Source.valueOf(Source.class,"sourceParam"));
+    }
+
+    String sourceIdParam = webRequest.getParameter("sourceId");
+    if (!Strings.isNullOrEmpty(sourceIdParam)) {
+      request.setSourceId(sourceIdParam);
     }
   }
 
