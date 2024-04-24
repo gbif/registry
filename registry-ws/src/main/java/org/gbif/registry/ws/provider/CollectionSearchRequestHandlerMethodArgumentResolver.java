@@ -18,6 +18,7 @@ import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -87,6 +88,13 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
             "Invalid boolean for personalCollection: " + personalCollection);
       }
     }
+
+    String sourceParam = webRequest.getParameter("source");
+    if (!Strings.isNullOrEmpty(sourceParam))
+      searchRequest.setSource(VocabularyUtils.lookupEnum(sourceParam, Source.class));
+
+    String sourceIdParam = webRequest.getParameter("sourceId");
+    if (!Strings.isNullOrEmpty(sourceIdParam)) searchRequest.setSourceId(sourceIdParam);
 
     return searchRequest;
   }

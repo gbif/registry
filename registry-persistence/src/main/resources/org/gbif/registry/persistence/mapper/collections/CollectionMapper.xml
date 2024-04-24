@@ -246,6 +246,9 @@
       LEFT JOIN address addr ON addr.key = c.address_key
       LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     </if>
+    <if test="params.source != null || params.sourceId != null">
+        INNER JOIN master_sync_metadata m ON c.master_sync_metadata_key = m.key
+    </if>
     <where>
       <choose>
         <when test="params.deleted != null and params.deleted">
@@ -391,10 +394,10 @@
         </foreach>
       </if>
       <if test="params.source != null">
-        AND m.source = #{params.source}
+        AND m.source = #{params.source,jdbcType=OTHER}
       </if>
       <if test="params.sourceId != null">
-        AND m.source_id = #{params.sourceId}
+        AND m.source_id = #{params.sourceId,jdbcType=VARCHAR}
       </if>
     </where>
   </sql>

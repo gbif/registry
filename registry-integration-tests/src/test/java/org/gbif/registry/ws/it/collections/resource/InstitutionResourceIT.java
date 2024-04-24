@@ -30,6 +30,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.batch.InstitutionBatchService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
@@ -103,6 +104,8 @@ public class InstitutionResourceIT
     req.setActive(true);
     req.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_FEDERAL);
     req.setDisciplines(Arrays.asList(Discipline.AGRICULTURAL, Discipline.OCEAN));
+    req.setSource(Source.ORGANIZATION);
+    req.setSourceId("12345");
 
     PagingResponse<Institution> result = getClient().list(req);
     assertEquals(institutions.size(), result.getResults().size());
