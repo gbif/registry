@@ -30,6 +30,7 @@ public class GithubClientConfig {
     return new ClientBuilder()
         .withObjectMapper(mapper)
         .withUrl(config.getGithubWsUrl())
+        .withCredentials(config.getGithubUser(), config.getGithubPassword())
         .build(GithubApiClient.class);
   }
 }
