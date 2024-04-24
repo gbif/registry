@@ -37,5 +37,5 @@ public interface LookupClient {
       @RequestParam(value = "collectionCode", required = false) @Trim String collectionCode,
       @RequestParam(value = "collectionId", required = false) @Trim String collectionId,
       @RequestParam(value = "country") Country country,
-      @RequestParam(value = "verbose", required = false) boolean verbose);
+      @RequestParam(value = "verbose", required = false) Boolean verbose);
 }

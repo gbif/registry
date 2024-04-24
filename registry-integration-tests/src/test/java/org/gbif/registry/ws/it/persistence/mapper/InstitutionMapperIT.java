@@ -14,6 +14,12 @@
 package org.gbif.registry.ws.it.persistence.mapper;
 
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.AlternativeCode;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.UserId;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
@@ -22,12 +28,14 @@ import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
 import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
+import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
@@ -57,6 +65,7 @@ public class InstitutionMapperIT extends BaseItTest {
   private MachineTagMapper machineTagMapper;
   private IdentifierMapper identifierMapper;
   private CollectionContactMapper contactMapper;
+  private MasterSourceSyncMetadataMapper metadataMapper;
 
   @Autowired
   public InstitutionMapperIT(
@@ -66,13 +75,15 @@ public class InstitutionMapperIT extends BaseItTest {
       IdentifierMapper identifierMapper,
       CollectionContactMapper contactMapper,
       SimplePrincipalProvider principalProvider,
-      EsManageServer esServer) {
+      EsManageServer esServer,
+      MasterSourceSyncMetadataMapper metadataMapper) {
     super(principalProvider, esServer);
     this.institutionMapper = institutionMapper;
     this.addressMapper = addressMapper;
     this.machineTagMapper = machineTagMapper;
     this.identifierMapper = identifierMapper;
     this.contactMapper = contactMapper;
+    this.metadataMapper = metadataMapper;
   }
 
   @Test
@@ -196,9 +207,26 @@ public class InstitutionMapperIT extends BaseItTest {
     inst3.setModifiedBy("test");
     institutionMapper.create(inst3);
 
+    Institution inst4 = new Institution();
+    inst4.setKey(UUID.randomUUID());
+    inst4.setCode("i4");
+    inst4.setName("Name of the forth institution");
+    inst4.setCreatedBy("test");
+    inst4.setModifiedBy("test");
+    institutionMapper.create(inst4);
+
+    MasterSourceMetadata masterSourceMetadata = new MasterSourceMetadata();
+    masterSourceMetadata.setSource(Source.IH_IRN);
+    masterSourceMetadata.setKey(123456);
+    masterSourceMetadata.setSourceId("test-123");
+    masterSourceMetadata.setCreatedBy("test");
+    metadataMapper.create(masterSourceMetadata);
+    institutionMapper.addMasterSourceMetadata(inst4.getKey(),masterSourceMetadata.getKey(),MasterSourceType.GRSCICOLL);
+
     Pageable page = PAGE.apply(5, 0L);
 
-    assertSearch(InstitutionSearchParams.builder().page(page).build(), 3);
+    assertSearch(InstitutionSearchParams.builder().sourceId("test-123").source(Source.IH_IRN).build(),1,inst4.getKey());
+    assertSearch(InstitutionSearchParams.builder().page(page).build(), 4);
     assertSearch(InstitutionSearchParams.builder().code("i1").page(page).build(), 1);
     assertSearch(InstitutionSearchParams.builder().code("I1").page(page).build(), 1);
     assertSearch(InstitutionSearchParams.builder().name("n2").page(page).build(), 1);
@@ -314,7 +342,7 @@ public class InstitutionMapperIT extends BaseItTest {
             .masterSourceType(MasterSourceType.GRSCICOLL)
             .page(page)
             .build(),
-        0);
+        1);
   }
 
   @Test
