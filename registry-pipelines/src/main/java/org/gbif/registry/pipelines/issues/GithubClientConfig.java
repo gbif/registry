@@ -13,38 +13,23 @@
  */
 package org.gbif.registry.pipelines.issues;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.gbif.ws.client.ClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import okhttp3.OkHttpClient;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-
-/** Lightweight client for the Github API. */
+/** Lightweight client for the GitHub API. */
 @Configuration
 public class GithubClientConfig {
 
   @Bean
-  public GithubApiService githubApiService(IssuesConfig config) {
+  public GithubApiClient githubApiService(IssuesConfig config) {
     ObjectMapper mapper =
         new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-    OkHttpClient okHttpClient =
-        new OkHttpClient.Builder()
-            .cache(null)
-            .addInterceptor(
-                new BasicAuthInterceptor(config.getGithubUser(), config.getGithubPassword()))
-            .build();
-
-    Retrofit retrofit =
-        new Retrofit.Builder()
-            .client(okHttpClient)
-            .baseUrl(config.getGithubWsUrl())
-            .addConverterFactory(JacksonConverterFactory.create(mapper))
-            .build();
-    return retrofit.create(GithubApiService.class);
+    return new ClientBuilder()
+        .withObjectMapper(mapper)
+        .withUrl(config.getGithubWsUrl())
+        .build(GithubApiClient.class);
   }
 }
