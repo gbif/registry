@@ -92,6 +92,9 @@ public abstract class BaseChangeSuggestionServiceIT<
     address.setCountry(Country.DENMARK);
     entity.setAddress(address);
 
+    Address emptyAddress = new Address();
+    entity.setMailingAddress(emptyAddress);
+
     Contact contact1 = new Contact();
     contact1.setFirstName("first");
     contact1.setLastName("last");

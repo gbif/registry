@@ -564,6 +564,10 @@ public abstract class BaseChangeSuggestionService<
                           + field.getName().substring(1))
                   .invoke(suggestedEntity);
 
+          if (suggestedValue instanceof Address && isEmptyAddress((Address) suggestedValue)) {
+            suggestedValue = null;
+          }
+
           Object previousValue =
               clazz
                   .getMethod(
@@ -571,6 +575,10 @@ public abstract class BaseChangeSuggestionService<
                           + field.getName().substring(0, 1).toUpperCase()
                           + field.getName().substring(1))
                   .invoke(currentEntity);
+
+          if (previousValue instanceof Address && isEmptyAddress((Address) previousValue)) {
+            previousValue = null;
+          }
 
           if (isDifferentValue(suggestedValue, previousValue)) {
             changes.add(createChangeDto(field, suggestedValue, previousValue, field.getType()));
@@ -824,6 +832,15 @@ public abstract class BaseChangeSuggestionService<
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return grSciCollAuthorizationService.allowedToUpdateChangeSuggestion(
         dto.getKey(), dto.getEntityType().name().toLowerCase(), authentication);
+  }
+
+  private boolean isEmptyAddress(Address address) {
+    return address != null
+        && Strings.isNullOrEmpty(address.getAddress())
+        && Strings.isNullOrEmpty(address.getCity())
+        && Strings.isNullOrEmpty(address.getPostalCode())
+        && Strings.isNullOrEmpty(address.getProvince())
+        && address.getCountry() == null;
   }
 
   protected abstract R newEmptyChangeSuggestion();
