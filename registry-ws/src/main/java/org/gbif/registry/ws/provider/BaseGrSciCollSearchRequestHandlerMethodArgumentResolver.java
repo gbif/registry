@@ -179,7 +179,7 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
 
     String sourceParam = webRequest.getParameter("source");
     if (!Strings.isNullOrEmpty(sourceParam)) {
-      request.setSource(Source.valueOf(Source.class,"sourceParam"));
+      request.setSource(Source.valueOf(sourceParam));
     }
 
     String sourceIdParam = webRequest.getParameter("sourceId");
