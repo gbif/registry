@@ -60,9 +60,6 @@ import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSec
 @Component
 public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
-  private static final Logger LOG =
-      LoggerFactory.getLogger(GrSciCollEditorAuthorizationFilter.class);
-
   public static final String GRSCICOLL_PATH = "grscicoll";
   public static final Pattern ENTITY_PATTERN =
       Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+).*");
@@ -79,10 +76,10 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
       Pattern.compile(".*/grscicoll/(collection|institution)/([a-f0-9-]+)/merge$");
   public static final Pattern CONVERSION_PATTERN =
       Pattern.compile(".*/grscicoll/institution/([a-f0-9-]+)/convertToCollection$");
-
   public static final String INSTITUTION = "institution";
   public static final String COLLECTION = "collection";
-
+  private static final Logger LOG =
+      LoggerFactory.getLogger(GrSciCollEditorAuthorizationFilter.class);
   private final GrSciCollAuthorizationService authService;
   private final AuthenticationFacade authenticationFacade;
   private final ObjectMapper objectMapper;
@@ -237,21 +234,26 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
     if ("POST".equals(request.getMethod()) && createEntityMatch.find()) {
       String entityType = createEntityMatch.group(1);
 
-      boolean allowed = false;
+      GrSciCollAuthorizationService.EntityOperationResponse entityOperationResponse =
+          new GrSciCollAuthorizationService.EntityOperationResponse();
       if (INSTITUTION.equalsIgnoreCase(entityType)) {
         Institution institution = readEntity(request, Institution.class);
-        allowed = authService.allowedToCreateInstitution(institution, authentication);
+        entityOperationResponse = authService.allowedToCreateInstitution(institution, authentication);
       } else if (COLLECTION.equalsIgnoreCase(entityType)) {
         Collection collection = readEntity(request, Collection.class);
-        allowed = authService.allowedToCreateCollection(collection, authentication);
+        entityOperationResponse = authService.allowedToCreateCollection(collection, authentication);
       }
 
-      if (!allowed) {
-        throw new WebApplicationException(
-            MessageFormat.format(
-                "User {0} is not allowed to create entity {1}",
-                authentication.getName(), entityType),
-            HttpStatus.FORBIDDEN);
+      if (!entityOperationResponse.isAllowed()) {
+        String errorMessage = MessageFormat.format(
+          "User {0} is not allowed to create entity {1}",
+          authentication.getName(), entityType);
+
+        if (entityOperationResponse.getMessage() != null && !entityOperationResponse.getMessage().isEmpty()) {
+          errorMessage += ". Reason: " + entityOperationResponse.getMessage();
+        }
+
+        throw new WebApplicationException(errorMessage, HttpStatus.FORBIDDEN);
       }
     }
   }
