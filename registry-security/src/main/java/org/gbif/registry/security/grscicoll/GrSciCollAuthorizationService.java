@@ -257,9 +257,9 @@ public class GrSciCollAuthorizationService {
     boolean allowedToModifyCountry = allowedToModifyCountry(authentication.getName(), country);
     if (allowedToModifyCountry) {
       return new EntityOperationResponse(true);
-    }
-    else {
-      return new EntityOperationResponse(false, "Not allowed to create institutions for the country: " + country);
+    } else {
+      return new EntityOperationResponse(
+          false, "Not allowed to create institutions for the country: " + country);
     }
   }
 
@@ -267,7 +267,8 @@ public class GrSciCollAuthorizationService {
    * An editor or mediator can create collections if they have their institution or country in the
    * scopes.
    */
-  public EntityOperationResponse allowedToCreateCollection(Collection collection, Authentication authentication) {
+  public EntityOperationResponse allowedToCreateCollection(
+      Collection collection, Authentication authentication) {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
       return new EntityOperationResponse(true);
     }
@@ -282,9 +283,13 @@ public class GrSciCollAuthorizationService {
 
     if (allowedToModifyCountry || allowedToModifyEntity) {
       return new EntityOperationResponse(true, "");
-    }
-    else {
-      return new EntityOperationResponse(false, "Not allowed to create collections under the institution " + institutionKey + "or in the country " + country);
+    } else {
+      return new EntityOperationResponse(
+          false,
+          "Not allowed to create collections under the institution: "
+              + institutionKey
+              + " or in the country: "
+              + country);
     }
   }
 
@@ -304,7 +309,9 @@ public class GrSciCollAuthorizationService {
 
       if (changeSuggestion.getType() == Type.CREATE) {
         return allowedToCreateInstitution(
-            readEntity(changeSuggestion.getSuggestedEntity(), Institution.class), authentication).isAllowed();
+                readEntity(changeSuggestion.getSuggestedEntity(), Institution.class),
+                authentication)
+            .isAllowed();
       } else if (changeSuggestion.getType() == Type.DELETE) {
         return allowedToDeleteInstitution(authentication, changeSuggestion.getEntityKey());
       } else if (changeSuggestion.getType() == Type.MERGE) {
@@ -375,8 +382,8 @@ public class GrSciCollAuthorizationService {
     private boolean allowed;
     private String message;
 
-    public EntityOperationResponse(boolean allowed){
-      this(allowed,null);
+    public EntityOperationResponse(boolean allowed) {
+      this(allowed, null);
     }
   }
 }
