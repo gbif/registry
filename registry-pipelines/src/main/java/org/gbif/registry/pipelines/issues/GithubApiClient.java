@@ -13,12 +13,15 @@
  */
 package org.gbif.registry.pipelines.issues;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import java.util.Set;
+
+import org.springframework.web.bind.annotation.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.web.bind.annotation.*;
 
 public interface GithubApiClient {
   @PostMapping("/issues")
