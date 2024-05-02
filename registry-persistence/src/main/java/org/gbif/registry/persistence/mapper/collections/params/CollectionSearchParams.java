@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.List;
