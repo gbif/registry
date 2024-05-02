@@ -41,6 +41,11 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 
@@ -239,34 +244,48 @@ public class GrSciCollAuthorizationService {
   }
 
   /** An editor or mediator can create an institution if they have their country in the scopes. */
-  public boolean allowedToCreateInstitution(
+  public EntityOperationResponse allowedToCreateInstitution(
       Institution institution, Authentication authentication) {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
-      return true;
+      return new EntityOperationResponse(true);
     }
 
     if (institution == null) {
-      return false;
+      return new EntityOperationResponse(false, "Institution cannot be null");
     }
-
-    return allowedToModifyCountry(authentication.getName(), extractCountry(institution));
+    Country country = extractCountry(institution);
+    boolean allowedToModifyCountry = allowedToModifyCountry(authentication.getName(), country);
+    if (allowedToModifyCountry) {
+      return new EntityOperationResponse(true);
+    }
+    else {
+      return new EntityOperationResponse(false, "Not allowed to create institutions for the country: " + country);
+    }
   }
 
   /**
    * An editor or mediator can create collections if they have their institution or country in the
    * scopes.
    */
-  public boolean allowedToCreateCollection(Collection collection, Authentication authentication) {
+  public EntityOperationResponse allowedToCreateCollection(Collection collection, Authentication authentication) {
     if (SecurityContextCheck.checkUserInRole(authentication, GRSCICOLL_ADMIN_ROLE)) {
-      return true;
+      return new EntityOperationResponse(true);
     }
 
     if (collection == null) {
-      return false;
+      return new EntityOperationResponse(false, "Collection cannot be null");
     }
+    Country country = extractCountry(collection);
+    UUID institutionKey = collection.getInstitutionKey();
+    boolean allowedToModifyEntity = allowedToModifyEntity(authentication.getName(), institutionKey);
+    boolean allowedToModifyCountry = allowedToModifyCountry(authentication.getName(), country);
 
-    return allowedToModifyEntity(authentication.getName(), collection.getInstitutionKey())
-        || allowedToModifyCountry(authentication.getName(), extractCountry(collection));
+    if (allowedToModifyCountry || allowedToModifyEntity) {
+      return new EntityOperationResponse(true, "");
+    }
+    else {
+      return new EntityOperationResponse(false, "Not allowed to create collections under the institution " + institutionKey + "or in the country " + country);
+    }
   }
 
   public boolean allowedToUpdateChangeSuggestion(
@@ -285,7 +304,7 @@ public class GrSciCollAuthorizationService {
 
       if (changeSuggestion.getType() == Type.CREATE) {
         return allowedToCreateInstitution(
-            readEntity(changeSuggestion.getSuggestedEntity(), Institution.class), authentication);
+            readEntity(changeSuggestion.getSuggestedEntity(), Institution.class), authentication).isAllowed();
       } else if (changeSuggestion.getType() == Type.DELETE) {
         return allowedToDeleteInstitution(authentication, changeSuggestion.getEntityKey());
       } else if (changeSuggestion.getType() == Type.MERGE) {
@@ -310,7 +329,7 @@ public class GrSciCollAuthorizationService {
       Collection suggestedEntity =
           readEntity(changeSuggestion.getSuggestedEntity(), Collection.class);
       if (changeSuggestion.getType() == Type.CREATE) {
-        return allowedToCreateCollection(suggestedEntity, authentication);
+        return allowedToCreateCollection(suggestedEntity, authentication).isAllowed();
       } else if (changeSuggestion.getType() == Type.DELETE) {
         return allowedToDeleteCollection(authentication, changeSuggestion.getEntityKey());
       } else if (changeSuggestion.getType() == Type.MERGE) {
@@ -345,6 +364,19 @@ public class GrSciCollAuthorizationService {
     } catch (JsonProcessingException e) {
       LOG.warn("Couldn't read json content", e);
       return null;
+    }
+  }
+
+  @Getter
+  @Setter
+  @AllArgsConstructor
+  @NoArgsConstructor
+  public static class EntityOperationResponse {
+    private boolean allowed;
+    private String message;
+
+    public EntityOperationResponse(boolean allowed){
+      this(allowed,null);
     }
   }
 }

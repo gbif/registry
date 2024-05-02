@@ -60,7 +60,7 @@ public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
 
   @Override
   boolean allowedToCreateEntity(Collection entity, Authentication authentication) {
-    return authorizationService.allowedToCreateCollection(entity, authentication);
+    return authorizationService.allowedToCreateCollection(entity, authentication).isAllowed();
   }
 
   @Override
