@@ -259,7 +259,7 @@ public class GrSciCollAuthorizationService {
       return new EntityOperationResponse(true);
     } else {
       return new EntityOperationResponse(
-          false, "Not allowed to create institutions for the country: " + country);
+          false, "Not allowed to create institutions for the country: " + (country == null ? "empty (Please provide a country with one of the addresses.)" : country));
     }
   }
 
@@ -287,9 +287,9 @@ public class GrSciCollAuthorizationService {
       return new EntityOperationResponse(
           false,
           "Not allowed to create collections under the institution: "
-              + institutionKey
+              + (institutionKey == null ? "empty" : institutionKey)
               + " or in the country: "
-              + country);
+              + (country == null ? "empty (Please provide a country with one of the addresses.)" : country));
     }
   }
 
