@@ -59,7 +59,7 @@ public class InstitutionBatchHandler extends BaseBatchHandler<Institution> {
 
   @Override
   boolean allowedToCreateEntity(Institution entity, Authentication authentication) {
-    return authorizationService.allowedToCreateInstitution(entity, authentication);
+    return authorizationService.allowedToCreateInstitution(entity, authentication).isAllowed();
   }
 
   @Override

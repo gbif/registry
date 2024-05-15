@@ -415,6 +415,21 @@ public class GrSciCollEditorAuthorizationFilterTest {
   }
 
   @Test
+  public void collectionCreationAsMediatorTest() throws JsonProcessingException {
+    // GIVEN
+    mockCollectionCreation(ROLES_GRSCICOLL_MEDIATOR_ONLY, false, false);
+
+    // WHEN
+    WebApplicationException ex =
+      assertThrows(
+        WebApplicationException.class,
+        () -> filter.doFilter(mockRequest, mockResponse, mockFilterChain));
+
+    // THEN
+    assertEquals(HttpStatus.FORBIDDEN.value(), ex.getStatus());
+  }
+
+  @Test
   public void institutionUpdateAsEditorWithEntityRightsTest() throws JsonProcessingException {
     // GIVEN
     mockInstitutionUpdate(ROLES_GRSCICOLL_EDITOR_ONLY, true, false);
