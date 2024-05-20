@@ -132,14 +132,14 @@ public class CollectionResource
             in = ParameterIn.QUERY,
             deprecated = true),
         @Parameter(
-            name = "contentTypes",
+            name = "contentType",
             description =
                 "Content type of a GrSciColl collection. Accepts multiple values, for example "
                     + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
             schema = @Schema(implementation = CollectionContentType.class),
             in = ParameterIn.QUERY),
         @Parameter(
-            name = "preservationTypes",
+            name = "preservationType",
             description =
                 "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
                     + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
