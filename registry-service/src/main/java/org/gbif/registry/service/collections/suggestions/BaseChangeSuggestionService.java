@@ -13,14 +13,11 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
-import org.gbif.api.model.collections.Address;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMappeable;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Status;
@@ -51,23 +48,6 @@ import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.elasticsearch.common.Strings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -76,13 +56,15 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.security.UserRoles.*;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
@@ -517,7 +499,7 @@ public abstract class BaseChangeSuggestionService<
     return new PagingResponse<>(page, count, changeSuggestions);
   }
 
-  private Set<ChangeDto> extractChanges(T suggestedEntity, T currentEntity) {
+  public Set<ChangeDto> extractChanges(T suggestedEntity, T currentEntity) {
     checkArgument(suggestedEntity != null, "Suggested entity is required");
     checkArgument(currentEntity != null, "Current entity is required");
 
@@ -555,30 +537,8 @@ public abstract class BaseChangeSuggestionService<
         }
       } else {
         try {
-          String methodPrefix = getGetterPrefix(field.getType());
-          Object suggestedValue =
-              clazz
-                  .getMethod(
-                      methodPrefix
-                          + field.getName().substring(0, 1).toUpperCase()
-                          + field.getName().substring(1))
-                  .invoke(suggestedEntity);
-
-          if (suggestedValue instanceof Address && isEmptyAddress((Address) suggestedValue)) {
-            suggestedValue = null;
-          }
-
-          Object previousValue =
-              clazz
-                  .getMethod(
-                      methodPrefix
-                          + field.getName().substring(0, 1).toUpperCase()
-                          + field.getName().substring(1))
-                  .invoke(currentEntity);
-
-          if (previousValue instanceof Address && isEmptyAddress((Address) previousValue)) {
-            previousValue = null;
-          }
+          Object suggestedValue = getValue(suggestedEntity, field);
+          Object previousValue = getValue(currentEntity, field);
 
           if (isDifferentValue(suggestedValue, previousValue)) {
             changes.add(createChangeDto(field, suggestedValue, previousValue, field.getType()));
@@ -589,6 +549,28 @@ public abstract class BaseChangeSuggestionService<
       }
     }
     return changes;
+  }
+
+  @Nullable
+  private Object getValue(T suggestedEntity, Field field)
+      throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    Object suggestedValue =
+        clazz
+            .getMethod(
+                getGetterPrefix(field.getType())
+                    + field.getName().substring(0, 1).toUpperCase()
+                    + field.getName().substring(1))
+            .invoke(suggestedEntity);
+
+    if (suggestedValue instanceof Address && isEmptyAddress((Address) suggestedValue)) {
+      suggestedValue = null;
+    }
+
+    if (suggestedValue instanceof String) {
+      suggestedValue = Strings.emptyToNull((String) suggestedValue);
+    }
+
+    return suggestedValue;
   }
 
   private static boolean isDifferentValue(Object suggestedValue, Object previousValue) {
