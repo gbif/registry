@@ -128,7 +128,7 @@ public class LookupResource {
       @Nullable @RequestParam(value = "collectionCode", required = false) @Trim
           String collectionCode,
       @Nullable @RequestParam(value = "collectionId", required = false) @Trim String collectionId,
-      @Nullable Country country,
+      @Nullable @RequestParam(value = "country", required = false) Country country,
       @Nullable @RequestParam(value = "verbose", required = false) boolean verbose) {
 
     LookupParams params = new LookupParams();

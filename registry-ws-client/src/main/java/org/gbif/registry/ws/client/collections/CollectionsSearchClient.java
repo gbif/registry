@@ -38,7 +38,7 @@ public interface CollectionsSearchClient {
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
       @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      @SpringQueryMap Country country,
+      @RequestParam(value = "country", required = false) Country country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return searchCollections(
         SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));

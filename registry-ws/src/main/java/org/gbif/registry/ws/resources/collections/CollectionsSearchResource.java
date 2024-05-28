@@ -89,7 +89,7 @@ public class CollectionsSearchResource {
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
       @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      Country country,
+      @RequestParam(value = "country", required = false) Country country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return collectionsSearchService.search(
         query, highlight, type, displayOnNHCPortal, country, limit);

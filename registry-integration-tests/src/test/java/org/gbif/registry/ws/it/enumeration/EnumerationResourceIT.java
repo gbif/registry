@@ -44,7 +44,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     properties = {
       "spring.jpa.hibernate.ddl-auto=create-drop",
       "spring.liquibase.enabled=false",
-      "spring.flyway.enabled=false"
+      "spring.flyway.enabled=false",
+      "spring.cloud.zookeeper.enabled=false",
+      "spring.cloud.zookeeper.config.enabled=false"
     })
 @AutoConfigureMockMvc(addFilters = false)
 public class EnumerationResourceIT {

@@ -39,10 +39,7 @@ import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Hidden;
 
@@ -65,7 +62,8 @@ public class IDigBioExternalResource {
 
   @NullToNotFound
   @GetMapping
-  public List<IDigBioCollection> getCollectionList(@Nullable Country country) {
+  public List<IDigBioCollection> getCollectionList(
+      @Nullable @RequestParam(value = "country", required = false) Country country) {
 
     Set<UUID> collectionKeys = findCollectionKeys(country);
 
