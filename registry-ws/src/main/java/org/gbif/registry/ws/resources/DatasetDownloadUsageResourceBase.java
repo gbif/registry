@@ -71,7 +71,7 @@ public abstract class DatasetDownloadUsageResourceBase
   @GetMapping("{datasetKey}")
   @Override
   public PagingResponse<DatasetOccurrenceDownloadUsage> listByDataset(
-      @PathVariable UUID datasetKey,
+      @PathVariable("datasetKey") UUID datasetKey,
       @RequestParam(value = "showDownloadDetails", required = false, defaultValue = "true")
           Boolean showDownloadDetails,
       Pageable page) {

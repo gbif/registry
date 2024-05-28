@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.doi.converter;
 
+import com.google.common.base.Preconditions;
+import jakarta.xml.bind.JAXBException;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.GbifUser;
 import org.gbif.api.model.occurrence.Download;
@@ -22,30 +24,16 @@ import org.gbif.api.model.occurrence.SqlDownloadRequest;
 import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers;
+import org.gbif.doi.metadata.datacite.*;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.*;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.AlternateIdentifiers.AlternateIdentifier;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Creators.Creator.CreatorName;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.Descriptions.Description;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Formats;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Identifier;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Publisher;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.RelatedIdentifiers.RelatedIdentifier;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.RightsList;
 import org.gbif.doi.metadata.datacite.DataCiteMetadata.RightsList.Rights;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Sizes;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles;
-import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
-import org.gbif.doi.metadata.datacite.DateType;
-import org.gbif.doi.metadata.datacite.DescriptionType;
-import org.gbif.doi.metadata.datacite.NameType;
-import org.gbif.doi.metadata.datacite.RelatedIdentifierType;
-import org.gbif.doi.metadata.datacite.RelationType;
 import org.gbif.doi.metadata.datacite.ResourceType;
+import org.gbif.doi.metadata.datacite.DataCiteMetadata.Titles.Title;
 import org.gbif.doi.service.InvalidMetadataException;
 import org.gbif.doi.service.datacite.DataCiteValidator;
 import org.gbif.occurrence.query.HumanPredicateBuilder;
@@ -53,23 +41,7 @@ import org.gbif.occurrence.query.TitleLookupService;
 
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
-
-import com.google.common.base.Preconditions;
-
-import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_DATASETS_EXPORT_METADATA;
-import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_DATASETS_METADATA;
-import static org.gbif.registry.doi.util.DataCiteConstants.API_DOWNLOAD_METADATA;
-import static org.gbif.registry.doi.util.DataCiteConstants.AVRO_FORMAT;
-import static org.gbif.registry.doi.util.DataCiteConstants.DEFAULT_DOWNLOAD_LICENSE;
-import static org.gbif.registry.doi.util.DataCiteConstants.DOWNLOAD_TITLE;
-import static org.gbif.registry.doi.util.DataCiteConstants.DWCA_FORMAT;
-import static org.gbif.registry.doi.util.DataCiteConstants.ENGLISH;
-import static org.gbif.registry.doi.util.DataCiteConstants.GBIF_PUBLISHER;
-import static org.gbif.registry.doi.util.DataCiteConstants.LICENSE_INFO;
-import static org.gbif.registry.doi.util.DataCiteConstants.PARQUET_FORMAT;
-import static org.gbif.registry.doi.util.DataCiteConstants.TSV_FORMAT;
-import static org.gbif.registry.doi.util.DataCiteConstants.ZIP_FORMAT;
+import static org.gbif.registry.doi.util.DataCiteConstants.*;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.fdate;
 import static org.gbif.registry.doi.util.RegistryDoiUtils.getYear;
 

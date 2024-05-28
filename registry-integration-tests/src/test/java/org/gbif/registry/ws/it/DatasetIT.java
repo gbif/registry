@@ -13,34 +13,25 @@
  */
 package org.gbif.registry.ws.it;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
+import jakarta.annotation.Nullable;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+import org.apache.commons.beanutils.BeanUtils;
+import org.apache.ibatis.io.Resources;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.common.search.SearchResponse;
-import org.gbif.api.model.registry.Citation;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.model.registry.Organization;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.DatasetRequestSearchParams;
 import org.gbif.api.model.registry.search.DatasetSearchParameter;
 import org.gbif.api.model.registry.search.DatasetSearchRequest;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
-import org.gbif.api.service.registry.DatasetSearchService;
-import org.gbif.api.service.registry.DatasetService;
-import org.gbif.api.service.registry.InstallationService;
-import org.gbif.api.service.registry.NodeService;
-import org.gbif.api.service.registry.OrganizationService;
+import org.gbif.api.service.registry.*;
 import org.gbif.api.util.Range;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.MaintenanceUpdateFrequency;
-import org.gbif.api.vocabulary.MetadataType;
+import org.gbif.api.vocabulary.*;
 import org.gbif.registry.search.dataset.indexing.DatasetRealtimeIndexer;
 import org.gbif.registry.search.test.DatasetSearchUpdateUtils;
 import org.gbif.registry.search.test.ElasticsearchInitializer;
@@ -56,6 +47,13 @@ import org.gbif.utils.file.FileUtils;
 import org.gbif.ws.NotFoundException;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,31 +65,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
-
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.ibatis.io.Resources;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.gbif.registry.test.Datasets.buildExpectedProcessedProperties;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is parameterized to run the same test routines for the following:

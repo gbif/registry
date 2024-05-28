@@ -47,7 +47,7 @@ public class DatasetElasticsearchConfiguration {
   }
 
   @Bean(name = "esOccurrenceClientConfig")
-  public EsClient.EsClientConfiguration occurrenceRestHighLevelClient(
+  public EsClient.EsClientConfiguration occurrenceRestHighLevelClientTest(
       EsManageServer esManageServer) {
     EsClient.EsClientConfiguration esClientConfiguration = new EsClient.EsClientConfiguration();
     esClientConfiguration.setSocketTimeOut(6000);
@@ -60,7 +60,7 @@ public class DatasetElasticsearchConfiguration {
   @Bean(name = "registryEsClientConfig")
   @Primary
   public EsClient.EsClientConfiguration registryRestHighLevelClient(EsManageServer esManageServer) {
-    return occurrenceRestHighLevelClient(esManageServer);
+    return occurrenceRestHighLevelClientTest(esManageServer);
   }
 
   @Bean

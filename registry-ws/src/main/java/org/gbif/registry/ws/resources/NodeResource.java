@@ -49,8 +49,8 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
@@ -136,7 +136,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @GetMapping("{key}")
   @NullToNotFound("/node/{key}")
   @Override
-  public Node get(@PathVariable UUID key) {
+  public Node get(@PathVariable("key") UUID key) {
     return nodeAugmenter.augment(super.get(key));
   }
 
@@ -217,7 +217,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -460,7 +460,7 @@ public class NodeResource extends BaseNetworkEntityResource<Node, NodeListParams
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey) {
     throw new UnsupportedOperationException("Contacts are manually managed in the Directory");
   }
 

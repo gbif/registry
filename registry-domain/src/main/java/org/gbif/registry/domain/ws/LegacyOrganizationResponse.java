@@ -23,9 +23,9 @@ import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 import java.util.Optional;
 
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.validation.constraints.NotNull;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;

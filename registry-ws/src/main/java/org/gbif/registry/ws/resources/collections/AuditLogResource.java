@@ -123,7 +123,7 @@ public class AuditLogResource {
   @Secured(GRSCICOLL_ADMIN_ROLE)
   @GetMapping()
   public PagingResponse<AuditLog> getAuditLogs(
-      @RequestParam(name = "traceId", required = false) Long traceId,
+      @RequestParam(name = "traceId", required = false) String traceId,
       @RequestParam(name = "collectionEntityType", required = false)
           CollectionEntityType collectionEntityType,
       @RequestParam(name = "subEntityType", required = false) String subEntityType,

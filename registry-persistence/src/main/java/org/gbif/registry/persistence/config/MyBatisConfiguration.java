@@ -30,20 +30,7 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.predicate.Predicate;
-import org.gbif.api.model.registry.Citation;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
@@ -193,8 +180,9 @@ public class MyBatisConfiguration {
           .getTypeAliasRegistry()
           .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
+          .getTypeAliasRegistry()
+          .registerAlias(
+              "InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);

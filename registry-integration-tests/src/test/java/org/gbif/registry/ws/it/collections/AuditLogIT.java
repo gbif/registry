@@ -13,13 +13,9 @@
  */
 package org.gbif.registry.ws.it.collections;
 
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
 import org.gbif.api.model.collections.merge.MergeParams;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
@@ -27,29 +23,12 @@ import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Identifiable;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.MachineTaggable;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Tag;
-import org.gbif.api.model.registry.Taggable;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.InstallationType;
-import org.gbif.api.vocabulary.Language;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.NodeType;
-import org.gbif.api.vocabulary.ParticipationStatus;
+import org.gbif.api.vocabulary.*;
 import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
@@ -63,26 +42,21 @@ import org.gbif.registry.ws.client.collections.InstitutionClient;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.gbif.ws.security.KeyStore;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AuditLogIT extends BaseItTest {
 
@@ -159,7 +133,7 @@ public class AuditLogIT extends BaseItTest {
     i.setCode("c1");
     i.setName("n1");
     UUID key = institutionClient.create(i);
-    long traceId = assertCreationCollectionEntity(key, CollectionEntityType.INSTITUTION);
+    String traceId = assertCreationCollectionEntity(key, CollectionEntityType.INSTITUTION);
 
     i = institutionClient.get(key);
     i.setName("n2");
@@ -205,7 +179,7 @@ public class AuditLogIT extends BaseItTest {
     assertEquals(1, logs.size());
     assertEquals(convertedCollectionKey, logs.get(0).getReplacementKey());
 
-    long conversionTraceId = logs.get(0).getTraceId();
+    String conversionTraceId = logs.get(0).getTraceId();
     logs =
         auditLogMapper.list(
             AuditLogListParams.builder().traceId(conversionTraceId).build(), new PagingRequest());
@@ -236,7 +210,7 @@ public class AuditLogIT extends BaseItTest {
     c.setCode("c1");
     c.setName("n1");
     UUID key = collectionClient.create(c);
-    long traceId = assertCreationCollectionEntity(key, CollectionEntityType.COLLECTION);
+    String traceId = assertCreationCollectionEntity(key, CollectionEntityType.COLLECTION);
 
     c = collectionClient.get(key);
     c.setName("n2");
@@ -282,9 +256,9 @@ public class AuditLogIT extends BaseItTest {
           T extends CollectionEntity & Taggable & Identifiable & MachineTaggable,
           R extends ChangeSuggestion<T>>
       void testSubEntities(
-          UUID entityKey, long previousTraceId, BaseCollectionEntityClient<T, R> client) {
+          UUID entityKey, String previousTraceId, BaseCollectionEntityClient<T, R> client) {
     int identifierKey = client.addIdentifier(entityKey, new Identifier(IdentifierType.LSID, "foo"));
-    long traceId =
+    String traceId =
         assertSubEntityCreation(
             entityKey,
             previousTraceId,
@@ -413,9 +387,9 @@ public class AuditLogIT extends BaseItTest {
           T extends CollectionEntity & Taggable & Identifiable & MachineTaggable & Contactable,
           R extends ChangeSuggestion<T>>
       void testPrimaryEntityOperations(
-          UUID entityKey, long previousTraceId, BaseCollectionEntityClient<T, R> client) {
+          UUID entityKey, String previousTraceId, BaseCollectionEntityClient<T, R> client) {
     int omKey = client.addOccurrenceMapping(entityKey, new OccurrenceMapping("c", "i", datasetKey));
-    long traceId =
+    String traceId =
         assertSubEntityCreation(
             entityKey,
             previousTraceId,
@@ -483,7 +457,7 @@ public class AuditLogIT extends BaseItTest {
     assertEquals(1, logs.size());
   }
 
-  private long assertCreationCollectionEntity(
+  private String assertCreationCollectionEntity(
       UUID collectionEntityKey, CollectionEntityType collectionEntityType) {
     List<AuditLog> logs =
         auditLogMapper.list(
@@ -498,7 +472,7 @@ public class AuditLogIT extends BaseItTest {
     return auditLog.getTraceId();
   }
 
-  private long assertUpdateCollectionEntity(UUID collectionEntityKey, long previousTraceId) {
+  private String assertUpdateCollectionEntity(UUID collectionEntityKey, String previousTraceId) {
     List<AuditLog> logs =
         auditLogMapper.list(
             AuditLogListParams.builder()
@@ -522,9 +496,9 @@ public class AuditLogIT extends BaseItTest {
     return logs.get(0).getTraceId();
   }
 
-  private long assertSubEntityCreation(
+  private String assertSubEntityCreation(
       UUID collectionEntityKey,
-      long previousTraceId,
+      String previousTraceId,
       Object subEntityKey,
       String subEntity,
       String operation) {
@@ -562,7 +536,7 @@ public class AuditLogIT extends BaseItTest {
             new PagingRequest());
     assertEquals(1, logs.size());
     assertEquals(replacementKey, logs.get(0).getReplacementKey());
-    long mergeTraceId = logs.get(0).getTraceId();
+    String mergeTraceId = logs.get(0).getTraceId();
     logs =
         auditLogMapper.list(
             AuditLogListParams.builder().traceId(mergeTraceId).build(), new PagingRequest());

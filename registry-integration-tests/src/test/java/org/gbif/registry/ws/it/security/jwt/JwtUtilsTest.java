@@ -18,7 +18,7 @@ import org.gbif.registry.ws.jwt.JwtUtils;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

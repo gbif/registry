@@ -58,7 +58,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -165,7 +165,7 @@ public class InstitutionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/institution/{key}")
-  public Institution get(@PathVariable UUID key) {
+  public Institution get(@PathVariable("key") UUID key) {
     return institutionService.get(key);
   }
 
@@ -183,7 +183,7 @@ public class InstitutionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("latimerCore/{key}")
   @NullToNotFound("/grscicoll/institution/latimerCore/{key}")
-  public OrganisationalUnit getAsLatimerCore(@PathVariable UUID key) {
+  public OrganisationalUnit getAsLatimerCore(@PathVariable("key") UUID key) {
     return institutionService.getAsLatimerCore(key);
   }
 
@@ -276,7 +276,7 @@ public class InstitutionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 

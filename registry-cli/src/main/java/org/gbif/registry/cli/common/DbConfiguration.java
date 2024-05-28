@@ -15,7 +15,7 @@ package org.gbif.registry.cli.common;
 
 import java.util.StringJoiner;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import com.beust.jcommander.Parameter;
 

@@ -142,4 +142,5 @@
   <include file="liquibase/134-deleted-fields-grscicoll.xml" />
   <include file="liquibase/135-vocabs-grscicoll.xml" />
   <include file="liquibase/136-new-fields-grscicoll.xml" />
+  <include file="liquibase/137-grscicoll-traceId-migrated.xml" />
 </databaseChangeLog>

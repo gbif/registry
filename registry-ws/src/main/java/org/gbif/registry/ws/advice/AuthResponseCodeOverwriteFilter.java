@@ -15,7 +15,7 @@ package org.gbif.registry.ws.advice;
 
 import java.util.Optional;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;

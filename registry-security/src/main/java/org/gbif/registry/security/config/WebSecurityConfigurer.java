@@ -24,33 +24,30 @@ import org.gbif.ws.server.filter.AppIdentityFilter;
 import org.gbif.ws.server.filter.HttpServletRequestWrapperFilter;
 import org.gbif.ws.server.filter.IdentityFilter;
 import org.gbif.ws.server.filter.RequestHeaderParamUpdateFilter;
-
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import static org.gbif.ws.security.SecurityUtils.corsAllOriginsAndMethodsConfiguration;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfigurer {
 
   private final ApplicationContext context;
 
@@ -63,9 +60,9 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     this.context = context;
   }
 
-  @Override
-  protected void configure(AuthenticationManagerBuilder auth) {
-    auth.authenticationProvider(dbAuthenticationProvider());
+  @Bean
+  public AuthenticationManager authenticationManager() {
+    return new ProviderManager(dbAuthenticationProvider());
   }
 
   private DaoAuthenticationProvider dbAuthenticationProvider() {
@@ -82,16 +79,14 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
     return firewall;
   }
 
-  @Override
-  public void configure(WebSecurity web) throws Exception {
-    super.configure(web);
-    web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
+  @Bean
+  public WebSecurityCustomizer webSecurityCustomizer() {
+    return web -> web.httpFirewall(allowUrlEncodedSlashHttpFirewall());
   }
 
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
-    http.httpBasic()
-        .disable()
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http.httpBasic(AbstractHttpConfigurer::disable)
         .addFilterAfter(context.getBean(HttpServletRequestWrapperFilter.class), CsrfFilter.class)
         .addFilterAfter(
             context.getBean(RequestHeaderParamUpdateFilter.class),
@@ -111,37 +106,15 @@ public class WebSecurityConfigurer extends WebSecurityConfigurerAdapter {
         .addFilterAfter(
             context.getBean(ResourceNotFoundRequestFilter.class),
             GrSciCollEditorAuthorizationFilter.class)
-        .csrf()
-        .disable()
-        .cors()
-        .and()
-        .authorizeRequests()
-        .anyRequest()
-        .authenticated();
-
-    http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .csrf(AbstractHttpConfigurer::disable)
+        .cors(c -> c.configurationSource(corsAllOriginsAndMethodsConfiguration()))
+        .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+        .sessionManagement(smc -> smc.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .build();
   }
 
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new RegistryPasswordEncoder();
-  }
-
-  @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    // CorsFilter only applies this if the origin header is present in the request
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type"));
-    configuration.setAllowedOrigins(Collections.singletonList("*"));
-    configuration.setAllowedMethods(
-        Arrays.asList("HEAD", "GET", "POST", "DELETE", "PUT", "OPTIONS"));
-    configuration.setExposedHeaders(
-        Arrays.asList(
-            "Access-Control-Allow-Origin",
-            "Access-Control-Allow-Methods",
-            "Access-Control-Allow-Headers"));
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
   }
 }

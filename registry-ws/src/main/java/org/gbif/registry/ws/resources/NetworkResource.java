@@ -42,8 +42,8 @@ import org.gbif.ws.WebApplicationException;
 import java.util.List;
 import java.util.UUID;
 
-import javax.validation.Valid;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
@@ -131,7 +131,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @GetMapping("{key}")
   @NullToNotFound("/network/{key}")
   @Override
-  public Network get(@PathVariable UUID key) {
+  public Network get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -215,7 +215,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -311,7 +311,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @PostMapping("{key}/constituents/{datasetKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
-  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+  public void addConstituent(@PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
     if (networkMapper.constituentExists(networkKey, datasetKey)) {
       throw new WebApplicationException(
           "Dataset " + datasetKey + " is already connected to the network " + networkKey,
@@ -343,7 +343,7 @@ public class NetworkResource extends BaseNetworkEntityResource<Network, NetworkL
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void removeConstituent(
-      @PathVariable("key") UUID networkKey, @PathVariable UUID datasetKey) {
+      @PathVariable("key") UUID networkKey, @PathVariable("datasetKey") UUID datasetKey) {
     if (!networkMapper.constituentExists(networkKey, datasetKey)) {
       throw new WebApplicationException(
           "Dataset " + datasetKey + " is not connected to the network " + networkKey,

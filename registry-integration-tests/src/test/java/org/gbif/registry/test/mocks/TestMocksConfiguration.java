@@ -56,11 +56,6 @@ public class TestMocksConfiguration {
   }
 
   @Bean
-  public InMemoryEmailSender inMemoryEmailSender() {
-    return new InMemoryEmailSender();
-  }
-
-  @Bean
   public TitleLookupService titleLookupServiceMock() {
     return new TitleLookupServiceMock();
   }

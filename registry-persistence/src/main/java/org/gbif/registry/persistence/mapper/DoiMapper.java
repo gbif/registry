@@ -22,7 +22,7 @@ import org.gbif.registry.domain.doi.DoiType;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;

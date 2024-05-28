@@ -13,30 +13,15 @@
  */
 package org.gbif.registry.security;
 
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.NetworkEntity;
-import org.gbif.api.model.registry.Organization;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.gbif.api.model.registry.*;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,13 +30,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import static org.gbif.registry.security.SecurityContextCheck.checkIsNotAdmin;
-import static org.gbif.registry.security.SecurityContextCheck.checkIsNotApp;
-import static org.gbif.registry.security.SecurityContextCheck.checkIsNotEditor;
-import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
+import static org.gbif.registry.security.SecurityContextCheck.*;
 
 /**
  * For requests authenticated with a REGISTRY_EDITOR role two levels of authorization need to be
@@ -246,13 +232,13 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Ensure request is allowed for the user.
-   * If so do nothing, if not throw {@link WebApplicationException}.
+   * Ensure request is allowed for the user. If so do nothing, if not throw {@link
+   * WebApplicationException}.
    *
    * @param username username
-   * @param path     request path
-   * @param matcher  matcher which contains the match between request path and pattern
-   * @param request  request
+   * @param path request path
+   * @param matcher matcher which contains the match between request path and pattern
+   * @param request request
    */
   private void ensureRequest(
       String username, String path, Matcher matcher, HttpServletRequest request) {
@@ -321,14 +307,13 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Ensure machine tag request is allowed for the user.
-   * If so do nothing, if not throw {@link WebApplicationException}.
-   * No key present in the path so this tries to deserialize body.
+   * Ensure machine tag request is allowed for the user. If so do nothing, if not throw {@link
+   * WebApplicationException}. No key present in the path so this tries to deserialize body.
    *
-   * @param entityName  network entity name (e.g. dataset, organization)
-   * @param username    username
+   * @param entityName network entity name (e.g. dataset, organization)
+   * @param username username
    * @param resourceKey network entity key
-   * @param request     tag key or namespace
+   * @param request tag key or namespace
    */
   private void ensureMachineTagRequestWithoutKey(
       String entityName, String username, String resourceKey, HttpServletRequest request) {
@@ -370,13 +355,12 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Ensure machine tag request is allowed for the user.
-   * If so do nothing, if not throw {@link WebApplicationException}.
-   * Uses machineTagKey.
+   * Ensure machine tag request is allowed for the user. If so do nothing, if not throw {@link
+   * WebApplicationException}. Uses machineTagKey.
    *
-   * @param entityName    network entity name (e.g. dataset, organization)
-   * @param username      username
-   * @param resourceKey   network entity key
+   * @param entityName network entity name (e.g. dataset, organization)
+   * @param username username
+   * @param resourceKey network entity key
    * @param machineTagKey the machine tag key
    */
   private void ensureMachineTagRequestWithKey(
@@ -411,10 +395,10 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Ensure pipelines request is allowed for the user.
-   * If so do nothing, if not throw {@link WebApplicationException}.
+   * Ensure pipelines request is allowed for the user. If so do nothing, if not throw {@link
+   * WebApplicationException}.
    *
-   * @param username    username
+   * @param username username
    * @param resourceKey resourceKey
    */
   private void ensurePipelinesRunRequest(String username, String resourceKey) {
@@ -438,12 +422,12 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Ensure network entity request (without resource key) is allowed for the user.
-   * If so do nothing, if not throw {@link WebApplicationException}.
+   * Ensure network entity request (without resource key) is allowed for the user. If so do nothing,
+   * if not throw {@link WebApplicationException}.
    *
    * @param entityName network entity name (e.g. dataset, organization)
-   * @param username   username
-   * @param request    HTTP request
+   * @param username username
+   * @param request HTTP request
    */
   private void ensureNetworkEntityRequestWithoutKey(
       String entityName, String username, HttpServletRequest request) {
@@ -506,11 +490,11 @@ public class EditorAuthorizationFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Ensure network entity request (with resource key) is allowed for the user.
-   * If so do nothing, if not throw {@link WebApplicationException}.
+   * Ensure network entity request (with resource key) is allowed for the user. If so do nothing, if
+   * not throw {@link WebApplicationException}.
    *
-   * @param entityName  network entity name (e.g. dataset, organization)
-   * @param username    username
+   * @param entityName network entity name (e.g. dataset, organization)
+   * @param username username
    * @param resourceKey network entity key
    */
   private void ensureNetworkEntityRequestWithKey(

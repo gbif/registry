@@ -18,7 +18,7 @@ import org.gbif.api.exception.ServiceUnavailableException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.dspace.xoai.dataprovider.builder.OAIRequestParametersBuilder;
 import org.dspace.xoai.dataprovider.exceptions.BadArgumentException;

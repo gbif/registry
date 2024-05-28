@@ -35,6 +35,7 @@ import org.gbif.ws.server.provider.DatasetSearchRequestHandlerMethodArgumentReso
 import org.gbif.ws.server.provider.DatasetSuggestRequestHandlerMethodArgumentResolver;
 import org.gbif.ws.server.provider.PageableHandlerMethodArgumentResolver;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
@@ -87,8 +88,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
    * @return ParamNameProcessor
    */
   @Bean
-  protected ParamNameProcessor paramNameProcessor() {
-    return new ParamNameProcessor();
+  protected ParamNameProcessor paramNameProcessor(
+      RequestMappingHandlerAdapter requestMappingHandlerAdapter) {
+    return new ParamNameProcessor(requestMappingHandlerAdapter);
   }
 
   /**
@@ -113,7 +115,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
               Optional.ofNullable(adapter.getArgumentResolvers()).orElse(Collections.emptyList());
           List<HandlerMethodArgumentResolver> argumentResolvers =
               new ArrayList<>(nullSafeArgumentResolvers);
-          argumentResolvers.add(0, paramNameProcessor());
+          argumentResolvers.add(0, paramNameProcessor(adapter));
           adapter.setArgumentResolvers(argumentResolvers);
         }
         return bean;

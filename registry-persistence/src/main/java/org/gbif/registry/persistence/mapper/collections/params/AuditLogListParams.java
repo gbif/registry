@@ -26,7 +26,7 @@ import lombok.Getter;
 @Builder
 @Getter
 public class AuditLogListParams {
-  @Nullable Long traceId;
+  @Nullable String traceId;
   @Nullable CollectionEntityType collectionEntityType;
   @Nullable String subEntityType;
   @Nullable String subEntityKey;

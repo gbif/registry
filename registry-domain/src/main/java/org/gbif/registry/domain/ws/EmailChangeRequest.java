@@ -15,8 +15,8 @@ package org.gbif.registry.domain.ws;
 
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 public class EmailChangeRequest {
 

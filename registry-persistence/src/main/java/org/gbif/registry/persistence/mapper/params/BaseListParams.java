@@ -18,7 +18,7 @@ import org.gbif.api.vocabulary.IdentifierType;
 
 import java.util.Date;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import lombok.Getter;
 import lombok.Setter;

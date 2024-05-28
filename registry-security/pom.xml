@@ -52,6 +52,11 @@
       <groupId>io.jsonwebtoken</groupId>
       <artifactId>jjwt</artifactId>
     </dependency>
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>

@@ -13,13 +13,15 @@
  */
 package org.gbif.registry.mail;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.gbif.registry.mail.config.MailConfigurationProperties;
 import org.gbif.registry.mail.util.RegistryMailUtils;
 
 import java.util.Date;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+//import javax.mail.MessagingException;
+//import javax.mail.internet.MimeMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

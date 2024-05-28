@@ -25,7 +25,7 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

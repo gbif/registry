@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.ObjectCodec;

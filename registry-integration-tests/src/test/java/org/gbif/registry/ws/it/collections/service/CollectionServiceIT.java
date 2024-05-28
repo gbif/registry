@@ -42,8 +42,8 @@ import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;

@@ -14,18 +14,15 @@
 package org.gbif.registry.ws.it.security;
 
 import org.gbif.registry.security.SecurityContextCheck;
-
-import java.util.Collection;
-import java.util.Collections;
-
-import javax.ws.rs.core.SecurityContext;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,7 +45,6 @@ public class SecurityContextCheckTest {
     assertFalse(SecurityContextCheck.checkUserInRole(new TestSecurityContext("A"), "B", "C"));
   }
 
-  /** Test implementation of {@link SecurityContext} */
   private static class TestSecurityContext implements Authentication {
 
     String role;

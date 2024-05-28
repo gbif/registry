@@ -27,8 +27,8 @@ import org.gbif.registry.security.jwt.JwtUtils;
 
 import java.util.Optional;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotNull;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -231,7 +231,7 @@ public class UserResource {
   @GetMapping("{username}/token")
   @Secured({ADMIN_ROLE, APP_ROLE})
   public ResponseEntity<?> generateJwtToken(
-      @PathVariable String username, Authentication authentication) {
+      @PathVariable("username") String username, Authentication authentication) {
     // the user shall be authenticated
     ensureUserSetInSecurityContext(authentication);
 

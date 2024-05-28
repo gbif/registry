@@ -21,7 +21,7 @@ import java.util.UUID;
 public class AuditLog {
 
   private long key;
-  private long traceId;
+  private String traceId;
   private CollectionEntityType collectionEntityType;
   private String subEntityType;
   private String operation;
@@ -41,11 +41,11 @@ public class AuditLog {
     this.key = key;
   }
 
-  public long getTraceId() {
+  public String getTraceId() {
     return traceId;
   }
 
-  public void setTraceId(long traceId) {
+  public void setTraceId(String traceId) {
     this.traceId = traceId;
   }
 

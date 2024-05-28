@@ -34,19 +34,18 @@ import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.cloud.openfeign.ribbon.FeignRibbonClientAutoConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -63,7 +62,7 @@ import java.util.Date;
 @SpringBootApplication(
     exclude = {
       RabbitAutoConfiguration.class,
-      ElasticSearchRestHealthContributorAutoConfiguration.class
+            ElasticsearchRestClientAutoConfiguration.class
     })
 @MapperScan("org.gbif.registry.persistence.mapper")
 @ComponentScan(
@@ -116,8 +115,7 @@ import java.util.Date;
 @PropertySource(RegistryIntegrationTestsConfiguration.TEST_PROPERTIES)
 @ImportAutoConfiguration({
   HttpMessageConvertersAutoConfiguration.class,
-  RibbonAutoConfiguration.class,
-  FeignRibbonClientAutoConfiguration.class,
+  LoadBalancerAutoConfiguration.class,
   FeignAutoConfiguration.class
 })
 @ActiveProfiles("test")

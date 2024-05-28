@@ -1,0 +1,13 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="137" author="mlopez">
+    <sql splitStatements="false" stripComments="false">
+      <![CDATA[
+        ALTER TABLE grscicoll_audit_log ALTER COLUMN trace_id TYPE text USING trace_id::text;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

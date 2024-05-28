@@ -16,7 +16,7 @@ package org.gbif.registry.domain.ws;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public class IptNetworkBriefResponse {
 

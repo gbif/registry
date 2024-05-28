@@ -57,7 +57,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -182,7 +182,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
-  public CollectionView getCollectionView(@PathVariable UUID key) {
+  public CollectionView getCollectionView(@PathVariable("key") UUID key) {
     return collectionService.getCollectionView(key);
   }
 
@@ -199,7 +199,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("latimerCore/{key}")
   @NullToNotFound("/grscicoll/collection/{key}")
-  public ObjectGroup getCollectionAsLatimerCore(@PathVariable UUID key) {
+  public ObjectGroup getCollectionAsLatimerCore(@PathVariable("key") UUID key) {
     return collectionService.getAsLatimerCore(key);
   }
 
@@ -292,7 +292,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 

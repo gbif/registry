@@ -40,7 +40,7 @@ import org.gbif.vocabulary.client.ConceptClient;
 import java.util.List;
 import java.util.UUID;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

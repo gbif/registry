@@ -48,9 +48,9 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
@@ -156,7 +156,7 @@ public class OrganizationResource
   @GetMapping("{key}")
   @NullToNotFound("/organization/{key}") // TODO TODO TODO
   @Override
-  public Organization get(@PathVariable UUID key) {
+  public Organization get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -264,7 +264,7 @@ public class OrganizationResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 

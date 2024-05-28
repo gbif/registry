@@ -16,7 +16,7 @@ package org.gbif.registry.security.jwt;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpHeaders;
 

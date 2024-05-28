@@ -130,7 +130,7 @@ public class IDigBioExternalResource {
 
   @NullToNotFound
   @GetMapping("{iDigBioKey}")
-  public IDigBioCollection getCollection(@PathVariable UUID iDigBioKey) {
+  public IDigBioCollection getCollection(@PathVariable("iDigBioKey") UUID iDigBioKey) {
     Set<UUID> collections = idigBioMapper.findIDigBioCollections("urn:uuid:" + iDigBioKey);
 
     if (collections == null || collections.isEmpty()) {

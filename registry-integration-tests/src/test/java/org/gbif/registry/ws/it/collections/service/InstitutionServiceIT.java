@@ -39,8 +39,8 @@ import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;

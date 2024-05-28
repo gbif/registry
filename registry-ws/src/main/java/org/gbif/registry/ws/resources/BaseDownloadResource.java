@@ -70,9 +70,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -320,7 +320,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("{prefix}/{suffix}")
   @NullToNotFound(useUrlMapping = true)
   public Download getByDoi(
-      @NotNull @PathVariable String prefix, @NotNull @PathVariable String suffix) {
+      @NotNull @PathVariable("prefix") String prefix, @NotNull @PathVariable("suffix") String suffix) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
     Download download = occurrenceDownloadMapper.getByDOI(new DOI(prefix, suffix));
@@ -398,7 +398,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("user/{user}")
   @Override
   public PagingResponse<Download> listByUser(
-      @PathVariable String user,
+      @PathVariable("user") String user,
       Pageable page,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false)
@@ -466,7 +466,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   @GetMapping("user/{user}/count")
   @Override
   public long countByUser(
-      @PathVariable String user,
+      @PathVariable("user") String user,
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
       @RequestParam(value = "from", required = false)
           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

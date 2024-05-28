@@ -50,9 +50,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -154,7 +154,7 @@ public class InstallationResource
   @GetMapping("{key}")
   @NullToNotFound("/installation/{key}")
   @Override
-  public Installation get(@PathVariable UUID key) {
+  public Installation get(@PathVariable("key") UUID key) {
     return super.get(key);
   }
 
@@ -242,7 +242,7 @@ public class InstallationResource
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}")
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     super.delete(key);
   }
 
@@ -396,7 +396,7 @@ public class InstallationResource
    */
   @Hidden
   @GetMapping("location/{type}")
-  public String organizationsAsGeoJSON(@PathVariable InstallationType type) {
+  public String organizationsAsGeoJSON(@PathVariable("type") InstallationType type) {
     List<Organization> orgs = organizationMapper.hostingInstallationsOf(type, true);
 
     // to increment the count on duplicates
@@ -443,7 +443,7 @@ public class InstallationResource
   @Transactional
   @Secured(ADMIN_ROLE)
   public void createMetasync(
-      @PathVariable UUID installationKey,
+      @PathVariable("installationKey") UUID installationKey,
       @RequestBody @Valid @NotNull @Trim MetasyncHistory metasyncHistory) {
     checkArgument(
         installationKey.equals(metasyncHistory.getInstallationKey()),
@@ -473,7 +473,7 @@ public class InstallationResource
   @GetMapping("{installationKey}/metasync")
   @Override
   public PagingResponse<MetasyncHistory> listMetasync(
-      @PathVariable UUID installationKey, Pageable page) {
+      @PathVariable("installationKey") UUID installationKey, Pageable page) {
     return new PagingResponse<>(
         page,
         (long) metasyncHistoryMapper.countByInstallation(installationKey),

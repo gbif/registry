@@ -13,21 +13,18 @@
  */
 package org.gbif.registry.events.collections;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
+import io.micrometer.tracing.Tracer;
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.registry.domain.collections.AuditLog;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.collections.AuditLogMapper;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.eventbus.Subscribe;
-
-import brave.Tracer;
 
 @Component
 public class AuditLogger {
@@ -133,10 +130,10 @@ public class AuditLogger {
     }
   }
 
-  private long getTraceId() {
+  private String getTraceId() {
     if (tracer.currentSpan() != null) {
       return tracer.currentSpan().context().traceId();
     }
-    return tracer.newTrace().context().traceId();
+    return tracer.nextSpan().context().traceId();
   }
 }

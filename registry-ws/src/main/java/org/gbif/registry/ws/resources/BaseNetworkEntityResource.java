@@ -60,10 +60,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.annotation.Nullable;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.annotation.Nullable;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,7 +239,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Transactional
   @Override
-  public void delete(@PathVariable UUID key) {
+  public void delete(@PathVariable("key") UUID key) {
     // the following lines allow to set the "modifiedBy" to the user who actually deletes the
     // entity.
     // the api delete(UUID) should be changed eventually
@@ -390,7 +390,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteComment(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int commentKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("commentKey") int commentKey) {
     mapper.deleteComment(targetEntityKey, commentKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Comment.class));
@@ -534,8 +534,8 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Override
   public void deleteMachineTags(
       @PathVariable("key") UUID targetEntityKey,
-      @PathVariable String namespace,
-      @PathVariable String name) {
+      @PathVariable("namespace") String namespace,
+      @PathVariable("name") String name) {
     mapper.deleteMachineTags(targetEntityKey, namespace, name);
   }
 
@@ -635,7 +635,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @DeleteMapping("{key}/tag/{tagKey}")
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
-  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable int tagKey) {
+  public void deleteTag(@PathVariable("key") UUID targetEntityKey, @PathVariable("tagKey") int tagKey) {
     mapper.deleteTag(targetEntityKey, tagKey);
     eventManager.post(ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Tag.class));
   }
@@ -771,7 +771,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE})
   @Override
   public void deleteContact(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int contactKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("contactKey") int contactKey) {
     mapper.deleteContact(targetEntityKey, contactKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Contact.class));
@@ -857,7 +857,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Secured({ADMIN_ROLE, EDITOR_ROLE, IPT_ROLE})
   @Override
   public void deleteEndpoint(
-      @PathVariable("key") UUID targetEntityKey, @PathVariable int endpointKey) {
+      @PathVariable("key") UUID targetEntityKey, @PathVariable("endpointKey") int endpointKey) {
     withMyBatis.deleteEndpoint(mapper, targetEntityKey, endpointKey);
     eventManager.post(
         ChangedComponentEvent.newInstance(targetEntityKey, objectClass, Endpoint.class));

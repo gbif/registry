@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolation;
 
 import com.google.common.base.Objects;
 
@@ -50,7 +50,7 @@ public class UserModelMutationResult {
 
   /**
    * Create a new {@link UserModelMutationResult} representing a custom {@link
-   * ModelMutationError#CONSTRAINT_VIOLATION} (not coming from javax.validation.Validator).
+   * ModelMutationError#CONSTRAINT_VIOLATION} (not coming from jakarta.validation.Validator).
    *
    * @param key
    * @param value

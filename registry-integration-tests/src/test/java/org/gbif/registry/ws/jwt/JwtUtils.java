@@ -13,17 +13,15 @@
  */
 package org.gbif.registry.ws.jwt;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.HttpServletRequest;
 import org.gbif.registry.security.jwt.JwtConfiguration;
 
+import javax.ws.rs.core.HttpHeaders;
 import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.HttpHeaders;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 
 public class JwtUtils {
 

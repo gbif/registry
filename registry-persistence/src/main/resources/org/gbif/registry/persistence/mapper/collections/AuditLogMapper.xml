@@ -43,7 +43,7 @@
     FROM grscicoll_audit_log
     <where>
       <if test="params.traceId != null">
-        trace_id = #{params.traceId,jdbcType=BIGINT}
+        trace_id = #{params.traceId,jdbcType=VARCHAR}
       </if>
       <if test="params.collectionEntityType != null">
         AND collection_entity_type = #{params.collectionEntityType,jdbcType=OTHER}

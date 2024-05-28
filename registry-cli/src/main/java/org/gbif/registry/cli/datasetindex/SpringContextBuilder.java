@@ -41,6 +41,7 @@ import java.util.Date;
 
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -157,7 +158,7 @@ public class SpringContextBuilder {
   /** Class to help with the loading and injection of */
   @SpringBootApplication(
       exclude = {
-        ElasticSearchRestHealthContributorAutoConfiguration.class,
+        ElasticsearchRestClientAutoConfiguration.class,
         DataSourceAutoConfiguration.class,
         LiquibaseAutoConfiguration.class,
         FreeMarkerAutoConfiguration.class,
