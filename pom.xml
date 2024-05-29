@@ -121,7 +121,7 @@
     <lombok.version>1.18.20</lombok.version>
     <mybatis.version>3.5.0</mybatis.version>
     <okhttp.version>4.9.1</okhttp.version>
-    <okio.version>2.10.0</okio.version>
+    <okio.version>3.4.0</okio.version>
     <retrofit.version>2.8.0</retrofit.version>
     <slf4j.version>1.7.30</slf4j.version>
     <woodstox.version>4.4.1</woodstox.version>
