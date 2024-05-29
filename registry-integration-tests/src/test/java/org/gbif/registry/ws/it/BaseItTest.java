@@ -130,6 +130,6 @@ public class BaseItTest extends BaseDBTest {
     registry.add("registry.datasource.url", PG_CONTAINER::getJdbcUrl);
     registry.add("registry.datasource.username", PG_CONTAINER::getUsername);
     registry.add("registry.datasource.password", PG_CONTAINER::getPassword);
-    registry.add("elasticsearch.mock", () -> "true");
+//    registry.add("elasticsearch.mock", () -> "true");
   }
 }

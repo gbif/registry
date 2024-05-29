@@ -88,6 +88,7 @@ elasticsearch:
     socketTimeOut:
     connectionRequestTimeOut:
     maxRetryTimeOut:
+  mock: true
 
 directory:
   app:

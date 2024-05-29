@@ -13,16 +13,7 @@
  */
 package org.gbif.registry.search.test;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Optional;
-import java.util.Properties;
-
+import lombok.SneakyThrows;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
@@ -39,7 +30,16 @@ import org.springframework.util.FileCopyUtils;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-import lombok.SneakyThrows;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.Properties;
+
 
 public class EsManageServer implements InitializingBean, DisposableBean {
 
@@ -80,7 +80,8 @@ public class EsManageServer implements InitializingBean, DisposableBean {
 
   @Override
   public void afterPropertiesSet() throws Exception {
-    start();
+    createIndex();
+//    start();
   }
 
   public String getHttpHostAddress() {
