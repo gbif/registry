@@ -125,7 +125,7 @@
     <retrofit.version>2.8.0</retrofit.version>
     <slf4j.version>1.7.30</slf4j.version>
     <woodstox.version>4.4.1</woodstox.version>
-    <zookeeper.version>3.8.1</zookeeper.version>
+    <zookeeper.version>3.8.4</zookeeper.version>
     <curator.version>5.5.0</curator.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
