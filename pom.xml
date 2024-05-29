@@ -77,10 +77,10 @@
     <!-- Spring -->
     <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
     <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
-    <spring-cloud-openfeign.version>2.2.6.RELEASE</spring-cloud-openfeign.version>
+    <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
-    <mybatis-spring-boot-starter.version>2.1.0</mybatis-spring-boot-starter.version>
-    <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
+    <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
+    <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
