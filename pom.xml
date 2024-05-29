@@ -91,7 +91,7 @@
     <gbif-api.version>1.16.3</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>1.4-SNAPSHOT</gbif-common-mybatis.version>
-    <gbif-common-ws.version>1.26</gbif-common-ws.version>
+    <gbif-common-ws.version>1.28-SNAPSHOT</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
     <gbif-doi.version>2.17</gbif-doi.version>
     <gbif-download-query-tools.version>1.51.0</gbif-download-query-tools.version>
