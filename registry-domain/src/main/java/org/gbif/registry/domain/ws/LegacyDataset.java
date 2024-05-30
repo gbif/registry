@@ -13,6 +13,12 @@
  */
 package org.gbif.registry.domain.ws;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.common.DOI;
@@ -21,33 +27,21 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.DatasetSubtype;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.*;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.validator.routines.EmailValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.UUID;
 
 /**
  * Class used to create or update a Dataset for legacy (GBRDS/IPT) API. Previously known as a
@@ -909,7 +903,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("primaryContactType", primaryContactType)
         .add("primaryContactEmail", primaryContactEmail)
         .add("primaryContactName", primaryContactName)

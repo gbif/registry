@@ -141,13 +141,6 @@ pipeline {
         }
 
     }
-
-    post {
-        failure {
-            slackSend message: "Registry build failed! - ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)",
-                    channel: "#jenkins"
-        }
-    }
 }
 
 def createReleaseArgs() {

@@ -13,13 +13,13 @@
  */
 package org.gbif.registry.doi.registration;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.domain.doi.DoiType;
 
 import javax.annotation.Nullable;
-
-import com.google.common.base.Objects;
 
 /**
  * Encapsulates a DOI registration request. Some fields are optional and its values can trigger a
@@ -135,7 +135,7 @@ public class DoiRegistration {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("key", key)
         .add("doi", doi)
         .add("metadata", metadata)

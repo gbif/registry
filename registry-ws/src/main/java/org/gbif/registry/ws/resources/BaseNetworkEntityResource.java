@@ -281,7 +281,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Override
   @Deprecated
   public PagingResponse<T> search(String query, Pageable page) {
-    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    String q = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     return list(BaseListParams.builder().query(q).page(page).build());
   }
 
@@ -973,7 +973,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   }
 
   protected String parseQuery(String q) {
-    return q != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(q)) : q;
+    return q != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(q)) : q;
   }
 
   protected Date parseFrom(Range<LocalDate> range) {
