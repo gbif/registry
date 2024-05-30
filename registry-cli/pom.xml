@@ -19,14 +19,14 @@
   </distributionManagement>
 
   <properties>
+    <java.version>17</java.version>
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
-    <gbif-cli.version>1.0</gbif-cli.version>
-    <metainf-services.version>1.5</metainf-services.version>
+    <gbif-cli.version>1.2-SNAPSHOT</gbif-cli.version>
+    <metainf-services.version>1.11</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
     <javax.mail.version>1.4.7</javax.mail.version>
-    <guava.version>18.0</guava.version>
 
     <sonar.coverage.jacoco.xmlReportPaths>
       ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
