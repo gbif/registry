@@ -148,7 +148,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
     String query =
         searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
     Set<UUID> institutionKeys = new HashSet<>();

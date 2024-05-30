@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.domain.ws;
 
+import com.google.common.base.MoreObjects;
 import org.gbif.api.annotation.Generated;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
@@ -86,7 +87,7 @@ public class LegacyOrganizationBriefResponse {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("key", key).add("name", name).toString();
+    return MoreObjects.toStringHelper(this).add("key", key).add("name", name).toString();
   }
 
   public static class LegacyOrganizationArraySerializer

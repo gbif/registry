@@ -182,7 +182,7 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
       InstitutionSearchRequest searchRequest, boolean deleted, Pageable page) {
     String query =
         searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
     return InstitutionSearchParams.builder()
