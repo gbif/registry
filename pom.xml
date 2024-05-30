@@ -122,7 +122,7 @@
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <logback.version>1.2.3</logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
-    <lombok.version>1.18.20</lombok.version>
+    <lombok.version>1.18.28</lombok.version>
     <mybatis.version>3.5.0</mybatis.version>
     <okhttp.version>4.9.1</okhttp.version>
     <okio.version>2.10.0</okio.version>
