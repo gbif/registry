@@ -145,7 +145,7 @@
     <!-- Test -->
     <junit.version>5.9.1</junit.version>
     <mockito.version>3.3.3</mockito.version>
-    <xmlunit.version>2.6.3</xmlunit.version>
+    <xmlunit.version>2.10.0</xmlunit.version>
     <postgresql-testcontainers.version>1.19.8</postgresql-testcontainers.version>
     <testcontainers-elasticsearch.version>1.19.8</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
