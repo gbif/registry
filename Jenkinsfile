@@ -33,11 +33,11 @@ pipeline {
                         configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS'),
                         configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
                 ]) {
-                    sh '''
+                    sh """
                         mvn -Denforcer.skip=true -s ${MAVEN_SETTINGS} clean package install deploy -T 1C -Dparallel=classes -DuseUnlimitedThreads=true
                         -Pgbif-dev,registry-cli-it,secrets-dev -U -Dappkeys.testfile=${APPKEYS_TESTFILE}
                         -B -pl !registry-cli,!registry-ws
-                        '''
+                        """
                 }
             }
         }
@@ -56,11 +56,11 @@ pipeline {
                         configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS'),
                         configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
                 ]) {
-                    sh '''
+                    sh """
                         mvn -s ${MAVEN_SETTINGS} clean package install deploy -T 1C -Dparallel=classes -DuseUnlimitedThreads=true
                         -Pgbif-dev,registry-cli-it,secrets-dev -U -Dappkeys.testfile=${APPKEYS_TESTFILE}
                         -B -pl registry-cli,registry-ws
-                        '''
+                        """
                 }
             }
         }
@@ -101,11 +101,11 @@ pipeline {
                         [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS'),
                          configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')]) {
                     git 'https://github.com/gbif/vocabulary.git'
-                    sh '''
+                    sh """
                         mvn -s $MAVEN_SETTINGS -Dappkeys.testfile=${APPKEYS_TESTFILE} clean package install verify -B
                         release:prepare release:perform $RELEASE_ARGS -Dparallel=classes -DuseUnlimitedThreads=true
                         - Pgbif-dev,registry-cli-it,secrets-dev -U -pl !registry-cli,!registry-ws
-                        '''
+                        """
                 }
             }
         }
@@ -128,11 +128,11 @@ pipeline {
                         [configFile(fileId: 'org.jenkinsci.plugins.configfiles.maven.GlobalMavenSettingsConfig1387378707709', variable: 'MAVEN_SETTINGS'),
                          configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')]) {
                     git 'https://github.com/gbif/vocabulary.git'
-                    sh '''
+                    sh """
                         mvn -s $MAVEN_SETTINGS -Dappkeys.testfile=${APPKEYS_TESTFILE} clean package install verify -B
                         release:prepare release:perform $RELEASE_ARGS -Dparallel=classes -DuseUnlimitedThreads=true
                         - Pgbif-dev,registry-cli-it,secrets-dev -U -pl registry-cli,registry-ws
-                        '''
+                        """
                 }
             }
         }
