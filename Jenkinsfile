@@ -35,8 +35,8 @@ pipeline {
                 ]) {
                     sh """
                         mvn -Denforcer.skip=true -Dappkeys.testfile=${APPKEYS_TESTFILE} -s ${MAVEN_SETTINGS} \
-                        clean package install deploy -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U  \
-                        -B -pl !registry-cli,!registry-ws
+                        clean package install verify deploy -T 1C -Dparallel=classes -DuseUnlimitedThreads=true -Pgbif-dev,registry-cli-it,secrets-dev -U  \
+                        -B -pl !registry-ws
                         """
                 }
             }
@@ -57,9 +57,9 @@ pipeline {
                         configFile(fileId: 'org.jenkinsci.plugins.configfiles.custom.CustomConfig1389220396351', variable: 'APPKEYS_TESTFILE')
                 ]) {
                     sh """
-                        mvn -s ${MAVEN_SETTINGS} clean package install deploy -T 1C -Dparallel=classes -DuseUnlimitedThreads=true \
+                        mvn -s ${MAVEN_SETTINGS} clean package install verify deploy -T 1C -Dparallel=classes -DuseUnlimitedThreads=true \
                         -Pgbif-dev,registry-cli-it,secrets-dev -U -Dappkeys.testfile=${APPKEYS_TESTFILE} \
-                        -B -pl registry-cli,registry-ws
+                        -B -pl registry-ws
                         """
                 }
             }
