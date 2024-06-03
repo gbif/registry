@@ -29,10 +29,11 @@
     <metainf-services.version>1.11</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
     <javax.mail.version>1.4.7</javax.mail.version>
+    <kotlin.version>1.4.20</kotlin.version>
 
-<!--    <sonar.coverage.jacoco.xmlReportPaths>-->
-<!--      ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml-->
-<!--    </sonar.coverage.jacoco.xmlReportPaths>-->
+    <sonar.coverage.jacoco.xmlReportPaths>
+      ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
   <build>
@@ -187,11 +188,6 @@
       <artifactId>spring-jdbc</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>converter-jackson</artifactId>
-    </dependency>
-
     <!-- GBIF dependencies -->
     <dependency>
       <groupId>org.gbif</groupId>
@@ -341,11 +337,6 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <scope>runtime</scope>
-    </dependency>
 
     <!-- logging -->
     <dependency>
@@ -381,6 +372,17 @@
       <groupId>org.apache.ant</groupId>
       <artifactId>ant</artifactId>
       <version>1.10.14</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib-common</artifactId>
+      <version>${kotlin.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>${kotlin.version}</version>
     </dependency>
 
     <!-- testing -->
