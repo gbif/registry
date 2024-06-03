@@ -374,6 +374,7 @@
       <version>1.10.14</version>
     </dependency>
 
+    <!-- needed for the datacite client -->
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-stdlib-common</artifactId>
