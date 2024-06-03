@@ -19,7 +19,9 @@
   </distributionManagement>
 
   <properties>
-    <java.version>17</java.version>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
+    <java.version>11</java.version>
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
@@ -53,8 +55,8 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration combine.self="override">
-          <source>17</source>
-          <target>17</target>
+          <source>11</source>
+          <target>11</target>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
         </configuration>
@@ -374,6 +376,11 @@
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
       <version>${javax.mail.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>1.10.14</version>
     </dependency>
 
     <!-- testing -->
