@@ -50,7 +50,6 @@ import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -62,6 +61,8 @@ import com.google.common.collect.Sets;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.validation.constraints.NotNull;
 
 
 @Component

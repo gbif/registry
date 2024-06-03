@@ -124,9 +124,6 @@
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
     <lombok.version>1.18.28</lombok.version>
     <mybatis.version>3.5.0</mybatis.version>
-    <okhttp.version>4.9.1</okhttp.version>
-    <okio.version>2.10.0</okio.version>
-    <retrofit.version>2.8.0</retrofit.version>
     <slf4j.version>1.7.30</slf4j.version>
     <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.8.1</zookeeper.version>
@@ -549,42 +546,6 @@
         <version>${geojson.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>retrofit</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>converter-jackson</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>converter-simplexml</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>converter-scalars</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>logging-interceptor</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okio</groupId>
-        <artifactId>okio</artifactId>
-        <version>${okio.version}</version>
-        <scope>runtime</scope>
-      </dependency>
       <dependency>
         <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
         <artifactId>owasp-java-html-sanitizer</artifactId>
