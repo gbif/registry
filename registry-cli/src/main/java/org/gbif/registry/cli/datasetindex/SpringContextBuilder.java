@@ -99,6 +99,12 @@ public class SpringContextBuilder {
     ctx.register(EsClient.class);
     ctx.register(DatasetJsonConverter.class);
 
+    // ignore error: org.springframework.beans.factory.BeanCreationException: Error creating bean
+    // with name 'compositeCompatibilityVerifier'
+    ((DefaultListableBeanFactory) ctx.getBeanFactory())
+        .destroySingleton(
+            "org.springframework.cloud.configuration.CompatibilityVerifierAutoConfiguration");
+
     if (configuration.isIndexClb()) {
       ctx.register(ChecklistbankPersistenceServiceImpl.class);
     }
@@ -114,12 +120,6 @@ public class SpringContextBuilder {
         () -> toEsClientConfiguration(configuration.getOccurrenceEs()));
 
     ctx.register(ApplicationConfig.class);
-
-    // ignore error: org.springframework.beans.factory.BeanCreationException: Error creating bean
-    // with name 'compositeCompatibilityVerifier'
-    ((DefaultListableBeanFactory) ctx.getBeanFactory())
-        .destroySingleton(
-            "org.springframework.cloud.configuration.CompatibilityVerifierAutoConfiguration");
 
     ctx.getEnvironment()
         .getPropertySources()
