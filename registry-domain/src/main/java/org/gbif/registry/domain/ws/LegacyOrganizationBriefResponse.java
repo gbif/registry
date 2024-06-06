@@ -13,7 +13,8 @@
  */
 package org.gbif.registry.domain.ws;
 
-import com.google.common.base.MoreObjects;
+import lombok.Setter;
+
 import org.gbif.api.annotation.Generated;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 /**
@@ -36,6 +38,7 @@ import com.google.common.base.Objects;
  * class to be converted into an XML document or JSON response. @XmlElement is used to specify
  * element names that consumers of legacy services expect to find.
  */
+@Setter
 @XmlRootElement(name = "organisation")
 public class LegacyOrganizationBriefResponse {
 
@@ -54,19 +57,11 @@ public class LegacyOrganizationBriefResponse {
     return key;
   }
 
-  public void setKey(String key) {
-    this.key = key;
-  }
-
   @JsonProperty(LegacyResourceConstants.NAME_PARAM)
   @XmlElement(name = LegacyResourceConstants.NAME_PARAM)
   @NotNull
   public String getName() {
     return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   @Generated

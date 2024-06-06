@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.List;
@@ -24,11 +21,6 @@ import javax.annotation.Nullable;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
-
-import org.gbif.api.vocabulary.collections.Source;
-
-import javax.annotation.Nullable;
-import java.util.List;
 
 @Getter
 @SuperBuilder

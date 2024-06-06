@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.identity.model;
 
-import com.google.common.base.MoreObjects;
 import org.gbif.api.model.common.AbstractGbifUser;
 
 import java.util.HashMap;
@@ -22,7 +21,7 @@ import java.util.Set;
 
 import javax.validation.ConstraintViolation;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import static org.gbif.registry.identity.model.ModelMutationError.CONSTRAINT_VIOLATION;
 

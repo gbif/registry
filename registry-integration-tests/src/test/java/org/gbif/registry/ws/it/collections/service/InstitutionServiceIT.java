@@ -34,18 +34,20 @@ import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.geojson.FeatureCollection;
-import org.geojson.Point;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.junit.jupiter.api.Assertions.*;
 

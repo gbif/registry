@@ -13,11 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import com.google.common.base.Strings;
-
-import org.apache.ibatis.type.BaseTypeHandler;
-import org.apache.ibatis.type.JdbcType;
-
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 
@@ -26,6 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.apache.ibatis.type.BaseTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+
+import com.google.common.base.Strings;
 
 /** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link Discipline}. */
 public class InstitutionGovernanceArrayTypeHandler extends BaseTypeHandler<List<InstitutionGovernance>> {

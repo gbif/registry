@@ -15,33 +15,15 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 
 import org.gbif.api.model.collections.Collection;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class CollectionDto {
 
   private Collection collection;
   private String institutionName;
   private String institutionCode;
 
-  public Collection getCollection() {
-    return collection;
-  }
-
-  public void setCollection(Collection collection) {
-    this.collection = collection;
-  }
-
-  public String getInstitutionName() {
-    return institutionName;
-  }
-
-  public void setInstitutionName(String institutionName) {
-    this.institutionName = institutionName;
-  }
-
-  public String getInstitutionCode() {
-    return institutionCode;
-  }
-
-  public void setInstitutionCode(String institutionCode) {
-    this.institutionCode = institutionCode;
-  }
 }

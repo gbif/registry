@@ -21,12 +21,13 @@ import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.cloud.openfeign.SpringQueryMap;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("grscicoll/collection")
 public interface CollectionClient

@@ -58,12 +58,13 @@ import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollecti
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
 import org.gbif.registry.persistence.mapper.handler.*;
-import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.net.URI;
 import java.util.UUID;
+
+import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MyBatisConfiguration {

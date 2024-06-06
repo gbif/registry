@@ -17,6 +17,9 @@ import org.gbif.api.vocabulary.Country;
 
 import java.util.UUID;
 
+import lombok.Setter;
+
+@Setter
 public class BaseEntityMatchedDto implements EntityMatchedDto {
 
   private UUID key;
@@ -38,17 +41,9 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return key;
   }
 
-  public void setKey(UUID key) {
-    this.key = key;
-  }
-
   @Override
   public String getName() {
     return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   @Override
@@ -56,17 +51,9 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return code;
   }
 
-  public void setCode(String code) {
-    this.code = code;
-  }
-
   @Override
   public Country getAddressCountry() {
     return addressCountry;
-  }
-
-  public void setAddressCountry(Country addressCountry) {
-    this.addressCountry = addressCountry;
   }
 
   @Override
@@ -74,17 +61,9 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return mailingAddressCountry;
   }
 
-  public void setMailingAddressCountry(Country mailingAddressCountry) {
-    this.mailingAddressCountry = mailingAddressCountry;
-  }
-
   @Override
   public boolean isActive() {
     return active;
-  }
-
-  public void setActive(boolean active) {
-    this.active = active;
   }
 
   @Override
@@ -92,17 +71,9 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return keyMatch;
   }
 
-  public void setKeyMatch(boolean keyMatch) {
-    this.keyMatch = keyMatch;
-  }
-
   @Override
   public boolean isCodeMatch() {
     return codeMatch;
-  }
-
-  public void setCodeMatch(boolean codeMatch) {
-    this.codeMatch = codeMatch;
   }
 
   @Override
@@ -110,17 +81,9 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return identifierMatch;
   }
 
-  public void setIdentifierMatch(boolean identifierMatch) {
-    this.identifierMatch = identifierMatch;
-  }
-
   @Override
   public boolean isAlternativeCodeMatch() {
     return alternativeCodeMatch;
-  }
-
-  public void setAlternativeCodeMatch(boolean alternativeCodeMatch) {
-    this.alternativeCodeMatch = alternativeCodeMatch;
   }
 
   @Override
@@ -128,17 +91,9 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return nameMatchWithCode;
   }
 
-  public void setNameMatchWithCode(boolean nameMatchWithCode) {
-    this.nameMatchWithCode = nameMatchWithCode;
-  }
-
   @Override
   public boolean isNameMatchWithIdentifier() {
     return nameMatchWithIdentifier;
-  }
-
-  public void setNameMatchWithIdentifier(boolean nameMatchWithIdentifier) {
-    this.nameMatchWithIdentifier = nameMatchWithIdentifier;
   }
 
   @Override
@@ -146,7 +101,4 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
     return explicitMapping;
   }
 
-  public void setExplicitMapping(boolean explicitMapping) {
-    this.explicitMapping = explicitMapping;
-  }
 }

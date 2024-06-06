@@ -15,33 +15,15 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class CollectionMatchedDto extends BaseEntityMatchedDto {
 
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
 
-  public UUID getInstitutionKey() {
-    return institutionKey;
-  }
-
-  public void setInstitutionKey(UUID institutionKey) {
-    this.institutionKey = institutionKey;
-  }
-
-  public String getInstitutionCode() {
-    return institutionCode;
-  }
-
-  public void setInstitutionCode(String institutionCode) {
-    this.institutionCode = institutionCode;
-  }
-
-  public String getInstitutionName() {
-    return institutionName;
-  }
-
-  public void setInstitutionName(String institutionName) {
-    this.institutionName = institutionName;
-  }
 }

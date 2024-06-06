@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.service.collections;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -40,12 +38,9 @@ import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.vocabulary.client.ConceptClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -53,8 +48,16 @@ import javax.validation.Valid;
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-import java.util.*;
-import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;

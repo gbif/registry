@@ -13,11 +13,9 @@
  */
 package org.gbif.registry.service.collections;
 
-import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionEntityService;
@@ -40,6 +38,19 @@ import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+
+import org.elasticsearch.common.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
@@ -50,15 +61,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
