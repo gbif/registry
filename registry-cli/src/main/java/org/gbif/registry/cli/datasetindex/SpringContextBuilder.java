@@ -13,6 +13,13 @@
  */
 package org.gbif.registry.cli.datasetindex;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.collect.ImmutableMap;
+import com.zaxxer.hikari.HikariDataSource;
 import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NetworkService;
@@ -35,10 +42,7 @@ import org.gbif.registry.ws.client.NetworkClient;
 import org.gbif.registry.ws.client.OrganizationClient;
 import org.gbif.ws.client.ClientBuilder;
 import org.gbif.ws.json.JacksonJsonObjectMapperProvider;
-
-import java.io.IOException;
-import java.util.Date;
-
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration;
@@ -54,13 +58,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.MapPropertySource;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.collect.ImmutableMap;
-import com.zaxxer.hikari.HikariDataSource;
+import java.io.IOException;
+import java.util.Date;
 
 public class SpringContextBuilder {
 
@@ -115,6 +114,12 @@ public class SpringContextBuilder {
         () -> toEsClientConfiguration(configuration.getOccurrenceEs()));
 
     ctx.register(ApplicationConfig.class);
+
+    // ignore error: org.springframework.beans.factory.BeanCreationException: Error creating bean
+    // with name 'compositeCompatibilityVerifier'
+    ((DefaultListableBeanFactory) ctx.getBeanFactory())
+        .destroySingleton(
+            "org.springframework.cloud.configuration.CompatibilityVerifierAutoConfiguration");
 
     ctx.getEnvironment()
         .getPropertySources()
@@ -199,13 +204,13 @@ public class SpringContextBuilder {
     public ClientBuilder clientBuilder(DatasetIndexConfiguration configuration) {
       ClientBuilder clientBuilder = new ClientBuilder();
 
-      ObjectMapper objectMapper = JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
+      ObjectMapper objectMapper =
+          JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport();
       SimpleModule simpleModule = new SimpleModule();
       simpleModule.addDeserializer(Date.class, new CustomDateDeserializer());
       objectMapper.registerModule(simpleModule);
 
-      clientBuilder.withObjectMapper(
-        objectMapper);
+      clientBuilder.withObjectMapper(objectMapper);
       clientBuilder.withUrl(
           configuration.getRegistryWsUrl() != null
               ? configuration.getRegistryWsUrl()
@@ -234,7 +239,7 @@ public class SpringContextBuilder {
     }
 
     @Bean
-    public GithubApiClient githubApiClient(ClientBuilder clientBuilder){
+    public GithubApiClient githubApiClient(ClientBuilder clientBuilder) {
       return clientBuilder.build(GithubApiClient.class);
     }
   }
