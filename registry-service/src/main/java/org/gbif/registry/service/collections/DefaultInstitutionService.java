@@ -39,6 +39,7 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearch
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
@@ -171,6 +172,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
     }
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
     InstitutionSearchParams params = buildSearchParams(searchRequest, deleted, page);
 

@@ -10,9 +10,37 @@ import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.vocabulary.model.*;
 import org.gbif.vocabulary.model.search.KeyNameResult;
 
-import java.util.List;
+import java.util.*;
 
 public class ConceptClientMock implements ConceptClient {
+
+  public static final String ROOT_CONCEPT = "test1";
+  public static final String CHILD1 = "test1.1";
+  public static final String CHILD11 = "test1.1.1";
+  public static final String CHILD2 = "test1.2";
+
+  private static final Map<String, ConceptView> CONCEPTS = new HashMap<>();
+
+  static {
+    Concept concept1 = new Concept();
+    concept1.setName(ROOT_CONCEPT);
+    ConceptView conceptView1 = new ConceptView(concept1);
+    conceptView1.setChildren(Arrays.asList(CHILD1, CHILD2));
+
+    Concept concept11 = new Concept();
+    concept11.setName(CHILD1);
+    ConceptView conceptView11 = new ConceptView(concept11);
+    conceptView11.setChildren(Collections.singletonList(CHILD11));
+
+    Concept concept12 = new Concept();
+    concept12.setName(CHILD2);
+    ConceptView conceptView12 = new ConceptView(concept12);
+
+    CONCEPTS.put(concept1.getName(), conceptView1);
+    CONCEPTS.put(concept11.getName(), conceptView11);
+    CONCEPTS.put(concept12.getName(), conceptView12);
+  }
+
   @Override
   public PagingResponse<ConceptView> listConcepts(String s, ConceptListParams conceptListParams) {
     return new PagingResponse<>();
@@ -121,7 +149,13 @@ public class ConceptClientMock implements ConceptClient {
   @Override
   public PagingResponse<ConceptView> listConceptsLatestRelease(
       String s, ConceptListParams conceptListParams) {
-    return null;
+
+    ConceptView view = CONCEPTS.get(conceptListParams.getName());
+    if (view == null) {
+      return new PagingResponse<>(conceptListParams.getPage(), 0L, Collections.emptyList());
+    } else {
+      return new PagingResponse<>(conceptListParams.getPage(), 1L, Collections.singletonList(view));
+    }
   }
 
   @Override
