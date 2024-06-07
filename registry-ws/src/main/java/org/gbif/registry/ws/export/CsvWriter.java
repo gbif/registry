@@ -29,6 +29,8 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+
 import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -271,7 +273,9 @@ public class CsvWriter<T> {
               "collection.replacedBy",
               "collection.featuredImageUrl",
               "collection.featuredImageLicense",
-              "collection.temporalCoverage"
+              "collection.temporalCoverage",
+              "collection.masterSource",
+              "collection.displayOnNHCPortal"
             })
         .header(
             new String[] {
@@ -320,7 +324,9 @@ public class CsvWriter<T> {
               "replaced_by",
               "featuredImageUrl",
               "featuredImageLicense",
-              "temporalCoverage"
+              "temporalCoverage",
+              "masterSourceType",
+              "displayOnNHCPortal"
             })
         .processors(
             new CellProcessor[] {
@@ -369,7 +375,9 @@ public class CsvWriter<T> {
               new UUIDProcessor(), // replacedBy: UUID
               new UriProcessor(), // featuredImageUrl : URI
               new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
-              new CleanStringProcessor() // temporalCoverage: String
+              new CleanStringProcessor(), // temporalCoverage: String
+              new Optional(new ParseEnum(MasterSourceType.class)), // masterSourceType: MasterSource
+              new Optional(new FmtBool("true", "false")) //displayOnNHCPortal: boolean
             })
         .forClass(CollectionView.class)
         .preference(preference)
@@ -423,7 +431,9 @@ public class CsvWriter<T> {
               "replacedBy",
               "convertedToCollection",
               "featuredImageUrl",
-              "featuredImageLicense"
+              "featuredImageLicense",
+              "masterSource",
+              "displayOnNHCPortal"
             })
         .header(
             new String[] {
@@ -466,7 +476,9 @@ public class CsvWriter<T> {
               "replaced_by",
               "converted_to_collection",
               "featuredImageUrl",
-              "featuredImageLicense"
+              "featuredImageLicense",
+              "masterSourceType",
+              "displayOnNHCPortal"
             })
         .processors(
             new CellProcessor[] {
@@ -511,6 +523,8 @@ public class CsvWriter<T> {
               new UUIDProcessor(), // convertedToCollection: UUID
               new UriProcessor(), // featuredImageUrl : URI
               new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
+              new Optional(new ParseEnum(MasterSourceType.class)), // masterSourceType: MasterSource
+              new Optional(new FmtBool("true", "false")) //displayOnNHCPortal: boolean
             })
         .preference(preference)
         .pager(pager)
