@@ -38,6 +38,7 @@ import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.registry.test.mocks.ConceptClientMock;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,7 +127,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     sourceMetadata.setSource(Source.IH_IRN);
     collection3.setMasterSourceMetadata(sourceMetadata);
     UUID key3 = collectionService.create(collection3);
-    collectionService.addMasterSourceMetadata(key3,sourceMetadata);
+    collectionService.addMasterSourceMetadata(key3, sourceMetadata);
 
     // query param
     PagingResponse<CollectionView> response =
@@ -134,8 +135,10 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(3, response.getResults().size());
 
-    response = collectionService.list(CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
-    assertEquals(1,response.getResults().size());
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+    assertEquals(1, response.getResults().size());
 
     // empty queries are ignored and return all elements
     response =
@@ -230,7 +233,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .accessionStatus("Institutional")
+                    .accessionStatus(Collections.singletonList("Institutional"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -240,7 +243,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .accessionStatus("Project")
+                    .accessionStatus(Collections.singletonList("Project"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -1139,5 +1142,55 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
 
     created.getContentTypes().add("foo");
     assertThrows(IllegalArgumentException.class, () -> collectionService.update(created));
+  }
+
+  @Test
+  public void listVocabConceptsWithChildrenTest() {
+    Collection collection1 = testData.newEntity();
+    collection1.setCode("c1");
+    collection1.setName("n1");
+    collection1.setContentTypes(
+        new ArrayList<>(Collections.singletonList(ConceptClientMock.ROOT_CONCEPT)));
+    collectionService.create(collection1);
+
+    Collection collection2 = testData.newEntity();
+    collection2.setCode("c2");
+    collection2.setName("n2");
+    collection2.setContentTypes(
+        new ArrayList<>(Collections.singletonList(ConceptClientMock.CHILD11)));
+    collectionService.create(collection2);
+
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        new ArrayList<>(Collections.singletonList(ConceptClientMock.ROOT_CONCEPT)))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        new ArrayList<>(Collections.singletonList(ConceptClientMock.CHILD11)))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        new ArrayList<>(Collections.singletonList(ConceptClientMock.CHILD2)))
+                    .build())
+            .getResults()
+            .size());
   }
 }

@@ -61,7 +61,10 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
       searchRequest.setPreservationTypes(Arrays.asList(preservationTypes));
     }
 
-    searchRequest.setAccessionStatus(webRequest.getParameter("accessionStatus"));
+    String[] accessionStatuses = webRequest.getParameterValues("accessionStatus");
+    if (accessionStatuses != null && accessionStatuses.length > 0) {
+      searchRequest.setAccessionStatus(Arrays.asList(accessionStatuses));
+    }
 
     String personalCollection = webRequest.getParameter("personalCollection");
     if (!Strings.isNullOrEmpty(personalCollection)) {
