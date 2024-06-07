@@ -39,6 +39,7 @@ import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchP
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.CollectionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
@@ -158,6 +159,8 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     if (searchRequest.getInstitutionKeys() != null) {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());
     }
+
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
     CollectionSearchParams params =
         CollectionSearchParams.builder()

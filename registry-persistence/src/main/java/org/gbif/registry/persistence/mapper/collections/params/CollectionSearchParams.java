@@ -28,7 +28,7 @@ public class CollectionSearchParams extends SearchParams {
 
   @Nullable List<String> contentTypes;
   @Nullable List<String> preservationTypes;
-  @Nullable String accessionStatus;
+  @Nullable List<String> accessionStatus;
   @Nullable Boolean personalCollection;
   @Nullable String sourceId;
   @Nullable Source source;
