@@ -13,6 +13,11 @@
  */
 package org.gbif.registry.cli.common.spring;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.ImmutableMap;
 import org.gbif.api.ws.mixin.Mixins;
 import org.gbif.common.messaging.ConnectionParameters;
 import org.gbif.common.messaging.DefaultMessagePublisher;
@@ -36,12 +41,6 @@ import org.gbif.registry.ws.resources.scheduled.UpdateDownloadStatsService;
 import org.gbif.ws.security.Md5EncodeServiceImpl;
 import org.gbif.ws.security.SecretKeySigningService;
 import org.gbif.ws.security.SigningService;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.mybatis.spring.annotation.MapperScan;
 import org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
@@ -56,11 +55,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.env.MapPropertySource;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Utility class to create Spring contexts to be used later in CLI applications. */
 public class SpringContextBuilder {
@@ -213,6 +211,15 @@ public class SpringContextBuilder {
       ctx.register(OccurrenceDownloadResource.class);
       ctx.register(UpdateDownloadStatsService.class);
     }
+
+    ctx.getEnvironment()
+        .getPropertySources()
+        .addLast(
+            new MapPropertySource(
+                "ManagedProperties",
+                new ImmutableMap.Builder<String, Object>()
+                    .put("spring.cloud.compatibility-verifier.enabled", "false")
+                    .build()));
 
     if (componentClasses != null) {
       for (Class<?> c : componentClasses) {
