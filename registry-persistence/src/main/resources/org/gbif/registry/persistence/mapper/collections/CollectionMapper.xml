@@ -330,8 +330,11 @@
           #{item,jdbcType=VARCHAR}::text
         </foreach>
       </if>
-      <if test="params.accessionStatus != null" >
-        AND c.accession_status = #{params.accessionStatus,jdbcType=VARCHAR}
+      <if test="params.accessionStatus != null and params.accessionStatus.size > 0" >
+        AND c.accession_status IN
+        <foreach item="item" collection="params.accessionStatus" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}::text
+        </foreach>
       </if>
       <if test="params.active != null" >
         AND c.active = #{params.active,jdbcType=BOOLEAN}
