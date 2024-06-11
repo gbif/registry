@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import lombok.Setter;
-
 import org.gbif.api.annotation.Generated;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
@@ -32,6 +30,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+
+import lombok.Setter;
 
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. </br> JAXB annotations allow the

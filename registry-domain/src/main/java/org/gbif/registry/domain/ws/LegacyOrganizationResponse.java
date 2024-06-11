@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import lombok.Setter;
-
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
@@ -33,6 +31,8 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
+import lombok.Setter;
 
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. Previously known as an Organisation

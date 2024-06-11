@@ -13,10 +13,6 @@
  */
 package org.gbif.registry.doi.registration;
 
-import lombok.Getter;
-
-import lombok.Setter;
-
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.common.DOI;
 import org.gbif.registry.domain.doi.DoiType;
@@ -25,6 +21,9 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Encapsulates a DOI registration request. Some fields are optional and its values can trigger a
