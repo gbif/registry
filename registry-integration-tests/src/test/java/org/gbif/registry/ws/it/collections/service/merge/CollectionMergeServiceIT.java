@@ -13,18 +13,17 @@
  */
 package org.gbif.registry.ws.it.collections.service.merge;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.service.collections.merge.CollectionMergeService;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /** Tests the {@link CollectionMergeService}. */
 public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {

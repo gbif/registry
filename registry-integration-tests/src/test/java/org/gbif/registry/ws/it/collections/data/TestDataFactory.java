@@ -13,13 +13,12 @@
  */
 package org.gbif.registry.ws.it.collections.data;
 
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.Institution;
-
 import java.net.URI;
 import java.util.Collections;
 import java.util.UUID;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.CollectionEntity;
+import org.gbif.api.model.collections.Institution;
 
 public class TestDataFactory {
 

@@ -28,23 +28,27 @@ import org.apache.ibatis.type.JdbcType;
 import com.google.common.base.Strings;
 
 /** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link Discipline}. */
-public class InstitutionGovernanceArrayTypeHandler extends BaseTypeHandler<List<InstitutionGovernance>> {
+public class InstitutionGovernanceArrayTypeHandler
+    extends BaseTypeHandler<List<InstitutionGovernance>> {
 
   @Override
   public void setNonNullParameter(
       PreparedStatement ps, int i, List<InstitutionGovernance> parameter, JdbcType jdbcType)
       throws SQLException {
-    Array array = ps.getConnection().createArrayOf("enum_institution_governance", parameter.toArray());
+    Array array =
+        ps.getConnection().createArrayOf("enum_institution_governance", parameter.toArray());
     ps.setArray(i, array);
   }
 
   @Override
-  public List<InstitutionGovernance> getNullableResult(ResultSet rs, String columnName) throws SQLException {
+  public List<InstitutionGovernance> getNullableResult(ResultSet rs, String columnName)
+      throws SQLException {
     return toList(rs.getArray(columnName));
   }
 
   @Override
-  public List<InstitutionGovernance> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+  public List<InstitutionGovernance> getNullableResult(ResultSet rs, int columnIndex)
+      throws SQLException {
     return toList(rs.getArray(columnIndex));
   }
 

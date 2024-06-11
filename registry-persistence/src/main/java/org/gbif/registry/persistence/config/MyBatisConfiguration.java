@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.persistence.config;
 
+import java.net.URI;
+import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
@@ -58,10 +60,6 @@ import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollecti
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
 import org.gbif.registry.persistence.mapper.handler.*;
-
-import java.net.URI;
-import java.util.UUID;
-
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

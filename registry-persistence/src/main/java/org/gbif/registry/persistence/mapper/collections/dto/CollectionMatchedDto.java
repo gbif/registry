@@ -25,5 +25,4 @@ public class CollectionMatchedDto extends BaseEntityMatchedDto {
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
-
 }

@@ -13,19 +13,51 @@
  */
 package org.gbif.registry.service.collections.batch;
 
-import org.gbif.api.model.collections.CollectionEntityType;
+import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
+import org.gbif.api.model.collections.CollectionEntityType;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileFields {
+
+  public static boolean isEntityField(String field, CollectionEntityType entityType) {
+    if (CommonFields.ALL_FIELDS.contains(field.toUpperCase())) {
+      return true;
+    }
+
+    if (entityType == CollectionEntityType.INSTITUTION) {
+      return InstitutionFields.ALL_FIELDS.contains(field.toUpperCase());
+    }
+
+    if (entityType == CollectionEntityType.COLLECTION) {
+      return CollectionFields.ALL_FIELDS.contains(field.toUpperCase());
+    }
+
+    return false;
+  }
+
+  public static List<String> getEntityFields(CollectionEntityType entityType) {
+    List<String> fields = new ArrayList<>(ContactFields.ALL_FIELDS);
+
+    if (entityType == CollectionEntityType.INSTITUTION) {
+      fields.addAll(InstitutionFields.ALL_FIELDS);
+    }
+
+    if (entityType == CollectionEntityType.COLLECTION) {
+      fields.addAll(CollectionFields.ALL_FIELDS);
+    }
+
+    return fields;
+  }
+
+  public static boolean isContactField(String field) {
+    return ContactFields.ALL_FIELDS.contains(field.toUpperCase());
+  }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
   public static class InstitutionFields {
@@ -111,11 +143,6 @@ public class FileFields {
     public static final String TAXONOMIC_EXPERTISE = "TAXONOMIC_EXPERTISE";
     public static final String NOTES = "NOTES";
     public static final String USER_IDS = "USER_IDS";
-
-    public static String getEntityCode(CollectionEntityType entityType) {
-      return entityType == CollectionEntityType.INSTITUTION ? INSTITUTION_CODE : COLLECTION_CODE;
-    }
-
     protected static final List<String> ALL_FIELDS =
         Arrays.asList(
             INSTITUTION_CODE,
@@ -138,6 +165,10 @@ public class FileFields {
             TAXONOMIC_EXPERTISE,
             NOTES,
             USER_IDS);
+
+    public static String getEntityCode(CollectionEntityType entityType) {
+      return entityType == CollectionEntityType.INSTITUTION ? INSTITUTION_CODE : COLLECTION_CODE;
+    }
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -165,19 +196,19 @@ public class FileFields {
 
     public static final String MAILING_ADDRESS_PREFIX = "MAILING_ADDRESS_";
     private static final String ADDRESS_SUFFIX = "ADDRESS";
-    private static final String CITY_SUFFIX = "CITY";
-    private static final String PROVINCE_SUFFIX = "PROVINCE";
-    private static final String POSTAL_CODE_SUFFIX = "POSTAL_CODE";
-    private static final String COUNTRY_SUFFIX = "COUNTRY";
     public static final String ADDRESS = ADDRESS_PREFIX + ADDRESS_SUFFIX;
-    public static final String CITY = ADDRESS_PREFIX + CITY_SUFFIX;
-    public static final String PROVINCE = ADDRESS_PREFIX + PROVINCE_SUFFIX;
-    public static final String POSTAL_CODE = ADDRESS_PREFIX + POSTAL_CODE_SUFFIX;
-    public static final String COUNTRY = ADDRESS_PREFIX + COUNTRY_SUFFIX;
     public static final String MAIL_ADDRESS = MAILING_ADDRESS_PREFIX + ADDRESS_SUFFIX;
+    private static final String CITY_SUFFIX = "CITY";
+    public static final String CITY = ADDRESS_PREFIX + CITY_SUFFIX;
     public static final String MAIL_CITY = MAILING_ADDRESS_PREFIX + CITY_SUFFIX;
+    private static final String PROVINCE_SUFFIX = "PROVINCE";
+    public static final String PROVINCE = ADDRESS_PREFIX + PROVINCE_SUFFIX;
     public static final String MAIL_PROVINCE = MAILING_ADDRESS_PREFIX + PROVINCE_SUFFIX;
+    private static final String POSTAL_CODE_SUFFIX = "POSTAL_CODE";
+    public static final String POSTAL_CODE = ADDRESS_PREFIX + POSTAL_CODE_SUFFIX;
     public static final String MAIL_POSTAL_CODE = MAILING_ADDRESS_PREFIX + POSTAL_CODE_SUFFIX;
+    private static final String COUNTRY_SUFFIX = "COUNTRY";
+    public static final String COUNTRY = ADDRESS_PREFIX + COUNTRY_SUFFIX;
     public static final String MAIL_COUNTRY = MAILING_ADDRESS_PREFIX + COUNTRY_SUFFIX;
 
     protected static final List<String> ALL_FIELDS =
@@ -207,39 +238,5 @@ public class FileFields {
             MAIL_COUNTRY,
             FEATURED_IMAGE_URL,
             FEATURED_IMAGE_LICENSE);
-  }
-
-  public static boolean isEntityField(String field, CollectionEntityType entityType) {
-    if (CommonFields.ALL_FIELDS.contains(field.toUpperCase())) {
-      return true;
-    }
-
-    if (entityType == CollectionEntityType.INSTITUTION) {
-      return InstitutionFields.ALL_FIELDS.contains(field.toUpperCase());
-    }
-
-    if (entityType == CollectionEntityType.COLLECTION) {
-      return CollectionFields.ALL_FIELDS.contains(field.toUpperCase());
-    }
-
-    return false;
-  }
-
-  public static List<String> getEntityFields(CollectionEntityType entityType) {
-    List<String> fields = new ArrayList<>(ContactFields.ALL_FIELDS);
-
-    if (entityType == CollectionEntityType.INSTITUTION) {
-      fields.addAll(InstitutionFields.ALL_FIELDS);
-    }
-
-    if (entityType == CollectionEntityType.COLLECTION) {
-      fields.addAll(CollectionFields.ALL_FIELDS);
-    }
-
-    return fields;
-  }
-
-  public static boolean isContactField(String field) {
-    return ContactFields.ALL_FIELDS.contains(field.toUpperCase());
   }
 }

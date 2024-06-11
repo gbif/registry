@@ -13,6 +13,17 @@
  */
 package org.gbif.registry.service.collections.utils;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
@@ -38,20 +49,6 @@ import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
 
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.elasticsearch.common.Strings;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class LatimerCoreConverter {
@@ -66,57 +63,6 @@ public class LatimerCoreConverter {
   public static final String PRIMARY = "Primary";
   public static final String PART_OF = "part of";
   public static final String TAXONOMIC_SCOPE = "Taxonomic scope";
-
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class IdentifierTypes {
-    public static final String INSTITUTION_CODE = "Institution code";
-    public static final String INSTITUTION_GRSCICOLL_KEY = "Institution GRSciColl key";
-    public static final String ALTERNATIVE_INSTITUTION_CODE = "Alternative institution code";
-    public static final String COLLECTION_CODE = "Collection code";
-    public static final String COLLECTION_GRSCICOLL_KEY = "Collection GRSciColl key";
-    public static final String ALTERNATIVE_COLLECTION_CODE = "Alternative collection code";
-    public static final String CONTACT_GRSCICOLL_KEY = "Contact GRSciColl key";
-  }
-
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class MeasurementOrFactTypes {
-    public static final String INSTITUTION_DESCRIPTION = "Institution description";
-    public static final String INSTITUTION_TYPE = "Institution type";
-    public static final String INSTITUTION_STATUS = "Institution status";
-    public static final String INSTITUTION_GOVERNANCE_TYPE = "Institution governance type";
-    public static final String RESEARCH_DISCIPLINE = "Research discipline";
-    public static final String LATITUDE = "Latitude";
-    public static final String LONGITUDE = "Longitude";
-    public static final String ADDITIONAL_NAME = "Additional name";
-    public static final String YEAR_FOUNDED = "Year founded";
-    public static final String DISPLAY_ON_NHC_PORTAL = "Display on NHC portal";
-    public static final String COLLECTION_NOTE = "Collection note";
-    public static final String NUMBER_SPECIMENS = "Number of specimens";
-    public static final String TAXONOMIC_EXPERTISE = "Taxonomic expertise";
-    public static final String CONTACT_NOTE = "Contact note";
-  }
-
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class References {
-    public static final String WEBSITE = "Website";
-    public static final String API = "API";
-    public static final String IMAGE = "Image";
-    public static final String INSTITUTION_HOMEPAGE = "Institution homepage";
-    public static final String INSTITUTION_COLLECTION_CATALOGUE =
-        "Institution collection catalogue";
-    public static final String INSTITUTION_COLLECTION_API = "Institution collection API";
-    public static final String INSTITUTION_LOGO_URL = "Institution logo URL";
-    public static final String COLLECTION_HOMEPAGE = "Collection homepage";
-    public static final String COLLECTION_CATALOGUE = "Collection catalogue";
-    public static final String COLLECTION_API = "Collection API";
-  }
-
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  public static class CollectionStatuses {
-    public static final String ACCESSION_STATUS = "Accession status";
-    public static final String OWNERSHIP = "Ownership";
-    public static final String PERSONAL_COLLECTION = "Personal collection";
-  }
 
   public static OrganisationalUnit toOrganisationalUnit(Institution institution) {
     OrganisationalUnit organisationalUnit = new OrganisationalUnit();
@@ -849,5 +795,56 @@ public class LatimerCoreConverter {
       collectionStatusHistory.setStatusType(type);
       objectGroup.getCollectionStatusHistory().add(collectionStatusHistory);
     }
+  }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class IdentifierTypes {
+    public static final String INSTITUTION_CODE = "Institution code";
+    public static final String INSTITUTION_GRSCICOLL_KEY = "Institution GRSciColl key";
+    public static final String ALTERNATIVE_INSTITUTION_CODE = "Alternative institution code";
+    public static final String COLLECTION_CODE = "Collection code";
+    public static final String COLLECTION_GRSCICOLL_KEY = "Collection GRSciColl key";
+    public static final String ALTERNATIVE_COLLECTION_CODE = "Alternative collection code";
+    public static final String CONTACT_GRSCICOLL_KEY = "Contact GRSciColl key";
+  }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class MeasurementOrFactTypes {
+    public static final String INSTITUTION_DESCRIPTION = "Institution description";
+    public static final String INSTITUTION_TYPE = "Institution type";
+    public static final String INSTITUTION_STATUS = "Institution status";
+    public static final String INSTITUTION_GOVERNANCE_TYPE = "Institution governance type";
+    public static final String RESEARCH_DISCIPLINE = "Research discipline";
+    public static final String LATITUDE = "Latitude";
+    public static final String LONGITUDE = "Longitude";
+    public static final String ADDITIONAL_NAME = "Additional name";
+    public static final String YEAR_FOUNDED = "Year founded";
+    public static final String DISPLAY_ON_NHC_PORTAL = "Display on NHC portal";
+    public static final String COLLECTION_NOTE = "Collection note";
+    public static final String NUMBER_SPECIMENS = "Number of specimens";
+    public static final String TAXONOMIC_EXPERTISE = "Taxonomic expertise";
+    public static final String CONTACT_NOTE = "Contact note";
+  }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class References {
+    public static final String WEBSITE = "Website";
+    public static final String API = "API";
+    public static final String IMAGE = "Image";
+    public static final String INSTITUTION_HOMEPAGE = "Institution homepage";
+    public static final String INSTITUTION_COLLECTION_CATALOGUE =
+        "Institution collection catalogue";
+    public static final String INSTITUTION_COLLECTION_API = "Institution collection API";
+    public static final String INSTITUTION_LOGO_URL = "Institution logo URL";
+    public static final String COLLECTION_HOMEPAGE = "Collection homepage";
+    public static final String COLLECTION_CATALOGUE = "Collection catalogue";
+    public static final String COLLECTION_API = "Collection API";
+  }
+
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  public static class CollectionStatuses {
+    public static final String ACCESSION_STATUS = "Accession status";
+    public static final String OWNERSHIP = "Ownership";
+    public static final String PERSONAL_COLLECTION = "Personal collection";
   }
 }

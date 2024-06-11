@@ -14,7 +14,6 @@
 package org.gbif.registry.persistence.mapper.collections.dto;
 
 import java.util.List;
-
 import lombok.Getter;
 import lombok.Setter;
 

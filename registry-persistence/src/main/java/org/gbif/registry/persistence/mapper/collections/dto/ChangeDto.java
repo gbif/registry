@@ -32,7 +32,6 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
-
 import lombok.Getter;
 import lombok.Setter;
 

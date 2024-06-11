@@ -13,16 +13,6 @@
  */
 package org.gbif.registry.domain.ws;
 
-import org.gbif.api.annotation.Generated;
-import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-
-import java.io.IOException;
-
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.namespace.QName;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -30,8 +20,14 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.namespace.QName;
 import lombok.Setter;
+import org.gbif.api.annotation.Generated;
+import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. </br> JAXB annotations allow the

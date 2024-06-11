@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service.collections.converters;
 
+import java.util.Collections;
+import java.util.List;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.AddTagAction;
@@ -26,9 +28,6 @@ import org.gbif.vocabulary.model.HiddenLabel;
 import org.gbif.vocabulary.model.Label;
 import org.gbif.vocabulary.model.Tag;
 import org.gbif.vocabulary.model.search.KeyNameResult;
-
-import java.util.Collections;
-import java.util.List;
 
 public class ConceptClientMock implements ConceptClient {
   @Override

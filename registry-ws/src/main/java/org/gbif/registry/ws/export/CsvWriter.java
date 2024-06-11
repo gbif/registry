@@ -13,6 +13,18 @@
  */
 package org.gbif.registry.ws.export;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import java.io.Writer;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
@@ -26,16 +38,6 @@ import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
-
-import java.io.Writer;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
 import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
@@ -43,12 +45,6 @@ import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.io.dozer.CsvDozerBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 import org.supercsv.util.CsvContext;
-
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
 
 @Data
 @Builder
@@ -69,45 +65,6 @@ public class CsvWriter<T> {
 
   // Use dozer if set to true.
   private Class<?> forClass;
-
-  private CsvPreference csvPreference() {
-    if (ExportFormat.CSV == preference) {
-      return CsvPreference.STANDARD_PREFERENCE;
-    } else if (ExportFormat.TSV == preference) {
-      return CsvPreference.TAB_PREFERENCE;
-    }
-    throw new IllegalArgumentException("Export format not supported " + preference);
-  }
-
-  @SneakyThrows
-  public void export(Writer writer) {
-    if (forClass != null) {
-      exportUsingDozerBeanWriter(writer);
-    } else {
-      exportUsingBeanWriter(writer);
-    }
-  }
-
-  @SneakyThrows
-  private void exportUsingBeanWriter(Writer writer) {
-    try (ICsvBeanWriter beanWriter = new CsvBeanWriter(writer, csvPreference())) {
-      beanWriter.writeHeader(header);
-      for (T o : pager) {
-        beanWriter.write(o, fields, processors);
-      }
-    }
-  }
-
-  @SneakyThrows
-  private void exportUsingDozerBeanWriter(Writer writer) {
-    try (CsvDozerBeanWriter beanWriter = new CsvDozerBeanWriter(writer, csvPreference())) {
-      beanWriter.writeHeader(header);
-      beanWriter.configureBeanMapping(forClass, fields);
-      for (T o : pager) {
-        beanWriter.write(o, processors);
-      }
-    }
-  }
 
   /** Creates an CsvWriter/exporter of DownloadStatistics. */
   public static CsvWriter<DownloadStatistics> downloadStatisticsCsvWriter(
@@ -534,6 +491,52 @@ public class CsvWriter<T> {
         .build();
   }
 
+  /** Joins elements using as a delimiter. */
+  public static String notNullJoiner(String delimiter, String... elements) {
+    return Arrays.stream(elements)
+        .filter(s -> s != null && !s.isEmpty())
+        .collect(Collectors.joining(delimiter));
+  }
+
+  private CsvPreference csvPreference() {
+    if (ExportFormat.CSV == preference) {
+      return CsvPreference.STANDARD_PREFERENCE;
+    } else if (ExportFormat.TSV == preference) {
+      return CsvPreference.TAB_PREFERENCE;
+    }
+    throw new IllegalArgumentException("Export format not supported " + preference);
+  }
+
+  @SneakyThrows
+  public void export(Writer writer) {
+    if (forClass != null) {
+      exportUsingDozerBeanWriter(writer);
+    } else {
+      exportUsingBeanWriter(writer);
+    }
+  }
+
+  @SneakyThrows
+  private void exportUsingBeanWriter(Writer writer) {
+    try (ICsvBeanWriter beanWriter = new CsvBeanWriter(writer, csvPreference())) {
+      beanWriter.writeHeader(header);
+      for (T o : pager) {
+        beanWriter.write(o, fields, processors);
+      }
+    }
+  }
+
+  @SneakyThrows
+  private void exportUsingDozerBeanWriter(Writer writer) {
+    try (CsvDozerBeanWriter beanWriter = new CsvDozerBeanWriter(writer, csvPreference())) {
+      beanWriter.writeHeader(header);
+      beanWriter.configureBeanMapping(forClass, fields);
+      for (T o : pager) {
+        beanWriter.write(o, processors);
+      }
+    }
+  }
+
   /** Null aware UUID processor. */
   public static class UUIDProcessor implements CellProcessor {
     @Override
@@ -624,13 +627,6 @@ public class CsvWriter<T> {
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? value.toString() : "";
     }
-  }
-
-  /** Joins elements using as a delimiter. */
-  public static String notNullJoiner(String delimiter, String... elements) {
-    return Arrays.stream(elements)
-        .filter(s -> s != null && !s.isEmpty())
-        .collect(Collectors.joining(delimiter));
   }
 
   /** Null aware Uri processor. */

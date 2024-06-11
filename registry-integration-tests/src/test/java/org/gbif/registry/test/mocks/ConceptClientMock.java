@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.test.mocks;
 
+import java.util.List;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.AddTagAction;
@@ -22,8 +23,6 @@ import org.gbif.vocabulary.api.DeprecateConceptAction;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.vocabulary.model.*;
 import org.gbif.vocabulary.model.search.KeyNameResult;
-
-import java.util.List;
 
 public class ConceptClientMock implements ConceptClient {
   @Override

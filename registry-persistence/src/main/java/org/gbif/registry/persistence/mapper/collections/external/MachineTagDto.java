@@ -15,7 +15,6 @@ package org.gbif.registry.persistence.mapper.collections.external;
 
 import java.util.Objects;
 import java.util.UUID;
-
 import lombok.Getter;
 import lombok.Setter;
 

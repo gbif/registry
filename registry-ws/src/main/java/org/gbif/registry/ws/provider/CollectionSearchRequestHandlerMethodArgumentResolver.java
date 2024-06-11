@@ -13,17 +13,14 @@
  */
 package org.gbif.registry.ws.provider;
 
-import org.gbif.api.model.collections.request.CollectionSearchRequest;
-
+import com.google.common.base.Strings;
 import java.util.Arrays;
 import java.util.UUID;
-
+import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
-
-import com.google.common.base.Strings;
 
 @SuppressWarnings("NullableProblems")
 public class CollectionSearchRequestHandlerMethodArgumentResolver

@@ -100,5 +100,4 @@ public class BaseEntityMatchedDto implements EntityMatchedDto {
   public boolean isExplicitMapping() {
     return explicitMapping;
   }
-
 }

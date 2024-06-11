@@ -25,5 +25,4 @@ public class CollectionDto {
   private Collection collection;
   private String institutionName;
   private String institutionCode;
-
 }

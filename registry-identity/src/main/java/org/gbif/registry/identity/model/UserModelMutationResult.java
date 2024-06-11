@@ -13,17 +13,14 @@
  */
 package org.gbif.registry.identity.model;
 
-import org.gbif.api.model.common.AbstractGbifUser;
+import static org.gbif.registry.identity.model.ModelMutationError.CONSTRAINT_VIOLATION;
 
+import com.google.common.base.MoreObjects;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 import javax.validation.ConstraintViolation;
-
-import com.google.common.base.MoreObjects;
-
-import static org.gbif.registry.identity.model.ModelMutationError.CONSTRAINT_VIOLATION;
+import org.gbif.api.model.common.AbstractGbifUser;
 
 /**
  * Model containing result of mutations to user data. Mostly used to return significant modelError
@@ -35,6 +32,23 @@ public class UserModelMutationResult {
   private String email;
   private ModelMutationError modelError;
   private Map<String, String> constraintViolation;
+
+  private UserModelMutationResult(String username, String email) {
+    this.username = username;
+    this.email = email;
+  }
+
+  private UserModelMutationResult(ModelMutationError modelError) {
+    this.modelError = modelError;
+  }
+
+  /** Only for JSON serialisation */
+  public UserModelMutationResult() {}
+
+  public UserModelMutationResult(Map<String, String> constraintViolation) {
+    this.modelError = CONSTRAINT_VIOLATION;
+    this.constraintViolation = constraintViolation;
+  }
 
   public static UserModelMutationResult onSuccess() {
     return new UserModelMutationResult(null, null);
@@ -72,53 +86,36 @@ public class UserModelMutationResult {
     return new UserModelMutationResult(cvMap);
   }
 
-  private UserModelMutationResult(String username, String email) {
-    this.username = username;
-    this.email = email;
+  public String getUsername() {
+    return username;
   }
-
-  private UserModelMutationResult(ModelMutationError modelError) {
-    this.modelError = modelError;
-  }
-
-  /** Only for JSON serialisation */
-  public UserModelMutationResult() {}
 
   public void setUsername(String username) {
     this.username = username;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
-  }
-
-  public void setError(ModelMutationError modelError) {
-    this.modelError = modelError;
-  }
-
-  public void setConstraintViolation(Map<String, String> constraintViolation) {
-    this.constraintViolation = constraintViolation;
-  }
-
-  public UserModelMutationResult(Map<String, String> constraintViolation) {
-    this.modelError = CONSTRAINT_VIOLATION;
-    this.constraintViolation = constraintViolation;
-  }
-
-  public String getUsername() {
-    return username;
   }
 
   public String getEmail() {
     return email;
   }
 
+  public void setEmail(String email) {
+    this.email = email;
+  }
+
   public Map<String, String> getConstraintViolation() {
     return constraintViolation;
   }
 
+  public void setConstraintViolation(Map<String, String> constraintViolation) {
+    this.constraintViolation = constraintViolation;
+  }
+
   public ModelMutationError getError() {
     return modelError;
+  }
+
+  public void setError(ModelMutationError modelError) {
+    this.modelError = modelError;
   }
 
   public boolean containsError() {

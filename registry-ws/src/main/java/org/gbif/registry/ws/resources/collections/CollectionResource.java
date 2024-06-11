@@ -13,6 +13,28 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -41,37 +63,11 @@ import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggest
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.resources.Docs;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.extensions.Extension;
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -98,13 +94,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 public class CollectionResource
     extends BaseCollectionEntityResource<Collection, CollectionChangeSuggestion> {
 
-  public final CollectionService collectionService;
-
   // Prefix for the export file format
   private static final String EXPORT_FILE_NAME = "%scollections.%s";
-
   // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
+  public final CollectionService collectionService;
 
   public CollectionResource(
       CollectionMergeService collectionMergeService,
@@ -123,54 +117,6 @@ public class CollectionResource
         Collection.class);
     this.collectionService = collectionService;
   }
-
-  @Target({ElementType.METHOD, ElementType.TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  @Parameters(
-      value = {
-        @Parameter(
-            name = "institution",
-            description = "A key for the institution. Deprecated: use institutionKey instead.",
-            schema = @Schema(implementation = UUID.class),
-            in = ParameterIn.QUERY,
-            deprecated = true),
-        @Parameter(
-            name = "contentType",
-            description =
-                "Content type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
-            schema = @Schema(implementation = CollectionContentType.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "preservationType",
-            description =
-                "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
-                    + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
-            schema = @Schema(implementation = PreservationType.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "accessionStatus",
-            description = "Accession status of a GrSciColl collection",
-            schema = @Schema(implementation = AccessionStatus.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "personalCollection",
-            description = "Flag for personal GRSciColl collections",
-            schema = @Schema(implementation = Boolean.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "sourceId",
-            description = "sourceId of MasterSourceMetadata",
-            schema = @Schema(implementation = String.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "source",
-            description = "Source attribute of MasterSourceMetadata",
-            schema = @Schema(implementation = Source.class),
-            in = ParameterIn.QUERY)
-      })
-  @SearchRequestParameters
-  @interface CollectionSearchParameters {}
 
   @Operation(
       operationId = "getCollection",
@@ -457,4 +403,52 @@ public class CollectionResource
   public List<SourceableField> getSourceableFields() {
     return MasterSourceUtils.COLLECTION_SOURCEABLE_FIELDS;
   }
+
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "institution",
+            description = "A key for the institution. Deprecated: use institutionKey instead.",
+            schema = @Schema(implementation = UUID.class),
+            in = ParameterIn.QUERY,
+            deprecated = true),
+        @Parameter(
+            name = "contentType",
+            description =
+                "Content type of a GrSciColl collection. Accepts multiple values, for example "
+                    + "`contentType=PALEONTOLOGICAL_OTHER&contentType=EARTH_PLANETARY_MINERALS`.",
+            schema = @Schema(implementation = CollectionContentType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "preservationType",
+            description =
+                "Preservation type of a GrSciColl collection. Accepts multiple values, for example "
+                    + "`preservationType=SAMPLE_CRYOPRESERVED&preservationType=SAMPLE_FLUID_PRESERVED`.",
+            schema = @Schema(implementation = PreservationType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "accessionStatus",
+            description = "Accession status of a GrSciColl collection",
+            schema = @Schema(implementation = AccessionStatus.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "personalCollection",
+            description = "Flag for personal GRSciColl collections",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "sourceId",
+            description = "sourceId of MasterSourceMetadata",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "source",
+            description = "Source attribute of MasterSourceMetadata",
+            schema = @Schema(implementation = Source.class),
+            in = ParameterIn.QUERY)
+      })
+  @SearchRequestParameters
+  @interface CollectionSearchParameters {}
 }

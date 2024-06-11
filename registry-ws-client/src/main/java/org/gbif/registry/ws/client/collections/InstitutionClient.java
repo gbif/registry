@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.client.collections;
 
+import java.util.List;
+import java.util.UUID;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
@@ -21,10 +23,6 @@ import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
-
-import java.util.List;
-import java.util.UUID;
-
 import org.geojson.FeatureCollection;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;

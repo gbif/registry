@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.provider;
 
+import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.UUID;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
@@ -21,19 +24,27 @@ import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
-
-import java.util.ArrayList;
-import java.util.UUID;
-
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-
-import com.google.common.base.Strings;
 
 public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
 
   public static final int MAX_PAGE_SIZE = 1000;
+
+  private static void validateIntegerRange(String param, String paramName) {
+    boolean rangeMatch = SearchUtils.INTEGER_RANGE.matcher(param).find();
+    boolean numberMatch = true;
+    try {
+      Integer.parseInt(param);
+    } catch (NumberFormatException ex) {
+      numberMatch = false;
+    }
+    if (!rangeMatch && !numberMatch) {
+      throw new IllegalArgumentException(
+          "Invalid " + paramName + " parameter.Only a number or a range is accepted: " + param);
+    }
+  }
 
   protected <T extends SearchRequest> void fillSearchRequestParams(
       T request, NativeWebRequest webRequest) {
@@ -180,20 +191,6 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     String sourceIdParam = webRequest.getParameter("sourceId");
     if (!Strings.isNullOrEmpty(sourceIdParam)) {
       request.setSourceId(sourceIdParam);
-    }
-  }
-
-  private static void validateIntegerRange(String param, String paramName) {
-    boolean rangeMatch = SearchUtils.INTEGER_RANGE.matcher(param).find();
-    boolean numberMatch = true;
-    try {
-      Integer.parseInt(param);
-    } catch (NumberFormatException ex) {
-      numberMatch = false;
-    }
-    if (!rangeMatch && !numberMatch) {
-      throw new IllegalArgumentException(
-          "Invalid " + paramName + " parameter.Only a number or a range is accepted: " + param);
     }
   }
 }

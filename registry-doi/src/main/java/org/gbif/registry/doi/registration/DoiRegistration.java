@@ -34,35 +34,26 @@ import lombok.Setter;
 public class DoiRegistration {
 
   /**
-   * -- GETTER --
-   *  If the DOI existed prior the registration, maybe it was reserved previously, this field must be
-   *  provided.
+   * -- GETTER -- If the DOI existed prior the registration, maybe it was reserved previously, this
+   * field must be provided.
    */
   @Nullable private DOI doi;
 
   /**
-   * -- GETTER --
-   *  Key, as a String, of the element to be linked to the DOI registration. This can be a download
-   *  key, a dataset UUID key or any other value.
+   * -- GETTER -- Key, as a String, of the element to be linked to the DOI registration. This can be
+   * a download key, a dataset UUID key or any other value.
    */
   @Nullable private String key;
 
-  /**
-   * -- GETTER --
-   * DataCite metadata object that will be provided to DOI register.
-   */
+  /** -- GETTER -- DataCite metadata object that will be provided to DOI register. */
   private String metadata;
 
-  /**
-   * -- GETTER --
-   * Type of DOI requested.
-   */
+  /** -- GETTER -- Type of DOI requested. */
   private DoiType type;
 
   /**
-   * -- GETTER --
-   *  GIBF user who requested the DOI or created the associated element: download, dataset or data
-   *  package.
+   * -- GETTER -- GIBF user who requested the DOI or created the associated element: download,
+   * dataset or data package.
    */
   private String user;
 

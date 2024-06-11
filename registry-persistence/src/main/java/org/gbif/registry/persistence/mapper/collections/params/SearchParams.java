@@ -49,14 +49,12 @@ public abstract class SearchParams {
   @Nullable MasterSourceType masterSourceType;
   @Nullable RangeParam numberSpecimens;
   @Nullable Boolean displayOnNHCPortal;
-  @Nullable private Boolean deleted;
-  @Nullable private UUID replacedBy;
   @Nullable RangeParam occurrenceCount;
   @Nullable RangeParam typeSpecimenCount;
   @Nullable List<UUID> institutionKeys;
-  @Nullable
-  CollectionsSortField sortBy;
-  @Nullable
-  SortOrder sortOrder;
+  @Nullable CollectionsSortField sortBy;
+  @Nullable SortOrder sortOrder;
+  @Nullable private Boolean deleted;
+  @Nullable private UUID replacedBy;
   @Nullable private Pageable page;
 }

@@ -13,6 +13,15 @@
  */
 package org.gbif.registry.domain.ws;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import java.util.Optional;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import lombok.Setter;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Node;
@@ -20,19 +29,6 @@ import org.gbif.api.model.registry.Organization;
 import org.gbif.api.vocabulary.ContactType;
 import org.gbif.api.vocabulary.Language;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-
-import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-
-import lombok.Setter;
 
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. Previously known as an Organisation
@@ -44,6 +40,7 @@ import lombok.Setter;
 @XmlRootElement(name = "organisation")
 public class LegacyOrganizationResponse {
 
+  private static final Joiner CONTACT_NAME = Joiner.on(" ").skipNulls();
   private String key;
   private String name;
   private String nameLanguage;
@@ -60,13 +57,14 @@ public class LegacyOrganizationResponse {
   private String primaryContactPhone;
   private String primaryContactDescription;
 
-  private static final Joiner CONTACT_NAME = Joiner.on(" ").skipNulls();
-
   public LegacyOrganizationResponse(Organization organization, Contact contact, Node node) {
     mapOrganizationPart(organization);
     mapContactPart(contact);
     mapNodePart(node);
   }
+
+  /** No argument, default constructor needed by JAXB. */
+  public LegacyOrganizationResponse() {}
 
   private void mapOrganizationPart(Organization organization) {
     key = organization.getKey() == null ? "" : organization.getKey().toString();
@@ -118,9 +116,6 @@ public class LegacyOrganizationResponse {
     nodeContactEmail =
         node.getEmail() == null || node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
   }
-
-  /** No argument, default constructor needed by JAXB. */
-  public LegacyOrganizationResponse() {}
 
   @XmlElement(name = LegacyResourceConstants.KEY_PARAM)
   @NotNull

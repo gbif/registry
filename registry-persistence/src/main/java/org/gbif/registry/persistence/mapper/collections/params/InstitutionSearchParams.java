@@ -30,6 +30,5 @@ public class InstitutionSearchParams extends SearchParams {
   @Nullable List<String> institutionalGovernances;
   @Nullable List<String> disciplines;
   @Nullable String sourceId;
-  @Nullable
-  Source source;
+  @Nullable Source source;
 }

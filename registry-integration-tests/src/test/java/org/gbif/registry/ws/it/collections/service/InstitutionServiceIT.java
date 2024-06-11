@@ -13,6 +13,15 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.latimercore.ContactDetail;
 import org.gbif.api.model.collections.latimercore.MeasurementOrFact;
@@ -34,22 +43,10 @@ import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.duplicates.InstitutionDuplicatesService;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
-
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
