@@ -13,14 +13,16 @@
  */
 package org.gbif.registry.persistence.mapper.collections.external;
 
+import org.gbif.api.model.collections.AlternativeCode;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.gbif.api.model.collections.AlternativeCode;
 
 @Getter
 @Setter

@@ -13,10 +13,12 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
+import org.gbif.api.vocabulary.Country;
+
 import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.gbif.api.vocabulary.Country;
 
 @Getter
 @Setter

@@ -13,11 +13,13 @@
  */
 package org.gbif.registry.persistence.mapper.collections.external;
 
+import org.gbif.api.vocabulary.IdentifierType;
+
 import java.util.Objects;
 import java.util.UUID;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.gbif.api.vocabulary.IdentifierType;
 
 @Setter
 @Getter

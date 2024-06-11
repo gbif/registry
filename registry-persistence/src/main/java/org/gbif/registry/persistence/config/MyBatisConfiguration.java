@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.persistence.config;
 
-import java.net.URI;
-import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
@@ -63,6 +61,9 @@ import org.gbif.registry.persistence.mapper.handler.*;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.net.URI;
+import java.util.UUID;
 
 @Configuration
 public class MyBatisConfiguration {

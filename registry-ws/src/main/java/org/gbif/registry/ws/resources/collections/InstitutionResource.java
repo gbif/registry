@@ -23,18 +23,6 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletResponse;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -69,6 +57,19 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
@@ -115,6 +116,41 @@ public class InstitutionResource
     this.institutionService = institutionService;
     this.institutionMergeService = institutionMergeService;
   }
+
+  @Target({ElementType.METHOD, ElementType.TYPE})
+  @Retention(RetentionPolicy.RUNTIME)
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "type",
+            description = "Type of a GrSciColl institution",
+            schema = @Schema(implementation = InstitutionType.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "institutionalGovernance",
+            description = "Instutional governance of a GrSciColl institution",
+            schema = @Schema(implementation = InstitutionGovernance.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "disciplines",
+            description =
+                "Discipline of a GrSciColl institution. Accepts multiple values, for example "
+                    + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
+            schema = @Schema(implementation = Discipline.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+           name = "sourceId",
+           description = "sourceId of MasterSourceMetadata",
+           schema = @Schema(implementation = String.class),
+           in = ParameterIn.QUERY),
+        @Parameter(
+          name = "source",
+          description = "Source attribute of MasterSourceMetadata",
+          schema = @Schema(implementation = Source.class),
+          in = ParameterIn.QUERY)
+      })
+  @SearchRequestParameters
+  @interface InstitutionSearchParameters {}
 
   @Operation(
       operationId = "getInstitution",
@@ -438,39 +474,4 @@ public class InstitutionResource
   public List<SourceableField> getSourceableFields() {
     return MasterSourceUtils.INSTITUTION_SOURCEABLE_FIELDS;
   }
-
-  @Target({ElementType.METHOD, ElementType.TYPE})
-  @Retention(RetentionPolicy.RUNTIME)
-  @Parameters(
-      value = {
-        @Parameter(
-            name = "type",
-            description = "Type of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionType.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "institutionalGovernance",
-            description = "Instutional governance of a GrSciColl institution",
-            schema = @Schema(implementation = InstitutionGovernance.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-            name = "disciplines",
-            description =
-                "Discipline of a GrSciColl institution. Accepts multiple values, for example "
-                    + "`discipline=ARCHAEOLOGY_PREHISTORIC&discipline=ARCHAEOLOGY_HISTORIC`",
-            schema = @Schema(implementation = Discipline.class),
-            in = ParameterIn.QUERY),
-        @Parameter(
-           name = "sourceId",
-           description = "sourceId of MasterSourceMetadata",
-           schema = @Schema(implementation = String.class),
-           in = ParameterIn.QUERY),
-        @Parameter(
-          name = "source",
-          description = "Source attribute of MasterSourceMetadata",
-          schema = @Schema(implementation = Source.class),
-          in = ParameterIn.QUERY)
-      })
-  @SearchRequestParameters
-  @interface InstitutionSearchParameters {}
 }

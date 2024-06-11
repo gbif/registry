@@ -18,16 +18,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
@@ -41,6 +31,17 @@ import org.gbif.api.vocabulary.*;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.UUID;
 
 /**
  * Class used to create or update a Dataset for legacy (GBRDS/IPT) API. Previously known as a
@@ -57,6 +58,25 @@ import org.slf4j.LoggerFactory;
 public class LegacyDataset extends Dataset implements LegacyEntity {
 
   private static final Logger LOG = LoggerFactory.getLogger(LegacyDataset.class);
+
+  // injected from HTTP form parameters
+  private ContactType primaryContactType;
+  private String primaryContactEmail;
+  private String primaryContactName;
+  private String primaryContactPhone;
+  private String primaryContactAddress;
+  private String primaryContactDescription;
+  private String serviceTypes;
+  private String serviceUrls;
+  private DOI datasetDoi;
+  private String rawSubtype;
+
+  // created from combination of fields after injection
+  private Contact primaryContact;
+  private Endpoint emlEndpoint;
+  private Endpoint archiveEndpoint;
+  private Endpoint dataPackageEndpoint;
+
   // Dataset constants
   private static final String IPT_EML_SERVICE_TYPE = "EML";
   private static final Set<String> ARCHIVE_ENDPOINT_TYPE_ALTERNATIVES =
@@ -71,22 +91,6 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   private static final Set<String> DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES =
       ImmutableSet.of(
           EndpointType.CAMTRAP_DP.name(), LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE);
-  // injected from HTTP form parameters
-  private ContactType primaryContactType;
-  private String primaryContactEmail;
-  private String primaryContactName;
-  private String primaryContactPhone;
-  private String primaryContactAddress;
-  private String primaryContactDescription;
-  private String serviceTypes;
-  private String serviceUrls;
-  private DOI datasetDoi;
-  private String rawSubtype;
-  // created from combination of fields after injection
-  private Contact primaryContact;
-  private Endpoint emlEndpoint;
-  private Endpoint archiveEndpoint;
-  private Endpoint dataPackageEndpoint;
 
   /** Default constructor. */
   public LegacyDataset() {
@@ -119,19 +123,18 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Set the Dataset DOI. Non-mandatory field because it has only been introduced as of IPT v2.2. It
-   * is injected on both register and update requests.
+   * Set the publishing organization key, a mandatory field. Be aware the publishing organisation
+   * key gets supplied in the parameters only on register requests. On update requests the key is
+   * supplied in the credentials.
    *
-   * @param doi The DOI
+   * @param organizationKey organization key as UUID
    */
-  @ParamName(LegacyResourceConstants.DOI_PARAM)
-  public void setDatasetDoi(String doi) {
+  @ParamName(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
+  public void setOrganizationKey(String organizationKey) {
     try {
-      if (doi != null) {
-        this.datasetDoi = new DOI(doi);
-      }
+      setPublishingOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
     } catch (IllegalArgumentException e) {
-      LOG.error("DOI is not valid: {}", Strings.nullToEmpty(doi));
+      LOG.debug("Publishing organization key is not a valid UUID: {}", organizationKey);
     }
   }
 
@@ -160,34 +163,6 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Set the publishing organization key, a mandatory field. Be aware the publishing organisation
-   * key gets supplied in the parameters only on register requests. On update requests the key is
-   * supplied in the credentials.
-   *
-   * @param organizationKey organization key as UUID
-   */
-  @ParamName(LegacyResourceConstants.ORGANIZATION_KEY_PARAM)
-  public void setOrganizationKey(String organizationKey) {
-    try {
-      setPublishingOrganizationKey(UUID.fromString(Strings.nullToEmpty(organizationKey)));
-    } catch (IllegalArgumentException e) {
-      LOG.debug("Publishing organization key is not a valid UUID: {}", organizationKey);
-    }
-  }
-
-  /**
-   * Get the key of the IPT installation. This method is not used but it is needed otherwise this
-   * Object can't be converted into an XML document via JAXB.
-   *
-   * @return key of the dataset's IPT installation
-   */
-  @XmlTransient
-  @Nullable
-  public String getIptKey() {
-    return getInstallationKey().toString();
-  }
-
-  /**
    * Set the IPT key. Non-mandatory field because it has only been introduced as of IPT v2.0.5. It
    * is injected on both register and update requests.
    *
@@ -204,16 +179,32 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get the title of the dataset. This is a required field in Registry2, and is required by the web
-   * services. This method is not used but it is needed otherwise this Object can't be converted
-   * into an XML document via JAXB.
+   * Set the Dataset DOI. Non-mandatory field because it has only been introduced as of IPT v2.2. It
+   * is injected on both register and update requests.
    *
-   * @return title of the dataset
+   * @param doi The DOI
    */
-  @XmlElement(name = LegacyResourceConstants.NAME_PARAM)
-  @NotNull
-  public String getDatasetName() {
-    return getTitle();
+  @ParamName(LegacyResourceConstants.DOI_PARAM)
+  public void setDatasetDoi(String doi) {
+    try {
+      if (doi != null) {
+        this.datasetDoi = new DOI(doi);
+      }
+    } catch (IllegalArgumentException e) {
+      LOG.error("DOI is not valid: {}", Strings.nullToEmpty(doi));
+    }
+  }
+
+  /**
+   * Get the key of the IPT installation. This method is not used but it is needed otherwise this
+   * Object can't be converted into an XML document via JAXB.
+   *
+   * @return key of the dataset's IPT installation
+   */
+  @XmlTransient
+  @Nullable
+  public String getIptKey() {
+    return getInstallationKey().toString();
   }
 
   /**
@@ -227,16 +218,16 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get the language of the dataset name. This is a required field in Registry2, and will be set
-   * either in the default constructor, or via the form parameter "nameLanguage". This method is not
-   * used but it is needed otherwise this Object can't be converted into an XML document via JAXB.
+   * Get the title of the dataset. This is a required field in Registry2, and is required by the web
+   * services. This method is not used but it is needed otherwise this Object can't be converted
+   * into an XML document via JAXB.
    *
-   * @return language of the dataset name
+   * @return title of the dataset
    */
-  @XmlElement(name = LegacyResourceConstants.NAME_LANGUAGE_PARAM)
+  @XmlElement(name = LegacyResourceConstants.NAME_PARAM)
   @NotNull
-  public String getDatasetNameLanguage() {
-    return getLanguage().getIso2LetterCode();
+  public String getDatasetName() {
+    return getTitle();
   }
 
   /**
@@ -257,15 +248,16 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get the dataset description. This method is not used but it is needed otherwise this Object
-   * can't be converted into an XML document via JAXB.
+   * Get the language of the dataset name. This is a required field in Registry2, and will be set
+   * either in the default constructor, or via the form parameter "nameLanguage". This method is not
+   * used but it is needed otherwise this Object can't be converted into an XML document via JAXB.
    *
-   * @return description of the dataset
+   * @return language of the dataset name
    */
-  @XmlElement(name = LegacyResourceConstants.DESCRIPTION_PARAM)
-  @Nullable
-  public String getDatasetDescription() {
-    return getDescription();
+  @XmlElement(name = LegacyResourceConstants.NAME_LANGUAGE_PARAM)
+  @NotNull
+  public String getDatasetNameLanguage() {
+    return getLanguage().getIso2LetterCode();
   }
 
   /**
@@ -276,6 +268,18 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @ParamName(LegacyResourceConstants.DESCRIPTION_PARAM)
   public void setDatasetDescription(String description) {
     setDescription(validateField(description, 10));
+  }
+
+  /**
+   * Get the dataset description. This method is not used but it is needed otherwise this Object
+   * can't be converted into an XML document via JAXB.
+   *
+   * @return description of the dataset
+   */
+  @XmlElement(name = LegacyResourceConstants.DESCRIPTION_PARAM)
+  @Nullable
+  public String getDatasetDescription() {
+    return getDescription();
   }
 
   /**
@@ -290,18 +294,6 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @NotNull
   public String getDatasetDescriptionLanguage() {
     return getLanguage().getIso2LetterCode();
-  }
-
-  /**
-   * Get logo URL. This method is not used but it is needed otherwise this Object can't be converted
-   * into an XML document via JAXB.
-   *
-   * @return logo URL
-   */
-  @XmlElement(name = LegacyResourceConstants.LOGO_URL_PARAM)
-  @Nullable
-  public String getDatasetLogoUrl() {
-    return getLogoUrl() == null ? null : getLogoUrl().toString();
   }
 
   /**
@@ -322,15 +314,15 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get homepage URL. This method is not used but it is needed otherwise this Object can't be
-   * converted into an XML document via JAXB.
+   * Get logo URL. This method is not used but it is needed otherwise this Object can't be converted
+   * into an XML document via JAXB.
    *
-   * @return homepage URL
+   * @return logo URL
    */
-  @XmlElement(name = LegacyResourceConstants.HOMEPAGE_URL_PARAM)
+  @XmlElement(name = LegacyResourceConstants.LOGO_URL_PARAM)
   @Nullable
-  public String getDatasetHomepageUrl() {
-    return getHomepage() == null ? null : getHomepage().toString();
+  public String getDatasetLogoUrl() {
+    return getLogoUrl() == null ? null : getLogoUrl().toString();
   }
 
   /**
@@ -351,15 +343,15 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get primary contact name. This method is not used but it is needed otherwise this Object can't
-   * be converted into an XML document via JAXB.
+   * Get homepage URL. This method is not used but it is needed otherwise this Object can't be
+   * converted into an XML document via JAXB.
    *
-   * @return primary contact name
+   * @return homepage URL
    */
-  @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
+  @XmlElement(name = LegacyResourceConstants.HOMEPAGE_URL_PARAM)
   @Nullable
-  public String getPrimaryContactName() {
-    return primaryContactName;
+  public String getDatasetHomepageUrl() {
+    return getHomepage() == null ? null : getHomepage().toString();
   }
 
   /**
@@ -373,15 +365,15 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get primary contact email. This method is not used but it is needed otherwise this Object can't
+   * Get primary contact name. This method is not used but it is needed otherwise this Object can't
    * be converted into an XML document via JAXB.
    *
-   * @return primary contact email
+   * @return primary contact name
    */
-  @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
-  @NotNull
-  public String getPrimaryContactEmail() {
-    return primaryContactEmail;
+  @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
+  @Nullable
+  public String getPrimaryContactName() {
+    return primaryContactName;
   }
 
   /**
@@ -402,15 +394,15 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Get primary contact type. This method is not used but it is needed otherwise this Object can't
+   * Get primary contact email. This method is not used but it is needed otherwise this Object can't
    * be converted into an XML document via JAXB.
    *
-   * @return primary contact type
+   * @return primary contact email
    */
-  @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
+  @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
   @NotNull
-  public ContactType getPrimaryContactType() {
-    return primaryContactType;
+  public String getPrimaryContactEmail() {
+    return primaryContactEmail;
   }
 
   /**
@@ -434,6 +426,28 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
+   * Get primary contact type. This method is not used but it is needed otherwise this Object can't
+   * be converted into an XML document via JAXB.
+   *
+   * @return primary contact type
+   */
+  @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
+  @NotNull
+  public ContactType getPrimaryContactType() {
+    return primaryContactType;
+  }
+
+  /**
+   * Set primary contact phone.
+   *
+   * @param primaryContactPhone primary contact type
+   */
+  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM)
+  public void setPrimaryContactPhone(String primaryContactPhone) {
+    this.primaryContactPhone = Strings.emptyToNull(primaryContactPhone);
+  }
+
+  /**
    * Get primary contact phone. This method is not used but it is needed otherwise this Object can't
    * be converted into an XML document via JAXB.
    *
@@ -446,13 +460,13 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Set primary contact phone.
+   * Set primary contact address.
    *
-   * @param primaryContactPhone primary contact type
+   * @param primaryContactAddress primary contact address
    */
-  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM)
-  public void setPrimaryContactPhone(String primaryContactPhone) {
-    this.primaryContactPhone = Strings.emptyToNull(primaryContactPhone);
+  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM)
+  public void setPrimaryContactAddress(String primaryContactAddress) {
+    this.primaryContactAddress = Strings.emptyToNull(primaryContactAddress);
   }
 
   /**
@@ -468,13 +482,13 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Set primary contact address.
+   * Set primary contact description.
    *
-   * @param primaryContactAddress primary contact address
+   * @param primaryContactDescription primary contact type
    */
-  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM)
-  public void setPrimaryContactAddress(String primaryContactAddress) {
-    this.primaryContactAddress = Strings.emptyToNull(primaryContactAddress);
+  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM)
+  public void setPrimaryContactDescription(String primaryContactDescription) {
+    this.primaryContactDescription = Strings.emptyToNull(primaryContactDescription);
   }
 
   /**
@@ -487,16 +501,6 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @Nullable
   public String getPrimaryContactDescription() {
     return primaryContactDescription;
-  }
-
-  /**
-   * Set primary contact description.
-   *
-   * @param primaryContactDescription primary contact type
-   */
-  @ParamName(LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM)
-  public void setPrimaryContactDescription(String primaryContactDescription) {
-    this.primaryContactDescription = Strings.emptyToNull(primaryContactDescription);
   }
 
   /**
@@ -572,16 +576,6 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   }
 
   /**
-   * Set the endpoint of type ARCHIVE. This endpoint will have been created via addEndpoint() that
-   * creates the endpoint from the injected HTTP Form parameters.
-   *
-   * @param archiveEndpoint endpoint of type ARCHIVE
-   */
-  public void setArchiveEndpoint(Endpoint archiveEndpoint) {
-    this.archiveEndpoint = archiveEndpoint;
-  }
-
-  /**
    * Get the endpoint of type DATA PACKAGE.
    *
    * @return the endpoint of type DATA PACKAGE
@@ -589,6 +583,16 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @XmlTransient
   public Endpoint getDataPackageEndpoint() {
     return dataPackageEndpoint;
+  }
+
+  /**
+   * Set the endpoint of type ARCHIVE. This endpoint will have been created via addEndpoint() that
+   * creates the endpoint from the injected HTTP Form parameters.
+   *
+   * @param archiveEndpoint endpoint of type ARCHIVE
+   */
+  public void setArchiveEndpoint(Endpoint archiveEndpoint) {
+    this.archiveEndpoint = archiveEndpoint;
   }
 
   public void setDataPackageEndpoint(Endpoint dataPackageEndpoint) {

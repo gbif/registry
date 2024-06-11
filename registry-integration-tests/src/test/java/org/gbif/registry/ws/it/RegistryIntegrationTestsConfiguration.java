@@ -14,8 +14,6 @@
 package org.gbif.registry.ws.it;
 
 import com.zaxxer.hikari.HikariDataSource;
-import java.util.Collections;
-import java.util.Date;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
@@ -57,6 +55,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+
+import java.util.Collections;
+import java.util.Date;
 
 @TestConfiguration
 @SpringBootApplication(
@@ -124,22 +125,6 @@ public class RegistryIntegrationTestsConfiguration {
 
   public static final String TEST_PROPERTIES = "classpath:application-test.yml";
 
-  public static void setSecurityPrincipal(
-      SimplePrincipalProvider simplePrincipalProvider, UserRole userRole) {
-    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
-    SecurityContextHolder.setContext(ctx);
-
-    ctx.setAuthentication(
-        new UsernamePasswordAuthenticationToken(
-            simplePrincipalProvider.get().getName(),
-            "",
-            Collections.singleton(new SimpleGrantedAuthority(userRole.name()))));
-  }
-
-  public static void main(String[] args) {
-    SpringApplication.run(RegistryIntegrationTestsConfiguration.class, args);
-  }
-
   @Bean
   public BeanUtilsBean beanUtilsBean() {
     DateTimeConverter dateConverter = new DateConverter(null);
@@ -198,11 +183,6 @@ public class RegistryIntegrationTestsConfiguration {
     };
   }
 
-  @Bean
-  public ConceptClient conceptClient() {
-    return new ConceptClientMock();
-  }
-
   private static class FeignFilterRequestMappingHandlerMapping
       extends RequestMappingHandlerMapping {
     @Override
@@ -210,5 +190,26 @@ public class RegistryIntegrationTestsConfiguration {
       return super.isHandler(beanType)
           && (AnnotationUtils.findAnnotation(beanType, FeignClient.class) == null);
     }
+  }
+
+  public static void setSecurityPrincipal(
+      SimplePrincipalProvider simplePrincipalProvider, UserRole userRole) {
+    SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+    SecurityContextHolder.setContext(ctx);
+
+    ctx.setAuthentication(
+        new UsernamePasswordAuthenticationToken(
+            simplePrincipalProvider.get().getName(),
+            "",
+            Collections.singleton(new SimpleGrantedAuthority(userRole.name()))));
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(RegistryIntegrationTestsConfiguration.class, args);
+  }
+
+  @Bean
+  public ConceptClient conceptClient() {
+    return new ConceptClientMock();
   }
 }

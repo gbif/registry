@@ -16,13 +16,6 @@ package org.gbif.registry.domain.ws;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.UUID;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.registry.Endpoint;
@@ -30,6 +23,14 @@ import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
 /**
  * Class used to create or update an Endpoint for legacy (GBRDS/IPT) API. Previously known as a
@@ -49,17 +50,6 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
   private UUID datasetKey;
 
   /**
-   * Get the endpoint's dataset key.
-   *
-   * @return dataset key
-   */
-  @XmlElement(name = LegacyResourceConstants.RESOURCE_KEY_PARAM)
-  @NotNull
-  public UUID getDatasetKey() {
-    return datasetKey;
-  }
-
-  /**
    * Set the endpoint's dataset key. Mandatory field, injected on both create and update requests.
    *
    * @param resourceKey dataset key as UUID
@@ -71,6 +61,17 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
     } catch (IllegalArgumentException e) {
       LOG.error("Dataset key is not a valid UUID: {}", Strings.nullToEmpty(resourceKey));
     }
+  }
+
+  /**
+   * Get the endpoint's dataset key.
+   *
+   * @return dataset key
+   */
+  @XmlElement(name = LegacyResourceConstants.RESOURCE_KEY_PARAM)
+  @NotNull
+  public UUID getDatasetKey() {
+    return datasetKey;
   }
 
   /**
@@ -136,21 +137,6 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
   }
 
   /**
-   * Get the endpoint URL. This method is not used but it is needed otherwise this Object can't be
-   * converted into an XML document via JAXB.
-   *
-   * @return url of the endpoint
-   */
-  @XmlElement(name = LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
-  @NotNull
-  public String getEndpointUrl() {
-    if (getUrl() == null) {
-      throw new IllegalStateException("Null is not acceptable");
-    }
-    return getUrl().toASCIIString();
-  }
-
-  /**
    * Set the endpoint URL.
    *
    * @param url of the endpoint
@@ -165,6 +151,21 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
         LOG.warn("Endpoint URL was invalid: {}", Strings.nullToEmpty(url));
       }
     }
+  }
+
+  /**
+   * Get the endpoint URL. This method is not used but it is needed otherwise this Object can't be
+   * converted into an XML document via JAXB.
+   *
+   * @return url of the endpoint
+   */
+  @XmlElement(name = LegacyResourceConstants.ACCESS_POINT_URL_PARAM)
+  @NotNull
+  public String getEndpointUrl() {
+    if (getUrl() == null) {
+      throw new IllegalStateException("Null is not acceptable");
+    }
+    return getUrl().toASCIIString();
   }
 
   @Generated

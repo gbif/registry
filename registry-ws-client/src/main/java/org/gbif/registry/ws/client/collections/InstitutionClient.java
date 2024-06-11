@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.client.collections;
 
-import java.util.List;
-import java.util.UUID;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
@@ -27,6 +25,9 @@ import org.geojson.FeatureCollection;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RequestMapping("grscicoll/institution")
 public interface InstitutionClient
