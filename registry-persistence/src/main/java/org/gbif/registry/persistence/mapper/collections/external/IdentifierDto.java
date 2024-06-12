@@ -18,35 +18,16 @@ import org.gbif.api.vocabulary.IdentifierType;
 import java.util.Objects;
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class IdentifierDto {
 
   private UUID entityKey;
   private IdentifierType type;
   private String identifier;
-
-  public UUID getEntityKey() {
-    return entityKey;
-  }
-
-  public void setEntityKey(UUID entityKey) {
-    this.entityKey = entityKey;
-  }
-
-  public IdentifierType getType() {
-    return type;
-  }
-
-  public void setType(IdentifierType type) {
-    this.type = type;
-  }
-
-  public String getIdentifier() {
-    return identifier;
-  }
-
-  public void setIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
 
   @Override
   public boolean equals(Object o) {

@@ -80,7 +80,7 @@ public class CollectionsSearchService {
           response.setCode(dto.getCode());
           response.setKey(dto.getKey());
           response.setName(dto.getName());
-          response.setDisplayOnNHCPortal(dto.getDisplayOnNHCPortal());
+          response.setDisplayOnNHCPortal(dto.isDisplayOnNHCPortal());
           response.setCountry(dto.getCountry());
           response.setMailingCountry(dto.getMailCountry());
 

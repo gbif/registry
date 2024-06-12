@@ -30,11 +30,14 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.google.common.base.Objects;
 
+import lombok.Setter;
+
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. </br> JAXB annotations allow the
  * class to be converted into an XML document or JSON response. @XmlElement is used to specify
  * element names that consumers of legacy services expect to find.
  */
+@Setter
 @XmlRootElement(name = "organisation")
 public class LegacyOrganizationBriefResponse {
 
@@ -53,19 +56,11 @@ public class LegacyOrganizationBriefResponse {
     return key;
   }
 
-  public void setKey(String key) {
-    this.key = key;
-  }
-
   @JsonProperty(LegacyResourceConstants.NAME_PARAM)
   @XmlElement(name = LegacyResourceConstants.NAME_PARAM)
   @NotNull
   public String getName() {
     return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   @Generated
