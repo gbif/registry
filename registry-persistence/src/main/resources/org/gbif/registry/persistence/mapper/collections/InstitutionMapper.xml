@@ -81,7 +81,7 @@
     #{displayOnNHCPortal,jdbcType=BOOLEAN},
     #{featuredImageUrl,jdbcType=VARCHAR},
     #{featuredImageLicense,jdbcType=OTHER},
-    #{featuredImageAttribution=VARCHAR}
+    #{featuredImageAttribution,jdbcType=VARCHAR}
   </sql>
 
   <sql id="INSTITUTION_PARAMS_UPDATE">
@@ -112,7 +112,7 @@
     display_on_NHCPortal = #{displayOnNHCPortal,jdbcType=BOOLEAN},
     featured_image_url = #{featuredImageUrl,jdbcType=VARCHAR},
     featured_image_license = #{featuredImageLicense,jdbcType=OTHER},
-    featured_image_attribution= #{featuredImageAttribution=VARCHAR}
+    featured_image_attribution= #{featuredImageAttribution,jdbcType=VARCHAR}
     <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
