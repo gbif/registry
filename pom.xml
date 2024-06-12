@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.96.5-SNAPSHOT</version>
+  <version>3.96.6-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -84,7 +84,7 @@
     <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
     <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
-    <springdoc-openapi-ui.version>1.8.0</springdoc-openapi-ui.version>
+    <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
@@ -134,6 +134,7 @@
     <geojson.version>1.14</geojson.version>
     <avro.version>1.8.2</avro.version>
     <jaxb-api.version>2.3.1</jaxb-api.version>
+    <swagger-annotations.version>2.2.3</swagger-annotations.version>
 
     <!-- Hadoop -->
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
@@ -170,6 +171,7 @@
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
+    <maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -716,6 +718,11 @@
         <version>${jaxb-api.version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>${swagger-annotations.version}</version>
+      </dependency>
 
       <!-- Test dependencies -->
       <dependency>
@@ -806,6 +813,11 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${spring-boot-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>

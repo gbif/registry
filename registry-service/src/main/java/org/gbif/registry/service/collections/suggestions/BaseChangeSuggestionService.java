@@ -562,8 +562,16 @@ public abstract class BaseChangeSuggestionService<
                     + field.getName().substring(1))
             .invoke(suggestedEntity);
 
-    if (suggestedValue instanceof Address && isEmptyAddress((Address) suggestedValue)) {
-      suggestedValue = null;
+    if (suggestedValue instanceof Address) {
+      Address address = (Address) suggestedValue;
+      if (isEmptyAddress(address)) {
+        return null;
+      } else {
+        address.setAddress(Strings.emptyToNull(address.getAddress()));
+        address.setCity(Strings.emptyToNull(address.getCity()));
+        address.setProvince(Strings.emptyToNull(address.getProvince()));
+        address.setPostalCode(Strings.emptyToNull(address.getPostalCode()));
+      }
     }
 
     if (suggestedValue instanceof String) {
