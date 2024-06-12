@@ -91,7 +91,7 @@
     #{featuredImageUrl,jdbcType=VARCHAR},
     #{featuredImageLicense,jdbcType=OTHER},
     #{temporalCoverage,jdbcType=VARCHAR},
-    #{featuredImageAttribution=VARCHAR}
+    #{featuredImageAttribution,jdbcType=VARCHAR}
   </sql>
 
   <sql id="COLLECTION_PARAMS_UPDATE">
@@ -129,7 +129,7 @@
     featured_image_url = #{featuredImageUrl,jdbcType=VARCHAR},
     featured_image_license = #{featuredImageLicense,jdbcType=OTHER},
     temporal_coverage = #{temporalCoverage,jdbcType=VARCHAR},
-    featured_image_attribution= #{featuredImageAttribution=VARCHAR}
+    featured_image_attribution= #{featuredImageAttribution,jdbcType=VARCHAR}
     <!-- not allowed to change neither the masterSource nor the master source metadata in the update -->
   </sql>
 
