@@ -33,6 +33,11 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class ChangeDto implements Serializable {
   private String fieldName;
   private Class<?> fieldType;
@@ -42,70 +47,6 @@ public class ChangeDto implements Serializable {
   private Date created;
   private String author;
   private boolean overwritten;
-
-  public String getFieldName() {
-    return fieldName;
-  }
-
-  public void setFieldName(String fieldName) {
-    this.fieldName = fieldName;
-  }
-
-  public Class<?> getFieldType() {
-    return fieldType;
-  }
-
-  public void setFieldType(Class<?> fieldType) {
-    this.fieldType = fieldType;
-  }
-
-  public String getFieldGenericTypeName() {
-    return fieldGenericTypeName;
-  }
-
-  public void setFieldGenericTypeName(String fieldGenericTypeName) {
-    this.fieldGenericTypeName = fieldGenericTypeName;
-  }
-
-  public Object getSuggested() {
-    return suggested;
-  }
-
-  public void setSuggested(Object suggested) {
-    this.suggested = suggested;
-  }
-
-  public Object getPrevious() {
-    return previous;
-  }
-
-  public void setPrevious(Object previous) {
-    this.previous = previous;
-  }
-
-  public Date getCreated() {
-    return created;
-  }
-
-  public void setCreated(Date created) {
-    this.created = created;
-  }
-
-  public String getAuthor() {
-    return author;
-  }
-
-  public void setAuthor(String author) {
-    this.author = author;
-  }
-
-  public boolean isOverwritten() {
-    return overwritten;
-  }
-
-  public void setOverwritten(boolean overwritten) {
-    this.overwritten = overwritten;
-  }
 
   @Override
   public boolean equals(Object o) {
