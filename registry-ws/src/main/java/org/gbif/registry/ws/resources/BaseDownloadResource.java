@@ -85,6 +85,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
@@ -345,9 +346,9 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
         occurrenceDownloadMapper.list(page, status, downloadType, source));
   }
 
-  @Hidden // Admin method hidden
+  /** Count all the downloads. **/
   @GetMapping("/count")
-  @Secured(ADMIN_ROLE)
+  @PreAuthorize("isAuthenticated()")
   @Override
   public long count(
       @RequestParam(value = "status", required = false) Set<Download.Status> status,
