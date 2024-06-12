@@ -347,6 +347,7 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
   }
 
   /** Count all the downloads. **/
+  @Hidden
   @GetMapping("/count")
   @PreAuthorize("isAuthenticated()")
   @Override
