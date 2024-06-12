@@ -13,10 +13,10 @@
  */
 package org.gbif.registry.ws.it.collections.service.merge;
 
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Contactable;
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.ContactService;
@@ -29,11 +29,12 @@ import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.domain.collections.Constants.IDIGBIO_NAMESPACE;
 import static org.junit.jupiter.api.Assertions.*;
