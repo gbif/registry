@@ -28,8 +28,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+
+import lombok.Setter;
 
 /**
  * Class used to generate response for legacy (GBRDS/IPT) API. Previously known as an Organisation
@@ -37,9 +40,11 @@ import com.google.common.base.Strings;
  * document or JSON response. @XmlElement is used to specify element names that consumers of legacy
  * services expect to find.
  */
+@Setter
 @XmlRootElement(name = "organisation")
 public class LegacyOrganizationResponse {
 
+  private static final Joiner CONTACT_NAME = Joiner.on(" ").skipNulls();
   private String key;
   private String name;
   private String nameLanguage;
@@ -56,13 +61,14 @@ public class LegacyOrganizationResponse {
   private String primaryContactPhone;
   private String primaryContactDescription;
 
-  private static final Joiner CONTACT_NAME = Joiner.on(" ").skipNulls();
-
   public LegacyOrganizationResponse(Organization organization, Contact contact, Node node) {
     mapOrganizationPart(organization);
     mapContactPart(contact);
     mapNodePart(node);
   }
+
+  /** No argument, default constructor needed by JAXB. */
+  public LegacyOrganizationResponse() {}
 
   private void mapOrganizationPart(Organization organization) {
     key = organization.getKey() == null ? "" : organization.getKey().toString();
@@ -115,17 +121,10 @@ public class LegacyOrganizationResponse {
         node.getEmail() == null || node.getEmail().isEmpty() ? "" : node.getEmail().get(0);
   }
 
-  /** No argument, default constructor needed by JAXB. */
-  public LegacyOrganizationResponse() {}
-
   @XmlElement(name = LegacyResourceConstants.KEY_PARAM)
   @NotNull
   public String getKey() {
     return key;
-  }
-
-  public void setKey(String key) {
-    this.key = key;
   }
 
   @XmlElement(name = LegacyResourceConstants.NAME_PARAM)
@@ -134,18 +133,10 @@ public class LegacyOrganizationResponse {
     return name;
   }
 
-  public void setName(String name) {
-    this.name = name;
-  }
-
   @XmlElement(name = "nodeKey")
   @NotNull
   public String getNodeKey() {
     return nodeKey;
-  }
-
-  public void setNodeKey(String nodeKey) {
-    this.nodeKey = nodeKey;
   }
 
   @XmlElement(name = "nodeName")
@@ -154,18 +145,10 @@ public class LegacyOrganizationResponse {
     return nodeName;
   }
 
-  public void setNodeName(String nodeName) {
-    this.nodeName = nodeName;
-  }
-
   @XmlElement(name = "nodeContactEmail")
   @NotNull
   public String getNodeContactEmail() {
     return nodeContactEmail;
-  }
-
-  public void setNodeContactEmail(String nodeContactEmail) {
-    this.nodeContactEmail = nodeContactEmail;
   }
 
   @XmlElement(name = LegacyResourceConstants.NAME_LANGUAGE_PARAM)
@@ -174,18 +157,10 @@ public class LegacyOrganizationResponse {
     return nameLanguage;
   }
 
-  public void setNameLanguage(String nameLanguage) {
-    this.nameLanguage = nameLanguage;
-  }
-
   @XmlElement(name = LegacyResourceConstants.DESCRIPTION_PARAM)
   @NotNull
   public String getDescription() {
     return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
   }
 
   @XmlElement(name = LegacyResourceConstants.DESCRIPTION_LANGUAGE_PARAM)
@@ -194,18 +169,10 @@ public class LegacyOrganizationResponse {
     return descriptionLanguage;
   }
 
-  public void setDescriptionLanguage(String descriptionLanguage) {
-    this.descriptionLanguage = descriptionLanguage;
-  }
-
   @XmlElement(name = LegacyResourceConstants.HOMEPAGE_URL_PARAM)
   @NotNull
   public String getHomepageURL() {
     return homepageURL;
-  }
-
-  public void setHomepageURL(String homepageURL) {
-    this.homepageURL = homepageURL;
   }
 
   @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_TYPE_PARAM)
@@ -214,18 +181,10 @@ public class LegacyOrganizationResponse {
     return primaryContactType;
   }
 
-  public void setPrimaryContactType(String primaryContactType) {
-    this.primaryContactType = primaryContactType;
-  }
-
   @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_NAME_PARAM)
   @NotNull
   public String getPrimaryContactName() {
     return primaryContactName;
-  }
-
-  public void setPrimaryContactName(String primaryContactName) {
-    this.primaryContactName = primaryContactName;
   }
 
   @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_EMAIL_PARAM)
@@ -234,18 +193,10 @@ public class LegacyOrganizationResponse {
     return primaryContactEmail;
   }
 
-  public void setPrimaryContactEmail(String primaryContactEmail) {
-    this.primaryContactEmail = primaryContactEmail;
-  }
-
   @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_ADDRESS_PARAM)
   @NotNull
   public String getPrimaryContactAddress() {
     return primaryContactAddress;
-  }
-
-  public void setPrimaryContactAddress(String primaryContactAddress) {
-    this.primaryContactAddress = primaryContactAddress;
   }
 
   @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_PHONE_PARAM)
@@ -254,18 +205,10 @@ public class LegacyOrganizationResponse {
     return primaryContactPhone;
   }
 
-  public void setPrimaryContactPhone(String primaryContactPhone) {
-    this.primaryContactPhone = primaryContactPhone;
-  }
-
   @XmlElement(name = LegacyResourceConstants.PRIMARY_CONTACT_DESCRIPTION_PARAM)
   @NotNull
   public String getPrimaryContactDescription() {
     return primaryContactDescription;
-  }
-
-  public void setPrimaryContactDescription(String primaryContactDescription) {
-    this.primaryContactDescription = primaryContactDescription;
   }
 
   @Generated
@@ -315,7 +258,7 @@ public class LegacyOrganizationResponse {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("key", key)
         .add("name", name)
         .add("nameLanguage", nameLanguage)

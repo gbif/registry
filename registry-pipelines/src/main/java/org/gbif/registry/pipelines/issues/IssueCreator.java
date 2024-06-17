@@ -40,6 +40,8 @@ import java.util.*;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+import javax.validation.constraints.NotNull;
+
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
@@ -50,7 +52,6 @@ import org.apache.hadoop.fs.AvroFSInput;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -62,7 +63,6 @@ import com.google.common.collect.Sets;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
 
 @Component
 @Slf4j
@@ -95,6 +95,7 @@ public class IssueCreator {
       };
   private static final String NEW_LINE = "\n";
   private static final String CODE_BLOCK_SEPARATOR = "```";
+  private static final String DATASET_NOT_FOUND_FOR_KEY = "Dataset not found for key: ";
   private final DatasetMapper datasetMapper;
   private final OrganizationMapper organizationMapper;
   private final InstallationMapper installationMapper;
@@ -103,7 +104,6 @@ public class IssueCreator {
   private final CubeWsClient cubeWsClient;
   private final OccurrenceWsSearchClient occurrenceWsSearchClient;
   private final IssuesConfig issuesConfig;
-  private static final String DATASET_NOT_FOUND_FOR_KEY = "Dataset not found for key: ";
 
   @Autowired
   public IssueCreator(
@@ -129,6 +129,27 @@ public class IssueCreator {
             .withObjectMapper(JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport())
             .withUrl(apiRootUrl)
             .build(OccurrenceWsSearchClient.class);
+  }
+
+  public static String getCurrentTimestamp() {
+    return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+  }
+
+  @SneakyThrows
+  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
+    Configuration config = new Configuration();
+
+    // check if the hdfs-site.xml is provided
+    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
+      File hdfsSite = new File(hdfsSiteConfig);
+      if (hdfsSite.exists() && hdfsSite.isFile()) {
+        log.info("using hdfs-site.xml");
+        config.addResource(hdfsSite.toURI().toURL());
+      } else {
+        log.warn("hdfs-site.xml does not exist");
+      }
+    }
+    return config;
   }
 
   public Issue createIdsValidationFailedIssue(
@@ -239,10 +260,6 @@ public class IssueCreator {
         .append(".");
 
     return body.toString();
-  }
-
-  public static String getCurrentTimestamp() {
-    return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
   }
 
   public GithubApiClient.IssueComment createIdsValidationFailedIssueComment(
@@ -420,22 +437,5 @@ public class IssueCreator {
         .map(o -> o.getVerbatimField(DwcTerm.occurrenceID))
         .filter(v -> !Strings.isNullOrEmpty(v))
         .collect(Collectors.toList());
-  }
-
-  @SneakyThrows
-  private static Configuration getHdfsConfiguration(String hdfsSiteConfig) {
-    Configuration config = new Configuration();
-
-    // check if the hdfs-site.xml is provided
-    if (!Strings.isNullOrEmpty(hdfsSiteConfig)) {
-      File hdfsSite = new File(hdfsSiteConfig);
-      if (hdfsSite.exists() && hdfsSite.isFile()) {
-        log.info("using hdfs-site.xml");
-        config.addResource(hdfsSite.toURI().toURL());
-      } else {
-        log.warn("hdfs-site.xml does not exist");
-      }
-    }
-    return config;
   }
 }
