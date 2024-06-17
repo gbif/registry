@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
 import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.List;
@@ -25,11 +22,6 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
-import org.gbif.api.vocabulary.collections.Source;
-
-import javax.annotation.Nullable;
-import java.util.List;
-
 @Getter
 @SuperBuilder
 public class InstitutionSearchParams extends SearchParams {
@@ -38,6 +30,5 @@ public class InstitutionSearchParams extends SearchParams {
   @Nullable List<String> institutionalGovernances;
   @Nullable List<String> disciplines;
   @Nullable String sourceId;
-  @Nullable
-  Source source;
+  @Nullable Source source;
 }

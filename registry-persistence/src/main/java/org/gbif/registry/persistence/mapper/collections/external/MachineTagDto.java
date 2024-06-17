@@ -16,44 +16,17 @@ package org.gbif.registry.persistence.mapper.collections.external;
 import java.util.Objects;
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
 public class MachineTagDto {
 
   private UUID entityKey;
   private String namespace;
   private String name;
   private String value;
-
-  public UUID getEntityKey() {
-    return entityKey;
-  }
-
-  public void setEntityKey(UUID entityKey) {
-    this.entityKey = entityKey;
-  }
-
-  public String getNamespace() {
-    return namespace;
-  }
-
-  public void setNamespace(String namespace) {
-    this.namespace = namespace;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getValue() {
-    return value;
-  }
-
-  public void setValue(String value) {
-    this.value = value;
-  }
 
   @Override
   public boolean equals(Object o) {
