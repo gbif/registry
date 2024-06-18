@@ -421,6 +421,10 @@ public class BaseCollectionEntityService<
         && !IdentifierUtils.isValidWikidataIdentifier(identifier.getIdentifier())) {
       throw new IllegalArgumentException("Invalid Wikidata identifier");
     }
+    if (identifier.getType() == IdentifierType.ROR
+        && !IdentifierUtils.isValidRORIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid ROR Identifier");
+    }
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})

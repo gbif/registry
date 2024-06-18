@@ -283,6 +283,13 @@ public abstract class BaseCollectionEntityServiceIT<
         () ->
             collectionEntityService.addIdentifier(
                 key, new Identifier(IdentifierType.WIKIDATA, "foo")));
+
+    // add invalid ROR identifier
+    assertThrows(
+      IllegalArgumentException.class,
+      () ->
+        collectionEntityService.addIdentifier(
+          key, new Identifier(IdentifierType.ROR, "foo")));
   }
 
   @Test
