@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
 @Validated
 @Service

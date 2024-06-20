@@ -14,7 +14,6 @@
 package org.gbif.registry.service.collections;
 
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.*;
@@ -33,7 +32,6 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.*;
 import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.*;
-import org.gbif.registry.persistence.mapper.collections.params.RangeParam;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
@@ -57,14 +55,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
-import static org.gbif.registry.service.collections.utils.SearchUtils.INTEGER_RANGE;
-import static org.gbif.registry.service.collections.utils.SearchUtils.WILDCARD_SEARCH;
 
 @Validated
 @Slf4j
@@ -875,34 +870,6 @@ public class BaseCollectionEntityService<
       throw new IllegalArgumentException(
           "Cannot set a deleted " + entityClass.getSimpleName() + " as master source");
     }
-  }
-
-  protected RangeParam parseIntegerRangeParameter(String param) {
-    if (Strings.isNullOrEmpty(param)) {
-      return null;
-    }
-
-    RangeParam rangeParam = new RangeParam();
-    Matcher matcher = INTEGER_RANGE.matcher(param);
-    if (matcher.matches()) {
-      String lowerString = matcher.group(1);
-      if (!lowerString.equals(WILDCARD_SEARCH)) {
-        rangeParam.setLowerBound(Integer.valueOf(lowerString));
-      }
-
-      String higherString = matcher.group(2);
-      if (!higherString.equals(WILDCARD_SEARCH)) {
-        rangeParam.setHigherBound(Integer.valueOf(higherString));
-      }
-    } else {
-      try {
-        rangeParam.setExactValue(Integer.valueOf(param));
-      } catch (Exception ex) {
-        log.info("Invalid range {}", param, ex);
-      }
-    }
-
-    return rangeParam;
   }
 
   protected List<Country> parseGbifRegion(SearchRequest searchRequest) {
