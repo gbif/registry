@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
@@ -175,5 +176,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .registerModule(new JavaTimeModule()))
         .withUrl(apiRootUrl)
         .build(ConceptClient.class);
+  }
+
+  @Bean
+  public NubResourceClient nubResourceClient(@Value("${api.root.url}") String apiRootUrl) {
+    return new ClientBuilder()
+        .withObjectMapper(
+            JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                .registerModule(new JavaTimeModule()))
+        .withUrl(apiRootUrl)
+        .build(NubResourceClient.class);
   }
 }
