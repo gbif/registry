@@ -99,13 +99,14 @@
     </sql>
 
     <!-- record queries -->
-    <resultMap id="RECORD_MAP" type="DescriptorRecord" autoMapping="true">
+    <resultMap id="RECORD_DTO_MAP" type="DescriptorRecordDto" autoMapping="true">
         <id property="key" column="key"/>
         <result property="descriptorKey" column="collection_descriptor_key"/>
         <result property="identifiedBy" column="identified_by" typeHandler="StringArrayTypeHandler"/>
         <result property="typeStatus" column="type_status" typeHandler="StringArrayTypeHandler"/>
         <result property="recordedBy" column="recorded_by" typeHandler="StringArrayTypeHandler"/>
         <result property="issues" column="issues" typeHandler="StringArrayTypeHandler"/>
+        <collection property="verbatim" column="key" select="listVerbatims"/>
     </resultMap>
 
     <sql id="RECORD_WRITE_FIELDS">
@@ -143,14 +144,14 @@
         WHERE collection_descriptor_key = #{descriptorKey,jdbcType=INTEGER}
     </delete>
 
-    <select id="getRecord" resultMap="RECORD_MAP">
+    <select id="getRecord" resultMap="RECORD_DTO_MAP">
         SELECT
         <include refid="RECORD_READ_FIELDS"/>
         FROM collection_descriptor_record r
         WHERE r.key = #{key,jdbcType=OTHER}
     </select>
 
-    <select id="listRecords" resultType="DescriptorRecord" resultMap="RECORD_MAP" parameterType="Pageable">
+    <select id="listRecords" resultType="DescriptorRecord" resultMap="RECORD_DTO_MAP" parameterType="Pageable">
         SELECT DISTINCT ON(
         <if test="params.query != null">ts_rank_cd(d.fulltext_search, query),</if>
         r.key)
@@ -249,9 +250,8 @@
     </sql>
 
     <!-- verbatim fields queries -->
-    <resultMap id="VERBATIM_MAP" type="VerbatimField" autoMapping="true">
+    <resultMap id="VERBATIM_DTO_MAP" type="VerbatimDto" autoMapping="true">
         <id property="key" column="key"/>
-        <result property="recordKey" column="collection_descriptor_record_key"/>
     </resultMap>
 
     <sql id="VERBATIM_WRITE_FIELDS">
@@ -268,7 +268,7 @@
         #{fieldValue,jdbcType=VARCHAR}
     </sql>
 
-    <insert id="createVerbatim" parameterType="VerbatimField" useGeneratedKeys="true" keyProperty="key">
+    <insert id="createVerbatim" useGeneratedKeys="true" keyProperty="key">
         INSERT INTO collection_descriptor_verbatim_field(<include refid="VERBATIM_WRITE_FIELDS"/>)
         VALUES(<include refid="VERBATIM_PARAMS_CREATE"/>)
     </insert>
@@ -286,33 +286,11 @@
         WHERE d.key = #{descriptorKey,jdbcType=INTEGER}
     </delete>
 
-    <select id="listVerbatims" resultType="VerbatimField" resultMap="VERBATIM_MAP" parameterType="Pageable">
-        SELECT DISTINCT ON(
-        <if test="params.query != null">ts_rank_cd(d.fulltext_search, query),</if> v.key)
-        <include refid="VERBATIM_READ_FIELDS"/>, v.fulltext_search
-        <include refid="LIST_VERBATIMS_FILTER"/>
-        ORDER BY <if test="params.query != null">ts_rank_cd(v.fulltext_search, query) DESC,</if> v.key
-        <if test="params.page != null">
-            LIMIT #{params.page.limit} OFFSET #{params.page.offset}
-        </if>
-    </select>
-
-    <select id="countVerbatims" resultType="Long">
-        SELECT COUNT(DISTINCT v.key)
-        <include refid="LIST_VERBATIMS_FILTER"/>
-    </select>
-
-    <sql id="LIST_VERBATIMS_FILTER">
+    <select id="listVerbatims" resultType="VerbatimDto" resultMap="VERBATIM_DTO_MAP">
+        SELECT
+        <include refid="VERBATIM_READ_FIELDS"/>
         FROM collection_descriptor_verbatim_field v
-        <if test="params.query != null">
-            <include refid="FULLTEXT_SEARCH"/>
-        </if>
-        <where>
-            <if test="params.recordKey != null">
-                v.collection_descriptor_record_key = #{params.recordKey,jdbcType=INTEGER}
-            </if>
-        </where>
-    </sql>
-
+        WHERE v.collection_descriptor_record_key = #{recordKey,jdbcType=INTEGER}
+    </select>
 
 </mapper>

@@ -32,13 +32,11 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.Record;
-import org.gbif.api.model.collections.descriptors.VerbatimField;
+import org.gbif.api.model.collections.descriptors.DescriptorRecord;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorRecordsSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorsVerbatimFieldsSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -584,7 +582,7 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{collectionKey}/descriptor/{key}/record")
   @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptor/{key}/record")
-  public PagingResponse<Record> listCollectionDescriptorRecords(
+  public PagingResponse<DescriptorRecord> listCollectionDescriptorRecords(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorKey,
       DescriptorRecordsSearchRequest searchRequest) {
@@ -605,42 +603,14 @@ public class CollectionResource
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{collectionKey}/descriptor/{descriptorKey}/record/{key}")
   @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptor/{descriptorKey}/record/{key}")
-  public Record getCollectionDescriptorRecord(
+  public DescriptorRecord getCollectionDescriptorRecord(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("descriptorKey") long descriptorKey,
       @PathVariable("key") long recordKey) {
-    Record record = descriptorsService.getDescriptorRecord(recordKey);
-    Preconditions.checkArgument(record.getDescriptorKey().equals(descriptorKey));
+    DescriptorRecord descriptorRecord = descriptorsService.getDescriptorRecord(recordKey);
+    Preconditions.checkArgument(descriptorRecord.getDescriptorKey().equals(descriptorKey));
     Descriptor descriptor = descriptorsService.getDescriptor(descriptorKey);
     Preconditions.checkArgument(descriptor.getCollectionKey().equals(collectionKey));
-    return record;
-  }
-
-  @Operation(
-      operationId = "getCollectionDescriptorRecordVerbatimFields",
-      summary = "Lists the verbatim values of the descriptor record.",
-      description = "Lists the verbatim values of the descriptor record.",
-      extensions =
-          @Extension(
-              name = "Order",
-              properties = @ExtensionProperty(name = "Order", value = "0720")))
-  @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Verbatim values found and returned")
-  @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptor/{descriptorKey}/record/{key}/verbatim")
-  @NullToNotFound(
-      "/grscicoll/collection/{collectionKey}/descriptor/{descriptorKey}/record/{key}/verbatim")
-  public PagingResponse<VerbatimField> listCollectionDescriptorRecordVerbatimFields(
-      @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("descriptorKey") long descriptorKey,
-      @PathVariable("key") long recordKey,
-      DescriptorsVerbatimFieldsSearchRequest searchRequest) {
-    Record record = descriptorsService.getDescriptorRecord(recordKey);
-    Preconditions.checkArgument(record.getDescriptorKey().equals(descriptorKey));
-    Descriptor descriptor = descriptorsService.getDescriptor(descriptorKey);
-    Preconditions.checkArgument(descriptor.getCollectionKey().equals(collectionKey));
-
-    searchRequest.setRecordKey(recordKey);
-    return descriptorsService.listDescriptorRecordVerbatimFields(searchRequest);
+    return descriptorRecord;
   }
 }
