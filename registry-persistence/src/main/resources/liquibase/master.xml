@@ -143,4 +143,5 @@
   <include file="liquibase/135-vocabs-grscicoll.xml" />
   <include file="liquibase/136-new-fields-grscicoll.xml" />
   <include file="liquibase/137-featured-image-attribution-grscicoll.xml" />
+  <include file="liquibase/138-collection-descriptors-grscicoll.xml" />
 </databaseChangeLog>

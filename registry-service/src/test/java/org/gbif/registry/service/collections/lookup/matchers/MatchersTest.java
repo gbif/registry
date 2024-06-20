@@ -15,6 +15,8 @@ package org.gbif.registry.service.collections.lookup.matchers;
 
 import java.util.UUID;
 
+import org.gbif.dwc.terms.DwcTerm;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +26,8 @@ public class MatchersTest {
 
   @Test
   public void parseUUIDTest() {
+    System.out.println(DwcTerm.kingdom.qualifiedName());
+
     assertEquals(
         UUID.fromString("685298f2-0bc1-4e44-b2d5-d9760574644e"),
         BaseMatcher.parseUUID(
@@ -36,7 +40,7 @@ public class MatchersTest {
         BaseMatcher.parseUUID(
             "https://www.gbif.org/grscicoll/collection/685298f2-bc1-4e44-b2d5-d9760574644e"));
     assertNull(
-      BaseMatcher.parseUUID(
-        "https://scientific-collections.gbif.org/institution/685298f2-bc1-4e44-b2d5-d9760574644e"));
+        BaseMatcher.parseUUID(
+            "https://scientific-collections.gbif.org/institution/685298f2-bc1-4e44-b2d5-d9760574644e"));
   }
 }
