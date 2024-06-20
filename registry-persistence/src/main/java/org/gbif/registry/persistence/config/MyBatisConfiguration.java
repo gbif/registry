@@ -17,8 +17,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.Record;
-import org.gbif.api.model.collections.descriptors.VerbatimField;
+import org.gbif.api.model.collections.descriptors.DescriptorRecord;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -33,66 +32,27 @@ import org.gbif.api.model.pipelines.PipelineExecution;
 import org.gbif.api.model.pipelines.PipelineProcess;
 import org.gbif.api.model.pipelines.PipelineStep;
 import org.gbif.api.model.predicate.Predicate;
-import org.gbif.api.model.registry.Citation;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.Contact;
-import org.gbif.api.model.registry.Dataset;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Endpoint;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.Installation;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Metadata;
-import org.gbif.api.model.registry.Network;
-import org.gbif.api.model.registry.Node;
-import org.gbif.api.model.registry.Organization;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.mybatis.type.CountryTypeHandler;
-import org.gbif.mybatis.type.LanguageTypeHandler;
-import org.gbif.mybatis.type.StringArrayTypeHandler;
-import org.gbif.mybatis.type.UriArrayTypeHandler;
-import org.gbif.mybatis.type.UriTypeHandler;
-import org.gbif.mybatis.type.UuidTypeHandler;
+import org.gbif.mybatis.type.*;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
-import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
-import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
-import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
-import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
-import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
-import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
-import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
-import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.ExtensionArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.InstitutionGovernanceArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.SuggestedChangesTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.UserIdsTypeHandler;
-
-import java.net.URI;
-import java.util.UUID;
-
+import org.gbif.registry.persistence.mapper.handler.*;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.net.URI;
+import java.util.UUID;
 
 @Configuration
 public class MyBatisConfiguration {
@@ -158,8 +118,11 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
       configuration.getTypeAliasRegistry().registerAlias("Descriptor", Descriptor.class);
-      configuration.getTypeAliasRegistry().registerAlias("DescriptorRecord", Record.class);
-      configuration.getTypeAliasRegistry().registerAlias("VerbatimField", VerbatimField.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorRecord", DescriptorRecord.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("DescriptorRecordDto", DescriptorRecordDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("VerbatimDto", VerbatimDto.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("DuplicateMetadataDto", DuplicateMetadataDto.class);
@@ -225,8 +188,9 @@ public class MyBatisConfiguration {
           .getTypeAliasRegistry()
           .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
+          .getTypeAliasRegistry()
+          .registerAlias(
+              "InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);
