@@ -9,11 +9,9 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.Record;
-import org.gbif.api.model.collections.descriptors.VerbatimField;
+import org.gbif.api.model.collections.descriptors.DescriptorRecord;
 import org.gbif.api.model.collections.request.DescriptorRecordsSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorsVerbatimFieldsSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -24,9 +22,9 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorRecordDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorRecordsParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsVerbatimFieldsParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
@@ -116,71 +115,73 @@ public class DefaultDescriptorService implements DescriptorsService {
           continue;
         }
 
-        Record descriptorRecord = new Record();
+        DescriptorRecord descriptorRecord = new DescriptorRecord();
         descriptorRecord.setDescriptorKey(descriptorKey);
 
         // sciName
         InterpretedResult<String> taxonomyResult =
             Interpreter.interpretScientificName(values, headersByName, nubResourceClient);
-        setResult(descriptorRecord, taxonomyResult, Record::setScientificName);
+        setResult(descriptorRecord, taxonomyResult, DescriptorRecord::setScientificName);
 
         // country
         InterpretedResult<Country> countryResult =
             Interpreter.interpretCountry(values, headersByName);
-        setResult(descriptorRecord, countryResult, Record::setCountry);
+        setResult(descriptorRecord, countryResult, DescriptorRecord::setCountry);
 
         // individual count
         InterpretedResult<Integer> individualCountResult =
             Interpreter.interpretIndividualCount(values, headersByName);
-        setResult(descriptorRecord, individualCountResult, Record::setIndividualCount);
+        setResult(descriptorRecord, individualCountResult, DescriptorRecord::setIndividualCount);
 
         // identifiedBy
         InterpretedResult<List<String>> identifiedByResult =
             Interpreter.interpretStringList(values, headersByName, DwcTerm.identifiedBy);
-        setResult(descriptorRecord, identifiedByResult, Record::setIdentifiedBy);
+        setResult(descriptorRecord, identifiedByResult, DescriptorRecord::setIdentifiedBy);
 
         // dateIdentified
         InterpretedResult<Date> dateIdentifiedResult =
             Interpreter.interpretDateIdentified(values, headersByName);
-        setResult(descriptorRecord, dateIdentifiedResult, Record::setDateIdentified);
+        setResult(descriptorRecord, dateIdentifiedResult, DescriptorRecord::setDateIdentified);
 
         // TypeStatus
         InterpretedResult<List<TypeStatus>> typeStatusResult =
             Interpreter.interpretTypeStatus(values, headersByName);
-        setResult(descriptorRecord, typeStatusResult, Record::setTypeStatus);
+        setResult(descriptorRecord, typeStatusResult, DescriptorRecord::setTypeStatus);
 
         // recordedBy
         InterpretedResult<List<String>> recordedByResult =
             Interpreter.interpretStringList(values, headersByName, DwcTerm.recordedBy);
-        setResult(descriptorRecord, recordedByResult, Record::setRecordedBy);
+        setResult(descriptorRecord, recordedByResult, DescriptorRecord::setRecordedBy);
 
         // TODO: create ltc terms??
         // discipline
         InterpretedResult<String> disciplineResult =
             Interpreter.interpretString(values, headersByName, "ltc:discipline");
-        setResult(descriptorRecord, disciplineResult, Record::setDiscipline);
+        setResult(descriptorRecord, disciplineResult, DescriptorRecord::setDiscipline);
 
         // objectClassification
         InterpretedResult<String> objectClassificationResult =
             Interpreter.interpretString(values, headersByName, "ltc:objectClassificationName");
-        setResult(descriptorRecord, objectClassificationResult, Record::setObjectClassification);
+        setResult(
+            descriptorRecord,
+            objectClassificationResult,
+            DescriptorRecord::setObjectClassification);
 
         descriptorsMapper.createRecord(descriptorRecord);
 
         // verbatim fields
         for (int i = 0; i < values.length; i++) {
-          VerbatimField verbatimField = new VerbatimField();
-          verbatimField.setRecordKey(descriptorRecord.getKey());
-          verbatimField.setFieldName(headersByIndex.get(i));
-          verbatimField.setFieldValue(values[i]);
-          descriptorsMapper.createVerbatim(verbatimField);
+          descriptorsMapper.createVerbatim(
+              descriptorRecord.getKey(), headersByIndex.get(i), values[i]);
         }
       }
     }
   }
 
   private <T> void setResult(
-      Record descriptorRecord, InterpretedResult<T> result, BiConsumer<Record, T> setter) {
+      DescriptorRecord descriptorRecord,
+      InterpretedResult<T> result,
+      BiConsumer<DescriptorRecord, T> setter) {
     setter.accept(descriptorRecord, result.getResult());
     if (descriptorRecord.getIssues() == null) {
       descriptorRecord.setIssues(new ArrayList<>());
@@ -258,12 +259,12 @@ public class DefaultDescriptorService implements DescriptorsService {
   }
 
   @Override
-  public Record getDescriptorRecord(@NotNull long key) {
-    return descriptorsMapper.getRecord(key);
+  public DescriptorRecord getDescriptorRecord(@NotNull long key) {
+    return convertRecordDto(descriptorsMapper.getRecord(key));
   }
 
   @Override
-  public PagingResponse<Record> listDescriptorRecords(
+  public PagingResponse<DescriptorRecord> listDescriptorRecords(
       DescriptorRecordsSearchRequest searchRequest) {
     if (searchRequest == null) {
       searchRequest = DescriptorRecordsSearchRequest.builder().build();
@@ -294,31 +295,38 @@ public class DefaultDescriptorService implements DescriptorsService {
             .page(page)
             .build();
 
-    return new PagingResponse<>(
-        page, descriptorsMapper.countRecords(params), descriptorsMapper.listRecords(params));
+    List<DescriptorRecordDto> dtos = descriptorsMapper.listRecords(params);
+    List<DescriptorRecord> results =
+        dtos.stream()
+            .map(
+                dto -> {
+                  DescriptorRecord descriptorRecord = convertRecordDto(dto);
+
+                  return descriptorRecord;
+                })
+            .collect(Collectors.toList());
+
+    return new PagingResponse<>(page, descriptorsMapper.countRecords(params), results);
   }
 
-  @Override
-  public PagingResponse<VerbatimField> listDescriptorRecordVerbatimFields(
-      DescriptorsVerbatimFieldsSearchRequest searchRequest) {
-    if (searchRequest == null) {
-      searchRequest = DescriptorsVerbatimFieldsSearchRequest.builder().build();
-    }
+  private static DescriptorRecord convertRecordDto(DescriptorRecordDto dto) {
+    DescriptorRecord descriptorRecord = new DescriptorRecord();
+    descriptorRecord.setKey(dto.getKey());
+    descriptorRecord.setRecordedBy(dto.getRecordedBy());
+    descriptorRecord.setDescriptorKey(dto.getDescriptorKey());
+    descriptorRecord.setCountry(dto.getCountry());
+    descriptorRecord.setDiscipline(dto.getDiscipline());
+    descriptorRecord.setIssues(dto.getIssues());
+    descriptorRecord.setDateIdentified(dto.getDateIdentified());
+    descriptorRecord.setIdentifiedBy(dto.getIdentifiedBy());
+    descriptorRecord.setIndividualCount(dto.getIndividualCount());
+    descriptorRecord.setObjectClassification(dto.getObjectClassification());
+    descriptorRecord.setScientificName(dto.getScientificName());
+    descriptorRecord.setTypeStatus(dto.getTypeStatus());
 
-    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
-    String query =
-        searchRequest.getQuery() != null
-            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQuery()))
-            : searchRequest.getQuery();
-
-    DescriptorsVerbatimFieldsParams params =
-        DescriptorsVerbatimFieldsParams.builder()
-            .query(query)
-            .recordKey(searchRequest.getRecordKey())
-            .page(page)
-            .build();
-
-    return new PagingResponse<>(
-        page, descriptorsMapper.countVerbatims(params), descriptorsMapper.listVerbatims(params));
+    Map<String, String> verbatim = new HashMap<>();
+    dto.getVerbatim().forEach(v -> verbatim.put(v.getFieldName(), v.getFieldValue()));
+    descriptorRecord.setVerbatim(verbatim);
+    return descriptorRecord;
   }
 }
