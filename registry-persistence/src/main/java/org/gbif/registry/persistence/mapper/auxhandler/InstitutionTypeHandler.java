@@ -13,7 +13,7 @@ public class InstitutionTypeHandler extends BaseTypeHandler<List<InstitutionType
 
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, List<InstitutionType> parameter, JdbcType jdbcType) throws SQLException {
-    Array array = ps.getConnection().createArrayOf("enum_institution_type", parameter.toArray());
+    Array array = ps.getConnection().createArrayOf("enum_institution_type", parameter.stream().map(Object::toString).map(String::toUpperCase).toArray());
     ps.setArray(i, array);
   }
 
