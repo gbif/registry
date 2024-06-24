@@ -53,6 +53,7 @@ import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
+import org.gbif.registry.persistence.mapper.auxhandler.InstitutionTypeHandler;
 import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
@@ -85,6 +86,7 @@ public class MyBatisConfiguration {
       configuration.getTypeHandlerRegistry().register(MetricInfoTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(LocaleTypeHandler.class);
       configuration.getTypeHandlerRegistry().register(ExtensionArrayTypeHandler.class);
+      configuration.getTypeHandlerRegistry().register(InstitutionTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("Node", Node.class);
       configuration.getTypeAliasRegistry().registerAlias("Organization", Organization.class);
