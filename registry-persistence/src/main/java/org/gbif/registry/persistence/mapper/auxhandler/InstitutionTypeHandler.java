@@ -38,6 +38,7 @@ public class InstitutionTypeHandler extends BaseTypeHandler<List<InstitutionType
     }
     return Arrays.stream((Object[]) sqlArray.getArray())
       .map(Object::toString)
+      .map(String::toUpperCase)
       .map(InstitutionType::valueOf)
       .collect(Collectors.toList());
   }
