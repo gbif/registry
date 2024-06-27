@@ -17,17 +17,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 import lombok.SneakyThrows;
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.latimercore.*;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
-import org.gbif.api.vocabulary.*;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.test.mocks.NubResourceClientMock;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
