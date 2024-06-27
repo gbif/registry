@@ -24,6 +24,18 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
@@ -32,11 +44,11 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorRecord;
+import org.gbif.api.model.collections.descriptors.DescriptorSet;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorRecordsSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorsSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -65,19 +77,6 @@ import org.springframework.http.MediaType;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Class that acts both as the WS endpoint for {@link Collection} entities and also provides an
@@ -469,44 +468,46 @@ public class CollectionResource
 
   // TODO: check descriptor docs
   @Operation(
-      operationId = "getCollectionDescriptors",
-      summary = "Lists the descriptors of the collection.",
-      description = "Lists the descriptors of the collection.",
+      operationId = "getCollectionDescriptorSets",
+      summary = "Lists the descriptor sets of the collection.",
+      description = "Lists the descriptor sets of the collection.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Collection descriptors found and returned")
+  @ApiResponse(responseCode = "200", description = "Collection descriptor sets found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptor")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptor")
-  public PagingResponse<Descriptor> listCollectionDescriptors(
-      @PathVariable("collectionKey") UUID collectionKey, DescriptorsSearchRequest searchRequest) {
-    return descriptorsService.listDescriptors(collectionKey, searchRequest);
+  @GetMapping("{collectionKey}/descriptorSet")
+  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorSet")
+  public PagingResponse<DescriptorSet> listCollectionDescriptorSets(
+      @PathVariable("collectionKey") UUID collectionKey, DescriptorSetSearchRequest searchRequest) {
+    return descriptorsService.listDescriptorSets(collectionKey, searchRequest);
   }
 
   @Operation(
-      operationId = "createCollectionDescriptor",
-      summary = "Create a new collection descriptor",
-      description = "Creates a new collection descriptor.",
+      operationId = "createCollectionDescriptorSet",
+      summary = "Create a new collection descriptor set",
+      description = "Creates a new collection descriptor set.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0501")))
   @ApiResponse(
       responseCode = "201",
-      description = "Collection descriptor created, new descriptor's key returned")
+      description = "Collection descriptor set created, new descriptor set's key returned")
   @Docs.DefaultUnsuccessfulWriteResponses
   @SneakyThrows
-  @PostMapping(value = "{collectionKey}/descriptor", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  public long createDescriptor(
+  @PostMapping(
+      value = "{collectionKey}/descriptorSet",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public long createDescriptorSet(
       @PathVariable UUID collectionKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
-    return descriptorsService.createDescriptor(
+    return descriptorsService.createDescriptorSet(
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
         format,
         title,
@@ -515,34 +516,35 @@ public class CollectionResource
   }
 
   @Operation(
-      operationId = "updateCollectionDescriptor",
-      summary = "Update an existing collection descriptor",
+      operationId = "updateCollectionDescriptorSet",
+      summary = "Update an existing collection descriptor set",
       description =
-          "Updates the existing collection descriptor. It updates the metadata and reimport the file by deleting the existing records and creating new ones.",
+          "Updates the existing collection descriptor set. It updates the metadata and reimport the file by deleting the "
+              + "existing descriptors and creating new ones.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0502")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Collection descriptor updated")
+  @ApiResponse(responseCode = "204", description = "Collection descriptor set updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @SneakyThrows
   @PutMapping(
-      value = "{collectionKey}/descriptor/{key}",
+      value = "{collectionKey}/descriptorSet/{key}",
       consumes = MediaType.APPLICATION_JSON_VALUE)
-  public void updateDescriptor(
+  public void updateDescriptorSet(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorKey,
+      @PathVariable("key") long descriptorSetKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
-    Descriptor existingDescriptor = descriptorsService.getDescriptor(descriptorKey);
-    Preconditions.checkArgument(existingDescriptor.getCollectionKey().equals(collectionKey));
+    DescriptorSet existingDescriptorSet = descriptorsService.getDescriptorSet(descriptorSetKey);
+    Preconditions.checkArgument(existingDescriptorSet.getCollectionKey().equals(collectionKey));
 
-    descriptorsService.updateDescriptor(
-        descriptorKey,
+    descriptorsService.updateDescriptorSet(
+        descriptorSetKey,
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
         format,
         title,
@@ -560,38 +562,39 @@ public class CollectionResource
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "200", description = "Collection found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptor/{key}")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptor/{key}")
-  public Descriptor getCollectionDescriptor(
-      @PathVariable("collectionKey") UUID collectionKey, @PathVariable("key") long descriptorKey) {
-    Descriptor existingDescriptor = descriptorsService.getDescriptor(descriptorKey);
-    Preconditions.checkArgument(existingDescriptor.getCollectionKey().equals(collectionKey));
-    return existingDescriptor;
+  @GetMapping("{collectionKey}/descriptorSet/{key}")
+  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorSet/{key}")
+  public DescriptorSet getCollectionDescriptorSet(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorSetKey) {
+    DescriptorSet existingDescriptorSet = descriptorsService.getDescriptorSet(descriptorSetKey);
+    Preconditions.checkArgument(existingDescriptorSet.getCollectionKey().equals(collectionKey));
+    return existingDescriptorSet;
   }
 
   @Operation(
-      operationId = "getCollectionDescriptorRecords",
-      summary = "Lists the descriptor records.",
-      description = "Lists the descriptor records.",
+      operationId = "getCollectionDescriptors",
+      summary = "Lists the descriptors.",
+      description = "Lists the descriptors.",
       extensions =
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0700")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Descriptor records found and returned")
+  @ApiResponse(responseCode = "200", description = "Descriptors found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptor/{key}/record")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptor/{key}/record")
-  public PagingResponse<DescriptorRecord> listCollectionDescriptorRecords(
+  @GetMapping("{collectionKey}/descriptorSet/{key}/descriptor")
+  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorSet/{key}/descriptor")
+  public PagingResponse<Descriptor> listCollectionDescriptors(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("key") long descriptorKey,
-      DescriptorRecordsSearchRequest searchRequest) {
-    searchRequest.setDescriptorKey(descriptorKey);
-    return descriptorsService.listDescriptorRecords(searchRequest);
+      @PathVariable("key") long descriptorSetKey,
+      DescriptorSearchRequest searchRequest) {
+    searchRequest.setDescriptorSetKey(descriptorSetKey);
+    return descriptorsService.listDescriptors(searchRequest);
   }
 
   @Operation(
-      operationId = "getCollectionDescriptorRecords",
+      operationId = "getCollectionDescriptor",
       summary = "Lists the descriptor records.",
       description = "Lists the descriptor records.",
       extensions =
@@ -599,18 +602,19 @@ public class CollectionResource
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0710")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Descriptor records found and returned")
+  @ApiResponse(responseCode = "200", description = "Descriptor found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
-  @GetMapping("{collectionKey}/descriptor/{descriptorKey}/record/{key}")
-  @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptor/{descriptorKey}/record/{key}")
-  public DescriptorRecord getCollectionDescriptorRecord(
+  @GetMapping("{collectionKey}/descriptorSet/{descriptorSetKey}/descriptor/{key}")
+  @NullToNotFound(
+      "/grscicoll/collection/{collectionKey}/descriptorSet/{descriptorSetKey}/descriptor/{key}")
+  public Descriptor getCollectionDescriptor(
       @PathVariable("collectionKey") UUID collectionKey,
-      @PathVariable("descriptorKey") long descriptorKey,
-      @PathVariable("key") long recordKey) {
-    DescriptorRecord descriptorRecord = descriptorsService.getDescriptorRecord(recordKey);
-    Preconditions.checkArgument(descriptorRecord.getDescriptorKey().equals(descriptorKey));
+      @PathVariable("descriptorSetKey") long descriptorSetKey,
+      @PathVariable("key") long descriptorKey) {
     Descriptor descriptor = descriptorsService.getDescriptor(descriptorKey);
-    Preconditions.checkArgument(descriptor.getCollectionKey().equals(collectionKey));
-    return descriptorRecord;
+    Preconditions.checkArgument(descriptor.getDescriptorSetKey().equals(descriptorSetKey));
+    DescriptorSet descriptorSet = descriptorsService.getDescriptorSet(descriptorSetKey);
+    Preconditions.checkArgument(descriptorSet.getCollectionKey().equals(collectionKey));
+    return descriptor;
   }
 }

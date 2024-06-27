@@ -1,5 +1,7 @@
 package org.gbif.registry.service.collections.descriptors;
 
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -7,11 +9,20 @@ import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorRecord;
-import org.gbif.api.model.collections.request.DescriptorRecordsSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorsSearchRequest;
+import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -22,26 +33,14 @@ import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
-import org.gbif.registry.persistence.mapper.collections.dto.DescriptorRecordDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorRecordsParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
 @Validated
 @Service
@@ -59,35 +58,35 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @SneakyThrows
   @Override
-  public long createDescriptor(
-      @NotNull @Valid byte[] descriptorFile,
+  public long createDescriptorSet(
+      @NotNull @Valid byte[] descriptorSetFile,
       @NotNull ExportFormat format,
       @NotNull String title,
       String description,
       @NotNull UUID collectionKey) {
-    Objects.requireNonNull(descriptorFile);
-    Preconditions.checkArgument(descriptorFile.length > 0);
+    Objects.requireNonNull(descriptorSetFile);
+    Preconditions.checkArgument(descriptorSetFile.length > 0);
     Objects.requireNonNull(collectionKey);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
 
-    Descriptor descriptor = new Descriptor();
-    descriptor.setTitle(title);
-    descriptor.setDescription(description);
-    descriptor.setCreatedBy(username);
-    descriptor.setModifiedBy(username);
-    descriptor.setCollectionKey(collectionKey);
-    descriptorsMapper.createDescriptor(descriptor);
+    DescriptorSet descriptorSet = new DescriptorSet();
+    descriptorSet.setTitle(title);
+    descriptorSet.setDescription(description);
+    descriptorSet.setCreatedBy(username);
+    descriptorSet.setModifiedBy(username);
+    descriptorSet.setCollectionKey(collectionKey);
+    descriptorsMapper.createDescriptorSet(descriptorSet);
 
-    importDescriptorsFile(descriptorFile, format, descriptor.getKey());
+    importDescriptorsFile(descriptorSetFile, format, descriptorSet.getKey());
 
-    return descriptor.getKey();
+    return descriptorSet.getKey();
   }
 
   private void importDescriptorsFile(
-      @NotNull @Valid byte[] descriptorFile, ExportFormat format, long descriptorKey)
+      @NotNull @Valid byte[] descriptorFile, ExportFormat format, long descriptorSetKey)
       throws IOException {
     // csv options
     CSVParser csvParser = new CSVParserBuilder().withSeparator(format.getDelimiter()).build();
@@ -102,7 +101,7 @@ public class DefaultDescriptorService implements DescriptorsService {
       // extract headers
       String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
-        // TODO: lowecase headers and compare case insensitive
+        // TODO: lowercase headers and compare case insensitive
         headersByIndex.put(i, headers[i]);
         headersByName.put(headers[i], i);
       }
@@ -115,126 +114,135 @@ public class DefaultDescriptorService implements DescriptorsService {
           continue;
         }
 
-        DescriptorRecord descriptorRecord = new DescriptorRecord();
-        descriptorRecord.setDescriptorKey(descriptorKey);
+        DescriptorDto descriptorDto = new DescriptorDto();
+        descriptorDto.setDescriptorSetKey(descriptorSetKey);
 
-        // sciName
-        InterpretedResult<String> taxonomyResult =
-            Interpreter.interpretScientificName(values, headersByName, nubResourceClient);
-        setResult(descriptorRecord, taxonomyResult, DescriptorRecord::setScientificName);
+        // taxonomy
+        InterpretedResult<Interpreter.TaxonData> taxonomyResult =
+            Interpreter.interpretTaxonomy(values, headersByName, nubResourceClient);
+        if (taxonomyResult.getResult() != null) {
+          descriptorDto.setUsageKey(taxonomyResult.getResult().getUsageKey());
+          descriptorDto.setUsageRank(taxonomyResult.getResult().getUsageRank());
+          descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
+          descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys());
+          descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
+        }
+        addIssues(descriptorDto, taxonomyResult);
 
         // country
         InterpretedResult<Country> countryResult =
             Interpreter.interpretCountry(values, headersByName);
-        setResult(descriptorRecord, countryResult, DescriptorRecord::setCountry);
+        setResult(descriptorDto, countryResult, DescriptorDto::setCountry);
 
         // individual count
         InterpretedResult<Integer> individualCountResult =
             Interpreter.interpretIndividualCount(values, headersByName);
-        setResult(descriptorRecord, individualCountResult, DescriptorRecord::setIndividualCount);
+        setResult(descriptorDto, individualCountResult, DescriptorDto::setIndividualCount);
 
         // identifiedBy
         InterpretedResult<List<String>> identifiedByResult =
             Interpreter.interpretStringList(values, headersByName, DwcTerm.identifiedBy);
-        setResult(descriptorRecord, identifiedByResult, DescriptorRecord::setIdentifiedBy);
+        setResult(descriptorDto, identifiedByResult, DescriptorDto::setIdentifiedBy);
 
         // dateIdentified
         InterpretedResult<Date> dateIdentifiedResult =
             Interpreter.interpretDateIdentified(values, headersByName);
-        setResult(descriptorRecord, dateIdentifiedResult, DescriptorRecord::setDateIdentified);
+        setResult(descriptorDto, dateIdentifiedResult, DescriptorDto::setDateIdentified);
 
         // TypeStatus
         InterpretedResult<List<TypeStatus>> typeStatusResult =
             Interpreter.interpretTypeStatus(values, headersByName);
-        setResult(descriptorRecord, typeStatusResult, DescriptorRecord::setTypeStatus);
+        setResult(descriptorDto, typeStatusResult, DescriptorDto::setTypeStatus);
 
         // recordedBy
         InterpretedResult<List<String>> recordedByResult =
             Interpreter.interpretStringList(values, headersByName, DwcTerm.recordedBy);
-        setResult(descriptorRecord, recordedByResult, DescriptorRecord::setRecordedBy);
+        setResult(descriptorDto, recordedByResult, DescriptorDto::setRecordedBy);
 
         // TODO: create ltc terms??
         // discipline
         InterpretedResult<String> disciplineResult =
             Interpreter.interpretString(values, headersByName, "ltc:discipline");
-        setResult(descriptorRecord, disciplineResult, DescriptorRecord::setDiscipline);
+        setResult(descriptorDto, disciplineResult, DescriptorDto::setDiscipline);
 
         // objectClassification
         InterpretedResult<String> objectClassificationResult =
             Interpreter.interpretString(values, headersByName, "ltc:objectClassificationName");
         setResult(
-            descriptorRecord,
-            objectClassificationResult,
-            DescriptorRecord::setObjectClassification);
+            descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassification);
 
-        descriptorsMapper.createRecord(descriptorRecord);
+        descriptorsMapper.createDescriptor(descriptorDto);
 
         // verbatim fields
         for (int i = 0; i < values.length; i++) {
           descriptorsMapper.createVerbatim(
-              descriptorRecord.getKey(), headersByIndex.get(i), values[i]);
+              descriptorDto.getKey(), headersByIndex.get(i), values[i]);
         }
       }
     }
   }
 
   private <T> void setResult(
-      DescriptorRecord descriptorRecord,
+      DescriptorDto descriptorDto,
       InterpretedResult<T> result,
-      BiConsumer<DescriptorRecord, T> setter) {
-    setter.accept(descriptorRecord, result.getResult());
-    if (descriptorRecord.getIssues() == null) {
-      descriptorRecord.setIssues(new ArrayList<>());
+      BiConsumer<DescriptorDto, T> setter) {
+    setter.accept(descriptorDto, result.getResult());
+    addIssues(descriptorDto, result);
+  }
+
+  private static <T> void addIssues(DescriptorDto descriptorDto, InterpretedResult<T> result) {
+    if (descriptorDto.getIssues() == null) {
+      descriptorDto.setIssues(new ArrayList<>());
     }
     if (result.getIssues() != null) {
-      descriptorRecord.getIssues().addAll(result.getIssues());
+      descriptorDto.getIssues().addAll(result.getIssues());
     }
   }
 
   @Override
-  public void deleteDescriptor(@NotNull long key) {
+  public void deleteDescriptorSet(@NotNull long key) {
     descriptorsMapper.deleteDescriptor(key);
   }
 
   @Override
-  public Descriptor getDescriptor(@NotNull long key) {
-    return descriptorsMapper.getDescriptor(key);
+  public DescriptorSet getDescriptorSet(@NotNull long key) {
+    return descriptorsMapper.getDescriptorSet(key);
   }
 
   @SneakyThrows
   @Override
-  public void updateDescriptor(
-      @NotNull long descriptorKey,
-      @NotNull byte[] descriptorsFile,
+  public void updateDescriptorSet(
+      @NotNull long descriptorSetKey,
+      @NotNull byte[] descriptorSetFile,
       @NotNull ExportFormat format,
       @NotNull String title,
       String description) {
-    Objects.requireNonNull(descriptorsFile);
-    Preconditions.checkArgument(descriptorsFile.length > 0);
+    Objects.requireNonNull(descriptorSetFile);
+    Preconditions.checkArgument(descriptorSetFile.length > 0);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
 
-    Descriptor descriptor = descriptorsMapper.getDescriptor(descriptorKey);
-    descriptor.setTitle(title);
-    descriptor.setDescription(description);
-    descriptor.setModifiedBy(username);
-    descriptorsMapper.updateDescriptor(descriptor);
+    DescriptorSet descriptorSet = descriptorsMapper.getDescriptorSet(descriptorSetKey);
+    descriptorSet.setTitle(title);
+    descriptorSet.setDescription(description);
+    descriptorSet.setModifiedBy(username);
+    descriptorsMapper.updateDescriptorSet(descriptorSet);
 
-    // remove records
-    descriptorsMapper.deleteRecords(descriptor.getKey());
+    // remove descriptors
+    descriptorsMapper.deleteDescriptors(descriptorSet.getKey());
 
     // reimport the file
-    importDescriptorsFile(descriptorsFile, format, descriptor.getKey());
+    importDescriptorsFile(descriptorSetFile, format, descriptorSet.getKey());
   }
 
   @Override
-  public PagingResponse<Descriptor> listDescriptors(
-      @NotNull UUID collectionKey, DescriptorsSearchRequest searchRequest) {
+  public PagingResponse<DescriptorSet> listDescriptorSets(
+      @NotNull UUID collectionKey, DescriptorSetSearchRequest searchRequest) {
     Objects.requireNonNull(collectionKey);
     if (searchRequest == null) {
-      searchRequest = DescriptorsSearchRequest.builder().build();
+      searchRequest = DescriptorSetSearchRequest.builder().build();
     }
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
@@ -243,31 +251,31 @@ public class DefaultDescriptorService implements DescriptorsService {
             ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQuery()))
             : searchRequest.getQuery();
 
-    DescriptorsParams params =
-        DescriptorsParams.builder()
+    DescriptorSetParams params =
+        DescriptorSetParams.builder()
             .query(query)
             .collectionKey(collectionKey)
             .title(searchRequest.getTitle())
             .description(searchRequest.getDescription())
+            .deleted(searchRequest.getDeleted())
             .page(page)
             .build();
 
     return new PagingResponse<>(
         page,
-        descriptorsMapper.countDescriptors(params),
-        descriptorsMapper.listDescriptors(params));
+        descriptorsMapper.countDescriptorSets(params),
+        descriptorsMapper.listDescriptorSets(params));
   }
 
   @Override
-  public DescriptorRecord getDescriptorRecord(@NotNull long key) {
-    return convertRecordDto(descriptorsMapper.getRecord(key));
+  public Descriptor getDescriptor(@NotNull long key) {
+    return convertRecordDto(descriptorsMapper.getDescriptor(key));
   }
 
   @Override
-  public PagingResponse<DescriptorRecord> listDescriptorRecords(
-      DescriptorRecordsSearchRequest searchRequest) {
+  public PagingResponse<Descriptor> listDescriptors(DescriptorSearchRequest searchRequest) {
     if (searchRequest == null) {
-      searchRequest = DescriptorRecordsSearchRequest.builder().build();
+      searchRequest = DescriptorSearchRequest.builder().build();
     }
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
@@ -276,17 +284,20 @@ public class DefaultDescriptorService implements DescriptorsService {
             ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQuery()))
             : searchRequest.getQuery();
 
-    DescriptorRecordsParams params =
-        DescriptorRecordsParams.builder()
+    DescriptorParams params =
+        DescriptorParams.builder()
             .query(query)
-            .descriptorKey(searchRequest.getDescriptorKey())
+            .descriptorSetKey(searchRequest.getDescriptorSetKey())
             .country(searchRequest.getCountry())
             .dateIdentified(searchRequest.getDateIdentified())
             .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
             .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
             .discipline(searchRequest.getDiscipline())
             .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
-            .scientificName(searchRequest.getScientificName())
+            .usageKey(searchRequest.getUsageKey())
+            .usageName(searchRequest.getUsageName())
+            .usageRank(searchRequest.getUsageRank())
+            .taxonKey(searchRequest.getTaxonKey())
             .objectClassification(searchRequest.getObjectClassification())
             .recordedBy(searchRequest.getRecordedBy())
             .identifiedBy(searchRequest.getIdentifiedBy())
@@ -295,25 +306,18 @@ public class DefaultDescriptorService implements DescriptorsService {
             .page(page)
             .build();
 
-    List<DescriptorRecordDto> dtos = descriptorsMapper.listRecords(params);
-    List<DescriptorRecord> results =
-        dtos.stream()
-            .map(
-                dto -> {
-                  DescriptorRecord descriptorRecord = convertRecordDto(dto);
+    List<DescriptorDto> dtos = descriptorsMapper.listDescriptors(params);
+    List<Descriptor> results =
+        dtos.stream().map(DefaultDescriptorService::convertRecordDto).collect(Collectors.toList());
 
-                  return descriptorRecord;
-                })
-            .collect(Collectors.toList());
-
-    return new PagingResponse<>(page, descriptorsMapper.countRecords(params), results);
+    return new PagingResponse<>(page, descriptorsMapper.countDescriptors(params), results);
   }
 
-  private static DescriptorRecord convertRecordDto(DescriptorRecordDto dto) {
-    DescriptorRecord descriptorRecord = new DescriptorRecord();
+  private static Descriptor convertRecordDto(DescriptorDto dto) {
+    Descriptor descriptorRecord = new Descriptor();
     descriptorRecord.setKey(dto.getKey());
     descriptorRecord.setRecordedBy(dto.getRecordedBy());
-    descriptorRecord.setDescriptorKey(dto.getDescriptorKey());
+    descriptorRecord.setDescriptorSetKey(dto.getDescriptorSetKey());
     descriptorRecord.setCountry(dto.getCountry());
     descriptorRecord.setDiscipline(dto.getDiscipline());
     descriptorRecord.setIssues(dto.getIssues());
@@ -321,8 +325,11 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorRecord.setIdentifiedBy(dto.getIdentifiedBy());
     descriptorRecord.setIndividualCount(dto.getIndividualCount());
     descriptorRecord.setObjectClassification(dto.getObjectClassification());
-    descriptorRecord.setScientificName(dto.getScientificName());
     descriptorRecord.setTypeStatus(dto.getTypeStatus());
+    descriptorRecord.setUsageKey(dto.getUsageKey());
+    descriptorRecord.setUsageName(dto.getUsageName());
+    descriptorRecord.setUsageRank(dto.getUsageRank());
+    descriptorRecord.setTaxonClassification(dto.getTaxonClassification());
 
     Map<String, String> verbatim = new HashMap<>();
     dto.getVerbatim().forEach(v -> verbatim.put(v.getFieldName(), v.getFieldValue()));

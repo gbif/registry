@@ -1,48 +1,44 @@
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.apache.ibatis.annotations.Param;
-import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorRecord;
-import org.gbif.registry.persistence.mapper.collections.dto.DescriptorRecordDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorRecordsParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
+import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DescriptorsMapper {
 
-  Descriptor getDescriptor(@Param("key") long key);
+  DescriptorSet getDescriptorSet(@Param("key") long key);
 
-  void createDescriptor(Descriptor entity);
+  void createDescriptorSet(DescriptorSet entity);
+
+  void deleteDescriptorSet(@Param("key") long key);
+
+  void updateDescriptorSet(DescriptorSet entity);
+
+  List<DescriptorSet> listDescriptorSets(@Param("params") DescriptorSetParams searchParams);
+
+  long countDescriptorSets(@Param("params") DescriptorSetParams searchParams);
+
+  DescriptorDto getDescriptor(@Param("key") long key);
+
+  void createDescriptor(DescriptorDto entity);
 
   void deleteDescriptor(@Param("key") long key);
 
-  void updateDescriptor(Descriptor entity);
+  List<DescriptorDto> listDescriptors(@Param("params") DescriptorParams searchParams);
 
-  List<Descriptor> listDescriptors(@Param("params") DescriptorsParams searchParams);
+  long countDescriptors(@Param("params") DescriptorParams searchParams);
 
-  long countDescriptors(@Param("params") DescriptorsParams searchParams);
-
-  DescriptorRecordDto getRecord(@Param("key") long key);
-
-  void createRecord(DescriptorRecord entity);
-
-  void deleteRecord(@Param("key") long key);
-
-  // TODO: dto con verbatim y luego pasarlos a map
-  List<DescriptorRecordDto> listRecords(@Param("params") DescriptorRecordsParams searchParams);
-
-  long countRecords(@Param("params") DescriptorRecordsParams searchParams);
-
-  void deleteRecords(@Param("descriptorKey") long descriptorKey);
+  void deleteDescriptors(@Param("descriptorSetKey") long descriptorSetKey);
 
   void createVerbatim(
-      @Param("recordKey") long recordKey,
+      @Param("descriptorKey") long descriptorKey,
       @Param("fieldName") String fieldName,
       @Param("fieldValue") String fieldValue);
 
-  // TODO: delete verbatim needed or cascade??
-
+  // TODO: list deleted
 }
