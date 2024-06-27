@@ -13,23 +13,20 @@
  */
 package org.gbif.registry.database;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.sql.DataSource;
-
+import com.google.common.base.Throwables;
+import lombok.Data;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.google.common.base.Throwables;
-
-import lombok.Data;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A Rule that will truncate the tables ready for a new test. It is expected to do this before each
@@ -106,7 +103,10 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "collection_contact",
           "institution_collection_contact",
           "collection_collection_contact",
-          "collections_batch");
+          "collections_batch",
+          "collection_descriptor_set",
+          "collection_descriptor",
+          "collection_descriptor_verbatim");
 
   public TestCaseDatabaseInitializer() {}
 

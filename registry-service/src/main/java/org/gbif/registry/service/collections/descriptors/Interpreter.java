@@ -1,14 +1,28 @@
 package org.gbif.registry.service.collections.descriptors;
 
+import static org.gbif.api.vocabulary.Kingdom.INCERTAE_SEDIS;
+import static org.gbif.api.vocabulary.OccurrenceIssue.*;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Singular;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
+import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.common.parsers.CountryParser;
@@ -18,16 +32,6 @@ import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DwcTerm;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.temporal.TemporalAccessor;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.gbif.api.vocabulary.Kingdom.INCERTAE_SEDIS;
-import static org.gbif.api.vocabulary.OccurrenceIssue.*;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Interpreter {
@@ -209,7 +213,7 @@ public class Interpreter {
     return resultBuilder.build();
   }
 
-  public static InterpretedResult<String> interpretScientificName(
+  public static InterpretedResult<TaxonData> interpretTaxonomy(
       String[] values, Map<String, Integer> headersByName, NubResourceClient nubResourceClient) {
     if (values.length == 0) {
       return InterpretedResult.empty();
@@ -256,8 +260,12 @@ public class Interpreter {
         || isEmptyResponse(nameUsageMatch)
         || checkFuzzy(nameUsageMatch, nameUsageParam)) {
 
-      return InterpretedResult.<String>builder()
-          .result(INCERTAE_SEDIS.scientificName())
+      return InterpretedResult.<TaxonData>builder()
+          .result(
+              TaxonData.builder()
+                  .usageName(INCERTAE_SEDIS.scientificName())
+                  .usageKey(INCERTAE_SEDIS.nubUsageKey())
+                  .build())
           .issues(Collections.singletonList(TAXON_MATCH_NONE.getId()))
           .build();
     } else {
@@ -272,9 +280,29 @@ public class Interpreter {
         issues.add(TAXON_MATCH_HIGHERRANK.getId());
       }
 
-      // TODO: check if usage name is null??
-      return InterpretedResult.<String>builder()
-          .result(nameUsageMatch.getUsage().getName())
+      TaxonData.TaxonDataBuilder taxonDataBuilder = TaxonData.builder();
+      Set<Integer> taxonKeys = new HashSet<>();
+      taxonDataBuilder.taxonKeys(taxonKeys);
+      if (nameUsageMatch.getUsage() != null) {
+        taxonDataBuilder
+            .usageName(nameUsageMatch.getUsage().getName())
+            .usageKey(nameUsageMatch.getUsage().getKey())
+            .usageRank(nameUsageMatch.getUsage().getRank());
+        taxonKeys.add(nameUsageMatch.getUsage().getKey());
+      }
+
+      if (nameUsageMatch.getClassification() != null) {
+        nameUsageMatch
+            .getClassification()
+            .forEach(
+                c -> {
+                  taxonDataBuilder.rankedName(c);
+                  taxonKeys.add(c.getKey());
+                });
+      }
+
+      return InterpretedResult.<TaxonData>builder()
+          .result(taxonDataBuilder.build())
           .issues(issues)
           .build();
     }
@@ -325,5 +353,18 @@ public class Interpreter {
             && Strings.isNullOrEmpty(nameUsageParam.getOrder())
             && Strings.isNullOrEmpty(nameUsageParam.getFamily());
     return isFuzzy && isEmptyTaxa;
+  }
+
+  @Data
+  @Builder
+  static class TaxonData {
+    private Integer usageKey;
+    private String usageName;
+    private Rank usageRank;
+
+    @Singular("rankedName")
+    private List<RankedName> taxonClassification;
+
+    private Set<Integer> taxonKeys;
   }
 }

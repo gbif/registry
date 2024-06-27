@@ -1,18 +1,19 @@
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import lombok.Data;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.TypeStatus;
-
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import lombok.Data;
+import org.gbif.api.v2.RankedName;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.TypeStatus;
 
 @Data
-public class DescriptorRecordDto {
+public class DescriptorDto {
 
   private long key;
-  private Long descriptorKey;
-  private String scientificName;
+  private Long descriptorSetKey;
   private Country country;
   private Integer individualCount;
   private List<String> identifiedBy;
@@ -23,4 +24,9 @@ public class DescriptorRecordDto {
   private String objectClassification;
   private List<String> issues;
   private List<VerbatimDto> verbatim;
+  private Integer usageKey;
+  private String usageName;
+  private Rank usageRank;
+  private List<RankedName> taxonClassification;
+  private Set<Integer> taxonKeys;
 }
