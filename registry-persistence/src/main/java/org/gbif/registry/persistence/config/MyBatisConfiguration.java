@@ -13,11 +13,13 @@
  */
 package org.gbif.registry.persistence.config;
 
+import java.net.URI;
+import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorRecord;
+import org.gbif.api.model.collections.descriptors.DescriptorSet;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -50,9 +52,6 @@ import org.gbif.registry.persistence.mapper.handler.*;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.net.URI;
-import java.util.UUID;
 
 @Configuration
 public class MyBatisConfiguration {
@@ -117,11 +116,9 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorSet", DescriptorSet.class);
       configuration.getTypeAliasRegistry().registerAlias("Descriptor", Descriptor.class);
-      configuration.getTypeAliasRegistry().registerAlias("DescriptorRecord", DescriptorRecord.class);
-      configuration
-          .getTypeAliasRegistry()
-          .registerAlias("DescriptorRecordDto", DescriptorRecordDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorDto", DescriptorDto.class);
       configuration.getTypeAliasRegistry().registerAlias("VerbatimDto", VerbatimDto.class);
       configuration
           .getTypeAliasRegistry()
@@ -191,6 +188,12 @@ public class MyBatisConfiguration {
           .getTypeAliasRegistry()
           .registerAlias(
               "InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("RankedNameListTypeHandler", RankedNameListTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("IntegerArrayTypeHandler", IntegerArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);

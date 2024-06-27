@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class DescriptorsVerbatimFieldsParams {
+public class DescriptorVerbatimParams {
 
   @Nullable String query;
   @Nullable Long recordKey;
