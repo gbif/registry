@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.96.6-SNAPSHOT</version>
+  <version>3.96.8-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -96,7 +96,7 @@
     <gbif-doi.version>2.22-SNAPSHOT</gbif-doi.version>
     <gbif-download-query-tools.version>1.51.0</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
-    <gbif-metadata-profile.version>2.1</gbif-metadata-profile.version>
+    <gbif-metadata-profile.version>2.2</gbif-metadata-profile.version>
     <gbif-parsers.version>0.60</gbif-parsers.version>
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
@@ -560,16 +560,6 @@
         <version>${janino-logback.version}</version>
         <scope>runtime</scope>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>ch.qos.logback</groupId>-->
-<!--        <artifactId>logback-classic</artifactId>-->
-<!--        <version>${logback.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>ch.qos.logback</groupId>-->
-<!--        <artifactId>logback-core</artifactId>-->
-<!--        <version>${logback.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>net.logstash.logback</groupId>
         <artifactId>logstash-logback-encoder</artifactId>
