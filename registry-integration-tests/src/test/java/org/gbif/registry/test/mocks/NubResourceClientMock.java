@@ -44,6 +44,21 @@ public class NubResourceClientMock implements NubResourceClient {
       LinneanClassification classification,
       Boolean strict,
       Boolean verbose) {
+
+    if ("Aves".equalsIgnoreCase(scientificName)) {
+      NameUsageMatch2 nameUsageMatch2 = new NameUsageMatch2();
+      nameUsageMatch2.setUsage(new RankedName(212, "Aves", Rank.CLASS));
+      nameUsageMatch2.setClassification(
+          Arrays.asList(
+              new RankedName(1, "Animalia", Rank.KINGDOM),
+              new RankedName(44, "Chordata", Rank.PHYLUM),
+              new RankedName(212, "Aves", Rank.CLASS)));
+      NameUsageMatch2.Diagnostics diagnostics = new NameUsageMatch2.Diagnostics();
+      diagnostics.setMatchType(NameUsageMatch.MatchType.EXACT);
+      nameUsageMatch2.setDiagnostics(diagnostics);
+      return nameUsageMatch2;
+    }
+
     NameUsageMatch2 nameUsageMatch2 = new NameUsageMatch2();
     nameUsageMatch2.setUsage(DEFAULT_USAGE);
 

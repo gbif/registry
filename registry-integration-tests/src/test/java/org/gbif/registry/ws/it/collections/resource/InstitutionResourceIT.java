@@ -13,6 +13,17 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.InstitutionImportParams;
 import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
@@ -45,18 +56,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 
 public class InstitutionResourceIT
     extends BaseCollectionEntityResourceIT<Institution, InstitutionChangeSuggestion> {
@@ -95,7 +94,7 @@ public class InstitutionResourceIT
             new PagingResponse<>(
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    InstitutionSearchRequest req = new InstitutionSearchRequest();
+    InstitutionSearchRequest req = InstitutionSearchRequest.builder().build();
     req.setCity("city");
     req.setContact(UUID.randomUUID());
     req.setCountry(Collections.singletonList(Country.DENMARK));
@@ -122,7 +121,7 @@ public class InstitutionResourceIT
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(orgs.size()), orgs));
 
     PagingResponse<OrganisationalUnit> result =
-        getClient().listAsLatimerCore(new InstitutionSearchRequest());
+        getClient().listAsLatimerCore(InstitutionSearchRequest.builder().build());
     assertEquals(orgs.size(), result.getResults().size());
 
     when(institutionService.getAsLatimerCore(any(UUID.class))).thenReturn(o1);
@@ -162,7 +161,8 @@ public class InstitutionResourceIT
     when(institutionService.listGeojson(any(InstitutionSearchRequest.class)))
         .thenReturn(featureCollection);
 
-    FeatureCollection result = getClient().listAsGeoJson(new InstitutionSearchRequest());
+    FeatureCollection result =
+        getClient().listAsGeoJson(InstitutionSearchRequest.builder().build());
     assertEquals(featureCollection.getFeatures().size(), result.getFeatures().size());
   }
 
@@ -195,7 +195,7 @@ public class InstitutionResourceIT
             new PagingResponse<>(
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
-    InstitutionSearchRequest request = new InstitutionSearchRequest();
+    InstitutionSearchRequest request = InstitutionSearchRequest.builder().build();
     request.setReplacedBy(UUID.randomUUID());
     PagingResponse<Institution> result = getClient().listDeleted(request);
     assertEquals(institutions.size(), result.getResults().size());

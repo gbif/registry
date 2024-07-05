@@ -17,7 +17,7 @@ import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
-import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,9 +32,9 @@ import org.springframework.stereotype.Repository;
 public interface InstitutionMapper
     extends BaseMapper<Institution>, LookupMapper<InstitutionMatchedDto> {
 
-  List<Institution> list(@Param("params") InstitutionSearchParams searchParams);
+  List<Institution> list(@Param("params") InstitutionListParams searchParams);
 
-  long count(@Param("params") InstitutionSearchParams searchParams);
+  long count(@Param("params") InstitutionListParams searchParams);
 
   /** A simple suggest by title service. */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);
@@ -49,7 +49,7 @@ public interface InstitutionMapper
   void convertToCollection(
       @Param("institutionKey") UUID institutionKey, @Param("collectionKey") UUID collectionKey);
 
-  List<InstitutionGeoJsonDto> listGeoJson(@Param("params") InstitutionSearchParams searchParams);
+  List<InstitutionGeoJsonDto> listGeoJson(@Param("params") InstitutionListParams searchParams);
 
   List<UUID> getAllKeys();
 }

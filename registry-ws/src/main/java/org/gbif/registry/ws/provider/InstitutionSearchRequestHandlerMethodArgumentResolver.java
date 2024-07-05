@@ -37,7 +37,7 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
 
-    InstitutionSearchRequest searchRequest = new InstitutionSearchRequest();
+    InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
     fillSearchRequestParams(searchRequest, webRequest);
 
     String[] types = webRequest.getParameterValues("type");

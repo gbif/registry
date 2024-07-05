@@ -13,22 +13,26 @@
  */
 package org.gbif.registry.persistence.mapper.collections;
 
-import org.gbif.api.vocabulary.Country;
-import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
-
 import java.util.List;
-
 import javax.annotation.Nullable;
-
 import org.apache.ibatis.annotations.Param;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.params.FullTextSearchParams;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 
 public interface CollectionsSearchMapper {
 
-  List<SearchDto> search(
-      @Nullable @Param("q") String query,
-      @Param("highlight") boolean highlight,
-      @Nullable @Param("type") String type,
-      @Nullable @Param("displayOnNHCPortal") Boolean displayOnNHCPortal,
-      @Nullable @Param("country") Country country,
-      @Param("limit") int limit);
+  List<SearchDto> search(@Nullable @Param("params") FullTextSearchParams params);
+
+  List<InstitutionSearchDto> searchInstitutions(
+      @Nullable @Param("params") InstitutionListParams listParams);
+
+  long countInstitutions(@Nullable @Param("params") InstitutionListParams listParams);
+
+  List<CollectionSearchDto> searchCollections(@Nullable @Param("params") DescriptorsParams params);
+
+  long countCollections(@Nullable @Param("params") DescriptorsParams listParams);
 }

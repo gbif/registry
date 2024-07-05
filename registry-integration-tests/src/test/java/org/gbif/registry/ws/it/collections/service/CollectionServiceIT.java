@@ -13,15 +13,21 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
 import org.gbif.api.model.collections.latimercore.*;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Identifier;
@@ -42,14 +48,6 @@ import org.gbif.registry.test.mocks.ConceptClientMock;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link CollectionService}. */
 public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collection> {
@@ -132,7 +130,11 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     // query param
     PagingResponse<CollectionView> response =
         collectionService.list(
-            CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
+            CollectionSearchRequest.builder()
+                .q("dummy")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(3, response.getResults().size());
 
     response =
@@ -143,55 +145,96 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     // empty queries are ignored and return all elements
     response =
         collectionService.list(
-            CollectionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
+            CollectionSearchRequest.builder()
+                .q("")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(3, response.getResults().size());
 
     response =
         collectionService.list(
-            CollectionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
+            CollectionSearchRequest.builder()
+                .q("city")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getCollection().getKey());
 
     response =
         collectionService.list(
-            CollectionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
+            CollectionSearchRequest.builder()
+                .q("city2")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getCollection().getKey());
 
     assertEquals(
         3,
         collectionService
-            .list(CollectionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("c")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         2,
         collectionService
-            .list(CollectionSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("dum add")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         collectionService
-            .list(CollectionSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("<")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         collectionService
-            .list(CollectionSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("\"<\"")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         3,
         collectionService
-            .list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         3,
         collectionService
-            .list(CollectionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("  ")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -199,33 +242,58 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     assertEquals(
         1,
         collectionService
-            .list(CollectionSearchRequest.builder().code("c1").page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
-    assertEquals(
-        1,
-        collectionService
-            .list(CollectionSearchRequest.builder().name("n2").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .code("c1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         1,
         collectionService
             .list(
-                CollectionSearchRequest.builder().code("c1").name("n1").page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .name("n2")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .code("c1")
+                    .name("n1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         collectionService
             .list(
-                CollectionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .code("c2")
+                    .name("n1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         2,
         collectionService
-            .list(CollectionSearchRequest.builder().active(true).page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .active(true)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
@@ -234,7 +302,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .accessionStatus(Collections.singletonList("Institutional"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -244,7 +313,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .accessionStatus(Collections.singletonList("Project"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -254,7 +324,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .contentTypes(Collections.singletonList("Archaeological"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -264,7 +335,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .contentTypes(Arrays.asList("Archaeological", "Biological"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -274,7 +346,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .preservationTypes(Collections.singletonList("SampleDried"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -284,7 +357,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .personalCollection(true)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -294,14 +368,22 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         1,
         collectionService
             .list(
-                CollectionSearchRequest.builder().alternativeCode("alt").page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .alternativeCode("alt")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         collectionService
             .list(
-                CollectionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .alternativeCode("foo")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -311,7 +393,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .country(Collections.singletonList(Country.SPAIN))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults();
     assertEquals(1, results.size());
@@ -322,7 +405,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .country(Collections.singletonList(Country.AFGHANISTAN))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -332,7 +416,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .country(Arrays.asList(Country.SPAIN, Country.DENMARK))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -342,7 +427,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .gbifRegion(Collections.singletonList(GbifRegion.EUROPE))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -353,7 +439,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                 CollectionSearchRequest.builder()
                     .country(Collections.singletonList(Country.SPAIN))
                     .gbifRegion(Collections.singletonList(GbifRegion.ASIA))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -361,14 +448,24 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     // city
     results =
         collectionService
-            .list(CollectionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .city("city2")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults();
     assertEquals(1, results.size());
     assertEquals(key2, results.get(0).getCollection().getKey());
     assertEquals(
         0,
         collectionService
-            .list(CollectionSearchRequest.builder().city("foo").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .city("foo")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -380,7 +477,12 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     assertEquals(
         1,
         collectionService
-            .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("city3")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -390,7 +492,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .displayOnNHCPortal(true)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -400,7 +503,11 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         1,
         collectionService
             .list(
-                CollectionSearchRequest.builder().numberSpecimens("100").page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .numberSpecimens("100")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -408,7 +515,11 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         0,
         collectionService
             .list(
-                CollectionSearchRequest.builder().numberSpecimens("98").page(DEFAULT_PAGE).build())
+                CollectionSearchRequest.builder()
+                    .numberSpecimens("98")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -418,7 +529,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .numberSpecimens("* , 100")
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -429,7 +541,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .numberSpecimens("97,300")
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -440,7 +553,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             .list(
                 CollectionSearchRequest.builder()
                     .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .get(0)
@@ -454,7 +568,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                 CollectionSearchRequest.builder()
                     .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
                     .sortOrder(SortOrder.DESC)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .get(0)
@@ -465,7 +580,12 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     assertEquals(
         0,
         collectionService
-            .list(CollectionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .list(
+                CollectionSearchRequest.builder()
+                    .q("city3")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
   }
@@ -499,7 +619,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(2, response.getResults().size());
 
@@ -507,7 +628,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .institution(institutionKey2)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
 
@@ -515,7 +637,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .institution(UUID.randomUUID())
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(0, response.getResults().size());
 
@@ -523,7 +646,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .institutionKeys(Collections.singletonList(institutionKey1))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(2, response.getResults().size());
 
@@ -531,16 +655,18 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .institutionKeys(Arrays.asList(institutionKey1, institutionKey2))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(3, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query(collection1.getCode())
+                .q(collection1.getCode())
                 .institutionKeys(Arrays.asList(institutionKey1, institutionKey2))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
   }
@@ -750,36 +876,40 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     PagingResponse<CollectionView> response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("code1")
+                .q("code1")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("foo")
+                .q("foo")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(0, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("code2")
+                .q("code2")
                 .institution(institutionKey2)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(0, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("code2")
+                .q("code2")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
 
@@ -797,36 +927,40 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("Name1")
+                .q("Name1")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("abcde")
+                .q("abcde")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("aa1@aa.com")
+                .q("aa1@aa.com")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
 
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .query("aves")
+                .q("aves")
                 .institution(institutionKey1)
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
   }
@@ -885,7 +1019,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection4.setName("Collection name4");
     UUID key4 = collectionService.create(collection4);
 
-    CollectionSearchRequest searchRequest = new CollectionSearchRequest();
+    CollectionSearchRequest searchRequest = CollectionSearchRequest.builder().build();
     searchRequest.setReplacedBy(key4);
     assertEquals(0, collectionService.listDeleted(searchRequest).getResults().size());
     collectionService.replace(key3, key4);
@@ -901,22 +1035,29 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     UUID key3 = collectionService.create(collection3);
 
     PagingResponse<CollectionView> response =
-        collectionService.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(3, response.getResults().size());
 
     collectionService.delete(key3);
 
-    response = collectionService.list(CollectionSearchRequest.builder().page(DEFAULT_PAGE).build());
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder()
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(2, response.getResults().size());
 
     response =
-        collectionService.list(
-            CollectionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
+        collectionService.list(CollectionSearchRequest.builder().limit(1).offset(0L).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        collectionService.list(
-            CollectionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
+        collectionService.list(CollectionSearchRequest.builder().limit(0).offset(0L).build());
     assertEquals(0, response.getResults().size());
   }
 

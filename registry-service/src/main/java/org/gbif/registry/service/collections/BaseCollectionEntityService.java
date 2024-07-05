@@ -871,15 +871,4 @@ public class BaseCollectionEntityService<
           "Cannot set a deleted " + entityClass.getSimpleName() + " as master source");
     }
   }
-
-  protected List<Country> parseGbifRegion(SearchRequest searchRequest) {
-    List<Country> countries = new ArrayList<>();
-    if (searchRequest.getGbifRegion() != null && !searchRequest.getGbifRegion().isEmpty()) {
-      countries.addAll(
-          Arrays.stream(Country.values())
-              .filter(c -> searchRequest.getGbifRegion().contains(c.getGbifRegion()))
-              .collect(Collectors.toList()));
-    }
-    return countries;
-  }
 }

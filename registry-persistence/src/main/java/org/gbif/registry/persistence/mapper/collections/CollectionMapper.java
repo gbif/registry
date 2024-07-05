@@ -18,7 +18,7 @@ import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
 import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
-import org.gbif.registry.persistence.mapper.collections.params.CollectionSearchParams;
+import org.gbif.registry.persistence.mapper.collections.params.CollectionListParams;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,9 +33,9 @@ import org.springframework.stereotype.Repository;
 public interface CollectionMapper
     extends BaseMapper<Collection>, LookupMapper<CollectionMatchedDto> {
 
-  List<CollectionDto> list(@Param("params") CollectionSearchParams searchParams);
+  List<CollectionDto> list(@Param("params") CollectionListParams searchParams);
 
-  long count(@Param("params") CollectionSearchParams searchParams);
+  long count(@Param("params") CollectionListParams searchParams);
 
   /** A simple suggest by title service. */
   List<KeyCodeNameResult> suggest(@Nullable @Param("q") String q);

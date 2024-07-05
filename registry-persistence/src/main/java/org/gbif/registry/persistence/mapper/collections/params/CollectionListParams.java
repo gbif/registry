@@ -24,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-public class CollectionSearchParams extends SearchParams {
+public class CollectionListParams extends ListParams {
 
   @Nullable List<String> contentTypes;
   @Nullable List<String> preservationTypes;
