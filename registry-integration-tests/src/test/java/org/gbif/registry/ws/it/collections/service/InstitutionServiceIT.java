@@ -13,12 +13,20 @@
  */
 package org.gbif.registry.ws.it.collections.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.latimercore.ContactDetail;
 import org.gbif.api.model.collections.latimercore.MeasurementOrFact;
 import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
-import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.Organization;
@@ -38,16 +46,6 @@ import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link InstitutionService}. */
 public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institution> {
@@ -118,30 +116,46 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     sourceMetadata.setSource(Source.IH_IRN);
     institution3.setMasterSourceMetadata(sourceMetadata);
     UUID key3 = institutionService.create(institution3);
-    institutionService.addMasterSourceMetadata(key3,sourceMetadata);
+    institutionService.addMasterSourceMetadata(key3, sourceMetadata);
 
     PagingResponse<Institution> response =
         institutionService.list(
-            InstitutionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
+            (InstitutionSearchRequest.builder().q("dummy").limit(DEFAULT_PAGE.getLimit()))
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(3, response.getResults().size());
 
-    response = institutionService.list(InstitutionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
-    assertEquals(1,response.getResults().size());
+    response =
+        institutionService.list(
+            InstitutionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+    assertEquals(1, response.getResults().size());
     // empty queries are ignored and return all elements
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().query("").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .q("")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(3, response.getResults().size());
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().query("city").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .q("city")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key1, response.getResults().get(0).getKey());
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().query("city2").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .q("city2")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
 
@@ -152,7 +166,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .institutionKeys(Arrays.asList(institution1.getKey(), institution2.getKey()))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -162,9 +177,10 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .query(institution1.getCode())
+                    .q(institution1.getCode())
                     .institutionKeys(Arrays.asList(institution1.getKey(), institution2.getKey()))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -173,27 +189,47 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(
         1,
         institutionService
-            .list(InstitutionSearchRequest.builder().code("c1").page(DEFAULT_PAGE).build())
-            .getResults()
-            .size());
-    assertEquals(
-        1,
-        institutionService
-            .list(InstitutionSearchRequest.builder().name("n2").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .code("c1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         1,
         institutionService
             .list(
-                InstitutionSearchRequest.builder().code("c1").name("n1").page(DEFAULT_PAGE).build())
+                InstitutionSearchRequest.builder()
+                    .name("n2")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
+            .getResults()
+            .size());
+    assertEquals(
+        1,
+        institutionService
+            .list(
+                InstitutionSearchRequest.builder()
+                    .code("c1")
+                    .name("n1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         institutionService
             .list(
-                InstitutionSearchRequest.builder().code("c2").name("n1").page(DEFAULT_PAGE).build())
+                InstitutionSearchRequest.builder()
+                    .code("c2")
+                    .name("n1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -201,43 +237,77 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(
         3,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("c").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("c")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         2,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("dum add").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("dum add")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("<").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("<")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         0,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("\"<\"").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("\"<\"")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         3,
         institutionService
-            .list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         3,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("  ").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("  ")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
         2,
         institutionService
-            .list(InstitutionSearchRequest.builder().active(true).page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .active(true)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
     assertEquals(
@@ -246,7 +316,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .type(Collections.singletonList("Herbarium"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -256,7 +327,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .institutionalGovernance(Collections.singletonList("Academic"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -266,7 +338,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .disciplines(Collections.singletonList("Anthropology"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -276,7 +349,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .disciplines(Arrays.asList("Archaeology", "Anthropology"))
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -284,19 +358,28 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     // alternative code
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().alternativeCode("alt").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .alternativeCode("alt")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(1, response.getResults().size());
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().alternativeCode("foo").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .alternativeCode("foo")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(0, response.getResults().size());
 
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
                 .country(Collections.singletonList(Country.SPAIN))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
@@ -304,28 +387,32 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService.list(
             InstitutionSearchRequest.builder()
                 .country(Collections.singletonList(Country.AFGHANISTAN))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(0, response.getResults().size());
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
                 .country(Arrays.asList(Country.SPAIN, Country.AFGHANISTAN))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(1, response.getResults().size());
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
                 .country(Arrays.asList(Country.SPAIN, Country.DENMARK))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(2, response.getResults().size());
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
                 .gbifRegion(Collections.singletonList(GbifRegion.EUROPE))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(2, response.getResults().size());
     response =
@@ -333,18 +420,27 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             InstitutionSearchRequest.builder()
                 .country(Collections.singletonList(Country.SPAIN))
                 .gbifRegion(Collections.singletonList(GbifRegion.ASIA))
-                .page(DEFAULT_PAGE)
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
                 .build());
     assertEquals(0, response.getResults().size());
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().city("city2").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .city("city2")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(1, response.getResults().size());
     assertEquals(key2, response.getResults().get(0).getKey());
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().city("foo").page(DEFAULT_PAGE).build());
+            InstitutionSearchRequest.builder()
+                .city("foo")
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(0, response.getResults().size());
 
     // update address
@@ -355,7 +451,12 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(
         1,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("city3")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -365,7 +466,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .displayOnNHCPortal(true)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -377,7 +479,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .numberSpecimens("100")
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -386,7 +489,11 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         0,
         institutionService
             .list(
-                InstitutionSearchRequest.builder().numberSpecimens("98").page(DEFAULT_PAGE).build())
+                InstitutionSearchRequest.builder()
+                    .numberSpecimens("98")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -396,7 +503,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .numberSpecimens("* , 100")
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -407,7 +515,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .numberSpecimens("97,300")
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .size());
@@ -418,7 +527,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .list(
                 InstitutionSearchRequest.builder()
                     .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .get(0)
@@ -431,7 +541,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
                 InstitutionSearchRequest.builder()
                     .sortBy(CollectionsSortField.NUMBER_SPECIMENS)
                     .sortOrder(SortOrder.DESC)
-                    .page(DEFAULT_PAGE)
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
                     .build())
             .getResults()
             .get(0)
@@ -441,7 +552,12 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(
         0,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("city3").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("city3")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
@@ -459,28 +575,48 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(
         1,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("Name1").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("Name1")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
     assertEquals(
         1,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("aa1@aa.com").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("aa1@aa.com")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
     assertEquals(
         1,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("aves").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("aves")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
 
     assertEquals(
         1,
         institutionService
-            .list(InstitutionSearchRequest.builder().query("abcde").page(DEFAULT_PAGE).build())
+            .list(
+                InstitutionSearchRequest.builder()
+                    .q("abcde")
+                    .limit(DEFAULT_PAGE.getLimit())
+                    .offset(DEFAULT_PAGE.getOffset())
+                    .build())
             .getResults()
             .size());
   }
@@ -539,7 +675,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     institution4.setName("Institution name4");
     UUID key4 = institutionService.create(institution4);
 
-    InstitutionSearchRequest searchRequest = new InstitutionSearchRequest();
+    InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
     searchRequest.setReplacedBy(key4);
     assertEquals(0, institutionService.listDeleted(searchRequest).getResults().size());
     institutionService.replace(key3, key4);
@@ -558,23 +694,29 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     UUID key3 = institutionService.create(institution3);
 
     PagingResponse<Institution> response =
-        institutionService.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder()
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(3, response.getResults().size());
 
     institutionService.delete(key3);
 
     response =
-        institutionService.list(InstitutionSearchRequest.builder().page(DEFAULT_PAGE).build());
+        institutionService.list(
+            InstitutionSearchRequest.builder()
+                .limit(DEFAULT_PAGE.getLimit())
+                .offset(DEFAULT_PAGE.getOffset())
+                .build());
     assertEquals(2, response.getResults().size());
 
     response =
-        institutionService.list(
-            InstitutionSearchRequest.builder().page(new PagingRequest(0L, 1)).build());
+        institutionService.list(InstitutionSearchRequest.builder().limit(1).offset(0L).build());
     assertEquals(1, response.getResults().size());
 
     response =
-        institutionService.list(
-            InstitutionSearchRequest.builder().page(new PagingRequest(0L, 0)).build());
+        institutionService.list(InstitutionSearchRequest.builder().limit(0).offset(0L).build());
     assertEquals(0, response.getResults().size());
   }
 

@@ -1,0 +1,415 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.gbif.registry.service.collections;
+
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+
+import com.google.common.base.CharMatcher;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import org.elasticsearch.common.Strings;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.request.SearchRequest;
+import org.gbif.api.model.collections.search.BaseSearchResponse;
+import org.gbif.api.model.collections.search.CollectionSearchResponse;
+import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
+import org.gbif.api.model.collections.search.DescriptorMatch;
+import org.gbif.api.model.collections.search.InstitutionSearchResponse;
+import org.gbif.api.model.collections.search.Match;
+import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
+import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.registry.domain.collections.TypeParam;
+import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
+import org.gbif.registry.persistence.mapper.collections.dto.BaseSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.params.FullTextSearchParams;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
+import org.gbif.registry.persistence.mapper.collections.params.ListParams;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.vocabulary.client.ConceptClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+/** Service to lookup GRSciColl institutions and collections. */
+@Service
+public class CollectionsSearchService {
+
+  private static final Pattern HIGHLIGHT_PATTERN = Pattern.compile(".*<b>.+</b>.*");
+
+  private final CollectionsSearchMapper searchMapper;
+  private final ConceptClient conceptClient;
+
+  @Autowired
+  public CollectionsSearchService(
+      CollectionsSearchMapper searchMapper, ConceptClient conceptClient) {
+    this.searchMapper = searchMapper;
+    this.conceptClient = conceptClient;
+  }
+
+  public List<CollectionsFullSearchResponse> search(
+      String query,
+      boolean highlight,
+      TypeParam type,
+      Boolean displayOnNHCPortal,
+      Country country,
+      int limit) {
+    List<SearchDto> dtos =
+        searchMapper.search(
+            FullTextSearchParams.builder()
+                .query(query)
+                .highlight(highlight)
+                .type(type != null ? type.name() : null)
+                .displayOnNHCPortal(displayOnNHCPortal)
+                .country(country)
+                .limit(limit)
+                .build());
+
+    // the query can return duplicates so we need an auxiliary map to filter duplicates
+    Map<UUID, CollectionsFullSearchResponse> responsesMap = new HashMap<>();
+    List<CollectionsFullSearchResponse> responses = new ArrayList<>();
+    dtos.forEach(
+        dto -> {
+          if (responsesMap.containsKey(dto.getKey())) {
+            CollectionsFullSearchResponse existing = responsesMap.get(dto.getKey());
+            if (highlight) {
+              addMatches(existing, dto);
+            }
+            if (dto.getDescriptorKey() != null) {
+              existing.getDescriptorMatches().add(addDescriptorMatch(dto));
+            }
+            return;
+          }
+
+          CollectionsFullSearchResponse response = new CollectionsFullSearchResponse();
+          response.setType(dto.getType());
+          response.setCode(dto.getCode());
+          response.setKey(dto.getKey());
+          response.setName(dto.getName());
+          response.setDisplayOnNHCPortal(dto.isDisplayOnNHCPortal());
+          response.setCountry(dto.getCountry());
+          response.setMailingCountry(dto.getMailingCountry());
+
+          if (dto.getType().equals("collection")) {
+            response.setInstitutionKey(dto.getInstitutionKey());
+            response.setInstitutionCode(dto.getInstitutionCode());
+            response.setInstitutionName(dto.getInstitutionName());
+          }
+
+          if (dto.getDescriptorKey() != null) {
+            response.getDescriptorMatches().add(addDescriptorMatch(dto));
+          }
+
+          if (highlight) {
+            addMatches(response, dto);
+          }
+
+          responses.add(response);
+          responsesMap.put(dto.getKey(), response);
+        });
+
+    return responses;
+  }
+
+  public PagingResponse<InstitutionSearchResponse> searchInstitutions(
+      InstitutionSearchRequest searchRequest) {
+
+    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    String query =
+        searchRequest.getQ() != null
+            ? com.google.common.base.Strings.emptyToNull(
+                CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
+            : searchRequest.getQ();
+
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+
+    InstitutionListParams.InstitutionListParamsBuilder listParamsBuilder =
+        InstitutionListParams.builder()
+            .types(searchRequest.getType())
+            .institutionalGovernances(searchRequest.getInstitutionalGovernance())
+            .disciplines(searchRequest.getDisciplines())
+            .institutionKeys(searchRequest.getInstitutionKeys());
+    buildCommonParams(listParamsBuilder, searchRequest);
+    InstitutionListParams listParams = listParamsBuilder.build();
+
+    List<InstitutionSearchDto> dtos = searchMapper.searchInstitutions(listParams);
+    List<InstitutionSearchResponse> results =
+        dtos.stream()
+            .map(
+                dto -> {
+                  InstitutionSearchResponse response = new InstitutionSearchResponse();
+                  createCommonResponse(dto, response);
+                  response.setTypes(dto.getTypes());
+                  response.setInstitutionalGovernances(dto.getInstitutionalGovernances());
+                  response.setDisciplines(dto.getDisciplines());
+                  response.setLatitude(dto.getLatitude());
+                  response.setLongitude(dto.getLongitude());
+                  response.setFoundingDate(dto.getFoundingDate());
+                  response.setNumberSpecimens(dto.getNumberSpecimens());
+                  response.setOccurrenceCount(dto.getOccurrenceCount());
+                  response.setTypeSpecimenCount(dto.getTypeSpecimenCount());
+
+
+                  if (Boolean.TRUE.equals(searchRequest.getHl())) {
+                    addMatches(response, dto);
+                  }
+
+                  return response;
+                })
+            .collect(Collectors.toList());
+
+    return new PagingResponse<>(page, searchMapper.countInstitutions(listParams), results);
+  }
+
+  public PagingResponse<CollectionSearchResponse> searchCollections(
+      CollectionDescriptorsSearchRequest searchRequest) {
+
+    Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    String query =
+        searchRequest.getQ() != null
+            ? com.google.common.base.Strings.emptyToNull(
+                CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
+            : searchRequest.getQ();
+
+    Set<UUID> institutionKeys = new HashSet<>();
+    if (searchRequest.getInstitution() != null) {
+      institutionKeys.add(searchRequest.getInstitution());
+    }
+    if (searchRequest.getInstitutionKeys() != null) {
+      institutionKeys.addAll(searchRequest.getInstitutionKeys());
+    }
+
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
+
+    DescriptorsParams.DescriptorsParamsBuilder listParamsBuilder =
+        DescriptorsParams.builder()
+            .contentTypes(searchRequest.getContentTypes())
+            .preservationTypes(searchRequest.getPreservationTypes())
+            .accessionStatus(searchRequest.getAccessionStatus())
+            .personalCollection(searchRequest.getPersonalCollection())
+            .institutionKeys(new ArrayList<>(institutionKeys))
+            .usageName(searchRequest.getUsageName())
+            .usageKey(searchRequest.getUsageKey())
+            .usageRank(searchRequest.getUsageRank())
+            .taxonKey(searchRequest.getTaxonKey())
+            .descriptorCountry(searchRequest.getDescriptorCountry())
+            .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
+            .identifiedBy(searchRequest.getIdentifiedBy())
+            .dateIdentified(searchRequest.getDateIdentified())
+            .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
+            .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
+            .typeStatus(searchRequest.getTypeStatus())
+            .recordedBy(searchRequest.getRecordedBy())
+            .discipline(searchRequest.getDiscipline())
+            .objectClassification(searchRequest.getObjectClassification())
+            .issues(searchRequest.getIssues());
+    buildCommonParams(listParamsBuilder, searchRequest);
+    DescriptorsParams listParams = listParamsBuilder.build();
+
+    List<CollectionSearchDto> dtos = searchMapper.searchCollections(listParams);
+    Map<UUID, CollectionSearchResponse> responsesMap = new HashMap<>();
+    List<CollectionSearchResponse> results = new ArrayList<>();
+    dtos.stream()
+        .sorted(Comparator.comparing(CollectionSearchDto::getRowNumber))
+        .forEach(
+            dto -> {
+              if (responsesMap.containsKey(dto.getKey())) {
+                CollectionSearchResponse existing = responsesMap.get(dto.getKey());
+                if (Boolean.TRUE.equals(listParams.getHighlight())) {
+                  addMatches(existing, dto);
+                }
+                if (isCollectionDescriptorResult(dto, listParams)) {
+                  existing.getDescriptorMatches().add(addDescriptorMatch(dto));
+                }
+                return;
+              }
+
+              CollectionSearchResponse response = new CollectionSearchResponse();
+              responsesMap.put(dto.getKey(), response);
+              results.add(response);
+
+              createCommonResponse(dto, response);
+              response.setContentTypes(dto.getContentTypes());
+              response.setPersonalCollection(dto.isPersonalCollection());
+              response.setPreservationTypes(dto.getPreservationTypes());
+              response.setAccessionStatus(dto.getAccessionStatus());
+              response.setInstitutionKey(dto.getInstitutionKey());
+              response.setInstitutionName(dto.getInstitutionName());
+              response.setInstitutionCode(dto.getInstitutionCode());
+              response.setNumberSpecimens(dto.getNumberSpecimens());
+              response.setTaxonomicCoverage(dto.getTaxonomicCoverage());
+              response.setGeographicCoverage(dto.getGeographicCoverage());
+              response.setDepartment(dto.getDepartment());
+              response.setDivision(dto.getDivision());
+              response.setDisplayOnNHCPortal(dto.isDisplayOnNHCPortal());
+              response.setOccurrenceCount(dto.getOccurrenceCount());
+              response.setTypeSpecimenCount(dto.getTypeSpecimenCount());
+
+              if (isCollectionDescriptorResult(dto, listParams)) {
+                response.getDescriptorMatches().add(addDescriptorMatch(dto));
+              }
+
+              if (Boolean.TRUE.equals(searchRequest.getHl())) {
+                addMatches(response, dto);
+              }
+            });
+
+    return new PagingResponse<>(page, searchMapper.countCollections(listParams), results);
+  }
+
+  private static boolean isCollectionDescriptorResult(
+      CollectionSearchDto dto, DescriptorsParams params) {
+    return dto.getDescriptorKey() != null
+        && (dto.getQueryDescriptorRank() != null && dto.getQueryDescriptorRank() > 0
+            || (params.getQuery() == null && params.descriptorSearch()));
+  }
+
+  private static DescriptorMatch addDescriptorMatch(SearchDto dto) {
+    DescriptorMatch descriptorMatch = new DescriptorMatch();
+    descriptorMatch.setKey(dto.getDescriptorKey());
+    descriptorMatch.setDescriptorSetKey(dto.getDescriptorSetKey());
+    descriptorMatch.setUsageName(dto.getDescriptorUsageName());
+    descriptorMatch.setUsageKey(dto.getDescriptorUsageKey());
+    descriptorMatch.setUsageRank(dto.getDescriptorUsageRank());
+    descriptorMatch.setCountry(dto.getDescriptorCountry());
+    descriptorMatch.setIndividualCount(dto.getDescriptorIndividualCount());
+    descriptorMatch.setIdentifiedBy(dto.getDescriptorIdentifiedBy());
+    descriptorMatch.setDateIdentified(dto.getDescriptorDateIdentified());
+    descriptorMatch.setTypeStatus(dto.getDescriptorTypeStatus());
+    descriptorMatch.setRecordedBy(dto.getDescriptorRecordedBy());
+    descriptorMatch.setDiscipline(dto.getDescriptorDiscipline());
+    descriptorMatch.setObjectClassification(dto.getDescriptorObjectClassification());
+    descriptorMatch.setIssues(dto.getDescriptorIssues());
+    return descriptorMatch;
+  }
+
+  private void buildCommonParams(
+      ListParams.ListParamsBuilder listParams, SearchRequest searchRequest) {
+    listParams
+        .query(searchRequest.getQ())
+        .code(searchRequest.getCode())
+        .name(searchRequest.getName())
+        .alternativeCode(searchRequest.getAlternativeCode())
+        .countries(searchRequest.getCountry())
+        .regionCountries(parseGbifRegion(searchRequest))
+        .city(searchRequest.getCity())
+        .fuzzyName(searchRequest.getFuzzyName())
+        .active(searchRequest.getActive())
+        .masterSourceType(searchRequest.getMasterSourceType())
+        .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
+        .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
+        .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
+        .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+        .sortBy(searchRequest.getSortBy())
+        .sortOrder(searchRequest.getSortOrder())
+        .highlight(searchRequest.getHl())
+        .page(searchRequest.getPage());
+  }
+
+  private void createCommonResponse(BaseSearchDto dto, BaseSearchResponse response) {
+    response.setKey(dto.getKey());
+    response.setCode(dto.getCode());
+    response.setName(dto.getName());
+    response.setDescription(dto.getDescription());
+    response.setActive(dto.isActive());
+    response.setCountry(dto.getCountry());
+    response.setMailingCountry(dto.getMailingCountry());
+    response.setCity(dto.getCity());
+    response.setMailingCity(dto.getMailingCity());
+    response.setAlternativeCodes(dto.getAlternativeCodes());
+    response.setDisplayOnNHCPortal(dto.isDisplayOnNHCPortal());
+    response.setFeaturedImageUrl(dto.getFeaturedImageUrl());
+    response.setFeaturedImageLicense(dto.getFeaturedImageLicense());
+    response.setFeaturedImageAttribution(dto.getFeaturedImageAttribution());
+  }
+
+  private void addMatches(BaseSearchResponse response, BaseSearchDto dto) {
+    Set<Match> matches = new HashSet<>();
+    createHighlightMatch(dto.getCodeHighlight(), "code").ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptionHighlight(), "description").ifPresent(matches::add);
+    createHighlightMatch(dto.getAlternativeCodesHighlight(), "alternativeCode")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getAddressHighlight(), "address").ifPresent(matches::add);
+    createHighlightMatch(dto.getCityHighlight(), "city").ifPresent(matches::add);
+    createHighlightMatch(dto.getProvinceHighlight(), "province").ifPresent(matches::add);
+    createHighlightMatch(dto.getCountryHighlight(), "country").ifPresent(matches::add);
+    createHighlightMatch(dto.getMailAddressHighlight(), "mailingAddress").ifPresent(matches::add);
+    createHighlightMatch(dto.getMailCityHighlight(), "mailingCity").ifPresent(matches::add);
+    createHighlightMatch(dto.getMailProvinceHighlight(), "mailingProvince").ifPresent(matches::add);
+    createHighlightMatch(dto.getMailCountryHighlight(), "mailingCountry").ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorUsageNameHighlight(), "descriptor.usageName")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorCountryHighlight(), "descriptor.country")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorIdentifiedByHighlight(), "descriptor.identifiedBy")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorTypeStatusHighlight(), "descriptor.typeStatus")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorRecordedByHighlight(), "descriptor.recordedBy")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorDisciplineHighlight(), "descriptor.discipline")
+        .ifPresent(matches::add);
+    createHighlightMatch(
+            dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification")
+        .ifPresent(matches::add);
+    createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
+        .ifPresent(matches::add);
+
+    Optional<Match> nameMatch = createHighlightMatch(dto.getNameHighlight(), "name");
+    if (nameMatch.isPresent()) {
+      matches.add(nameMatch.get());
+    } else if (dto.isSimilarityMatch()) {
+      Match match = new Match();
+      match.setField("name");
+      match.setSnippet(dto.getName());
+      matches.add(match);
+    }
+
+    if (!matches.isEmpty()) {
+      if (response.getMatches() == null) {
+        response.setMatches(matches);
+      } else {
+        response.getMatches().addAll(matches);
+      }
+    }
+  }
+
+  private static Optional<Match> createHighlightMatch(String highlight, String fieldName) {
+    if (!Strings.isNullOrEmpty(highlight) && HIGHLIGHT_PATTERN.matcher(highlight).matches()) {
+      Match match = new Match();
+      match.setField(fieldName);
+      match.setSnippet(highlight);
+      return Optional.of(match);
+    }
+
+    return Optional.empty();
+  }
+}

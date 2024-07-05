@@ -3,28 +3,15 @@ package org.gbif.registry.persistence.mapper.collections.params;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Nullable;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.TypeStatus;
 
-@Data
-@Builder
-public class SearchParams {
-
-  @Nullable String q;
-  Boolean highlight;
-  String type;
-  Boolean displayOnNHCPortal;
-  @Nullable List<Country> countries;
-  @Nullable List<Country> regionCountries;
-  @Nullable String city;
-
-  Integer limit;
-  Integer offset;
-
-  // collection fields
+@Getter
+@SuperBuilder
+public class DescriptorsParams extends CollectionListParams {
 
   // descriptors fields
   List<String> usageName;
@@ -34,8 +21,7 @@ public class SearchParams {
   @Nullable List<Country> descriptorCountry;
   @Nullable RangeParam individualCount;
   @Nullable List<String> identifiedBy;
-  @Nullable
-  Date dateIdentified;
+  @Nullable Date dateIdentified;
   @Nullable Date dateIdentifiedFrom;
   @Nullable Date dateIdentifiedBefore;
   @Nullable List<TypeStatus> typeStatus;
@@ -43,4 +29,23 @@ public class SearchParams {
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
   @Nullable List<String> issues;
+
+  public boolean descriptorSearch() {
+    return query != null
+        || usageName != null
+        || usageKey != null
+        || usageRank != null
+        || taxonKey != null
+        || descriptorCountry != null
+        || individualCount != null
+        || identifiedBy != null
+        || dateIdentified != null
+        || dateIdentifiedFrom != null
+        || dateIdentifiedBefore != null
+        || typeStatus != null
+        || recordedBy != null
+        || discipline != null
+        || objectClassification != null
+        || issues != null;
+  }
 }

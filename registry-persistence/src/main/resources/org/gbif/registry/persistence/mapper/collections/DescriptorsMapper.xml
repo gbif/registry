@@ -210,12 +210,6 @@
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
-      <if test="params.usageRank != null and params.usageRank.size > 0">
-        AND d.usage_rank IN
-        <foreach item="item" collection="params.usageRank" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
       <if test="params.taxonKey != null  and params.taxonKey.size > 0">
         AND d.taxon_keys &amp;&amp; ARRAY
         <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
@@ -268,11 +262,17 @@
         </foreach>
       </if>
       <if test="params.objectClassification != null  and params.objectClassification.size > 0">
-        AND d.object_classification_name IN
-        <foreach item="item" collection="params.objectClassification" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
+      AND d.object_classification_name IN
+      <foreach item="item" collection="params.objectClassification" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <if test="params.country != null  and params.country.size > 0">
+      AND d.country IN
+      <foreach item="item" collection="params.country" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
       <if test="params.issues != null and params.issues.size > 0">
         AND d.issues &amp;&amp; ARRAY
         <foreach item="item" collection="params.issues" open="[" separator="," close="]">

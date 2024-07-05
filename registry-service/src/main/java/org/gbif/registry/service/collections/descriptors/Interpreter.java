@@ -315,7 +315,7 @@ public class Interpreter {
 
   private static String extractValue(
       String[] values, Map<String, Integer> headersByName, String fieldName) {
-    return Optional.ofNullable(headersByName.get(fieldName))
+    return Optional.ofNullable(headersByName.get(fieldName.toLowerCase()))
         .map(i -> values[i])
         .filter(v -> !v.isEmpty())
         .orElse(null);
@@ -323,7 +323,7 @@ public class Interpreter {
 
   private static Optional<String> extractOptValue(
       String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return Optional.ofNullable(headersByName.get(term.prefixedName()))
+    return Optional.ofNullable(headersByName.get(term.prefixedName().toLowerCase()))
         .map(i -> values[i])
         .filter(v -> !v.isEmpty());
   }
