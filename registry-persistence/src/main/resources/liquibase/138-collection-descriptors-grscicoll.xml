@@ -32,7 +32,7 @@
             country text,
             individual_count integer,
             identified_by text[],
-            date_identified text,
+            date_identified timestamptz,
             type_status text[],
             recorded_by text[],
             discipline text,
@@ -80,7 +80,6 @@
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.usage_rank,''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.country,''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.identified_by, ' '),''))) ||
-                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.date_identified,''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.type_status, ' '),''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.recorded_by, ' '),''))) ||
                   TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.discipline,''))) ||

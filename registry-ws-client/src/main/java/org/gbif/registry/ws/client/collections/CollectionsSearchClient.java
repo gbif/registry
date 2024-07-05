@@ -13,27 +13,25 @@
  */
 package org.gbif.registry.ws.client.collections;
 
-import org.gbif.api.model.collections.search.CollectionsSearchResponse;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
-
-import java.util.List;
-
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import lombok.AllArgsConstructor;
-
 @RequestMapping("grscicoll/search")
 public interface CollectionsSearchClient {
 
   @RequestMapping(method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  List<CollectionsSearchResponse> searchCollections(@SpringQueryMap SearchRequest searchRequest);
+  List<CollectionsFullSearchResponse> searchCollections(
+      @SpringQueryMap SearchRequest searchRequest);
 
-  default List<CollectionsSearchResponse> searchCollections(
+  default List<CollectionsFullSearchResponse> searchCollections(
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,

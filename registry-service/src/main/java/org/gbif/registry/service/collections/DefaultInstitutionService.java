@@ -13,8 +13,23 @@
  */
 package org.gbif.registry.service.collections;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -35,7 +50,7 @@ import org.gbif.registry.events.collections.ReplaceEntityEvent;
 import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
-import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
 import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
@@ -50,21 +65,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.validation.Validator;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.*;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
 @Validated
 @Service
@@ -169,27 +169,27 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
   private PagingResponse<Institution> listInternal(
       InstitutionSearchRequest searchRequest, boolean deleted) {
     if (searchRequest == null) {
-      searchRequest = new InstitutionSearchRequest();
+      searchRequest = InstitutionSearchRequest.builder().build();
     }
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
-    InstitutionSearchParams params = buildSearchParams(searchRequest, deleted, page);
+    InstitutionListParams params = buildSearchParams(searchRequest, deleted, page);
 
     long total = institutionMapper.count(params);
     return new PagingResponse<>(page, total, institutionMapper.list(params));
   }
 
-  private InstitutionSearchParams buildSearchParams(
+  private InstitutionListParams buildSearchParams(
       InstitutionSearchRequest searchRequest, boolean deleted, Pageable page) {
     String query =
         searchRequest.getQ() != null
             ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
-    return InstitutionSearchParams.builder()
+    return InstitutionListParams.builder()
         .query(query)
         .code(searchRequest.getCode())
         .name(searchRequest.getName())

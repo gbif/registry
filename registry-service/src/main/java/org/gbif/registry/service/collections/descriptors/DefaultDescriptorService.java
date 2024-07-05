@@ -36,6 +36,7 @@ import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
+import org.gbif.registry.service.collections.batch.FileParsingUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -101,18 +102,17 @@ public class DefaultDescriptorService implements DescriptorsService {
       // extract headers
       String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
-        // TODO: lowercase headers and compare case insensitive
-        headersByIndex.put(i, headers[i]);
-        headersByName.put(headers[i], i);
+        headersByIndex.put(i, headers[i].toLowerCase());
+        headersByName.put(headers[i].toLowerCase(), i);
       }
-
-      // TODO: fill CSV empty columns
 
       String[] values;
       while ((values = csvReader.readNextSilently()) != null) {
         if (values.length == 0) {
           continue;
         }
+
+        values = FileParsingUtils.normalizeValues(headersByIndex.entrySet().size(), values);
 
         DescriptorDto descriptorDto = new DescriptorDto();
         descriptorDto.setDescriptorSetKey(descriptorSetKey);

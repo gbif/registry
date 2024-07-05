@@ -13,6 +13,18 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
@@ -42,19 +54,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
 
 public class CollectionResourceIT
     extends BaseCollectionEntityResourceIT<Collection, CollectionChangeSuggestion> {
@@ -92,7 +91,7 @@ public class CollectionResourceIT
     when(collectionService.list(any(CollectionSearchRequest.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    CollectionSearchRequest req = new CollectionSearchRequest();
+    CollectionSearchRequest req = CollectionSearchRequest.builder().build();
     req.setCity("city");
     req.setInstitution(UUID.randomUUID());
     req.setCountry(Collections.singletonList(Country.DENMARK));
@@ -118,7 +117,7 @@ public class CollectionResourceIT
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(orgs.size()), orgs));
 
     PagingResponse<ObjectGroup> result =
-        getClient().listAsLatimerCore(new CollectionSearchRequest());
+        getClient().listAsLatimerCore(CollectionSearchRequest.builder().build());
     assertEquals(orgs.size(), result.getResults().size());
 
     when(collectionService.getAsLatimerCore(any(UUID.class))).thenReturn(o1);
@@ -169,7 +168,7 @@ public class CollectionResourceIT
     when(collectionService.listDeleted(any(CollectionSearchRequest.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    CollectionSearchRequest request = new CollectionSearchRequest();
+    CollectionSearchRequest request = CollectionSearchRequest.builder().build();
     request.setReplacedBy(UUID.randomUUID());
     PagingResponse<CollectionView> result = getClient().listDeleted(request);
     assertEquals(views.size(), result.getResults().size());
