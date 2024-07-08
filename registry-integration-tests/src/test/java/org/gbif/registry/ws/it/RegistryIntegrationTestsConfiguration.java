@@ -13,6 +13,12 @@
  */
 package org.gbif.registry.ws.it;
 
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.apache.commons.beanutils.ConvertUtils;
+import org.apache.commons.beanutils.ConvertUtilsBean;
+import org.apache.commons.beanutils.converters.DateConverter;
+import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.config.VarnishPurgeConfiguration;
@@ -22,17 +28,10 @@ import org.gbif.registry.search.dataset.indexing.checklistbank.ChecklistbankPers
 import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
+import org.gbif.registry.test.mocks.ConceptClientMock;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.Collections;
-import java.util.Date;
-
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.ConvertUtilsBean;
-import org.apache.commons.beanutils.converters.DateConverter;
-import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.elasticsearch.ElasticSearchRestHealthContributorAutoConfiguration;
@@ -48,11 +47,7 @@ import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.ribbon.FeignRibbonClientAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -61,7 +56,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import com.zaxxer.hikari.HikariDataSource;
+import java.util.Collections;
+import java.util.Date;
 
 @TestConfiguration
 @SpringBootApplication(
@@ -210,5 +206,10 @@ public class RegistryIntegrationTestsConfiguration {
 
   public static void main(String[] args) {
     SpringApplication.run(RegistryIntegrationTestsConfiguration.class, args);
+  }
+
+  @Bean
+  public ConceptClient conceptClient() {
+    return new ConceptClientMock();
   }
 }

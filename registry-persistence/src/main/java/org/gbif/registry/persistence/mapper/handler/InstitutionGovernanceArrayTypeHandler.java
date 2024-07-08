@@ -13,60 +13,55 @@
  */
 package org.gbif.registry.persistence.mapper.handler;
 
-import org.gbif.api.vocabulary.collections.PreservationType;
+import com.google.common.base.Strings;
 
-import java.sql.Array;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import org.apache.ibatis.type.BaseTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+
+import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.collections.InstitutionGovernance;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.ibatis.type.BaseTypeHandler;
-import org.apache.ibatis.type.JdbcType;
-
-import com.google.common.base.Strings;
-
-/** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link PreservationType}. */
-public class PreservationTypeArrayTypeHandler extends BaseTypeHandler<List<PreservationType>> {
+/** {@link org.apache.ibatis.type.TypeHandler} for arrays of {@link Discipline}. */
+public class InstitutionGovernanceArrayTypeHandler extends BaseTypeHandler<List<InstitutionGovernance>> {
 
   @Override
   public void setNonNullParameter(
-      PreparedStatement ps, int i, List<PreservationType> parameter, JdbcType jdbcType)
+      PreparedStatement ps, int i, List<InstitutionGovernance> parameter, JdbcType jdbcType)
       throws SQLException {
-    Array array = ps.getConnection().createArrayOf("text", parameter.toArray());
+    Array array = ps.getConnection().createArrayOf("enum_institution_governance", parameter.toArray());
     ps.setArray(i, array);
   }
 
   @Override
-  public List<PreservationType> getNullableResult(ResultSet rs, String columnName)
-      throws SQLException {
+  public List<InstitutionGovernance> getNullableResult(ResultSet rs, String columnName) throws SQLException {
     return toList(rs.getArray(columnName));
   }
 
   @Override
-  public List<PreservationType> getNullableResult(ResultSet rs, int columnIndex)
-      throws SQLException {
+  public List<InstitutionGovernance> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
     return toList(rs.getArray(columnIndex));
   }
 
   @Override
-  public List<PreservationType> getNullableResult(CallableStatement cs, int columnIndex)
+  public List<InstitutionGovernance> getNullableResult(CallableStatement cs, int columnIndex)
       throws SQLException {
     return toList(cs.getArray(columnIndex));
   }
 
-  private List<PreservationType> toList(Array pgArray) throws SQLException {
+  private List<InstitutionGovernance> toList(Array pgArray) throws SQLException {
     if (pgArray == null) return new ArrayList<>();
 
     String[] strings = (String[]) pgArray.getArray();
     if (strings != null && strings.length > 0) {
       return Arrays.stream(strings)
           .filter(v -> !Strings.isNullOrEmpty(v))
-          .map(PreservationType::valueOf)
+          .map(InstitutionGovernance::valueOf)
           .collect(Collectors.toList());
     }
     return new ArrayList<>();

@@ -47,49 +47,23 @@ import org.gbif.api.model.registry.Tag;
 import org.gbif.api.model.registry.metasync.MetasyncHistory;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Language;
-import org.gbif.mybatis.type.CountryTypeHandler;
-import org.gbif.mybatis.type.LanguageTypeHandler;
-import org.gbif.mybatis.type.StringArrayTypeHandler;
-import org.gbif.mybatis.type.UriArrayTypeHandler;
-import org.gbif.mybatis.type.UriTypeHandler;
-import org.gbif.mybatis.type.UuidTypeHandler;
+import org.gbif.mybatis.type.*;
 import org.gbif.registry.domain.doi.DoiType;
 import org.gbif.registry.domain.ws.DerivedDataset;
 import org.gbif.registry.domain.ws.DerivedDatasetUsage;
 import org.gbif.registry.persistence.mapper.auxhandler.AlternativeCodesTypeHandler;
 import org.gbif.registry.persistence.mapper.auxhandler.CollectionSummaryTypeHandler;
-import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
-import org.gbif.registry.persistence.mapper.collections.dto.CollectionMatchedDto;
-import org.gbif.registry.persistence.mapper.collections.dto.DuplicateDto;
-import org.gbif.registry.persistence.mapper.collections.dto.DuplicateMetadataDto;
-import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
-import org.gbif.registry.persistence.mapper.collections.dto.InstitutionMatchedDto;
-import org.gbif.registry.persistence.mapper.collections.dto.MasterSourceOrganizationDto;
-import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
-import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.ExtensionArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PreservationTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.SuggestedChangesTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.UserIdsTypeHandler;
-
-import java.net.URI;
-import java.util.UUID;
-
+import org.gbif.registry.persistence.mapper.handler.*;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.net.URI;
+import java.util.UUID;
 
 @Configuration
 public class MyBatisConfiguration {
@@ -128,11 +102,11 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Download", Download.class);
       configuration.getTypeAliasRegistry().registerAlias("DownloadRequest", DownloadRequest.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
+          .getTypeAliasRegistry()
+          .registerAlias("PredicateDownloadRequest", PredicateDownloadRequest.class);
       configuration
-        .getTypeAliasRegistry()
-        .registerAlias("SqlDownloadRequest", SqlDownloadRequest.class);
+          .getTypeAliasRegistry()
+          .registerAlias("SqlDownloadRequest", SqlDownloadRequest.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("DatasetOccurrenceDownload", DatasetOccurrenceDownloadUsage.class);
@@ -211,10 +185,6 @@ public class MyBatisConfiguration {
               "CollectionContentTypeArrayTypeHandler", CollectionContentTypeArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
-          .registerAlias(
-              "PreservationTypeArrayTypeHandler", PreservationTypeArrayTypeHandler.class);
-      configuration
-          .getTypeAliasRegistry()
           .registerAlias("StepTypeArrayTypeHandler", StepTypeArrayTypeHandler.class);
       configuration
           .getTypeAliasRegistry()
@@ -222,6 +192,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("ExtensionArrayTypeHandler", ExtensionArrayTypeHandler.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("InstitutionGovernanceArrayTypeHandler", InstitutionGovernanceArrayTypeHandler.class);
 
       configuration.getTypeAliasRegistry().registerAlias("PipelineProcess", PipelineProcess.class);
       configuration.getTypeAliasRegistry().registerAlias("Step", PipelineStep.class);

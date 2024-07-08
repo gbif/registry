@@ -24,10 +24,9 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.IdentifierMapper;
@@ -42,6 +41,7 @@ import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -98,17 +98,16 @@ public class CollectionMapperIT extends BaseItTest {
 
     Collection collection = new Collection();
     collection.setKey(key);
-    collection.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection.setAccessionStatus("Institutional");
     collection.setCode("CODE");
     collection.setName("NAME");
     collection.setCreatedBy("test");
     collection.setModifiedBy("test");
     collection.setEmail(Collections.singletonList("test@test.com"));
     collection.setPhone(Collections.singletonList("1234"));
-    collection.setIndexHerbariorumRecord(true);
     collection.setNumberSpecimens(12);
     collection.setTaxonomicCoverage("taxonomic coverage");
-    collection.setGeography("geography");
+    collection.setGeographicCoverage("geography");
     collection.setNotes("notes for testing");
     collection.setIncorporatedCollections(Arrays.asList("col1", "col2"));
     collection.setImportantCollectors(Arrays.asList("collector 1", "collector 2"));
@@ -118,10 +117,13 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setDivision("division");
     collection.setDepartment("department");
     collection.setDisplayOnNHCPortal(true);
+    collection.setFeaturedImageUrl(URI.create("http://test.com"));
+    collection.setFeaturedImageLicense(License.CC0_1_0);
+    collection.setTemporalCoverage("temporal coverage");
 
-    List<PreservationType> preservationTypes = new ArrayList<>();
-    preservationTypes.add(PreservationType.STORAGE_CONTROLLED_ATMOSPHERE);
-    preservationTypes.add(PreservationType.SAMPLE_CRYOPRESERVED);
+    List<String> preservationTypes = new ArrayList<>();
+    preservationTypes.add("StorageControlledAtmosphere");
+    preservationTypes.add("SampleCryopreserved");
     collection.setPreservationTypes(preservationTypes);
 
     Address address = new Address();
@@ -143,7 +145,7 @@ public class CollectionMapperIT extends BaseItTest {
 
     // update entity
     collection.setDescription("dummy description");
-    preservationTypes.add(PreservationType.SAMPLE_DRIED);
+    preservationTypes.add("SampleDried");
     collection.setPreservationTypes(preservationTypes);
     collectionMapper.update(collection);
     collectionStored = collectionMapper.get(key);

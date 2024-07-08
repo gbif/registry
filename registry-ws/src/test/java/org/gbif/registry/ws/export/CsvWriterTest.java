@@ -32,12 +32,6 @@ import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -257,24 +251,24 @@ public class CsvWriterTest {
     alternativeCode.setCode("alt" + consecutive);
     alternativeCode.setDescription("altDescription" + consecutive);
     collection.setAlternativeCodes(Collections.singletonList(alternativeCode));
-    collection.setApiUrl(new URI("http://coll" + consecutive + ".org"));
-    collection.setCatalogUrl(new URI("http://cat" + consecutive + ".org"));
+    collection.setApiUrls(Collections.singletonList(new URI("http://coll" + consecutive + ".org")));
+    collection.setCatalogUrls(
+        Collections.singletonList(new URI("http://cat" + consecutive + ".org")));
     collection.setCode("COL" + consecutive);
-    collection.setContentTypes(
-        Collections.singletonList(CollectionContentType.ARCHAEOLOGICA_WOODEN_ARTIFACTS));
+    collection.setContentTypes(Collections.singletonList("Archaeological"));
     collection.setCreatedBy("me");
     collection.setCreated(new Date());
     collection.setModifiedBy("me");
     collection.setModified(new Date());
     collection.setDescription("Collections description" + consecutive);
-    collection.setGeography("Geo" + consecutive);
+    collection.setGeographicCoverage("Geo" + consecutive);
     collection.setHomepage(new URI("http://coll" + consecutive + ".org"));
     collection.setImportantCollectors(Collections.singletonList("Collector" + consecutive));
     collection.setIncorporatedCollections(Collections.singletonList("Coll1." + consecutive));
     collection.setKey(UUID.randomUUID());
     collection.setName("Collection" + consecutive);
     collection.setMailingAddress(address);
-    collection.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
+    collection.setPreservationTypes(Collections.singletonList("SampleDried"));
     collection.setTaxonomicCoverage("world");
 
     collection.setActive(true);
@@ -305,9 +299,8 @@ public class CsvWriterTest {
     tag.setKey(consecutive);
     collection.setTags(Collections.singletonList(tag));
 
-    collection.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection.setAccessionStatus("Institutional");
     collection.setCollectionSummary(Collections.singletonMap("count", consecutive));
-    collection.setIndexHerbariorumRecord(false);
     collection.setPersonalCollection(false);
     collection.setReplacedBy(UUID.randomUUID());
     collection.setNotes("Note" + consecutive);
@@ -345,8 +338,7 @@ public class CsvWriterTest {
     assertEquals(collectionView.getCollection().getAddress().getCity(), line[5]);
     assertEquals(collectionView.getCollection().getAddress().getProvince(), line[6]);
     assertEquals(
-        CsvWriter.ListCollectionContentTypeProcessor.toString(
-            collectionView.getCollection().getContentTypes()),
+        CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getContentTypes()),
         line[7]); //
     assertEquals(collectionView.getCollection().isActive(), Boolean.parseBoolean(line[8]));
     assertEquals(
@@ -359,13 +351,16 @@ public class CsvWriterTest {
         CsvWriter.ListStringProcessor.toString(collectionView.getCollection().getPhone()),
         line[12]);
     assertEquals(collectionView.getCollection().getHomepage().toString(), line[13]);
-    assertEquals(collectionView.getCollection().getCatalogUrl().toString(), line[14]);
-    assertEquals(collectionView.getCollection().getApiUrl().toString(), line[15]);
     assertEquals(
-        CsvWriter.ListPreservationTypeProcessor.toString(
+        CsvWriter.ListUriProcessor.toString(collectionView.getCollection().getCatalogUrls()),
+        line[14]);
+    assertEquals(
+        CsvWriter.ListUriProcessor.toString(collectionView.getCollection().getApiUrls()), line[15]);
+    assertEquals(
+        CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getPreservationTypes()),
         line[16]);
-    assertEquals(collectionView.getCollection().getAccessionStatus().name(), line[17]);
+    assertEquals(collectionView.getCollection().getAccessionStatus(), line[17]);
     assertEquals(collectionView.getInstitutionName(), line[18]);
     assertEquals(collectionView.getInstitutionCode(), line[19]);
     assertEquals(collectionView.getCollection().getInstitutionKey().toString(), line[20]);
@@ -391,40 +386,38 @@ public class CsvWriterTest {
     assertEquals(
         CsvWriter.ListContactProcessor.toString(collectionView.getCollection().getContactPersons()),
         line[30]);
-    assertEquals(
-        collectionView.getCollection().isIndexHerbariorumRecord(), Boolean.parseBoolean(line[31]));
-    assertEquals(collectionView.getCollection().getNumberSpecimens(), Integer.parseInt(line[32]));
+    assertEquals(collectionView.getCollection().getNumberSpecimens(), Integer.parseInt(line[31]));
     assertEquals(
         CsvWriter.ListMachineTagProcessor.toString(collectionView.getCollection().getMachineTags()),
-        line[33]);
-    assertEquals(collectionView.getCollection().getTaxonomicCoverage(), line[34]);
-    assertEquals(collectionView.getCollection().getGeography(), line[35]);
-    assertEquals(collectionView.getCollection().getNotes(), line[36]);
+        line[32]);
+    assertEquals(collectionView.getCollection().getTaxonomicCoverage(), line[33]);
+    assertEquals(collectionView.getCollection().getGeographicCoverage(), line[34]);
+    assertEquals(collectionView.getCollection().getNotes(), line[35]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getIncorporatedCollections()),
-        line[37]);
+        line[36]);
     assertEquals(
         CsvWriter.ListStringProcessor.toString(
             collectionView.getCollection().getImportantCollectors()),
-        line[38]);
+        line[37]);
     assertEquals(
         CsvWriter.CollectionSummaryProcessor.toString(
             collectionView.getCollection().getCollectionSummary()),
-        line[39]);
+        line[38]);
     assertEquals(
         CsvWriter.ListAlternativeCodeProcessor.toString(
             collectionView.getCollection().getAlternativeCodes()),
-        line[40]);
+        line[39]);
     assertEquals(
         CsvWriter.ListCommentProcessor.toString(collectionView.getCollection().getComments()),
-        line[41]);
+        line[40]);
     assertEquals(
         CsvWriter.ListOccurrenceMappingsProcessor.toString(
             collectionView.getCollection().getOccurrenceMappings()),
-        line[42]);
+        line[41]);
     assertEquals(
-        collectionView.getCollection().getReplacedBy().toString(), line[43].replace("\r", ""));
+        collectionView.getCollection().getReplacedBy().toString(), line[42].replace("\r", ""));
   }
 
   /** Generates test instances of Institution. */
@@ -449,26 +442,25 @@ public class CsvWriterTest {
     alternativeCode.setCode("ALT_INST" + consecutive);
     alternativeCode.setDescription("alternative description" + consecutive);
     institution.setAlternativeCodes(Collections.singletonList(alternativeCode));
-    institution.setApiUrl(new URI("http://api.inst" + consecutive + ".org"));
-    institution.setCatalogUrl(new URI("http://cat.inst" + consecutive + ".org"));
+    institution.setApiUrls(
+        Collections.singletonList(new URI("http://api.inst" + consecutive + ".org")));
+    institution.setCatalogUrls(
+        Collections.singletonList(new URI("http://cat.inst" + consecutive + ".org")));
     institution.setLogoUrl(new URI("http://inst" + consecutive + ".org/log.png"));
     institution.setHomepage(new URI("http://inst" + consecutive + ".org/l"));
     institution.setCode("INST" + consecutive);
     institution.setAdditionalNames(Collections.singletonList("Additional name" + consecutive));
-    institution.setDisciplines(Collections.singletonList(Discipline.SPACE));
+    institution.setDisciplines(Collections.singletonList("Archaeology"));
     institution.setConvertedToCollection(UUID.randomUUID());
     institution.setLatitude(new BigDecimal(40));
     institution.setLongitude(new BigDecimal(90));
-    institution.setType(InstitutionType.BOTANICAL_GARDEN);
-    institution.setCitesPermitNumber("permit" + consecutive);
-    institution.setTaxonomicDescription("Taxa description " + consecutive);
-    institution.setInstitutionalGovernance(InstitutionGovernance.ACADEMIC_NON_PROFIT);
+    institution.setTypes(Collections.singletonList("BotanicalGarden"));
+    institution.setInstitutionalGovernances(Collections.singletonList("Academic"));
     institution.setCreatedBy("me");
     institution.setCreated(new Date());
     institution.setModifiedBy("me");
     institution.setModified(new Date());
     institution.setDescription("Institution description" + consecutive);
-    institution.setGeographicDescription("Geo description" + consecutive);
     institution.setHomepage(new URI("http://coll" + consecutive + ".org"));
     institution.setFoundingDate(2010);
 
@@ -510,7 +502,6 @@ public class CsvWriterTest {
     tag.setKey(consecutive);
     institution.setTags(Collections.singletonList(tag));
 
-    institution.setIndexHerbariorumRecord(false);
     institution.setReplacedBy(UUID.randomUUID());
 
     return institution;
@@ -544,16 +535,17 @@ public class CsvWriterTest {
     assertEquals(institution.getMailingAddress().getCountry().getIso2LetterCode(), line[4]);
     assertEquals(institution.getMailingAddress().getCity(), line[5]);
     assertEquals(institution.getMailingAddress().getProvince(), line[6]);
-    assertEquals(institution.getType().name(), line[7]); //
+    assertEquals(CsvWriter.ListStringProcessor.toString(institution.getTypes()), line[7]); //
     assertEquals(institution.isActive(), Boolean.parseBoolean(line[8]));
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getEmail()), line[9]);
     assertEquals(CsvWriter.ListStringProcessor.toString(institution.getPhone()), line[10]);
     assertEquals(institution.getHomepage().toString(), line[11]);
-    assertEquals(institution.getCatalogUrl().toString(), line[12]);
-    assertEquals(institution.getApiUrl().toString(), line[13]);
-    assertEquals(institution.getInstitutionalGovernance().name(), line[14]);
+    assertEquals(CsvWriter.ListUriProcessor.toString(institution.getCatalogUrls()), line[12]);
+    assertEquals(CsvWriter.ListUriProcessor.toString(institution.getApiUrls()), line[13]);
     assertEquals(
-        CsvWriter.ListDisciplinesProcessor.toString(institution.getDisciplines()), line[15]);
+        CsvWriter.ListStringProcessor.toString(institution.getInstitutionalGovernances()),
+        line[14]);
+    assertEquals(CsvWriter.ListStringProcessor.toString(institution.getDisciplines()), line[15]);
     assertEquals(institution.getLatitude().toString(), line[16]);
     assertEquals(institution.getLongitude().toString(), line[17]);
     assertEquals(CsvWriter.AddressProcessor.toString(institution.getMailingAddress()), line[18]);
@@ -561,33 +553,29 @@ public class CsvWriterTest {
     assertEquals(
         CsvWriter.ListStringProcessor.toString(institution.getAdditionalNames()), line[20]);
     assertEquals(Integer.toString(institution.getFoundingDate()), line[21]);
-    assertEquals(institution.getGeographicDescription(), line[22]);
-    assertEquals(institution.getTaxonomicDescription(), line[23]);
-    assertEquals(Integer.toString(institution.getNumberSpecimens()), line[24]);
-    assertEquals(institution.isIndexHerbariorumRecord(), Boolean.parseBoolean(line[25]));
-    assertEquals(institution.getLogoUrl().toString(), line[26]);
-    assertEquals(institution.getCitesPermitNumber(), line[27]);
-    assertEquals(institution.getCreatedBy(), line[28]);
-    assertEquals(institution.getModifiedBy(), line[29]);
-    assertEquals(dateFormat.format(institution.getCreated()), line[30]);
-    assertEquals(dateFormat.format(institution.getModified()), line[31]);
+    assertEquals(Integer.toString(institution.getNumberSpecimens()), line[22]);
+    assertEquals(institution.getLogoUrl().toString(), line[23]);
+    assertEquals(institution.getCreatedBy(), line[24]);
+    assertEquals(institution.getModifiedBy(), line[25]);
+    assertEquals(dateFormat.format(institution.getCreated()), line[26]);
+    assertEquals(dateFormat.format(institution.getModified()), line[27]);
     assertEquals(
-        Optional.ofNullable(institution.getDeleted()).map(dateFormat::format).orElse(""), line[32]);
-    assertEquals(CsvWriter.ListTagsProcessor.toString(institution.getTags()), line[33]);
+        Optional.ofNullable(institution.getDeleted()).map(dateFormat::format).orElse(""), line[28]);
+    assertEquals(CsvWriter.ListTagsProcessor.toString(institution.getTags()), line[29]);
     assertEquals(
-        CsvWriter.ListIdentifierProcessor.toString(institution.getIdentifiers()), line[34]);
+        CsvWriter.ListIdentifierProcessor.toString(institution.getIdentifiers()), line[30]);
     assertEquals(
-        CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[35]);
+        CsvWriter.ListContactProcessor.toString(institution.getContactPersons()), line[31]);
     assertEquals(
-        CsvWriter.ListMachineTagProcessor.toString(institution.getMachineTags()), line[36]);
+        CsvWriter.ListMachineTagProcessor.toString(institution.getMachineTags()), line[32]);
     assertEquals(
         CsvWriter.ListAlternativeCodeProcessor.toString(institution.getAlternativeCodes()),
-        line[37]);
-    assertEquals(CsvWriter.ListCommentProcessor.toString(institution.getComments()), line[38]);
+        line[33]);
+    assertEquals(CsvWriter.ListCommentProcessor.toString(institution.getComments()), line[34]);
     assertEquals(
         CsvWriter.ListOccurrenceMappingsProcessor.toString(institution.getOccurrenceMappings()),
-        line[39]);
-    assertEquals(institution.getReplacedBy().toString(), line[40]);
-    assertEquals(institution.getConvertedToCollection().toString(), line[41].replace("\r", ""));
+        line[35]);
+    assertEquals(institution.getReplacedBy().toString(), line[36]);
+    assertEquals(institution.getConvertedToCollection().toString(), line[37].replace("\r", ""));
   }
 }

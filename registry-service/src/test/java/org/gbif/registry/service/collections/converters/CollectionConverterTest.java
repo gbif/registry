@@ -23,6 +23,7 @@ import org.gbif.api.model.registry.eml.TaxonomicCoverages;
 import org.gbif.api.model.registry.eml.geospatial.GeospatialCoverage;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.PreservationMethodType;
+import org.gbif.vocabulary.client.ConceptClient;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -39,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Tests the {@link CollectionConverter}. */
 public class CollectionConverterTest {
 
+  private final ConceptClient conceptClient = new ConceptClientMock();
+
   @Test
   public void convertFromDatasetTest() {
     Dataset dataset = createDataset();
@@ -48,7 +51,8 @@ public class CollectionConverterTest {
 
     String collectionCode = "CODE";
     Collection convertedCollection =
-        CollectionConverter.convertFromDataset(dataset, organization, collectionCode);
+        CollectionConverter.convertFromDataset(
+            dataset, organization, collectionCode, conceptClient);
 
     assertEquals(collectionCode, convertedCollection.getCode());
     assertConvertedCollection(dataset, organization, convertedCollection);
@@ -70,7 +74,7 @@ public class CollectionConverterTest {
     collection.setNotes("testtttt");
 
     Collection convertedCollection =
-        CollectionConverter.convertFromDataset(dataset, organization, collection);
+        CollectionConverter.convertFromDataset(dataset, organization, collection, conceptClient);
 
     assertEquals(collection.getCode(), convertedCollection.getCode());
     assertNotEquals(originalCollectionName, convertedCollection.getName());
@@ -94,7 +98,7 @@ public class CollectionConverterTest {
             .startsWith(dataset.getTaxonomicCoverages().get(0).getDescription()));
     assertTrue(
         convertedCollection
-            .getGeography()
+            .getGeographicCoverage()
             .startsWith(dataset.getGeographicCoverages().get(0).getDescription()));
     assertTrue(
         convertedCollection.getIdentifiers().stream()

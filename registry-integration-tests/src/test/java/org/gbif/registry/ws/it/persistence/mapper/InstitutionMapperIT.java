@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.ws.it.persistence.mapper;
 
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
@@ -24,7 +25,7 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.collections.Discipline;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
@@ -39,23 +40,15 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearch
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.net.URI;
+import java.util.*;
+
 import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class InstitutionMapperIT extends BaseItTest {
 
@@ -108,14 +101,14 @@ public class InstitutionMapperIT extends BaseItTest {
     institution.setModifiedBy("test");
     institution.setActive(true);
     institution.setHomepage(URI.create("http://dummy.com"));
-    List<Discipline> disciplines = new ArrayList<>();
-    disciplines.add(Discipline.AGRICULTURAL_ANIMAL_SCIENCE);
-    institution.setDisciplines(disciplines);
+    institution.setDisciplines(Collections.singletonList("Archaeology"));
     institution.setEmail(Collections.singletonList("test@test.com"));
     institution.setPhone(Collections.singletonList("1234"));
     institution.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode("CODE2", "another code")));
     institution.setDisplayOnNHCPortal(true);
+    institution.setFeaturedImageUrl(URI.create("http://test.com"));
+    institution.setFeaturedImageLicense(License.CC0_1_0);
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");

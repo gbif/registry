@@ -219,7 +219,9 @@ public class IDigBioExternalResource {
         .ifPresent(iDigBioCollection::setCollectionLsid);
 
     iDigBioCollection.setCollectionUrl(collection.getHomepage());
-    iDigBioCollection.setCollectionCatalogUrl(collection.getCatalogUrl());
+    iDigBioCollection.setCollectionCatalogUrl(
+        !collection.getCatalogUrls().isEmpty() ? collection.getCatalogUrls().get(0) : null);
+    iDigBioCollection.setCollectionCatalogUrls(collection.getCatalogUrls());
     iDigBioCollection.setDescription(collection.getDescription());
     iDigBioCollection.setCataloguedSpecimens(collection.getNumberSpecimens());
     iDigBioCollection.setTaxonCoverage(collection.getTaxonomicCoverage());

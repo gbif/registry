@@ -13,18 +13,18 @@
  */
 package org.gbif.registry.service.collections.batch;
 
+import com.google.common.base.Strings;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.CollectionEntity;
-import org.gbif.api.model.collections.CollectionEntityType;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
 import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
@@ -33,76 +33,23 @@ import org.gbif.registry.service.collections.batch.model.ParserResult;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import com.google.common.base.Strings;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ACTIVE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ADDRESS;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ALT_CODES;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.API_URL;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CATALOG_URL;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CITY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CODE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.COUNTRY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.DESCRIPTION;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.EMAIL;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.HOMEPAGE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.IDENTIFIERS;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_ADDRESS;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_CITY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_COUNTRY;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_POSTAL_CODE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.MAIL_PROVINCE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.NAME;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.NUMBER_SPECIMENS;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.PHONE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.POSTAL_CODE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.PROVINCE;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.FAX;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.FIRST_NAME;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.LAST_NAME;
-import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.POSITION;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.DISCIPLINES;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.FOUNDING_DATE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.GEOGRAPHIC_DESCRIPTION;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.INSTITUTIONAL_GOVERNANCE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.LATITUDE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.LOGO_URL;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.LONGITUDE;
-import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.TAXONOMIC_DESCRIPTION;
+import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.*;
+import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.*;
+import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.isContactField;
 import static org.gbif.registry.service.collections.batch.FileFields.isEntityField;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseAddress;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseAlternativeCodes;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseBigDecimal;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseBoolean;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseCollectionsSummary;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseCountry;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseEnum;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseIdentifiers;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseInteger;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseListValues;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseStringList;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUUID;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUri;
-import static org.gbif.registry.service.collections.batch.FileParsingUtils.parseUserIds;
+import static org.gbif.registry.service.collections.batch.FileParsingUtils.*;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {
@@ -175,54 +122,35 @@ public class FileParser {
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Institution institution = new Institution();
-    handleParserResult(
-        parseUUID(extractValue(values, headersIndex.get(KEY))), institution::setKey, errors);
-    institution.setCode(extractValue(values, headersIndex.get(CODE)));
-    institution.setName(extractValue(values, headersIndex.get(NAME)));
-    institution.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
-    parseStringList(extractValue(values, headersIndex.get(EMAIL))).ifPresent(institution::setEmail);
-    parseStringList(extractValue(values, headersIndex.get(PHONE))).ifPresent(institution::setPhone);
-    handleParserResult(
-        parseAlternativeCodes(extractValue(values, headersIndex.get(ALT_CODES))),
-        institution::setAlternativeCodes,
-        errors);
+    createBaseEntityFromValues(values, headersIndex, institution, errors);
     parseStringList(
             extractValue(values, headersIndex.get(FileFields.InstitutionFields.ADDITIONAL_NAMES)))
         .ifPresent(institution::setAdditionalNames);
-    Optional.ofNullable(
+    parseStringList(
             extractValue(values, headersIndex.get(FileFields.InstitutionFields.INSTITUTION_TYPE)))
-        .map(InstitutionType::valueOf)
-        .ifPresent(institution::setType);
-    handleParserResult(
-        parseBoolean(extractValue(values, headersIndex.get(ACTIVE))),
-        institution::setActive,
-        errors);
+        .ifPresent(institution::setTypes);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(HOMEPAGE))),
         institution::setHomepage,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(CATALOG_URL))),
-        institution::setCatalogUrl,
+        parseListValues(
+            extractValue(values, headersIndex.get(CATALOG_URL)), FileParsingUtils::parseUri),
+        institution::setCatalogUrls,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(API_URL))), institution::setApiUrl, errors);
+        parseListValues(
+            extractValue(values, headersIndex.get(API_URL)), FileParsingUtils::parseUri),
+        institution::setApiUrls,
+        errors);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(LOGO_URL))),
         institution::setLogoUrl,
         errors);
-    handleParserResult(
-        parseEnum(
-            extractValue(values, headersIndex.get(INSTITUTIONAL_GOVERNANCE)),
-            InstitutionGovernance::valueOf),
-        institution::setInstitutionalGovernance,
-        errors);
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(DISCIPLINES)),
-            s -> parseEnum(s, Discipline::valueOf)),
-        institution::setDisciplines,
-        errors);
+    parseStringList(extractValue(values, headersIndex.get(INSTITUTIONAL_GOVERNANCE)))
+        .ifPresent(institution::setInstitutionalGovernances);
+    parseStringList(extractValue(values, headersIndex.get(DISCIPLINES)))
+        .ifPresent(institution::setDisciplines);
     handleParserResult(
         parseBigDecimal(extractValue(values, headersIndex.get(LATITUDE))),
         institution::setLatitude,
@@ -232,38 +160,12 @@ public class FileParser {
         institution::setLongitude,
         errors);
     handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(ADDRESS)),
-            extractValue(values, headersIndex.get(CITY)),
-            extractValue(values, headersIndex.get(PROVINCE)),
-            extractValue(values, headersIndex.get(POSTAL_CODE)),
-            extractValue(values, headersIndex.get(COUNTRY))),
-        institution::setAddress,
-        errors);
-    handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(MAIL_ADDRESS)),
-            extractValue(values, headersIndex.get(MAIL_CITY)),
-            extractValue(values, headersIndex.get(MAIL_PROVINCE)),
-            extractValue(values, headersIndex.get(MAIL_POSTAL_CODE)),
-            extractValue(values, headersIndex.get(MAIL_COUNTRY))),
-        institution::setMailingAddress,
-        errors);
-    handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(FOUNDING_DATE))),
         institution::setFoundingDate,
         errors);
-    institution.setGeographicDescription(
-        extractValue(values, headersIndex.get(GEOGRAPHIC_DESCRIPTION)));
-    institution.setTaxonomicDescription(
-        extractValue(values, headersIndex.get(TAXONOMIC_DESCRIPTION)));
     handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(NUMBER_SPECIMENS))),
         institution::setNumberSpecimens,
-        errors);
-    handleParserResult(
-        parseIdentifiers(extractValue(values, headersIndex.get(IDENTIFIERS))),
-        institution::setIdentifiers,
         errors);
 
     return ParsedData.<Institution>builder().entity(institution).errors(errors).build();
@@ -273,21 +175,10 @@ public class FileParser {
       String[] values, Map<String, Integer> headersIndex) {
     List<String> errors = new ArrayList<>();
     Collection collection = new Collection();
-    handleParserResult(
-        parseUUID(extractValue(values, headersIndex.get(KEY))), collection::setKey, errors);
-    collection.setCode(extractValue(values, headersIndex.get(CODE)));
-    collection.setName(extractValue(values, headersIndex.get(NAME)));
-    collection.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
-    handleParserResult(
-        parseListValues(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.CONTENT_TYPES)),
-            s -> parseEnum(s, CollectionContentType::valueOf)),
-        collection::setContentTypes,
-        errors);
-    handleParserResult(
-        parseBoolean(extractValue(values, headersIndex.get(ACTIVE))),
-        collection::setActive,
-        errors);
+    createBaseEntityFromValues(values, headersIndex, collection, errors);
+    parseStringList(
+            extractValue(values, headersIndex.get(FileFields.CollectionFields.CONTENT_TYPES)))
+        .ifPresent(collection::setContentTypes);
     handleParserResult(
         parseBoolean(
             extractValue(
@@ -299,56 +190,29 @@ public class FileParser {
             extractValue(values, headersIndex.get(FileFields.CollectionFields.DOI))),
         collection::setDoi,
         errors);
-    parseStringList(extractValue(values, headersIndex.get(EMAIL))).ifPresent(collection::setEmail);
-    parseStringList(extractValue(values, headersIndex.get(PHONE))).ifPresent(collection::setPhone);
     handleParserResult(
         parseUri(extractValue(values, headersIndex.get(HOMEPAGE))),
         collection::setHomepage,
         errors);
     handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(CATALOG_URL))),
-        collection::setCatalogUrl,
+        parseListValues(
+            extractValue(values, headersIndex.get(CATALOG_URL)), FileParsingUtils::parseUri),
+        collection::setCatalogUrls,
         errors);
-    handleParserResult(
-        parseUri(extractValue(values, headersIndex.get(API_URL))), collection::setApiUrl, errors);
     handleParserResult(
         parseListValues(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.PRESERVATION_TYPES)),
-            s -> parseEnum(s, PreservationType::valueOf)),
-        collection::setPreservationTypes,
+            extractValue(values, headersIndex.get(API_URL)), FileParsingUtils::parseUri),
+        collection::setApiUrls,
         errors);
-    handleParserResult(
-        parseEnum(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.ACCESSION_STATUS)),
-            AccessionStatus::valueOf),
-        collection::setAccessionStatus,
-        errors);
+    parseStringList(
+            extractValue(values, headersIndex.get(FileFields.CollectionFields.PRESERVATION_TYPES)))
+        .ifPresent(collection::setPreservationTypes);
+    collection.setAccessionStatus(
+        extractValue(values, headersIndex.get(FileFields.CollectionFields.ACCESSION_STATUS)));
     handleParserResult(
         parseUUID(
             extractValue(values, headersIndex.get(FileFields.CollectionFields.INSTITUTION_KEY))),
         collection::setInstitutionKey,
-        errors);
-    handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(ADDRESS)),
-            extractValue(values, headersIndex.get(CITY)),
-            extractValue(values, headersIndex.get(PROVINCE)),
-            extractValue(values, headersIndex.get(POSTAL_CODE)),
-            extractValue(values, headersIndex.get(COUNTRY))),
-        collection::setAddress,
-        errors);
-    handleParserResult(
-        parseAddress(
-            extractValue(values, headersIndex.get(MAIL_ADDRESS)),
-            extractValue(values, headersIndex.get(MAIL_CITY)),
-            extractValue(values, headersIndex.get(MAIL_PROVINCE)),
-            extractValue(values, headersIndex.get(MAIL_POSTAL_CODE)),
-            extractValue(values, headersIndex.get(MAIL_COUNTRY))),
-        collection::setMailingAddress,
-        errors);
-    handleParserResult(
-        parseIdentifiers(extractValue(values, headersIndex.get(IDENTIFIERS))),
-        collection::setIdentifiers,
         errors);
     handleParserResult(
         parseInteger(extractValue(values, headersIndex.get(NUMBER_SPECIMENS))),
@@ -356,8 +220,8 @@ public class FileParser {
         errors);
     collection.setTaxonomicCoverage(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.TAXONOMIC_COVERAGE)));
-    collection.setGeography(
-        extractValue(values, headersIndex.get(FileFields.CollectionFields.GEOGRAPHY)));
+    collection.setGeographicCoverage(
+        extractValue(values, headersIndex.get(FileFields.CollectionFields.GEOGRAPHIC_COVERAGE)));
     collection.setNotes(extractValue(values, headersIndex.get(FileFields.CollectionFields.NOTES)));
     parseStringList(
             extractValue(
@@ -372,16 +236,63 @@ public class FileParser {
             extractValue(values, headersIndex.get(FileFields.CollectionFields.COLLECTION_SUMMARY))),
         collection::setCollectionSummary,
         errors);
-    handleParserResult(
-        parseAlternativeCodes(extractValue(values, headersIndex.get(ALT_CODES))),
-        collection::setAlternativeCodes,
-        errors);
     collection.setDepartment(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.DEPARTMENT)));
     collection.setDivision(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.DIVISION)));
+    collection.setTemporalCoverage(
+        extractValue(values, headersIndex.get(FileFields.CollectionFields.TEMPORAL_COVERAGE)));
 
     return ParsedData.<Collection>builder().entity(collection).errors(errors).build();
+  }
+
+  private static <T extends CollectionEntity> void createBaseEntityFromValues(
+      String[] values, Map<String, Integer> headersIndex, T entity, List<String> errors) {
+    handleParserResult(
+        parseUUID(extractValue(values, headersIndex.get(KEY))), entity::setKey, errors);
+    entity.setCode(extractValue(values, headersIndex.get(CODE)));
+    entity.setName(extractValue(values, headersIndex.get(NAME)));
+    entity.setDescription(extractValue(values, headersIndex.get(DESCRIPTION)));
+    parseStringList(extractValue(values, headersIndex.get(EMAIL))).ifPresent(entity::setEmail);
+    parseStringList(extractValue(values, headersIndex.get(PHONE))).ifPresent(entity::setPhone);
+    handleParserResult(
+        parseAlternativeCodes(extractValue(values, headersIndex.get(ALT_CODES))),
+        entity::setAlternativeCodes,
+        errors);
+    handleParserResult(
+        parseBoolean(extractValue(values, headersIndex.get(ACTIVE))), entity::setActive, errors);
+    handleParserResult(
+        parseAddress(
+            extractValue(values, headersIndex.get(ADDRESS)),
+            extractValue(values, headersIndex.get(CITY)),
+            extractValue(values, headersIndex.get(PROVINCE)),
+            extractValue(values, headersIndex.get(POSTAL_CODE)),
+            extractValue(values, headersIndex.get(COUNTRY))),
+        entity::setAddress,
+        errors);
+    handleParserResult(
+        parseAddress(
+            extractValue(values, headersIndex.get(MAIL_ADDRESS)),
+            extractValue(values, headersIndex.get(MAIL_CITY)),
+            extractValue(values, headersIndex.get(MAIL_PROVINCE)),
+            extractValue(values, headersIndex.get(MAIL_POSTAL_CODE)),
+            extractValue(values, headersIndex.get(MAIL_COUNTRY))),
+        entity::setMailingAddress,
+        errors);
+    handleParserResult(
+        parseIdentifiers(extractValue(values, headersIndex.get(IDENTIFIERS))),
+        entity::setIdentifiers,
+        errors);
+    handleParserResult(
+        parseUri(extractValue(values, headersIndex.get(FEATURED_IMAGE_URL))),
+        entity::setFeaturedImageUrl,
+        errors);
+    handleParserResult(
+        parseEnum(
+            extractValue(values, headersIndex.get(FEATURED_IMAGE_LICENSE)),
+            v -> License.fromString(v).orElse(null)),
+        entity::setFeaturedImageLicense,
+        errors);
   }
 
   static String extractValue(String[] values, Integer index) {

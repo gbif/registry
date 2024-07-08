@@ -14,14 +14,11 @@
 package org.gbif.registry.ws.it.collections.service;
 
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.MasterSourceMetadata;
-import org.gbif.api.model.collections.UserId;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.duplicates.Duplicate;
 import org.gbif.api.model.collections.duplicates.DuplicatesResult;
+import org.gbif.api.model.collections.latimercore.*;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -34,43 +31,25 @@ import org.gbif.api.service.registry.DatasetService;
 import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
-import org.gbif.api.vocabulary.CollectionsSortField;
-import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.SortOrder;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
+import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.registry.test.mocks.ConceptClientMock;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.validation.ConstraintViolationException;
-import javax.validation.ValidationException;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+import java.net.URI;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /** Tests the {@link CollectionService}. */
 public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collection> {
@@ -111,12 +90,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setActive(true);
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
-    collection1.setContentTypes(
-        Arrays.asList(
-            CollectionContentType.RECORDS_ASSOCIATED_DATA,
-            CollectionContentType.ARCHAEOLOGICAL_C14));
-    collection1.setPreservationTypes(
-        Arrays.asList(PreservationType.SAMPLE_DRIED, PreservationType.SAMPLE_CRYOPRESERVED));
+    collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
+    collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleCryopreserved"));
     Address address = new Address();
     address.setAddress("dummy address");
     address.setCity("city");
@@ -131,10 +106,9 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection2.setCode("c2");
     collection2.setName("n2");
     collection2.setActive(false);
-    collection2.setContentTypes(
-        Collections.singletonList(CollectionContentType.RECORDS_ASSOCIATED_DATA));
-    collection2.setPreservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED));
-    collection2.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
+    collection2.setContentTypes(Collections.singletonList("Archaeological"));
+    collection2.setPreservationTypes(Collections.singletonList("SampleDried"));
+    collection2.setAccessionStatus("Institutional");
     collection2.setPersonalCollection(false);
     collection2.setNumberSpecimens(200);
     Address address2 = new Address();
@@ -153,7 +127,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     sourceMetadata.setSource(Source.IH_IRN);
     collection3.setMasterSourceMetadata(sourceMetadata);
     UUID key3 = collectionService.create(collection3);
-    collectionService.addMasterSourceMetadata(key3,sourceMetadata);
+    collectionService.addMasterSourceMetadata(key3, sourceMetadata);
 
     // query param
     PagingResponse<CollectionView> response =
@@ -161,8 +135,10 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
             CollectionSearchRequest.builder().query("dummy").page(DEFAULT_PAGE).build());
     assertEquals(3, response.getResults().size());
 
-    response = collectionService.list(CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
-    assertEquals(1,response.getResults().size());
+    response =
+        collectionService.list(
+            CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+    assertEquals(1, response.getResults().size());
 
     // empty queries are ignored and return all elements
     response =
@@ -257,7 +233,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .accessionStatus(AccessionStatus.INSTITUTIONAL)
+                    .accessionStatus(Collections.singletonList("Institutional"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -267,7 +243,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .accessionStatus(AccessionStatus.PROJECT)
+                    .accessionStatus(Collections.singletonList("Project"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -277,8 +253,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .contentTypes(
-                        Collections.singletonList(CollectionContentType.RECORDS_ASSOCIATED_DATA))
+                    .contentTypes(Collections.singletonList("Archaeological"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -288,10 +263,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .contentTypes(
-                        Arrays.asList(
-                            CollectionContentType.RECORDS_ASSOCIATED_DATA,
-                            CollectionContentType.RECORDS_SEISMOGRAMS))
+                    .contentTypes(Arrays.asList("Archaeological", "Biological"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -301,7 +273,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .preservationTypes(Collections.singletonList(PreservationType.SAMPLE_DRIED))
+                    .preservationTypes(Collections.singletonList("SampleDried"))
                     .page(DEFAULT_PAGE)
                     .build())
             .getResults()
@@ -571,6 +543,181 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
                 .page(DEFAULT_PAGE)
                 .build());
     assertEquals(1, response.getResults().size());
+  }
+
+  @Test
+  public void listAndGetAsLatimerCoreTest() {
+    Collection collection1 = testData.newEntity();
+    collection1.setCode("c1");
+    collection1.setName("n1");
+    collection1.setActive(true);
+    collection1.setAccessionStatus(null);
+    collection1.setPersonalCollection(true);
+    collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
+    collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleFluidPreserved"));
+    Address address = new Address();
+    address.setAddress("dummy address");
+    address.setCity("city");
+    address.setCountry(Country.DENMARK);
+    collection1.setAddress(address);
+    collection1.setAlternativeCodes(Collections.singletonList(new AlternativeCode("alt", "test")));
+    collection1.setNumberSpecimens(100);
+    collection1.setDisplayOnNHCPortal(false);
+    collection1.getApiUrls().add(URI.create("http://aa.com"));
+    UUID key1 = collectionService.create(collection1);
+
+    Collection collection2 = testData.newEntity();
+    collection2.setCode("c2");
+    collection2.setName("n2");
+    collection2.setActive(false);
+    collection2.setContentTypes(Collections.singletonList("Archaeological"));
+    collection2.setPreservationTypes(Collections.singletonList("SampleDried"));
+    collection2.setAccessionStatus("Institutional");
+    collection2.setPersonalCollection(false);
+    collection2.setNumberSpecimens(200);
+    Address address2 = new Address();
+    address2.setAddress("dummy address2");
+    address2.setCity("city2");
+    address2.setCountry(Country.SPAIN);
+    collection2.setAddress(address2);
+    UUID key2 = collectionService.create(collection2);
+
+    PagingResponse<ObjectGroup> objectGroups =
+        collectionService.listAsLatimerCore(CollectionSearchRequest.builder().build());
+    assertEquals(2, objectGroups.getResults().size());
+
+    ObjectGroup objectGroup = collectionService.getAsLatimerCore(key1);
+    assertEquals(collection1.getName(), objectGroup.getCollectionName());
+    assertTrue(
+        objectGroup.getIdentifier().stream()
+            .anyMatch(
+                i ->
+                    collection1.getCode().equals(i.getIdentifierValue())
+                        && i.getIdentifierType()
+                            .equals(LatimerCoreConverter.IdentifierTypes.COLLECTION_CODE)));
+    assertEquals(
+        objectGroup.getAddress().get(0).getAddressCountry(), collection1.getAddress().getCountry());
+    assertTrue(
+        objectGroup.getReference().stream()
+            .anyMatch(
+                r ->
+                    r.getResourceIRI().equals(collection1.getApiUrls().get(0))
+                        && r.getReferenceType().equals(LatimerCoreConverter.References.API)
+                        && r.getReferenceName()
+                            .equals(LatimerCoreConverter.References.COLLECTION_API)));
+  }
+
+  @Test
+  public void createAndUpdateLatimerCoreTest() {
+    ObjectGroup objectGroup = new ObjectGroup();
+    objectGroup.setCollectionName("coll name");
+
+    org.gbif.api.model.collections.latimercore.Address address =
+        new org.gbif.api.model.collections.latimercore.Address();
+    address.setStreetAddress("street");
+    address.setAddressCountry(Country.SPAIN);
+    address.setAddressType(LatimerCoreConverter.PHYSICAL);
+    objectGroup.getAddress().add(address);
+
+    org.gbif.api.model.collections.latimercore.Address mailingAddress =
+        new org.gbif.api.model.collections.latimercore.Address();
+    mailingAddress.setStreetAddress("st.");
+    mailingAddress.setAddressCountry(Country.DENMARK);
+    mailingAddress.setAddressType(LatimerCoreConverter.MAILING);
+    objectGroup.getAddress().add(mailingAddress);
+
+    org.gbif.api.model.collections.latimercore.Identifier identifier =
+        new org.gbif.api.model.collections.latimercore.Identifier();
+    identifier.setIdentifierType(LatimerCoreConverter.IdentifierTypes.COLLECTION_CODE);
+    identifier.setIdentifierValue("C1");
+    objectGroup.getIdentifier().add(identifier);
+
+    ContactDetail contactDetail = new ContactDetail();
+    contactDetail.setContactDetailCategory(LatimerCoreConverter.EMAIL);
+    contactDetail.setContactDetailValue("aa@aa.com");
+    objectGroup.getContactDetail().add(contactDetail);
+
+    MeasurementOrFact measurementOrFact = new MeasurementOrFact();
+    measurementOrFact.setMeasurementType(
+        LatimerCoreConverter.MeasurementOrFactTypes.NUMBER_SPECIMENS);
+    measurementOrFact.setMeasurementValue("100");
+    objectGroup.getMeasurementOrFact().add(measurementOrFact);
+
+    PersonRole personRole = new PersonRole();
+    Person person = new Person();
+    personRole.getPerson().add(person);
+    person.setFamilyName("fam");
+    person.setGivenName("giv");
+    objectGroup.getPersonRole().add(personRole);
+
+    UUID key1 = collectionService.createFromLatimerCore(objectGroup);
+    Collection collection = collectionService.get(key1);
+    assertEquals(objectGroup.getCollectionName(), collection.getName());
+    assertEquals(address.getAddressCountry(), collection.getAddress().getCountry());
+    assertEquals(address.getStreetAddress(), collection.getAddress().getAddress());
+    assertEquals(identifier.getIdentifierValue(), collection.getCode());
+    assertEquals(contactDetail.getContactDetailValue(), collection.getEmail().get(0));
+    assertEquals(
+        measurementOrFact.getMeasurementValue(), collection.getNumberSpecimens().toString());
+    assertEquals(1, collection.getContactPersons().size());
+    assertEquals(person.getGivenName(), collection.getContactPersons().get(0).getFirstName());
+
+    // the key is not set
+    assertThrows(
+        IllegalArgumentException.class, () -> collectionService.updateFromLatimerCore(objectGroup));
+
+    ObjectGroup createdObjectGroup = collectionService.getAsLatimerCore(key1);
+
+    org.gbif.api.model.collections.latimercore.Identifier keyId =
+        new org.gbif.api.model.collections.latimercore.Identifier();
+    keyId.setIdentifierType(LatimerCoreConverter.IdentifierTypes.COLLECTION_GRSCICOLL_KEY);
+    keyId.setIdentifierValue(key1.toString());
+    createdObjectGroup.getIdentifier().add(keyId);
+
+    createdObjectGroup.setDescription("desc");
+
+    Reference reference = new Reference();
+    reference.setReferenceName(LatimerCoreConverter.References.COLLECTION_API);
+    reference.setReferenceType(LatimerCoreConverter.References.API);
+    reference.setResourceIRI(URI.create("http://aaa.com"));
+    createdObjectGroup.getReference().add(reference);
+
+    createdObjectGroup.getPersonRole().get(0).getPerson().get(0).setGivenName("giv11");
+
+    PersonRole personRole2 = new PersonRole();
+    Person person2 = new Person();
+    personRole2.getPerson().add(person2);
+    person2.setFamilyName("fam2");
+    person2.setGivenName("giv2");
+    createdObjectGroup.getPersonRole().add(personRole2);
+
+    collectionService.updateFromLatimerCore(createdObjectGroup);
+    Collection updatedCollection = collectionService.get(key1);
+
+    assertEquals(createdObjectGroup.getCollectionName(), updatedCollection.getName());
+    assertEquals(address.getAddressCountry(), updatedCollection.getAddress().getCountry());
+    assertEquals(address.getStreetAddress(), updatedCollection.getAddress().getAddress());
+    assertEquals(
+        mailingAddress.getAddressCountry(), updatedCollection.getMailingAddress().getCountry());
+    assertEquals(
+        mailingAddress.getStreetAddress(), updatedCollection.getMailingAddress().getAddress());
+    assertEquals(identifier.getIdentifierValue(), updatedCollection.getCode());
+    assertEquals(contactDetail.getContactDetailValue(), updatedCollection.getEmail().get(0));
+    assertEquals(
+        measurementOrFact.getMeasurementValue(), updatedCollection.getNumberSpecimens().toString());
+    assertEquals(createdObjectGroup.getDescription(), updatedCollection.getDescription());
+    assertEquals(reference.getResourceIRI(), updatedCollection.getApiUrls().get(0));
+    assertEquals(2, updatedCollection.getContactPersons().size());
+    assertTrue(
+        updatedCollection.getContactPersons().stream()
+            .anyMatch(c -> "giv11".equals(c.getFirstName())));
+
+    // delete contact
+    ObjectGroup updatedObjectGroup = collectionService.getAsLatimerCore(key1);
+    updatedObjectGroup.getPersonRole().remove(0);
+    collectionService.updateFromLatimerCore(updatedObjectGroup);
+    updatedCollection = collectionService.get(key1);
+    assertEquals(1, updatedCollection.getContactPersons().size());
   }
 
   @Test
@@ -975,5 +1122,75 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     // delete the master source
     collectionService.deleteMasterSourceMetadata(collectionKey);
     assertDoesNotThrow(() -> collectionService.delete(collectionKey));
+  }
+
+  @Test
+  public void vocabConceptsTest() {
+    Collection collection1 = testData.newEntity();
+    collection1.setCode("c1");
+    collection1.setName("n1");
+    collection1.setContentTypes(Collections.singletonList("foo"));
+    assertThrows(IllegalArgumentException.class, () -> collectionService.create(collection1));
+
+    collection1.setContentTypes(Arrays.asList("Archaeological", "C14"));
+    UUID key = collectionService.create(collection1);
+    Collection created = collectionService.get(key);
+
+    assertEquals(2, created.getContentTypes().size());
+    assertTrue(created.getContentTypes().contains("Archaeological"));
+    assertTrue(created.getContentTypes().contains("C14"));
+
+    created.getContentTypes().add("foo");
+    assertThrows(IllegalArgumentException.class, () -> collectionService.update(created));
+  }
+
+  @Test
+  public void listVocabConceptsWithChildrenTest() {
+    Collection collection1 = testData.newEntity();
+    collection1.setCode("c1");
+    collection1.setName("n1");
+    collection1.setContentTypes(
+        new ArrayList<>(Collections.singletonList(ConceptClientMock.ROOT_CONCEPT)));
+    collectionService.create(collection1);
+
+    Collection collection2 = testData.newEntity();
+    collection2.setCode("c2");
+    collection2.setName("n2");
+    collection2.setContentTypes(
+        new ArrayList<>(Collections.singletonList(ConceptClientMock.CHILD11)));
+    collectionService.create(collection2);
+
+    assertEquals(
+        2,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        new ArrayList<>(Collections.singletonList(ConceptClientMock.ROOT_CONCEPT)))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        1,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        new ArrayList<>(Collections.singletonList(ConceptClientMock.CHILD11)))
+                    .build())
+            .getResults()
+            .size());
+
+    assertEquals(
+        0,
+        collectionService
+            .list(
+                CollectionSearchRequest.builder()
+                    .contentTypes(
+                        new ArrayList<>(Collections.singletonList(ConceptClientMock.CHILD2)))
+                    .build())
+            .getResults()
+            .size());
   }
 }

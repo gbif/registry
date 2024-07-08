@@ -13,14 +13,13 @@
  */
 package org.gbif.registry.service.collections.batch;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.gbif.api.model.collections.CollectionEntityType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.KEY;
 
@@ -37,8 +36,6 @@ public class FileFields {
     public static final String LATITUDE = "LATITUDE";
     public static final String LONGITUDE = "LONGITUDE";
     public static final String FOUNDING_DATE = "FOUNDING_DATE";
-    public static final String GEOGRAPHIC_DESCRIPTION = "GEOGRAPHIC_DESCRIPTION";
-    public static final String TAXONOMIC_DESCRIPTION = "TAXONOMIC_DESCRIPTION";
 
     protected static final List<String> ALL_FIELDS =
         Arrays.asList(
@@ -49,9 +46,7 @@ public class FileFields {
             DISCIPLINES,
             LATITUDE,
             LONGITUDE,
-            FOUNDING_DATE,
-            GEOGRAPHIC_DESCRIPTION,
-            TAXONOMIC_DESCRIPTION);
+            FOUNDING_DATE);
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -63,7 +58,7 @@ public class FileFields {
     public static final String ACCESSION_STATUS = "ACCESSION_STATUS";
     public static final String INSTITUTION_KEY = "INSTITUTION_KEY";
     public static final String TAXONOMIC_COVERAGE = "TAXONOMIC_COVERAGE";
-    public static final String GEOGRAPHY = "GEOGRAPHY";
+    public static final String GEOGRAPHIC_COVERAGE = "GEOGRAPHIC_COVERAGE";
     public static final String NOTES = "NOTES";
     public static final String INCORPORATED_COLLECTIONS = "INCORPORATED_COLLECTIONS";
     public static final String IMPORTANT_COLLECTIONS = "IMPORTANT_COLLECTIONS";
@@ -71,6 +66,7 @@ public class FileFields {
     public static final String COLLECTION_SUMMARY = "COLLECTION_SUMMARY";
     public static final String DEPARTMENT = "DEPARTMENT";
     public static final String DIVISION = "DIVISION";
+    public static final String TEMPORAL_COVERAGE = "TEMPORAL_COVERAGE";
 
     protected static final List<String> ALL_FIELDS =
         Arrays.asList(
@@ -81,14 +77,15 @@ public class FileFields {
             ACCESSION_STATUS,
             INSTITUTION_KEY,
             TAXONOMIC_COVERAGE,
-            GEOGRAPHY,
+            GEOGRAPHIC_COVERAGE,
             NOTES,
             INCORPORATED_COLLECTIONS,
             IMPORTANT_COLLECTIONS,
             IMPORTANT_COLLECTORS,
             COLLECTION_SUMMARY,
             DEPARTMENT,
-            DIVISION);
+            DIVISION,
+            TEMPORAL_COVERAGE);
   }
 
   @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -158,6 +155,9 @@ public class FileFields {
     public static final String CATALOG_URL = "CATALOG_URL";
     public static final String API_URL = "API_URL";
     public static final String NUMBER_SPECIMENS = "NUMBER_SPECIMENS";
+    public static final String FEATURED_IMAGE_URL = "FEATURED_IMAGE_URL";
+    public static final String FEATURED_IMAGE_LICENSE = "FEATURED_IMAGE_LICENSE";
+
     /** address fields */
     public static final String ADDRESS_PREFIX = "ADDRESS_";
 
@@ -202,7 +202,9 @@ public class FileFields {
             MAIL_CITY,
             MAIL_PROVINCE,
             MAIL_POSTAL_CODE,
-            MAIL_COUNTRY);
+            MAIL_COUNTRY,
+            FEATURED_IMAGE_URL,
+            FEATURED_IMAGE_LICENSE);
   }
 
   public static boolean isEntityField(String field, CollectionEntityType entityType) {

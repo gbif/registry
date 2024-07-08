@@ -58,7 +58,7 @@ public abstract class BaseBatchService implements BatchService {
         authentication != null && authentication.getName() != null, "Authentication is required");
 
     // create entry in DB
-    Batch batch = new Batch();
+     Batch batch = new Batch();
     batch.setCreatedBy(authentication.getName());
     batch.setState(Batch.State.IN_PROGRESS);
     batch.setEntityType(entityType);

@@ -82,13 +82,11 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     newCollection.setAlternativeCodes(institutionToConvert.getAlternativeCodes());
     newCollection.setName(institutionToConvert.getName());
     newCollection.setDescription(institutionToConvert.getDescription());
-    newCollection.setGeography(institutionToConvert.getGeographicDescription());
-    newCollection.setTaxonomicCoverage(institutionToConvert.getTaxonomicDescription());
     newCollection.setEmail(institutionToConvert.getEmail());
     newCollection.setPhone(institutionToConvert.getPhone());
     newCollection.setHomepage(institutionToConvert.getHomepage());
-    newCollection.setCatalogUrl(institutionToConvert.getCatalogUrl());
-    newCollection.setApiUrl(institutionToConvert.getApiUrl());
+    newCollection.setCatalogUrls(institutionToConvert.getCatalogUrls());
+    newCollection.setApiUrls(institutionToConvert.getApiUrls());
     newCollection.setActive(institutionToConvert.isActive());
 
     if (institutionToConvert.getAddress() != null) {

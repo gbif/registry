@@ -13,46 +13,25 @@
  */
 package org.gbif.registry.ws.export;
 
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import lombok.Builder;
+import lombok.Data;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.Institution;
-import org.gbif.api.model.collections.OccurrenceMapping;
+import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.occurrence.DownloadStatistics;
-import org.gbif.api.model.registry.Comment;
-import org.gbif.api.model.registry.DatasetOccurrenceDownloadUsage;
-import org.gbif.api.model.registry.Identifier;
-import org.gbif.api.model.registry.MachineTag;
-import org.gbif.api.model.registry.Tag;
+import org.gbif.api.model.registry.*;
 import org.gbif.api.model.registry.search.DatasetSearchResult;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.DatasetSubtype;
 import org.gbif.api.vocabulary.DatasetType;
 import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.Discipline;
-import org.gbif.api.vocabulary.collections.InstitutionGovernance;
-import org.gbif.api.vocabulary.collections.InstitutionType;
-import org.gbif.api.vocabulary.collections.PreservationType;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 
-import java.io.Writer;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.supercsv.cellprocessor.FmtBool;
-import org.supercsv.cellprocessor.FmtDate;
-import org.supercsv.cellprocessor.FmtNumber;
-import org.supercsv.cellprocessor.Optional;
-import org.supercsv.cellprocessor.ParseEnum;
-import org.supercsv.cellprocessor.ParseInt;
-import org.supercsv.cellprocessor.ParseLong;
+import org.supercsv.cellprocessor.*;
 import org.supercsv.cellprocessor.ift.CellProcessor;
 import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
@@ -60,11 +39,14 @@ import org.supercsv.io.dozer.CsvDozerBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 import org.supercsv.util.CsvContext;
 
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-
-import lombok.Builder;
-import lombok.Data;
-import lombok.SneakyThrows;
+import java.io.Writer;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -260,8 +242,8 @@ public class CsvWriter<T> {
               "collection.email",
               "collection.phone",
               "collection.homepage",
-              "collection.catalogUrl",
-              "collection.apiUrl",
+              "collection.catalogUrls",
+              "collection.apiUrls",
               "collection.preservationTypes",
               "collection.accessionStatus",
               "institutionName",
@@ -277,11 +259,10 @@ public class CsvWriter<T> {
               "collection.tags",
               "collection.identifiers",
               "collection.contactPersons",
-              "collection.indexHerbariorumRecord",
               "collection.numberSpecimens",
               "collection.machineTags",
               "collection.taxonomicCoverage",
-              "collection.geography",
+              "collection.geographicCoverage",
               "collection.notes",
               "collection.incorporatedCollections",
               "collection.importantCollectors",
@@ -289,7 +270,12 @@ public class CsvWriter<T> {
               "collection.alternativeCodes",
               "collection.comments",
               "collection.occurrenceMappings",
-              "collection.replacedBy"
+              "collection.replacedBy",
+              "collection.featuredImageUrl",
+              "collection.featuredImageLicense",
+              "collection.temporalCoverage",
+              "collection.masterSource",
+              "collection.displayOnNHCPortal"
             })
         .header(
             new String[] {
@@ -324,11 +310,10 @@ public class CsvWriter<T> {
               "tags",
               "identifiers",
               "contactPersons",
-              "index_herbariorum_record",
               "number_specimens",
               "machine_tags",
               "taxonomic_coverage",
-              "geography",
+              "geographic_coverage",
               "notes",
               "incorporated_collections",
               "important_collectors",
@@ -336,7 +321,12 @@ public class CsvWriter<T> {
               "alternative_codes",
               "comments",
               "occurrence_mappings",
-              "replaced_by"
+              "replaced_by",
+              "featuredImageUrl",
+              "featuredImageLicense",
+              "temporalCoverage",
+              "masterSourceType",
+              "displayOnNHCPortal"
             })
         .processors(
             new CellProcessor[] {
@@ -347,18 +337,17 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // address: extract the country
               new CleanStringProcessor(), // address: extract the city
               new CleanStringProcessor(), // address: extract the province
-              new ListCollectionContentTypeProcessor(), // contentTypes: List
+              new ListStringProcessor(), // contentTypes: List
               new Optional(new FmtBool("true", "false")), // active: boolean
               new Optional(new FmtBool("true", "false")), // personalCollection: boolean
               new DOIProcessor(), // doi: DOI
               new ListStringProcessor(), // email: List
               new ListStringProcessor(), // phone: List
               new UriProcessor(), // homepage: URI
-              new UriProcessor(), // catalogUrl: URI
-              new UriProcessor(), // apiUrl: URI
-              new ListPreservationTypeProcessor(), // preservationTypes: List
-              new Optional(
-                  new ParseEnum(AccessionStatus.class)), // accessionStatus: AccessionStatus
+              new ListUriProcessor(), // catalogUrl: URI
+              new ListUriProcessor(), // apiUrl: URI
+              new ListStringProcessor(), // preservationTypes: List
+              new Optional(new CleanStringProcessor()), // accessionStatus: AccessionStatus
               null, // institutionCode: String
               new CleanStringProcessor(), // institutionName: String
               new UUIDProcessor(), // institutionKey: UUID
@@ -372,11 +361,10 @@ public class CsvWriter<T> {
               new ListTagsProcessor(), // tags: List
               new ListIdentifierProcessor(), // identifiers: List
               new ListContactProcessor(), // contactPersons: List
-              new Optional(new FmtBool("true", "false")), // indexHerbariorumRecord: boolean
               new Optional(new ParseInt()), // numberSpecimens: int
               new ListMachineTagProcessor(), // machineTags: List
               new CleanStringProcessor(), // taxonomicCoverage: String
-              new CleanStringProcessor(), // geography: String
+              new CleanStringProcessor(), // geographicCoverage: String
               new CleanStringProcessor(), // notes: String
               new ListStringProcessor(), // incorporatedCollections: List
               new ListStringProcessor(), // importantCollectors: List
@@ -384,7 +372,12 @@ public class CsvWriter<T> {
               new ListAlternativeCodeProcessor(), // alternativeCodes: List
               new ListCommentProcessor(), // comments: List
               new ListOccurrenceMappingsProcessor(), // occurrenceMappings: List
-              new UUIDProcessor() // replacedBy: UUID
+              new UUIDProcessor(), // replacedBy: UUID
+              new UriProcessor(), // featuredImageUrl : URI
+              new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
+              new CleanStringProcessor(), // temporalCoverage: String
+              new Optional(new ParseEnum(MasterSourceType.class)), // masterSourceType: MasterSource
+              new Optional(new FmtBool("true", "false")) //displayOnNHCPortal: boolean
             })
         .forClass(CollectionView.class)
         .preference(preference)
@@ -393,6 +386,7 @@ public class CsvWriter<T> {
   }
 
   /** Creates an CsvWriter/exporter of Collection. */
+  // TODO: processor for new multivalue fields
   public static CsvWriter<Institution> institutions(
       Iterable<Institution> pager, ExportFormat preference) {
     return CsvWriter.<Institution>builder()
@@ -405,14 +399,14 @@ public class CsvWriter<T> {
               "country",
               "city",
               "province",
-              "type",
+              "types",
               "active",
               "email",
               "phone",
               "homepage",
-              "catalogUrl",
-              "apiUrl",
-              "institutionalGovernance",
+              "catalogUrls",
+              "apiUrls",
+              "institutionalGovernances",
               "disciplines",
               "latitude",
               "longitude",
@@ -420,12 +414,8 @@ public class CsvWriter<T> {
               "address",
               "additionalNames",
               "foundingDate",
-              "geographicDescription",
-              "taxonomicDescription",
               "numberSpecimens",
-              "indexHerbariorumRecord",
               "logoUrl",
-              "citesPermitNumber",
               "createdBy",
               "modifiedBy",
               "created",
@@ -439,7 +429,11 @@ public class CsvWriter<T> {
               "comments",
               "occurrenceMappings",
               "replacedBy",
-              "convertedToCollection"
+              "convertedToCollection",
+              "featuredImageUrl",
+              "featuredImageLicense",
+              "masterSource",
+              "displayOnNHCPortal"
             })
         .header(
             new String[] {
@@ -465,12 +459,8 @@ public class CsvWriter<T> {
               "address",
               "additional_names",
               "founding_date",
-              "geographic_description",
-              "taxonomic_description",
               "number_specimens",
-              "index_herbariorum_record",
               "logo_url",
-              "cites_permit_number",
               "created_by",
               "modified_by",
               "created",
@@ -484,7 +474,11 @@ public class CsvWriter<T> {
               "comments",
               "occurrence_mappings",
               "replaced_by",
-              "converted_to_collection"
+              "converted_to_collection",
+              "featuredImageUrl",
+              "featuredImageLicense",
+              "masterSourceType",
+              "displayOnNHCPortal"
             })
         .processors(
             new CellProcessor[] {
@@ -495,30 +489,24 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // address: extract the country
               new CleanStringProcessor(), // address: extract the city
               new CleanStringProcessor(), // address: extract the province
-              new Optional(new ParseEnum(InstitutionType.class)), // type:InstitutionType
+              new Optional(new ListStringProcessor()), // type:InstitutionType
               new Optional(new FmtBool("true", "false")), // active: boolean
               new ListStringProcessor(), // email: List<String>
               new ListStringProcessor(), // phone: List<String>
               new UriProcessor(), // homepage: URI
-              new UriProcessor(), // catalogUrl: URI
-              new UriProcessor(), // apiUrl: URI
+              new ListUriProcessor(), // catalogUrl: URI
+              new ListUriProcessor(), // apiUrl: URI
               new Optional(
-                  new ParseEnum(
-                      InstitutionGovernance
-                          .class)), // institutionalGovernance:InstitutionGovernance
-              new ListDisciplinesProcessor(), // disciplines:List
+                  new ListStringProcessor()), // institutionalGovernance:InstitutionGovernance
+              new ListStringProcessor(), // disciplines:List
               new Optional(new FmtNumber("###.####")), // latitude: BigDecimal
               new Optional(new FmtNumber("###.####")), // longitude: BigDecimal
               new AddressProcessor(), // mailingAddress: Address
               new AddressProcessor(), // address: Address
               new ListStringProcessor(), // additionalNames: List<String>
               new Optional(new ParseInt()), // foundingDate: Date
-              new CleanStringProcessor(), // geographicDescription: String
-              new CleanStringProcessor(), // taxonomicDescription: String
               new Optional(new ParseInt()), // numberSpecimens: int
-              new Optional(new FmtBool("true", "false")), // indexHerbariorumRecord: boolean
               new UriProcessor(), // logoUrl: URI
-              new CleanStringProcessor(), // citesPermitNumber: String
               null, // createdBy: String
               null, // modifiedBy: String
               new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601), // created: Date
@@ -532,7 +520,11 @@ public class CsvWriter<T> {
               new ListCommentProcessor(), // comments: List<Comment>
               new ListOccurrenceMappingsProcessor(), // occurrenceMappings: List<OccurrenceMapping>
               new UUIDProcessor(), // replacedBy: UUID
-              new UUIDProcessor() // convertedToCollection: UUID
+              new UUIDProcessor(), // convertedToCollection: UUID
+              new UriProcessor(), // featuredImageUrl : URI
+              new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
+              new Optional(new ParseEnum(MasterSourceType.class)), // masterSourceType: MasterSource
+              new Optional(new FmtBool("true", "false")) //displayOnNHCPortal: boolean
             })
         .preference(preference)
         .pager(pager)
@@ -595,36 +587,6 @@ public class CsvWriter<T> {
     }
   }
 
-  /** Null aware List of CollectionContentTypes processor. */
-  public static class ListCollectionContentTypeProcessor implements CellProcessor {
-
-    public static String toString(List<CollectionContentType> value) {
-      return value.stream()
-          .map(CollectionContentType::name)
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<CollectionContentType>) value) : "";
-    }
-  }
-
-  /** Null aware List of PreservationType processor. */
-  public static class ListPreservationTypeProcessor implements CellProcessor {
-
-    public static String toString(List<PreservationType> value) {
-      return value.stream()
-          .map(PreservationType::name)
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<PreservationType>) value) : "";
-    }
-  }
-
   /** Null aware List<String> processor. */
   public static class ListStringProcessor implements CellProcessor {
 
@@ -637,6 +599,19 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<String>) value) : "";
+    }
+  }
+
+  /** Null aware List<URI> processor. */
+  public static class ListUriProcessor implements CellProcessor {
+
+    public static String toString(List<URI> value) {
+      return value.stream().map(URI::toString).collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? toString((List<URI>) value) : "";
     }
   }
 
@@ -817,19 +792,6 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<OccurrenceMapping>) value) : "";
-    }
-  }
-
-  /** Null aware List<Discipline> processor. */
-  public static class ListDisciplinesProcessor implements CellProcessor {
-
-    public static String toString(List<Discipline> value) {
-      return value.stream().map(Discipline::name).collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((List<Discipline>) value) : "";
     }
   }
 }

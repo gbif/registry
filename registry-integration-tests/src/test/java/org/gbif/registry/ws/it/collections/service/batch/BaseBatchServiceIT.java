@@ -25,6 +25,7 @@ import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.service.collections.batch.FileFields;
@@ -131,6 +132,7 @@ public abstract class BaseBatchServiceIT<T extends CollectionEntity> extends Bas
     assertEquals(1, updated.getAlternativeCodes().size());
     assertEquals("c22", updated.getAlternativeCodes().get(0).getCode());
     assertEquals("another code", updated.getAlternativeCodes().get(0).getDescription());
+    assertEquals(License.CC0_1_0, updated.getFeaturedImageLicense());
 
     assertAddressContactsAndIdentifiers(updated);
     assertTrue(Files.exists(Paths.get(batch.getResultFilePath())));
