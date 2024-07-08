@@ -13,9 +13,6 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.List;
@@ -29,9 +26,9 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class CollectionSearchParams extends SearchParams {
 
-  @Nullable List<CollectionContentType> contentTypes;
-  @Nullable List<PreservationType> preservationTypes;
-  @Nullable AccessionStatus accessionStatus;
+  @Nullable List<String> contentTypes;
+  @Nullable List<String> preservationTypes;
+  @Nullable List<String> accessionStatus;
   @Nullable Boolean personalCollection;
   @Nullable String sourceId;
   @Nullable Source source;

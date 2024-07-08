@@ -13,9 +13,12 @@
  */
 package org.gbif.registry.service.collections;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.MasterSourceMetadata;
+import org.gbif.api.model.collections.latimercore.OrganisationalUnit;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -29,35 +32,18 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.CreateCollectionEntityEvent;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.ReplaceEntityEvent;
-import org.gbif.registry.persistence.mapper.CommentMapper;
-import org.gbif.registry.persistence.mapper.DatasetMapper;
-import org.gbif.registry.persistence.mapper.IdentifierMapper;
-import org.gbif.registry.persistence.mapper.MachineTagMapper;
-import org.gbif.registry.persistence.mapper.OrganizationMapper;
-import org.gbif.registry.persistence.mapper.TagMapper;
-import org.gbif.registry.persistence.mapper.collections.AddressMapper;
-import org.gbif.registry.persistence.mapper.collections.CollectionContactMapper;
-import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
-import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
-import org.gbif.registry.persistence.mapper.collections.OccurrenceMappingMapper;
+import org.gbif.registry.persistence.mapper.*;
+import org.gbif.registry.persistence.mapper.collections.*;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionGeoJsonDto;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionSearchParams;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.converters.InstitutionConverter;
-
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validator;
-import javax.validation.groups.Default;
-
+import org.gbif.registry.service.collections.utils.LatimerCoreConverter;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
@@ -65,13 +51,19 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Strings;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
+import javax.validation.groups.Default;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+import static org.gbif.registry.security.UserRoles.*;
 
 @Validated
 @Service
@@ -97,7 +89,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
       OrganizationMapper organizationMapper,
       EventManager eventManager,
       WithMyBatis withMyBatis,
-      Validator validator) {
+      Validator validator,
+      ConceptClient conceptClient) {
     super(
         institutionMapper,
         addressMapper,
@@ -112,7 +105,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         commentMapper,
         Institution.class,
         eventManager,
-        withMyBatis);
+        withMyBatis,
+        conceptClient);
     this.institutionMapper = institutionMapper;
     this.organizationMapper = organizationMapper;
     this.validator = validator;
@@ -123,6 +117,53 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
     return listInternal(searchRequest, false);
   }
 
+  @Override
+  public PagingResponse<OrganisationalUnit> listAsLatimerCore(
+      InstitutionSearchRequest searchRequest) {
+
+    PagingResponse<Institution> results = listInternal(searchRequest, false);
+
+    List<OrganisationalUnit> organisationalUnits =
+        results.getResults().stream()
+            .map(LatimerCoreConverter::toOrganisationalUnit)
+            .collect(Collectors.toList());
+
+    return new PagingResponse<>(
+        results.getOffset(), results.getLimit(), results.getCount(), organisationalUnits);
+  }
+
+  @Override
+  public OrganisationalUnit getAsLatimerCore(@NotNull UUID key) {
+    return LatimerCoreConverter.toOrganisationalUnit(get(key));
+  }
+
+  @Override
+  public UUID createFromLatimerCore(@NotNull @Valid OrganisationalUnit organisationalUnit) {
+    return create(LatimerCoreConverter.fromOrganisationalUnit(organisationalUnit));
+  }
+
+  @Override
+  public void updateFromLatimerCore(@NotNull @Valid OrganisationalUnit organisationalUnit) {
+    UUID key =
+        LatimerCoreConverter.getInstitutionKey(organisationalUnit)
+            .orElseThrow(() -> new IllegalArgumentException("GRSciColl key is required"));
+
+    Institution institution = institutionMapper.get(key);
+
+    Institution convertedInstitution =
+        LatimerCoreConverter.fromOrganisationalUnit(organisationalUnit);
+    if (institution.getAddress() != null && convertedInstitution.getAddress() != null) {
+      convertedInstitution.getAddress().setKey(institution.getAddress().getKey());
+    }
+
+    if (institution.getMailingAddress() != null
+        && convertedInstitution.getMailingAddress() != null) {
+      convertedInstitution.getMailingAddress().setKey(institution.getMailingAddress().getKey());
+    }
+
+    update(convertedInstitution);
+  }
+
   @NotNull
   private PagingResponse<Institution> listInternal(
       InstitutionSearchRequest searchRequest, boolean deleted) {
@@ -131,6 +172,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
     }
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
+
+    Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
     InstitutionSearchParams params = buildSearchParams(searchRequest, deleted, page);
 
@@ -160,8 +203,8 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .city(searchRequest.getCity())
         .fuzzyName(searchRequest.getFuzzyName())
         .active(searchRequest.getActive())
-        .type(searchRequest.getType())
-        .institutionalGovernance(searchRequest.getInstitutionalGovernance())
+        .types(searchRequest.getType())
+        .institutionalGovernances(searchRequest.getInstitutionalGovernance())
         .disciplines(searchRequest.getDisciplines())
         .masterSourceType(searchRequest.getMasterSourceType())
         .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))

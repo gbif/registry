@@ -13,22 +13,15 @@
  */
 package org.gbif.registry.ws.provider;
 
+import com.google.common.base.Strings;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.CollectionContentType;
-import org.gbif.api.vocabulary.collections.PreservationType;
-
-import java.util.Arrays;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.google.common.base.Strings;
+import java.util.Arrays;
+import java.util.UUID;
 
 @SuppressWarnings("NullableProblems")
 public class CollectionSearchRequestHandlerMethodArgumentResolver
@@ -60,23 +53,18 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
 
     String[] contentTypes = webRequest.getParameterValues("contentType");
     if (contentTypes != null && contentTypes.length > 0) {
-      searchRequest.setContentTypes(
-          Arrays.stream(contentTypes)
-              .map(v -> VocabularyUtils.lookupEnum(v, CollectionContentType.class))
-              .collect(Collectors.toList()));
+      searchRequest.setContentTypes(Arrays.asList(contentTypes));
     }
 
     String[] preservationTypes = webRequest.getParameterValues("preservationType");
     if (preservationTypes != null && preservationTypes.length > 0) {
-      searchRequest.setPreservationTypes(
-          Arrays.stream(preservationTypes)
-              .map(v -> VocabularyUtils.lookupEnum(v, PreservationType.class))
-              .collect(Collectors.toList()));
+      searchRequest.setPreservationTypes(Arrays.asList(preservationTypes));
     }
 
-    searchRequest.setAccessionStatus(
-        VocabularyUtils.lookupEnum(
-            webRequest.getParameter("accessionStatus"), AccessionStatus.class));
+    String[] accessionStatuses = webRequest.getParameterValues("accessionStatus");
+    if (accessionStatuses != null && accessionStatuses.length > 0) {
+      searchRequest.setAccessionStatus(Arrays.asList(accessionStatuses));
+    }
 
     String personalCollection = webRequest.getParameter("personalCollection");
     if (!Strings.isNullOrEmpty(personalCollection)) {

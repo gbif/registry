@@ -86,7 +86,7 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
     toReplace.setDescription("description");
     toReplace.getEmail().add("a@a.com");
     toReplace.getEmail().add("b@a.com");
-    toReplace.setGeography("replaced geo");
+    toReplace.setGeographicCoverage("replaced geo");
     return toReplace;
   }
 
@@ -96,7 +96,7 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
     replacement.setCode("c2");
     replacement.setName("n2");
     replacement.getEmail().add("a@a.com");
-    replacement.setGeography("geo");
+    replacement.setGeographicCoverage("geo");
     return replacement;
   }
 
@@ -104,7 +104,7 @@ public class CollectionMergeServiceIT extends BaseMergeServiceIT<Collection> {
   void extraAsserts(Collection replaced, Collection replacement, Collection replacementUpdated) {
     assertEquals(replacement.getKey(), replaced.getReplacedBy());
     assertEquals(2, replacementUpdated.getEmail().size());
-    assertEquals(replacement.getGeography(), replacementUpdated.getGeography());
+    assertEquals(replacement.getGeographicCoverage(), replacementUpdated.getGeographicCoverage());
     assertEquals(replaced.getDescription(), replacementUpdated.getDescription());
   }
 }

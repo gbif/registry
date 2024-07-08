@@ -28,7 +28,7 @@ public class IDigBioCollectionDto {
   private String collectionName;
   private List<AlternativeCode> collectionAlternativeCodes = new ArrayList<>();
   private String homepage;
-  private String catalogUrl;
+  private List<String> catalogUrls;
   private String description;
   private int numberSpecimens;
   private String taxonomicCoverage;
@@ -95,12 +95,12 @@ public class IDigBioCollectionDto {
     this.homepage = homepage;
   }
 
-  public String getCatalogUrl() {
-    return catalogUrl;
+  public List<String> getCatalogUrls() {
+    return catalogUrls;
   }
 
-  public void setCatalogUrl(String catalogUrl) {
-    this.catalogUrl = catalogUrl;
+  public void setCatalogUrl(List<String> catalogUrls) {
+    this.catalogUrls = catalogUrls;
   }
 
   public String getDescription() {
@@ -290,7 +290,7 @@ public class IDigBioCollectionDto {
         && Objects.equals(collectionName, that.collectionName)
         && Objects.equals(collectionAlternativeCodes, that.collectionAlternativeCodes)
         && Objects.equals(homepage, that.homepage)
-        && Objects.equals(catalogUrl, that.catalogUrl)
+        && Objects.equals(catalogUrls, that.catalogUrls)
         && Objects.equals(description, that.description)
         && Objects.equals(taxonomicCoverage, that.taxonomicCoverage)
         && Objects.equals(geographicRange, that.geographicRange)
@@ -322,7 +322,7 @@ public class IDigBioCollectionDto {
         collectionName,
         collectionAlternativeCodes,
         homepage,
-        catalogUrl,
+        catalogUrls,
         description,
         numberSpecimens,
         taxonomicCoverage,

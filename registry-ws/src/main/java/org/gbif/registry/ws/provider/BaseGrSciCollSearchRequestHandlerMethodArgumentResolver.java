@@ -13,27 +13,20 @@
  */
 package org.gbif.registry.ws.provider;
 
-
+import com.google.common.base.Strings;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.CollectionsSortField;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.SortOrder;
+import org.gbif.api.vocabulary.*;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
-
-import java.util.ArrayList;
-import java.util.UUID;
-
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
-import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.UUID;
 
 public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {

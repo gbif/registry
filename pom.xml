@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.96.3-eml-SNAPSHOT</version>
+  <version>3.96.6.1-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -97,6 +97,7 @@
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
+    <gbif-vocabulary.version>1.0.5</gbif-vocabulary.version>
     <checklistbank.version>2.125</checklistbank.version>
 
     <!-- Third party -->
@@ -124,8 +125,7 @@
     <retrofit.version>2.8.0</retrofit.version>
     <slf4j.version>1.7.30</slf4j.version>
     <woodstox.version>4.4.1</woodstox.version>
-    <zookeeper.version>3.8.1</zookeeper.version>
-    <curator.version>5.5.0</curator.version>
+    <zookeeper.version>3.4.14</zookeeper.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
@@ -421,6 +421,11 @@
         <artifactId>download-query-tools</artifactId>
         <version>${gbif-download-query-tools.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.gbif.vocabulary</groupId>
+        <artifactId>vocabulary-rest-ws-client</artifactId>
+        <version>${gbif-vocabulary.version}</version>
+      </dependency>
 
       <!-- Third party dependencies -->
       <dependency>
@@ -444,21 +449,6 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-framework</artifactId>
-        <version>${curator.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-recipes</artifactId>
-        <version>${curator.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-x-discovery</artifactId>
-        <version>${curator.version}</version>
       </dependency>
       <dependency>
         <groupId>org.mybatis</groupId>

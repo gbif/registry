@@ -15,6 +15,7 @@ package org.gbif.registry.ws.it.collections.resource;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
@@ -28,8 +29,6 @@ import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
-import org.gbif.api.vocabulary.collections.AccessionStatus;
-import org.gbif.api.vocabulary.collections.PreservationType;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -39,6 +38,10 @@ import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggest
 import org.gbif.registry.ws.client.collections.CollectionClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.web.server.LocalServerPort;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,14 +49,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.web.server.LocalServerPort;
-
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class CollectionResourceIT
@@ -98,12 +98,47 @@ public class CollectionResourceIT
     req.setCountry(Collections.singletonList(Country.DENMARK));
     req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
     req.setPersonalCollection(true);
-    req.setAccessionStatus(AccessionStatus.INSTITUTIONAL);
-    req.setPreservationTypes(
-        Arrays.asList(PreservationType.SAMPLE_CRYOPRESERVED, PreservationType.SAMPLE_DRIED));
-
+    req.setAccessionStatus(Collections.singletonList("Institutional"));
+    req.setPreservationTypes(Arrays.asList("SampleCryopreserved", "SampleDried"));
     PagingResponse<CollectionView> result = getClient().list(req);
     assertEquals(views.size(), result.getResults().size());
+  }
+
+  @Test
+  public void listAndGetAsLatimerCoreTest() {
+    ObjectGroup o1 = new ObjectGroup();
+    o1.setDescription("des");
+    o1.setCollectionName("name");
+    ObjectGroup o2 = new ObjectGroup();
+    o2.setDescription("des2");
+    o2.setCollectionName("name2");
+    List<ObjectGroup> orgs = Arrays.asList(o1, o2);
+
+    when(collectionService.listAsLatimerCore(any(CollectionSearchRequest.class)))
+        .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(orgs.size()), orgs));
+
+    PagingResponse<ObjectGroup> result =
+        getClient().listAsLatimerCore(new CollectionSearchRequest());
+    assertEquals(orgs.size(), result.getResults().size());
+
+    when(collectionService.getAsLatimerCore(any(UUID.class))).thenReturn(o1);
+    ObjectGroup objectGroupReturned = getClient().getAsLatimerCore(UUID.randomUUID());
+    assertEquals(o1, objectGroupReturned);
+  }
+
+  @Test
+  public void createAndUpdateLatimerCoreTest() {
+    ObjectGroup o1 = new ObjectGroup();
+    o1.setDescription("des");
+    o1.setCollectionName("name");
+    UUID key = UUID.randomUUID();
+
+    when(collectionService.createFromLatimerCore(o1)).thenReturn(key);
+
+    assertEquals(key, getClient().createFromLatimerCore(o1));
+
+    doNothing().when(collectionService).updateFromLatimerCore(o1);
+    assertDoesNotThrow(() -> getClient().updateFromLatimerCore(key, o1));
   }
 
   @Test

@@ -15,6 +15,8 @@ package org.gbif.registry.ws.resources.external;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,8 +45,13 @@ public class IDigBioCollection implements Serializable {
   @JsonProperty("collection_url")
   private String collectionUrl;
 
+  // use collectionCatalogUrls instead
+  @Deprecated
   @JsonProperty("collection_catalog_url")
   private String collectionCatalogUrl;
+
+  @JsonProperty("collection_catalog_urls")
+  private List<String> collectionCatalogUrls = new ArrayList<>();
 
   private String description;
   private int cataloguedSpecimens;
@@ -186,6 +193,14 @@ public class IDigBioCollection implements Serializable {
 
   public void setCollectionCatalogUrl(String collectionCatalogUrl) {
     this.collectionCatalogUrl = collectionCatalogUrl;
+  }
+
+  public List<String> getCollectionCatalogUrls() {
+    return collectionCatalogUrls;
+  }
+
+  public void setCollectionCatalogUrls(List<String> collectionCatalogUrls) {
+    this.collectionCatalogUrls = collectionCatalogUrls;
   }
 
   public String getDescription() {
