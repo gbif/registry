@@ -487,6 +487,10 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     if (stepsToSend.stream().anyMatch(StepType::isOccurrenceType)) {
       finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
     }
+    // TODO: Events from dwca will be ignorred, add dataset type?
+    if (stepsToSend.stream().anyMatch(StepType::isVerbatimType)) {
+      finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
+    }
     if (stepsToSend.stream().noneMatch(StepType::isVerbatimType)) {
       finalSteps.remove(StepType.FRAGMENTER);
     }
