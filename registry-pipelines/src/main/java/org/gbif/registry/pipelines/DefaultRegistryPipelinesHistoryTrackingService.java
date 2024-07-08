@@ -65,6 +65,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.StringUtils;
@@ -396,9 +398,12 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     // Performs the messaging and updates the status onces the message has been sent
     Dataset dataset = datasetService.get(datasetKey);
 
+    // Create Rabbit messages
     Map<StepType, PipelineBasedMessage> stepsToSend = new EnumMap<>(StepType.class);
     for (StepType stepName : prioritizeSteps(steps, dataset)) {
-      processStep(stepName, process, prefix, interpretTypes, stepsToSend);
+      Optional<? extends PipelineBasedMessage> message =
+        createStepMessage(stepName, process, prefix, interpretTypes);
+      message.ifPresent(m -> stepsToSend.put(stepName, m));
     }
 
     if (stepsToSend.isEmpty()) {
@@ -452,42 +457,35 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return responseBuilder.build();
   }
 
-  private void processStep(StepType stepName, PipelineProcess process, String prefix,
-      Set<String> interpretTypes, Map<StepType, PipelineBasedMessage> stepsToSend){
+  private Optional<? extends PipelineBasedMessage> createStepMessage(StepType stepName, PipelineProcess process, String prefix,
+      Set<String> interpretTypes){
     Optional<PipelineStep> latestStepOpt = getLatestSuccessfulStep(process, stepName);
 
-    if (!latestStepOpt.isPresent()) {
+    if (latestStepOpt.isEmpty()) {
       LOG.warn("Can't find latest successful step for the datasetKey {}", process.getDatasetKey());
-      return;
+      return Optional.empty();
     }
 
-    PipelineStep step = latestStepOpt.get();
-    try {
-      PipelineBasedMessage message = null;
-
-      if (stepName == StepType.INTERPRETED_TO_INDEX
-          || stepName == StepType.HDFS_VIEW
-          || stepName == StepType.FRAGMENTER) {
-        message = createInterpretedMessage(prefix, step.getMessage(), stepName);
-      } else if (stepName == StepType.VERBATIM_TO_INTERPRETED) {
-        message = createVerbatimMessage(prefix, step.getMessage(), interpretTypes);
-      } else if (stepName == StepType.DWCA_TO_VERBATIM) {
-        message = createMessage(step.getMessage(), PipelinesDwcaMessage.class);
-      } else if (stepName == StepType.ABCD_TO_VERBATIM) {
-        message = createMessage(step.getMessage(), PipelinesAbcdMessage.class);
-      } else if (stepName == StepType.XML_TO_VERBATIM) {
-        message = createMessage(step.getMessage(), PipelinesXmlMessage.class);
-      } else if (stepName == StepType.EVENTS_VERBATIM_TO_INTERPRETED) {
-        message = createMessage(step.getMessage(), PipelinesEventsMessage.class);
-      } else if (stepName == StepType.EVENTS_INTERPRETED_TO_INDEX) {
-        message = createMessage(step.getMessage(), PipelinesEventsInterpretedMessage.class);
-      }
-
-      if (message != null) {
-        stepsToSend.put(stepName, message);
-      }
-    } catch (IOException ex) {
-      LOG.warn("Error reading message", ex);
+    String jsonMessage = latestStepOpt.get().getMessage();
+    switch (stepName) {
+      case INTERPRETED_TO_INDEX:
+      case HDFS_VIEW:
+      case FRAGMENTER:
+        return createInterpretedMessage(prefix, jsonMessage, stepName);
+      case VERBATIM_TO_INTERPRETED:
+        return createVerbatimMessage(prefix, jsonMessage, interpretTypes);
+      case DWCA_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, PipelinesDwcaMessage.class);
+      case ABCD_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, PipelinesAbcdMessage.class);
+      case XML_TO_VERBATIM:
+        return deserializeMessage(jsonMessage, PipelinesXmlMessage.class);
+      case EVENTS_VERBATIM_TO_INTERPRETED:
+        return deserializeMessage(jsonMessage, PipelinesEventsMessage.class);
+      case EVENTS_INTERPRETED_TO_INDEX:
+        return deserializeMessage(jsonMessage, PipelinesEventsInterpretedMessage.class);
+      default:
+        return Optional.empty();
     }
   }
 
@@ -501,15 +499,25 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     return finalSteps;
   }
 
-  private <T extends PipelineBasedMessage> T createMessage(String jsonMessage, Class<T> targetClass)
-      throws IOException {
-    return objectMapper.readValue(jsonMessage, targetClass);
+  private <T extends PipelineBasedMessage> Optional<T> deserializeMessage(
+      String jsonMessage, Class<T> targetClass) {
+    try {
+      T message = objectMapper.readValue(jsonMessage, targetClass);
+      return Optional.of(message);
+    } catch (JsonProcessingException ex) {
+      LOG.warn("Error deserializing json message", ex);
+      return Optional.empty();
+    }
   }
 
-  private PipelineBasedMessage createVerbatimMessage(
-      String prefix, String jsonMessage, Set<String> interpretTypes) throws IOException {
+  private Optional<PipelineBasedMessage> createVerbatimMessage(
+      String prefix, String jsonMessage, Set<String> interpretTypes) {
     PipelinesVerbatimMessage message =
-        objectMapper.readValue(jsonMessage, PipelinesVerbatimMessage.class);
+        deserializeMessage(jsonMessage, PipelinesVerbatimMessage.class).orElse(null);
+    if (message == null) {
+      return Optional.empty();
+    }
+
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
     HashSet<String> steps = new HashSet<>();
 
@@ -539,16 +547,19 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       message.getInterpretTypes().add(RecordType.CLUSTERING.name());
     }
 
-    return message;
+    return Optional.of(message);
   }
 
-  private PipelineBasedMessage createInterpretedMessage(
-      String prefix, String jsonMessage, StepType stepType) throws IOException {
+  private Optional<PipelineBasedMessage> createInterpretedMessage(
+      String prefix, String jsonMessage, StepType stepType) {
     PipelinesInterpretedMessage message =
-        objectMapper.readValue(jsonMessage, PipelinesInterpretedMessage.class);
+        deserializeMessage(jsonMessage, PipelinesInterpretedMessage.class).orElse(null);
+    if (message == null) {
+      return Optional.empty();
+    }
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    message.setPipelineSteps(Collections.singleton(stepType.name()));
-    return message;
+    message.setPipelineSteps(Set.of(stepType.name()));
+    return Optional.of(message);
   }
 
   @Override
