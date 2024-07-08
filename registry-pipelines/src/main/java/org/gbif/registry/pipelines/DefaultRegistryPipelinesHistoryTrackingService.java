@@ -49,7 +49,6 @@ import org.gbif.registry.pipelines.util.PredicateUtils;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -104,18 +103,8 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               EndpointCreatedComparator.INSTANCE));
 
   private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
-      new HashSet<>(
-          Arrays.asList(
-              PipelineStep.Status.COMPLETED,
-              PipelineStep.Status.ABORTED,
-              PipelineStep.Status.FAILED));
-
-  private static final Set<StepType> INCLUDE_FRAGMENTER = new HashSet<>(Arrays.asList(
-    StepType.DWCA_TO_VERBATIM,
-    StepType.XML_TO_VERBATIM,
-    StepType.ABCD_TO_VERBATIM,
-    StepType.FRAGMENTER
-  ));
+      Set.of(
+          PipelineStep.Status.COMPLETED, PipelineStep.Status.ABORTED, PipelineStep.Status.FAILED);
 
   private ObjectMapper objectMapper;
   /** The messagePublisher can be optional. */
@@ -491,9 +480,14 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   @VisibleForTesting
   protected Set<StepType> getStepTypes(Set<StepType> stepsToSend) {
-    Set<StepType> finalSteps =
-        PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend);
-    if (stepsToSend.stream().noneMatch(INCLUDE_FRAGMENTER::contains)) {
+    Set<StepType> finalSteps = new HashSet<>();
+    if (stepsToSend.stream().anyMatch(StepType::isEventType)) {
+      finalSteps.addAll(PipelinesWorkflow.getEventWorkflow().getAllNodesFor(stepsToSend));
+    }
+    if (stepsToSend.stream().anyMatch(StepType::isOccurrenceType)) {
+      finalSteps.addAll(PipelinesWorkflow.getOccurrenceWorkflow().getAllNodesFor(stepsToSend));
+    }
+    if (stepsToSend.stream().noneMatch(StepType::isVerbatimType)) {
       finalSteps.remove(StepType.FRAGMENTER);
     }
     return finalSteps;
@@ -519,7 +513,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
     }
 
     Optional.ofNullable(prefix).ifPresent(message::setResetPrefix);
-    HashSet<String> steps = new HashSet<>();
+    Set<String> steps = new HashSet<>();
 
     if (message.getPipelineSteps().contains(StepType.VERBATIM_TO_INTERPRETED.name())) {
       steps.add(StepType.VERBATIM_TO_INTERPRETED.name());
