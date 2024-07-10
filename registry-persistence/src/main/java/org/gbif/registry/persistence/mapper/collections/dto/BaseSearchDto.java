@@ -13,7 +13,6 @@ import org.gbif.api.vocabulary.License;
 @Data
 public abstract class BaseSearchDto {
 
-  private long rowNumber;
   private UUID key;
   private String code;
   private String name;
