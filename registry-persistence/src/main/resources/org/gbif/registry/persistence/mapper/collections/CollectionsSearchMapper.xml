@@ -290,7 +290,7 @@
       c.number_specimens,
     </if>
     <if test="params.fuzzyName != null">similarity_score,</if>
-    c.created, c.key) row_number() over() AS row_number,
+    c.created, c.key)
     c.key, c.code, c.name, c.description, c.content_type, c.active, c.personal_collection,
     c.preservation_type, c.accession_status, c.institution_key, c.number_specimens, c.created,
     c.taxonomic_coverage, c.geographic_coverage, c.alternative_codes,

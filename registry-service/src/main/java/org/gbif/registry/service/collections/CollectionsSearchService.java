@@ -230,7 +230,6 @@ public class CollectionsSearchService {
     Map<UUID, CollectionSearchResponse> responsesMap = new HashMap<>();
     List<CollectionSearchResponse> results = new ArrayList<>();
     dtos.stream()
-        .sorted(Comparator.comparing(CollectionSearchDto::getRowNumber))
         .forEach(
             dto -> {
               if (responsesMap.containsKey(dto.getKey())) {
