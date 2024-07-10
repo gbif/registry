@@ -1,6 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Getter;
@@ -21,10 +21,9 @@ public class DescriptorsParams extends CollectionListParams {
   @Nullable List<Country> descriptorCountry;
   @Nullable RangeParam individualCount;
   @Nullable List<String> identifiedBy;
-  @Nullable Date dateIdentified;
-  @Nullable Date dateIdentifiedFrom;
-  @Nullable Date dateIdentifiedBefore;
-  @Nullable List<TypeStatus> typeStatus;
+  @Nullable LocalDate dateIdentifiedFrom;
+  @Nullable LocalDate dateIdentifiedBefore;
+  @Nullable List<String> typeStatus;
   @Nullable List<String> recordedBy;
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
@@ -39,7 +38,6 @@ public class DescriptorsParams extends CollectionListParams {
         || descriptorCountry != null
         || individualCount != null
         || identifiedBy != null
-        || dateIdentified != null
         || dateIdentifiedFrom != null
         || dateIdentifiedBefore != null
         || typeStatus != null

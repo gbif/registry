@@ -201,7 +201,7 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @Override
   public void deleteDescriptorSet(@NotNull long key) {
-    descriptorsMapper.deleteDescriptor(key);
+    descriptorsMapper.deleteDescriptorSet(key);
   }
 
   @Override
@@ -289,7 +289,6 @@ public class DefaultDescriptorService implements DescriptorsService {
             .query(query)
             .descriptorSetKey(searchRequest.getDescriptorSetKey())
             .country(searchRequest.getCountry())
-            .dateIdentified(searchRequest.getDateIdentified())
             .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
             .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
             .discipline(searchRequest.getDiscipline())

@@ -3,47 +3,18 @@
 <mapper namespace="org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper">
 
   <!-- Auto-mapping and eager loading of sub resources  -->
-  <resultMap id="SEARCH_DTO_MAP" type="SearchDto" autoMapping="true">
-    <result column="descriptorIdentifiedBy" property="descriptorIdentifiedBy" typeHandler="StringArrayTypeHandler"/>
-    <result column="descriptorTypeStatus" property="descriptorTypeStatus" typeHandler="StringArrayTypeHandler"/>
-    <result column="descriptorRecordedBy" property="descriptorRecordedBy" typeHandler="StringArrayTypeHandler"/>
-    <result column="descriptorIssues" property="descriptorIssues" typeHandler="StringArrayTypeHandler"/>
-  </resultMap>
+  <resultMap id="SEARCH_DTO_MAP" type="SearchDto" autoMapping="true"/>
 
   <sql id="INSTITUTION_READ_FIELDS">
     i.key, i.code, i.name, i.description, i.alternative_codes,
     i.display_on_NHCPortal AS displayOnNHCPortal,'institution' AS type,
-    i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code,
-    null::integer AS descriptorKey, null::integer AS descriptorSetKey, null::integer AS descriptorUsageKey,
-    null AS descriptorUsageName, null AS descriptorUsageRank, null AS descriptorCountry,
-    null::integer AS descriptorIndividualCount, null::text[] AS descriptorIdentifiedBy,
-    null::timestamptz as descriptorDateIdentified, null::text[] AS descriptorTypeStatus,
-    null::text[] AS descriptorRecordedBy, null AS descriptorDiscipline,
-    null AS descriptorObjectClassification, null::text[] AS descriptorIssues
+    i.address_key, i.mailing_address_key, null::uuid institution_key, null institution_name, null institution_code
   </sql>
 
   <sql id="COLLECTION_READ_FIELDS">
     c.key, c.code, c.name, c.description, c.alternative_codes,
     c.display_on_NHCPortal AS displayOnNHCPortal,'collection' AS type,
-    c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code,
-    null::integer AS descriptorKey, null::integer AS descriptorSetKey, null::integer AS descriptorUsageKey,
-    null AS descriptorUsageName, null AS descriptorUsageRank, null AS descriptorCountry,
-    null::integer AS descriptorIndividualCount, null::text[] AS descriptorIdentifiedBy,
-    null as descriptorDateIdentified, null::text[] AS descriptorTypeStatus,
-    null::text[] AS descriptorRecordedBy, null AS descriptorDiscipline,
-    null AS descriptorObjectClassification, null::text[] AS descriptorIssues
-  </sql>
-
-  <sql id="COLLECTION_WITH_DESCRIPTOR_READ_FIELDS">
-    c.key, c.code, c.name, c.description, c.alternative_codes,
-    c.display_on_NHCPortal AS displayOnNHCPortal,'collection' AS type,
-    c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code,
-    d.key AS descriptorKey, d.collection_descriptor_set_key AS descriptorSetKey, d.usage_key AS descriptorUsageKey,
-    d.usage_name AS descriptorUsageName, d.usage_rank AS descriptorUsageRank, d.country AS descriptorCountry,
-    d.individual_count AS descriptorIndividualCount, d.identified_by AS descriptorIdentifiedBy,
-    d.date_identified as descriptorDateIdentified, d.type_status AS descriptorTypeStatus,
-    d.recorded_by AS descriptorRecordedBy, d.discipline AS descriptorDiscipline,
-    d.object_classification_name AS descriptorObjectClassification, d.issues AS descriptorIssues
+    c.address_key, c.mailing_address_key, i.key institution_key, i.name institution_name, i.code institution_code
   </sql>
 
   <sql id="TS_QUERY">
@@ -52,13 +23,8 @@
 
   <select id="search" resultMap="SEARCH_DTO_MAP">
     SELECT <if test="params.query != null">matches.score,</if> matches.type, matches.key, matches.code, matches.name,
-    matches.institution_key,
-    matches.institution_code, matches.institution_name, matches.displayOnNHCPortal, ad.country country, mail.country
-    mail_country, matches.descriptorKey, matches.descriptorSetKey, matches.descriptorUsageKey,
-    matches.descriptorUsageName, matches.descriptorUsageRank, matches.descriptorCountry,
-    matches.descriptorIndividualCount, matches.descriptorIdentifiedBy, matches.descriptorDateIdentified,
-    matches.descriptorTypeStatus, matches.descriptorRecordedBy, matches.descriptorDiscipline,
-    matches.descriptorObjectClassification, matches.descriptorIssues
+    matches.institution_key, matches.institution_code, matches.institution_name, matches.displayOnNHCPortal,
+    ad.country country, mail.country mail_country
     <if test="params.query != null &amp;&amp; params.highlight">
       ,ts_headline(matches.code, query) code_highlight, ts_headline(matches.name, query) name_highlight
       ,ts_headline(matches.description, query) description_highlight
@@ -67,16 +33,7 @@
       ,ts_headline(ad.province, query) province_highlight,ts_headline(ad.country, query) country_highlight
       ,ts_headline(mail.address, query) mail_address_highlight,ts_headline(mail.city, query) mail_city_highlight
       ,ts_headline(mail.province, query) mail_province_highlight, ts_headline(mail.country, query)
-      mail_country_highlight,
-      ts_headline(matches.descriptorUsageName, query) descriptor_usage_name_highlight,
-      ts_headline(matches.descriptorCountry, query) descriptor_country_highlight,
-      ts_headline(array_to_string(matches.descriptorIdentifiedBy, ' '), query) descriptor_identified_by_highlight,
-      ts_headline(array_to_string(matches.descriptorTypeStatus, ' '), query) descriptor_type_status_highlight,
-      ts_headline(array_to_string(matches.descriptorRecordedBy, ' '), query) descriptor_recorded_by_highlight,
-      ts_headline(matches.descriptorDiscipline, query) descriptor_discipline_highlight,
-      ts_headline(matches.descriptorObjectClassification, query) descriptor_object_classification_highlight,
-      ts_headline(array_to_string(matches.descriptorIssues, ' '), query) descriptor_issues_highlight,
-      matches.similarity_match
+      mail_country_highlight, matches.similarity_match
     </if>
     FROM (
     <trim prefixOverrides="UNION ALL">
@@ -185,27 +142,6 @@
           </if>
           )
         </if>
-        UNION ALL
-        (
-        SELECT DISTINCT ON (<if test="params.query != null">ts_rank_cd(d.fulltext_search, query),</if> c.key, d.key)
-        <include refid="COLLECTION_WITH_DESCRIPTOR_READ_FIELDS"/>, false AS similarity_match
-        <if test="params.query != null">
-          ,ts_rank_cd(d.fulltext_search, query) score, query
-        </if>
-        FROM collection c
-        LEFT JOIN institution i ON i.key = c.institution_key
-        INNER JOIN collection_descriptor_set ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-        INNER JOIN collection_descriptor d ON d.collection_descriptor_set_key = ds.key
-        <if test="params.query != null">
-          INNER JOIN
-          <include refid="TS_QUERY"/>
-          AS query ON query @@ d.fulltext_search
-        </if>
-        WHERE c.deleted IS NULL
-        <if test="params.displayOnNHCPortal != null">
-          AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-        </if>
-        )
       </if>
     </trim>
     ) AS matches
@@ -304,6 +240,10 @@
     <result property="contentTypes" column="content_type" typeHandler="StringArrayTypeHandler"/>
     <result property="preservationTypes" column="preservation_type" typeHandler="StringArrayTypeHandler"/>
     <result property="alternativeCodes" column="alternative_codes" typeHandler="AlternativeCodesTypeHandler"/>
+    <result column="descriptorIdentifiedBy" property="descriptorIdentifiedBy" typeHandler="StringArrayTypeHandler"/>
+    <result column="descriptorTypeStatus" property="descriptorTypeStatus" typeHandler="StringArrayTypeHandler"/>
+    <result column="descriptorRecordedBy" property="descriptorRecordedBy" typeHandler="StringArrayTypeHandler"/>
+    <result column="descriptorIssues" property="descriptorIssues" typeHandler="StringArrayTypeHandler"/>
   </resultMap>
 
   <select id="searchCollections" resultType="CollectionSearchDto" resultMap="COLLECTION_DTO_MAP"
@@ -449,9 +389,6 @@
       <foreach item="item" collection="params.identifiedBy" open="[" separator="," close="]">
         #{item,jdbcType=VARCHAR}::text
       </foreach>
-    </if>
-    <if test="params.dateIdentified != null">
-      AND d.individual_count = #{params.individualCount,jdbcType=VARCHAR}
     </if>
     <if test="params.dateIdentifiedFrom != null">AND d.date_identified &gt;= #{params.dateIdentifiedFrom}</if>
     <if test="params.dateIdentifiedBefore != null">AND d.date_identified &lt; #{params.dateIdentifiedBefore}

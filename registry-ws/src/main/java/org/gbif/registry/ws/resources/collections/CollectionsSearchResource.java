@@ -24,8 +24,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
 import org.gbif.api.documentation.CommonParameters;
+import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
+import org.gbif.api.model.collections.search.InstitutionSearchResponse;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.service.collections.CollectionsSearchService;
@@ -45,7 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
             name = "Order",
             properties = @ExtensionProperty(name = "Order", value = "1400")))
 @RestController
-@RequestMapping(value = "grscicoll/search", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "grscicoll", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CollectionsSearchResource {
 
   private final CollectionsSearchService collectionsSearchService;
@@ -81,8 +86,8 @@ public class CollectionsSearchResource {
       })
   @ApiResponse(responseCode = "200", description = "Search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
-  @GetMapping
-  public List<CollectionsFullSearchResponse> searchCollections(
+  @GetMapping("search")
+  public List<CollectionsFullSearchResponse> searchCrossEntities(
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
@@ -91,5 +96,41 @@ public class CollectionsSearchResource {
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return collectionsSearchService.search(
         query, highlight, type, displayOnNHCPortal, country, limit);
+  }
+
+  @Operation(
+      operationId = "searchInstitutions",
+      summary = "Search across institutions",
+      description = "Searches for institutions.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0110")))
+  @CommonParameters.HighlightParameter
+  @InstitutionResource.InstitutionSearchParameters
+  @ApiResponse(responseCode = "200", description = "Search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("institution/search")
+  public PagingResponse<InstitutionSearchResponse> searchInstitutions(
+      InstitutionSearchRequest searchRequest) {
+    return collectionsSearchService.searchInstitutions(searchRequest);
+  }
+
+  @Operation(
+      operationId = "searchCollections",
+      summary = "Search across collections",
+      description = "Searches for collections",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0120")))
+  @CollectionResource.CollectionSearchParameters
+  @CommonParameters.HighlightParameter
+  @ApiResponse(responseCode = "200", description = "Search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping("collection/search")
+  public PagingResponse<CollectionSearchResponse> searchCollections(
+      CollectionDescriptorsSearchRequest searchRequest) {
+    return collectionsSearchService.searchCollections(searchRequest);
   }
 }

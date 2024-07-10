@@ -41,7 +41,9 @@
             fulltext_search tsvector
          );
 
-         -- TODO: index for the fields that we search for?
+         CREATE INDEX collection_descriptor_usage_name_idx ON collection_descriptor(usage_name);
+         CREATE INDEX collection_descriptor_taxon_keys_idx ON collection_descriptor(taxon_keys);
+         CREATE INDEX collection_descriptor_country_idx ON collection_descriptor(country);
 
          CREATE INDEX collection_descriptor_fulltext_search_idx ON collection_descriptor USING gin(fulltext_search);
 

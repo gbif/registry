@@ -17,6 +17,7 @@ import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRe
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -28,7 +29,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
@@ -36,8 +36,8 @@ import org.gbif.api.model.collections.search.BaseSearchResponse;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
 import org.gbif.api.model.collections.search.DescriptorMatch;
+import org.gbif.api.model.collections.search.Highlight;
 import org.gbif.api.model.collections.search.InstitutionSearchResponse;
-import org.gbif.api.model.collections.search.Match;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
@@ -99,7 +99,7 @@ public class CollectionsSearchService {
           if (responsesMap.containsKey(dto.getKey())) {
             CollectionsFullSearchResponse existing = responsesMap.get(dto.getKey());
             if (highlight) {
-              addMatches(existing, dto);
+              addHighlights(existing, dto);
             }
             if (dto.getDescriptorKey() != null) {
               existing.getDescriptorMatches().add(addDescriptorMatch(dto));
@@ -127,7 +127,7 @@ public class CollectionsSearchService {
           }
 
           if (highlight) {
-            addMatches(response, dto);
+            addHighlights(response, dto);
           }
 
           responses.add(response);
@@ -141,12 +141,6 @@ public class CollectionsSearchService {
       InstitutionSearchRequest searchRequest) {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
-
-    String query =
-        searchRequest.getQ() != null
-            ? com.google.common.base.Strings.emptyToNull(
-                CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
-            : searchRequest.getQ();
 
     Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
@@ -176,9 +170,8 @@ public class CollectionsSearchService {
                   response.setOccurrenceCount(dto.getOccurrenceCount());
                   response.setTypeSpecimenCount(dto.getTypeSpecimenCount());
 
-
                   if (Boolean.TRUE.equals(searchRequest.getHl())) {
-                    addMatches(response, dto);
+                    addHighlights(response, dto);
                   }
 
                   return response;
@@ -192,12 +185,6 @@ public class CollectionsSearchService {
       CollectionDescriptorsSearchRequest searchRequest) {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
-
-    String query =
-        searchRequest.getQ() != null
-            ? com.google.common.base.Strings.emptyToNull(
-                CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
-            : searchRequest.getQ();
 
     Set<UUID> institutionKeys = new HashSet<>();
     if (searchRequest.getInstitution() != null) {
@@ -223,14 +210,19 @@ public class CollectionsSearchService {
             .descriptorCountry(searchRequest.getDescriptorCountry())
             .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
             .identifiedBy(searchRequest.getIdentifiedBy())
-            .dateIdentified(searchRequest.getDateIdentified())
-            .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
-            .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
+            .dateIdentifiedBefore(
+                searchRequest.getDateIdentified() != null
+                    ? searchRequest.getDateIdentified().lowerEndpoint()
+                    : null)
+            .dateIdentifiedFrom(
+                searchRequest.getDateIdentified() != null
+                    ? searchRequest.getDateIdentified().upperEndpoint()
+                    : null)
             .typeStatus(searchRequest.getTypeStatus())
             .recordedBy(searchRequest.getRecordedBy())
             .discipline(searchRequest.getDiscipline())
             .objectClassification(searchRequest.getObjectClassification())
-            .issues(searchRequest.getIssues());
+            .issues(searchRequest.getIssue());
     buildCommonParams(listParamsBuilder, searchRequest);
     DescriptorsParams listParams = listParamsBuilder.build();
 
@@ -244,7 +236,7 @@ public class CollectionsSearchService {
               if (responsesMap.containsKey(dto.getKey())) {
                 CollectionSearchResponse existing = responsesMap.get(dto.getKey());
                 if (Boolean.TRUE.equals(listParams.getHighlight())) {
-                  addMatches(existing, dto);
+                  addHighlights(existing, dto);
                 }
                 if (isCollectionDescriptorResult(dto, listParams)) {
                   existing.getDescriptorMatches().add(addDescriptorMatch(dto));
@@ -278,7 +270,7 @@ public class CollectionsSearchService {
               }
 
               if (Boolean.TRUE.equals(searchRequest.getHl())) {
-                addMatches(response, dto);
+                addHighlights(response, dto);
               }
             });
 
@@ -313,8 +305,13 @@ public class CollectionsSearchService {
 
   private void buildCommonParams(
       ListParams.ListParamsBuilder listParams, SearchRequest searchRequest) {
+    String query =
+        searchRequest.getQ() != null
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
+            : searchRequest.getQ();
+
     listParams
-        .query(searchRequest.getQ())
+        .query(query)
         .code(searchRequest.getCode())
         .name(searchRequest.getName())
         .alternativeCode(searchRequest.getAlternativeCode())
@@ -351,63 +348,67 @@ public class CollectionsSearchService {
     response.setFeaturedImageAttribution(dto.getFeaturedImageAttribution());
   }
 
-  private void addMatches(BaseSearchResponse response, BaseSearchDto dto) {
-    Set<Match> matches = new HashSet<>();
-    createHighlightMatch(dto.getCodeHighlight(), "code").ifPresent(matches::add);
-    createHighlightMatch(dto.getDescriptionHighlight(), "description").ifPresent(matches::add);
+  private void addHighlights(BaseSearchResponse response, BaseSearchDto dto) {
+    Set<Highlight> highlights = new HashSet<>();
+    createHighlightMatch(dto.getCodeHighlight(), "code").ifPresent(highlights::add);
+    createHighlightMatch(dto.getDescriptionHighlight(), "description").ifPresent(highlights::add);
     createHighlightMatch(dto.getAlternativeCodesHighlight(), "alternativeCode")
-        .ifPresent(matches::add);
-    createHighlightMatch(dto.getAddressHighlight(), "address").ifPresent(matches::add);
-    createHighlightMatch(dto.getCityHighlight(), "city").ifPresent(matches::add);
-    createHighlightMatch(dto.getProvinceHighlight(), "province").ifPresent(matches::add);
-    createHighlightMatch(dto.getCountryHighlight(), "country").ifPresent(matches::add);
-    createHighlightMatch(dto.getMailAddressHighlight(), "mailingAddress").ifPresent(matches::add);
-    createHighlightMatch(dto.getMailCityHighlight(), "mailingCity").ifPresent(matches::add);
-    createHighlightMatch(dto.getMailProvinceHighlight(), "mailingProvince").ifPresent(matches::add);
-    createHighlightMatch(dto.getMailCountryHighlight(), "mailingCountry").ifPresent(matches::add);
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getAddressHighlight(), "address").ifPresent(highlights::add);
+    createHighlightMatch(dto.getCityHighlight(), "city").ifPresent(highlights::add);
+    createHighlightMatch(dto.getProvinceHighlight(), "province").ifPresent(highlights::add);
+    createHighlightMatch(dto.getCountryHighlight(), "country").ifPresent(highlights::add);
+    createHighlightMatch(dto.getMailAddressHighlight(), "mailingAddress")
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getMailCityHighlight(), "mailingCity").ifPresent(highlights::add);
+    createHighlightMatch(dto.getMailProvinceHighlight(), "mailingProvince")
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getMailCountryHighlight(), "mailingCountry")
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorUsageNameHighlight(), "descriptor.usageName")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorCountryHighlight(), "descriptor.country")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIdentifiedByHighlight(), "descriptor.identifiedBy")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorTypeStatusHighlight(), "descriptor.typeStatus")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorRecordedByHighlight(), "descriptor.recordedBy")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorDisciplineHighlight(), "descriptor.discipline")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(
             dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
-        .ifPresent(matches::add);
+        .ifPresent(highlights::add);
 
-    Optional<Match> nameMatch = createHighlightMatch(dto.getNameHighlight(), "name");
+    Optional<Highlight> nameMatch = createHighlightMatch(dto.getNameHighlight(), "name");
     if (nameMatch.isPresent()) {
-      matches.add(nameMatch.get());
+      highlights.add(nameMatch.get());
     } else if (dto.isSimilarityMatch()) {
-      Match match = new Match();
-      match.setField("name");
-      match.setSnippet(dto.getName());
-      matches.add(match);
+      Highlight highlight = new Highlight();
+      highlight.setField("name");
+      highlight.setSnippet(dto.getName());
+      highlights.add(highlight);
     }
 
-    if (!matches.isEmpty()) {
-      if (response.getMatches() == null) {
-        response.setMatches(matches);
+    if (!highlights.isEmpty()) {
+      if (response.getHighlights() == null) {
+        response.setHighlights(highlights);
       } else {
-        response.getMatches().addAll(matches);
+        response.getHighlights().addAll(highlights);
       }
     }
   }
 
-  private static Optional<Match> createHighlightMatch(String highlight, String fieldName) {
-    if (!Strings.isNullOrEmpty(highlight) && HIGHLIGHT_PATTERN.matcher(highlight).matches()) {
-      Match match = new Match();
-      match.setField(fieldName);
-      match.setSnippet(highlight);
-      return Optional.of(match);
+  private static Optional<Highlight> createHighlightMatch(String highlightText, String fieldName) {
+    if (!Strings.isNullOrEmpty(highlightText)
+        && HIGHLIGHT_PATTERN.matcher(highlightText).matches()) {
+      Highlight highlight = new Highlight();
+      highlight.setField(fieldName);
+      highlight.setSnippet(highlightText);
+      return Optional.of(highlight);
     }
 
     return Optional.empty();

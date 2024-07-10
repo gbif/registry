@@ -13,20 +13,26 @@
  */
 package org.gbif.registry.ws.client.collections;
 
+import java.util.List;
+import java.util.UUID;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorSet;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("grscicoll/collection")
 public interface CollectionClient
@@ -96,4 +102,53 @@ public interface CollectionClient
       produces = MediaType.APPLICATION_JSON_VALUE,
       consumes = MediaType.APPLICATION_JSON_VALUE)
   UUID createFromDataset(@RequestBody CollectionImportParams importParams);
+
+  @PostMapping(
+      value = "{collectionKey}/descriptorSet",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  long createDescriptorSet(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
+      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestParam("title") @Trim String title,
+      @RequestParam(value = "description", required = false) @Trim String description);
+
+  @PutMapping(
+      value = "{collectionKey}/descriptorSet/{key}",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  void updateDescriptorSet(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorSetKey,
+      @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
+      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestParam("title") @Trim String title,
+      @RequestParam(value = "description", required = false) @Trim String description);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorSet/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  DescriptorSet getCollectionDescriptorSet(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorSetKey);
+
+  @GetMapping(value = "{collectionKey}/descriptorSet", produces = MediaType.APPLICATION_JSON_VALUE)
+  PagingResponse<DescriptorSet> listCollectionDescriptorSets(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @SpringQueryMap DescriptorSetSearchRequest searchRequest);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorSet/{key}/descriptor",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  PagingResponse<Descriptor> listCollectionDescriptors(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorSetKey,
+      @SpringQueryMap DescriptorSearchRequest searchRequest);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorSet/{descriptorSetKey}/descriptor/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  Descriptor getCollectionDescriptor(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("descriptorSetKey") long descriptorSetKey,
+      @PathVariable("key") long descriptorKey);
 }

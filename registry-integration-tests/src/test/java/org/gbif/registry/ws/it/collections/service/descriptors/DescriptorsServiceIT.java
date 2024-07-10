@@ -57,7 +57,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
 
   @Test
   @SneakyThrows
-  public void createDescriptorSetTest() {
+  public void descriptorsTest() {
     Collection collection = new Collection();
     collection.setCode("c1");
     collection.setName("n1");
@@ -129,5 +129,15 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     descriptors = descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(4, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 3));
+
+    descriptorsService.deleteDescriptorSet(descriptorSetKey);
+    assertEquals(
+        0,
+        descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build()).getCount());
+    assertEquals(
+        0,
+        descriptorsService
+            .listDescriptorSets(collection.getKey(), DescriptorSetSearchRequest.builder().build())
+            .getCount());
   }
 }

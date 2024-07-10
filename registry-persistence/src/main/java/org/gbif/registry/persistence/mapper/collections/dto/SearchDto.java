@@ -45,7 +45,7 @@ public class SearchDto extends BaseSearchDto {
   private Integer descriptorIndividualCount;
   private List<String> descriptorIdentifiedBy;
   private Date descriptorDateIdentified;
-  private List<TypeStatus> descriptorTypeStatus;
+  private List<String> descriptorTypeStatus;
   private List<String> descriptorRecordedBy;
   private String descriptorDiscipline;
   private String descriptorObjectClassification;

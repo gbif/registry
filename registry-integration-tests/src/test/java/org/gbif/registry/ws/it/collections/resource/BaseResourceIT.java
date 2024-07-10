@@ -13,6 +13,12 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+
+import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
+
+import java.util.Arrays;
+import java.util.Collections;
+import javax.sql.DataSource;
 import org.gbif.api.vocabulary.UserRole;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.test.mocks.IdentityServiceMock;
@@ -26,12 +32,6 @@ import org.gbif.ws.security.GbifAuthService;
 import org.gbif.ws.security.GbifAuthenticationManager;
 import org.gbif.ws.security.GbifAuthenticationManagerImpl;
 import org.gbif.ws.security.KeyStore;
-
-import java.util.Arrays;
-import java.util.Collections;
-
-import javax.sql.DataSource;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -54,8 +54,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import static org.gbif.registry.ws.it.fixtures.TestConstants.IT_APP_KEY2;
 
 /** Base class for IT tests that initializes data sources and basic security settings. */
 @ExtendWith(SpringExtension.class)
@@ -146,6 +144,7 @@ public class BaseResourceIT {
     return clientBuilder
         .withUrl("http://localhost:" + localServerPort)
         .withCredentials(username, username)
+        .withFormEncoder()
         .build(cls);
   }
 
