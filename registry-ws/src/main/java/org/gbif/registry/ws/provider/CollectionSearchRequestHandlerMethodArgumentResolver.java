@@ -39,6 +39,13 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
       WebDataBinderFactory binderFactory) {
 
     CollectionSearchRequest searchRequest = CollectionSearchRequest.builder().build();
+    fillCollectionSearchRequest(searchRequest, webRequest);
+
+    return searchRequest;
+  }
+
+  protected void fillCollectionSearchRequest(
+      CollectionSearchRequest searchRequest, NativeWebRequest webRequest) {
     fillSearchRequestParams(searchRequest, webRequest);
 
     String institution = webRequest.getParameter("institution");
@@ -74,7 +81,5 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
             "Invalid boolean for personalCollection: " + personalCollection);
       }
     }
-
-    return searchRequest;
   }
 }

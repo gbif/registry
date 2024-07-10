@@ -185,6 +185,7 @@
 
   <sql id="LIST_DESCRIPTORS_FILTER">
     FROM collection_descriptor d
+    INNER JOIN collection_descriptor_set ds ON ds.key = d.collection_descriptor_set_key AND ds.deleted IS NULL
     <if test="params.query != null">
       <include refid="FULLTEXT_SEARCH"/>
     </if>
@@ -236,9 +237,6 @@
         <foreach item="item" collection="params.identifiedBy" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}::text
         </foreach>
-      </if>
-      <if test="params.dateIdentified != null">
-        AND d.individual_count = #{params.individualCount,jdbcType=VARCHAR}
       </if>
       <if test="params.dateIdentifiedFrom != null">AND d.date_identified &gt;= #{params.dateIdentifiedFrom}</if>
       <if test="params.dateIdentifiedBefore != null">AND d.date_identified &lt; #{params.dateIdentifiedBefore}

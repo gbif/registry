@@ -160,12 +160,12 @@ public class CollectionsSearchIT extends BaseServiceIT {
         searchService.search("I1", true, null, null, null, 10);
     assertEquals(3, responses.size());
     assertEquals(i1.getKey(), responses.get(0).getKey());
-    assertEquals(1, responses.get(0).getMatches().size());
+    assertEquals(1, responses.get(0).getHighlights().size());
 
     responses = searchService.search("i1", true, null, null, null, 10);
     assertEquals(3, responses.size());
     assertEquals(i11.getKey(), responses.get(0).getKey());
-    assertEquals(2, responses.get(0).getMatches().size());
+    assertEquals(2, responses.get(0).getHighlights().size());
   }
 
   @Test
@@ -176,13 +176,13 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
     responses = searchService.search("Collection 2", true, null, null, null, 10);
     assertEquals(2, responses.size());
-    assertEquals(1, responses.get(0).getMatches().size());
-    assertEquals(1, responses.get(1).getMatches().size());
+    assertEquals(1, responses.get(0).getHighlights().size());
+    assertEquals(1, responses.get(1).getHighlights().size());
 
     responses = searchService.search("Colllection 1", true, null, null, null, 10);
     assertEquals(2, responses.size());
-    assertEquals(1, responses.get(0).getMatches().size());
-    assertEquals(1, responses.get(1).getMatches().size());
+    assertEquals(1, responses.get(0).getHighlights().size());
+    assertEquals(1, responses.get(1).getHighlights().size());
   }
 
   @Test
@@ -205,24 +205,24 @@ public class CollectionsSearchIT extends BaseServiceIT {
     responses = searchService.search(Country.SPAIN.getIso2LetterCode(), true, null, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
-    assertEquals(1, responses.get(0).getMatches().size());
+    assertEquals(1, responses.get(0).getHighlights().size());
 
     responses = searchService.search("oviedo", true, null, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
-    assertEquals(1, responses.get(0).getMatches().size());
+    assertEquals(1, responses.get(0).getHighlights().size());
 
     responses = searchService.search("street asturias", true, null, null, null, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
-    assertEquals(2, responses.get(0).getMatches().size());
+    assertEquals(2, responses.get(0).getHighlights().size());
   }
 
   @Test
   public void searchWithoutHighlightTest() {
     List<CollectionsFullSearchResponse> responses =
         searchService.search("Collection", false, null, null, null, 10);
-    assertTrue(responses.get(0).getMatches().isEmpty());
+    assertTrue(responses.get(0).getHighlights().isEmpty());
   }
 
   @Test
@@ -282,7 +282,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     responses = searchService.search("C1", true, null, null, Country.SPAIN, 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
-    assertEquals(1, responses.get(0).getMatches().size());
+    assertEquals(1, responses.get(0).getHighlights().size());
 
     responses = searchService.search("C1", true, null, null, Country.DENMARK, 10);
     assertEquals(0, responses.size());
@@ -316,7 +316,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         searchService.searchInstitutions(
             InstitutionSearchRequest.builder().q("different").hl(true).build());
     assertEquals(1, response.getResults().size());
-    assertEquals(1, response.getResults().get(0).getMatches().size());
+    assertEquals(1, response.getResults().get(0).getHighlights().size());
   }
 
   @Test
@@ -340,7 +340,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
             CollectionDescriptorsSearchRequest.builder().q("Asturias").hl(true).build());
     assertEquals(1, response.getResults().size());
     assertEquals(1, response.getCount());
-    assertEquals(1, response.getResults().get(0).getMatches().size());
+    assertEquals(1, response.getResults().get(0).getHighlights().size());
     assertTrue(response.getResults().get(0).getDescriptorMatches().isEmpty());
 
     response =
@@ -348,13 +348,16 @@ public class CollectionsSearchIT extends BaseServiceIT {
             CollectionDescriptorsSearchRequest.builder().q("aves").build());
     assertEquals(1, response.getResults().size());
     assertEquals(1, response.getCount());
-    assertTrue(response.getResults().get(0).getMatches().isEmpty());
+    assertTrue(response.getResults().get(0).getHighlights().isEmpty());
     assertEquals(2, response.getResults().get(0).getDescriptorMatches().size());
 
-    List<CollectionsFullSearchResponse> fullSearchResponses =
-        searchService.search("DK", false, null, null, null, 10);
-    assertEquals(1, fullSearchResponses.size());
-    assertEquals(2, fullSearchResponses.get(0).getDescriptorMatches().size());
+    response =
+        searchService.searchCollections(
+            CollectionDescriptorsSearchRequest.builder().q("aves").hl(true).build());
+    assertEquals(1, response.getResults().size());
+    assertEquals(1, response.getCount());
+    assertEquals(2, response.getResults().get(0).getDescriptorMatches().size());
+    assertEquals(1, response.getResults().get(0).getHighlights().size());
 
     assertDescriptorSearch(
         1,
@@ -386,7 +389,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1,
         2,
         CollectionDescriptorsSearchRequest.builder()
-            .typeStatus(Arrays.asList(TypeStatus.COTYPE, TypeStatus.EPITYPE))
+            .typeStatus(Arrays.asList(TypeStatus.COTYPE.name(), TypeStatus.EPITYPE.name()))
             .build());
 
     assertDescriptorSearch(

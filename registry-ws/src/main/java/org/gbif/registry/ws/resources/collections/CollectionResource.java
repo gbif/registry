@@ -532,7 +532,7 @@ public class CollectionResource
   @SneakyThrows
   @PutMapping(
       value = "{collectionKey}/descriptorSet/{key}",
-      consumes = MediaType.APPLICATION_JSON_VALUE)
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public void updateDescriptorSet(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorSetKey,
