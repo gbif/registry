@@ -25,7 +25,7 @@ public class DescriptorParams {
   @Nullable List<String> identifiedBy;
   @Nullable Date dateIdentifiedFrom;
   @Nullable Date dateIdentifiedBefore;
-  @Nullable List<TypeStatus> typeStatus;
+  @Nullable List<String> typeStatus;
   @Nullable List<String> recordedBy;
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
