@@ -202,10 +202,10 @@
             <if test="params.query != null" >,query</if>
             <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
     FROM collection c
-    <include refid="LIST_FILTER" />
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
     </if>
+    <include refid="LIST_FILTER" />
     ) AS c
     ORDER BY
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.sortBy">
@@ -222,10 +222,10 @@
   <select id="count" resultType="Long">
     SELECT count(DISTINCT c.key)
     FROM collection c
-    <include refid="LIST_FILTER" />
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
     </if>
+    <include refid="LIST_FILTER" />
   </select>
 
   <sql id="LIST_FILTER">
