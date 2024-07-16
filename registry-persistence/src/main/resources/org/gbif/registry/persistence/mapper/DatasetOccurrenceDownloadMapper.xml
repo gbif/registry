@@ -45,12 +45,14 @@
   <select id="listByDataset" resultMap="DATASET_OCCURRENCE_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,<include refid="org.gbif.registry.persistence.mapper.OccurrenceDownloadMapper.OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM dataset_occurrence_download dod
+    <!-- When events get their own download tables, this join to occurrence_download can be removed. -->
     JOIN occurrence_download od ON dod.download_key = od.key
     WHERE dod.dataset_key = #{datasetKey,jdbcType=OTHER}
     <if test="type != null">
       AND od.type = #{type,jdbcType=OTHER}
     </if>
-    ORDER BY od.created DESC, od.key DESC
+    <!-- This is preferable to joining to the occurrence_download table to ORDER BY created DESC. -->
+    ORDER BY RIGHT(download_key, 15) DESC, LEFT(download_key, 7) DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -59,12 +61,14 @@
   <select id="listByDatasetWithoutDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="map">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>
     FROM dataset_occurrence_download dod
+    <!-- When events get their own download tables, this join to occurrence_download can be removed. -->
     JOIN occurrence_download od ON dod.download_key = od.key
     WHERE dod.dataset_key = #{datasetKey,jdbcType=OTHER}
     <if test="type != null">
       AND od.type = #{type,jdbcType=OTHER}
     </if>
-    ORDER BY od.created DESC, od.key DESC
+    <!-- This is preferable to joining to the occurrence_download table to ORDER BY created DESC. -->
+    ORDER BY RIGHT(download_key, 15) DESC, LEFT(download_key, 7) DESC
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -73,18 +77,16 @@
   <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
     FROM dataset_occurrence_download dod
-    INNER JOIN occurrence_download od ON dod.download_key = od.key
-    INNER JOIN dataset d ON d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
     <if test="datasetTitle != null" >
-      AND d.title = #{datasetTitle,jdbcType=VARCHAR}
+      AND dod.dataset_title = #{datasetTitle,jdbcType=VARCHAR}
     </if>
     ORDER BY
     <if test="sortBy != null">
       <choose>
         <when test="sortBy.name.equals('DATASET_TITLE')">
-          d.title
+          dod.dataset_title
         </when>
         <when test="sortBy.name.equals('COUNTRY_CODE')">
           o.country
@@ -106,7 +108,7 @@
       </if>
       ,
     </if>
-    od.created DESC, od.key DESC
+    dod.number_records DESC, dod.dataset_key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -115,16 +117,15 @@
   <select id="listOrganizationsByDownload" resultMap="ORGANIZATION_OCCURRENCE_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT o.key AS organizationKey, o.title AS organizationTitle, o.country AS publishingCountryCode, dod.download_key,
-    sum(dod.number_records) AS numberRecords
+    SUM(dod.number_records) AS numberRecords
     FROM dataset_occurrence_download dod
-    INNER JOIN occurrence_download od ON dod.download_key = od.key
     INNER JOIN dataset d on d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
     <if test="organizationTitle != null" >
       AND o.title = #{organizationTitle,jdbcType=VARCHAR}
     </if>
-    GROUP BY o.key, o.title, o.country, dod.download_key, od.created, od.key
+    GROUP BY o.key, o.title, o.country, dod.download_key
     ORDER BY
     <if test="sortBy != null">
       <choose>
@@ -151,7 +152,7 @@
       </if>
       ,
     </if>
-    od.created DESC, od.key, o.key
+    o.key
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -159,13 +160,12 @@
 
   <select id="listCountriesByDownload" resultMap="COUNTRY_OCCURRENCE_DOWNLOAD_MAP"
           parameterType="org.gbif.api.model.common.paging.Pageable">
-    SELECT o.country AS publishingCountryCode, dod.download_key, sum(dod.number_records) AS numberRecords
+    SELECT o.country AS publishingCountryCode, dod.download_key, SUM(dod.number_records) AS numberRecords
     FROM dataset_occurrence_download dod
-    INNER JOIN occurrence_download od ON dod.download_key = od.key
     INNER JOIN dataset d on d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
-    GROUP BY o.country,dod.download_key,od.created,od.key
+    GROUP BY o.country, dod.download_key
     ORDER BY
     <if test="sortBy != null">
       <choose>
@@ -189,10 +189,7 @@
       </if>
       ,
     </if>
-    od.created DESC, od.key
-    <if test="sortBy != null and sortBy.name.equals('RECORD_COUNT')">
-      ,o.country
-    </if>
+    o.country
     <if test="page != null" >
       LIMIT #{page.limit} OFFSET #{page.offset}
     </if>
@@ -201,7 +198,6 @@
   <select id="countOrganizationsByDownload" resultType="Integer">
     SELECT COUNT(DISTINCT o.key)
     FROM dataset_occurrence_download dod
-    INNER JOIN occurrence_download od ON dod.download_key = od.key
     INNER JOIN dataset d on d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
@@ -213,7 +209,6 @@
   <select id="countCountriesByDownload" resultType="Integer">
     SELECT COUNT(DISTINCT o.country)
     FROM dataset_occurrence_download dod
-    INNER JOIN occurrence_download od ON dod.download_key = od.key
     INNER JOIN dataset d on d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
@@ -221,12 +216,13 @@
 
   <select id="countByDataset" resultType="Integer" parameterType="map">
     SELECT COUNT(DISTINCT download_key)
+    <!-- When events get their own download tables, this join to occurrence_download can be removed. -->
     FROM dataset_occurrence_download JOIN occurrence_download od ON download_key = od.key
     WHERE dataset_key = #{datasetKey,jdbcType=OTHER}
     <if test="type != null"> AND od.type = #{type,jdbcType=OTHER}</if>
   </select>
 
-  <insert id="createOrUpdateUsages" >
+  <insert id="createOrUpdateUsages">
     WITH
       dataset_usages(dataset_key, number_records) AS
       ((VALUES
