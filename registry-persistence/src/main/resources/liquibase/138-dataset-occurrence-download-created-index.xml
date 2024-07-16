@@ -6,7 +6,7 @@
   <changeSet id="138" author="mblissett">
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
-          CREATE INDEX CONCURRENTLY dataset_occurrence_download_created_idx ON dataset_occurrence_download (right(download_key, 15), left(download_key, 7));
+          CREATE INDEX dataset_occurrence_download_created_idx ON dataset_occurrence_download (right(download_key, 15), left(download_key, 7));
        ]]>
     </sql>
   </changeSet>
