@@ -77,6 +77,7 @@
   <select id="listByDownload" resultMap="DATASET_OCCURRENCE_OMIT_DOWNLOAD_MAP" parameterType="org.gbif.api.model.common.paging.Pageable">
     SELECT <include refid="DATASET_OCCURRENCE_DOWNLOAD_FIELDS"/>,o.country
     FROM dataset_occurrence_download dod
+    INNER JOIN dataset d ON d.key = dod.dataset_key
     INNER JOIN organization o ON o.key = d.publishing_organization_key
     WHERE dod.download_key = #{downloadKey,jdbcType=OTHER}
     <if test="datasetTitle != null" >
