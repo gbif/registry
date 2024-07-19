@@ -45,6 +45,7 @@ public class CollectionChangeSuggestionService
     extends BaseChangeSuggestionService<Collection, CollectionChangeSuggestion> {
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
+  private  final InstitutionChangeSuggestionService institutionService;
 
   @Autowired
   public CollectionChangeSuggestionService(
@@ -57,7 +58,8 @@ public class CollectionChangeSuggestionService
       CollectionsEmailManager emailManager,
       EventManager eventManager,
       GrSciCollAuthorizationService grSciCollAuthorizationService,
-      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties) {
+      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties,
+      InstitutionChangeSuggestionService institutionService) {
     super(
         changeSuggestionMapper,
         collectionMergeService,
@@ -72,6 +74,7 @@ public class CollectionChangeSuggestionService
         grSciCollAuthorizationService,
         collectionsMailConfigurationProperties);
     this.changeSuggestionMapper = changeSuggestionMapper;
+    this.institutionService = institutionService;
   }
 
   @Override
@@ -83,14 +86,31 @@ public class CollectionChangeSuggestionService
   }
 
   @Override
+  public  UUID applyChangeSuggestion(int suggestionKey){
+    ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
+    if (dto.getType() == Type.CREATE) {
+      if (dto.getCreateInstitution()) {
+        UUID createdInstitution = institutionService.createInstitutionForCollectionSuggestion(suggestionKey);
+        Collection suggestedCollection = readJson(dto.getSuggestedEntity(), Collection.class);
+        suggestedCollection.setInstitutionKey(createdInstitution);
+        dto.setSuggestedEntity(toJson(suggestedCollection));
+        changeSuggestionMapper.update(dto);
+      }
+    }
+    return super.applyChangeSuggestion(suggestionKey);
+  }
+
+  @Override
   public CollectionChangeSuggestion getChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
 
     if (dto == null || dto.getEntityType() != CollectionEntityType.COLLECTION) {
       return null;
     }
-
-    return dtoToChangeSuggestion(dto);
+    CollectionChangeSuggestion changeSuggestion = dtoToChangeSuggestion(dto);
+    changeSuggestion.setCreateInstitution(dto.getCreateInstitution());
+    changeSuggestion.setIhIdentifier(dto.getIhIdentifier());
+    return changeSuggestion;
   }
 
   @Override
