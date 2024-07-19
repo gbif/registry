@@ -43,6 +43,7 @@ public interface ChangeSuggestionMapper {
       @Param("entityType") CollectionEntityType entityType,
       @Param("proposerEmail") String proposerEmail,
       @Param("entityKey") UUID entityKey,
+      @Param("ihIdentifier") String ihIdentifier,
       @Nullable @Param("page") Pageable page);
 
   long count(
