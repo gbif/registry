@@ -144,4 +144,5 @@
   <include file="liquibase/136-new-fields-grscicoll.xml" />
   <include file="liquibase/137-featured-image-attribution-grscicoll.xml" />
   <include file="liquibase/138-collection-descriptors-grscicoll.xml" />
+  <include file="liquibase/139-event-download-tables.xml" />
 </databaseChangeLog>
