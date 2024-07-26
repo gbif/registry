@@ -8,7 +8,6 @@ import lombok.Getter;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 
 @Getter
 @Builder
