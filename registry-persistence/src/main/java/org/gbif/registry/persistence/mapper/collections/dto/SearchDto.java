@@ -16,14 +16,10 @@ package org.gbif.registry.persistence.mapper.collections.dto;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

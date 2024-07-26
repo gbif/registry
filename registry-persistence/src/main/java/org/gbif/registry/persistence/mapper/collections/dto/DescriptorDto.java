@@ -7,7 +7,6 @@ import lombok.Data;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 
 @Data
 public class DescriptorDto {
@@ -18,7 +17,7 @@ public class DescriptorDto {
   private Integer individualCount;
   private List<String> identifiedBy;
   private Date dateIdentified;
-  private List<TypeStatus> typeStatus;
+  private List<String> typeStatus;
   private List<String> recordedBy;
   private String discipline;
   private String objectClassification;

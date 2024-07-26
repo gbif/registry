@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 
 @Getter
 @SuperBuilder

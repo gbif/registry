@@ -150,7 +150,7 @@ public class DefaultDescriptorService implements DescriptorsService {
         setResult(descriptorDto, dateIdentifiedResult, DescriptorDto::setDateIdentified);
 
         // TypeStatus
-        InterpretedResult<List<TypeStatus>> typeStatusResult =
+        InterpretedResult<List<String>> typeStatusResult =
             Interpreter.interpretTypeStatus(values, headersByName);
         setResult(descriptorDto, typeStatusResult, DescriptorDto::setTypeStatus);
 
