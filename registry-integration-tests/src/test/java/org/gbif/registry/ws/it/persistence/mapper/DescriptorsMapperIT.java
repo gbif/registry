@@ -104,7 +104,7 @@ public class DescriptorsMapperIT extends BaseItTest {
     descriptorDto.setCountry(Country.DENMARK);
     descriptorDto.setDiscipline("discipline");
     descriptorDto.setIssues(Arrays.asList("i1", "i2"));
-    descriptorDto.setTypeStatus(Collections.singletonList(TypeStatus.ALLOLECTOTYPE));
+    descriptorDto.setTypeStatus(Collections.singletonList(TypeStatus.ALLOLECTOTYPE.name()));
     descriptorDto.setUsageRank(Rank.ABERRATION);
     descriptorDto.setUsageName("usage");
     descriptorDto.setUsageKey(5);

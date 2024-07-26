@@ -76,7 +76,7 @@ public class Interpreter {
     return InterpretedResult.<String>builder().result(verbatimValue).build();
   }
 
-  public static InterpretedResult<List<TypeStatus>> interpretTypeStatus(
+  public static InterpretedResult<List<String>> interpretTypeStatus(
       String[] values, Map<String, Integer> headersByName) {
     if (values.length == 0) {
       return InterpretedResult.empty();
@@ -87,19 +87,19 @@ public class Interpreter {
       return InterpretedResult.empty();
     }
 
-    List<TypeStatus> results = new ArrayList<>();
+    List<String> results = new ArrayList<>();
     Set<String> issues = new HashSet<>();
     verbatimValue.forEach(
         v -> {
           ParseResult<TypeStatus> parseResult = typeStatusParser.parse(v);
           if (parseResult.isSuccessful()) {
-            results.add(parseResult.getPayload());
+            results.add(parseResult.getPayload().name());
           } else {
             issues.add(TYPE_STATUS_INVALID.getId());
           }
         });
 
-    return InterpretedResult.<List<TypeStatus>>builder()
+    return InterpretedResult.<List<String>>builder()
         .result(results)
         .issues(new ArrayList<>(issues))
         .build();
