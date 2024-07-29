@@ -19,22 +19,42 @@ import org.gbif.registry.domain.doi.DoiType;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Encapsulates a DOI registration request. Some fields are optional and its values can trigger a
  * different behaviour in the DoiRegistrationService.
  */
+@Setter
+@Getter
 public class DoiRegistration {
 
+  /**
+   * If the DOI existed prior the registration, maybe it was reserved previously, this
+   * field must be provided.
+   */
   @Nullable private DOI doi;
 
+  /**
+   * Key, as a String, of the element to be linked to the DOI registration. This can be
+   * a download key, a dataset UUID key or any other value.
+   */
   @Nullable private String key;
 
+  /** DataCite metadata object that will be provided to DOI register. */
   private String metadata;
 
+  /** Type of DOI requested. */
   private DoiType type;
 
+  /**
+   * GIBF user who requested the DOI or created the associated element: download,
+   * dataset or data package.
+   */
   private String user;
 
   /** Default constructor. */
@@ -46,60 +66,6 @@ public class DoiRegistration {
     this.key = key;
     this.metadata = metadata;
     this.type = type;
-    this.user = user;
-  }
-
-  /**
-   * If the DOI existed prior the registration, maybe it was reserved previously, this field must be
-   * provided.
-   */
-  public DOI getDoi() {
-    return doi;
-  }
-
-  public void setDoi(DOI doi) {
-    this.doi = doi;
-  }
-
-  /**
-   * Key, as a String, of the element to be linked to the DOI registration. This can be a download
-   * key, a dataset UUID key or any other value.
-   */
-  public String getKey() {
-    return key;
-  }
-
-  public void setKey(String key) {
-    this.key = key;
-  }
-
-  /** DataCite metadata object that will be provided to DOI register. */
-  public String getMetadata() {
-    return metadata;
-  }
-
-  public void setMetadata(String metadata) {
-    this.metadata = metadata;
-  }
-
-  /** Type of DOI requested. */
-  public DoiType getType() {
-    return type;
-  }
-
-  public void setType(DoiType type) {
-    this.type = type;
-  }
-
-  /**
-   * GIBF user who requested the DOI or created the associated element: download, dataset or data
-   * package.
-   */
-  public String getUser() {
-    return user;
-  }
-
-  public void setUser(String user) {
     this.user = user;
   }
 
@@ -135,7 +101,7 @@ public class DoiRegistration {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("key", key)
         .add("doi", doi)
         .add("metadata", metadata)
