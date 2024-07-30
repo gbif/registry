@@ -16,8 +16,6 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.InstitutionChangeSuggestion;
-import org.gbif.api.model.collections.suggestions.Type;
-import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
@@ -57,7 +55,6 @@ public class InstitutionChangeSuggestionService
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final InstitutionMergeService institutionMergeService;
   private final InstitutionService institutionService;
-  private final ContactService contactService;
 
   @Autowired
   public InstitutionChangeSuggestionService(
@@ -70,8 +67,7 @@ public class InstitutionChangeSuggestionService
       CollectionsEmailManager emailManager,
       EventManager eventManager,
       GrSciCollAuthorizationService grSciCollAuthorizationService,
-      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties,
-      @Qualifier("defaultInstitutionService") ContactService contactService) {
+      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties) {
     super(
         changeSuggestionMapper,
         institutionMergeService,
@@ -88,7 +84,6 @@ public class InstitutionChangeSuggestionService
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionMergeService = institutionMergeService;
     this.institutionService = institutionService;
-    this.contactService = contactService;
   }
 
   @Override
@@ -122,21 +117,6 @@ public class InstitutionChangeSuggestionService
         dto.getNameNewInstitutionConvertedCollection());
 
     return suggestion;
-  }
-
-  public UUID createInstitutionForCollectionSuggestion(int suggestionKey){
-    ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
-    InstitutionChangeSuggestion changeSuggestion = dtoToChangeSuggestion(dto);
-    UUID createdEntity = null;
-    if (dto.getType() == Type.CREATE) {
-
-      if (dto.getCreateInstitution()) {
-        Institution institution = dtoToInstitution(dto);
-        createdEntity = institutionService.create(institution);
-        createContacts(changeSuggestion,createdEntity);
-      }
-    }
-    return createdEntity;
   }
 
   @Override
@@ -179,23 +159,4 @@ public class InstitutionChangeSuggestionService
     }
   }
 
-  private Institution dtoToInstitution(ChangeSuggestionDto dto) {
-    Institution institution = new Institution();
-    if (dto.getSuggestedEntity() != null) {
-      institution = readJson(dto.getSuggestedEntity(), Institution.class);
-
-    }
-
-    return institution;
-  }
-
-  private void createContacts(InstitutionChangeSuggestion changeSuggestion, UUID createdEntity) {
-    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
-      && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
-      changeSuggestion
-        .getSuggestedEntity()
-        .getContactPersons()
-        .forEach(c -> contactService.addContactPerson(createdEntity, c));
-    }
-  }
 }
