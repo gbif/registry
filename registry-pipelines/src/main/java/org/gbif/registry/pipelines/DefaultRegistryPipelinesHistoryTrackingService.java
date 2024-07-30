@@ -817,7 +817,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         Optional<PipelineStep> identifierStep =
             steps.stream().filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER).findAny();
 
-        if (identifierStep.isPresent() && identifierStep.get().getState() == Status.FAILED) {
+        if (identifierStep.isPresent()
+          && FINISHED_STATE_SET.contains(identifierStep.get().getState())
+          && identifierStep.get().getMessage() != null
+          && !identifierStep.get().getMessage().isEmpty()) {
+
           // Update and mark identier as OK
           PipelineStep pipelineStep = identifierStep.get();
           pipelineStep.setState(Status.COMPLETED);
