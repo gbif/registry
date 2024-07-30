@@ -39,7 +39,7 @@
     now(), <!-- modified -->
     #{modifiedBy,jdbcType=VARCHAR},
     #{ihIdentifier, jdbcType=VARCHAR},
-    #{createInstitution, jdbcType=OTHER}
+    #{createInstitution, jdbcType=BOOLEAN}
   </sql>
 
   <sql id="SUGGESTION_PARAMS_UPDATE">
