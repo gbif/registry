@@ -125,7 +125,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         StreamUtils.copyToByteArray(
             new ClassPathResource("collections/descriptors.csv").getInputStream()),
         ExportFormat.TSV,
-        "My descriptor set",
+        "My personal descriptor set",
         "description",
         c1.getKey());
 
@@ -150,7 +150,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
             new ClassPathResource("collections/descriptors3.csv").getInputStream()),
         ExportFormat.TSV,
         "My descriptor set 3",
-        "description",
+        "unusual description",
         c2.getKey());
   }
 
@@ -399,6 +399,14 @@ public class CollectionsSearchIT extends BaseServiceIT {
             .usageName(Collections.singletonList(NubResourceClientMock.DEFAULT_USAGE.getName()))
             .build());
 
+    assertDescriptorSearch(
+        1,
+        1,
+        CollectionDescriptorsSearchRequest.builder()
+            .descriptorCountry(Collections.singletonList(Country.PORTUGAL))
+            .q("cc2")
+            .build());
+
     PagingResponse<CollectionSearchResponse> first =
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
@@ -443,6 +451,26 @@ public class CollectionsSearchIT extends BaseServiceIT {
                 .limit(1)
                 .build());
     assertEquals(c1.getKey(), sorted.getResults().get(0).getKey());
+
+    PagingResponse<CollectionSearchResponse> result =
+        searchService.searchCollections(
+            CollectionDescriptorsSearchRequest.builder().q("personal").hl(true).build());
+    assertEquals(1, result.getResults().size());
+    assertEquals(c1.getKey(), result.getResults().get(0).getKey());
+    assertEquals(
+        "descriptorSet.title",
+        result.getResults().get(0).getHighlights().iterator().next().getField());
+    assertTrue(result.getResults().get(0).getDescriptorMatches().isEmpty());
+
+    result =
+        searchService.searchCollections(
+            CollectionDescriptorsSearchRequest.builder().q("unusual").hl(true).build());
+    assertEquals(1, result.getResults().size());
+    assertEquals(c2.getKey(), result.getResults().get(0).getKey());
+    assertEquals(
+        "descriptorSet.description",
+        result.getResults().get(0).getHighlights().iterator().next().getField());
+    assertTrue(result.getResults().get(0).getDescriptorMatches().isEmpty());
   }
 
   private void assertDescriptorSearch(

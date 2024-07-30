@@ -45,4 +45,21 @@ public class DescriptorsParams extends CollectionListParams {
         || objectClassification != null
         || issues != null;
   }
+
+  public boolean descriptorSearchWithoutQuery() {
+    return usageName != null
+        || usageKey != null
+        || usageRank != null
+        || taxonKey != null
+        || descriptorCountry != null
+        || individualCount != null
+        || identifiedBy != null
+        || dateIdentifiedFrom != null
+        || dateIdentifiedBefore != null
+        || typeStatus != null
+        || recordedBy != null
+        || discipline != null
+        || objectClassification != null
+        || issues != null;
+  }
 }
