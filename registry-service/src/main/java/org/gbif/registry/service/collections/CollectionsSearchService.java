@@ -19,7 +19,6 @@ import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntege
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -280,7 +279,7 @@ public class CollectionsSearchService {
       CollectionSearchDto dto, DescriptorsParams params) {
     return dto.getDescriptorKey() != null
         && (dto.getQueryDescriptorRank() != null && dto.getQueryDescriptorRank() > 0
-            || (params.getQuery() == null && params.descriptorSearch()));
+            || params.descriptorSearchWithoutQuery());
   }
 
   private static DescriptorMatch addDescriptorMatch(SearchDto dto) {
@@ -380,6 +379,10 @@ public class CollectionsSearchService {
             dto.getDescriptorObjectClassificationHighlight(), "descriptor.objectClassification")
         .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getDescriptorSetTitleHighlight(), "descriptorSet.title")
+        .ifPresent(highlights::add);
+    createHighlightMatch(dto.getDescriptorSetDescriptionHighlight(), "descriptorSet.description")
         .ifPresent(highlights::add);
 
     Optional<Highlight> nameMatch = createHighlightMatch(dto.getNameHighlight(), "name");

@@ -49,5 +49,7 @@ public abstract class BaseSearchDto {
   private String descriptorDisciplineHighlight;
   private String descriptorObjectClassificationHighlight;
   private String descriptorIssuesHighlight;
+  private String descriptorSetTitleHighlight;
+  private String descriptorSetDescriptionHighlight;
   private boolean similarityMatch;
 }

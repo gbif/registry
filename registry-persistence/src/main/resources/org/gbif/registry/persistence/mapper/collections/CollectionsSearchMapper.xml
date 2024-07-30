@@ -274,7 +274,9 @@
         ts_headline(array_to_string(d.recorded_by, ' '), c.query) descriptor_recorded_by_highlight,
         ts_headline(d.discipline, c.query) descriptor_discipline_highlight,
         ts_headline(d.object_classification_name, c.query) descriptor_object_classification_highlight,
-        ts_headline(array_to_string(d.issues, ' '), c.query) descriptor_issues_highlight
+        ts_headline(array_to_string(d.issues, ' '), c.query) descriptor_issues_highlight,
+        ts_headline(ds.title, c.query) descriptor_set_title_highlight,
+        ts_headline(ds.description, c.query) descriptor_set_description_highlight
       </if>
     </if>
     <if test="params.query != null">
@@ -439,6 +441,7 @@
     WHERE collection_key = c.key AND query @@ cc.fulltext_search
     )
     OR <include refid="TS_QUERY"/> @@ d.fulltext_search
+    OR <include refid="TS_QUERY"/> @@ ds.fulltext_search
   </sql>
 
 </mapper>
