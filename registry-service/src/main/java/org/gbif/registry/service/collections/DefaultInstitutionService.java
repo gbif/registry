@@ -45,7 +45,6 @@ import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.Point;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +67,6 @@ import static org.gbif.registry.security.UserRoles.*;
 
 @Validated
 @Service
-@Qualifier("defaultInstitutionService")
 public class DefaultInstitutionService extends BaseCollectionEntityService<Institution>
     implements InstitutionService {
 
