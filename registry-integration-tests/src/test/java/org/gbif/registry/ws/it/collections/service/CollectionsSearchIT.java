@@ -121,7 +121,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     c1.setDisplayOnNHCPortal(false);
     collectionService.create(c1);
 
-    descriptorsService.createDescriptorSet(
+    descriptorsService.createDescriptorGroup(
         StreamUtils.copyToByteArray(
             new ClassPathResource("collections/descriptors.csv").getInputStream()),
         ExportFormat.TSV,
@@ -129,7 +129,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         "description",
         c1.getKey());
 
-    descriptorsService.createDescriptorSet(
+    descriptorsService.createDescriptorGroup(
         StreamUtils.copyToByteArray(
             new ClassPathResource("collections/descriptors2.csv").getInputStream()),
         ExportFormat.TSV,
@@ -145,7 +145,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     c2.getIdentifiers().add(new Identifier(IdentifierType.LSID, "lsid-coll"));
     collectionService.create(c2);
 
-    descriptorsService.createDescriptorSet(
+    descriptorsService.createDescriptorGroup(
         StreamUtils.copyToByteArray(
             new ClassPathResource("collections/descriptors3.csv").getInputStream()),
         ExportFormat.TSV,
@@ -458,7 +458,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     assertEquals(1, result.getResults().size());
     assertEquals(c1.getKey(), result.getResults().get(0).getKey());
     assertEquals(
-        "descriptorSet.title",
+        "descriptorGroup.title",
         result.getResults().get(0).getHighlights().iterator().next().getField());
     assertTrue(result.getResults().get(0).getDescriptorMatches().isEmpty());
 
@@ -468,7 +468,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     assertEquals(1, result.getResults().size());
     assertEquals(c2.getKey(), result.getResults().get(0).getKey());
     assertEquals(
-        "descriptorSet.description",
+        "descriptorGroup.description",
         result.getResults().get(0).getHighlights().iterator().next().getField());
     assertTrue(result.getResults().get(0).getDescriptorMatches().isEmpty());
   }

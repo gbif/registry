@@ -12,7 +12,7 @@ import org.gbif.api.vocabulary.Rank;
 public class DescriptorDto {
 
   private long key;
-  private Long descriptorSetKey;
+  private Long descriptorGroupKey;
   private Country country;
   private Integer individualCount;
   private List<String> identifiedBy;

@@ -104,7 +104,7 @@ public class TestCaseDatabaseInitializer implements BeforeEachCallback {
           "institution_collection_contact",
           "collection_collection_contact",
           "collections_batch",
-          "collection_descriptor_set",
+          "collection_descriptor_group",
           "collection_descriptor",
           "collection_descriptor_verbatim");
 

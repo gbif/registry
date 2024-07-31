@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
@@ -30,8 +30,8 @@ import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -45,7 +45,7 @@ public class DescriptorsMapperIT extends BaseItTest {
   protected TestCaseDatabaseInitializer databaseRule =
       new TestCaseDatabaseInitializer(
           "collection",
-          "collection_descriptor_set",
+          "collection_descriptor_group",
           "collection_descriptor",
           "collection_descriptor_verbatim");
 
@@ -74,33 +74,33 @@ public class DescriptorsMapperIT extends BaseItTest {
     collectionMapper.create(collection);
     assertNotNull(collection.getKey());
 
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setTitle("title");
-    descriptorSet.setDescription("description");
-    descriptorSet.setCreatedBy("user");
-    descriptorSet.setModifiedBy("user");
-    descriptorSet.setCollectionKey(collection.getKey());
-    descriptorsMapper.createDescriptorSet(descriptorSet);
-    assertTrue(descriptorSet.getKey() > 0);
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setTitle("title");
+    descriptorGroup.setDescription("description");
+    descriptorGroup.setCreatedBy("user");
+    descriptorGroup.setModifiedBy("user");
+    descriptorGroup.setCollectionKey(collection.getKey());
+    descriptorsMapper.createDescriptorGroup(descriptorGroup);
+    assertTrue(descriptorGroup.getKey() > 0);
 
-    DescriptorSet created = descriptorsMapper.getDescriptorSet(descriptorSet.getKey());
-    assertTrue(descriptorSet.lenientEquals(created));
+    DescriptorGroup created = descriptorsMapper.getDescriptorGroup(descriptorGroup.getKey());
+    assertTrue(descriptorGroup.lenientEquals(created));
 
     created.setTitle("title2");
-    descriptorsMapper.updateDescriptorSet(created);
+    descriptorsMapper.updateDescriptorGroup(created);
 
-    DescriptorSet updated = descriptorsMapper.getDescriptorSet(descriptorSet.getKey());
+    DescriptorGroup updated = descriptorsMapper.getDescriptorGroup(descriptorGroup.getKey());
     assertTrue(updated.lenientEquals(created));
 
     assertEquals(
         1,
         descriptorsMapper
-            .listDescriptorSets(
-                DescriptorSetParams.builder().collectionKey(collection.getKey()).build())
+            .listDescriptorGroups(
+                DescriptorGroupParams.builder().collectionKey(collection.getKey()).build())
             .size());
 
     DescriptorDto descriptorDto = new DescriptorDto();
-    descriptorDto.setDescriptorSetKey(descriptorSet.getKey());
+    descriptorDto.setDescriptorGroupKey(descriptorGroup.getKey());
     descriptorDto.setCountry(Country.DENMARK);
     descriptorDto.setDiscipline("discipline");
     descriptorDto.setIssues(Arrays.asList("i1", "i2"));
@@ -130,7 +130,7 @@ public class DescriptorsMapperIT extends BaseItTest {
         1,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().descriptorSetKey(descriptorSet.getKey()).build())
+                DescriptorParams.builder().descriptorGroupKey(descriptorGroup.getKey()).build())
             .size());
 
     assertEquals(
@@ -149,26 +149,26 @@ public class DescriptorsMapperIT extends BaseItTest {
                     .build())
             .size());
 
-    descriptorsMapper.deleteDescriptorSet(descriptorSet.getKey());
+    descriptorsMapper.deleteDescriptorGroup(descriptorGroup.getKey());
     assertTrue(
         descriptorsMapper
-            .listDescriptorSets(
-                DescriptorSetParams.builder().collectionKey(collection.getKey()).build())
+            .listDescriptorGroups(
+                DescriptorGroupParams.builder().collectionKey(collection.getKey()).build())
             .isEmpty());
 
     assertEquals(
         1,
         descriptorsMapper
-            .listDescriptorSets(DescriptorSetParams.builder().deleted(true).build())
+            .listDescriptorGroups(DescriptorGroupParams.builder().deleted(true).build())
             .size());
 
-    descriptorsMapper.deleteDescriptors(descriptorSet.getKey());
+    descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
     assertEquals(
         0,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().descriptorSetKey(descriptorSet.getKey()).build())
+                DescriptorParams.builder().descriptorGroupKey(descriptorGroup.getKey()).build())
             .size());
   }
 }

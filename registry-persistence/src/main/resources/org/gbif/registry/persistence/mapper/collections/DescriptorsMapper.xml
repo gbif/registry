@@ -2,20 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="org.gbif.registry.persistence.mapper.collections.DescriptorsMapper">
 
-  <resultMap id="DESCRIPTOR_SET_MAP" type="DescriptorSet" autoMapping="true">
+  <resultMap id="DESCRIPTOR_GROUP_MAP" type="DescriptorGroup" autoMapping="true">
     <id property="key" column="key"/>
   </resultMap>
 
-  <sql id="DESCRIPTOR_SET_WRITE_FIELDS">
+  <sql id="DESCRIPTOR_GROUP_WRITE_FIELDS">
     title, description, collection_key, created, created_by, modified, modified_by
   </sql>
 
-  <sql id="DESCRIPTOR_SET_READ_FIELDS">
+  <sql id="DESCRIPTOR_GROUP_READ_FIELDS">
     ds.key, ds.title, ds.description, ds.collection_key, ds.created, ds.created_by, ds.modified, ds.modified_by,
     ds.deleted
   </sql>
 
-  <sql id="DESCRIPTOR_SET_PARAMS_CREATE">
+  <sql id="DESCRIPTOR_GROUP_PARAMS_CREATE">
     #{title,jdbcType=VARCHAR},
     #{description,jdbcType=VARCHAR},
     #{collectionKey,jdbcType=OTHER},
@@ -25,7 +25,7 @@
     #{modifiedBy,jdbcType=VARCHAR}
   </sql>
 
-  <sql id="DESCRIPTOR_SET_PARAMS_UPDATE">
+  <sql id="DESCRIPTOR_GROUP_PARAMS_UPDATE">
     title = #{title,jdbcType=VARCHAR},
     description = #{description,jdbcType=VARCHAR},
     modified_by = #{modifiedBy,jdbcType=VARCHAR},
@@ -39,50 +39,50 @@
     AS query ON query @@ fulltext_search
   </sql>
 
-  <insert id="createDescriptorSet" parameterType="DescriptorSet" useGeneratedKeys="true" keyProperty="key">
-    INSERT INTO collection_descriptor_set(<include refid="DESCRIPTOR_SET_WRITE_FIELDS"/>)
-    VALUES(<include refid="DESCRIPTOR_SET_PARAMS_CREATE"/>)
+  <insert id="createDescriptorGroup" parameterType="DescriptorGroup" useGeneratedKeys="true" keyProperty="key">
+    INSERT INTO collection_descriptor_group(<include refid="DESCRIPTOR_GROUP_WRITE_FIELDS"/>)
+    VALUES(<include refid="DESCRIPTOR_GROUP_PARAMS_CREATE"/>)
   </insert>
 
-  <update id="updateDescriptorSet" parameterType="DescriptorSet">
-    UPDATE collection_descriptor_set
+  <update id="updateDescriptorGroup" parameterType="DescriptorGroup">
+    UPDATE collection_descriptor_group
     SET
-    <include refid="DESCRIPTOR_SET_PARAMS_UPDATE"/>
+    <include refid="DESCRIPTOR_GROUP_PARAMS_UPDATE"/>
     WHERE key = #{key,jdbcType=OTHER}
   </update>
 
-  <update id="deleteDescriptorSet">
-    UPDATE collection_descriptor_set
+  <update id="deleteDescriptorGroup">
+    UPDATE collection_descriptor_group
     SET deleted = now()
     WHERE key = #{key,jdbcType=OTHER} AND deleted IS NULL
   </update>
 
-  <select id="getDescriptorSet" resultMap="DESCRIPTOR_SET_MAP">
+  <select id="getDescriptorGroup" resultMap="DESCRIPTOR_GROUP_MAP">
     SELECT
-    <include refid="DESCRIPTOR_SET_READ_FIELDS"/>
-    FROM collection_descriptor_set ds
+    <include refid="DESCRIPTOR_GROUP_READ_FIELDS"/>
+    FROM collection_descriptor_group ds
     WHERE ds.key = #{key,jdbcType=OTHER}
   </select>
 
-  <select id="listDescriptorSets" resultType="DescriptorSet" resultMap="DESCRIPTOR_SET_MAP" parameterType="Pageable">
+  <select id="listDescriptorGroups" resultType="DescriptorGroup" resultMap="DESCRIPTOR_GROUP_MAP" parameterType="Pageable">
     SELECT DISTINCT ON(
     <if test="params.query != null">ts_rank_cd(ds.fulltext_search, query),</if>
     ds.created, ds.key)
-    <include refid="DESCRIPTOR_SET_READ_FIELDS"/>, ds.fulltext_search
-    <include refid="LIST_DESCRIPTOR_SETS_FILTER"/>
+    <include refid="DESCRIPTOR_GROUP_READ_FIELDS"/>, ds.fulltext_search
+    <include refid="LIST_DESCRIPTOR_GROUPS_FILTER"/>
     ORDER BY <if test="params.query != null">ts_rank_cd(ds.fulltext_search, query) DESC,</if>ds.created DESC, ds.key
     <if test="params.page != null">
       LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
   </select>
 
-  <select id="countDescriptorSets" resultType="Long">
+  <select id="countDescriptorGroups" resultType="Long">
     SELECT COUNT(DISTINCT ds.key)
-    <include refid="LIST_DESCRIPTOR_SETS_FILTER"/>
+    <include refid="LIST_DESCRIPTOR_GROUPS_FILTER"/>
   </select>
 
-  <sql id="LIST_DESCRIPTOR_SETS_FILTER">
-    FROM collection_descriptor_set ds
+  <sql id="LIST_DESCRIPTOR_GROUPS_FILTER">
+    FROM collection_descriptor_group ds
     <if test="params.query != null">
       <include refid="FULLTEXT_SEARCH"/>
     </if>
@@ -120,19 +120,19 @@
   </resultMap>
 
   <sql id="DESCRIPTOR_WRITE_FIELDS">
-    collection_descriptor_set_key, usage_key, usage_name, usage_rank, taxon_classification, taxon_keys, country,
+    collection_descriptor_group_key, usage_key, usage_name, usage_rank, taxon_classification, taxon_keys, country,
     individual_count, identified_by, date_identified, type_status, recorded_by, discipline, object_classification_name,
     issues
   </sql>
 
   <sql id="DESCRIPTOR_READ_FIELDS">
-    d.key, d.collection_descriptor_set_key, d.usage_key, d.usage_name, d.usage_rank, d.taxon_classification, d.country,
+    d.key, d.collection_descriptor_group_key, d.usage_key, d.usage_name, d.usage_rank, d.taxon_classification, d.country,
     d.individual_count, d.identified_by, d.date_identified, d.type_status, d.recorded_by, d.discipline,
     d.object_classification_name, d.issues
   </sql>
 
   <sql id="DESCRIPTOR_PARAMS_CREATE">
-    #{descriptorSetKey,jdbcType=INTEGER},
+    #{descriptorGroupKey,jdbcType=INTEGER},
     #{usageKey,jdbcType=INTEGER},
     #{usageName,jdbcType=VARCHAR},
     #{usageRank,jdbcType=VARCHAR},
@@ -156,7 +156,7 @@
 
   <delete id="deleteDescriptors">
     DELETE FROM collection_descriptor
-    WHERE collection_descriptor_set_key = #{descriptorSetKey,jdbcType=INTEGER}
+    WHERE collection_descriptor_group_key = #{descriptorGroupKey,jdbcType=INTEGER}
   </delete>
 
   <select id="getDescriptor" resultMap="DESCRIPTOR_DTO_MAP">
@@ -185,13 +185,13 @@
 
   <sql id="LIST_DESCRIPTORS_FILTER">
     FROM collection_descriptor d
-    INNER JOIN collection_descriptor_set ds ON ds.key = d.collection_descriptor_set_key AND ds.deleted IS NULL
+    INNER JOIN collection_descriptor_group ds ON ds.key = d.collection_descriptor_group_key AND ds.deleted IS NULL
     <if test="params.query != null">
       <include refid="FULLTEXT_SEARCH"/>
     </if>
     <where>
-      <if test="params.descriptorSetKey != null">
-        AND d.collection_descriptor_set_key = #{params.descriptorSetKey,jdbcType=OTHER}
+      <if test="params.descriptorGroupKey != null">
+        AND d.collection_descriptor_group_key = #{params.descriptorGroupKey,jdbcType=OTHER}
       </if>
       <if test="params.usageKey != null and params.usageKey.size > 0">
         AND d.usage_key IN
