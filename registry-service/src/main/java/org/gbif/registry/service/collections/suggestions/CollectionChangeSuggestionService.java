@@ -91,7 +91,7 @@ public class CollectionChangeSuggestionService
   public  UUID applyChangeSuggestion(int suggestionKey){
     ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
     if (dto.getType() == Type.CREATE) {
-      if (dto.getCreateInstitution()) {
+      if (Boolean.TRUE.equals(dto.getCreateInstitution())) {
         UUID createdInstitution = createInstitutionForCollectionSuggestion(dto);
         Collection suggestedCollection = readJson(dto.getSuggestedEntity(), Collection.class);
         suggestedCollection.setInstitutionKey(createdInstitution);
