@@ -33,7 +33,7 @@ public interface DescriptorsMapper {
 
   long countDescriptors(@Param("params") DescriptorParams searchParams);
 
-  void deleteDescriptors(@Param("DescriptorGroupKey") long DescriptorGroupKey);
+  void deleteDescriptors(@Param("descriptorGroupKey") long descriptorGroupKey);
 
   void createVerbatim(
       @Param("descriptorKey") long descriptorKey,
