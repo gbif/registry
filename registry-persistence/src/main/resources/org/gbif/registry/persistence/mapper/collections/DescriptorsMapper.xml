@@ -309,5 +309,6 @@
     <include refid="VERBATIM_READ_FIELDS"/>
     FROM collection_descriptor_verbatim v
     WHERE v.collection_descriptor_key = #{descriptorKey,jdbcType=INTEGER}
+    ORDER BY v.key ASC
   </select>
 </mapper>
