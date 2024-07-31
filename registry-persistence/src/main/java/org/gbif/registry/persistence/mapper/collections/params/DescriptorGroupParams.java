@@ -8,7 +8,7 @@ import org.gbif.api.model.common.paging.Pageable;
 
 @Getter
 @Builder
-public class DescriptorSetParams {
+public class DescriptorGroupParams {
 
   UUID collectionKey;
   @Nullable String query;

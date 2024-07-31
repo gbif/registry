@@ -33,7 +33,7 @@ public class SearchDto extends BaseSearchDto {
 
   // descriptors fields
   private Long descriptorKey;
-  private Long descriptorSetKey;
+  private Long descriptorGroupKey;
   private Long descriptorUsageKey;
   private String descriptorUsageName;
   private Rank descriptorUsageRank;

@@ -26,7 +26,7 @@ import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
@@ -123,15 +123,15 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     collectionMapper.create(collection);
 
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setCollectionKey(collectionKey);
-    descriptorSet.setTitle("title");
-    descriptorSet.setCreatedBy("test");
-    descriptorSet.setModifiedBy("test");
-    descriptorsMapper.createDescriptorSet(descriptorSet);
+    DescriptorGroup DescriptorGroup = new DescriptorGroup();
+    DescriptorGroup.setCollectionKey(collectionKey);
+    DescriptorGroup.setTitle("title");
+    DescriptorGroup.setCreatedBy("test");
+    DescriptorGroup.setModifiedBy("test");
+    descriptorsMapper.createDescriptorGroup(DescriptorGroup);
 
     DescriptorDto descriptorDto = new DescriptorDto();
-    descriptorDto.setDescriptorSetKey(descriptorSet.getKey());
+    descriptorDto.setDescriptorGroupKey(DescriptorGroup.getKey());
     descriptorDto.setUsageName("aves");
     descriptorDto.setCountry(Country.SPAIN);
     descriptorsMapper.createDescriptor(descriptorDto);

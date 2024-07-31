@@ -250,7 +250,7 @@
           parameterType="Pageable">
     SELECT c.*
     <if test="params.descriptorSearch">
-      ,d.key AS descriptorKey, d.collection_descriptor_set_key AS descriptorSetKey, d.usage_key AS descriptorUsageKey,
+      ,d.key AS descriptorKey, d.collection_descriptor_group_key AS descriptorGroupKey, d.usage_key AS descriptorUsageKey,
       d.usage_name AS descriptorUsageName, d.usage_rank AS descriptorUsageRank, d.country AS descriptorCountry,
       d.individual_count AS descriptorIndividualCount, d.identified_by AS descriptorIdentifiedBy,
       d.date_identified as descriptorDateIdentified, d.type_status AS descriptorTypeStatus,
@@ -275,8 +275,8 @@
         ts_headline(d.discipline, c.query) descriptor_discipline_highlight,
         ts_headline(d.object_classification_name, c.query) descriptor_object_classification_highlight,
         ts_headline(array_to_string(d.issues, ' '), c.query) descriptor_issues_highlight,
-        ts_headline(ds.title, c.query) descriptor_set_title_highlight,
-        ts_headline(ds.description, c.query) descriptor_set_description_highlight
+        ts_headline(ds.title, c.query) descriptor_group_title_highlight,
+        ts_headline(ds.description, c.query) descriptor_group_description_highlight
       </if>
     </if>
     <if test="params.query != null">
@@ -304,8 +304,8 @@
     <if test="params.query != null">, query</if>
     FROM collection c
     <if test="params.descriptorSearch">
-      LEFT JOIN collection_descriptor_set ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-      LEFT JOIN collection_descriptor d ON d.collection_descriptor_set_key = ds.key
+      LEFT JOIN collection_descriptor_group ds ON ds.collection_key = c.key AND ds.deleted IS NULL
+      LEFT JOIN collection_descriptor d ON d.collection_descriptor_group_key = ds.key
     </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
@@ -324,8 +324,8 @@
     </if>
     ) AS c
     <if test="params.descriptorSearch">
-      LEFT JOIN collection_descriptor_set ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-      LEFT JOIN collection_descriptor d ON d.collection_descriptor_set_key = ds.key
+      LEFT JOIN collection_descriptor_group ds ON ds.collection_key = c.key AND ds.deleted IS NULL
+      LEFT JOIN collection_descriptor d ON d.collection_descriptor_group_key = ds.key
     </if>
     <where>
       <include refid="DESCRIPTORS_FILTER"/>
@@ -336,8 +336,8 @@
     SELECT count(DISTINCT c.key)
     FROM collection c
     <if test="params.descriptorSearch">
-      LEFT JOIN collection_descriptor_set ds ON ds.collection_key = c.key AND ds.deleted IS NULL
-      LEFT JOIN collection_descriptor d ON d.collection_descriptor_set_key = ds.key
+      LEFT JOIN collection_descriptor_group ds ON ds.collection_key = c.key AND ds.deleted IS NULL
+      LEFT JOIN collection_descriptor d ON d.collection_descriptor_group_key = ds.key
     </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>

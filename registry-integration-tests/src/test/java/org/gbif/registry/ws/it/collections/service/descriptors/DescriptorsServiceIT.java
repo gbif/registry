@@ -20,7 +20,7 @@ import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
@@ -64,19 +64,19 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     collectionService.create(collection);
 
     Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
-    long descriptorSetKey =
-        descriptorsService.createDescriptorSet(
+    long DescriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
             StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
             ExportFormat.TSV,
             "My descriptor set",
             "description",
             collection.getKey());
-    assertTrue(descriptorSetKey > 0);
+    assertTrue(DescriptorGroupKey > 0);
 
     assertEquals(
         1,
         descriptorsService
-            .listDescriptorSets(collection.getKey(), DescriptorSetSearchRequest.builder().build())
+            .listDescriptorGroups(collection.getKey(), DescriptorGroupSearchRequest.builder().build())
             .getResults()
             .size());
 
@@ -119,8 +119,8 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             .size());
 
     Resource descriptorsFile2 = new ClassPathResource("collections/descriptors2.csv");
-    descriptorsService.updateDescriptorSet(
-        descriptorSetKey,
+    descriptorsService.updateDescriptorGroup(
+        DescriptorGroupKey,
         StreamUtils.copyToByteArray(descriptorsFile2.getInputStream()),
         ExportFormat.TSV,
         "My descriptor set",
@@ -130,14 +130,14 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(4, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 3));
 
-    descriptorsService.deleteDescriptorSet(descriptorSetKey);
+    descriptorsService.deleteDescriptorGroup(DescriptorGroupKey);
     assertEquals(
         0,
         descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build()).getCount());
     assertEquals(
         0,
         descriptorsService
-            .listDescriptorSets(collection.getKey(), DescriptorSetSearchRequest.builder().build())
+            .listDescriptorGroups(collection.getKey(), DescriptorGroupSearchRequest.builder().build())
             .getCount());
   }
 }

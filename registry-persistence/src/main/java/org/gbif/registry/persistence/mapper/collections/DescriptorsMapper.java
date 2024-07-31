@@ -2,26 +2,26 @@ package org.gbif.registry.persistence.mapper.collections;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DescriptorsMapper {
 
-  DescriptorSet getDescriptorSet(@Param("key") long key);
+  DescriptorGroup getDescriptorGroup(@Param("key") long key);
 
-  void createDescriptorSet(DescriptorSet entity);
+  void createDescriptorGroup(DescriptorGroup entity);
 
-  void deleteDescriptorSet(@Param("key") long key);
+  void deleteDescriptorGroup(@Param("key") long key);
 
-  void updateDescriptorSet(DescriptorSet entity);
+  void updateDescriptorGroup(DescriptorGroup entity);
 
-  List<DescriptorSet> listDescriptorSets(@Param("params") DescriptorSetParams searchParams);
+  List<DescriptorGroup> listDescriptorGroups(@Param("params") DescriptorGroupParams searchParams);
 
-  long countDescriptorSets(@Param("params") DescriptorSetParams searchParams);
+  long countDescriptorGroups(@Param("params") DescriptorGroupParams searchParams);
 
   DescriptorDto getDescriptor(@Param("key") long key);
 
@@ -33,7 +33,7 @@ public interface DescriptorsMapper {
 
   long countDescriptors(@Param("params") DescriptorParams searchParams);
 
-  void deleteDescriptors(@Param("descriptorSetKey") long descriptorSetKey);
+  void deleteDescriptors(@Param("DescriptorGroupKey") long DescriptorGroupKey);
 
   void createVerbatim(
       @Param("descriptorKey") long descriptorKey,

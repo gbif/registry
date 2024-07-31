@@ -20,9 +20,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
@@ -35,7 +35,7 @@ import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorSetParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -61,35 +61,35 @@ public class DefaultDescriptorService implements DescriptorsService {
   @SneakyThrows
   @Transactional
   @Override
-  public long createDescriptorSet(
-      @NotNull @Valid byte[] descriptorSetFile,
+  public long createDescriptorGroup(
+      @NotNull @Valid byte[] descriptorGroupFile,
       @NotNull ExportFormat format,
       @NotNull String title,
       String description,
       @NotNull UUID collectionKey) {
-    Objects.requireNonNull(descriptorSetFile);
-    Preconditions.checkArgument(descriptorSetFile.length > 0);
+    Objects.requireNonNull(descriptorGroupFile);
+    Preconditions.checkArgument(descriptorGroupFile.length > 0);
     Objects.requireNonNull(collectionKey);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
 
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setTitle(title);
-    descriptorSet.setDescription(description);
-    descriptorSet.setCreatedBy(username);
-    descriptorSet.setModifiedBy(username);
-    descriptorSet.setCollectionKey(collectionKey);
-    descriptorsMapper.createDescriptorSet(descriptorSet);
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setTitle(title);
+    descriptorGroup.setDescription(description);
+    descriptorGroup.setCreatedBy(username);
+    descriptorGroup.setModifiedBy(username);
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorsMapper.createDescriptorGroup(descriptorGroup);
 
-    importDescriptorsFile(descriptorSetFile, format, descriptorSet.getKey());
+    importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
 
-    return descriptorSet.getKey();
+    return descriptorGroup.getKey();
   }
 
   private void importDescriptorsFile(
-      @NotNull @Valid byte[] descriptorFile, ExportFormat format, long descriptorSetKey)
+      @NotNull @Valid byte[] descriptorFile, ExportFormat format, long descriptorGroupKey)
       throws IOException {
     // csv options
     CSVParser csvParser = new CSVParserBuilder().withSeparator(format.getDelimiter()).build();
@@ -117,7 +117,7 @@ public class DefaultDescriptorService implements DescriptorsService {
         values = FileParsingUtils.normalizeValues(headersByIndex.entrySet().size(), values);
 
         DescriptorDto descriptorDto = new DescriptorDto();
-        descriptorDto.setDescriptorSetKey(descriptorSetKey);
+        descriptorDto.setDescriptorGroupKey(descriptorGroupKey);
 
         // taxonomy
         InterpretedResult<Interpreter.TaxonData> taxonomyResult =
@@ -202,50 +202,50 @@ public class DefaultDescriptorService implements DescriptorsService {
   }
 
   @Override
-  public void deleteDescriptorSet(@NotNull long key) {
-    descriptorsMapper.deleteDescriptorSet(key);
+  public void deleteDescriptorGroup(@NotNull long key) {
+    descriptorsMapper.deleteDescriptorGroup(key);
   }
 
   @Override
-  public DescriptorSet getDescriptorSet(@NotNull long key) {
-    return descriptorsMapper.getDescriptorSet(key);
+  public DescriptorGroup getDescriptorGroup(@NotNull long key) {
+    return descriptorsMapper.getDescriptorGroup(key);
   }
 
   @SneakyThrows
   @Transactional
   @Override
-  public void updateDescriptorSet(
-      @NotNull long descriptorSetKey,
-      @NotNull byte[] descriptorSetFile,
+  public void updateDescriptorGroup(
+      @NotNull long descriptorGroupKey,
+      @NotNull byte[] descriptorGroupFile,
       @NotNull ExportFormat format,
       @NotNull String title,
       String description) {
-    Objects.requireNonNull(descriptorSetFile);
-    Preconditions.checkArgument(descriptorSetFile.length > 0);
+    Objects.requireNonNull(descriptorGroupFile);
+    Preconditions.checkArgument(descriptorGroupFile.length > 0);
     Preconditions.checkArgument(!Strings.isNullOrEmpty(title));
 
     final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     final String username = authentication.getName();
 
-    DescriptorSet descriptorSet = descriptorsMapper.getDescriptorSet(descriptorSetKey);
-    descriptorSet.setTitle(title);
-    descriptorSet.setDescription(description);
-    descriptorSet.setModifiedBy(username);
-    descriptorsMapper.updateDescriptorSet(descriptorSet);
+    DescriptorGroup descriptorGroup = descriptorsMapper.getDescriptorGroup(descriptorGroupKey);
+    descriptorGroup.setTitle(title);
+    descriptorGroup.setDescription(description);
+    descriptorGroup.setModifiedBy(username);
+    descriptorsMapper.updateDescriptorGroup(descriptorGroup);
 
     // remove descriptors
-    descriptorsMapper.deleteDescriptors(descriptorSet.getKey());
+    descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
     // reimport the file
-    importDescriptorsFile(descriptorSetFile, format, descriptorSet.getKey());
+    importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
   }
 
   @Override
-  public PagingResponse<DescriptorSet> listDescriptorSets(
-      @NotNull UUID collectionKey, DescriptorSetSearchRequest searchRequest) {
+  public PagingResponse<DescriptorGroup> listDescriptorGroups(
+      @NotNull UUID collectionKey, DescriptorGroupSearchRequest searchRequest) {
     Objects.requireNonNull(collectionKey);
     if (searchRequest == null) {
-      searchRequest = DescriptorSetSearchRequest.builder().build();
+      searchRequest = DescriptorGroupSearchRequest.builder().build();
     }
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
@@ -254,8 +254,8 @@ public class DefaultDescriptorService implements DescriptorsService {
             ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQuery()))
             : searchRequest.getQuery();
 
-    DescriptorSetParams params =
-        DescriptorSetParams.builder()
+    DescriptorGroupParams params =
+        DescriptorGroupParams.builder()
             .query(query)
             .collectionKey(collectionKey)
             .title(searchRequest.getTitle())
@@ -266,8 +266,8 @@ public class DefaultDescriptorService implements DescriptorsService {
 
     return new PagingResponse<>(
         page,
-        descriptorsMapper.countDescriptorSets(params),
-        descriptorsMapper.listDescriptorSets(params));
+        descriptorsMapper.countDescriptorGroups(params),
+        descriptorsMapper.listDescriptorGroups(params));
   }
 
   @Override
@@ -290,7 +290,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     DescriptorParams params =
         DescriptorParams.builder()
             .query(query)
-            .descriptorSetKey(searchRequest.getDescriptorSetKey())
+            .descriptorGroupKey(searchRequest.getDescriptorGroupKey())
             .country(searchRequest.getCountry())
             .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
             .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
@@ -319,7 +319,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     Descriptor descriptorRecord = new Descriptor();
     descriptorRecord.setKey(dto.getKey());
     descriptorRecord.setRecordedBy(dto.getRecordedBy());
-    descriptorRecord.setDescriptorSetKey(dto.getDescriptorSetKey());
+    descriptorRecord.setDescriptorGroupKey(dto.getDescriptorGroupKey());
     descriptorRecord.setCountry(dto.getCountry());
     descriptorRecord.setDiscipline(dto.getDiscipline());
     descriptorRecord.setIssues(dto.getIssues());
