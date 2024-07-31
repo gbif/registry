@@ -13,41 +13,37 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import org.gbif.api.vocabulary.Country;
-
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
-public class SearchDto {
+@EqualsAndHashCode(callSuper = true)
+@Data
+public class SearchDto extends BaseSearchDto {
 
   private float score;
   private String type;
-  private UUID key;
-  private String code;
-  private String name;
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
-  private boolean displayOnNHCPortal;
-  private Country country;
-  private Country mailCountry;
 
-  private String codeHighlight;
-  private String nameHighlight;
-  private String descriptionHighlight;
-  private String alternativeCodesHighlight;
-  private String addressHighlight;
-  private String cityHighlight;
-  private String provinceHighlight;
-  private String countryHighlight;
-  private String mailAddressHighlight;
-  private String mailCityHighlight;
-  private String mailProvinceHighlight;
-  private String mailCountryHighlight;
-
-  private boolean similarityMatch;
+  // descriptors fields
+  private Long descriptorKey;
+  private Long descriptorSetKey;
+  private Long descriptorUsageKey;
+  private String descriptorUsageName;
+  private Rank descriptorUsageRank;
+  private Country descriptorCountry;
+  private Integer descriptorIndividualCount;
+  private List<String> descriptorIdentifiedBy;
+  private Date descriptorDateIdentified;
+  private List<String> descriptorTypeStatus;
+  private List<String> descriptorRecordedBy;
+  private String descriptorDiscipline;
+  private String descriptorObjectClassification;
+  private List<String> descriptorIssues;
 }

@@ -59,6 +59,9 @@ date=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r
     echo "COMMIT;"
 ) | tee | toDb
 
+curl -X BAN --fail -i https://api.gbif.org -H 'X-Ban-URL: '$downloadKey
+sleep 1
+
 newDoi=$(curl -Ss https://api.gbif.org/v1/occurrence/download/$downloadKey | jq -r .doi)
 ssh crap@prodcrawler1-vh.gbif.org ./util/doi-synchronizer --fix-doi --doi $newDoi --skip-dia
 

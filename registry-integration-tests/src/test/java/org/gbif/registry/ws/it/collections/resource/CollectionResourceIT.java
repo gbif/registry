@@ -13,13 +13,32 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorSet;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
@@ -27,8 +46,10 @@ import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.registry.service.collections.batch.CollectionBatchService;
 import org.gbif.registry.service.collections.duplicates.CollectionDuplicatesService;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
@@ -42,19 +63,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 public class CollectionResourceIT
     extends BaseCollectionEntityResourceIT<Collection, CollectionChangeSuggestion> {
@@ -68,6 +80,7 @@ public class CollectionResourceIT
   @MockBean private CollectionChangeSuggestionService collectionChangeSuggestionService;
 
   @MockBean private CollectionBatchService collectionBatchService;
+  @MockBean private DescriptorsService descriptorsService;
 
   @Autowired
   public CollectionResourceIT(
@@ -92,7 +105,7 @@ public class CollectionResourceIT
     when(collectionService.list(any(CollectionSearchRequest.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    CollectionSearchRequest req = new CollectionSearchRequest();
+    CollectionSearchRequest req = CollectionSearchRequest.builder().build();
     req.setCity("city");
     req.setInstitution(UUID.randomUUID());
     req.setCountry(Collections.singletonList(Country.DENMARK));
@@ -118,7 +131,7 @@ public class CollectionResourceIT
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(orgs.size()), orgs));
 
     PagingResponse<ObjectGroup> result =
-        getClient().listAsLatimerCore(new CollectionSearchRequest());
+        getClient().listAsLatimerCore(CollectionSearchRequest.builder().build());
     assertEquals(orgs.size(), result.getResults().size());
 
     when(collectionService.getAsLatimerCore(any(UUID.class))).thenReturn(o1);
@@ -169,7 +182,7 @@ public class CollectionResourceIT
     when(collectionService.listDeleted(any(CollectionSearchRequest.class)))
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
-    CollectionSearchRequest request = new CollectionSearchRequest();
+    CollectionSearchRequest request = CollectionSearchRequest.builder().build();
     request.setReplacedBy(UUID.randomUUID());
     PagingResponse<CollectionView> result = getClient().listDeleted(request);
     assertEquals(views.size(), result.getResults().size());
@@ -221,6 +234,120 @@ public class CollectionResourceIT
     params.setDatasetKey(UUID.randomUUID());
     params.setCollectionCode("code");
     assertEquals(institutionKey, getClient().createFromDataset(params));
+  }
+
+  @SneakyThrows
+  @Test
+  public void createDescriptorSetTest() {
+    when(descriptorsService.createDescriptorSet(any(), any(), any(), any(), any())).thenReturn(1L);
+
+    Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
+    MultipartFile descriptorsFile =
+        new MockMultipartFile("descriptorsFile", descriptorsResource.getInputStream());
+
+    assertEquals(
+        1L,
+        getClient()
+            .createDescriptorSet(
+                UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title", "desc"));
+  }
+
+  @SneakyThrows
+  @Test
+  public void updateDescriptorSetTest() {
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorSet descriptorSet = new DescriptorSet();
+    descriptorSet.setCollectionKey(collectionKey);
+    descriptorSet.setTitle("title");
+
+    when(descriptorsService.getDescriptorSet(anyLong())).thenReturn(descriptorSet);
+    doNothing()
+        .when(descriptorsService)
+        .updateDescriptorSet(anyLong(), any(), any(), anyString(), anyString());
+
+    Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
+    MultipartFile descriptorsFile =
+        new MockMultipartFile("descriptorsFile", descriptorsResource.getInputStream());
+
+    assertDoesNotThrow(
+        () ->
+            getClient()
+                .updateDescriptorSet(
+                    collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc"));
+  }
+
+  @Test
+  public void getDescriptorSetTest() {
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorSet descriptorSet = new DescriptorSet();
+    descriptorSet.setCollectionKey(collectionKey);
+    descriptorSet.setTitle("title");
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.getDescriptorSet(1L)).thenReturn(descriptorSet);
+
+    assertEquals(descriptorSet, getClient().getCollectionDescriptorSet(collectionKey, 1L));
+  }
+
+  @Test
+  public void listDescriptorSetTest() {
+    DescriptorSet descriptorSet = new DescriptorSet();
+    descriptorSet.setCollectionKey(UUID.randomUUID());
+    descriptorSet.setTitle("title");
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.listDescriptorSets(
+            any(UUID.class), any(DescriptorSetSearchRequest.class)))
+        .thenReturn(new PagingResponse<>(0, 10, 1L, Collections.singletonList(descriptorSet)));
+
+    assertEquals(
+        1,
+        getClient()
+            .listCollectionDescriptorSets(
+                UUID.randomUUID(), DescriptorSetSearchRequest.builder().query("foo").build())
+            .getResults()
+            .size());
+  }
+
+  @Test
+  public void listDescriptorsTest() {
+    Descriptor descriptor = new Descriptor();
+    descriptor.setDescriptorSetKey(1L);
+    descriptor.setUsageRank(Rank.ABERRATION);
+    descriptor.setCountry(Country.SPAIN);
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.listDescriptors(any()))
+        .thenReturn(new PagingResponse<>(0, 10, 1L, Collections.singletonList(descriptor)));
+
+    assertEquals(
+        1,
+        getClient()
+            .listCollectionDescriptors(
+                UUID.randomUUID(),
+                1L,
+                DescriptorSearchRequest.builder().query("foo").individualCount("1,10").build())
+            .getResults()
+            .size());
+  }
+
+  @Test
+  public void getDescriptorTest() {
+    UUID collectionKey = UUID.randomUUID();
+    Descriptor descriptor = new Descriptor();
+    descriptor.setDescriptorSetKey(1L);
+    descriptor.setUsageRank(Rank.ABERRATION);
+    descriptor.setCountry(Country.SPAIN);
+
+    DescriptorSet descriptorSet = new DescriptorSet();
+    descriptorSet.setCollectionKey(collectionKey);
+    descriptorSet.setTitle("title");
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.getDescriptor(anyLong())).thenReturn(descriptor);
+    when(descriptorsService.getDescriptorSet(anyLong())).thenReturn(descriptorSet);
+
+    assertEquals(descriptor, getClient().getCollectionDescriptor(collectionKey, 1L, 1L));
   }
 
   protected CollectionClient getClient() {

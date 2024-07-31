@@ -1,0 +1,115 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="140" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+         CREATE TABLE collection_descriptor_set(
+            key serial NOT NULL PRIMARY KEY,
+            title text NOT NULL CHECK (assert_min_length(title, 1)),
+            description text CHECK (assert_min_length(description, 1)),
+            collection_key uuid NOT NULL REFERENCES collection(key) ON DELETE CASCADE,
+            created timestamptz NOT NULL DEFAULT now(),
+            created_by varchar NOT NULL CHECK (assert_min_length(created_by, 3)),
+            modified timestamptz NOT NULL DEFAULT now(),
+            modified_by varchar NOT NULL CHECK (assert_min_length(modified_by, 3)),
+            deleted timestamptz NULL,
+            fulltext_search tsvector
+         );
+
+        CREATE INDEX collection_descriptor_set_fulltext_search_idx ON collection_descriptor_set USING gin(fulltext_search);
+
+         CREATE TABLE collection_descriptor(
+            key serial NOT NULL PRIMARY KEY,
+            collection_descriptor_set_key integer NOT NULL REFERENCES collection_descriptor_set(key) ON DELETE CASCADE,
+            usage_key integer,
+            usage_name text,
+            usage_rank text,
+            taxon_classification jsonb,
+            taxon_keys integer[],
+            country text,
+            individual_count integer,
+            identified_by text[],
+            date_identified timestamptz,
+            type_status text[],
+            recorded_by text[],
+            discipline text,
+            object_classification_name text,
+            issues text[],
+            fulltext_search tsvector
+         );
+
+         CREATE INDEX collection_descriptor_usage_name_idx ON collection_descriptor(usage_name);
+         CREATE INDEX collection_descriptor_taxon_keys_idx ON collection_descriptor(taxon_keys);
+         CREATE INDEX collection_descriptor_country_idx ON collection_descriptor(country);
+
+         CREATE INDEX collection_descriptor_fulltext_search_idx ON collection_descriptor USING gin(fulltext_search);
+
+         CREATE TABLE collection_descriptor_verbatim(
+            key serial NOT NULL PRIMARY KEY,
+            collection_descriptor_key integer NOT NULL REFERENCES collection_descriptor(key) ON DELETE CASCADE,
+            field_name text,
+            field_value text,
+            fulltext_search tsvector
+         );
+
+         CREATE INDEX collection_descriptor_verbatim_fulltext_search_idx ON collection_descriptor_verbatim USING gin(fulltext_search);
+
+         CREATE OR REPLACE FUNCTION collection_descriptor_set_change_trigger()
+          RETURNS TRIGGER AS
+          $change$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.title,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.description,'')));
+                RETURN NEW;
+              END;
+         $change$
+         LANGUAGE plpgsql;
+
+         CREATE TRIGGER collection_descriptor_set_fulltext_update
+          BEFORE INSERT OR UPDATE ON collection_descriptor_set
+          FOR EACH ROW EXECUTE PROCEDURE collection_descriptor_set_change_trigger();
+
+         CREATE OR REPLACE FUNCTION collection_descriptor_change_trigger()
+          RETURNS TRIGGER AS
+          $recordchange$
+              BEGIN
+                NEW.fulltext_search :=
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.usage_name,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.usage_rank,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.country,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.identified_by, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.type_status, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(array_to_string(NEW.recorded_by, ' '),''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.discipline,''))) ||
+                  TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.object_classification_name,'')));
+                RETURN NEW;
+              END;
+          $recordchange$
+          LANGUAGE plpgsql;
+
+        CREATE TRIGGER collection_descriptor_fulltext_update
+          BEFORE INSERT OR UPDATE ON collection_descriptor
+          FOR EACH ROW EXECUTE PROCEDURE collection_descriptor_change_trigger();
+
+        CREATE OR REPLACE FUNCTION collection_descriptor_verbatim_change_trigger()
+        RETURNS TRIGGER AS
+        $fieldchange$
+            BEGIN
+              NEW.fulltext_search :=
+                TO_TSVECTOR('pg_catalog.english', unaccent(COALESCE(NEW.field_value,'')));
+              RETURN NEW;
+            END;
+        $fieldchange$
+        LANGUAGE plpgsql;
+
+        CREATE TRIGGER collection_descriptor_verbatim_fulltext_update
+          BEFORE INSERT OR UPDATE ON collection_descriptor_verbatim
+          FOR EACH ROW EXECUTE PROCEDURE collection_descriptor_verbatim_change_trigger();
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
