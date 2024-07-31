@@ -21,21 +21,21 @@ import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
-import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
+import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -333,8 +333,10 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorRecord.setUsageRank(dto.getUsageRank());
     descriptorRecord.setTaxonClassification(dto.getTaxonClassification());
 
-    Map<String, String> verbatim = new HashMap<>();
-    dto.getVerbatim().forEach(v -> verbatim.put(v.getFieldName(), v.getFieldValue()));
+    Map<String, String> verbatim = new LinkedHashMap<>();
+    dto.getVerbatim().stream()
+        .sorted(Comparator.comparing(VerbatimDto::getKey))
+        .forEach(v -> verbatim.put(v.getFieldName(), v.getFieldValue()));
     descriptorRecord.setVerbatim(verbatim);
     return descriptorRecord;
   }
