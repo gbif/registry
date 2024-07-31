@@ -110,7 +110,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Autowired protected ObjectMapper objectMapper;
   @Autowired protected MockMvc mockMvc;
 
-  @MockBean private ResourceNotFoundService resourceNotFoundService;
+  @MockBean protected ResourceNotFoundService resourceNotFoundService;
 
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T, R>> cls,
