@@ -30,11 +30,11 @@ import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSetSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -238,8 +238,8 @@ public class CollectionResourceIT
 
   @SneakyThrows
   @Test
-  public void createDescriptorSetTest() {
-    when(descriptorsService.createDescriptorSet(any(), any(), any(), any(), any())).thenReturn(1L);
+  public void createDescriptorGroupTest() {
+    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any())).thenReturn(1L);
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
     MultipartFile descriptorsFile =
@@ -248,22 +248,22 @@ public class CollectionResourceIT
     assertEquals(
         1L,
         getClient()
-            .createDescriptorSet(
+            .createDescriptorGroup(
                 UUID.randomUUID(), ExportFormat.CSV, descriptorsFile, "title", "desc"));
   }
 
   @SneakyThrows
   @Test
-  public void updateDescriptorSetTest() {
+  public void updateDescriptorGroupTest() {
     UUID collectionKey = UUID.randomUUID();
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setCollectionKey(collectionKey);
-    descriptorSet.setTitle("title");
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
 
-    when(descriptorsService.getDescriptorSet(anyLong())).thenReturn(descriptorSet);
+    when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
     doNothing()
         .when(descriptorsService)
-        .updateDescriptorSet(anyLong(), any(), any(), anyString(), anyString());
+        .updateDescriptorGroup(anyLong(), any(), any(), anyString(), anyString());
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
     MultipartFile descriptorsFile =
@@ -272,39 +272,39 @@ public class CollectionResourceIT
     assertDoesNotThrow(
         () ->
             getClient()
-                .updateDescriptorSet(
+                .updateDescriptorGroup(
                     collectionKey, 1L, ExportFormat.CSV, descriptorsFile, "title", "desc"));
   }
 
   @Test
-  public void getDescriptorSetTest() {
+  public void getDescriptorGroupTest() {
     UUID collectionKey = UUID.randomUUID();
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setCollectionKey(collectionKey);
-    descriptorSet.setTitle("title");
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
 
     when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
-    when(descriptorsService.getDescriptorSet(1L)).thenReturn(descriptorSet);
+    when(descriptorsService.getDescriptorGroup(1L)).thenReturn(descriptorGroup);
 
-    assertEquals(descriptorSet, getClient().getCollectionDescriptorSet(collectionKey, 1L));
+    assertEquals(descriptorGroup, getClient().getCollectionDescriptorGroup(collectionKey, 1L));
   }
 
   @Test
-  public void listDescriptorSetTest() {
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setCollectionKey(UUID.randomUUID());
-    descriptorSet.setTitle("title");
+  public void listDescriptorGroupTest() {
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(UUID.randomUUID());
+    descriptorGroup.setTitle("title");
 
     when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
-    when(descriptorsService.listDescriptorSets(
-            any(UUID.class), any(DescriptorSetSearchRequest.class)))
-        .thenReturn(new PagingResponse<>(0, 10, 1L, Collections.singletonList(descriptorSet)));
+    when(descriptorsService.listDescriptorGroups(
+            any(UUID.class), any(DescriptorGroupSearchRequest.class)))
+        .thenReturn(new PagingResponse<>(0, 10, 1L, Collections.singletonList(descriptorGroup)));
 
     assertEquals(
         1,
         getClient()
-            .listCollectionDescriptorSets(
-                UUID.randomUUID(), DescriptorSetSearchRequest.builder().query("foo").build())
+            .listCollectionDescriptorGroups(
+                UUID.randomUUID(), DescriptorGroupSearchRequest.builder().query("foo").build())
             .getResults()
             .size());
   }
@@ -312,7 +312,7 @@ public class CollectionResourceIT
   @Test
   public void listDescriptorsTest() {
     Descriptor descriptor = new Descriptor();
-    descriptor.setDescriptorSetKey(1L);
+    descriptor.setDescriptorGroupKey(1L);
     descriptor.setUsageRank(Rank.ABERRATION);
     descriptor.setCountry(Country.SPAIN);
 
@@ -335,17 +335,17 @@ public class CollectionResourceIT
   public void getDescriptorTest() {
     UUID collectionKey = UUID.randomUUID();
     Descriptor descriptor = new Descriptor();
-    descriptor.setDescriptorSetKey(1L);
+    descriptor.setDescriptorGroupKey(1L);
     descriptor.setUsageRank(Rank.ABERRATION);
     descriptor.setCountry(Country.SPAIN);
 
-    DescriptorSet descriptorSet = new DescriptorSet();
-    descriptorSet.setCollectionKey(collectionKey);
-    descriptorSet.setTitle("title");
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
 
     when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
     when(descriptorsService.getDescriptor(anyLong())).thenReturn(descriptor);
-    when(descriptorsService.getDescriptorSet(anyLong())).thenReturn(descriptorSet);
+    when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
 
     assertEquals(descriptor, getClient().getCollectionDescriptor(collectionKey, 1L, 1L));
   }

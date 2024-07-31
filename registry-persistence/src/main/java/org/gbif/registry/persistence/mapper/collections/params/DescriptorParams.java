@@ -14,7 +14,7 @@ import org.gbif.api.vocabulary.Rank;
 public class DescriptorParams {
 
   @Nullable String query;
-  @Nullable Long descriptorSetKey;
+  @Nullable Long descriptorGroupKey;
   @Nullable List<Integer> usageKey;
   @Nullable List<String> usageName;
   @Nullable List<Rank> usageRank;

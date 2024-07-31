@@ -285,7 +285,7 @@ public class CollectionsSearchService {
   private static DescriptorMatch addDescriptorMatch(SearchDto dto) {
     DescriptorMatch descriptorMatch = new DescriptorMatch();
     descriptorMatch.setKey(dto.getDescriptorKey());
-    descriptorMatch.setDescriptorSetKey(dto.getDescriptorSetKey());
+    descriptorMatch.setDescriptorGroupKey(dto.getDescriptorGroupKey());
     descriptorMatch.setUsageName(dto.getDescriptorUsageName());
     descriptorMatch.setUsageKey(dto.getDescriptorUsageKey());
     descriptorMatch.setUsageRank(dto.getDescriptorUsageRank());
@@ -380,9 +380,9 @@ public class CollectionsSearchService {
         .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorIssuesHighlight(), "descriptor.issues")
         .ifPresent(highlights::add);
-    createHighlightMatch(dto.getDescriptorSetTitleHighlight(), "descriptorSet.title")
+    createHighlightMatch(dto.getDescriptorGroupTitleHighlight(), "descriptorGroup.title")
         .ifPresent(highlights::add);
-    createHighlightMatch(dto.getDescriptorSetDescriptionHighlight(), "descriptorSet.description")
+    createHighlightMatch(dto.getDescriptorGroupDescriptionHighlight(), "descriptorGroup.description")
         .ifPresent(highlights::add);
 
     Optional<Highlight> nameMatch = createHighlightMatch(dto.getNameHighlight(), "name");

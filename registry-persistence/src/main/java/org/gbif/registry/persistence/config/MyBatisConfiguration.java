@@ -19,7 +19,7 @@ import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.descriptors.DescriptorSet;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.common.DOI;
 import org.gbif.api.model.common.DoiData;
 import org.gbif.api.model.common.paging.Pageable;
@@ -116,7 +116,7 @@ public class MyBatisConfiguration {
       configuration.getTypeAliasRegistry().registerAlias("Address", Address.class);
       configuration.getTypeAliasRegistry().registerAlias("CollectionDto", CollectionDto.class);
       configuration.getTypeAliasRegistry().registerAlias("DuplicateDto", DuplicateDto.class);
-      configuration.getTypeAliasRegistry().registerAlias("DescriptorSet", DescriptorSet.class);
+      configuration.getTypeAliasRegistry().registerAlias("DescriptorGroup", DescriptorGroup.class);
       configuration.getTypeAliasRegistry().registerAlias("Descriptor", Descriptor.class);
       configuration.getTypeAliasRegistry().registerAlias("DescriptorDto", DescriptorDto.class);
       configuration.getTypeAliasRegistry().registerAlias("VerbatimDto", VerbatimDto.class);

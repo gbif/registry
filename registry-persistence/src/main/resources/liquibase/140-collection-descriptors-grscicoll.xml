@@ -6,7 +6,7 @@
   <changeSet id="140" author="mlopez" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-         CREATE TABLE collection_descriptor_set(
+         CREATE TABLE collection_descriptor_group(
             key serial NOT NULL PRIMARY KEY,
             title text NOT NULL CHECK (assert_min_length(title, 1)),
             description text CHECK (assert_min_length(description, 1)),
@@ -19,11 +19,11 @@
             fulltext_search tsvector
          );
 
-        CREATE INDEX collection_descriptor_set_fulltext_search_idx ON collection_descriptor_set USING gin(fulltext_search);
+        CREATE INDEX collection_descriptor_group_fulltext_search_idx ON collection_descriptor_group USING gin(fulltext_search);
 
          CREATE TABLE collection_descriptor(
             key serial NOT NULL PRIMARY KEY,
-            collection_descriptor_set_key integer NOT NULL REFERENCES collection_descriptor_set(key) ON DELETE CASCADE,
+            collection_descriptor_group_key integer NOT NULL REFERENCES collection_descriptor_group(key) ON DELETE CASCADE,
             usage_key integer,
             usage_name text,
             usage_rank text,
@@ -57,7 +57,7 @@
 
          CREATE INDEX collection_descriptor_verbatim_fulltext_search_idx ON collection_descriptor_verbatim USING gin(fulltext_search);
 
-         CREATE OR REPLACE FUNCTION collection_descriptor_set_change_trigger()
+         CREATE OR REPLACE FUNCTION collection_descriptor_group_change_trigger()
           RETURNS TRIGGER AS
           $change$
               BEGIN
@@ -69,9 +69,9 @@
          $change$
          LANGUAGE plpgsql;
 
-         CREATE TRIGGER collection_descriptor_set_fulltext_update
-          BEFORE INSERT OR UPDATE ON collection_descriptor_set
-          FOR EACH ROW EXECUTE PROCEDURE collection_descriptor_set_change_trigger();
+         CREATE TRIGGER collection_descriptor_group_fulltext_update
+          BEFORE INSERT OR UPDATE ON collection_descriptor_group
+          FOR EACH ROW EXECUTE PROCEDURE collection_descriptor_group_change_trigger();
 
          CREATE OR REPLACE FUNCTION collection_descriptor_change_trigger()
           RETURNS TRIGGER AS
