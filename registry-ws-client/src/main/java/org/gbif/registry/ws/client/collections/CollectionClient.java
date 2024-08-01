@@ -22,8 +22,8 @@ import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -131,7 +131,14 @@ public interface CollectionClient
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey);
 
-  @GetMapping(value = "{collectionKey}/descriptorGroup", produces = MediaType.APPLICATION_JSON_VALUE)
+  @DeleteMapping(value = "{collectionKey}/descriptorGroup/{key}")
+  void deleteCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorGroup",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   PagingResponse<DescriptorGroup> listCollectionDescriptorGroups(
       @PathVariable("collectionKey") UUID collectionKey,
       @SpringQueryMap DescriptorGroupSearchRequest searchRequest);
