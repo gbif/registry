@@ -33,8 +33,8 @@ import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
@@ -239,7 +239,8 @@ public class CollectionResourceIT
   @SneakyThrows
   @Test
   public void createDescriptorGroupTest() {
-    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any())).thenReturn(1L);
+    when(descriptorsService.createDescriptorGroup(any(), any(), any(), any(), any()))
+        .thenReturn(1L);
 
     Resource descriptorsResource = new ClassPathResource("collections/descriptors.csv");
     MultipartFile descriptorsFile =
@@ -348,6 +349,21 @@ public class CollectionResourceIT
     when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
 
     assertEquals(descriptor, getClient().getCollectionDescriptor(collectionKey, 1L, 1L));
+  }
+
+  @Test
+  public void deleteDescriptorTest() {
+    UUID collectionKey = UUID.randomUUID();
+
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setKey(1L);
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
+
+    when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
+    when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
+
+    assertDoesNotThrow(() -> getClient().deleteCollectionDescriptorGroup(collectionKey, 1L));
   }
 
   protected CollectionClient getClient() {

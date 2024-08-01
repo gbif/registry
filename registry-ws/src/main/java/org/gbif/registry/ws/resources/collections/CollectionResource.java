@@ -45,12 +45,10 @@ import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
-import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
-import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
@@ -478,12 +476,15 @@ public class CollectionResource
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Collection descriptor groups found and returned")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Collection descriptor groups found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
   @GetMapping("{collectionKey}/descriptorGroup")
   @NullToNotFound("/grscicoll/collection/{collectionKey}/descriptorGroup")
   public PagingResponse<DescriptorGroup> listCollectionDescriptorGroups(
-      @PathVariable("collectionKey") UUID collectionKey, DescriptorGroupSearchRequest searchRequest) {
+      @PathVariable("collectionKey") UUID collectionKey,
+      DescriptorGroupSearchRequest searchRequest) {
     return descriptorsService.listDescriptorGroups(collectionKey, searchRequest);
   }
 
@@ -542,7 +543,8 @@ public class CollectionResource
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
-    DescriptorGroup existingDescriptorGroup = descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
 
     descriptorsService.updateDescriptorGroup(
@@ -554,7 +556,7 @@ public class CollectionResource
   }
 
   @Operation(
-      operationId = "getCollectionDescriptor",
+      operationId = "getCollectionDescriptorGroup",
       summary = "Get details of a single collection descriptor",
       description = "Details of a single collection descriptor",
       extensions =
@@ -569,9 +571,32 @@ public class CollectionResource
   public DescriptorGroup getCollectionDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey) {
-    DescriptorGroup existingDescriptorGroup = descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
     return existingDescriptorGroup;
+  }
+
+  @Operation(
+      operationId = "deleteCollectionDescriptorGroup",
+      summary = "Get details of a single collection descriptor group",
+      description = "Details of a single collection descriptor group",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0510")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "204", description = "Descriptor group marked as deleted")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @DeleteMapping("{collectionKey}/descriptorGroup/{key}")
+  public void deleteCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
   }
 
   @Operation(
