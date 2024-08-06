@@ -135,8 +135,7 @@ public class CollectionChangeSuggestionService
     CollectionChangeSuggestion changeSuggestion = dtoToChangeSuggestion(dto);
     UUID createdEntity = null;
     if (dto.getType() == Type.CREATE) {
-
-      if (dto.getCreateInstitution()) {
+      if (Boolean.TRUE.equals(dto.getCreateInstitution())) {
         Institution institution = collectionChangeSuggestionToInstitution(dto);
         createdEntity = institutionService.create(institution);
         createContacts(changeSuggestion,createdEntity);
