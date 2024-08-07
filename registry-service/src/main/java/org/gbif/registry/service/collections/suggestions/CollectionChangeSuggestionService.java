@@ -149,7 +149,12 @@ public class CollectionChangeSuggestionService
 
     if (dto.getSuggestedEntity() != null) {
       Collection collection = readJson(dto.getSuggestedEntity(), Collection.class);
-      institution.setName(collection.getName());
+
+      String name = collection.getName();
+      if(name.startsWith("Herbarium - ")) {
+        name = name.substring("Herbarium - ".length());
+      }
+      institution.setName(name);
       institution.setCode(collection.getCode());
       institution.setActive(collection.isActive());
 
