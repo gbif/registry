@@ -145,4 +145,5 @@
   <include file="liquibase/137-featured-image-attribution-grscicoll.xml" />
   <include file="liquibase/138-dataset-occurrence-download-created-index.xml" />
   <include file="liquibase/139-dataset-occurrence-download-created-index.xml" />
+  <include file="liquibase/140-contact-salutation.xml" />
 </databaseChangeLog>
