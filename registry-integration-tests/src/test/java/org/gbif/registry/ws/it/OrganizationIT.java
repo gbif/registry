@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.it;
 
+import java.math.BigDecimal;
+
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Dataset;
@@ -44,9 +46,13 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.geojson.Feature;
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.locationtech.jts.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.server.LocalServerPort;
 
@@ -264,6 +270,34 @@ public class OrganizationIT extends NetworkEntityIT<Organization> {
     service.delete(key2);
     searchParams = new OrganizationRequestSearchParams();
     assertResultsOfSize(service.listDeleted(searchParams), 1);
+  }
+
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testListPublishersAsGeoJson(ServiceType serviceType) {
+    OrganizationService service = (OrganizationService) getService(serviceType);
+
+    Node node = testDataFactory.newNode();
+    UUID nodeKey = nodeResource.create(node);
+
+    Organization o1 = testDataFactory.newOrganization(nodeKey);
+    o1.setTitle("n1");
+    o1.setEndorsementApproved(true);
+    o1.setLatitude(BigDecimal.valueOf(50d));
+    o1.setLongitude(BigDecimal.valueOf(12d));
+
+    UUID key1 = getService(serviceType).create(o1);
+
+    FeatureCollection expectedFeatureCollection = new FeatureCollection();
+    Feature f1 = new Feature();
+    f1.setGeometry(new Point(12d, 50d));
+    f1.setProperty("organization", "n1");
+    f1.setProperty("key", key1.toString());
+    expectedFeatureCollection.add(f1);
+
+    OrganizationRequestSearchParams searchParams = new OrganizationRequestSearchParams();
+    FeatureCollection result = service.listGeoJson(searchParams);
+    Assert.equals(expectedFeatureCollection.getFeatures().size(),result.getFeatures().size());
   }
 
   private void createOrgs(UUID nodeKey, ServiceType serviceType, Country... countries) {
