@@ -29,6 +29,12 @@
     <result property="language" column="language" typeHandler="org.gbif.mybatis.type.LanguageTypeHandler" />
   </resultMap>
 
+  <resultMap id="ORGANIZATION_GEOJSON_DTO_MAP" type="OrganizationGeoJsonDto" autoMapping="true">
+    <id property="key" column="key"/>
+    <result property="title" column="title" />
+    <association property="numPublishedDatasets" column="key" select="countPublishedDatasets" />
+  </resultMap>
+
   <sql id="WRITABLE_ORGANIZATION_FIELDS">
     key,endorsing_node_key,password,title,abbreviation,description,language,email,
     phone,homepage,logo_url,address,city,province,country,postal_code,latitude,longitude,created,created_by,
@@ -483,6 +489,15 @@
     <if test="georeferenced != null and georeferenced == true" >
       AND o.latitude IS NOT NULL AND o.longitude IS NOT NULL
     </if>
+  </select>
+
+  <select id="listGeoJson" resultType="OrganizationGeoJsonDto" resultMap="ORGANIZATION_GEOJSON_DTO_MAP">
+    SELECT DISTINCT ON(<if test="params.query != null" >ts_rank_cd(o.fulltext_search, query), </if>o.created, o.key)
+    <include refid="ORGANIZATION_FIELDS"/>
+    <include refid="LIST_FILTER" />
+    AND o.latitude IS NOT NULL
+    AND o.longitude IS NOT NULL
+    ORDER BY <if test="params.query != null" >ts_rank_cd(o.fulltext_search, query) DESC, </if>o.created DESC, o.key
   </select>
 
   <select id="getChallengeCodeKey" resultType="Integer">

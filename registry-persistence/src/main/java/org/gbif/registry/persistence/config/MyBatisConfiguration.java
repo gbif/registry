@@ -57,6 +57,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
+import org.gbif.registry.persistence.mapper.dto.OrganizationGeoJsonDto;
 import org.gbif.registry.persistence.mapper.handler.*;
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -216,6 +217,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("UserIdsTypeHandler", UserIdsTypeHandler.class);
+      configuration
+          .getTypeAliasRegistry()
+          .registerAlias("OrganizationGeoJsonDto", OrganizationGeoJsonDto.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);
