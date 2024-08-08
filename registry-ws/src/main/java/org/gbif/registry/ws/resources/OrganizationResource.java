@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources;
 
+import org.apache.ibatis.annotations.Param;
+
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -33,6 +35,7 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.persistence.mapper.DatasetMapper;
 import org.gbif.registry.persistence.mapper.InstallationMapper;
 import org.gbif.registry.persistence.mapper.OrganizationMapper;
+import org.gbif.registry.persistence.mapper.dto.OrganizationGeoJsonDto;
 import org.gbif.registry.persistence.mapper.params.BaseListParams;
 import org.gbif.registry.persistence.mapper.params.DatasetListParams;
 import org.gbif.registry.persistence.mapper.params.InstallationListParams;
@@ -52,6 +55,9 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 
+import org.geojson.Feature;
+import org.geojson.FeatureCollection;
+import org.geojson.Point;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -534,6 +540,70 @@ public class OrganizationResource
   @Override
   public List<KeyTitleResult> suggest(@RequestParam(value = "q", required = false) String label) {
     return organizationMapper.suggest(label);
+  }
+
+  @Operation(
+    operationId = "listOrganizationAsGeoJson",
+    summary = "List all organizations as GeoJson.",
+    description =
+    "Lists all current organizations in GeoJson format (deleted organizations are not listed).",
+    extensions =
+    @Extension(
+      name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0550")))
+  @SimpleSearchParameters
+  @Parameters(
+    value = {
+      @Parameter(
+        name = "isEndorsed",
+        description = "Whether the organization is endorsed by a node.",
+        schema = @Schema(implementation = Boolean.class),
+        in = ParameterIn.QUERY),
+      @Parameter(
+        name = "networkKey",
+        description = "Filter for organizations publishing datasets belonging to a network.",
+        schema = @Schema(implementation = UUID.class),
+        in = ParameterIn.QUERY)
+    })
+  @ApiResponse(responseCode = "200", description = "Organization search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @Override
+  @GetMapping("geojson")
+  public FeatureCollection listGeoJson(@Param("params") OrganizationRequestSearchParams request) {
+    if (request == null) {
+      request = new OrganizationRequestSearchParams();
+    }
+
+    OrganizationListParams listParams =
+      OrganizationListParams.builder()
+        .query(parseQuery(request.getQ()))
+        .country(request.getCountry())
+        .isEndorsed(request.getIsEndorsed())
+        .deleted(false)
+        .networkKey(request.getNetworkKey())
+        .from(parseFrom(request.getModified()))
+        .to(parseTo(request.getModified()))
+        .identifier(request.getIdentifier())
+        .identifierType(request.getIdentifierType())
+        .mtNamespace(request.getMachineTagNamespace())
+        .mtName(request.getMachineTagName())
+        .mtValue(request.getMachineTagValue())
+        .page(null)
+        .build();
+
+    List<OrganizationGeoJsonDto> publishers = organizationMapper.listGeoJson(listParams);
+
+    FeatureCollection featureCollection = new FeatureCollection();
+    for (OrganizationGeoJsonDto p: publishers) {
+        Feature feature = new Feature();
+        feature.setProperty("key", p.getKey());
+        feature.setProperty("title", p.getTitle());
+        feature.setProperty("numPublishedDatasets", p.getNumPublishedDatasets());
+        feature.setGeometry(new Point(p.getLongitude().doubleValue(), p.getLatitude().doubleValue()));
+        featureCollection.add(feature);
+      }
+
+    return  featureCollection;
   }
 
   /**
