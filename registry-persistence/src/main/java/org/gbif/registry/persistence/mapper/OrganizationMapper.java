@@ -20,6 +20,7 @@ import org.gbif.api.model.registry.search.KeyTitleResult;
 import org.gbif.api.vocabulary.InstallationType;
 import org.gbif.registry.domain.ws.LegacyOrganizationBriefResponse;
 import org.gbif.registry.persistence.ChallengeCodeSupportMapper;
+import org.gbif.registry.persistence.mapper.dto.OrganizationGeoJsonDto;
 import org.gbif.registry.persistence.mapper.params.OrganizationListParams;
 
 import java.util.List;
@@ -83,4 +84,10 @@ public interface OrganizationMapper
   List<KeyTitleResult> suggest(@Nullable @Param("q") String q);
 
   Organization getLightweight(@Param("key") UUID key);
+
+  /**
+   * @return The list of organizations as geojson
+   */
+  List<OrganizationGeoJsonDto> listGeoJson(@Param("params") OrganizationListParams params);
+
 }
