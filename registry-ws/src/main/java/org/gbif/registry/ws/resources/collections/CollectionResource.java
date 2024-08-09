@@ -25,6 +25,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -32,9 +34,16 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import org.gbif.api.annotation.NullToNotFound;
@@ -70,10 +79,14 @@ import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggest
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.resources.Docs;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -507,7 +520,7 @@ public class CollectionResource
   public long createDescriptorGroup(
       @PathVariable UUID collectionKey,
       @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
-      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestPart(value = "descriptorsFile", required = false) MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
     return descriptorsService.createDescriptorGroup(
@@ -543,10 +556,7 @@ public class CollectionResource
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
-    DescriptorGroup existingDescriptorGroup =
-        descriptorsService.getDescriptorGroup(descriptorGroupKey);
-    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
-
+    getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
     descriptorsService.updateDescriptorGroup(
         descriptorGroupKey,
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
@@ -571,16 +581,13 @@ public class CollectionResource
   public DescriptorGroup getCollectionDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey) {
-    DescriptorGroup existingDescriptorGroup =
-        descriptorsService.getDescriptorGroup(descriptorGroupKey);
-    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
-    return existingDescriptorGroup;
+    return getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
   }
 
   @Operation(
       operationId = "deleteCollectionDescriptorGroup",
-      summary = "Get details of a single collection descriptor group",
-      description = "Details of a single collection descriptor group",
+      summary = "Deletes a collection descriptor group",
+      description = "Deletes a collection descriptor group",
       extensions =
           @Extension(
               name = "Order",
@@ -593,10 +600,93 @@ public class CollectionResource
   public void deleteCollectionDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey) {
+    getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
+  }
+
+  @Operation(
+      operationId = "CollectionDescriptorGroupExport",
+      summary = "Exports a collection descriptor group.",
+      description = "Download a collection descriptor group as CSV or TSV.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0520")))
+  @CollectionSearchParameters
+  @ApiResponse(responseCode = "200", description = "Collection search successful")
+  @ApiResponse(responseCode = "400", description = "Invalid search query provided")
+  @GetMapping(value = "{collectionKey}/descriptorGroup/{key}/export", produces = "application/zip")
+  public ResponseEntity<Resource> exportDescriptorGroup(
+      HttpServletResponse response,
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey,
+      @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format)
+      throws IOException {
+    DescriptorGroup existingDescriptorGroup =
+        getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+
+    DescriptorSearchRequest searchRequest =
+        DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build();
+
+    Preconditions.checkArgument(
+        descriptorsService.countDescriptors(searchRequest) > 0,
+        "The descriptor group doesn't have descriptors");
+
+    Path interpretedCsv = Files.createFile(Paths.get("interpreted." + format.name().toLowerCase()));
+    try (Writer writer =
+        new OutputStreamWriter(new FileOutputStream(interpretedCsv.toFile().getName()))) {
+      CsvWriter.descriptors(
+              Iterables.descriptors(descriptorsService, searchRequest, EXPORT_LIMIT), format)
+          .export(writer);
+    }
+
+    Path verbatimCsv = Files.createFile(Paths.get("verbatim." + format.name().toLowerCase()));
+    Set<String> verbatimFields = descriptorsService.getVerbatimNames(descriptorGroupKey);
+    try (Writer writer =
+        new OutputStreamWriter(new FileOutputStream(verbatimCsv.toFile().getName()))) {
+      CsvWriter.descriptorVerbatims(
+              Iterables.descriptorVerbatims(descriptorsService, searchRequest, EXPORT_LIMIT),
+              format,
+              verbatimFields)
+          .exportMap(writer);
+    }
+
+    Path zipFile = zipFiles(existingDescriptorGroup, interpretedCsv, verbatimCsv);
+    ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(zipFile));
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=" + zipFile.toFile().getName())
+        .body(resource);
+  }
+
+  private static Path zipFiles(
+      DescriptorGroup existingDescriptorGroup, Path interpretedCsv, Path verbatimCsv)
+      throws IOException {
+    Path zipFile = Files.createTempFile(existingDescriptorGroup.getTitle(), ".zip");
+    try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
+      for (Path f : Arrays.asList(interpretedCsv, verbatimCsv)) {
+        try (FileInputStream fis = new FileInputStream(f.toFile())) {
+          ZipEntry zipEntry = new ZipEntry(f.toFile().getName());
+          zipOut.putNextEntry(zipEntry);
+          byte[] bytes = new byte[1024];
+          int length;
+          while ((length = fis.read(bytes)) >= 0) {
+            zipOut.write(bytes, 0, length);
+          }
+          zipOut.closeEntry();
+        }
+        Files.delete(f);
+      }
+    }
+
+    return zipFile;
+  }
+
+  @NotNull
+  private DescriptorGroup getDescriptorGroupWithCheck(UUID collectionKey, long descriptorGroupKey) {
     DescriptorGroup existingDescriptorGroup =
         descriptorsService.getDescriptorGroup(descriptorGroupKey);
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
-    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
+    return existingDescriptorGroup;
   }
 
   @Operation(
@@ -640,8 +730,7 @@ public class CollectionResource
       @PathVariable("key") long descriptorKey) {
     Descriptor descriptor = descriptorsService.getDescriptor(descriptorKey);
     Preconditions.checkArgument(descriptor.getDescriptorGroupKey().equals(descriptorGroupKey));
-    DescriptorGroup descriptorGroup = descriptorsService.getDescriptorGroup(descriptorGroupKey);
-    Preconditions.checkArgument(descriptorGroup.getCollectionKey().equals(collectionKey));
+    getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
     return descriptor;
   }
 }

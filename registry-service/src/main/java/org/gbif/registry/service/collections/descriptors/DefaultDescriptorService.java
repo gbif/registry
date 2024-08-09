@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
@@ -31,6 +32,9 @@ import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.registry.events.EventManager;
+import org.gbif.registry.events.collections.EventType;
+import org.gbif.registry.events.collections.SubEntityCollectionEvent;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
@@ -50,12 +54,16 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   private final NubResourceClient nubResourceClient;
   private final DescriptorsMapper descriptorsMapper;
+  private final EventManager eventManager;
 
   @Autowired
   public DefaultDescriptorService(
-      NubResourceClient nubResourceClient, DescriptorsMapper descriptorsMapper) {
+      NubResourceClient nubResourceClient,
+      DescriptorsMapper descriptorsMapper,
+      EventManager eventManager) {
     this.nubResourceClient = nubResourceClient;
     this.descriptorsMapper = descriptorsMapper;
+    this.eventManager = eventManager;
   }
 
   @SneakyThrows
@@ -84,6 +92,14 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorsMapper.createDescriptorGroup(descriptorGroup);
 
     importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
+
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            collectionKey,
+            Collection.class,
+            DescriptorGroup.class,
+            descriptorGroup.getKey(),
+            EventType.CREATE));
 
     return descriptorGroup.getKey();
   }
@@ -203,7 +219,18 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @Override
   public void deleteDescriptorGroup(@NotNull long key) {
+    DescriptorGroup descriptorGroup = descriptorsMapper.getDescriptorGroup(key);
+    Preconditions.checkArgument(
+        descriptorGroup != null, "Descriptor group not found for key " + key);
     descriptorsMapper.deleteDescriptorGroup(key);
+
+    eventManager.post(
+        SubEntityCollectionEvent.newInstance(
+            descriptorGroup.getCollectionKey(),
+            Collection.class,
+            DescriptorGroup.class,
+            key,
+            EventType.DELETE));
   }
 
   @Override
@@ -238,6 +265,14 @@ public class DefaultDescriptorService implements DescriptorsService {
 
     // reimport the file
     importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
+
+    eventManager.post(
+      SubEntityCollectionEvent.newInstance(
+        descriptorGroup.getCollectionKey(),
+        Collection.class,
+        DescriptorGroup.class,
+        descriptorGroupKey,
+        EventType.UPDATE));
   }
 
   @Override
@@ -281,38 +316,56 @@ public class DefaultDescriptorService implements DescriptorsService {
       searchRequest = DescriptorSearchRequest.builder().build();
     }
 
+    DescriptorParams params = createDescriptorParams(searchRequest);
+    List<DescriptorDto> dtos = descriptorsMapper.listDescriptors(params);
+    List<Descriptor> results =
+        dtos.stream().map(DefaultDescriptorService::convertRecordDto).collect(Collectors.toList());
+
+    return new PagingResponse<>(
+        params.getPage(), descriptorsMapper.countDescriptors(params), results);
+  }
+
+  private DescriptorParams createDescriptorParams(DescriptorSearchRequest searchRequest) {
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
     String query =
         searchRequest.getQuery() != null
             ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQuery()))
             : searchRequest.getQuery();
 
-    DescriptorParams params =
-        DescriptorParams.builder()
-            .query(query)
-            .descriptorGroupKey(searchRequest.getDescriptorGroupKey())
-            .country(searchRequest.getCountry())
-            .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
-            .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
-            .discipline(searchRequest.getDiscipline())
-            .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
-            .usageKey(searchRequest.getUsageKey())
-            .usageName(searchRequest.getUsageName())
-            .usageRank(searchRequest.getUsageRank())
-            .taxonKey(searchRequest.getTaxonKey())
-            .objectClassification(searchRequest.getObjectClassification())
-            .recordedBy(searchRequest.getRecordedBy())
-            .identifiedBy(searchRequest.getIdentifiedBy())
-            .issues(searchRequest.getIssues())
-            .typeStatus(searchRequest.getTypeStatus())
-            .page(page)
-            .build();
+    return DescriptorParams.builder()
+        .query(query)
+        .descriptorGroupKey(searchRequest.getDescriptorGroupKey())
+        .country(searchRequest.getCountry())
+        .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
+        .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
+        .discipline(searchRequest.getDiscipline())
+        .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
+        .usageKey(searchRequest.getUsageKey())
+        .usageName(searchRequest.getUsageName())
+        .usageRank(searchRequest.getUsageRank())
+        .taxonKey(searchRequest.getTaxonKey())
+        .objectClassification(searchRequest.getObjectClassification())
+        .recordedBy(searchRequest.getRecordedBy())
+        .identifiedBy(searchRequest.getIdentifiedBy())
+        .issues(searchRequest.getIssues())
+        .typeStatus(searchRequest.getTypeStatus())
+        .page(page)
+        .build();
+  }
 
-    List<DescriptorDto> dtos = descriptorsMapper.listDescriptors(params);
-    List<Descriptor> results =
-        dtos.stream().map(DefaultDescriptorService::convertRecordDto).collect(Collectors.toList());
+  @Override
+  public long countDescriptors(DescriptorSearchRequest searchRequest) {
+    DescriptorParams params = createDescriptorParams(searchRequest);
+    return descriptorsMapper.countDescriptors(params);
+  }
 
-    return new PagingResponse<>(page, descriptorsMapper.countDescriptors(params), results);
+  @Override
+  public Set<String> getVerbatimNames(long descriptorGroupKey) {
+    List<VerbatimDto> dtos = descriptorsMapper.getVerbatimNames(descriptorGroupKey);
+    return dtos.stream()
+        .sorted(Comparator.comparing(VerbatimDto::getKey))
+        .map(VerbatimDto::getFieldName)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   private static Descriptor convertRecordDto(DescriptorDto dto) {

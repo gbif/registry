@@ -4,8 +4,9 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
+import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -41,4 +42,6 @@ public interface DescriptorsMapper {
       @Param("fieldValue") String fieldValue);
 
   // TODO: list deleted
+
+  List<VerbatimDto> getVerbatimNames(long descriptorGroupKey);
 }
