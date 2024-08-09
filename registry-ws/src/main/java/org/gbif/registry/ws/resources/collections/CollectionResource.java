@@ -37,6 +37,8 @@ import java.lang.annotation.Target;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -632,7 +634,12 @@ public class CollectionResource
         descriptorsService.countDescriptors(searchRequest) > 0,
         "The descriptor group doesn't have descriptors");
 
-    Path interpretedCsv = Files.createFile(Paths.get("interpreted." + format.name().toLowerCase()));
+    long ts = System.currentTimeMillis();
+
+    Path interpretedCsv =
+        Files.createFile(
+            Paths.get("interpreted" + ts + "." + format.name().toLowerCase()),
+            PosixFilePermissions.asFileAttribute(filePermissions()));
     try (Writer writer =
         new OutputStreamWriter(new FileOutputStream(interpretedCsv.toFile().getName()))) {
       CsvWriter.descriptors(
@@ -640,7 +647,10 @@ public class CollectionResource
           .export(writer);
     }
 
-    Path verbatimCsv = Files.createFile(Paths.get("verbatim." + format.name().toLowerCase()));
+    Path verbatimCsv =
+        Files.createFile(
+            Paths.get("verbatim" + ts + "." + format.name().toLowerCase()),
+            PosixFilePermissions.asFileAttribute(filePermissions()));
     Set<String> verbatimFields = descriptorsService.getVerbatimNames(descriptorGroupKey);
     try (Writer writer =
         new OutputStreamWriter(new FileOutputStream(verbatimCsv.toFile().getName()))) {
@@ -658,6 +668,16 @@ public class CollectionResource
         .body(resource);
   }
 
+  private Set<PosixFilePermission> filePermissions() {
+    return Set.of(
+        PosixFilePermission.OWNER_WRITE,
+        PosixFilePermission.OWNER_READ,
+        PosixFilePermission.OWNER_EXECUTE,
+        PosixFilePermission.OTHERS_WRITE,
+        PosixFilePermission.OTHERS_READ,
+        PosixFilePermission.OTHERS_EXECUTE);
+  }
+
   private static Path zipFiles(
       DescriptorGroup existingDescriptorGroup, Path interpretedCsv, Path verbatimCsv)
       throws IOException {
@@ -665,7 +685,7 @@ public class CollectionResource
     try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
       for (Path f : Arrays.asList(interpretedCsv, verbatimCsv)) {
         try (FileInputStream fis = new FileInputStream(f.toFile())) {
-          ZipEntry zipEntry = new ZipEntry(f.toFile().getName());
+          ZipEntry zipEntry = new ZipEntry(f.toFile().getName().replaceAll("[0,9]", ""));
           zipOut.putNextEntry(zipEntry);
           byte[] bytes = new byte[1024];
           int length;
