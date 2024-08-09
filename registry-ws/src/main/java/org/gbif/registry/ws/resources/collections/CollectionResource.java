@@ -685,7 +685,7 @@ public class CollectionResource
     try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
       for (Path f : Arrays.asList(interpretedCsv, verbatimCsv)) {
         try (FileInputStream fis = new FileInputStream(f.toFile())) {
-          ZipEntry zipEntry = new ZipEntry(f.toFile().getName().replaceAll("[0,9]", ""));
+          ZipEntry zipEntry = new ZipEntry(f.toFile().getName().replaceAll("[0-9]", ""));
           zipOut.putNextEntry(zipEntry);
           byte[] bytes = new byte[1024];
           int length;
