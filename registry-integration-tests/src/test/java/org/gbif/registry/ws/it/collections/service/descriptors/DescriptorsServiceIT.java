@@ -19,8 +19,8 @@ import java.util.*;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
-import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
@@ -64,19 +64,20 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     collectionService.create(collection);
 
     Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
-    long DescriptorGroupKey =
+    long descriptorGroupKey =
         descriptorsService.createDescriptorGroup(
             StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
             ExportFormat.TSV,
             "My descriptor set",
             "description",
             collection.getKey());
-    assertTrue(DescriptorGroupKey > 0);
+    assertTrue(descriptorGroupKey > 0);
 
     assertEquals(
         1,
         descriptorsService
-            .listDescriptorGroups(collection.getKey(), DescriptorGroupSearchRequest.builder().build())
+            .listDescriptorGroups(
+                collection.getKey(), DescriptorGroupSearchRequest.builder().build())
             .getResults()
             .size());
 
@@ -120,7 +121,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
 
     Resource descriptorsFile2 = new ClassPathResource("collections/descriptors2.csv");
     descriptorsService.updateDescriptorGroup(
-        DescriptorGroupKey,
+        descriptorGroupKey,
         StreamUtils.copyToByteArray(descriptorsFile2.getInputStream()),
         ExportFormat.TSV,
         "My descriptor set",
@@ -130,14 +131,15 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(4, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 3));
 
-    descriptorsService.deleteDescriptorGroup(DescriptorGroupKey);
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
     assertEquals(
         0,
         descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build()).getCount());
     assertEquals(
         0,
         descriptorsService
-            .listDescriptorGroups(collection.getKey(), DescriptorGroupSearchRequest.builder().build())
+            .listDescriptorGroups(
+                collection.getKey(), DescriptorGroupSearchRequest.builder().build())
             .getCount());
   }
 }
