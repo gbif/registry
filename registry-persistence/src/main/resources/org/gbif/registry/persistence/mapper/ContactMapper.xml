@@ -13,7 +13,7 @@
   </resultMap>
 
   <sql id="WRITABLE_CONTACT_FIELDS">
-    user_id,first_name,last_name,description,position,email,phone,homepage,organization,address,city,province,country,postal_code,created,created_by,modified,modified_by
+    user_id,first_name,last_name,salutation,description,position,email,phone,homepage,organization,address,city,province,country,postal_code,created,created_by,modified,modified_by
   </sql>
 
   <sql id="CONTACT_FIELDS">
