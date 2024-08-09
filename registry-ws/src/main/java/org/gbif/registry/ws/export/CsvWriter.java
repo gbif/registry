@@ -13,42 +13,45 @@
  */
 package org.gbif.registry.ws.export;
 
-import org.gbif.api.model.collections.*;
-import org.gbif.api.model.collections.Address;
-import org.gbif.api.model.collections.Contact;
-import org.gbif.api.model.collections.view.CollectionView;
-import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.model.occurrence.DownloadStatistics;
-import org.gbif.api.model.registry.*;
-import org.gbif.api.model.registry.search.DatasetSearchResult;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.DatasetSubtype;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.License;
-import org.gbif.api.vocabulary.collections.MasterSourceType;
-
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import java.io.Writer;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.supercsv.cellprocessor.*;
-import org.supercsv.cellprocessor.ift.CellProcessor;
-import org.supercsv.io.CsvBeanWriter;
-import org.supercsv.io.ICsvBeanWriter;
-import org.supercsv.io.dozer.CsvDozerBeanWriter;
-import org.supercsv.prefs.CsvPreference;
-import org.supercsv.util.CsvContext;
-
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Address;
+import org.gbif.api.model.collections.Contact;
+import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.occurrence.DownloadStatistics;
+import org.gbif.api.model.registry.*;
+import org.gbif.api.model.registry.search.DatasetSearchResult;
+import org.gbif.api.v2.RankedName;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.DatasetSubtype;
+import org.gbif.api.vocabulary.DatasetType;
+import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.supercsv.cellprocessor.*;
+import org.supercsv.cellprocessor.ift.CellProcessor;
+import org.supercsv.io.CsvBeanWriter;
+import org.supercsv.io.CsvMapWriter;
+import org.supercsv.io.ICsvBeanWriter;
+import org.supercsv.io.ICsvMapWriter;
+import org.supercsv.io.dozer.CsvDozerBeanWriter;
+import org.supercsv.prefs.CsvPreference;
+import org.supercsv.util.CsvContext;
 
 @Data
 @Builder
@@ -64,6 +67,8 @@ public class CsvWriter<T> {
   private final CellProcessor[] processors;
 
   private final Iterable<T> pager;
+
+  private final Iterable<Map<String, T>> mapPager;
 
   private final ExportFormat preference;
 
@@ -340,7 +345,7 @@ public class CsvWriter<T> {
               new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
               new CleanStringProcessor(), // temporalCoverage: String
               new Optional(new ParseEnum(MasterSourceType.class)), // masterSourceType: MasterSource
-              new Optional(new FmtBool("true", "false")) //displayOnNHCPortal: boolean
+              new Optional(new FmtBool("true", "false")) // displayOnNHCPortal: boolean
             })
         .forClass(CollectionView.class)
         .preference(preference)
@@ -348,8 +353,7 @@ public class CsvWriter<T> {
         .build();
   }
 
-  /** Creates an CsvWriter/exporter of Collection. */
-  // TODO: processor for new multivalue fields
+  /** Creates an CsvWriter/exporter of Institution. */
   public static CsvWriter<Institution> institutions(
       Iterable<Institution> pager, ExportFormat preference) {
     return CsvWriter.<Institution>builder()
@@ -487,10 +491,86 @@ public class CsvWriter<T> {
               new UriProcessor(), // featuredImageUrl : URI
               new Optional(new ParseEnum(License.class)), // featuredImageLicense: License
               new Optional(new ParseEnum(MasterSourceType.class)), // masterSourceType: MasterSource
-              new Optional(new FmtBool("true", "false")) //displayOnNHCPortal: boolean
+              new Optional(new FmtBool("true", "false")) // displayOnNHCPortal: boolean
             })
         .preference(preference)
         .pager(pager)
+        .build();
+  }
+
+  /** Creates an CsvWriter/exporter of Descriptor. */
+  public static CsvWriter<Descriptor> descriptors(
+      Iterable<Descriptor> pager, ExportFormat preference) {
+    return CsvWriter.<Descriptor>builder()
+        .fields(
+            new String[] {
+              "key",
+              "descriptorGroupKey",
+              "usageKey",
+              "usageName",
+              "usageRank",
+              "country",
+              "individualCount",
+              "identifiedBy",
+              "dateIdentified",
+              "typeStatus",
+              "recordedBy",
+              "discipline",
+              "objectClassification",
+              "taxonClassification",
+              "issues"
+            })
+        .header(
+            new String[] {
+              "key",
+              "descriptor_group_key",
+              "usage_key",
+              "usage_name",
+              "usage_rank",
+              "country",
+              "individual_count",
+              "identified_by",
+              "date_identified",
+              "type_status",
+              "recorded_by",
+              "discipline",
+              "object_classification",
+              "taxon_classification",
+              "issues"
+            })
+        .processors(
+            new CellProcessor[] {
+              new ParseLong(), // key: long
+              new ParseLong(), // descriptorGroupKey: long
+              new Optional(new ParseInt()), // usageKey: int
+              new CleanStringProcessor(), // usageName: String
+              new Optional(new ParseEnum(Rank.class)), // usageRank: Rank
+              new CountryProcessor(), // country
+              new Optional(new ParseInt()), // individualCount: int
+              new Optional(new ListStringProcessor()), // identifiedBy
+              new Optional(new FmtDate(StdDateFormat.DATE_FORMAT_STR_ISO8601)), // dateIdentified
+              new Optional(new ListStringProcessor()), // typeStatus: List<String>
+              new Optional(new ListStringProcessor()), // recordedBy: List<String>
+              new Optional(new CleanStringProcessor()), // discipline
+              new Optional(new CleanStringProcessor()), // objectClassification
+              new Optional(new ListRankedNameProcessor()), // taxonClassification
+              new Optional(new ListStringProcessor()) // issues
+            })
+        .preference(preference)
+        .pager(pager)
+        .build();
+  }
+
+  /** Creates an CsvWriter/exporter of Descriptor verbatim fields. */
+  public static CsvWriter<String> descriptorVerbatims(
+      Iterable<Map<String, String>> pager, ExportFormat preference, Set<String> headers) {
+    return CsvWriter.<String>builder()
+        .fields(headers.toArray(new String[0]))
+        .header(headers.toArray(new String[0]))
+        .processors(
+            headers.stream().map(h -> new CleanStringProcessor()).toArray(CellProcessor[]::new))
+        .preference(preference)
+        .mapPager(pager)
         .build();
   }
 
@@ -508,6 +588,16 @@ public class CsvWriter<T> {
       return CsvPreference.TAB_PREFERENCE;
     }
     throw new IllegalArgumentException("Export format not supported " + preference);
+  }
+
+  @SneakyThrows
+  public void exportMap(Writer writer) {
+    try (ICsvMapWriter mapWriter = new CsvMapWriter(writer, csvPreference())) {
+      mapWriter.writeHeader(header);
+      for (Map<String, T> o : mapPager) {
+        mapWriter.write(o, fields, processors);
+      }
+    }
   }
 
   @SneakyThrows
@@ -794,6 +884,30 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<OccurrenceMapping>) value) : "";
+    }
+  }
+
+  /** Null aware List<RankedName> processor. */
+  public static class ListRankedNameProcessor implements CellProcessor {
+
+    public static String toString(List<RankedName> value) {
+      return value.stream()
+          .filter(Objects::nonNull)
+          .map(ListRankedNameProcessor::toString)
+          .collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+
+    public static String toString(RankedName rankedName) {
+      return notNullJoiner(
+          ":",
+          String.valueOf(rankedName.getKey()),
+          rankedName.getName(),
+          rankedName.getRank() != null ? rankedName.getRank().name() : null);
+    }
+
+    @Override
+    public String execute(Object value, CsvContext csvContext) {
+      return value != null ? toString((List<RankedName>) value) : "";
     }
   }
 }
