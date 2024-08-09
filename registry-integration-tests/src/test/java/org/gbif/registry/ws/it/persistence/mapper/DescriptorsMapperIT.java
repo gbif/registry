@@ -126,6 +126,8 @@ public class DescriptorsMapperIT extends BaseItTest {
     assertEquals(Rank.ABERRATION, createdDescriptor.getUsageRank());
     assertEquals(2, createdDescriptor.getTaxonClassification().size());
 
+    assertEquals(2, descriptorsMapper.getVerbatimNames(descriptorGroup.getKey()).size());
+
     assertEquals(
         1,
         descriptorsMapper

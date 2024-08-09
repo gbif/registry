@@ -111,6 +111,7 @@
   <resultMap id="DESCRIPTOR_DTO_MAP" type="DescriptorDto" autoMapping="true">
     <id property="key" column="key"/>
     <result property="descriptorKey" column="collection_descriptor_key"/>
+    <result property="descriptorGroupKey" column="collection_descriptor_group_key"/>
     <result property="identifiedBy" column="identified_by" typeHandler="StringArrayTypeHandler"/>
     <result property="typeStatus" column="type_status" typeHandler="StringArrayTypeHandler"/>
     <result property="recordedBy" column="recorded_by" typeHandler="StringArrayTypeHandler"/>
@@ -311,4 +312,12 @@
     WHERE v.collection_descriptor_key = #{descriptorKey,jdbcType=INTEGER}
     ORDER BY v.key ASC
   </select>
+
+  <select id="getVerbatimNames" resultType="VerbatimDto" resultMap="VERBATIM_DTO_MAP">
+      SELECT <include refid="VERBATIM_READ_FIELDS"/>
+      FROM collection_descriptor_verbatim v
+      INNER JOIN collection_descriptor cd ON cd.key = v.collection_descriptor_key
+      WHERE cd.collection_descriptor_group_key = #{descriptorGroupKey,jdbcType=INTEGER}
+  </select>
+
 </mapper>
