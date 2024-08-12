@@ -18,8 +18,10 @@ import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
@@ -48,6 +50,7 @@ public class CollectionChangeSuggestionService
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
   private final InstitutionService institutionService;
+  private final CollectionService collectionService;
 
   @Autowired
   public CollectionChangeSuggestionService(
@@ -77,6 +80,7 @@ public class CollectionChangeSuggestionService
         collectionsMailConfigurationProperties);
     this.changeSuggestionMapper = changeSuggestionMapper;
     this.institutionService = institutionService;
+    this.collectionService = collectionService;
   }
 
   @Override
@@ -96,10 +100,19 @@ public class CollectionChangeSuggestionService
         Collection suggestedCollection = readJson(dto.getSuggestedEntity(), Collection.class);
         suggestedCollection.setInstitutionKey(createdInstitution);
         dto.setSuggestedEntity(toJson(suggestedCollection));
+
         changeSuggestionMapper.update(dto);
       }
     }
-    return super.applyChangeSuggestion(suggestionKey);
+
+    UUID createdEntity = super.applyChangeSuggestion(suggestionKey);
+
+    if (dto.getIhIdentifier() != null){
+      collectionService.addIdentifier(createdEntity,new Identifier(IdentifierType.IH_IRN,
+        dto.getIhIdentifier()));
+    }
+
+    return createdEntity;
   }
 
   @Override
@@ -135,10 +148,12 @@ public class CollectionChangeSuggestionService
     CollectionChangeSuggestion changeSuggestion = dtoToChangeSuggestion(dto);
     UUID createdEntity = null;
     if (dto.getType() == Type.CREATE) {
-
-      if (dto.getCreateInstitution()) {
+      if (Boolean.TRUE.equals(dto.getCreateInstitution())) {
         Institution institution = collectionChangeSuggestionToInstitution(dto);
+
         createdEntity = institutionService.create(institution);
+        institutionService.addIdentifier(createdEntity,new Identifier(IdentifierType.IH_IRN,
+          dto.getIhIdentifier()));
         createContacts(changeSuggestion,createdEntity);
       }
     }
@@ -150,10 +165,14 @@ public class CollectionChangeSuggestionService
 
     if (dto.getSuggestedEntity() != null) {
       Collection collection = readJson(dto.getSuggestedEntity(), Collection.class);
-      institution.setName(collection.getName());
+
+      String name = collection.getName();
+      if(name.startsWith("Herbarium - ")) {
+        name = name.substring("Herbarium - ".length());
+      }
+      institution.setName(name);
       institution.setCode(collection.getCode());
       institution.setActive(collection.isActive());
-
       institution.setAddress(collection.getAddress());
       institution.setEmail(collection.getEmail());
       institution.setPhone(collection.getPhone());
