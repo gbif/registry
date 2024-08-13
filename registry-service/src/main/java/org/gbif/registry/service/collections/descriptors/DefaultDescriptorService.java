@@ -120,7 +120,7 @@ public class DefaultDescriptorService implements DescriptorsService {
       // extract headers
       String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
-        headersByIndex.put(i, headers[i].toLowerCase());
+        headersByIndex.put(i, headers[i]);
         headersByName.put(headers[i].toLowerCase(), i);
       }
 
@@ -187,7 +187,7 @@ public class DefaultDescriptorService implements DescriptorsService {
         InterpretedResult<String> objectClassificationResult =
             Interpreter.interpretString(values, headersByName, "ltc:objectClassificationName");
         setResult(
-            descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassification);
+            descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassificationName);
 
         descriptorsMapper.createDescriptor(descriptorDto);
 
@@ -379,7 +379,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorRecord.setDateIdentified(dto.getDateIdentified());
     descriptorRecord.setIdentifiedBy(dto.getIdentifiedBy());
     descriptorRecord.setIndividualCount(dto.getIndividualCount());
-    descriptorRecord.setObjectClassification(dto.getObjectClassification());
+    descriptorRecord.setObjectClassification(dto.getObjectClassificationName());
     descriptorRecord.setTypeStatus(dto.getTypeStatus());
     descriptorRecord.setUsageKey(dto.getUsageKey());
     descriptorRecord.setUsageName(dto.getUsageName());
