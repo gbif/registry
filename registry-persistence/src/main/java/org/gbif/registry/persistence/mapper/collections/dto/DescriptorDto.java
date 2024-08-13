@@ -20,7 +20,7 @@ public class DescriptorDto {
   private List<String> typeStatus;
   private List<String> recordedBy;
   private String discipline;
-  private String objectClassification;
+  private String objectClassificationName;
   private List<String> issues;
   private List<VerbatimDto> verbatim;
   private Integer usageKey;
