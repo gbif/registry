@@ -11,6 +11,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -233,6 +234,24 @@ public class Interpreter {
         extractValue(values, headersByName, DwcTerm.scientificNameAuthorship);
     String taxonRank = extractValue(values, headersByName, DwcTerm.taxonRank);
     String taxonID = extractValue(values, headersByName, DwcTerm.taxonID);
+
+    if (Stream.of(
+            kingdom,
+            phylum,
+            clazz,
+            order,
+            family,
+            genus,
+            scientificName,
+            genericName,
+            specificEpithet,
+            infraspecificEpithet,
+            scientificNameAuthorship,
+            taxonRank,
+            taxonID)
+        .allMatch(Strings::isNullOrEmpty)) {
+      return InterpretedResult.empty();
+    }
 
     NameUsage nameUsageParam = new NameUsage();
     nameUsageParam.setKingdom(kingdom);
