@@ -18,13 +18,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
+import org.gbif.api.util.GrSciCollUtils;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.test.mocks.NubResourceClientMock;
 import org.gbif.registry.ws.it.collections.service.BaseServiceIT;
@@ -141,5 +146,63 @@ public class DescriptorsServiceIT extends BaseServiceIT {
             .listDescriptorGroups(
                 collection.getKey(), DescriptorGroupSearchRequest.builder().build())
             .getCount());
+  }
+
+  @Test
+  @SneakyThrows
+  public void ihDescriptorsTest() {
+    Collection collection = new Collection();
+    collection.setCode("c1");
+    collection.setName("n1");
+    collectionService.create(collection);
+
+    collectionService.addMasterSourceMetadata(
+        collection.getKey(), new MasterSourceMetadata(Source.IH_IRN, "dsfgds"));
+
+    String title = "My descriptor set";
+    String description = "description";
+
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
+    long descriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
+            StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+            ExportFormat.TSV,
+            title,
+            description,
+            collection.getKey());
+    assertTrue(descriptorGroupKey > 0);
+
+    assertEquals(
+        1,
+        descriptorsService
+            .listDescriptorGroups(
+                collection.getKey(), DescriptorGroupSearchRequest.builder().build())
+            .getResults()
+            .size());
+
+    PagingResponse<Descriptor> descriptors =
+        descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
+    assertEquals(5, descriptors.getResults().size());
+
+    collectionService.addMachineTag(
+        collection.getKey(),
+        new MachineTag(
+            GrSciCollUtils.IH_NS,
+            GrSciCollUtils.COLL_SUMMARY_MT,
+            String.valueOf(descriptorGroupKey)));
+
+    descriptorsService.updateDescriptorGroup(
+        descriptorGroupKey,
+        StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+        ExportFormat.TSV,
+        "foo",
+        "foo");
+
+    DescriptorGroup updated = descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    assertEquals(title, updated.getTitle());
+    assertEquals(description, updated.getDescription());
+
+    descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
+    assertNull(descriptorsService.getDescriptorGroup(descriptorGroupKey).getDeleted());
   }
 }

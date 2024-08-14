@@ -1,5 +1,6 @@
 package org.gbif.registry.service.collections.descriptors;
 
+import static org.gbif.api.util.GrSciCollUtils.*;
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
 import com.google.common.base.CharMatcher;
@@ -28,8 +29,10 @@ import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.events.EventManager;
@@ -55,15 +58,18 @@ public class DefaultDescriptorService implements DescriptorsService {
   private final NubResourceClient nubResourceClient;
   private final DescriptorsMapper descriptorsMapper;
   private final EventManager eventManager;
+  private final CollectionService collectionService;
 
   @Autowired
   public DefaultDescriptorService(
       NubResourceClient nubResourceClient,
       DescriptorsMapper descriptorsMapper,
-      EventManager eventManager) {
+      EventManager eventManager,
+      CollectionService collectionService) {
     this.nubResourceClient = nubResourceClient;
     this.descriptorsMapper = descriptorsMapper;
     this.eventManager = eventManager;
+    this.collectionService = collectionService;
   }
 
   @SneakyThrows
@@ -222,6 +228,12 @@ public class DefaultDescriptorService implements DescriptorsService {
     DescriptorGroup descriptorGroup = descriptorsMapper.getDescriptorGroup(key);
     Preconditions.checkArgument(
         descriptorGroup != null, "Descriptor group not found for key " + key);
+
+    if (isIHDescriptorGroup(key, descriptorGroup.getCollectionKey())) {
+      // can't delete a descriptor group that comes from IH
+      return;
+    }
+
     descriptorsMapper.deleteDescriptorGroup(key);
 
     eventManager.post(
@@ -255,6 +267,12 @@ public class DefaultDescriptorService implements DescriptorsService {
     final String username = authentication.getName();
 
     DescriptorGroup descriptorGroup = descriptorsMapper.getDescriptorGroup(descriptorGroupKey);
+
+    if (isIHDescriptorGroup(descriptorGroupKey, descriptorGroup.getCollectionKey())) {
+      // can't update a descriptor group that comes from IH
+      return;
+    }
+
     descriptorGroup.setTitle(title);
     descriptorGroup.setDescription(description);
     descriptorGroup.setModifiedBy(username);
@@ -267,12 +285,29 @@ public class DefaultDescriptorService implements DescriptorsService {
     importDescriptorsFile(descriptorGroupFile, format, descriptorGroup.getKey());
 
     eventManager.post(
-      SubEntityCollectionEvent.newInstance(
-        descriptorGroup.getCollectionKey(),
-        Collection.class,
-        DescriptorGroup.class,
-        descriptorGroupKey,
-        EventType.UPDATE));
+        SubEntityCollectionEvent.newInstance(
+            descriptorGroup.getCollectionKey(),
+            Collection.class,
+            DescriptorGroup.class,
+            descriptorGroupKey,
+            EventType.UPDATE));
+  }
+
+  private boolean isIHDescriptorGroup(long descriptorGroupKey, UUID collectionKey) {
+    Collection collection = collectionService.get(collectionKey);
+    List<Long> ihDescriptorGroups =
+        collection.getMachineTags().stream()
+            .filter(
+                mt ->
+                    mt.getNamespace().equals(IH_NS)
+                        && (mt.getName().equals(COLL_SUMMARY_MT)
+                            || mt.getName().equals(COLLECTORS_MT))
+                        && mt.getValue() != null)
+            .map(mt -> Long.parseLong(mt.getValue()))
+            .collect(Collectors.toList());
+
+    return collection.getMasterSource().equals(MasterSourceType.IH)
+        && ihDescriptorGroups.contains(descriptorGroupKey);
   }
 
   @Override
