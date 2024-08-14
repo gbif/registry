@@ -146,7 +146,7 @@
     #{typeStatus,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{recordedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{discipline,jdbcType=VARCHAR},
-    #{objectClassification,jdbcType=VARCHAR},
+    #{objectClassificationName,jdbcType=VARCHAR},
     #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
   </sql>
 
