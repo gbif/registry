@@ -129,7 +129,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
 
     descriptors = descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(4, descriptors.getResults().size());
-    assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 3));
+    assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
 
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
     assertEquals(
