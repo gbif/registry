@@ -844,4 +844,8 @@ public abstract class BaseChangeSuggestionService<
   protected abstract ChangeSuggestionDto createConvertToCollectionSuggestionDto(R changeSuggestion);
 
   protected abstract UUID applyConversionToCollection(ChangeSuggestionDto dto);
+
+  protected static String decodeIRN(String irn) {
+    return irn.replace("gbif:ih:irn:", "");
+  }
 }
