@@ -16,12 +16,14 @@ package org.gbif.registry.service.collections.suggestions;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
@@ -92,7 +94,7 @@ public class CollectionChangeSuggestionService
   }
 
   @Override
-  public  UUID applyChangeSuggestion(int suggestionKey){
+  public UUID applyChangeSuggestion(int suggestionKey){
     ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
     if (dto.getType() == Type.CREATE) {
       if (Boolean.TRUE.equals(dto.getCreateInstitution())) {
@@ -110,6 +112,8 @@ public class CollectionChangeSuggestionService
     if (dto.getIhIdentifier() != null){
       collectionService.addIdentifier(createdEntity,new Identifier(IdentifierType.IH_IRN,
         dto.getIhIdentifier()));
+      collectionService.addMasterSourceMetadata(createdEntity, new MasterSourceMetadata(
+        Source.IH_IRN, decodeIRN(dto.getIhIdentifier())));
     }
 
     return createdEntity;
@@ -152,8 +156,10 @@ public class CollectionChangeSuggestionService
         Institution institution = collectionChangeSuggestionToInstitution(dto);
 
         createdEntity = institutionService.create(institution);
-        institutionService.addIdentifier(createdEntity,new Identifier(IdentifierType.IH_IRN,
+        institutionService.addIdentifier(createdEntity, new Identifier(IdentifierType.IH_IRN,
           dto.getIhIdentifier()));
+        institutionService.addMasterSourceMetadata(createdEntity, new MasterSourceMetadata(
+          Source.IH_IRN, decodeIRN(dto.getIhIdentifier())));
         createContacts(changeSuggestion,createdEntity);
       }
     }
