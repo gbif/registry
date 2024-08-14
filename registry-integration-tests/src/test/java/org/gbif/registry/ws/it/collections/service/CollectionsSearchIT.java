@@ -367,9 +367,9 @@ public class CollectionsSearchIT extends BaseServiceIT {
             .build());
     assertDescriptorSearch(
         1,
-        3,
+        2,
         CollectionDescriptorsSearchRequest.builder()
-            .descriptorCountry(Arrays.asList(Country.DENMARK, Country.UNITED_STATES))
+            .descriptorCountry(Arrays.asList(Country.PORTUGAL, Country.UNITED_STATES))
             .build());
     assertDescriptorSearch(
         0,
@@ -393,7 +393,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
             .build());
 
     assertDescriptorSearch(
-        2,
+        1,
         null,
         CollectionDescriptorsSearchRequest.builder()
             .usageName(Collections.singletonList(NubResourceClientMock.DEFAULT_USAGE.getName()))
@@ -407,17 +407,24 @@ public class CollectionsSearchIT extends BaseServiceIT {
             .q("cc2")
             .build());
 
+    assertDescriptorSearch(
+        2,
+        null,
+        CollectionDescriptorsSearchRequest.builder()
+            .descriptorCountry(Collections.singletonList(Country.DENMARK))
+            .build());
+
     PagingResponse<CollectionSearchResponse> first =
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
-                .usageName(Collections.singletonList(NubResourceClientMock.DEFAULT_USAGE.getName()))
+                .descriptorCountry(Collections.singletonList(Country.DENMARK))
                 .limit(1)
                 .build());
     assertEquals(1, first.getResults().size());
     PagingResponse<CollectionSearchResponse> second =
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
-                .usageName(Collections.singletonList(NubResourceClientMock.DEFAULT_USAGE.getName()))
+                .descriptorCountry(Collections.singletonList(Country.DENMARK))
                 .offset(1L)
                 .limit(1)
                 .build());

@@ -668,7 +668,7 @@ public class CollectionResource
         .body(resource);
   }
 
-  private Set<PosixFilePermission> filePermissions() {
+  private static Set<PosixFilePermission> filePermissions() {
     return Set.of(
         PosixFilePermission.OWNER_WRITE,
         PosixFilePermission.OWNER_READ,
@@ -681,7 +681,10 @@ public class CollectionResource
   private static Path zipFiles(
       DescriptorGroup existingDescriptorGroup, Path interpretedCsv, Path verbatimCsv)
       throws IOException {
-    Path zipFile = Files.createTempFile(existingDescriptorGroup.getTitle(), ".zip");
+    Path zipFile =
+        Files.createTempFile(
+            "descriptorGroup" + existingDescriptorGroup.getKey() + "_export", ".zip");
+
     try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile.toFile()))) {
       for (Path f : Arrays.asList(interpretedCsv, verbatimCsv)) {
         try (FileInputStream fis = new FileInputStream(f.toFile())) {
