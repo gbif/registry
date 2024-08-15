@@ -13,228 +13,38 @@
  */
 package org.gbif.registry.persistence.mapper.collections.dto;
 
-import org.gbif.api.vocabulary.Country;
-
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
 
-public class SearchDto {
+@SuppressWarnings("MissingOverride")
+@EqualsAndHashCode(callSuper = true)
+@Data
+public class SearchDto extends BaseSearchDto {
 
   private float score;
   private String type;
-  private UUID key;
-  private String code;
-  private String name;
   private UUID institutionKey;
   private String institutionCode;
   private String institutionName;
-  private boolean displayOnNHCPortal;
-  private Country country;
-  private Country mailCountry;
 
-  private String codeHighlight;
-  private String nameHighlight;
-  private String descriptionHighlight;
-  private String alternativeCodesHighlight;
-  private String addressHighlight;
-  private String cityHighlight;
-  private String provinceHighlight;
-  private String countryHighlight;
-  private String mailAddressHighlight;
-  private String mailCityHighlight;
-  private String mailProvinceHighlight;
-  private String mailCountryHighlight;
-
-  private boolean similarityMatch;
-
-  public float getScore() {
-    return score;
-  }
-
-  public void setScore(float score) {
-    this.score = score;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
-    this.type = type;
-  }
-
-  public UUID getKey() {
-    return key;
-  }
-
-  public void setKey(UUID key) {
-    this.key = key;
-  }
-
-  public String getCode() {
-    return code;
-  }
-
-  public void setCode(String code) {
-    this.code = code;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public UUID getInstitutionKey() {
-    return institutionKey;
-  }
-
-  public void setInstitutionKey(UUID institutionKey) {
-    this.institutionKey = institutionKey;
-  }
-
-  public String getInstitutionCode() {
-    return institutionCode;
-  }
-
-  public void setInstitutionCode(String institutionCode) {
-    this.institutionCode = institutionCode;
-  }
-
-  public String getInstitutionName() {
-    return institutionName;
-  }
-
-  public void setInstitutionName(String institutionName) {
-    this.institutionName = institutionName;
-  }
-
-  public boolean getDisplayOnNHCPortal() {
-    return displayOnNHCPortal;
-  }
-
-  public void setDisplayOnNHCPortal(boolean displayOnNHCPortal) {
-    this.displayOnNHCPortal = displayOnNHCPortal;
-  }
-
-  public Country getCountry() {
-    return country;
-  }
-
-  public void setCountry(Country country) {
-    this.country = country;
-  }
-
-  public Country getMailCountry() {
-    return mailCountry;
-  }
-
-  public void setMailCountry(Country mailCountry) {
-    this.mailCountry = mailCountry;
-  }
-
-  public String getCodeHighlight() {
-    return codeHighlight;
-  }
-
-  public void setCodeHighlight(String codeHighlight) {
-    this.codeHighlight = codeHighlight;
-  }
-
-  public String getNameHighlight() {
-    return nameHighlight;
-  }
-
-  public void setNameHighlight(String nameHighlight) {
-    this.nameHighlight = nameHighlight;
-  }
-
-  public String getDescriptionHighlight() {
-    return descriptionHighlight;
-  }
-
-  public void setDescriptionHighlight(String descriptionHighlight) {
-    this.descriptionHighlight = descriptionHighlight;
-  }
-
-  public String getAlternativeCodesHighlight() {
-    return alternativeCodesHighlight;
-  }
-
-  public void setAlternativeCodesHighlight(String alternativeCodesHighlight) {
-    this.alternativeCodesHighlight = alternativeCodesHighlight;
-  }
-
-  public String getAddressHighlight() {
-    return addressHighlight;
-  }
-
-  public void setAddressHighlight(String addressHighlight) {
-    this.addressHighlight = addressHighlight;
-  }
-
-  public String getCityHighlight() {
-    return cityHighlight;
-  }
-
-  public void setCityHighlight(String cityHighlight) {
-    this.cityHighlight = cityHighlight;
-  }
-
-  public String getProvinceHighlight() {
-    return provinceHighlight;
-  }
-
-  public void setProvinceHighlight(String provinceHighlight) {
-    this.provinceHighlight = provinceHighlight;
-  }
-
-  public String getCountryHighlight() {
-    return countryHighlight;
-  }
-
-  public void setCountryHighlight(String countryHighlight) {
-    this.countryHighlight = countryHighlight;
-  }
-
-  public String getMailAddressHighlight() {
-    return mailAddressHighlight;
-  }
-
-  public void setMailAddressHighlight(String mailAddressHighlight) {
-    this.mailAddressHighlight = mailAddressHighlight;
-  }
-
-  public String getMailCityHighlight() {
-    return mailCityHighlight;
-  }
-
-  public void setMailCityHighlight(String mailCityHighlight) {
-    this.mailCityHighlight = mailCityHighlight;
-  }
-
-  public String getMailProvinceHighlight() {
-    return mailProvinceHighlight;
-  }
-
-  public void setMailProvinceHighlight(String mailProvinceHighlight) {
-    this.mailProvinceHighlight = mailProvinceHighlight;
-  }
-
-  public String getMailCountryHighlight() {
-    return mailCountryHighlight;
-  }
-
-  public void setMailCountryHighlight(String mailCountryHighlight) {
-    this.mailCountryHighlight = mailCountryHighlight;
-  }
-
-  public boolean isSimilarityMatch() {
-    return similarityMatch;
-  }
-
-  public void setSimilarityMatch(boolean similarityMatch) {
-    this.similarityMatch = similarityMatch;
-  }
+  // descriptors fields
+  private Long descriptorKey;
+  private Long descriptorGroupKey;
+  private Long descriptorUsageKey;
+  private String descriptorUsageName;
+  private Rank descriptorUsageRank;
+  private Country descriptorCountry;
+  private Integer descriptorIndividualCount;
+  private List<String> descriptorIdentifiedBy;
+  private Date descriptorDateIdentified;
+  private List<String> descriptorTypeStatus;
+  private List<String> descriptorRecordedBy;
+  private String descriptorDiscipline;
+  private String descriptorObjectClassification;
+  private List<String> descriptorIssues;
 }
