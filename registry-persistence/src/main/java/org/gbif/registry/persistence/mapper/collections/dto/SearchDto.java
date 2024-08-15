@@ -21,6 +21,7 @@ import lombok.EqualsAndHashCode;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
 
+@SuppressWarnings("MissingOverride")
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class SearchDto extends BaseSearchDto {

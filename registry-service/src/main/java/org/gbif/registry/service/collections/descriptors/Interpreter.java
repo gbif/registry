@@ -16,7 +16,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Singular;
 import org.gbif.api.model.checklistbank.NameUsage;
 import org.gbif.api.model.checklistbank.NameUsageMatch;
 import org.gbif.api.v2.NameUsageMatch2;
@@ -311,11 +310,13 @@ public class Interpreter {
       }
 
       if (nameUsageMatch.getClassification() != null) {
+        List<RankedName> rankedNames = new ArrayList<>();
+        taxonDataBuilder.taxonClassification(rankedNames);
         nameUsageMatch
             .getClassification()
             .forEach(
                 c -> {
-                  taxonDataBuilder.rankedName(c);
+                  rankedNames.add(c);
                   taxonKeys.add(c.getKey());
                 });
       }
@@ -380,8 +381,6 @@ public class Interpreter {
     private Integer usageKey;
     private String usageName;
     private Rank usageRank;
-
-    @Singular("rankedName")
     private List<RankedName> taxonClassification;
 
     private Set<Integer> taxonKeys;

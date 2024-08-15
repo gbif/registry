@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -653,7 +654,7 @@ public class CollectionResource
             PosixFilePermissions.asFileAttribute(filePermissions()));
     Set<String> verbatimFields = descriptorsService.getVerbatimNames(descriptorGroupKey);
     try (Writer writer =
-        new OutputStreamWriter(new FileOutputStream(verbatimCsv.toFile().getName()))) {
+        new OutputStreamWriter(Files.newOutputStream(Paths.get(verbatimCsv.toFile().getName())))) {
       CsvWriter.descriptorVerbatims(
               Iterables.descriptorVerbatims(descriptorsService, searchRequest, EXPORT_LIMIT),
               format,
@@ -669,13 +670,14 @@ public class CollectionResource
   }
 
   private static Set<PosixFilePermission> filePermissions() {
-    return Set.of(
-        PosixFilePermission.OWNER_WRITE,
-        PosixFilePermission.OWNER_READ,
-        PosixFilePermission.OWNER_EXECUTE,
-        PosixFilePermission.OTHERS_WRITE,
-        PosixFilePermission.OTHERS_READ,
-        PosixFilePermission.OTHERS_EXECUTE);
+    return new HashSet<>(
+        Arrays.asList(
+            PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.OWNER_EXECUTE,
+            PosixFilePermission.OTHERS_WRITE,
+            PosixFilePermission.OTHERS_READ,
+            PosixFilePermission.OTHERS_EXECUTE));
   }
 
   private static Path zipFiles(

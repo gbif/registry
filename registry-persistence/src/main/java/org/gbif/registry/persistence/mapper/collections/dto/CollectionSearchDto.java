@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 
+@SuppressWarnings("MissingOverride")
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class CollectionSearchDto extends SearchDto {
