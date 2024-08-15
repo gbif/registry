@@ -19,9 +19,12 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
+import java.util.*;
+import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
+import org.gbif.registry.ws.provider.CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
@@ -49,8 +52,6 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
-import java.util.*;
-
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
@@ -73,6 +74,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new NodeRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
+    argumentResolvers.add(new CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver());
   }
 
   @Override
@@ -175,5 +177,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .registerModule(new JavaTimeModule()))
         .withUrl(apiRootUrl)
         .build(ConceptClient.class);
+  }
+
+  @Bean
+  public NubResourceClient nubResourceClient(@Value("${api.root.url}") String apiRootUrl) {
+    return new ClientBuilder()
+        .withObjectMapper(
+            JacksonJsonObjectMapperProvider.getObjectMapperWithBuilderSupport()
+                .registerModule(new JavaTimeModule()))
+        .withUrl(apiRootUrl)
+        .build(NubResourceClient.class);
   }
 }
