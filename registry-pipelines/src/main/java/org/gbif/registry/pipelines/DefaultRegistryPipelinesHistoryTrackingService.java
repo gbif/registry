@@ -101,6 +101,13 @@ public class DefaultRegistryPipelinesHistoryTrackingService
               Collections.reverseOrder(new EndpointPriorityComparator()),
               EndpointCreatedComparator.INSTANCE));
 
+  private static final Set<PipelineStep.Status> FINISHED_STATE_SET =
+      new HashSet<>(
+          Arrays.asList(
+              PipelineStep.Status.COMPLETED,
+              PipelineStep.Status.ABORTED,
+              PipelineStep.Status.FAILED));
+
   private static final Set<StepType> INCLUDE_FRAGMENTER = new HashSet<>(Arrays.asList(
     StepType.DWCA_TO_VERBATIM,
     StepType.XML_TO_VERBATIM,
@@ -615,6 +622,16 @@ public class DefaultRegistryPipelinesHistoryTrackingService
 
   @Override
   public long updatePipelineStep(PipelineStep pipelineStep, String user) {
+    PipelineStep currentStep = getPipelineStep(pipelineStep.getKey());
+    if (FINISHED_STATE_SET.contains(currentStep.getState())) {
+      LOG.warn(
+          "PipelineStep key {} can't be updated to status {}, cause it has finished state {}",
+          currentStep.getKey(),
+          pipelineStep.getState(),
+          currentStep.getState());
+      return currentStep.getKey();
+    }
+
     Objects.requireNonNull(pipelineStep, "PipelineStep can't be null");
     Preconditions.checkArgument(StringUtils.isNotEmpty(user), "user can't be null");
 
@@ -791,7 +808,11 @@ public class DefaultRegistryPipelinesHistoryTrackingService
         Optional<PipelineStep> identifierStep =
             steps.stream().filter(x -> x.getType() == StepType.VERBATIM_TO_IDENTIFIER).findAny();
 
-        if (identifierStep.isPresent() && identifierStep.get().getState() == Status.FAILED) {
+        if (identifierStep.isPresent()
+          && FINISHED_STATE_SET.contains(identifierStep.get().getState())
+          && identifierStep.get().getMessage() != null
+          && !identifierStep.get().getMessage().isEmpty()) {
+
           // Update and mark identier as OK
           PipelineStep pipelineStep = identifierStep.get();
           pipelineStep.setState(Status.COMPLETED);

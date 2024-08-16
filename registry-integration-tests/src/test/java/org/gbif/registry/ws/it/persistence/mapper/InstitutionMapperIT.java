@@ -13,7 +13,6 @@
  */
 package org.gbif.registry.ws.it.persistence.mapper;
 
-import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
@@ -40,12 +39,13 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionListPa
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
 import java.util.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
 import static org.junit.jupiter.api.Assertions.*;
@@ -109,6 +109,7 @@ public class InstitutionMapperIT extends BaseItTest {
     institution.setDisplayOnNHCPortal(true);
     institution.setFeaturedImageUrl(URI.create("http://test.com"));
     institution.setFeaturedImageLicense(License.CC0_1_0);
+    institution.setFeaturedImageAttribution("dummy image attribution");
 
     List<String> additionalNames = new ArrayList<>();
     additionalNames.add("name2");
