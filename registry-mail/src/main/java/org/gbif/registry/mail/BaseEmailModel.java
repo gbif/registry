@@ -16,9 +16,12 @@ package org.gbif.registry.mail;
 import java.util.Collections;
 import java.util.Set;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+
+import lombok.Getter;
 
 /** Very basic email model that holds the main components of an email to send. */
+@Getter
 public class BaseEmailModel {
 
   private final Set<String> emailAddresses;
@@ -49,29 +52,9 @@ public class BaseEmailModel {
     this.from = from;
   }
 
-  public Set<String> getEmailAddresses() {
-    return emailAddresses;
-  }
-
-  public String getSubject() {
-    return subject;
-  }
-
-  public String getBody() {
-    return body;
-  }
-
-  public Set<String> getCcAddresses() {
-    return ccAddresses;
-  }
-
-  public String getFrom() {
-    return from;
-  }
-
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("emailAddresses", emailAddresses)
         .add("subject", subject)
         .add("body", body)

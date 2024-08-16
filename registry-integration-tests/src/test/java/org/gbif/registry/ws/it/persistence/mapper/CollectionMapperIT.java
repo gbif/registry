@@ -120,6 +120,7 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setFeaturedImageUrl(URI.create("http://test.com"));
     collection.setFeaturedImageLicense(License.CC0_1_0);
     collection.setTemporalCoverage("temporal coverage");
+    collection.setFeaturedImageAttribution("dummy image attribution");
 
     List<String> preservationTypes = new ArrayList<>();
     preservationTypes.add("StorageControlledAtmosphere");

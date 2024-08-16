@@ -6,8 +6,8 @@
   <changeSet id="137" author="auzun" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-         ALTER TABLE institution ADD COLUMN featured_image_attribution TEXT;
-         ALTER TABLE collection ADD COLUMN featured_image_attribution TEXT;
+        ALTER TABLE institution ADD COLUMN featured_image_attribution TEXT;
+        ALTER TABLE collection ADD COLUMN featured_image_attribution TEXT;
       ]]>
     </sql>
   </changeSet>
