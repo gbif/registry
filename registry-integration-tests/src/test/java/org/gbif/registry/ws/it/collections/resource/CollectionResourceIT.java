@@ -305,7 +305,7 @@ public class CollectionResourceIT
         1,
         getClient()
             .listCollectionDescriptorGroups(
-                UUID.randomUUID(), DescriptorGroupSearchRequest.builder().query("foo").build())
+                UUID.randomUUID(), DescriptorGroupSearchRequest.builder().q("foo").build())
             .getResults()
             .size());
   }
@@ -327,7 +327,7 @@ public class CollectionResourceIT
             .listCollectionDescriptors(
                 UUID.randomUUID(),
                 1L,
-                DescriptorSearchRequest.builder().query("foo").individualCount("1,10").build())
+                DescriptorSearchRequest.builder().q("foo").individualCount("1,10").build())
             .getResults()
             .size());
   }
