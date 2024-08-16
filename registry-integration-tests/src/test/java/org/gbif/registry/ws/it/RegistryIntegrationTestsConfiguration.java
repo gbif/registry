@@ -14,12 +14,15 @@
 package org.gbif.registry.ws.it;
 
 import com.zaxxer.hikari.HikariDataSource;
+import java.util.Collections;
+import java.util.Date;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.config.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
@@ -29,6 +32,7 @@ import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.test.mocks.ConceptClientMock;
+import org.gbif.registry.test.mocks.NubResourceClientMock;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -55,9 +59,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-
-import java.util.Collections;
-import java.util.Date;
 
 @TestConfiguration
 @SpringBootApplication(
@@ -211,5 +212,10 @@ public class RegistryIntegrationTestsConfiguration {
   @Bean
   public ConceptClient conceptClient() {
     return new ConceptClientMock();
+  }
+
+  @Bean
+  public NubResourceClient nubResourceClient() {
+    return new NubResourceClientMock();
   }
 }

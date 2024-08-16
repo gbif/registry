@@ -13,14 +13,8 @@
  */
 package org.gbif.registry.database;
 
-import org.gbif.registry.ws.it.fixtures.TestConstants;
-
 import java.sql.SQLException;
 import java.time.Duration;
-
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
 import liquibase.Contexts;
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -28,6 +22,9 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import org.gbif.registry.ws.it.fixtures.TestConstants;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 public class BaseDBTest {
 

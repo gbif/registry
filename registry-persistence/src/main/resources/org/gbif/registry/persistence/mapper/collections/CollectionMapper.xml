@@ -201,28 +201,16 @@
             <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode, c.fulltext_search
             <if test="params.query != null" >,query</if>
             <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
-      <include refid="LIST_FILTER" />
+    FROM collection c
+    <if test="params.query != null" >
+      <include refid="FULLTEXT_SEARCH"/>
+    </if>
+    <include refid="LIST_FILTER" />
     ) AS c
     ORDER BY
-    <if test="params.sortBy != null and params.query == null">
-      <choose>
-        <when test="params.sortBy.name.equals('NUMBER_SPECIMENS')">
-          c.number_specimens
-        </when>
-        <otherwise/>
-      </choose>
-      <if test="params.sortOrder != null">
-        <choose>
-          <when test="params.sortOrder.name.equals('DESC')">
-            DESC
-          </when>
-          <otherwise>
-            ASC
-          </otherwise>
-        </choose>
-      </if>
-      NULLS LAST,
-    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.sortBy">
+      <property name="alias" value="c."/>
+    </include>
     <if test="params.query != null" >ts_rank_cd(c.fulltext_search, query) DESC, </if>
              <if test="params.fuzzyName != null" >similarity_score DESC, </if>
              c.created DESC, c.key
@@ -233,15 +221,15 @@
 
   <select id="count" resultType="Long">
     SELECT count(DISTINCT c.key)
+    FROM collection c
+    <if test="params.query != null" >
+      <include refid="FULLTEXT_SEARCH"/>
+    </if>
     <include refid="LIST_FILTER" />
   </select>
 
   <sql id="LIST_FILTER">
-    FROM collection c
     LEFT JOIN institution inst ON inst.key = c.institution_key
-    <if test="params.query != null" >
-      <include refid="FULLTEXT_SEARCH"/>
-    </if>
     <if test="params.machineTagNamespace != null || params.machineTagName != null || params.machineTagValue != null" >
       INNER JOIN collection_machine_tag cmt on cmt.collection_key = c.key
       INNER JOIN machine_tag mt on mt.key = cmt.machine_tag_key
@@ -250,10 +238,8 @@
       INNER JOIN collection_identifier ci on ci.collection_key = c.key
       INNER JOIN identifier id on id.key = ci.identifier_key
     </if>
-    <if test="params.countries != null || params.regionCountries != null || params.city != null">
-      LEFT JOIN address addr ON addr.key = c.address_key
-      LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
-    </if>
+    LEFT JOIN address addr ON addr.key = c.address_key
+    LEFT JOIN address mail_addr ON mail_addr.key = c.mailing_address_key
     <if test="params.source != null || params.sourceId != null">
         INNER JOIN master_sync_metadata m ON c.master_sync_metadata_key = m.key
     </if>

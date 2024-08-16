@@ -110,7 +110,7 @@ abstract class BaseCollectionEntityResourceIT<
   @Autowired protected ObjectMapper objectMapper;
   @Autowired protected MockMvc mockMvc;
 
-  @MockBean private ResourceNotFoundService resourceNotFoundService;
+  @MockBean protected ResourceNotFoundService resourceNotFoundService;
 
   public BaseCollectionEntityResourceIT(
       Class<? extends BaseCollectionEntityClient<T, R>> cls,
@@ -528,7 +528,7 @@ abstract class BaseCollectionEntityResourceIT<
     UUID entityKey = UUID.randomUUID();
     Pageable page = new PagingRequest();
 
-    when(getMockChangeSuggestionService().list(status, type, proposerEmail, entityKey, page))
+    when(getMockChangeSuggestionService().list(status, type, proposerEmail, entityKey, null, page))
         .thenReturn(
             new PagingResponse<>(
                 new PagingRequest(), 1L, Collections.singletonList(changeSuggestion)));

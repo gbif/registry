@@ -1,60 +1,46 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.vocabulary.CollectionsSortField;
-import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.IdentifierType;
-import org.gbif.api.vocabulary.SortOrder;
-import org.gbif.api.vocabulary.collections.MasterSourceType;
-
+import java.util.Date;
 import java.util.List;
-import java.util.UUID;
-
 import javax.annotation.Nullable;
+import lombok.Builder;
+import lombok.Data;
+import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.TypeStatus;
 
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+@Data
+@Builder
+public class SearchParams {
 
-@Getter
-@SuperBuilder
-public abstract class SearchParams {
-
-  @Nullable String query;
-  @Nullable String code;
-  @Nullable String name;
-  @Nullable String alternativeCode;
-  @Nullable String machineTagNamespace;
-  @Nullable String machineTagName;
-  @Nullable String machineTagValue;
-  @Nullable IdentifierType identifierType;
-  @Nullable String identifier;
+  @Nullable String q;
+  Boolean highlight;
+  String type;
+  Boolean displayOnNHCPortal;
   @Nullable List<Country> countries;
   @Nullable List<Country> regionCountries;
   @Nullable String city;
-  @Nullable String fuzzyName;
-  @Nullable Boolean active;
-  @Nullable MasterSourceType masterSourceType;
-  @Nullable RangeParam numberSpecimens;
-  @Nullable Boolean displayOnNHCPortal;
-  @Nullable RangeParam occurrenceCount;
-  @Nullable RangeParam typeSpecimenCount;
-  @Nullable List<UUID> institutionKeys;
-  @Nullable CollectionsSortField sortBy;
-  @Nullable SortOrder sortOrder;
-  @Nullable private Boolean deleted;
-  @Nullable private UUID replacedBy;
-  @Nullable private Pageable page;
+
+  Integer limit;
+  Integer offset;
+
+  // collection fields
+
+  // descriptors fields
+  List<String> usageName;
+  List<Integer> usageKey;
+  List<Rank> usageRank;
+  List<Integer> taxonKey;
+  @Nullable List<Country> descriptorCountry;
+  @Nullable RangeParam individualCount;
+  @Nullable List<String> identifiedBy;
+  @Nullable
+  Date dateIdentified;
+  @Nullable Date dateIdentifiedFrom;
+  @Nullable Date dateIdentifiedBefore;
+  @Nullable List<TypeStatus> typeStatus;
+  @Nullable List<String> recordedBy;
+  @Nullable List<String> discipline;
+  @Nullable List<String> objectClassification;
+  @Nullable List<String> issues;
 }
