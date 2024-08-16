@@ -36,7 +36,6 @@
 
   <sql id="FULLTEXT_SEARCH">
     JOIN to_tsquery('english',regexp_replace(quote_literal(unaccent(trim(#{params.query}))),'\s+',':*&amp;','g')||':*')
-    AS query ON query @@ fulltext_search
   </sql>
 
   <insert id="createDescriptorGroup" parameterType="DescriptorGroup" useGeneratedKeys="true" keyProperty="key">
@@ -84,7 +83,7 @@
   <sql id="LIST_DESCRIPTOR_GROUPS_FILTER">
     FROM collection_descriptor_group ds
     <if test="params.query != null">
-      <include refid="FULLTEXT_SEARCH"/>
+      <include refid="FULLTEXT_SEARCH"/> AS query ON query @@ ds.fulltext_search
     </if>
     <where>
       <choose>
@@ -188,7 +187,7 @@
     FROM collection_descriptor d
     INNER JOIN collection_descriptor_group ds ON ds.key = d.collection_descriptor_group_key AND ds.deleted IS NULL
     <if test="params.query != null">
-      <include refid="FULLTEXT_SEARCH"/>
+      <include refid="FULLTEXT_SEARCH"/> AS query ON query @@ d.fulltext_search
     </if>
     <where>
       <if test="params.descriptorGroupKey != null">
