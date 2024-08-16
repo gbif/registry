@@ -15,9 +15,15 @@ package org.gbif.registry.service.collections.suggestions;
 
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
+import org.gbif.api.model.collections.Institution;
+import org.gbif.api.model.collections.MasterSourceMetadata;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Type;
+import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.InstitutionService;
+import org.gbif.api.vocabulary.IdentifierType;
+import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.mail.EmailSender;
 import org.gbif.registry.mail.collections.CollectionsEmailManager;
@@ -45,6 +51,8 @@ public class CollectionChangeSuggestionService
     extends BaseChangeSuggestionService<Collection, CollectionChangeSuggestion> {
 
   private final ChangeSuggestionMapper changeSuggestionMapper;
+  private final InstitutionService institutionService;
+  private final CollectionService collectionService;
 
   @Autowired
   public CollectionChangeSuggestionService(
@@ -57,7 +65,8 @@ public class CollectionChangeSuggestionService
       CollectionsEmailManager emailManager,
       EventManager eventManager,
       GrSciCollAuthorizationService grSciCollAuthorizationService,
-      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties) {
+      CollectionsMailConfigurationProperties collectionsMailConfigurationProperties,
+      InstitutionService institutionService) {
     super(
         changeSuggestionMapper,
         collectionMergeService,
@@ -72,6 +81,8 @@ public class CollectionChangeSuggestionService
         grSciCollAuthorizationService,
         collectionsMailConfigurationProperties);
     this.changeSuggestionMapper = changeSuggestionMapper;
+    this.institutionService = institutionService;
+    this.collectionService = collectionService;
   }
 
   @Override
@@ -83,14 +94,42 @@ public class CollectionChangeSuggestionService
   }
 
   @Override
+  public UUID applyChangeSuggestion(int suggestionKey){
+    ChangeSuggestionDto dto = changeSuggestionMapper.get(suggestionKey);
+    if (dto.getType() == Type.CREATE) {
+      if (Boolean.TRUE.equals(dto.getCreateInstitution())) {
+        UUID createdInstitution = createInstitutionForCollectionSuggestion(dto);
+        Collection suggestedCollection = readJson(dto.getSuggestedEntity(), Collection.class);
+        suggestedCollection.setInstitutionKey(createdInstitution);
+        dto.setSuggestedEntity(toJson(suggestedCollection));
+
+        changeSuggestionMapper.update(dto);
+      }
+    }
+
+    UUID createdEntity = super.applyChangeSuggestion(suggestionKey);
+
+    if (dto.getIhIdentifier() != null){
+      collectionService.addIdentifier(createdEntity,new Identifier(IdentifierType.IH_IRN,
+        dto.getIhIdentifier()));
+      collectionService.addMasterSourceMetadata(createdEntity, new MasterSourceMetadata(
+        Source.IH_IRN, decodeIRN(dto.getIhIdentifier())));
+    }
+
+    return createdEntity;
+  }
+
+  @Override
   public CollectionChangeSuggestion getChangeSuggestion(int key) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(key);
 
     if (dto == null || dto.getEntityType() != CollectionEntityType.COLLECTION) {
       return null;
     }
-
-    return dtoToChangeSuggestion(dto);
+    CollectionChangeSuggestion changeSuggestion = dtoToChangeSuggestion(dto);
+    changeSuggestion.setCreateInstitution(dto.getCreateInstitution());
+    changeSuggestion.setIhIdentifier(dto.getIhIdentifier());
+    return changeSuggestion;
   }
 
   @Override
@@ -107,5 +146,61 @@ public class CollectionChangeSuggestionService
   @Override
   protected UUID applyConversionToCollection(ChangeSuggestionDto dto) {
     throw new UnsupportedOperationException();
+  }
+
+  public UUID createInstitutionForCollectionSuggestion(ChangeSuggestionDto dto){
+    CollectionChangeSuggestion changeSuggestion = dtoToChangeSuggestion(dto);
+    UUID createdEntity = null;
+    if (dto.getType() == Type.CREATE) {
+      if (Boolean.TRUE.equals(dto.getCreateInstitution())) {
+        Institution institution = collectionChangeSuggestionToInstitution(dto);
+
+        createdEntity = institutionService.create(institution);
+        institutionService.addIdentifier(createdEntity, new Identifier(IdentifierType.IH_IRN,
+          dto.getIhIdentifier()));
+        institutionService.addMasterSourceMetadata(createdEntity, new MasterSourceMetadata(
+          Source.IH_IRN, decodeIRN(dto.getIhIdentifier())));
+        createContacts(changeSuggestion,createdEntity);
+      }
+    }
+    return createdEntity;
+  }
+
+  private Institution collectionChangeSuggestionToInstitution(ChangeSuggestionDto dto) {
+    Institution institution = new Institution();
+
+    if (dto.getSuggestedEntity() != null) {
+      Collection collection = readJson(dto.getSuggestedEntity(), Collection.class);
+
+      String name = collection.getName();
+      if(name.startsWith("Herbarium - ")) {
+        name = name.substring("Herbarium - ".length());
+      }
+      institution.setName(name);
+      institution.setCode(collection.getCode());
+      institution.setActive(collection.isActive());
+      institution.setAddress(collection.getAddress());
+      institution.setEmail(collection.getEmail());
+      institution.setPhone(collection.getPhone());
+      institution.setComments(collection.getComments());
+      institution.setMasterSourceMetadata(collection.getMasterSourceMetadata());
+      institution.setMasterSource(collection.getMasterSource());
+      institution.setContactPersons(collection.getContactPersons());
+
+      institution.setDescription(collection.getDescription());
+
+    }
+
+    return institution;
+  }
+
+  private void createContacts(CollectionChangeSuggestion changeSuggestion, UUID createdEntity) {
+    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
+      && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
+      changeSuggestion
+        .getSuggestedEntity()
+        .getContactPersons()
+        .forEach(c -> institutionService.addContactPerson(createdEntity, c));
+    }
   }
 }

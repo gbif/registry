@@ -158,4 +158,5 @@ public class InstitutionChangeSuggestionService
       throw new RuntimeException(e);
     }
   }
+
 }

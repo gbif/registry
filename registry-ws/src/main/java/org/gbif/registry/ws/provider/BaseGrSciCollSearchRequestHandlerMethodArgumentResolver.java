@@ -14,6 +14,8 @@
 package org.gbif.registry.ws.provider;
 
 import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.UUID;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.util.VocabularyUtils;
@@ -24,9 +26,6 @@ import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.ws.server.provider.PageableProvider;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
-
-import java.util.ArrayList;
-import java.util.UUID;
 
 public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     implements HandlerMethodArgumentResolver {
@@ -39,6 +38,15 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     Pageable page = PageableProvider.getPagingRequest(webRequest, MAX_PAGE_SIZE);
     request.setLimit(page.getLimit());
     request.setOffset(page.getOffset());
+
+    String hl = webRequest.getParameter("hl");
+    if (!Strings.isNullOrEmpty(hl)) {
+      try {
+        request.setHl(Boolean.parseBoolean(hl));
+      } catch (Exception e) {
+        throw new IllegalArgumentException("Invalid boolean for hl: " + hl);
+      }
+    }
 
     request.setAlternativeCode(webRequest.getParameter("alternativeCode"));
     request.setCode(webRequest.getParameter("code"));
@@ -181,7 +189,7 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     }
   }
 
-  private static void validateIntegerRange(String param, String paramName) {
+  protected static void validateIntegerRange(String param, String paramName) {
     boolean rangeMatch = SearchUtils.INTEGER_RANGE.matcher(param).find();
     boolean numberMatch = true;
     try {

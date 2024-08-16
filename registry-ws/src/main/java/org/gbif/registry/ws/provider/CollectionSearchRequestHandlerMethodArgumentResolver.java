@@ -14,14 +14,13 @@
 package org.gbif.registry.ws.provider;
 
 import com.google.common.base.Strings;
+import java.util.Arrays;
+import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
-
-import java.util.Arrays;
-import java.util.UUID;
 
 @SuppressWarnings("NullableProblems")
 public class CollectionSearchRequestHandlerMethodArgumentResolver
@@ -39,7 +38,14 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
 
-    CollectionSearchRequest searchRequest = new CollectionSearchRequest();
+    CollectionSearchRequest searchRequest = CollectionSearchRequest.builder().build();
+    fillCollectionSearchRequest(searchRequest, webRequest);
+
+    return searchRequest;
+  }
+
+  protected void fillCollectionSearchRequest(
+      CollectionSearchRequest searchRequest, NativeWebRequest webRequest) {
     fillSearchRequestParams(searchRequest, webRequest);
 
     String institution = webRequest.getParameter("institution");
@@ -75,7 +81,5 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
             "Invalid boolean for personalCollection: " + personalCollection);
       }
     }
-
-    return searchRequest;
   }
 }

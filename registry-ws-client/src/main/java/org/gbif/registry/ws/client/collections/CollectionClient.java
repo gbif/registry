@@ -13,20 +13,26 @@
  */
 package org.gbif.registry.ws.client.collections;
 
+import java.util.List;
+import java.util.UUID;
+import org.gbif.api.annotation.Trim;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
+import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
+import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
+import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("grscicoll/collection")
 public interface CollectionClient
@@ -96,4 +102,60 @@ public interface CollectionClient
       produces = MediaType.APPLICATION_JSON_VALUE,
       consumes = MediaType.APPLICATION_JSON_VALUE)
   UUID createFromDataset(@RequestBody CollectionImportParams importParams);
+
+  @PostMapping(
+      value = "{collectionKey}/descriptorGroup",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  long createDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
+      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestParam("title") @Trim String title,
+      @RequestParam(value = "description", required = false) @Trim String description);
+
+  @PutMapping(
+      value = "{collectionKey}/descriptorGroup/{key}",
+      consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  void updateDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey,
+      @RequestParam(value = "format", defaultValue = "CSV") ExportFormat format,
+      @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
+      @RequestParam("title") @Trim String title,
+      @RequestParam(value = "description", required = false) @Trim String description);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorGroup/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  DescriptorGroup getCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey);
+
+  @DeleteMapping(value = "{collectionKey}/descriptorGroup/{key}")
+  void deleteCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorGroup",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  PagingResponse<DescriptorGroup> listCollectionDescriptorGroups(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @SpringQueryMap DescriptorGroupSearchRequest searchRequest);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorGroup/{key}/descriptor",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  PagingResponse<Descriptor> listCollectionDescriptors(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey,
+      @SpringQueryMap DescriptorSearchRequest searchRequest);
+
+  @GetMapping(
+      value = "{collectionKey}/descriptorGroup/{descriptorGroupKey}/descriptor/{key}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  Descriptor getCollectionDescriptor(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("descriptorGroupKey") long descriptorGroupKey,
+      @PathVariable("key") long descriptorKey);
 }
