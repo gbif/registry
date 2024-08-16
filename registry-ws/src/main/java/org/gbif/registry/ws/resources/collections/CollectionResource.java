@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
@@ -40,6 +41,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,6 +66,7 @@ import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
@@ -71,6 +74,7 @@ import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
 import org.gbif.api.vocabulary.collections.PreservationType;
@@ -482,7 +486,6 @@ public class CollectionResource
     return MasterSourceUtils.COLLECTION_SOURCEABLE_FIELDS;
   }
 
-  // TODO: check descriptor docs
   @Operation(
       operationId = "getCollectionDescriptorGroups",
       summary = "Lists the descriptor groups of the collection.",
@@ -491,6 +494,26 @@ public class CollectionResource
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0500")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "title",
+            description = "Descriptor group title",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "description",
+            description = "Descriptor group description",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "deleted",
+            description = "Boolean flag to indicate if we want deleted descriptor groups",
+            schema = @Schema(implementation = Boolean.class),
+            in = ParameterIn.QUERY)
+      })
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(
       responseCode = "200",
@@ -722,6 +745,103 @@ public class CollectionResource
           @Extension(
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0700")))
+  @Parameters(
+      value = {
+        @Parameter(
+            name = "descriptorGroupKey",
+            description = "Key of the descriptor group",
+            schema = @Schema(implementation = Long.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "usageKey",
+            description = "Taxon usage key of the descriptor",
+            schema = @Schema(implementation = Integer.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "usageName",
+            description = "Taxon usage name of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "usageRank",
+            description = "Taxon usage rank of the descriptor",
+            schema = @Schema(implementation = Rank.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "taxonKey",
+            description = "Taxon key of the descriptor",
+            schema = @Schema(implementation = Integer.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "country",
+            description = "Country of the descriptor",
+            schema = @Schema(implementation = Country.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "individualCount",
+            description =
+                "Individual count of the descriptor. It supports ranges and a '*' can be used as a wildcard",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "identifiedBy",
+            description = "Identified by field of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "dateIdentified",
+            description = "Date identified field of the descriptor",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "dateIdentifiedFrom",
+            description = "Date identified of the descriptor is equal or higher than the specified",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "dateIdentifiedBefore",
+            description = "Date identified of the descriptor is lower than the specified",
+            schema = @Schema(implementation = Date.class),
+            in = ParameterIn.QUERY),
+        @Parameter(
+            name = "typeStatus",
+            description = "Type status of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "recordedBy",
+            description = "RecordedBy of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "discipline",
+            description = "Discipline of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "objectClassification",
+            description = "Object classification of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE),
+        @Parameter(
+            name = "issues",
+            description = "Issues of the descriptor",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY,
+            explode = Explode.TRUE)
+      })
+  @CommonParameters.QParameter
+  @Pageable.OffsetLimitParameters
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "200", description = "Descriptors found and returned")
   @Docs.DefaultUnsuccessfulReadResponses
