@@ -147,4 +147,5 @@
   <include file="liquibase/139-dataset-occurrence-download-created-index.xml" />
   <include file="liquibase/140-ih-identifier-change-sugestion.xml" />
   <include file="liquibase/141-collection-descriptors-grscicoll.xml" />
+  <include file="liquibase/142-grscicoll_lookup_indexes.xml" />
 </databaseChangeLog>
