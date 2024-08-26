@@ -317,6 +317,12 @@ public class CollectionResourceIT
     descriptor.setUsageRank(Rank.ABERRATION);
     descriptor.setCountry(Country.SPAIN);
 
+    UUID collectionKey = UUID.randomUUID();
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
+
+    when(descriptorsService.getDescriptorGroup(anyLong())).thenReturn(descriptorGroup);
     when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
     when(descriptorsService.listDescriptors(any()))
         .thenReturn(new PagingResponse<>(0, 10, 1L, Collections.singletonList(descriptor)));
