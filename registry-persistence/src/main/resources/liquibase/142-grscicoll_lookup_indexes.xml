@@ -1,0 +1,15 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="142" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+         CREATE INDEX identifier_type_idx ON identifier(type);
+         CREATE INDEX institution_alt_codes_idx ON institution USING gin(alternative_codes);
+         CREATE INDEX collection_alt_codes_idx ON collection USING gin(alternative_codes);
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>
