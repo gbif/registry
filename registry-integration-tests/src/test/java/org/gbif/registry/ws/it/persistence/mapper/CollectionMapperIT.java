@@ -110,8 +110,6 @@ public class CollectionMapperIT extends BaseItTest {
     collection.setGeographicCoverage("geography");
     collection.setNotes("notes for testing");
     collection.setIncorporatedCollections(Arrays.asList("col1", "col2"));
-    collection.setImportantCollectors(Arrays.asList("collector 1", "collector 2"));
-    collection.setCollectionSummary(Collections.singletonMap("key", 0));
     collection.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode("CODE2", "another code")));
     collection.setDivision("division");

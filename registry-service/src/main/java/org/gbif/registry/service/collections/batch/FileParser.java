@@ -13,30 +13,7 @@
  */
 package org.gbif.registry.service.collections.batch;
 
-import com.google.common.base.Strings;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
-import org.gbif.api.model.collections.Collection;
-import org.gbif.api.model.collections.*;
-import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.vocabulary.License;
-import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
-import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
-import org.gbif.registry.service.collections.batch.model.ParsedData;
-import org.gbif.registry.service.collections.batch.model.ParserResult;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
+import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.ADDRESS;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.CITY;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.COUNTRY;
@@ -44,12 +21,34 @@ import static org.gbif.registry.service.collections.batch.FileFields.CommonField
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.PHONE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.POSTAL_CODE;
 import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.PROVINCE;
-import static org.gbif.registry.service.collections.batch.FileFields.CommonFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.ContactFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.InstitutionFields.*;
 import static org.gbif.registry.service.collections.batch.FileFields.isContactField;
 import static org.gbif.registry.service.collections.batch.FileFields.isEntityField;
 import static org.gbif.registry.service.collections.batch.FileParsingUtils.*;
+
+import com.google.common.base.Strings;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.common.export.ExportFormat;
+import org.gbif.api.vocabulary.License;
+import org.gbif.registry.service.collections.batch.model.ContactsParserResult;
+import org.gbif.registry.service.collections.batch.model.EntitiesParserResult;
+import org.gbif.registry.service.collections.batch.model.ParsedData;
+import org.gbif.registry.service.collections.batch.model.ParserResult;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileParser {
@@ -227,15 +226,6 @@ public class FileParser {
             extractValue(
                 values, headersIndex.get(FileFields.CollectionFields.INCORPORATED_COLLECTIONS)))
         .ifPresent(collection::setIncorporatedCollections);
-    parseStringList(
-            extractValue(
-                values, headersIndex.get(FileFields.CollectionFields.IMPORTANT_COLLECTORS)))
-        .ifPresent(collection::setImportantCollectors);
-    handleParserResult(
-        parseCollectionsSummary(
-            extractValue(values, headersIndex.get(FileFields.CollectionFields.COLLECTION_SUMMARY))),
-        collection::setCollectionSummary,
-        errors);
     collection.setDepartment(
         extractValue(values, headersIndex.get(FileFields.CollectionFields.DEPARTMENT)));
     collection.setDivision(
