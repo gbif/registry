@@ -62,8 +62,6 @@ public class FileFields {
     public static final String NOTES = "NOTES";
     public static final String INCORPORATED_COLLECTIONS = "INCORPORATED_COLLECTIONS";
     public static final String IMPORTANT_COLLECTIONS = "IMPORTANT_COLLECTIONS";
-    public static final String IMPORTANT_COLLECTORS = "IMPORTANT_COLLECTORS";
-    public static final String COLLECTION_SUMMARY = "COLLECTION_SUMMARY";
     public static final String DEPARTMENT = "DEPARTMENT";
     public static final String DIVISION = "DIVISION";
     public static final String TEMPORAL_COVERAGE = "TEMPORAL_COVERAGE";
@@ -81,8 +79,6 @@ public class FileFields {
             NOTES,
             INCORPORATED_COLLECTIONS,
             IMPORTANT_COLLECTIONS,
-            IMPORTANT_COLLECTORS,
-            COLLECTION_SUMMARY,
             DEPARTMENT,
             DIVISION,
             TEMPORAL_COVERAGE);
