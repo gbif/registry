@@ -233,8 +233,6 @@ public class CsvWriter<T> {
               "collection.geographicCoverage",
               "collection.notes",
               "collection.incorporatedCollections",
-              "collection.importantCollectors",
-              "collection.collectionSummary",
               "collection.alternativeCodes",
               "collection.comments",
               "collection.occurrenceMappings",
@@ -284,8 +282,6 @@ public class CsvWriter<T> {
               "geographic_coverage",
               "notes",
               "incorporated_collections",
-              "important_collectors",
-              "collection_summary",
               "alternative_codes",
               "comments",
               "occurrence_mappings",
@@ -335,8 +331,6 @@ public class CsvWriter<T> {
               new CleanStringProcessor(), // geographicCoverage: String
               new CleanStringProcessor(), // notes: String
               new ListStringProcessor(), // incorporatedCollections: List
-              new ListStringProcessor(), // importantCollectors: List
-              new CollectionSummaryProcessor(), // collectionSummary: Map
               new ListAlternativeCodeProcessor(), // alternativeCodes: List
               new ListCommentProcessor(), // comments: List
               new ListOccurrenceMappingsProcessor(), // occurrenceMappings: List
@@ -846,21 +840,6 @@ public class CsvWriter<T> {
     @Override
     public String execute(Object value, CsvContext csvContext) {
       return value != null ? toString((List<Comment>) value) : "";
-    }
-  }
-
-  /** Null aware Map<String, Integer> processor. */
-  public static class CollectionSummaryProcessor implements CellProcessor {
-
-    public static String toString(Map<String, Integer> value) {
-      return value.entrySet().stream()
-          .map(e -> e.getKey() + ':' + e.getValue().toString())
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-
-    @Override
-    public String execute(Object value, CsvContext csvContext) {
-      return value != null ? toString((Map<String, Integer>) value) : "";
     }
   }
 

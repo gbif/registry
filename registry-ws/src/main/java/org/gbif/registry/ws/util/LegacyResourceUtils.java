@@ -23,6 +23,7 @@ import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.registry.domain.ws.LegacyDataset;
 import org.gbif.registry.domain.ws.LegacyEndpoint;
 import org.gbif.registry.domain.ws.LegacyInstallation;
+import org.gbif.ws.NotFoundException;
 import org.gbif.ws.security.LegacyRequestAuthorization;
 
 import java.util.UUID;
@@ -68,11 +69,12 @@ public final class LegacyResourceUtils {
       LegacyInstallation installation,
       InstallationService installationService,
       OrganizationService organizationService) {
-    Installation existing = installationService.get(installation.getKey());
-    if (existing == null) {
+    try {
+      installationService.get(installation.getKey());
+    } catch (NotFoundException e) {
       LOG.error(
-          "Installation update uses an installation that does not exist, key={}",
-          installation.getKey());
+        "Installation update uses an installation that does not exist, key={}",
+        installation.getKey());
       return false;
     }
     return isValid(installation, organizationService);
@@ -97,7 +99,9 @@ public final class LegacyResourceUtils {
           installation.getKey());
       return false;
     }
-    if (organizationService.get(installation.getOrganizationKey()) == null) {
+    try {
+      organizationService.get(installation.getOrganizationKey());
+    } catch (NotFoundException e){
       LOG.error(
           "Installation uses a hosting org that does not exist, key={}",
           installation.getOrganizationKey());
@@ -130,25 +134,29 @@ public final class LegacyResourceUtils {
       LOG.error("Dataset is missing mandatory field type, key={}", dataset.getKey());
       return false;
     }
-    if (dataset.getPublishingOrganizationKey() == null) {
-      LOG.error(
+    try {
+      if (dataset.getPublishingOrganizationKey() == null) {
+        LOG.error(
           "Publishing org key not included in HTTP parameters for dataset, key={}",
           dataset.getKey());
+        return false;
+      }
+      organizationService.get(dataset.getPublishingOrganizationKey());
+    } catch (NotFoundException e) {
+      LOG.error(
+        "Dataset uses an publishing org that does not exist, key={}",
+        dataset.getPublishingOrganizationKey());
       return false;
     }
-    if (organizationService.get(dataset.getPublishingOrganizationKey()) == null) {
-      LOG.error(
-          "Dataset uses an publishing org that does not exist, key={}",
-          dataset.getPublishingOrganizationKey());
-      return false;
-    }
-    if (dataset.getInstallationKey() == null) {
-      LOG.error(
+    try {
+      if (dataset.getInstallationKey() == null) {
+        LOG.error(
           "Installation key not included in HTTP parameters for dataset, or could not be inferred, key={}",
           dataset.getKey());
-      return false;
-    }
-    if (installationService.get(dataset.getInstallationKey()) == null) {
+        return false;
+      }
+      installationService.get(dataset.getInstallationKey());
+    } catch (NotFoundException e) {
       LOG.error("Dataset uses an IPT that does not exist, key={}", dataset.getInstallationKey());
       return false;
     }
