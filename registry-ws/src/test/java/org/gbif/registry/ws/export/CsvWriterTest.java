@@ -263,7 +263,6 @@ public class CsvWriterTest {
     collection.setDescription("Collections description" + consecutive);
     collection.setGeographicCoverage("Geo" + consecutive);
     collection.setHomepage(new URI("http://coll" + consecutive + ".org"));
-    collection.setImportantCollectors(Collections.singletonList("Collector" + consecutive));
     collection.setIncorporatedCollections(Collections.singletonList("Coll1." + consecutive));
     collection.setKey(UUID.randomUUID());
     collection.setName("Collection" + consecutive);
@@ -300,7 +299,6 @@ public class CsvWriterTest {
     collection.setTags(Collections.singletonList(tag));
 
     collection.setAccessionStatus("Institutional");
-    collection.setCollectionSummary(Collections.singletonMap("count", consecutive));
     collection.setPersonalCollection(false);
     collection.setReplacedBy(UUID.randomUUID());
     collection.setNotes("Note" + consecutive);
@@ -398,26 +396,18 @@ public class CsvWriterTest {
             collectionView.getCollection().getIncorporatedCollections()),
         line[36]);
     assertEquals(
-        CsvWriter.ListStringProcessor.toString(
-            collectionView.getCollection().getImportantCollectors()),
-        line[37]);
-    assertEquals(
-        CsvWriter.CollectionSummaryProcessor.toString(
-            collectionView.getCollection().getCollectionSummary()),
-        line[38]);
-    assertEquals(
         CsvWriter.ListAlternativeCodeProcessor.toString(
             collectionView.getCollection().getAlternativeCodes()),
-        line[39]);
+        line[37]);
     assertEquals(
         CsvWriter.ListCommentProcessor.toString(collectionView.getCollection().getComments()),
-        line[40]);
+        line[38]);
     assertEquals(
         CsvWriter.ListOccurrenceMappingsProcessor.toString(
             collectionView.getCollection().getOccurrenceMappings()),
-        line[41]);
+        line[39]);
     assertEquals(
-        collectionView.getCollection().getReplacedBy().toString(), line[42].replace("\r", ""));
+        collectionView.getCollection().getReplacedBy().toString(), line[40].replace("\r", ""));
   }
 
   /** Generates test instances of Institution. */

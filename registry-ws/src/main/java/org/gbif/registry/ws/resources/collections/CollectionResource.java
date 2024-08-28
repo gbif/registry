@@ -851,6 +851,12 @@ public class CollectionResource
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey,
       DescriptorSearchRequest searchRequest) {
+    DescriptorGroup existingDescriptorGroup =
+      descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      return null;
+    }
+
     searchRequest.setDescriptorGroupKey(descriptorGroupKey);
     return descriptorsService.listDescriptors(searchRequest);
   }
@@ -873,9 +879,15 @@ public class CollectionResource
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("descriptorGroupKey") long descriptorGroupKey,
       @PathVariable("key") long descriptorKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      return null;
+    }
+
     Descriptor descriptor = descriptorsService.getDescriptor(descriptorKey);
     Preconditions.checkArgument(descriptor.getDescriptorGroupKey().equals(descriptorGroupKey));
-    getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
     return descriptor;
   }
 }

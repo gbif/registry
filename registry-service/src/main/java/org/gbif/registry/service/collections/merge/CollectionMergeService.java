@@ -57,8 +57,6 @@ public class CollectionMergeService extends BaseMergeService<Collection> {
         mergeLists(
             entityToReplace.getIncorporatedCollections(),
             replacement.getIncorporatedCollections()));
-    replacement.setImportantCollectors(
-        mergeLists(entityToReplace.getImportantCollectors(), replacement.getImportantCollectors()));
 
     // codes of the replaced entity are added as alternative codes of the replacement
     replacement
