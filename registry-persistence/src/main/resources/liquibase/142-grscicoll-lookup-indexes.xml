@@ -8,7 +8,9 @@
       <![CDATA[
          CREATE INDEX identifier_type_idx ON identifier(type);
          CREATE INDEX institution_alt_codes_idx ON institution USING gin(alternative_codes);
+         CREATE INDEX institution_code_idx ON institution(code);
          CREATE INDEX collection_alt_codes_idx ON collection USING gin(alternative_codes);
+         CREATE INDEX collection_code_idx ON collection(code);
       ]]>
     </sql>
   </changeSet>
