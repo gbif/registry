@@ -42,7 +42,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -86,12 +85,13 @@ import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggest
 import org.gbif.registry.service.collections.utils.MasterSourceUtils;
 import org.gbif.registry.ws.export.CsvWriter;
 import org.gbif.registry.ws.resources.Docs;
-import org.jetbrains.annotations.NotNull;
+import org.gbif.ws.WebApplicationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StreamUtils;
@@ -131,6 +131,8 @@ public class CollectionResource
 
   // Page size to iterate over download stats export service
   private static final int EXPORT_LIMIT = 1_000;
+  private static final String INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP =
+      "The collection key in the path doesn't match the one in the descriptor group";
 
   public CollectionResource(
       CollectionMergeService collectionMergeService,
@@ -582,7 +584,14 @@ public class CollectionResource
       @RequestPart("descriptorsFile") MultipartFile descriptorsFile,
       @RequestParam("title") @Trim String title,
       @RequestParam(value = "description", required = false) @Trim String description) {
-    getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      throw new WebApplicationException("Descriptor group was not found", HttpStatus.NOT_FOUND);
+    }
+
+    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
+
     descriptorsService.updateDescriptorGroup(
         descriptorGroupKey,
         StreamUtils.copyToByteArray(descriptorsFile.getResource().getInputStream()),
@@ -607,7 +616,16 @@ public class CollectionResource
   public DescriptorGroup getCollectionDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey) {
-    return getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+
+    if (existingDescriptorGroup != null) {
+      Preconditions.checkArgument(
+          existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+          INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+    }
+
+    return existingDescriptorGroup;
   }
 
   @Operation(
@@ -626,7 +644,16 @@ public class CollectionResource
   public void deleteCollectionDescriptorGroup(
       @PathVariable("collectionKey") UUID collectionKey,
       @PathVariable("key") long descriptorGroupKey) {
-    getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      throw new WebApplicationException("Descriptor group was not found", HttpStatus.NOT_FOUND);
+    }
+
+    Preconditions.checkArgument(
+        existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+        INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
   }
 
@@ -649,7 +676,14 @@ public class CollectionResource
       @RequestParam(value = "format", defaultValue = "TSV") ExportFormat format)
       throws IOException {
     DescriptorGroup existingDescriptorGroup =
-        getDescriptorGroupWithCheck(collectionKey, descriptorGroupKey);
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+    if (existingDescriptorGroup == null) {
+      throw new WebApplicationException("Descriptor group was not found", HttpStatus.NOT_FOUND);
+    }
+
+    Preconditions.checkArgument(
+        existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+        INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
 
     DescriptorSearchRequest searchRequest =
         DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build();
@@ -726,14 +760,6 @@ public class CollectionResource
     }
 
     return zipFile;
-  }
-
-  @NotNull
-  private DescriptorGroup getDescriptorGroupWithCheck(UUID collectionKey, long descriptorGroupKey) {
-    DescriptorGroup existingDescriptorGroup =
-        descriptorsService.getDescriptorGroup(descriptorGroupKey);
-    Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
-    return existingDescriptorGroup;
   }
 
   @Operation(
@@ -851,7 +877,7 @@ public class CollectionResource
       @PathVariable("key") long descriptorGroupKey,
       DescriptorSearchRequest searchRequest) {
     DescriptorGroup existingDescriptorGroup =
-      descriptorsService.getDescriptorGroup(descriptorGroupKey);
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
     if (existingDescriptorGroup == null) {
       return null;
     }
