@@ -30,6 +30,4 @@ public class CollectionListParams extends ListParams {
   @Nullable List<String> preservationTypes;
   @Nullable List<String> accessionStatus;
   @Nullable Boolean personalCollection;
-  @Nullable String sourceId;
-  @Nullable Source source;
 }
