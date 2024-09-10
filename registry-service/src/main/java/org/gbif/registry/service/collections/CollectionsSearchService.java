@@ -313,6 +313,11 @@ public class CollectionsSearchService {
         .code(searchRequest.getCode())
         .name(searchRequest.getName())
         .alternativeCode(searchRequest.getAlternativeCode())
+        .machineTagNamespace(searchRequest.getMachineTagNamespace())
+        .machineTagName(searchRequest.getMachineTagName())
+        .machineTagValue(searchRequest.getMachineTagValue())
+        .identifierType(searchRequest.getIdentifierType())
+        .identifier(searchRequest.getIdentifier())
         .countries(searchRequest.getCountry())
         .regionCountries(parseGbifRegion(searchRequest))
         .city(searchRequest.getCity())
@@ -321,8 +326,11 @@ public class CollectionsSearchService {
         .masterSourceType(searchRequest.getMasterSourceType())
         .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
         .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
+        .replacedBy(searchRequest.getReplacedBy())
         .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
         .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+        .sourceId(searchRequest.getSourceId())
+        .source(searchRequest.getSource())
         .sortBy(searchRequest.getSortBy())
         .sortOrder(searchRequest.getSortOrder())
         .highlight(searchRequest.getHl())
@@ -382,7 +390,8 @@ public class CollectionsSearchService {
         .ifPresent(highlights::add);
     createHighlightMatch(dto.getDescriptorGroupTitleHighlight(), "descriptorGroup.title")
         .ifPresent(highlights::add);
-    createHighlightMatch(dto.getDescriptorGroupDescriptionHighlight(), "descriptorGroup.description")
+    createHighlightMatch(
+            dto.getDescriptorGroupDescriptionHighlight(), "descriptorGroup.description")
         .ifPresent(highlights::add);
 
     Optional<Highlight> nameMatch = createHighlightMatch(dto.getNameHighlight(), "name");

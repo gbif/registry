@@ -24,6 +24,7 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.SortOrder;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
+import org.gbif.api.vocabulary.collections.Source;
 
 @Getter
 @SuperBuilder
@@ -50,6 +51,8 @@ public abstract class ListParams {
   @Nullable RangeParam occurrenceCount;
   @Nullable RangeParam typeSpecimenCount;
   @Nullable List<UUID> institutionKeys;
+  @Nullable Source source;
+  @Nullable String sourceId;
   @Nullable CollectionsSortField sortBy;
   @Nullable SortOrder sortOrder;
   @Nullable private Boolean deleted;
