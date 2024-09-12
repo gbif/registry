@@ -473,13 +473,7 @@ public abstract class BaseChangeSuggestionService<
   }
 
   private void createContacts(R changeSuggestion, UUID createdEntity) {
-    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
-        && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
-      changeSuggestion
-          .getSuggestedEntity()
-          .getContactPersons()
-          .forEach(c -> contactService.addContactPerson(createdEntity, c));
-    }
+    contactService.addSuggestionContacts(createdEntity, changeSuggestion);
   }
 
   @Override
