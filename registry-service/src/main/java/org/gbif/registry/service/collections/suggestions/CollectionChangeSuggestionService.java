@@ -195,12 +195,6 @@ public class CollectionChangeSuggestionService
   }
 
   private void createContacts(CollectionChangeSuggestion changeSuggestion, UUID createdEntity) {
-    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
-      && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
-      changeSuggestion
-        .getSuggestedEntity()
-        .getContactPersons()
-        .forEach(c -> institutionService.addContactPerson(createdEntity, c));
-    }
+    institutionService.addSuggestionContacts(createdEntity, changeSuggestion);
   }
 }
