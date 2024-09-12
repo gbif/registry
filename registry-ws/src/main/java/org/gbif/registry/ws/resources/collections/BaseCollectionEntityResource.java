@@ -535,7 +535,7 @@ public abstract class BaseCollectionEntityResource<
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0485")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "200", description = "Apply suggestion discarded")
+  @ApiResponse(responseCode = "200", description = "Change suggestion applied")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @PutMapping(value = "changeSuggestion/{key}/apply")
