@@ -17,12 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.*;
-import org.gbif.api.model.collections.request.SearchRequest;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.util.IdentifierUtils;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
@@ -52,7 +51,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -556,6 +554,31 @@ public class BaseCollectionEntityService<
   @Override
   public List<Contact> listContactPersons(@NotNull UUID entityKey) {
     return baseMapper.listContactPersons(entityKey);
+  }
+
+  //Add contacts to entities created by ih-sync
+  @Validated({PrePersist.class, Default.class})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public void addSuggestionContacts(@NotNull UUID createdEntity, @NotNull ChangeSuggestion changeSuggestion) {
+    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
+        && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
+
+        changeSuggestion
+          .getSuggestedEntity()
+          .getContactPersons()
+          .forEach(c -> {
+            // Check if the proposedBy is "ih-sync"
+            if (!IH_SYNC_USER.equals(changeSuggestion.getProposedBy())) {
+              // If not "ih-sync", add the contact person
+               addContactPerson(createdEntity, c);
+            }
+            else {
+              addContactPersonToEntity(createdEntity,c);
+            }
+          });
+      }
   }
 
   @Validated({PrePersist.class, Default.class})
