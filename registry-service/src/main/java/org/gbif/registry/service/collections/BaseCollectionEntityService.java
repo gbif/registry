@@ -561,7 +561,7 @@ public class BaseCollectionEntityService<
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Transactional
   @Override
-  public void addSuggestionContacts(@NotNull UUID createdEntity, @NotNull ChangeSuggestion changeSuggestion) {
+  public <R extends CollectionEntity> void addSuggestionContacts(@NotNull UUID createdEntity, @NotNull ChangeSuggestion<R> changeSuggestion) {
     if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
         && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
 
