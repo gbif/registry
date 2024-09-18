@@ -23,15 +23,16 @@ import org.gbif.api.v2.RankedName;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.OccurrenceIssue;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.common.parsers.CountryParser;
 import org.gbif.common.parsers.NumberParser;
-import org.gbif.common.parsers.TypeStatusParser;
 import org.gbif.common.parsers.core.OccurrenceParseResult;
 import org.gbif.common.parsers.core.ParseResult;
 import org.gbif.common.parsers.date.MultiinputTemporalParser;
 import org.gbif.dwc.terms.DwcTerm;
+import org.gbif.registry.service.collections.utils.Vocabularies;
+import org.gbif.vocabulary.client.ConceptClient;
+import org.gbif.vocabulary.model.search.LookupResult;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Interpreter {
@@ -41,7 +42,8 @@ public class Interpreter {
   private static final Pattern INT_POSITIVE_PATTERN = Pattern.compile("(^\\d{1,10}$)");
   private static final MultiinputTemporalParser temporalParser = MultiinputTemporalParser.create();
   private static final CountryParser countryParser = CountryParser.getInstance();
-  private static final TypeStatusParser typeStatusParser = TypeStatusParser.getInstance();
+  private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
+      Set.of("?", "possible", "possibly", "potential", "maybe", "perhaps");
 
   public static InterpretedResult<List<String>> interpretStringList(
       String[] values, Map<String, Integer> headersByName, DwcTerm term) {
@@ -77,25 +79,32 @@ public class Interpreter {
   }
 
   public static InterpretedResult<List<String>> interpretTypeStatus(
-      String[] values, Map<String, Integer> headersByName) {
+      String[] values, Map<String, Integer> headersByName, ConceptClient conceptClient) {
     if (values.length == 0) {
       return InterpretedResult.empty();
     }
 
-    List<String> verbatimValue = extractListValue(values, headersByName, DwcTerm.typeStatus);
-    if (verbatimValue == null || verbatimValue.isEmpty()) {
+    List<String> verbatimValues = extractListValue(values, headersByName, DwcTerm.typeStatus);
+    if (verbatimValues == null || verbatimValues.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    List<String> results = new ArrayList<>();
     Set<String> issues = new HashSet<>();
-    verbatimValue.forEach(
+    List<String> results = new ArrayList<>();
+    verbatimValues.forEach(
         v -> {
-          ParseResult<TypeStatus> parseResult = typeStatusParser.parse(v);
-          if (parseResult.isSuccessful()) {
-            results.add(parseResult.getPayload().name());
+          List<LookupResult> lookupResults =
+              conceptClient.lookupInLatestRelease(
+                  Vocabularies.TYPE_STATUS, ConceptClient.LookupParams.of(v, null));
+
+          if (lookupResults.size() == 1) {
+            results.add(lookupResults.get(0).getConceptName());
+          } else if (lookupResults.isEmpty()
+              && SUSPECTED_TYPE_STATUS_VALUES.stream()
+                  .anyMatch(sts -> v.toLowerCase().contains(sts))) {
+            issues.add(OccurrenceIssue.SUSPECTED_TYPE.getId());
           } else {
-            issues.add(TYPE_STATUS_INVALID.getId());
+            issues.add(OccurrenceIssue.TYPE_STATUS_INVALID.getId());
           }
         });
 
