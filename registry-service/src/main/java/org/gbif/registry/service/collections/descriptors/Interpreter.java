@@ -94,8 +94,7 @@ public class Interpreter {
     verbatimValues.forEach(
         v -> {
           List<LookupResult> lookupResults =
-              conceptClient.lookupInLatestRelease(
-                  Vocabularies.TYPE_STATUS, ConceptClient.LookupParams.of(v, null));
+              Vocabularies.lookupLatestRelease(Vocabularies.TYPE_STATUS, v, conceptClient);
 
           if (lookupResults.size() == 1) {
             results.add(lookupResults.get(0).getConceptName());
