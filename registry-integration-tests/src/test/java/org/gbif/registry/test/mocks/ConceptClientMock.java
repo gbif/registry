@@ -1,5 +1,6 @@
 package org.gbif.registry.test.mocks;
 
+import java.util.*;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.AddTagAction;
@@ -9,8 +10,7 @@ import org.gbif.vocabulary.api.DeprecateConceptAction;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.vocabulary.model.*;
 import org.gbif.vocabulary.model.search.KeyNameResult;
-
-import java.util.*;
+import org.gbif.vocabulary.model.search.LookupResult;
 
 public class ConceptClientMock implements ConceptClient {
 
@@ -196,5 +196,21 @@ public class ConceptClientMock implements ConceptClient {
   @Override
   public List<KeyNameResult> suggestLatestRelease(String s, SuggestParams suggestParams) {
     return null;
+  }
+
+  @Override
+  public List<LookupResult> lookup(String s, LookupParams lookupParams) {
+    if (lookupParams.getQ().contains("foo")) {
+      return Collections.emptyList();
+    }
+
+    LookupResult lookupResult = new LookupResult();
+    lookupResult.setConceptName(lookupParams.getQ());
+    return Collections.singletonList(lookupResult);
+  }
+
+  @Override
+  public List<LookupResult> lookupInLatestRelease(String s, LookupParams lookupParams) {
+    return lookup(s, lookupParams);
   }
 }
