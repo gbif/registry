@@ -24,6 +24,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
+import org.gbif.vocabulary.model.search.LookupResult;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Vocabularies {
@@ -224,6 +225,16 @@ public class Vocabularies {
       String vocabulary, String conceptName, ConceptClient conceptClient) {
     return Retry.decorateSupplier(
             RETRY, () -> conceptClient.getFromLatestRelease(vocabulary, conceptName, false, false))
+        .get();
+  }
+
+  public static List<LookupResult> lookupLatestRelease(
+      String vocabulary, String query, ConceptClient conceptClient) {
+    return Retry.decorateSupplier(
+            RETRY,
+            () ->
+                conceptClient.lookupInLatestRelease(
+                    vocabulary, ConceptClient.LookupParams.of(query, null)))
         .get();
   }
 
