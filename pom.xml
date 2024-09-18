@@ -101,7 +101,7 @@
     <gbif-postal-service.version>1.8.0</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
-    <gbif-vocabulary.version>1.0.5</gbif-vocabulary.version>
+    <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
     <checklistbank.version>2.127-SNAPSHOT</checklistbank.version>
 
     <!-- Third party -->

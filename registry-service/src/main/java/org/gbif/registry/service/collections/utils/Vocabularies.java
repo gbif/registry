@@ -45,6 +45,7 @@ public class Vocabularies {
   public static final String ACCESSION_STATUS = "AccessionStatus";
 
   public static final String PRESERVATION_TYPE = "PreservationType";
+  public static final String TYPE_STATUS = "TypeStatus";
 
   private static final Cache<String, Set<String>> childrenConceptsCache =
       new Cache2kBuilder<String, Set<String>>() {}.eternal(true).build();

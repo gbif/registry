@@ -91,6 +91,18 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(5, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
 
+    // check the order of the verbatim fields is the same as in the file
+    descriptors
+        .getResults()
+        .forEach(
+            d -> {
+              Iterator<String> verbatimKeysIt = d.getVerbatim().keySet().iterator();
+              assertEquals("dwc:scientificName", verbatimKeysIt.next());
+              assertEquals("Num. of Specimens", verbatimKeysIt.next());
+              assertEquals("Num. Databased", verbatimKeysIt.next());
+              assertEquals("Num. Imaged", verbatimKeysIt.next());
+            });
+
     assertEquals(
         0,
         descriptorsService
@@ -135,6 +147,18 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     descriptors = descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(4, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
+
+    // check the order of the verbatim fields is the same as in the file
+    descriptors
+        .getResults()
+        .forEach(
+            d -> {
+              Iterator<String> verbatimKeysIt = d.getVerbatim().keySet().iterator();
+              assertEquals("dwc:scientificName", verbatimKeysIt.next());
+              assertEquals("Num. of Specimens", verbatimKeysIt.next());
+              assertEquals("Num. Databased", verbatimKeysIt.next());
+              assertEquals("dwc:country", verbatimKeysIt.next());
+            });
 
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
     assertEquals(

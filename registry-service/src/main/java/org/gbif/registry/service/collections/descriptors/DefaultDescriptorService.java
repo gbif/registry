@@ -44,6 +44,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -59,17 +60,20 @@ public class DefaultDescriptorService implements DescriptorsService {
   private final DescriptorsMapper descriptorsMapper;
   private final EventManager eventManager;
   private final CollectionService collectionService;
+  private final ConceptClient conceptClient;
 
   @Autowired
   public DefaultDescriptorService(
       NubResourceClient nubResourceClient,
       DescriptorsMapper descriptorsMapper,
       EventManager eventManager,
-      CollectionService collectionService) {
+      CollectionService collectionService,
+      ConceptClient conceptClient) {
     this.nubResourceClient = nubResourceClient;
     this.descriptorsMapper = descriptorsMapper;
     this.eventManager = eventManager;
     this.collectionService = collectionService;
+    this.conceptClient = conceptClient;
   }
 
   @SneakyThrows
@@ -175,7 +179,7 @@ public class DefaultDescriptorService implements DescriptorsService {
 
         // TypeStatus
         InterpretedResult<List<String>> typeStatusResult =
-            Interpreter.interpretTypeStatus(values, headersByName);
+            Interpreter.interpretTypeStatus(values, headersByName, conceptClient);
         setResult(descriptorDto, typeStatusResult, DescriptorDto::setTypeStatus);
 
         // recordedBy
