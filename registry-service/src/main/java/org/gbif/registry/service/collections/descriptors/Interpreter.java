@@ -47,12 +47,12 @@ public class Interpreter {
       Set.of("?", "possible", "possibly", "potential", "maybe", "perhaps");
 
   public static InterpretedResult<List<String>> interpretStringList(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, DwcTerm term) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    List<String> verbatimValue = extractListValue(values, headersByName, term);
+    List<String> verbatimValue = extractListValue(valuesMap, term);
     if (verbatimValue == null || verbatimValue.isEmpty()) {
       return InterpretedResult.empty();
     }
@@ -61,17 +61,17 @@ public class Interpreter {
   }
 
   public static InterpretedResult<String> interpretString(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return interpretString(values, headersByName, term.prefixedName());
+      Map<String, String> valuesMap, DwcTerm term) {
+    return interpretString(valuesMap, term.prefixedName());
   }
 
   public static InterpretedResult<String> interpretString(
-      String[] values, Map<String, Integer> headersByName, String fieldName) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, String fieldName) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimValue = extractValue(values, headersByName, fieldName);
+    String verbatimValue = extractValue(valuesMap, fieldName);
     if (Strings.isNullOrEmpty(verbatimValue)) {
       return InterpretedResult.empty();
     }
@@ -80,12 +80,12 @@ public class Interpreter {
   }
 
   public static InterpretedResult<List<String>> interpretTypeStatus(
-      String[] values, Map<String, Integer> headersByName, ConceptClient conceptClient) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, ConceptClient conceptClient) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    List<String> verbatimValues = extractListValue(values, headersByName, DwcTerm.typeStatus);
+    List<String> verbatimValues = extractListValue(valuesMap, DwcTerm.typeStatus);
     if (verbatimValues == null || verbatimValues.isEmpty()) {
       return InterpretedResult.empty();
     }
@@ -97,9 +97,10 @@ public class Interpreter {
           List<LookupResult> lookupResults =
               Vocabularies.lookupLatestRelease(Vocabularies.TYPE_STATUS, v, conceptClient);
 
-          if (lookupResults.size() == 1) {
+          if (lookupResults != null && lookupResults.size() == 1) {
             results.add(lookupResults.get(0).getConceptName());
-          } else if (lookupResults.isEmpty()
+          } else if (lookupResults != null
+              && lookupResults.isEmpty()
               && SUSPECTED_TYPE_STATUS_VALUES.stream()
                   .anyMatch(sts -> v.toLowerCase().contains(sts))) {
             issues.add(OccurrenceIssue.SUSPECTED_TYPE.getId());
@@ -114,13 +115,12 @@ public class Interpreter {
         .build();
   }
 
-  public static InterpretedResult<Date> interpretDateIdentified(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  public static InterpretedResult<Date> interpretDateIdentified(Map<String, String> valuesMap) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimDateIdentified = extractValue(values, headersByName, DwcTerm.dateIdentified);
+    String verbatimDateIdentified = extractValue(valuesMap, DwcTerm.dateIdentified);
     if (Strings.isNullOrEmpty(verbatimDateIdentified)) {
       return InterpretedResult.empty();
     }
@@ -148,13 +148,12 @@ public class Interpreter {
     return resultBuilder.build();
   }
 
-  public static InterpretedResult<Integer> interpretIndividualCount(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  public static InterpretedResult<Integer> interpretIndividualCount(Map<String, String> valuesMap) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimIndividualCount = extractValue(values, headersByName, DwcTerm.individualCount);
+    String verbatimIndividualCount = extractValue(valuesMap, DwcTerm.individualCount);
     if (Strings.isNullOrEmpty(verbatimIndividualCount)) {
       return InterpretedResult.empty();
     }
@@ -171,14 +170,13 @@ public class Interpreter {
         .build();
   }
 
-  public static InterpretedResult<Country> interpretCountry(
-      String[] values, Map<String, Integer> headersByName) {
-    if (values.length == 0) {
+  public static InterpretedResult<Country> interpretCountry(Map<String, String> valuesMap) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String verbatimCountry = extractValue(values, headersByName, DwcTerm.country);
-    String verbatimCountryCode = extractValue(values, headersByName, DwcTerm.countryCode);
+    String verbatimCountry = extractValue(valuesMap, DwcTerm.country);
+    String verbatimCountryCode = extractValue(valuesMap, DwcTerm.countryCode);
 
     if (Strings.isNullOrEmpty(verbatimCountry) && Strings.isNullOrEmpty(verbatimCountryCode)) {
       return InterpretedResult.empty();
@@ -223,25 +221,24 @@ public class Interpreter {
   }
 
   public static InterpretedResult<TaxonData> interpretTaxonomy(
-      String[] values, Map<String, Integer> headersByName, NubResourceClient nubResourceClient) {
-    if (values.length == 0) {
+      Map<String, String> valuesMap, NubResourceClient nubResourceClient) {
+    if (valuesMap.isEmpty()) {
       return InterpretedResult.empty();
     }
 
-    String kingdom = extractValue(values, headersByName, DwcTerm.kingdom);
-    String phylum = extractValue(values, headersByName, DwcTerm.phylum);
-    String clazz = extractValue(values, headersByName, DwcTerm.class_);
-    String order = extractValue(values, headersByName, DwcTerm.order);
-    String family = extractValue(values, headersByName, DwcTerm.family);
-    String genus = extractValue(values, headersByName, DwcTerm.genus);
-    String scientificName = extractValue(values, headersByName, DwcTerm.scientificName);
-    String genericName = extractValue(values, headersByName, DwcTerm.genericName);
-    String specificEpithet = extractValue(values, headersByName, DwcTerm.specificEpithet);
-    String infraspecificEpithet = extractValue(values, headersByName, DwcTerm.infraspecificEpithet);
-    String scientificNameAuthorship =
-        extractValue(values, headersByName, DwcTerm.scientificNameAuthorship);
-    String taxonRank = extractValue(values, headersByName, DwcTerm.taxonRank);
-    String taxonID = extractValue(values, headersByName, DwcTerm.taxonID);
+    String kingdom = extractValue(valuesMap, DwcTerm.kingdom);
+    String phylum = extractValue(valuesMap, DwcTerm.phylum);
+    String clazz = extractValue(valuesMap, DwcTerm.class_);
+    String order = extractValue(valuesMap, DwcTerm.order);
+    String family = extractValue(valuesMap, DwcTerm.family);
+    String genus = extractValue(valuesMap, DwcTerm.genus);
+    String scientificName = extractValue(valuesMap, DwcTerm.scientificName);
+    String genericName = extractValue(valuesMap, DwcTerm.genericName);
+    String specificEpithet = extractValue(valuesMap, DwcTerm.specificEpithet);
+    String infraspecificEpithet = extractValue(valuesMap, DwcTerm.infraspecificEpithet);
+    String scientificNameAuthorship = extractValue(valuesMap, DwcTerm.scientificNameAuthorship);
+    String taxonRank = extractValue(valuesMap, DwcTerm.taxonRank);
+    String taxonID = extractValue(valuesMap, DwcTerm.taxonID);
 
     if (Stream.of(
             kingdom,
@@ -335,29 +332,23 @@ public class Interpreter {
     }
   }
 
-  private static String extractValue(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return extractValue(values, headersByName, term.prefixedName());
+  private static String extractValue(Map<String, String> valuesMap, DwcTerm term) {
+    return extractValue(valuesMap, term.prefixedName());
   }
 
-  private static String extractValue(
-      String[] values, Map<String, Integer> headersByName, String fieldName) {
-    return Optional.ofNullable(headersByName.get(fieldName.toLowerCase()))
-        .map(i -> values[i])
+  private static String extractValue(Map<String, String> valuesMap, String fieldName) {
+    return Optional.ofNullable(valuesMap.get(fieldName.toLowerCase()))
         .filter(v -> !v.isEmpty())
         .orElse(null);
   }
 
-  private static Optional<String> extractOptValue(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return Optional.ofNullable(headersByName.get(term.prefixedName().toLowerCase()))
-        .map(i -> values[i])
+  private static Optional<String> extractOptValue(Map<String, String> valuesMap, DwcTerm term) {
+    return Optional.ofNullable(valuesMap.get(term.prefixedName().toLowerCase()))
         .filter(v -> !v.isEmpty());
   }
 
-  private static List<String> extractListValue(
-      String[] values, Map<String, Integer> headersByName, DwcTerm term) {
-    return extractOptValue(values, headersByName, term)
+  private static List<String> extractListValue(Map<String, String> valuesMap, DwcTerm term) {
+    return extractOptValue(valuesMap, term)
         .map(
             x ->
                 Arrays.stream(x.split(DEFAULT_SEPARATOR))
