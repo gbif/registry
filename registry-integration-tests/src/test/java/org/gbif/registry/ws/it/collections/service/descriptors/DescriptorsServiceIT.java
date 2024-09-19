@@ -91,6 +91,18 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     assertEquals(5, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
 
+    // check the order of the verbatim fields is the same as in the file
+    descriptors
+        .getResults()
+        .forEach(
+            d -> {
+              Iterator<String> verbatimKeysIt = d.getVerbatim().keySet().iterator();
+              assertEquals("dwc:scientificName", verbatimKeysIt.next());
+              assertEquals("Num. of Specimens", verbatimKeysIt.next());
+              assertEquals("Num. Databased", verbatimKeysIt.next());
+              assertEquals("Num. Imaged", verbatimKeysIt.next());
+            });
+
     assertEquals(
         0,
         descriptorsService
@@ -135,6 +147,18 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     descriptors = descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(4, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
+
+    // check the order of the verbatim fields is the same as in the file
+    descriptors
+        .getResults()
+        .forEach(
+            d -> {
+              Iterator<String> verbatimKeysIt = d.getVerbatim().keySet().iterator();
+              assertEquals("dwc:scientificName", verbatimKeysIt.next());
+              assertEquals("Num. of Specimens", verbatimKeysIt.next());
+              assertEquals("Num. Databased", verbatimKeysIt.next());
+              assertEquals("dwc:country", verbatimKeysIt.next());
+            });
 
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
     assertEquals(
@@ -204,5 +228,53 @@ public class DescriptorsServiceIT extends BaseServiceIT {
 
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
     assertNull(descriptorsService.getDescriptorGroup(descriptorGroupKey).getDeleted());
+  }
+
+  @Test
+  @SneakyThrows
+  public void reinterpretationTest() {
+    Collection collection = new Collection();
+    collection.setCode("c1");
+    collection.setName("n1");
+    collectionService.create(collection);
+
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
+    long descriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
+            StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+            ExportFormat.TSV,
+            "My descriptor set",
+            "description",
+            collection.getKey());
+
+    long descriptorsCount =
+        descriptorsService.countDescriptors(
+            DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build());
+
+    assertDoesNotThrow(() -> descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey));
+
+    PagingResponse<DescriptorGroup> descriptorGroups =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(), DescriptorGroupSearchRequest.builder().build());
+    assertEquals(1, descriptorGroups.getCount());
+    assertEquals(descriptorGroupKey, descriptorGroups.getResults().get(0).getKey());
+    assertEquals(
+        descriptorsCount,
+        descriptorsService.countDescriptors(
+            DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build()));
+
+    assertDoesNotThrow(
+        () -> descriptorsService.reinterpretCollectionDescriptorGroups(collection.getKey()));
+    assertDoesNotThrow(descriptorsService::reinterpretAllDescriptorGroups);
+
+    descriptorGroups =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(), DescriptorGroupSearchRequest.builder().build());
+    assertEquals(1, descriptorGroups.getCount());
+    assertEquals(descriptorGroupKey, descriptorGroups.getResults().get(0).getKey());
+    assertEquals(
+        descriptorsCount,
+        descriptorsService.countDescriptors(
+            DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build()));
   }
 }

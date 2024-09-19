@@ -164,6 +164,19 @@ public class DescriptorsMapperIT extends BaseItTest {
             .listDescriptorGroups(DescriptorGroupParams.builder().deleted(true).build())
             .size());
 
+    // update descriptor
+    createdDescriptor.setCountry(Country.COCOS_ISLANDS);
+    createdDescriptor.setUsageName("NEW");
+    createdDescriptor.setTaxonClassification(
+        Arrays.asList(new RankedName(1, "Kingdom2", Rank.KINGDOM)));
+    descriptorsMapper.updateDescriptor(createdDescriptor);
+
+    DescriptorDto updatedDescriptor = descriptorsMapper.getDescriptor(createdDescriptor.getKey());
+    assertEquals(Country.COCOS_ISLANDS, updatedDescriptor.getCountry());
+    assertEquals("NEW", updatedDescriptor.getUsageName());
+    assertEquals(1, updatedDescriptor.getTaxonClassification().size());
+    assertEquals("Kingdom2", updatedDescriptor.getTaxonClassification().get(0).getName());
+
     descriptorsMapper.deleteDescriptors(descriptorGroup.getKey());
 
     assertEquals(
