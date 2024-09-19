@@ -13,6 +13,20 @@
  */
 package org.gbif.registry.security.grscicoll;
 
+import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
+import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.merge.ConvertToCollectionParams;
@@ -22,18 +36,6 @@ import org.gbif.registry.security.AuthenticationFacade;
 import org.gbif.registry.security.UserRoles;
 import org.gbif.ws.WebApplicationException;
 import org.gbif.ws.server.GbifHttpServletRequestWrapper;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -41,12 +43,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static org.gbif.registry.security.SecurityContextCheck.checkUserInRole;
-import static org.gbif.registry.security.SecurityContextCheck.ensureUserSetInSecurityContext;
 
 /**
  * For requests authenticated with a GRSCICOLL_EDITOR role two levels of authorization need to be
@@ -119,7 +115,11 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
               "User has no GrSciColl editor rights", HttpStatus.FORBIDDEN);
         }
 
-        if (isChangeSuggestionRequest(path)) {
+        if (isReinterpretAllDescriptorGroupsRequest(path)
+            && !checkUserInRole(authentication, UserRoles.GRSCICOLL_ADMIN_ROLE)) {
+          throw new WebApplicationException(
+              "User has no GrSciColl admin rights", HttpStatus.FORBIDDEN);
+        } else if (isChangeSuggestionRequest(path)) {
           checkChangeSuggestionUpdate(path, authentication);
         } else if (!isBatchRequest(path)) {
           // editors cannot edit machine tags
@@ -136,6 +136,10 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
 
   private boolean isChangeSuggestionRequest(String path) {
     return path.contains("/changeSuggestion");
+  }
+
+  private boolean isReinterpretAllDescriptorGroupsRequest(String path) {
+    return path.contains("/reinterpretAllDescriptorGroups");
   }
 
   private boolean isBatchRequest(String path) {
@@ -238,18 +242,21 @@ public class GrSciCollEditorAuthorizationFilter extends OncePerRequestFilter {
           new GrSciCollAuthorizationService.EntityOperationResponse();
       if (INSTITUTION.equalsIgnoreCase(entityType)) {
         Institution institution = readEntity(request, Institution.class);
-        entityOperationResponse = authService.allowedToCreateInstitution(institution, authentication);
+        entityOperationResponse =
+            authService.allowedToCreateInstitution(institution, authentication);
       } else if (COLLECTION.equalsIgnoreCase(entityType)) {
         Collection collection = readEntity(request, Collection.class);
         entityOperationResponse = authService.allowedToCreateCollection(collection, authentication);
       }
 
       if (!entityOperationResponse.isAllowed()) {
-        String errorMessage = MessageFormat.format(
-          "User {0} is not allowed to create entity {1}",
-          authentication.getName(), entityType);
+        String errorMessage =
+            MessageFormat.format(
+                "User {0} is not allowed to create entity {1}",
+                authentication.getName(), entityType);
 
-        if (entityOperationResponse.getMessage() != null && !entityOperationResponse.getMessage().isEmpty()) {
+        if (entityOperationResponse.getMessage() != null
+            && !entityOperationResponse.getMessage().isEmpty()) {
           errorMessage += ". Reason: " + entityOperationResponse.getMessage();
         }
 

@@ -149,6 +149,23 @@
     #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
   </sql>
 
+  <sql id="DESCRIPTOR_PARAMS_UPDATE">
+    usage_key = #{usageKey,jdbcType=INTEGER},
+    usage_name = #{usageName,jdbcType=VARCHAR},
+    usage_rank = #{usageRank,jdbcType=VARCHAR},
+    taxon_classification = #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
+    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=IntegerArrayTypeHandler},
+    country = #{country,jdbcType=VARCHAR},
+    individual_count = #{individualCount,jdbcType=INTEGER},
+    identified_by = #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    date_identified = #{dateIdentified,jdbcType=OTHER},
+    type_status = #{typeStatus,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    recorded_by = #{recordedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    discipline = #{discipline,jdbcType=VARCHAR},
+    object_classification_name = #{objectClassificationName,jdbcType=VARCHAR},
+    issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
+  </sql>
+
   <insert id="createDescriptor" parameterType="DescriptorDto" useGeneratedKeys="true" keyProperty="key">
     INSERT INTO collection_descriptor(<include refid="DESCRIPTOR_WRITE_FIELDS"/>)
     VALUES(<include refid="DESCRIPTOR_PARAMS_CREATE"/>)
@@ -158,6 +175,12 @@
     DELETE FROM collection_descriptor
     WHERE collection_descriptor_group_key = #{descriptorGroupKey,jdbcType=INTEGER}
   </delete>
+
+  <update id="updateDescriptor" parameterType="DescriptorDto">
+    UPDATE collection_descriptor
+    SET <include refid="DESCRIPTOR_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
 
   <select id="getDescriptor" resultMap="DESCRIPTOR_DTO_MAP">
     SELECT
