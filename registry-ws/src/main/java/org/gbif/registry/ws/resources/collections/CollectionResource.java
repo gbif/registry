@@ -917,4 +917,64 @@ public class CollectionResource
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
     return descriptor;
   }
+
+  @Operation(
+      operationId = "reinterpretCollectionDescriptorGroup",
+      summary = "Reinterprets a collection descriptor group",
+      description = "Reinterprets a collection descriptor group.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "Collection descriptor group reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("{collectionKey}/descriptorGroup/{key}/reinterpret")
+  public void reinterpretCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+
+    if (existingDescriptorGroup != null) {
+      Preconditions.checkArgument(
+          existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+          INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+    }
+
+    descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey);
+  }
+
+  @Operation(
+      operationId = "reinterpretCollectionDescriptorGroups",
+      summary = "Reinterprets all the descriptor groups of the collection",
+      description = "Reinterprets all the descriptor groups of the collection",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "Collection descriptor groups reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("{collectionKey}/descriptorGroup/reinterpretAll")
+  public void reinterpretCollectionDescriptorGroups(
+      @PathVariable("collectionKey") UUID collectionKey) {
+    descriptorsService.reinterpretCollectionDescriptorGroups(collectionKey);
+  }
+
+  @Operation(
+      operationId = "reinterpretAllDescriptorGroups",
+      summary = "Reinterprets all the descriptor groups",
+      description = "Reinterprets all the descriptor groups",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "All descriptor groups reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("reinterpretAllDescriptorGroups")
+  public void reinterpretAllDescriptorGroups() {
+    descriptorsService.reinterpretAllDescriptorGroups();
+  }
 }

@@ -17,12 +17,11 @@ public class InterpreterIT {
 
   @Test
   public void typeStatusInterpreterTest() {
-    String[] values = new String[] {"allotype|hyotype|foo|possibly foo"};
-    Map<String, Integer> headersByName = new HashMap<>();
-    headersByName.put("dwc:typestatus", 0);
+    Map<String, String> valuesMap = new HashMap<>();
+    valuesMap.put("dwc:typestatus", "allotype|hyotype|foo|possibly foo");
 
     InterpretedResult<List<String>> result =
-        Interpreter.interpretTypeStatus(values, headersByName, conceptClient);
+        Interpreter.interpretTypeStatus(valuesMap, conceptClient);
     assertEquals(2, result.getResult().size());
     assertEquals(2, result.getIssues().size());
   }
