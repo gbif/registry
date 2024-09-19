@@ -229,4 +229,52 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     descriptorsService.deleteDescriptorGroup(descriptorGroupKey);
     assertNull(descriptorsService.getDescriptorGroup(descriptorGroupKey).getDeleted());
   }
+
+  @Test
+  @SneakyThrows
+  public void reinterpretationTest() {
+    Collection collection = new Collection();
+    collection.setCode("c1");
+    collection.setName("n1");
+    collectionService.create(collection);
+
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
+    long descriptorGroupKey =
+        descriptorsService.createDescriptorGroup(
+            StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
+            ExportFormat.TSV,
+            "My descriptor set",
+            "description",
+            collection.getKey());
+
+    long descriptorsCount =
+        descriptorsService.countDescriptors(
+            DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build());
+
+    assertDoesNotThrow(() -> descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey));
+
+    PagingResponse<DescriptorGroup> descriptorGroups =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(), DescriptorGroupSearchRequest.builder().build());
+    assertEquals(1, descriptorGroups.getCount());
+    assertEquals(descriptorGroupKey, descriptorGroups.getResults().get(0).getKey());
+    assertEquals(
+        descriptorsCount,
+        descriptorsService.countDescriptors(
+            DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build()));
+
+    assertDoesNotThrow(
+        () -> descriptorsService.reinterpretCollectionDescriptorGroups(collection.getKey()));
+    assertDoesNotThrow(descriptorsService::reinterpretAllDescriptorGroups);
+
+    descriptorGroups =
+        descriptorsService.listDescriptorGroups(
+            collection.getKey(), DescriptorGroupSearchRequest.builder().build());
+    assertEquals(1, descriptorGroups.getCount());
+    assertEquals(descriptorGroupKey, descriptorGroups.getResults().get(0).getKey());
+    assertEquals(
+        descriptorsCount,
+        descriptorsService.countDescriptors(
+            DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build()));
+  }
 }

@@ -26,6 +26,8 @@ public interface DescriptorsMapper {
 
   DescriptorDto getDescriptor(@Param("key") long key);
 
+  void updateDescriptor(DescriptorDto descriptorDto);
+
   void createDescriptor(DescriptorDto entity);
 
   void deleteDescriptor(@Param("key") long key);
