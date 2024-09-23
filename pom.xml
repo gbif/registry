@@ -131,6 +131,7 @@
     <opencsv.version>5.7.1</opencsv.version>
     <geojson.version>1.14</geojson.version>
     <avro.version>1.8.2</avro.version>
+    <resilience4j.version>1.7.0</resilience4j.version>
 
     <!-- Hadoop -->
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
@@ -687,6 +688,13 @@
         <groupId>org.cache2k</groupId>
         <artifactId>cache2k-api</artifactId>
         <version>${cache2k.version}</version>
+      </dependency>
+
+      <!-- Fault tolerance - Used for API service calls-->
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+        <version>${resilience4j.version}</version>
       </dependency>
 
       <dependency>
