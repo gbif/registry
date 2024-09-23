@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
@@ -308,7 +309,7 @@ public abstract class BaseChangeSuggestionService<
         updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
         "A comment is required");
 
-    if (dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) {
+    if ((dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) && !dto.getProposedBy().equals(IH_SYNC_USER)) {
       // we get the current entity from the DB to update the suggested entity with the current state
       // and minimize the risk of having race conditions
       R changeSuggestion = dtoToChangeSuggestion(dto);
@@ -324,7 +325,6 @@ public abstract class BaseChangeSuggestionService<
             .forEach(c -> c.setOverwritten(true));
         dto.getChanges().add(newChange);
       }
-
       dto.setSuggestedEntity(toJson(updatedChangeSuggestion.getSuggestedEntity()));
     }
 
