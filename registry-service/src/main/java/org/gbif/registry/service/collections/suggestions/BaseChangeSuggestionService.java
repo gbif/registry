@@ -324,7 +324,10 @@ public abstract class BaseChangeSuggestionService<
             .forEach(c -> c.setOverwritten(true));
         dto.getChanges().add(newChange);
       }
-
+      if (dto.getChanges().stream().filter(c -> c.getFieldName().equals("institutionKey"))
+        .anyMatch(ChangeDto::isOverwritten)){
+          dto.setCreateInstitution(false);
+      }
       dto.setSuggestedEntity(toJson(updatedChangeSuggestion.getSuggestedEntity()));
     }
 
