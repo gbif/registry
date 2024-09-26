@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
@@ -304,9 +305,9 @@ public abstract class BaseChangeSuggestionService<
   public void updateChangeSuggestion(R updatedChangeSuggestion) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
 
-    checkArgument(
-        updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
-        "A comment is required");
+    //checkArgument(
+    //updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
+        //"A comment is required");
 
     if (dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) {
       // we get the current entity from the DB to update the suggested entity with the current state
@@ -324,7 +325,12 @@ public abstract class BaseChangeSuggestionService<
             .forEach(c -> c.setOverwritten(true));
         dto.getChanges().add(newChange);
       }
-
+      if (updatedChangeSuggestion.getSuggestedEntity() instanceof Collection && updatedChangeSuggestion.getProposedBy().equals(IH_SYNC_USER)) {
+        Collection collection = (Collection) updatedChangeSuggestion.getSuggestedEntity();
+        if (collection.getInstitutionKey() != null) {
+          dto.setCreateInstitution(false);
+        }
+      }
       dto.setSuggestedEntity(toJson(updatedChangeSuggestion.getSuggestedEntity()));
     }
 
