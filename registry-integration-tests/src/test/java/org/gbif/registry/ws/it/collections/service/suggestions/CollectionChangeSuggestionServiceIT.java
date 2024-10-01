@@ -35,6 +35,7 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
@@ -94,7 +95,7 @@ public class CollectionChangeSuggestionServiceIT
 
   @Test
   public void newEntitySuggestionFromIhSyncTest() {
-    resetSecurityContext("ih-sync", UserRole.GRSCICOLL_ADMIN);
+    resetSecurityContext(IH_SYNC_USER, UserRole.GRSCICOLL_ADMIN);
     // State
     Collection entity = createEntity();
     entity.setMasterSource(MasterSourceType.IH);
