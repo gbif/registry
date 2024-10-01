@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.gbif.api.model.collections.Address;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
+
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Contact;
@@ -35,7 +37,6 @@ import org.gbif.api.vocabulary.UserRole;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.service.collections.suggestions.CollectionChangeSuggestionService;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 
 import java.net.URI;
