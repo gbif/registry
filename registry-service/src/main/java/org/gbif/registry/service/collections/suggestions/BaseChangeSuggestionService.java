@@ -522,29 +522,50 @@ public abstract class BaseChangeSuggestionService<
 
       if (field.getName().equals(CONTACTS_FIELD_NAME)) {
         Map<Integer, Contact> currentContactsMap =
-            currentEntity.getContactPersons().stream()
-                .collect(Collectors.toMap(Contact::getKey, c -> c));
+          currentEntity.getContactPersons().stream()
+            .filter(c -> c.getKey() != null)
+            .collect(Collectors.toMap(Contact::getKey, c -> c));
+
+        List<Contact> currentNullKeyContacts = currentEntity.getContactPersons().stream()
+          .filter(c -> c.getKey() == null)
+          .collect(Collectors.toList());
 
         suggestedEntity
-            .getContactPersons()
-            .forEach(
-                sugg -> {
-                  Contact current = currentContactsMap.get(sugg.getKey());
-                  if (current == null || !current.lenientEquals(sugg)) {
-                    // contact has changed
-                    changes.add(createChangeDto(field, sugg, current, Contact.class));
-                  }
-                  // remove from map
-                  if (current != null) {
-                    currentContactsMap.remove(current.getKey());
-                  }
-                });
+          .getContactPersons()
+          .forEach(sugg -> {
+            // If the key is non-null, proceed as usual
+            if (sugg.getKey() != null) {
+              Contact current = currentContactsMap.get(sugg.getKey());
+              if (current == null || !current.lenientEquals(sugg)) {
+                changes.add(createChangeDto(field, sugg, current, Contact.class));
+              }
+              if (current != null) {
+                currentContactsMap.remove(current.getKey());  // Remove from map if processed
+              }
+            } else {
+              // Handle null-key contacts separately by comparing with the list of null-key current contacts
+              Optional<Contact> currentWithNullKey = currentNullKeyContacts.stream()
+                .filter(current -> current.lenientEquals(sugg))
+                .findFirst();
+
+              if (!currentWithNullKey.isPresent()) {
+                changes.add(createChangeDto(field, sugg, null, Contact.class));
+              } else {
+                // Remove from null key list if matched
+                currentNullKeyContacts.remove(currentWithNullKey.get());
+              }
+            }
+          });
 
         // contacts deleted
         if (!currentContactsMap.isEmpty()) {
           currentContactsMap
-              .values()
-              .forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
+            .values()
+            .forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
+        }
+        //contacts deleted (with null keys)
+        if (!currentNullKeyContacts.isEmpty()) {
+          currentNullKeyContacts.forEach(c -> changes.add(createChangeDto(field, null, c, Contact.class)));
         }
       } else {
         try {
