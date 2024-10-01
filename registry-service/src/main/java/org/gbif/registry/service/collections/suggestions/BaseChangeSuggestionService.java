@@ -13,11 +13,23 @@
  */
 package org.gbif.registry.service.collections.suggestions;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.*;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.COLLECTION_LOCKABLE_FIELDS;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
+import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import org.gbif.api.model.collections.Collection;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.gbif.api.model.collections.*;
+import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
@@ -36,6 +48,7 @@ import org.gbif.api.service.collections.ContactService;
 import org.gbif.api.service.collections.CrudService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.UserRole;
+import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
 import org.gbif.registry.events.collections.SubEntityCollectionEvent;
@@ -49,6 +62,8 @@ import org.gbif.registry.persistence.mapper.collections.dto.ChangeDto;
 import org.gbif.registry.persistence.mapper.collections.dto.ChangeSuggestionDto;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.merge.MergeService;
+import org.gbif.registry.service.collections.utils.MasterSourceUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -56,18 +71,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.*;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.IH_SYNC_USER;
-import static org.gbif.registry.service.collections.utils.MasterSourceUtils.hasExternalMasterSource;
 
 public abstract class BaseChangeSuggestionService<
         T extends
@@ -305,14 +308,16 @@ public abstract class BaseChangeSuggestionService<
   public void updateChangeSuggestion(R updatedChangeSuggestion) {
     ChangeSuggestionDto dto = changeSuggestionMapper.get(updatedChangeSuggestion.getKey());
 
-    //checkArgument(
-    //updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
-        //"A comment is required");
+    checkArgument(
+    updatedChangeSuggestion.getComments().size() > dto.getComments().size(),
+        "A comment is required");
 
     if (dto.getType() == Type.CREATE || dto.getType() == Type.UPDATE) {
       // we get the current entity from the DB to update the suggested entity with the current state
       // and minimize the risk of having race conditions
       R changeSuggestion = dtoToChangeSuggestion(dto);
+
+      lockFields(changeSuggestion, updatedChangeSuggestion);
 
       Set<ChangeDto> newChanges =
           extractChanges(
@@ -858,6 +863,22 @@ public abstract class BaseChangeSuggestionService<
         && Strings.isNullOrEmpty(address.getPostalCode())
         && Strings.isNullOrEmpty(address.getProvince())
         && address.getCountry() == null;
+  }
+
+  private void lockFields(R entityOld, R entityNew) {
+    List<MasterSourceUtils.LockableField> fieldsToLock;
+    if (entityOld instanceof CollectionChangeSuggestion
+      && entityOld.getProposedBy().equals(IH_SYNC_USER)) {
+      fieldsToLock = COLLECTION_LOCKABLE_FIELDS.get(MasterSourceType.IH);
+      fieldsToLock.forEach(
+        f -> {
+          try {
+            f.getSetter().invoke(entityNew.getSuggestedEntity(), f.getGetter().invoke(entityOld.getSuggestedEntity()));
+          } catch (Exception e) {
+            throw new IllegalStateException("Could not lock field", e);
+          }
+        });
+    }
   }
 
   protected abstract R newEmptyChangeSuggestion();
