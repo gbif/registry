@@ -868,7 +868,7 @@ public abstract class BaseChangeSuggestionService<
   private void lockFields(R entityOld, R entityNew) {
     List<MasterSourceUtils.LockableField> fieldsToLock;
     if (entityOld instanceof CollectionChangeSuggestion
-      && entityOld.getProposedBy().equals(IH_SYNC_USER)) {
+      && Objects.equals(entityOld.getProposedBy(), IH_SYNC_USER)) {
       fieldsToLock = COLLECTION_LOCKABLE_FIELDS.get(MasterSourceType.IH);
       fieldsToLock.forEach(
         f -> {
