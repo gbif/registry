@@ -14,16 +14,14 @@
 package org.gbif.registry.service.collections;
 
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.*;
-import org.gbif.api.model.collections.request.SearchRequest;
+import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
 import org.gbif.api.model.registry.*;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.util.IdentifierUtils;
 import org.gbif.api.util.validators.identifierschemes.IdentifierSchemeValidator;
-import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.TagName;
 import org.gbif.api.vocabulary.TagNamespace;
@@ -33,7 +31,6 @@ import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.*;
 import org.gbif.registry.persistence.mapper.*;
 import org.gbif.registry.persistence.mapper.collections.*;
-import org.gbif.registry.persistence.mapper.collections.params.RangeParam;
 import org.gbif.registry.security.SecurityContextCheck;
 import org.gbif.registry.service.WithMyBatis;
 import org.gbif.registry.service.collections.utils.IdentifierValidatorUtils;
@@ -54,17 +51,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
 import static org.gbif.registry.service.collections.utils.MasterSourceUtils.*;
-import static org.gbif.registry.service.collections.utils.SearchUtils.INTEGER_RANGE;
-import static org.gbif.registry.service.collections.utils.SearchUtils.WILDCARD_SEARCH;
 
 @Validated
 @Slf4j
@@ -426,6 +419,10 @@ public class BaseCollectionEntityService<
         && !IdentifierUtils.isValidWikidataIdentifier(identifier.getIdentifier())) {
       throw new IllegalArgumentException("Invalid Wikidata identifier");
     }
+    if (identifier.getType() == IdentifierType.ROR
+        && !IdentifierUtils.isValidRORIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid ROR Identifier");
+    }
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -557,6 +554,31 @@ public class BaseCollectionEntityService<
   @Override
   public List<Contact> listContactPersons(@NotNull UUID entityKey) {
     return baseMapper.listContactPersons(entityKey);
+  }
+
+  //Add contacts to entities created by ih-sync
+  @Validated({PrePersist.class, Default.class})
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Override
+  public <R extends CollectionEntity> void addSuggestionContacts(@NotNull UUID createdEntity, @NotNull ChangeSuggestion<R> changeSuggestion) {
+    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
+        && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
+
+        changeSuggestion
+          .getSuggestedEntity()
+          .getContactPersons()
+          .forEach(c -> {
+            // Check if the proposedBy is "ih-sync"
+            if (!IH_SYNC_USER.equals(changeSuggestion.getProposedBy())) {
+              // If not "ih-sync", add the contact person
+               addContactPerson(createdEntity, c);
+            }
+            else {
+              addContactPersonToEntity(createdEntity,c);
+            }
+          });
+      }
   }
 
   @Validated({PrePersist.class, Default.class})
@@ -875,44 +897,5 @@ public class BaseCollectionEntityService<
       throw new IllegalArgumentException(
           "Cannot set a deleted " + entityClass.getSimpleName() + " as master source");
     }
-  }
-
-  protected RangeParam parseIntegerRangeParameter(String param) {
-    if (Strings.isNullOrEmpty(param)) {
-      return null;
-    }
-
-    RangeParam rangeParam = new RangeParam();
-    Matcher matcher = INTEGER_RANGE.matcher(param);
-    if (matcher.matches()) {
-      String lowerString = matcher.group(1);
-      if (!lowerString.equals(WILDCARD_SEARCH)) {
-        rangeParam.setLowerBound(Integer.valueOf(lowerString));
-      }
-
-      String higherString = matcher.group(2);
-      if (!higherString.equals(WILDCARD_SEARCH)) {
-        rangeParam.setHigherBound(Integer.valueOf(higherString));
-      }
-    } else {
-      try {
-        rangeParam.setExactValue(Integer.valueOf(param));
-      } catch (Exception ex) {
-        log.info("Invalid range {}", param, ex);
-      }
-    }
-
-    return rangeParam;
-  }
-
-  protected List<Country> parseGbifRegion(SearchRequest searchRequest) {
-    List<Country> countries = new ArrayList<>();
-    if (searchRequest.getGbifRegion() != null && !searchRequest.getGbifRegion().isEmpty()) {
-      countries.addAll(
-          Arrays.stream(Country.values())
-              .filter(c -> searchRequest.getGbifRegion().contains(c.getGbifRegion()))
-              .collect(Collectors.toList()));
-    }
-    return countries;
   }
 }

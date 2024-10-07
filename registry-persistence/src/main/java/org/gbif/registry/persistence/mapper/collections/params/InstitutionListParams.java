@@ -24,11 +24,9 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-public class InstitutionSearchParams extends SearchParams {
+public class InstitutionListParams extends ListParams {
 
   @Nullable List<String> types;
   @Nullable List<String> institutionalGovernances;
   @Nullable List<String> disciplines;
-  @Nullable String sourceId;
-  @Nullable Source source;
 }

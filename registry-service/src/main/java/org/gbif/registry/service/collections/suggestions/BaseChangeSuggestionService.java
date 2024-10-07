@@ -20,6 +20,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.*;
 import org.gbif.api.model.collections.suggestions.Change;
 import org.gbif.api.model.collections.suggestions.ChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
 import org.gbif.api.model.collections.suggestions.Status;
 import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.common.GbifUser;
@@ -261,6 +262,10 @@ public abstract class BaseChangeSuggestionService<
     dto.setChanges(
         extractChanges(changeSuggestion.getSuggestedEntity(), createEmptyEntityInstance()));
     dto.setCountryScope(getCountry(changeSuggestion.getSuggestedEntity()));
+    if (changeSuggestion instanceof CollectionChangeSuggestion) {
+      dto.setCreateInstitution(((CollectionChangeSuggestion) changeSuggestion).getCreateInstitution());
+      dto.setIhIdentifier(((CollectionChangeSuggestion) changeSuggestion).getIhIdentifier());
+    }
 
     return dto;
   }
@@ -468,13 +473,7 @@ public abstract class BaseChangeSuggestionService<
   }
 
   private void createContacts(R changeSuggestion, UUID createdEntity) {
-    if (changeSuggestion.getSuggestedEntity().getContactPersons() != null
-        && !changeSuggestion.getSuggestedEntity().getContactPersons().isEmpty()) {
-      changeSuggestion
-          .getSuggestedEntity()
-          .getContactPersons()
-          .forEach(c -> contactService.addContactPerson(createdEntity, c));
-    }
+    contactService.addSuggestionContacts(createdEntity, changeSuggestion);
   }
 
   @Override
@@ -483,12 +482,13 @@ public abstract class BaseChangeSuggestionService<
       @Nullable Type type,
       @Nullable String proposerEmail,
       @Nullable UUID entityKey,
+      @Nullable String ihIdentifier,
       @Nullable Pageable pageable) {
     Pageable page = pageable == null ? new PagingRequest() : pageable;
 
     List<ChangeSuggestionDto> dtos =
         changeSuggestionMapper.list(
-            status, type, collectionEntityType, proposerEmail, entityKey, page);
+            status, type, collectionEntityType, proposerEmail, entityKey, ihIdentifier, page);
 
     long count =
         changeSuggestionMapper.count(status, type, collectionEntityType, proposerEmail, entityKey);
@@ -801,7 +801,7 @@ public abstract class BaseChangeSuggestionService<
     }
   }
 
-  private <S> S readJson(String content, Class<S> clazz) {
+  protected <S> S readJson(String content, Class<S> clazz) {
     try {
       return objectMapper.readValue(content, clazz);
     } catch (JsonProcessingException e) {
@@ -838,4 +838,8 @@ public abstract class BaseChangeSuggestionService<
   protected abstract ChangeSuggestionDto createConvertToCollectionSuggestionDto(R changeSuggestion);
 
   protected abstract UUID applyConversionToCollection(ChangeSuggestionDto dto);
+
+  protected static String decodeIRN(String irn) {
+    return irn.replace("gbif:ih:irn:", "");
+  }
 }

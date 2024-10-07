@@ -12,14 +12,14 @@
   <sql id="SUGGESTION_WRITE_FIELDS">
     entity_type, entity_key, type, status, proposed, proposed_by, proposer_email, changes, comments,
     suggested_entity, merge_target_key, institution_converted_collection, name_new_institution_converted_collection,
-    modified, modified_by
+    modified, modified_by, ih_identifier, create_institution
   </sql>
 
   <sql id="SUGGESTION_READ_FIELDS">
     cs.key, cs.entity_type, cs.entity_key, cs.type, cs.status, cs.proposed, cs.proposed_by, cs.proposer_email, cs. applied,
     cs.applied_by, cs.discarded_by, cs.discarded, cs.suggested_entity, cs.comments,
     cs.merge_target_key, cs.changes, cs.institution_converted_collection, cs.name_new_institution_converted_collection,
-    cs.modified, cs.modified_by
+    cs.modified, cs.modified_by, cs.ih_identifier, cs.create_institution
   </sql>
 
   <sql id="SUGGESTION_PARAMS_CREATE">
@@ -37,7 +37,9 @@
     #{institutionConvertedCollection,jdbcType=OTHER},
     #{nameNewInstitutionConvertedCollection,jdbcType=VARCHAR},
     now(), <!-- modified -->
-    #{modifiedBy,jdbcType=VARCHAR}
+    #{modifiedBy,jdbcType=VARCHAR},
+    #{ihIdentifier, jdbcType=VARCHAR},
+    #{createInstitution, jdbcType=BOOLEAN}
   </sql>
 
   <sql id="SUGGESTION_PARAMS_UPDATE">
@@ -93,6 +95,9 @@
       </if>
       <if test="entityKey != null">
         AND cs.entity_key = #{entityKey,jdbcType=OTHER}
+      </if>
+      <if test="ihIdentifier != null">
+        AND cs.ih_identifier = #{ihIdentifier, jdbcType=OTHER}
       </if>
     </where>
     ORDER BY cs.proposed DESC

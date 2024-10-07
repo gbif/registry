@@ -13,11 +13,9 @@
  */
 package org.gbif.registry.events.collections;
 
-import org.gbif.api.model.collections.CollectionEntity;
-
-import java.util.UUID;
-
 import com.google.common.base.Preconditions;
+import java.util.UUID;
+import org.gbif.api.model.collections.CollectionEntity;
 
 /**
  * This event is fired after collection entity components such as contacts, identifiers or tags have
@@ -61,6 +59,22 @@ public class SubEntityCollectionEvent<T extends CollectionEntity, R>
         collectionEntityClass,
         (Class<R>) subEntity.getClass(),
         subEntity,
+        null,
+        String.valueOf(subEntityKey),
+        eventType);
+  }
+
+  public static <T extends CollectionEntity, R> SubEntityCollectionEvent<T, R> newInstance(
+      UUID collectionEntityKey,
+      Class<T> collectionEntityClass,
+      Class<R> subEntity,
+      long subEntityKey,
+      EventType eventType) {
+    return new SubEntityCollectionEvent<>(
+        collectionEntityKey,
+        collectionEntityClass,
+        subEntity,
+        null,
         null,
         String.valueOf(subEntityKey),
         eventType);

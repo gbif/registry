@@ -24,12 +24,10 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-public class CollectionSearchParams extends SearchParams {
+public class CollectionListParams extends ListParams {
 
   @Nullable List<String> contentTypes;
   @Nullable List<String> preservationTypes;
   @Nullable List<String> accessionStatus;
   @Nullable Boolean personalCollection;
-  @Nullable String sourceId;
-  @Nullable Source source;
 }
