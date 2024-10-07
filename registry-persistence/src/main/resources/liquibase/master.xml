@@ -150,4 +150,5 @@
   <include file="liquibase/142-grscicoll-lookup-indexes.xml" />
   <include file="liquibase/143-removed-fields-grscicoll.xml" />
   <include file="liquibase/144-mdt-endpoint-installation-types.xml" />
+  <include file="liquibase/145-contact-salutation.xml" />
 </databaseChangeLog>
