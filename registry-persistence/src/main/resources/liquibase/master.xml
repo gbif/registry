@@ -148,6 +148,7 @@
   <include file="liquibase/140-collection-descriptors-grscicoll.xml" />
   <include file="liquibase/141-ih-identifier-change-sugestion.xml" />
   <include file="liquibase/142-grscicoll-lookup-indexes.xml" />
-  <include file="liquibase/143-contact-salutation.xml" />
-  <include file="liquibase/144-removed-fields-grscicoll.xml" />
+  <include file="liquibase/143-removed-fields-grscicoll.xml" />
+  <include file="liquibase/144-mdt-endpoint-installation-types.xml" />
+  <include file="liquibase/145-contact-salutation.xml" />
 </databaseChangeLog>
