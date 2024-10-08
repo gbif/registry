@@ -330,7 +330,7 @@ public abstract class BaseChangeSuggestionService<
             .forEach(c -> c.setOverwritten(true));
         dto.getChanges().add(newChange);
       }
-      if (updatedChangeSuggestion.getSuggestedEntity() instanceof Collection && updatedChangeSuggestion.getProposedBy().equals(IH_SYNC_USER)) {
+      if (updatedChangeSuggestion.getSuggestedEntity() instanceof Collection && IH_SYNC_USER.equals(updatedChangeSuggestion.getProposedBy())) {
         Collection collection = (Collection) updatedChangeSuggestion.getSuggestedEntity();
         if (collection.getInstitutionKey() != null) {
           dto.setCreateInstitution(false);
@@ -868,7 +868,7 @@ public abstract class BaseChangeSuggestionService<
   private void lockFields(R entityOld, R entityNew) {
     List<MasterSourceUtils.LockableField> fieldsToLock;
     if (entityOld instanceof CollectionChangeSuggestion
-      && Objects.equals(entityOld.getProposedBy(), IH_SYNC_USER)) {
+      && IH_SYNC_USER.equals(entityOld.getProposedBy())) {
       fieldsToLock = COLLECTION_LOCKABLE_FIELDS.get(MasterSourceType.IH);
       fieldsToLock.forEach(
         f -> {
