@@ -423,6 +423,14 @@ public class BaseCollectionEntityService<
         && !IdentifierUtils.isValidRORIdentifier(identifier.getIdentifier())) {
       throw new IllegalArgumentException("Invalid ROR Identifier");
     }
+    if (identifier.getType() == IdentifierType.ISIL
+        && !IdentifierUtils.isValidISILIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid ISIL Identifier");
+    }
+    if (identifier.getType() == IdentifierType.CLB_DATASET_KEY
+        && !IdentifierUtils.isValidCLBDatasetKey(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid CLB_DATASET_KEY");
+    }
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
