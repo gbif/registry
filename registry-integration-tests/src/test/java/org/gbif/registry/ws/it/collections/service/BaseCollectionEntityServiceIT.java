@@ -290,6 +290,13 @@ public abstract class BaseCollectionEntityServiceIT<
       () ->
         collectionEntityService.addIdentifier(
           key, new Identifier(IdentifierType.ROR, "foo")));
+
+    //add invalid ISIL identifier
+    assertThrows(
+      IllegalArgumentException.class,
+      () ->
+        collectionEntityService.addIdentifier(
+          key, new Identifier(IdentifierType.ISIL, "foo")));
   }
 
   @Test
