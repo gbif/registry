@@ -552,10 +552,11 @@
 
   <!-- IDENTIFIERS -->
   <insert id="addIdentifier">
-    INSERT INTO institution_identifier(institution_key,identifier_key)
+    INSERT INTO institution_identifier(institution_key,identifier_key,is_primary)
     VALUES(
     #{targetEntityKey,jdbcType=OTHER},
-    #{identifierKey,jdbcType=INTEGER}
+    #{identifierKey,jdbcType=INTEGER},
+    #{isPrimary,jdbcType=BOOLEAN}
     )
   </insert>
 
@@ -583,6 +584,20 @@
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '')
       AND inst.deleted IS NULL;
   </select>
+
+  <!-- Update existing primary identifier to false -->
+  <update id="updatePrimaryIdentifier">
+    UPDATE institution_identifier
+    SET is_primary=false
+    WHERE institution_key=#{targetEntityKey,jdbcType=OTHER}
+  </update>
+
+  <!-- Update identifier is_primary -->
+  <update id="updateIdentifier">
+    UPDATE institution_identifier
+    SET is_primary=#{primary,jdbcType=BOOLEAN},
+    WHERE institution_key=#{targetEntityKey,jdbcType=OTHER} AND identifier_key=#{identifierKey,jdbcType=OTHER}
+  </update>
   <!-- END IDENTIFIERS -->
 
   <!-- MACHINE TAGS -->
