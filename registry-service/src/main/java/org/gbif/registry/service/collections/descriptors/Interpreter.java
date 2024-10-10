@@ -271,8 +271,10 @@ public class Interpreter {
     NameUsageMatch2 nameUsageMatch =
         nubResourceClient.match2(
             scientificName,
+            null,
             scientificNameAuthorship,
             taxonRank,
+            null,
             genericName,
             specificEpithet,
             infraspecificEpithet,
@@ -305,13 +307,13 @@ public class Interpreter {
       }
 
       TaxonData.TaxonDataBuilder taxonDataBuilder = TaxonData.builder();
-      Set<Integer> taxonKeys = new HashSet<>();
+      Set<String> taxonKeys = new HashSet<>();
       taxonDataBuilder.taxonKeys(taxonKeys);
       if (nameUsageMatch.getUsage() != null) {
         taxonDataBuilder
             .usageName(nameUsageMatch.getUsage().getName())
             .usageKey(nameUsageMatch.getUsage().getKey())
-            .usageRank(nameUsageMatch.getUsage().getRank());
+            .usageRank(Rank.valueOf(nameUsageMatch.getUsage().getRank()));
         taxonKeys.add(nameUsageMatch.getUsage().getKey());
       }
 
@@ -376,13 +378,13 @@ public class Interpreter {
   @Data
   @Builder
   static class TaxonData {
-    private Integer usageKey;
+    private String usageKey;
     private String usageName;
     private Rank usageRank;
 
     @Singular("rankedName")
     private List<RankedName> taxonClassification;
 
-    private Set<Integer> taxonKeys;
+    private Set<String> taxonKeys;
   }
 }

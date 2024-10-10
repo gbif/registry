@@ -10,9 +10,9 @@ import org.gbif.checklistbank.ws.client.NubResourceClient;
 
 public class NubResourceClientMock implements NubResourceClient {
 
-  public static final RankedName DEFAULT_USAGE = new RankedName(100, "usage", Rank.SPECIES);
+  public static final RankedName DEFAULT_USAGE = new RankedName("100", "usage", Rank.SPECIES.toString(), null);
   public static final RankedName DEFAULT_HIGHEST_USAGE =
-      new RankedName(1, "superHigherUsage", Rank.KINGDOM);
+      new RankedName("1", "superHigherUsage", Rank.KINGDOM.toString(), null);
 
   @Override
   public NameUsageMatch match(
@@ -31,6 +31,15 @@ public class NubResourceClientMock implements NubResourceClient {
   }
 
   @Override
+  public NameUsageMatch match(String scientificName, Rank rank, LinneanClassification classification, boolean strict, boolean verbose) {
+    return NubResourceClient.super.match(scientificName, rank, classification, strict, verbose);
+  }
+
+  @Override
+  public NameUsageMatch2 match2(String s, String s1, String s2, String s3, String s4, String s5, String s6, String s7, LinneanClassification linneanClassification, Boolean aBoolean, Boolean aBoolean1) {
+    return null;
+  }
+
   public NameUsageMatch2 match2(
       String scientificName2,
       String scientificName,
@@ -47,12 +56,12 @@ public class NubResourceClientMock implements NubResourceClient {
 
     if ("Aves".equalsIgnoreCase(scientificName)) {
       NameUsageMatch2 nameUsageMatch2 = new NameUsageMatch2();
-      nameUsageMatch2.setUsage(new RankedName(212, "Aves", Rank.CLASS));
+      nameUsageMatch2.setUsage(new RankedName("212", "Aves", Rank.CLASS.toString(), null));
       nameUsageMatch2.setClassification(
           Arrays.asList(
-              new RankedName(1, "Animalia", Rank.KINGDOM),
-              new RankedName(44, "Chordata", Rank.PHYLUM),
-              new RankedName(212, "Aves", Rank.CLASS)));
+              new RankedName("1", "Animalia", Rank.KINGDOM.toString(), null),
+              new RankedName("44", "Chordata", Rank.PHYLUM.toString(), null),
+              new RankedName("212", "Aves", Rank.CLASS.toString(), null)));
       NameUsageMatch2.Diagnostics diagnostics = new NameUsageMatch2.Diagnostics();
       diagnostics.setMatchType(NameUsageMatch.MatchType.EXACT);
       nameUsageMatch2.setDiagnostics(diagnostics);
@@ -63,7 +72,7 @@ public class NubResourceClientMock implements NubResourceClient {
     nameUsageMatch2.setUsage(DEFAULT_USAGE);
 
     nameUsageMatch2.setClassification(
-        Arrays.asList(new RankedName(50, "higherUsage", Rank.GENUS), DEFAULT_HIGHEST_USAGE));
+        Arrays.asList(new RankedName("50", "higherUsage", Rank.GENUS.toString(), null), DEFAULT_HIGHEST_USAGE));
 
     return nameUsageMatch2;
   }

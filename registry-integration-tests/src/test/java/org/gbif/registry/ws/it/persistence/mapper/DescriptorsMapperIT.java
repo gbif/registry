@@ -107,11 +107,11 @@ public class DescriptorsMapperIT extends BaseItTest {
     descriptorDto.setTypeStatus(Collections.singletonList(TypeStatus.ALLOLECTOTYPE.name()));
     descriptorDto.setUsageRank(Rank.ABERRATION);
     descriptorDto.setUsageName("usage");
-    descriptorDto.setUsageKey(5);
+    descriptorDto.setUsageKey(String.valueOf(5));
 
     descriptorDto.setTaxonClassification(
         Arrays.asList(
-            new RankedName(1, "Kingdom", Rank.KINGDOM), new RankedName(3, "Phylum", Rank.PHYLUM)));
+            new RankedName("1", "Kingdom", Rank.KINGDOM.toString(), ""), new RankedName("3", "Phylum", Rank.PHYLUM.toString(), "")));
     descriptorsMapper.createDescriptor(descriptorDto);
     assertTrue(descriptorDto.getKey() > 0);
 
@@ -139,7 +139,7 @@ public class DescriptorsMapperIT extends BaseItTest {
         1,
         descriptorsMapper
             .listDescriptors(
-                DescriptorParams.builder().usageKey(Collections.singletonList(5)).build())
+                DescriptorParams.builder().usageKey(Collections.singletonList("5")).build())
             .size());
 
     assertEquals(
@@ -168,7 +168,7 @@ public class DescriptorsMapperIT extends BaseItTest {
     createdDescriptor.setCountry(Country.COCOS_ISLANDS);
     createdDescriptor.setUsageName("NEW");
     createdDescriptor.setTaxonClassification(
-        Arrays.asList(new RankedName(1, "Kingdom2", Rank.KINGDOM)));
+        Arrays.asList(new RankedName("1", "Kingdom2", Rank.KINGDOM.toString(), "")));
     descriptorsMapper.updateDescriptor(createdDescriptor);
 
     DescriptorDto updatedDescriptor = descriptorsMapper.getDescriptor(createdDescriptor.getKey());
