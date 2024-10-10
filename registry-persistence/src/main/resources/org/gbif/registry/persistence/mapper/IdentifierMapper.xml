@@ -7,7 +7,7 @@
   </sql>
 
   <sql id="IDENTIFIER_FIELDS">
-    key,<include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.WRITABLE_IDENTIFIER_FIELDS"/>
+    key,is_primary AS primary, <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.WRITABLE_IDENTIFIER_FIELDS"/>
   </sql>
 
   <sql id="WRITABLE_IDENTIFIER_FIELD_TYPES">
