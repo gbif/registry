@@ -152,4 +152,5 @@
   <include file="liquibase/144-mdt-endpoint-installation-types.xml" />
   <include file="liquibase/145-contact-salutation.xml" />
   <include file="liquibase/146-isil-clb-identifiers.xml" />
+  <include file="liquibase/147-primary-identifier-grscicoll.xml" />
 </databaseChangeLog>
