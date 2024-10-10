@@ -53,7 +53,7 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
       searchRequest.setUsageKey(new ArrayList<>());
       for (String keyParam : usageKeys) {
         try {
-          searchRequest.getUsageKey().add(Integer.parseInt(keyParam));
+          searchRequest.getUsageKey().add(keyParam);
         } catch (Exception ex) {
           throw new IllegalArgumentException(
               "Invalid integer for usage key parameter: " + keyParam);
@@ -71,7 +71,7 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
       searchRequest.setUsageRank(new ArrayList<>());
       for (String param : usageRanks) {
         try {
-          searchRequest.getUsageRank().add(Rank.valueOf(param));
+          searchRequest.getUsageRank().add(param);
         } catch (Exception ex) {
           throw new IllegalArgumentException("Invalid rank for usage rank parameter: " + param);
         }
@@ -83,7 +83,7 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
       searchRequest.setTaxonKey(new ArrayList<>());
       for (String keyParam : taxonKeys) {
         try {
-          searchRequest.getTaxonKey().add(Integer.parseInt(keyParam));
+          searchRequest.getTaxonKey().add(keyParam);
         } catch (Exception ex) {
           throw new IllegalArgumentException(
               "Invalid integer for taxon key parameter: " + keyParam);

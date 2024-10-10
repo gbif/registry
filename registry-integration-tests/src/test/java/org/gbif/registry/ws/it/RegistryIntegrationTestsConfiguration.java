@@ -32,8 +32,9 @@ import org.gbif.registry.search.dataset.indexing.es.EsConfiguration;
 import org.gbif.registry.search.dataset.indexing.ws.GbifWsClient;
 import org.gbif.registry.surety.OrganizationEmailTemplateManagerIT;
 import org.gbif.registry.test.mocks.ConceptClientMock;
-import org.gbif.registry.test.mocks.NubResourceClientMock;
+import org.gbif.registry.test.mocks.NameUsageMatchingServiceMock;
 import org.gbif.registry.ws.config.DataSourcesConfiguration;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
 import org.mybatis.spring.annotation.MapperScan;
@@ -215,7 +216,7 @@ public class RegistryIntegrationTestsConfiguration {
   }
 
   @Bean
-  public NubResourceClient nubResourceClient() {
-    return new NubResourceClientMock();
+  public NameUsageMatchingService nameUsageMatchingService() {
+    return new NameUsageMatchingServiceMock();
   }
 }

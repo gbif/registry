@@ -23,9 +23,9 @@ public class DescriptorDto {
   private String objectClassificationName;
   private List<String> issues;
   private List<VerbatimDto> verbatim;
-  private Integer usageKey;
+  private String usageKey;
   private String usageName;
-  private Rank usageRank;
+  private String usageRank;
   private List<RankedName> taxonClassification;
-  private Set<Integer> taxonKeys;
+  private List<String> taxonKeys;
 }

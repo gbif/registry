@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.97.0-SNAPSHOT</version>
+  <version>3.97.0-multitaxonomy-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -88,21 +88,22 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>1.17.0-SNAPSHOT</gbif-api.version>
+    <gbif-api.version>1.18.0-multitaxonomy-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
-    <gbif-common-mybatis.version>1.4-SNAPSHOT</gbif-common-mybatis.version>
+    <gbif-common-mybatis.version>1.4</gbif-common-mybatis.version>
     <gbif-common-ws.version>1.28-SNAPSHOT</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
     <gbif-doi.version>2.22-SNAPSHOT</gbif-doi.version>
-    <gbif-download-query-tools.version>1.53.0-SNAPSHOT</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.53.0-multitaxonomy-java11-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.4</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>0.195.4</gbif-occurrence.version>
+    <gbif-occurrence.version>0.196.0-H3-multi-taxonomy-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
-    <checklistbank.version>2.127-SNAPSHOT</checklistbank.version>
+    <gbif-kvs.version>2.0-SNAPSHOT</gbif-kvs.version>
+    <checklistbank.version>2.127</checklistbank.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -145,8 +146,8 @@
     <junit.version>5.9.1</junit.version>
     <mockito.version>3.3.3</mockito.version>
     <xmlunit.version>2.6.3</xmlunit.version>
-    <postgresql-testcontainers.version>1.19.8</postgresql-testcontainers.version>
-    <testcontainers-elasticsearch.version>1.19.8</testcontainers-elasticsearch.version>
+    <postgresql-testcontainers.version>1.20.2</postgresql-testcontainers.version>
+    <testcontainers-elasticsearch.version>1.20.2</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.9.12</reflections.version>
@@ -432,6 +433,13 @@
         <artifactId>vocabulary-rest-ws-client</artifactId>
         <version>${gbif-vocabulary.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.gbif.kvs</groupId>
+        <artifactId>kvs-rest-clients</artifactId>
+        <version>${gbif-kvs.version}</version>
+      </dependency>
+
 
       <!-- Third party dependencies -->
       <dependency>

@@ -24,8 +24,6 @@ public class EmbeddedPostgresTestUtils {
 
   private EmbeddedPostgresTestUtils() {}
 
-  public static final String LIQUIBASE_MASTER_FILE = "liquibase/master.xml";
-
   /** Extracts the connection information to create a {@link DbConfiguration} instance. */
   public static DbConfiguration toDbConfig(PostgreSQLContainer database) {
     DbConfiguration db = new DbConfiguration();

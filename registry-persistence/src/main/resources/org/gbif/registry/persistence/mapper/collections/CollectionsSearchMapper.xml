@@ -350,7 +350,7 @@
     <if test="params.usageKey != null and params.usageKey.size > 0">
       AND d.usage_key IN
       <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
-        #{item,jdbcType=INTEGER}
+        #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.usageName != null and params.usageName.size > 0">
@@ -368,7 +368,7 @@
     <if test="params.taxonKey != null  and params.taxonKey.size > 0">
       AND d.taxon_keys &amp;&amp; ARRAY
       <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
-        #{item,jdbcType=INTEGER}
+        #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
     <if test="params.individualCount != null">

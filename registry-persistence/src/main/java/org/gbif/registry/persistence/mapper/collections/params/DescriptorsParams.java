@@ -14,9 +14,9 @@ public class DescriptorsParams extends CollectionListParams {
 
   // descriptors fields
   List<String> usageName;
-  List<Integer> usageKey;
-  List<Rank> usageRank;
-  List<Integer> taxonKey;
+  List<String> usageKey;
+  List<String> usageRank;
+  List<String> taxonKey;
   @Nullable List<Country> descriptorCountry;
   @Nullable RangeParam individualCount;
   @Nullable List<String> identifiedBy;

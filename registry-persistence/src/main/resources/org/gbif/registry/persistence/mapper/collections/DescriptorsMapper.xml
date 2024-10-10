@@ -133,11 +133,11 @@
 
   <sql id="DESCRIPTOR_PARAMS_CREATE">
     #{descriptorGroupKey,jdbcType=INTEGER},
-    #{usageKey,jdbcType=INTEGER},
+    #{usageKey,jdbcType=VARCHAR},
     #{usageName,jdbcType=VARCHAR},
     #{usageRank,jdbcType=VARCHAR},
     #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
-    #{taxonKeys,jdbcType=ARRAY,typeHandler=IntegerArrayTypeHandler},
+    #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{country,jdbcType=VARCHAR},
     #{individualCount,jdbcType=INTEGER},
     #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -150,11 +150,11 @@
   </sql>
 
   <sql id="DESCRIPTOR_PARAMS_UPDATE">
-    usage_key = #{usageKey,jdbcType=INTEGER},
+    usage_key = #{usageKey,jdbcType=VARCHAR},
     usage_name = #{usageName,jdbcType=VARCHAR},
     usage_rank = #{usageRank,jdbcType=VARCHAR},
     taxon_classification = #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
-    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=IntegerArrayTypeHandler},
+    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     country = #{country,jdbcType=VARCHAR},
     individual_count = #{individualCount,jdbcType=INTEGER},
     identified_by = #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
@@ -219,7 +219,7 @@
       <if test="params.usageKey != null and params.usageKey.size > 0">
         AND d.usage_key IN
         <foreach item="item" collection="params.usageKey" open="(" separator="," close=")">
-          #{item,jdbcType=INTEGER}
+          #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.usageName != null and params.usageName.size > 0">
@@ -237,7 +237,7 @@
       <if test="params.taxonKey != null  and params.taxonKey.size > 0">
         AND d.taxon_keys &amp;&amp; ARRAY
         <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
-          #{item,jdbcType=INTEGER}
+          #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
       <if test="params.individualCount != null">

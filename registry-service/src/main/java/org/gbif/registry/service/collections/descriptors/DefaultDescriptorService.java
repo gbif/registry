@@ -36,7 +36,6 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.events.EventManager;
 import org.gbif.registry.events.collections.EventType;
@@ -47,6 +46,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
+import org.gbif.rest.client.species.NameUsageMatchingService;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -61,7 +61,7 @@ import org.springframework.validation.annotation.Validated;
 @Service
 public class DefaultDescriptorService implements DescriptorsService {
 
-  private final NubResourceClient nubResourceClient;
+  private final NameUsageMatchingService nameUsageMatchingService;
   private final DescriptorsMapper descriptorsMapper;
   private final EventManager eventManager;
   private final CollectionService collectionService;
@@ -69,12 +69,12 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @Autowired
   public DefaultDescriptorService(
-      NubResourceClient nubResourceClient,
+      NameUsageMatchingService nameUsageMatchingService,
       DescriptorsMapper descriptorsMapper,
       EventManager eventManager,
       CollectionService collectionService,
       ConceptClient conceptClient) {
-    this.nubResourceClient = nubResourceClient;
+    this.nameUsageMatchingService = nameUsageMatchingService;
     this.descriptorsMapper = descriptorsMapper;
     this.eventManager = eventManager;
     this.collectionService = collectionService;
@@ -433,12 +433,12 @@ public class DefaultDescriptorService implements DescriptorsService {
   private void interpretDescriptor(Map<String, String> valuesMap, DescriptorDto descriptorDto) {
     // taxonomy
     InterpretedResult<Interpreter.TaxonData> taxonomyResult =
-        Interpreter.interpretTaxonomy(valuesMap, nubResourceClient);
+        Interpreter.interpretTaxonomy(valuesMap, nameUsageMatchingService);
     if (taxonomyResult.getResult() != null) {
       descriptorDto.setUsageKey(taxonomyResult.getResult().getUsageKey());
       descriptorDto.setUsageRank(taxonomyResult.getResult().getUsageRank());
       descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
-      descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys());
+      descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys() != null ? new ArrayList<>(taxonomyResult.getResult().getTaxonKeys()) : List.of());
       descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
     }
     addIssues(descriptorDto, taxonomyResult);
