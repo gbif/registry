@@ -195,7 +195,10 @@ public class WithMyBatis {
       Identifier identifier) {
     checkArgument(identifier.getKey() == null, CREATE_ERROR_MESSAGE);
     identifierMapper.createIdentifier(identifier);
-    identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey());
+    if (identifier.getIsPrimary()) {
+      identifiableMapper.updatePrimaryIdentifier(targetEntityKey);
+    }
+    identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey(), identifier.getIsPrimary());
     return identifier.getKey();
   }
 }
