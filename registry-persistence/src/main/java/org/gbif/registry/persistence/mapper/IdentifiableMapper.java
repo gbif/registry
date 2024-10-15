@@ -23,16 +23,10 @@ import org.apache.ibatis.annotations.Param;
 public interface IdentifiableMapper {
 
   int addIdentifier(
-      @Param("targetEntityKey") UUID entityKey, @Param("identifierKey") int identifierKey, @Param("isPrimary") boolean isPrimary);
+      @Param("targetEntityKey") UUID entityKey, @Param("identifierKey") int identifierKey);
 
   int deleteIdentifier(
       @Param("targetEntityKey") UUID entityKey, @Param("identifierKey") int identifierKey);
 
   List<Identifier> listIdentifiers(@Param("targetEntityKey") UUID identifierKey);
-
-  /**
-   * Updates the current primary identifier of the given entity if it exists and makes it non-primary.
-   */
-  void updatePrimaryIdentifier(
-    @Param("targetEntityKey") UUID entityKey);
 }
