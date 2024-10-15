@@ -31,6 +31,7 @@ import org.gbif.registry.persistence.mapper.IdentifierMapper;
 import org.gbif.registry.persistence.mapper.MachineTagMapper;
 import org.gbif.registry.persistence.mapper.MachineTaggableMapper;
 import org.gbif.registry.persistence.mapper.NetworkEntityMapper;
+import org.gbif.registry.persistence.mapper.PrimaryIdentifiableMapper;
 import org.gbif.registry.persistence.mapper.TagMapper;
 import org.gbif.registry.persistence.mapper.TaggableMapper;
 
@@ -195,10 +196,41 @@ public class WithMyBatis {
       Identifier identifier) {
     checkArgument(identifier.getKey() == null, CREATE_ERROR_MESSAGE);
     identifierMapper.createIdentifier(identifier);
-    if (identifier.getIsPrimary()) {
+    identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey());
+    return identifier.getKey();
+  }
+
+  @Transactional
+  public int addCollectionIdentifier(
+    IdentifierMapper identifierMapper,
+    PrimaryIdentifiableMapper identifiableMapper,
+    UUID targetEntityKey,
+    Identifier identifier) {
+    checkArgument(identifier.getKey() == null, CREATE_ERROR_MESSAGE);
+    identifierMapper.createIdentifier(identifier);
+    if (identifier.isPrimary()) {
       identifiableMapper.updatePrimaryIdentifier(targetEntityKey);
     }
-    identifiableMapper.addIdentifier(targetEntityKey, identifier.getKey(), identifier.getIsPrimary());
+    return identifiableMapper.addCollectionIdentifier(
+        targetEntityKey, identifier.getKey(), identifier.isPrimary());
+  }
+
+  @Transactional
+  public int updateCollectionIdentifier(
+    IdentifierMapper identifierMapper,
+    PrimaryIdentifiableMapper identifiableMapper,
+    UUID targetEntityKey,
+    Identifier identifier) {
+    checkArgument(identifier.getKey() != null, "Unable to update an entity with no key");
+    checkArgument(
+      Boolean.TRUE.equals(identifiableMapper.areRelated(targetEntityKey, identifier.getKey())),
+      "The provided identifier is not connected to the given entity");
+    // is this a primary identifier? We need to make sure it only exists once per type
+    if (identifier.isPrimary()) {
+      identifiableMapper.updatePrimaryIdentifier(targetEntityKey);
+    }
+    identifierMapper.updateIdentifier(identifier);
+    identifiableMapper.updateIdentifier(targetEntityKey, identifier.isPrimary(), identifier.getKey());
     return identifier.getKey();
   }
 }
