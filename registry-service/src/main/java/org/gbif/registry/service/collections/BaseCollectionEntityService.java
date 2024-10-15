@@ -158,7 +158,7 @@ public class BaseCollectionEntityService<
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     identifier.setCreatedBy(authentication.getName());
     int identifierKey =
-        withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
+        withMyBatis.addCollectionIdentifier(identifierMapper, baseMapper, entityKey, identifier);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
             entityKey, objectClass, identifier, identifierKey, EventType.CREATE));
@@ -182,6 +182,19 @@ public class BaseCollectionEntityService<
   @Override
   public List<Identifier> listIdentifiers(UUID key) {
     return baseMapper.listIdentifiers(key);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Validated({PrePersist.class, Default.class})
+  @Override
+  public int updateIdentifier(UUID entityKey, Identifier identifier) {
+    validateIdentifier(identifier);
+    int identifierKey =
+      withMyBatis.updateCollectionIdentifier(identifierMapper, baseMapper, entityKey, identifier);
+    eventManager.post(SubEntityCollectionEvent.newInstance(
+      entityKey, objectClass, identifier, identifierKey, EventType.UPDATE));
+    return identifierKey;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})

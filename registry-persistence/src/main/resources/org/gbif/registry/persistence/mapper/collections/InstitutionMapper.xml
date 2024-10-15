@@ -551,7 +551,7 @@
   <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
-  <insert id="addIdentifier">
+  <insert id="addCollectionIdentifier">
     INSERT INTO institution_identifier(institution_key,identifier_key,is_primary)
     VALUES(
     #{targetEntityKey,jdbcType=OTHER},
@@ -561,7 +561,7 @@
   </insert>
 
   <select id="listIdentifiers" resultType="Identifier">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.COLLECTION_IDENTIFIER_FIELDS"/>
     FROM identifier INNER JOIN institution_identifier ON identifier_key = key
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
@@ -586,6 +586,7 @@
   </select>
 
   <!-- Update existing primary identifier to false -->
+  <!-- Update existing primary identifier to false -->
   <update id="updatePrimaryIdentifier">
     UPDATE institution_identifier
     SET is_primary=false
@@ -595,9 +596,17 @@
   <!-- Update identifier is_primary -->
   <update id="updateIdentifier">
     UPDATE institution_identifier
-    SET is_primary=#{primary,jdbcType=BOOLEAN},
+    SET is_primary=#{primary,jdbcType=BOOLEAN}
     WHERE institution_key=#{targetEntityKey,jdbcType=OTHER} AND identifier_key=#{identifierKey,jdbcType=OTHER}
   </update>
+
+  <select id="areRelated" resultType="boolean">
+    SELECT true
+    FROM institution_identifier
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
+    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+    LIMIT 1
+  </select>
   <!-- END IDENTIFIERS -->
 
   <!-- MACHINE TAGS -->
