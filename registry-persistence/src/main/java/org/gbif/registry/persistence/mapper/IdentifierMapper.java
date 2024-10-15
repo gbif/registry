@@ -35,4 +35,6 @@ public interface IdentifierMapper {
       @Nullable @Param("page") Pageable page);
 
   Identifier get(@Param("key") int key);
+
+  int updateIdentifier(Identifier identifier);
 }

@@ -198,7 +198,7 @@ public class InstitutionMapperIT extends BaseItTest {
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
     identifier.setCreatedBy("test");
     identifierMapper.createIdentifier(identifier);
-    institutionMapper.addIdentifier(inst2.getKey(), identifier.getKey());
+    institutionMapper.addCollectionIdentifier(inst2.getKey(), identifier.getKey(), identifier.isPrimary());
 
     Institution inst3 = new Institution();
     inst3.setKey(UUID.randomUUID());

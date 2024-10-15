@@ -297,16 +297,30 @@ abstract class BaseCollectionEntityResourceIT<
     assertEquals(identifierKey, identifierKeyReturned);
     identifier.setKey(identifierKeyReturned);
 
+    // update identifier
+    Identifier updatedIdentifier = new Identifier();
+    updatedIdentifier.setKey(identifierKey);
+    updatedIdentifier.setIdentifier("updated-identifier");
+    updatedIdentifier.setType(IdentifierType.DOI);
+    updatedIdentifier.setPrimary(true);
+
+    when(getMockCollectionEntityService().updateIdentifier(entityKey, updatedIdentifier))
+      .thenReturn(identifierKey);
+
+    int updatedIdentifierKeyReturned = baseClient.updateIdentifier(entityKey, identifierKey, updatedIdentifier);
+    assertEquals(identifierKey, updatedIdentifierKeyReturned);
+
+    // Verify the identifier was updated correctly
     when(getMockCollectionEntityService().listIdentifiers(entityKey))
-        .thenReturn(Collections.singletonList(identifier));
+        .thenReturn(Collections.singletonList(updatedIdentifier));
     // mock call in ResourceNotFoundRequestFilter
     when(resourceNotFoundService.entityExists(any(), any())).thenReturn(true);
 
     List<Identifier> identifiers = baseClient.listIdentifiers(entityKey);
     assertEquals(1, identifiers.size());
     assertEquals(identifierKey, identifiers.get(0).getKey());
-    assertEquals("identifier", identifiers.get(0).getIdentifier());
-    assertEquals(IdentifierType.LSID, identifiers.get(0).getType());
+    assertEquals("updated-identifier", identifiers.get(0).getIdentifier());
+    assertEquals(IdentifierType.DOI, identifiers.get(0).getType());
 
     doNothing().when(getMockCollectionEntityService()).deleteIdentifier(entityKey, identifierKey);
     assertDoesNotThrow(() -> baseClient.deleteIdentifier(entityKey, identifierKey));
