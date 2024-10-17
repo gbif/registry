@@ -13,13 +13,32 @@
  */
 package org.gbif.registry.ws.provider;
 
+import static org.gbif.registry.service.collections.utils.SearchUtils.DEFAULT_FACET_LIMIT;
+import static org.gbif.ws.util.CommonWsUtils.*;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_LIMIT;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MINCOUNT;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_MULTISELECT;
+import static org.gbif.ws.util.WebserviceParameter.PARAM_FACET_OFFSET;
+
 import com.google.common.base.Strings;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.CollectionsFacetParameter;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 import org.gbif.registry.service.collections.utils.SearchUtils;
@@ -27,12 +46,13 @@ import org.gbif.ws.server.provider.PageableProvider;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
-public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
+public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<
+        F extends CollectionsFacetParameter>
     implements HandlerMethodArgumentResolver {
 
   public static final int MAX_PAGE_SIZE = 1000;
 
-  protected <T extends SearchRequest> void fillSearchRequestParams(
+  protected <T extends SearchRequest<F>> void fillSearchRequestParams(
       T request, NativeWebRequest webRequest) {
     // page
     Pageable page = PageableProvider.getPagingRequest(webRequest, MAX_PAGE_SIZE);
@@ -187,7 +207,77 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
     if (!Strings.isNullOrEmpty(sourceIdParam)) {
       request.setSourceId(sourceIdParam);
     }
+
+    fillFacetParams(request, webRequest);
   }
+
+  protected <T extends SearchRequest<F>> void fillFacetParams(
+      T searchRequest, NativeWebRequest webRequest) {
+    final Map<String, String[]> params =
+        webRequest.getParameterMap().entrySet().stream()
+            .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Map.Entry::getValue));
+
+    final String facetMultiSelectValue = getFirstIgnoreCase(params, PARAM_FACET_MULTISELECT);
+    if (facetMultiSelectValue != null) {
+      searchRequest.setMultiSelectFacets(Boolean.parseBoolean(facetMultiSelectValue));
+    }
+
+    final String facetMinCountValue = getFirstIgnoreCase(params, PARAM_FACET_MINCOUNT);
+    if (facetMinCountValue != null) {
+      searchRequest.setFacetMinCount(Integer.parseInt(facetMinCountValue));
+    }
+
+    final String facetLimit = getFirstIgnoreCase(params, PARAM_FACET_LIMIT);
+    if (facetLimit != null) {
+      searchRequest.setFacetLimit(Integer.parseInt(facetLimit));
+    }
+
+    final String facetOffset = getFirstIgnoreCase(params, PARAM_FACET_OFFSET);
+    if (facetOffset != null) {
+      searchRequest.setFacetOffset(Integer.parseInt(facetOffset));
+    }
+
+    final List<String> facetParams =
+        params.get(PARAM_FACET) != null
+            ? Arrays.asList(params.get(PARAM_FACET))
+            : Collections.emptyList();
+    if (!facetParams.isEmpty()) {
+      Set<F> parsedFacets = new HashSet<>();
+      for (String f : facetParams) {
+        F facet = findFacetParam(f);
+        if (facet != null) {
+          parsedFacets.add(facet);
+          String pFacetOffset = getFirstIgnoreCase(params, f + '.' + PARAM_FACET_OFFSET);
+          String pFacetLimit = getFirstIgnoreCase(params, f + '.' + PARAM_FACET_LIMIT);
+          if (pFacetLimit != null) {
+            if (pFacetOffset != null) {
+              searchRequest
+                  .getFacetPages()
+                  .put(
+                      facet,
+                      new PagingRequest(
+                          Integer.parseInt(pFacetOffset), Integer.parseInt(pFacetLimit)));
+            } else {
+              searchRequest
+                  .getFacetPages()
+                  .put(facet, new PagingRequest(0, Integer.parseInt(pFacetLimit)));
+            }
+          } else if (pFacetOffset != null) {
+            searchRequest
+                .getFacetPages()
+                .put(facet, new PagingRequest(Integer.parseInt(pFacetOffset), DEFAULT_FACET_LIMIT));
+          }
+        }
+      }
+      searchRequest.setFacets(parsedFacets);
+    }
+  }
+
+  private static String getFirstIgnoreCase(Map<String, String[]> params, String param) {
+    return getFirst(params, param.toLowerCase());
+  }
+
+  protected abstract F findFacetParam(String facetParam);
 
   protected static void validateIntegerRange(String param, String paramName) {
     boolean rangeMatch = SearchUtils.INTEGER_RANGE.matcher(param).find();

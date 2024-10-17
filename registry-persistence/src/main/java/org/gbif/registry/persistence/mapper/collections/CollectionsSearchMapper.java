@@ -17,6 +17,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.ibatis.annotations.Param;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
@@ -35,4 +36,12 @@ public interface CollectionsSearchMapper {
   List<CollectionSearchDto> searchCollections(@Nullable @Param("params") DescriptorsParams params);
 
   long countCollections(@Nullable @Param("params") DescriptorsParams listParams);
+
+  List<FacetDto> collectionFacet(@Nullable @Param("params") DescriptorsParams params);
+
+  long collectionFacetCardinality(@Nullable @Param("params") DescriptorsParams params);
+
+  List<FacetDto> institutionFacet(@Nullable @Param("params") InstitutionListParams params);
+
+  long institutionFacetCardinality(@Nullable @Param("params") InstitutionListParams params);
 }

@@ -5,8 +5,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
+import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 
 @Getter
 @SuperBuilder
@@ -27,6 +29,20 @@ public class DescriptorsParams extends CollectionListParams {
   @Nullable List<String> discipline;
   @Nullable List<String> objectClassification;
   @Nullable List<String> issues;
+
+  // facets
+  @Nullable CollectionFacetParameter facet;
+
+  public boolean descriptorFacet() {
+    return facet == CollectionFacetParameter.DESCRIPTOR_COUNTRY
+        || facet == CollectionFacetParameter.KINGDOM_KEY
+        || facet == CollectionFacetParameter.PHYLUM_KEY
+        || facet == CollectionFacetParameter.CLASS_KEY
+        || facet == CollectionFacetParameter.ORDER_KEY
+        || facet == CollectionFacetParameter.FAMILY_KEY
+        || facet == CollectionFacetParameter.GENUS_KEY
+        || facet == CollectionFacetParameter.SPECIES_KEY;
+  }
 
   public boolean descriptorSearch() {
     return query != null

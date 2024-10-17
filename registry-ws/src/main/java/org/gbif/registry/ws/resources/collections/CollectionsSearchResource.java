@@ -28,10 +28,12 @@ import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
 import org.gbif.api.model.collections.search.InstitutionSearchResponse;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.springframework.http.MediaType;
@@ -129,8 +131,8 @@ public class CollectionsSearchResource {
   @ApiResponse(responseCode = "200", description = "Search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("collection/search")
-  public PagingResponse<CollectionSearchResponse> searchCollections(
-      CollectionDescriptorsSearchRequest searchRequest) {
+  public FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter>
+      searchCollections(CollectionDescriptorsSearchRequest searchRequest) {
     return collectionsSearchService.searchCollections(searchRequest);
   }
 }

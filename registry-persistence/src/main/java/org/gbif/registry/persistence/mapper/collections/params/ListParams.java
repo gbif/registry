@@ -19,10 +19,10 @@ import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import org.gbif.api.model.common.paging.Pageable;
-import org.gbif.api.vocabulary.CollectionsSortField;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.SortOrder;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
 
@@ -58,4 +58,6 @@ public abstract class ListParams {
   @Nullable private Boolean deleted;
   @Nullable private UUID replacedBy;
   @Nullable private Pageable page;
+  @Nullable private Pageable facetPage;
+  @Nullable private Integer facetMinCount;
 }

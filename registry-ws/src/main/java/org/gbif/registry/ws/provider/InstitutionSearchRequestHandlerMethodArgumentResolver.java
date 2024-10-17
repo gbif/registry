@@ -13,17 +13,17 @@
  */
 package org.gbif.registry.ws.provider;
 
+import java.util.Arrays;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.util.Arrays;
-
 @SuppressWarnings("NullableProblems")
 public class InstitutionSearchRequestHandlerMethodArgumentResolver
-    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver {
+    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<InstitutionFacetParameter> {
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
@@ -56,5 +56,10 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
     }
 
     return searchRequest;
+  }
+
+  @Override
+  protected InstitutionFacetParameter findFacetParam(String facetParam) {
+    return InstitutionFacetParameter.valueOf(facetParam);
   }
 }

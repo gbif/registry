@@ -13,12 +13,9 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.collections.Source;
 
 import java.util.List;
-
 import javax.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 

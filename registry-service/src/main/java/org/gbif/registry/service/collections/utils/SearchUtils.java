@@ -20,4 +20,5 @@ public class SearchUtils {
   public static final Pattern INTEGER_RANGE =
       Pattern.compile("^(\\d+|\\*)\\s*,\\s*(\\d+|\\*)$");
   public static final String WILDCARD_SEARCH = "*";
+  public static final int DEFAULT_FACET_LIMIT = 10;
 }
