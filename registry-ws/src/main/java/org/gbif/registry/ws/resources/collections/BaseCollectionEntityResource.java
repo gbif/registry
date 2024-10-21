@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import java.util.Objects;
+
 import org.gbif.api.annotation.EmptyToNull;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
@@ -629,7 +631,7 @@ public abstract class BaseCollectionEntityResource<
               name = "Order",
               properties = @ExtensionProperty(name = "Order", value = "0433")))
   @Docs.DefaultEntityKeyParameter
-  @ApiResponse(responseCode = "204", description = "Endpoint deleted")
+  @ApiResponse(responseCode = "204", description = "Identifier deleted")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
   @DeleteMapping("{key}/identifier/{identifierKey}")
@@ -654,6 +656,29 @@ public abstract class BaseCollectionEntityResource<
   @Nullable
   public List<Identifier> listIdentifiers(@PathVariable UUID key) {
     return collectionEntityService.listIdentifiers(key);
+  }
+
+  @Operation(
+    operationId = "updateIdentifier",
+    summary = "Update an identifier for a specified entity",
+    extensions = @Extension(
+      name = "Order",
+      properties = @ExtensionProperty(name = "Order", value = "0436")))
+  @Docs.DefaultEntityKeyParameter
+  @ApiResponse(responseCode = "204", description = "Identifier updated")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
+  @Transactional
+  public int updateIdentifier(
+    @PathVariable("key") UUID entityKey,
+    @PathVariable("identifierKey") Integer identifierKey,
+    @RequestBody Boolean isPrimary) {
+    checkArgument(
+      Objects.nonNull(isPrimary),
+      "The 'isPrimary' parameter must not be null."
+    );
+    return collectionEntityService.updateIdentifier(entityKey, identifierKey, isPrimary);
   }
 
   @Operation(

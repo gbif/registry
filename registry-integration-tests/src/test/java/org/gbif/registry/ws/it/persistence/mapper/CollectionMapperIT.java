@@ -207,7 +207,7 @@ public class CollectionMapperIT extends BaseItTest {
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
     identifier.setCreatedBy("test");
     identifierMapper.createIdentifier(identifier);
-    collectionMapper.addIdentifier(col2.getKey(), identifier.getKey());
+    collectionMapper.addCollectionIdentifier(col2.getKey(), identifier.getKey(), identifier.isPrimary());
 
     Collection col3 = new Collection();
     col3.setKey(UUID.randomUUID());

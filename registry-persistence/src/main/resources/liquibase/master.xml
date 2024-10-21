@@ -150,4 +150,5 @@
   <include file="liquibase/142-grscicoll-lookup-indexes.xml" />
   <include file="liquibase/143-removed-fields-grscicoll.xml" />
   <include file="liquibase/144-isil-clb-identifiers.xml" />
+  <include file="liquibase/145-primary-identifier-grscicoll.xml" />
 </databaseChangeLog>
