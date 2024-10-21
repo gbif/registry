@@ -188,13 +188,11 @@ public class BaseCollectionEntityService<
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
-  public int updateIdentifier(UUID entityKey, Identifier identifier) {
-    validateIdentifier(identifier);
-    int identifierKey =
-      withMyBatis.updateCollectionIdentifier(identifierMapper, baseMapper, entityKey, identifier);
+  public int updateIdentifier(UUID entityKey, int identifierKey, Boolean isPrimary) {
+      int key = withMyBatis.updateCollectionIdentifier(baseMapper, entityKey, identifierKey, isPrimary);
     eventManager.post(SubEntityCollectionEvent.newInstance(
-      entityKey, objectClass, identifier, identifierKey, EventType.UPDATE));
-    return identifierKey;
+      entityKey, objectClass, Identifier.class, (long) identifierKey, EventType.UPDATE));
+    return key;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
