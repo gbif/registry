@@ -263,155 +263,25 @@
       INNER JOIN master_sync_metadata m ON i.master_sync_metadata_key = m.key
     </if>
     <where>
-      <choose>
-        <when test="params.deleted != null and params.deleted">
-          i.deleted IS NOT NULL
-        </when>
-        <otherwise>
-          i.deleted IS NULL
-        </otherwise>
-      </choose>
-      <if test="params.code != null" >
-        AND lower(i.code) = lower(#{params.code,jdbcType=VARCHAR})
-      </if>
-      <if test="params.alternativeCode != null" >
-        AND i.alternative_codes ?? #{params.alternativeCode,jdbcType=VARCHAR}
-      </if>
-      <if test="params.name != null" >
-        AND i.name = #{params.name,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagNamespace != null" >
-        AND mt.namespace = #{params.machineTagNamespace,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagName != null" >
-        AND mt.name = #{params.machineTagName,jdbcType=VARCHAR}
-      </if>
-      <if test="params.machineTagValue != null" >
-        AND mt.value = #{params.machineTagValue,jdbcType=VARCHAR}
-      </if>
-      <if test="params.identifierType != null" >
-        AND id.type = #{params.identifierType,jdbcType=OTHER}
-      </if>
-      <if test="params.identifier != null" >
-        AND id.identifier = #{params.identifier,jdbcType=VARCHAR}
-      </if>
-      <if test="params.countries != null and params.countries.size > 0">
-        AND (addr.country IN
-          <foreach item="item" collection="params.countries" open="(" separator="," close=")">
-            #{item,jdbcType=VARCHAR}
-          </foreach>
-          OR mail_addr.country IN
-          <foreach item="item" collection="params.countries" open="(" separator="," close=")">
-            #{item,jdbcType=VARCHAR}
-          </foreach>
-        )
-      </if>
-      <if test="params.regionCountries != null and params.regionCountries.size > 0">
-        AND (addr.country IN
-        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-        OR mail_addr.country IN
-        <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-        )
-      </if>
-      <if test="params.city != null" >
-        AND (normalize_name(addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR})
-        OR
-        normalize_name(mail_addr.city) = normalize_name(#{params.city,jdbcType=VARCHAR}))
-      </if>
-      <if test="params.fuzzyName != null" >
-        AND similar_name(i.name, #{params.fuzzyName,jdbcType=VARCHAR})
-      </if>
-      <if test="params.types != null and params.types.size > 0" >
-        AND i.type &amp;&amp; ARRAY
-        <foreach item="item" collection="params.types" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.institutionalGovernances != null and params.institutionalGovernances.size > 0" >
-        AND i.institutional_governance &amp;&amp; ARRAY
-        <foreach item="item" collection="params.institutionalGovernances" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.disciplines != null and params.disciplines.size > 0" >
-        AND i.discipline &amp;&amp; ARRAY
-        <foreach item="item" collection="params.disciplines" open="[" separator="," close="]">
-          #{item,jdbcType=VARCHAR}::text
-        </foreach>
-      </if>
-      <if test="params.active != null" >
-        AND i.active = #{params.active,jdbcType=OTHER}
-      </if>
-      <if test="params.masterSourceType != null" >
-        AND i.master_source = #{params.masterSourceType,jdbcType=OTHER}
-      </if>
-      <if test="params.numberSpecimens != null" >
-        <choose>
-          <when test="params.numberSpecimens.exactValue != null">
-            AND i.number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.numberSpecimens.lowerBound != null" >
-              AND i.number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.numberSpecimens.higherBound != null" >
-              AND i.number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.occurrenceCount != null" >
-        <choose>
-          <when test="params.occurrenceCount.exactValue != null">
-            AND i.occurrence_count = #{params.occurrenceCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.occurrenceCount.lowerBound != null" >
-              AND i.occurrence_count >= #{params.occurrenceCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.occurrenceCount.higherBound != null" >
-              AND i.occurrence_count &lt;= #{params.occurrenceCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.typeSpecimenCount != null" >
-        <choose>
-          <when test="params.typeSpecimenCount.exactValue != null">
-            AND i.type_specimen_count = #{params.typeSpecimenCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.typeSpecimenCount.lowerBound != null" >
-              AND i.type_specimen_count >= #{params.typeSpecimenCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.typeSpecimenCount.higherBound != null" >
-              AND i.type_specimen_count &lt;= #{params.typeSpecimenCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
-      <if test="params.displayOnNHCPortal != null" >
-        AND i.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-      </if>
-      <if test="params.replacedBy != null" >
-        AND i.replaced_by = #{params.replacedBy,jdbcType=OTHER}
-      </if>
-      <if test="params.institutionKeys != null and params.institutionKeys.size > 0" >
-        AND i.key IN
-        <foreach item="item" collection="params.institutionKeys" open="(" separator="," close=")">
-          #{item,jdbcType=VARCHAR}
-        </foreach>
-      </if>
-      <if test="params.source != null">
-        AND m.source = #{params.source,jdbcType=OTHER}
-      </if>
-      <if test="params.sourceId != null">
-        AND m.source_id = #{params.sourceId,jdbcType=VARCHAR}
-      </if>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.COMMON_LIST_FILTER">
+        <property name="alias" value="i."/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+        <property name="values" value="params.types"/>
+        <property name="field" value="i.type"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+        <property name="values" value="params.institutionalGovernances"/>
+        <property name="field" value="i.institutional_governance"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ARRAY_FIELD_FILTER">
+        <property name="values" value="params.disciplines"/>
+        <property name="field" value="i.discipline"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+        <property name="values" value="params.institutionKeys"/>
+        <property name="field" value="i.key"/>
+      </include>
     </where>
   </sql>
 

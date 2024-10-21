@@ -1,5 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,7 @@ public class FullTextSearchParams {
   @Nullable String query;
   boolean highlight;
   @Nullable String type;
-  @Nullable Boolean displayOnNHCPortal;
-  @Nullable Country country;
+  @Nullable List<Boolean> displayOnNHCPortal;
+  @Nullable List<Country> country;
   int limit;
 }

@@ -46,7 +46,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -74,6 +73,7 @@ import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
@@ -366,34 +366,22 @@ public class CollectionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
-            searchRequest.getGbifRegion() != null
-                ? searchRequest.getGbifRegion().stream()
-                    .map(GbifRegion::name)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCountry() != null
-                ? searchRequest.getCountry().stream()
-                    .map(Country::getIso2LetterCode)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCity(),
-            searchRequest.getInstitution() != null
-                ? searchRequest.getInstitution().toString()
-                : null,
-            searchRequest.getAlternativeCode(),
-            searchRequest.getCode(),
-            searchRequest.getName(),
-            searchRequest.getContact() != null ? searchRequest.getContact().toString() : null,
-            searchRequest.getIdentifierType() != null
-                ? searchRequest.getIdentifierType().name()
-                : null,
-            searchRequest.getIdentifier(),
-            searchRequest.getMachineTagNamespace(),
-            searchRequest.getMachineTagName(),
-            searchRequest.getMachineTagValue(),
-            searchRequest.getFuzzyName(),
+            join(searchRequest.getGbifRegion(), GbifRegion::name),
+            join(searchRequest.getCountry(), Country::getIso2LetterCode),
+            join(searchRequest.getCity()),
+            join(searchRequest.getInstitution(), UUID::toString),
+            join(searchRequest.getAlternativeCode()),
+            join(searchRequest.getCode()),
+            join(searchRequest.getName()),
+            join(searchRequest.getContact(), UUID::toString),
+            join(searchRequest.getIdentifierType(), IdentifierType::name),
+            join(searchRequest.getIdentifier()),
+            join(searchRequest.getMachineTagNamespace()),
+            join(searchRequest.getMachineTagName()),
+            join(searchRequest.getMachineTagValue()),
+            join(searchRequest.getFuzzyName()),
             searchRequest.getQ());
-    if (preFileName.length() > 0) {
+    if (!preFileName.isEmpty()) {
       preFileName += "-";
     }
     return ContentDisposition.builder("attachment")
