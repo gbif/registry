@@ -1,0 +1,26 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <changeSet id="148" author="mlopez" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+         ALTER TABLE collection_descriptor ADD COLUMN kingdom_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN kingdom_name text;
+         ALTER TABLE collection_descriptor ADD COLUMN phylum_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN phylum_name text;
+         ALTER TABLE collection_descriptor ADD COLUMN class_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN class_name text;
+         ALTER TABLE collection_descriptor ADD COLUMN order_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN order_name text;
+         ALTER TABLE collection_descriptor ADD COLUMN family_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN family_name text;
+         ALTER TABLE collection_descriptor ADD COLUMN genus_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN genus_name text;
+         ALTER TABLE collection_descriptor ADD COLUMN species_key integer;
+         ALTER TABLE collection_descriptor ADD COLUMN species_name text;
+      ]]>
+    </sql>
+  </changeSet>
+</databaseChangeLog>

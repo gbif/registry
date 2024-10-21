@@ -35,6 +35,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
@@ -440,6 +441,34 @@ public class DefaultDescriptorService implements DescriptorsService {
       descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
       descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys());
       descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
+      taxonomyResult
+          .getResult()
+          .getTaxonClassification()
+          .forEach(
+              r -> {
+                if (r.getRank() == Rank.KINGDOM) {
+                  descriptorDto.setKingdomKey(r.getKey());
+                  descriptorDto.setKingdomName(r.getName());
+                } else if (r.getRank() == Rank.PHYLUM) {
+                  descriptorDto.setPhylumKey(r.getKey());
+                  descriptorDto.setPhylumName(r.getName());
+                } else if (r.getRank() == Rank.CLASS) {
+                  descriptorDto.setClassKey(r.getKey());
+                  descriptorDto.setClassName(r.getName());
+                } else if (r.getRank() == Rank.ORDER) {
+                  descriptorDto.setOrderKey(r.getKey());
+                  descriptorDto.setOrderName(r.getName());
+                } else if (r.getRank() == Rank.FAMILY) {
+                  descriptorDto.setFamilyKey(r.getKey());
+                  descriptorDto.setFamilyName(r.getName());
+                } else if (r.getRank() == Rank.GENUS) {
+                  descriptorDto.setGenusKey(r.getKey());
+                  descriptorDto.setGenusName(r.getName());
+                } else if (r.getRank() == Rank.SPECIES) {
+                  descriptorDto.setSpeciesKey(r.getKey());
+                  descriptorDto.setSpeciesName(r.getName());
+                }
+              });
     }
     addIssues(descriptorDto, taxonomyResult);
 

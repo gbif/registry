@@ -29,6 +29,7 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
@@ -36,7 +37,8 @@ import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -121,22 +123,22 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     collectionMapper.create(collection);
 
-    DescriptorGroup DescriptorGroup = new DescriptorGroup();
-    DescriptorGroup.setCollectionKey(collectionKey);
-    DescriptorGroup.setTitle("title");
-    DescriptorGroup.setCreatedBy("test");
-    DescriptorGroup.setModifiedBy("test");
-    descriptorsMapper.createDescriptorGroup(DescriptorGroup);
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(collectionKey);
+    descriptorGroup.setTitle("title");
+    descriptorGroup.setCreatedBy("test");
+    descriptorGroup.setModifiedBy("test");
+    descriptorsMapper.createDescriptorGroup(descriptorGroup);
 
     DescriptorDto descriptorDto = new DescriptorDto();
-    descriptorDto.setDescriptorGroupKey(DescriptorGroup.getKey());
+    descriptorDto.setDescriptorGroupKey(descriptorGroup.getKey());
     descriptorDto.setUsageName("aves");
     descriptorDto.setCountry(Country.SPAIN);
     descriptorsMapper.createDescriptor(descriptorDto);
 
     List<CollectionSearchDto> dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().query("aves").build());
+            DescriptorsListParams.builder().query("aves").build());
     assertEquals(1, dtos.size());
     assertEquals(Country.SPAIN, dtos.get(0).getCountry());
     assertEquals(Country.SPAIN, dtos.get(0).getMailingCountry());
@@ -145,22 +147,158 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().query("division").build());
+            DescriptorsListParams.builder().query("division").build());
     assertEquals(1, dtos.size());
     assertEquals(0, dtos.get(0).getQueryDescriptorRank());
     assertTrue(dtos.get(0).getQueryRank() > 0);
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().query("aves").build());
+            DescriptorsListParams.builder().query("aves").build());
     assertEquals(1, dtos.size());
     assertEquals(0, dtos.get(0).getQueryRank());
     assertTrue(dtos.get(0).getQueryDescriptorRank() > 0);
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().usageName(Collections.singletonList("aves")).build());
+            DescriptorsListParams.builder().usageName(Collections.singletonList("aves")).build());
     assertEquals(1, dtos.size());
     assertNotNull(dtos.get(0).getDescriptorKey());
+  }
+
+  @Test
+  public void facetsTest() {
+    UUID c1Key = UUID.randomUUID();
+    Collection c1 = new Collection();
+    c1.setKey(c1Key);
+    c1.setAccessionStatus("Institutional");
+    c1.setCode("c1");
+    c1.setName("name1");
+    c1.setCreatedBy("test");
+    c1.setModifiedBy("test");
+
+    List<String> preservationTypes = new ArrayList<>();
+    preservationTypes.add("StorageControlledAtmosphere");
+    preservationTypes.add("SampleCryopreserved");
+    c1.setPreservationTypes(preservationTypes);
+
+    Address address = new Address();
+    address.setCountry(Country.SPAIN);
+    addressMapper.create(address);
+    assertNotNull(address.getKey());
+    c1.setAddress(address);
+
+    Address mailingAddress = new Address();
+    mailingAddress.setCountry(Country.SPAIN);
+    addressMapper.create(mailingAddress);
+    assertNotNull(mailingAddress.getKey());
+    c1.setMailingAddress(mailingAddress);
+
+    collectionMapper.create(c1);
+
+    DescriptorGroup descriptorGroup = new DescriptorGroup();
+    descriptorGroup.setCollectionKey(c1Key);
+    descriptorGroup.setTitle("title");
+    descriptorGroup.setCreatedBy("test");
+    descriptorGroup.setModifiedBy("test");
+    descriptorsMapper.createDescriptorGroup(descriptorGroup);
+
+    DescriptorDto descriptorDto1 = new DescriptorDto();
+    descriptorDto1.setDescriptorGroupKey(descriptorGroup.getKey());
+    descriptorDto1.setUsageName("aves");
+    descriptorDto1.setCountry(Country.DENMARK);
+    descriptorDto1.setKingdomKey(1);
+    descriptorsMapper.createDescriptor(descriptorDto1);
+
+    DescriptorDto descriptorDto2 = new DescriptorDto();
+    descriptorDto2.setDescriptorGroupKey(descriptorGroup.getKey());
+    descriptorDto2.setKingdomKey(1);
+    descriptorDto2.setCountry(Country.DENMARK);
+    descriptorsMapper.createDescriptor(descriptorDto2);
+
+    UUID c2Key = UUID.randomUUID();
+    Collection c2 = new Collection();
+    c2.setKey(c2Key);
+    c2.setAccessionStatus("Institutional");
+    c2.setCode("c2");
+    c2.setName("name2");
+    c2.setCreatedBy("test");
+    c2.setModifiedBy("test");
+
+    address = new Address();
+    address.setCountry(Country.SPAIN);
+    addressMapper.create(address);
+    assertNotNull(address.getKey());
+    c2.setAddress(address);
+
+    mailingAddress = new Address();
+    mailingAddress.setCountry(Country.SPAIN);
+    addressMapper.create(mailingAddress);
+    assertNotNull(mailingAddress.getKey());
+    c2.setMailingAddress(mailingAddress);
+
+    collectionMapper.create(c2);
+
+    DescriptorGroup descriptorGroupC2 = new DescriptorGroup();
+    descriptorGroupC2.setCollectionKey(c2Key);
+    descriptorGroupC2.setTitle("title");
+    descriptorGroupC2.setCreatedBy("test");
+    descriptorGroupC2.setModifiedBy("test");
+    descriptorsMapper.createDescriptorGroup(descriptorGroupC2);
+
+    DescriptorDto descriptorDtoC2 = new DescriptorDto();
+    descriptorDtoC2.setDescriptorGroupKey(descriptorGroupC2.getKey());
+    descriptorDtoC2.setKingdomKey(2);
+    descriptorDtoC2.setCountry(Country.DENMARK);
+    descriptorsMapper.createDescriptor(descriptorDtoC2);
+
+    List<FacetDto> facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.PRESERVATION_TYPE)
+                .build());
+    assertEquals(2, facetDtos.size());
+    facetDtos.forEach(f -> assertEquals(1, f.getCount()));
+    assertEquals(
+        2,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.PRESERVATION_TYPE)
+                .build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).build());
+    assertEquals(1, facetDtos.size());
+    assertEquals(2, facetDtos.get(0).getCount());
+    assertEquals(
+        1,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.DESCRIPTOR_COUNTRY)
+                .build());
+    assertEquals(1, facetDtos.size());
+    assertEquals(2, facetDtos.get(0).getCount());
+    assertEquals(
+        1,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.DESCRIPTOR_COUNTRY)
+                .build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build());
+    assertEquals(2, facetDtos.size());
+    facetDtos.forEach(f -> assertEquals(1, f.getCount()));
+
+    assertEquals(
+        2,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build()));
   }
 }

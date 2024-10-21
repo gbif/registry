@@ -13,6 +13,13 @@
  */
 package org.gbif.registry.service.collections.batch;
 
+import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntityType;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -22,19 +29,10 @@ import org.gbif.api.service.collections.CollectionService;
 import org.gbif.registry.persistence.mapper.collections.BatchMapper;
 import org.gbif.registry.security.grscicoll.GrSciCollAuthorizationService;
 import org.gbif.registry.service.collections.batch.model.ParsedData;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-
-import com.google.common.base.Strings;
 
 @Service
 public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
@@ -86,12 +84,17 @@ public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
     List<CollectionView> collectionsFound = new ArrayList<>();
     if (!Strings.isNullOrEmpty(code)) {
       collectionsFound =
-          collectionService.list(CollectionSearchRequest.builder().code(code).build()).getResults();
+          collectionService
+              .list(CollectionSearchRequest.builder().code(Collections.singletonList(code)).build())
+              .getResults();
 
       if (collectionsFound.isEmpty()) {
         collectionsFound =
             collectionService
-                .list(CollectionSearchRequest.builder().alternativeCode(code).build())
+                .list(
+                    CollectionSearchRequest.builder()
+                        .alternativeCode(Collections.singletonList(code))
+                        .build())
                 .getResults();
       }
     }
@@ -104,8 +107,8 @@ public class CollectionBatchHandler extends BaseBatchHandler<Collection> {
             collectionService
                 .list(
                     CollectionSearchRequest.builder()
-                        .identifier(identifier.getIdentifier())
-                        .identifierType(identifier.getType())
+                        .identifier(Collections.singletonList(identifier.getIdentifier()))
+                        .identifierType(Collections.singletonList(identifier.getType()))
                         .build())
                 .getResults();
         i++;

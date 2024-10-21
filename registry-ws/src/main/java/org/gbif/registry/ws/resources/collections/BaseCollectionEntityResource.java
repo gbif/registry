@@ -18,6 +18,35 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.base.Preconditions;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.Explode;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.extensions.Extension;
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
+import lombok.SneakyThrows;
 import org.gbif.api.annotation.EmptyToNull;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
@@ -40,27 +69,12 @@ import org.gbif.api.service.collections.BatchService;
 import org.gbif.api.service.collections.ChangeSuggestionService;
 import org.gbif.api.service.collections.CollectionEntityService;
 import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.registry.persistence.mapper.collections.params.DuplicatesSearchParams;
 import org.gbif.registry.service.collections.duplicates.DuplicatesService;
 import org.gbif.registry.service.collections.merge.MergeService;
 import org.gbif.registry.ws.resources.Docs;
-
-import java.io.IOException;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
@@ -997,5 +1011,13 @@ public abstract class BaseCollectionEntityResource<
 
   private String getNormalizedApiBaseUrl() {
     return apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
+  }
+
+  protected <S> String join(List<S> values, Function<S, String> mapper) {
+    return values != null ? values.stream().map(mapper).collect(Collectors.joining("-")) : null;
+  }
+
+  protected String join(List<String> values) {
+    return values != null ? String.join("-", values) : null;
   }
 }
