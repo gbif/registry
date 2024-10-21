@@ -13,6 +13,14 @@
  */
 package org.gbif.registry.service.collections.merge;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
+
+import com.google.common.base.Strings;
+import java.util.Collections;
+import java.util.UUID;
+import javax.annotation.Nullable;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
@@ -25,22 +33,11 @@ import org.gbif.api.model.registry.Identifier;
 import org.gbif.api.model.registry.MachineTag;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.InstitutionService;
-
-import java.util.UUID;
-
-import javax.annotation.Nullable;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import com.google.common.base.Strings;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
-import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 
 /** Service to merge duplicated {@link Institution}. */
 @Service
@@ -206,7 +203,9 @@ public class InstitutionMergeService extends BaseMergeService<Institution> {
     // move the collections to the entity to keep
     PagingResponse<CollectionView> collections =
         collectionService.list(
-            CollectionSearchRequest.builder().institution(sourceInstitutionKey).build());
+            CollectionSearchRequest.builder()
+                .institution(Collections.singletonList(sourceInstitutionKey))
+                .build());
     collections
         .getResults()
         .forEach(

@@ -13,8 +13,6 @@
  */
 package org.gbif.registry.ws.provider;
 
-import com.google.common.base.Strings;
-import java.util.Arrays;
 import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
 import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
@@ -49,39 +47,16 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
       CollectionSearchRequest searchRequest, NativeWebRequest webRequest) {
     fillSearchRequestParams(searchRequest, webRequest);
 
-    String institution = webRequest.getParameter("institution");
-    if (!Strings.isNullOrEmpty(institution)) {
-      try {
-        searchRequest.setInstitution(UUID.fromString(institution));
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Invalid UUID for institution: " + institution);
-      }
-    }
-
-    String[] contentTypes = webRequest.getParameterValues("contentType");
-    if (contentTypes != null && contentTypes.length > 0) {
-      searchRequest.setContentTypes(Arrays.asList(contentTypes));
-    }
-
-    String[] preservationTypes = webRequest.getParameterValues("preservationType");
-    if (preservationTypes != null && preservationTypes.length > 0) {
-      searchRequest.setPreservationTypes(Arrays.asList(preservationTypes));
-    }
-
-    String[] accessionStatuses = webRequest.getParameterValues("accessionStatus");
-    if (accessionStatuses != null && accessionStatuses.length > 0) {
-      searchRequest.setAccessionStatus(Arrays.asList(accessionStatuses));
-    }
-
-    String personalCollection = webRequest.getParameter("personalCollection");
-    if (!Strings.isNullOrEmpty(personalCollection)) {
-      try {
-        searchRequest.setPersonalCollection(Boolean.parseBoolean(personalCollection));
-      } catch (Exception e) {
-        throw new IllegalArgumentException(
-            "Invalid boolean for personalCollection: " + personalCollection);
-      }
-    }
+    extractMultivalueParam(webRequest, "institution", UUID::fromString)
+        .ifPresent(searchRequest::setInstitution);
+    extractMultivalueParam(webRequest, "contentType").ifPresent(searchRequest::setContentTypes);
+    extractMultivalueParam(webRequest, "preservationType")
+        .ifPresent(searchRequest::setPreservationTypes);
+    extractMultivalueParam(webRequest, "accessionStatus")
+        .ifPresent(searchRequest::setAccessionStatus);
+    extractMultivalueParam(webRequest, "contentType").ifPresent(searchRequest::setContentTypes);
+    extractMultivalueParam(webRequest, "personalCollection", Boolean::parseBoolean)
+        .ifPresent(searchRequest::setPersonalCollection);
   }
 
   @Override

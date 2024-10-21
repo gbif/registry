@@ -13,20 +13,20 @@
  */
 package org.gbif.registry.ws.provider;
 
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
-import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
+import java.util.Arrays;
+import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.Country;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-@SuppressWarnings("NullableProblems")
-public class InstitutionSearchRequestHandlerMethodArgumentResolver
-    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<InstitutionFacetParameter> {
+public class CountryListHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
-    return InstitutionSearchRequest.class.equals(parameter.getParameterType());
+    return "Country[]".equals(parameter.getParameterType().getSimpleName());
   }
 
   @Override
@@ -35,20 +35,21 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
       ModelAndViewContainer mavContainer,
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
-
-    InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
-    fillSearchRequestParams(searchRequest, webRequest);
-
-    extractMultivalueParam(webRequest, "type").ifPresent(searchRequest::setType);
-    extractMultivalueParam(webRequest, "institutionalGovernance")
-        .ifPresent(searchRequest::setInstitutionalGovernance);
-    extractMultivalueParam(webRequest, "discipline").ifPresent(searchRequest::setDisciplines);
-
-    return searchRequest;
+    final String paramName = parameter.getParameterName();
+    final String[] countryCodes =
+        paramName != null ? webRequest.getParameterMap().get(paramName) : null;
+    return countryCodes != null
+        ? Arrays.stream(countryCodes).map(this::parseCountry).toArray(Country[]::new)
+        : null;
   }
 
-  @Override
-  protected InstitutionFacetParameter findFacetParam(String facetParam) {
-    return InstitutionFacetParameter.valueOf(facetParam);
+  private Country parseCountry(String param) {
+    Country parsed = Country.fromIsoCode(param);
+
+    if (parsed == null) {
+      // if nothing found also try by enum name
+      parsed = VocabularyUtils.lookupEnum(param, Country.class);
+    }
+    return parsed;
   }
 }

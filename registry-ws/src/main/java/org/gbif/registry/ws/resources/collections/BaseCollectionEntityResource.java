@@ -37,6 +37,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
@@ -952,5 +954,13 @@ public abstract class BaseCollectionEntityResource<
 
   private String getNormalizedApiBaseUrl() {
     return apiBaseUrl.endsWith("/") ? apiBaseUrl.substring(0, apiBaseUrl.length() - 1) : apiBaseUrl;
+  }
+
+  protected <S> String join(List<S> values, Function<S, String> mapper) {
+    return values != null ? values.stream().map(mapper).collect(Collectors.joining("-")) : null;
+  }
+
+  protected String join(List<String> values) {
+    return values != null ? String.join("-", values) : null;
   }
 }

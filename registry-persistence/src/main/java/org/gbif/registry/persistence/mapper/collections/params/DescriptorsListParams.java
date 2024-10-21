@@ -5,20 +5,19 @@ import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 
 @Getter
 @SuperBuilder
-public class DescriptorsParams extends CollectionListParams {
+public class DescriptorsListParams extends CollectionListParams {
 
   // descriptors fields
-  List<String> usageName;
-  List<Integer> usageKey;
-  List<Rank> usageRank;
-  List<Integer> taxonKey;
+  @Nullable List<String> usageName;
+  @Nullable List<Integer> usageKey;
+  @Nullable List<Rank> usageRank;
+  @Nullable List<Integer> taxonKey;
   @Nullable List<Country> descriptorCountry;
   @Nullable RangeParam individualCount;
   @Nullable List<String> identifiedBy;

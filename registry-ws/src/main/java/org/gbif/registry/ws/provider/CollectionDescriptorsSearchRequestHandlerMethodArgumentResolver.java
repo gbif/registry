@@ -15,14 +15,12 @@ package org.gbif.registry.ws.provider;
 
 import com.google.common.base.Strings;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.util.SearchTypeValidator;
 import org.gbif.api.util.VocabularyUtils;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.Rank;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -48,48 +46,20 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
         CollectionDescriptorsSearchRequest.builder().build();
     fillCollectionSearchRequest(searchRequest, webRequest);
 
-    String[] usageKeys = webRequest.getParameterValues("usageKey");
-    if (usageKeys != null && usageKeys.length > 0) {
-      searchRequest.setUsageKey(new ArrayList<>());
-      for (String keyParam : usageKeys) {
-        try {
-          searchRequest.getUsageKey().add(Integer.parseInt(keyParam));
-        } catch (Exception ex) {
-          throw new IllegalArgumentException(
-              "Invalid integer for usage key parameter: " + keyParam);
-        }
-      }
-    }
-
-    String[] usageNames = webRequest.getParameterValues("usageName");
-    if (usageNames != null && usageNames.length > 0) {
-      searchRequest.setUsageName(Arrays.asList(usageNames));
-    }
-
-    String[] usageRanks = webRequest.getParameterValues("usageRank");
-    if (usageRanks != null && usageRanks.length > 0) {
-      searchRequest.setUsageRank(new ArrayList<>());
-      for (String param : usageRanks) {
-        try {
-          searchRequest.getUsageRank().add(Rank.valueOf(param));
-        } catch (Exception ex) {
-          throw new IllegalArgumentException("Invalid rank for usage rank parameter: " + param);
-        }
-      }
-    }
-
-    String[] taxonKeys = webRequest.getParameterValues("taxonKey");
-    if (taxonKeys != null && taxonKeys.length > 0) {
-      searchRequest.setTaxonKey(new ArrayList<>());
-      for (String keyParam : taxonKeys) {
-        try {
-          searchRequest.getTaxonKey().add(Integer.parseInt(keyParam));
-        } catch (Exception ex) {
-          throw new IllegalArgumentException(
-              "Invalid integer for taxon key parameter: " + keyParam);
-        }
-      }
-    }
+    extractMultivalueParam(webRequest, "usageKey", Integer::parseInt)
+        .ifPresent(searchRequest::setUsageKey);
+    extractMultivalueParam(webRequest, "usageName").ifPresent(searchRequest::setUsageName);
+    extractMultivalueParam(webRequest, "usageRank", Rank::valueOf)
+        .ifPresent(searchRequest::setUsageRank);
+    extractMultivalueParam(webRequest, "taxonKey", Integer::parseInt)
+        .ifPresent(searchRequest::setTaxonKey);
+    extractMultivalueParam(webRequest, "identifiedBy").ifPresent(searchRequest::setIdentifiedBy);
+    extractMultivalueParam(webRequest, "typeStatus").ifPresent(searchRequest::setTypeStatus);
+    extractMultivalueParam(webRequest, "recordedBy").ifPresent(searchRequest::setRecordedBy);
+    extractMultivalueParam(webRequest, "discipline").ifPresent(searchRequest::setDiscipline);
+    extractMultivalueParam(webRequest, "objectClassification")
+        .ifPresent(searchRequest::setObjectClassification);
+    extractMultivalueParam(webRequest, "issue").ifPresent(searchRequest::setIssue);
 
     String[] descriptorCountries = webRequest.getParameterValues("descriptorCountry");
     if (descriptorCountries != null && descriptorCountries.length > 0) {
@@ -113,45 +83,8 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
       searchRequest.setIndividualCount(individualCountParam);
     }
 
-    String[] identifiedByParam = webRequest.getParameterValues("identifiedBy");
-    if (identifiedByParam != null && identifiedByParam.length > 0) {
-      searchRequest.setIdentifiedBy(Arrays.asList(identifiedByParam));
-    }
-
     Optional.ofNullable(webRequest.getParameter("dateIdentified"))
         .ifPresent(v -> searchRequest.setDateIdentified(SearchTypeValidator.parseDateRange(v)));
-
-    String[] typeStatusParam = webRequest.getParameterValues("typeStatus");
-    if (typeStatusParam != null && typeStatusParam.length > 0) {
-      searchRequest.setTypeStatus(new ArrayList<>());
-      for (String param : typeStatusParam) {
-        try {
-          searchRequest.getTypeStatus().add(TypeStatus.valueOf(param).name());
-        } catch (Exception ex) {
-          throw new IllegalArgumentException("Invalid type status parameter: " + param);
-        }
-      }
-    }
-
-    String[] recordedByParam = webRequest.getParameterValues("recordedBy");
-    if (recordedByParam != null && recordedByParam.length > 0) {
-      searchRequest.setRecordedBy(Arrays.asList(recordedByParam));
-    }
-
-    String[] disciplineParam = webRequest.getParameterValues("discipline");
-    if (disciplineParam != null && disciplineParam.length > 0) {
-      searchRequest.setDiscipline(Arrays.asList(disciplineParam));
-    }
-
-    String[] objectClassificationParam = webRequest.getParameterValues("objectClassification");
-    if (objectClassificationParam != null && objectClassificationParam.length > 0) {
-      searchRequest.setObjectClassification(Arrays.asList(objectClassificationParam));
-    }
-
-    String[] issueParam = webRequest.getParameterValues("issue");
-    if (issueParam != null && issueParam.length > 0) {
-      searchRequest.setIssue(Arrays.asList(issueParam));
-    }
 
     return searchRequest;
   }

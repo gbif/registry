@@ -74,11 +74,13 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     highlight.setSnippet("snippet");
     response.setHighlights(Collections.singleton(highlight));
 
-    when(collectionsSearchService.search(q, hl, null, null, Country.SPAIN, limit))
+    when(collectionsSearchService.search(
+            q, hl, null, null, Collections.singletonList(Country.SPAIN), limit))
         .thenReturn(Collections.singletonList(response));
 
     List<CollectionsFullSearchResponse> responseReturned =
-        collectionsSearchClient.searchCrossEntities(q, hl, null, null, Country.SPAIN, limit);
+        collectionsSearchClient.searchCrossEntities(
+            q, hl, null, null, Collections.singletonList(Country.SPAIN), limit);
     assertEquals(1, responseReturned.size());
     assertEquals(response, responseReturned.get(0));
   }

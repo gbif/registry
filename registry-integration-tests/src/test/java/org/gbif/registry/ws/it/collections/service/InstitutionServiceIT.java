@@ -128,7 +128,10 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
 
     response =
         institutionService.list(
-            InstitutionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+            InstitutionSearchRequest.builder()
+                .source(Collections.singletonList(Source.IH_IRN))
+                .sourceId(Collections.singletonList("test-123"))
+                .build());
     assertEquals(1, response.getResults().size());
     // empty queries are ignored and return all elements
     response =
@@ -192,7 +195,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .code("c1")
+                    .code(Collections.singletonList("c1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -203,7 +206,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .name("n2")
+                    .name(Collections.singletonList("n2"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -214,8 +217,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .code("c1")
-                    .name("n1")
+                    .code(Collections.singletonList("c1"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -226,8 +229,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .code("c2")
-                    .name("n1")
+                    .code(Collections.singletonList("c2"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -305,7 +308,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .active(true)
+                    .active(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -360,7 +363,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .alternativeCode("alt")
+                .alternativeCode(Collections.singletonList("alt"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -369,7 +372,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .alternativeCode("foo")
+                .alternativeCode(Collections.singletonList("foo"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -429,7 +432,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .city("city2")
+                .city(Collections.singletonList("city2"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -438,7 +441,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     response =
         institutionService.list(
             InstitutionSearchRequest.builder()
-                .city("foo")
+                .city(Collections.singletonList("foo"))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -466,7 +469,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .displayOnNHCPortal(true)
+                    .displayOnNHCPortal(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -677,7 +680,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     UUID key4 = institutionService.create(institution4);
 
     InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
-    searchRequest.setReplacedBy(key4);
+    searchRequest.setReplacedBy(Collections.singletonList(key4));
     assertEquals(0, institutionService.listDeleted(searchRequest).getResults().size());
     institutionService.replace(key3, key4);
     assertEquals(1, institutionService.listDeleted(searchRequest).getResults().size());
@@ -1062,7 +1065,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
             .getFeatures()
             .size());
     FeatureCollection featuresC1 =
-        institutionService.listGeojson(InstitutionSearchRequest.builder().code("c1").build());
+        institutionService.listGeojson(
+            InstitutionSearchRequest.builder().code(Collections.singletonList("c1")).build());
     assertEquals(1, featuresC1.getFeatures().size());
     assertTrue(featuresC1.getFeatures().get(0).getGeometry() instanceof Point);
     assertEquals(2, featuresC1.getFeatures().get(0).getProperties().size());

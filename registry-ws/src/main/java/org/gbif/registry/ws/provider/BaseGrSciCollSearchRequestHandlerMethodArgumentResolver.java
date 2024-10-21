@@ -25,12 +25,13 @@ import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
@@ -68,38 +69,28 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<
       }
     }
 
-    request.setAlternativeCode(webRequest.getParameter("alternativeCode"));
-    request.setCode(webRequest.getParameter("code"));
-    request.setName(webRequest.getParameter("name"));
+    extractMultivalueParam(webRequest, "alternativeCode").ifPresent(request::setAlternativeCode);
+    extractMultivalueParam(webRequest, "code").ifPresent(request::setCode);
+    extractMultivalueParam(webRequest, "name").ifPresent(request::setName);
+    extractMultivalueParam(webRequest, "contact", UUID::fromString).ifPresent(request::setContact);
+    extractMultivalueParam(webRequest, "identifier").ifPresent(request::setIdentifier);
+    extractMultivalueParam(
+            webRequest,
+            "identifierType",
+            v -> VocabularyUtils.lookup(v, IdentifierType.class).orElse(null))
+        .ifPresent(request::setIdentifierType);
 
-    String contact = webRequest.getParameter("contact");
-    if (!Strings.isNullOrEmpty(contact)) {
-      try {
-        request.setContact(UUID.fromString(contact));
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Invalid UUID for contact: " + contact);
-      }
-    }
+    extractMultivalueParam(webRequest, "machineTagName").ifPresent(request::setMachineTagName);
+    extractMultivalueParam(webRequest, "machineTagNamespace")
+        .ifPresent(request::setMachineTagNamespace);
+    extractMultivalueParam(webRequest, "machineTagValue").ifPresent(request::setMachineTagValue);
+    extractMultivalueParam(webRequest, "city").ifPresent(request::setCity);
+    extractMultivalueParam(webRequest, "fuzzyName").ifPresent(request::setFuzzyName);
 
-    request.setIdentifier(webRequest.getParameter("identifier"));
-    request.setIdentifierType(
-        VocabularyUtils.lookupEnum(
-            webRequest.getParameter("identifierType"), IdentifierType.class));
-    request.setMachineTagName(webRequest.getParameter("machineTagName"));
-    request.setMachineTagNamespace(webRequest.getParameter("machineTagNamespace"));
-    request.setMachineTagValue(webRequest.getParameter("machineTagValue"));
     request.setQ(webRequest.getParameter("q"));
-    request.setCity(webRequest.getParameter("city"));
-    request.setFuzzyName(webRequest.getParameter("fuzzyName"));
 
-    String active = webRequest.getParameter("active");
-    if (!Strings.isNullOrEmpty(active)) {
-      try {
-        request.setActive(Boolean.parseBoolean(active));
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Invalid boolean for active: " + active);
-      }
-    }
+    extractMultivalueParam(webRequest, "active", Boolean::parseBoolean)
+        .ifPresent(request::setActive);
 
     String[] countryParams = webRequest.getParameterValues("country");
     if (countryParams != null && countryParams.length > 0) {
@@ -130,14 +121,8 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<
       }
     }
 
-    String masterSourceTypeParam = webRequest.getParameter("masterSourceType");
-    if (!Strings.isNullOrEmpty(masterSourceTypeParam)) {
-      try {
-        request.setMasterSourceType(MasterSourceType.valueOf(masterSourceTypeParam));
-      } catch (Exception e) {
-        throw new IllegalArgumentException("Invalid master source type: " + masterSourceTypeParam);
-      }
-    }
+    extractMultivalueParam(webRequest, "masterSourceType", MasterSourceType::valueOf)
+        .ifPresent(request::setMasterSourceType);
 
     String numberSpecimensParam = webRequest.getParameter("numberSpecimens");
     if (!Strings.isNullOrEmpty(numberSpecimensParam)) {
@@ -145,15 +130,8 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<
       request.setNumberSpecimens(numberSpecimensParam);
     }
 
-    String displayOnNHCPortal = webRequest.getParameter("displayOnNHCPortal");
-    if (!Strings.isNullOrEmpty(displayOnNHCPortal)) {
-      try {
-        request.setDisplayOnNHCPortal(Boolean.parseBoolean(displayOnNHCPortal));
-      } catch (Exception e) {
-        throw new IllegalArgumentException(
-            "Invalid boolean for displayOnNHCPortal: " + displayOnNHCPortal);
-      }
-    }
+    extractMultivalueParam(webRequest, "displayOnNHCPortal", Boolean::parseBoolean)
+        .ifPresent(request::setDisplayOnNHCPortal);
 
     String sortByParam = webRequest.getParameter("sortBy");
     if (!Strings.isNullOrEmpty(sortByParam)) {
@@ -185,30 +163,40 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<
       request.setTypeSpecimenCount(typeSpecimenCountParam);
     }
 
-    String[] institutionKeysParams = webRequest.getParameterValues("institutionKey");
-    if (institutionKeysParams != null && institutionKeysParams.length > 0) {
-      request.setInstitutionKeys(new ArrayList<>());
-      for (String keyParam : institutionKeysParams) {
-        try {
-          request.getInstitutionKeys().add(UUID.fromString(keyParam));
-        } catch (Exception ex) {
-          throw new IllegalArgumentException(
-              "Invalid UUID for institution key parameter: " + keyParam);
-        }
-      }
-    }
-
-    String sourceParam = webRequest.getParameter("source");
-    if (!Strings.isNullOrEmpty(sourceParam)) {
-      request.setSource(Source.valueOf(sourceParam));
-    }
-
-    String sourceIdParam = webRequest.getParameter("sourceId");
-    if (!Strings.isNullOrEmpty(sourceIdParam)) {
-      request.setSourceId(sourceIdParam);
-    }
+    extractMultivalueParam(webRequest, "institutionKey", UUID::fromString)
+        .ifPresent(request::setInstitutionKeys);
+    extractMultivalueParam(webRequest, "source", Source::valueOf).ifPresent(request::setSource);
+    extractMultivalueParam(webRequest, "sourceId").ifPresent(request::setSourceId);
 
     fillFacetParams(request, webRequest);
+  }
+
+  protected Optional<List<String>> extractMultivalueParam(
+      NativeWebRequest webRequest, String paramName) {
+    String[] listParams = webRequest.getParameterValues(paramName);
+    if (listParams != null && listParams.length > 0) {
+      return Optional.of(Arrays.asList(listParams));
+    }
+    return Optional.empty();
+  }
+
+  protected <T> Optional<List<T>> extractMultivalueParam(
+      NativeWebRequest webRequest, String paramName, Function<String, T> mapper) {
+    String[] listParams = webRequest.getParameterValues(paramName);
+
+    if (listParams != null) {
+      List<T> result = new ArrayList<>();
+      for (String param : listParams) {
+        try {
+          result.add(mapper.apply(param));
+        } catch (Exception ex) {
+          throw new IllegalArgumentException(
+              "Invalid value " + param + " for parameter " + paramName);
+        }
+      }
+      return Optional.of(result);
+    }
+    return Optional.empty();
   }
 
   protected <T extends SearchRequest<F>> void fillFacetParams(
@@ -244,6 +232,9 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<
     if (!facetParams.isEmpty()) {
       Set<F> parsedFacets = new HashSet<>();
       for (String f : facetParams) {
+        if (f.isEmpty()) {
+          continue;
+        }
         F facet = findFacetParam(f);
         if (facet != null) {
           parsedFacets.add(facet);

@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
@@ -93,11 +94,12 @@ public class CollectionsSearchResource {
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
-      @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      Country country,
+      @RequestParam(value = "displayOnNHCPortal", required = false)
+          List<Boolean> displayOnNHCPortal,
+      Country[] country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return collectionsSearchService.search(
-        query, highlight, type, displayOnNHCPortal, country, limit);
+        query, highlight, type, displayOnNHCPortal, Arrays.asList(country), limit);
   }
 
   @Operation(

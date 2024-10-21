@@ -72,8 +72,9 @@ public interface CollectionsSearchClient {
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
-      @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      @SpringQueryMap Country country,
+      @RequestParam(value = "displayOnNHCPortal", required = false)
+          List<Boolean> displayOnNHCPortal,
+      @SpringQueryMap List<Country> country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return searchCrossEntities(
         SearchRequest.of(query, highlight, type, displayOnNHCPortal, country, limit));
@@ -84,8 +85,8 @@ public interface CollectionsSearchClient {
     String q;
     boolean hl;
     TypeParam entityType;
-    Boolean displayOnNHCPortal;
-    Country country;
+    List<Boolean> displayOnNHCPortal;
+    List<Country> country;
     int limit;
   }
 }

@@ -20,7 +20,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.persistence.mapper.collections.params.FullTextSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 
@@ -33,13 +33,13 @@ public interface CollectionsSearchMapper {
 
   long countInstitutions(@Nullable @Param("params") InstitutionListParams listParams);
 
-  List<CollectionSearchDto> searchCollections(@Nullable @Param("params") DescriptorsParams params);
+  List<CollectionSearchDto> searchCollections(@Nullable @Param("params") DescriptorsListParams params);
 
-  long countCollections(@Nullable @Param("params") DescriptorsParams listParams);
+  long countCollections(@Nullable @Param("params") DescriptorsListParams listParams);
 
-  List<FacetDto> collectionFacet(@Nullable @Param("params") DescriptorsParams params);
+  List<FacetDto> collectionFacet(@Nullable @Param("params") DescriptorsListParams params);
 
-  long collectionFacetCardinality(@Nullable @Param("params") DescriptorsParams params);
+  long collectionFacetCardinality(@Nullable @Param("params") DescriptorsListParams params);
 
   List<FacetDto> institutionFacet(@Nullable @Param("params") InstitutionListParams params);
 

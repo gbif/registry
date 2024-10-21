@@ -268,10 +268,10 @@ public class CollectionsSearchIT extends BaseServiceIT {
   @Test
   public void displayOnNHCPortalTest() {
     List<CollectionsFullSearchResponse> responses =
-        searchService.search(null, false, null, true, null, 10);
+        searchService.search(null, false, null, Collections.singletonList(true), null, 10);
     assertEquals(4, responses.size());
 
-    responses = searchService.search(null, false, null, false, null, 10);
+    responses = searchService.search(null, false, null, Collections.singletonList(false), null, 10);
     assertEquals(2, responses.size());
   }
 
@@ -293,25 +293,33 @@ public class CollectionsSearchIT extends BaseServiceIT {
   @Test
   public void countryFilterTest() {
     List<CollectionsFullSearchResponse> responses =
-        searchService.search(null, true, null, null, Country.SPAIN, 10);
+        searchService.search(null, true, null, null, Collections.singletonList(Country.SPAIN), 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
 
-    responses = searchService.search(null, true, null, null, Country.DENMARK, 10);
+    responses =
+        searchService.search(
+            null, true, null, null, Collections.singletonList(Country.DENMARK), 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search(null, true, INSTITUTION, null, Country.SPAIN, 10);
+    responses =
+        searchService.search(
+            null, true, INSTITUTION, null, Collections.singletonList(Country.SPAIN), 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search("I1", true, null, null, Country.SPAIN, 10);
+    responses =
+        searchService.search("I1", true, null, null, Collections.singletonList(Country.SPAIN), 10);
     assertEquals(0, responses.size());
 
-    responses = searchService.search("C1", true, null, null, Country.SPAIN, 10);
+    responses =
+        searchService.search("C1", true, null, null, Collections.singletonList(Country.SPAIN), 10);
     assertEquals(1, responses.size());
     assertEquals(c1.getKey(), responses.get(0).getKey());
     assertEquals(1, responses.get(0).getHighlights().size());
 
-    responses = searchService.search("C1", true, null, null, Country.DENMARK, 10);
+    responses =
+        searchService.search(
+            "C1", true, null, null, Collections.singletonList(Country.DENMARK), 10);
     assertEquals(0, responses.size());
   }
 

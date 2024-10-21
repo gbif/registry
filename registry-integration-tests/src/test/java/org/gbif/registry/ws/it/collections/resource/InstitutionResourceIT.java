@@ -95,11 +95,11 @@ public class InstitutionResourceIT
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
     InstitutionSearchRequest req = InstitutionSearchRequest.builder().build();
-    req.setCity("city");
-    req.setContact(UUID.randomUUID());
+    req.setCity(Collections.singletonList("city"));
+    req.setContact(Collections.singletonList(UUID.randomUUID()));
     req.setCountry(Collections.singletonList(Country.DENMARK));
     req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
-    req.setActive(true);
+    req.setActive(Collections.singletonList(true));
     req.setInstitutionalGovernance(Collections.singletonList("Academic"));
     req.setDisciplines(Arrays.asList("Archaeology", "Anthropology"));
 
@@ -196,7 +196,7 @@ public class InstitutionResourceIT
                 new PagingRequest(), Long.valueOf(institutions.size()), institutions));
 
     InstitutionSearchRequest request = InstitutionSearchRequest.builder().build();
-    request.setReplacedBy(UUID.randomUUID());
+    request.setReplacedBy(Collections.singletonList(UUID.randomUUID()));
     PagingResponse<Institution> result = getClient().listDeleted(request);
     assertEquals(institutions.size(), result.getResults().size());
   }

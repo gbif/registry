@@ -38,7 +38,7 @@ import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -138,7 +138,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     List<CollectionSearchDto> dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().query("aves").build());
+            DescriptorsListParams.builder().query("aves").build());
     assertEquals(1, dtos.size());
     assertEquals(Country.SPAIN, dtos.get(0).getCountry());
     assertEquals(Country.SPAIN, dtos.get(0).getMailingCountry());
@@ -147,21 +147,21 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().query("division").build());
+            DescriptorsListParams.builder().query("division").build());
     assertEquals(1, dtos.size());
     assertEquals(0, dtos.get(0).getQueryDescriptorRank());
     assertTrue(dtos.get(0).getQueryRank() > 0);
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().query("aves").build());
+            DescriptorsListParams.builder().query("aves").build());
     assertEquals(1, dtos.size());
     assertEquals(0, dtos.get(0).getQueryRank());
     assertTrue(dtos.get(0).getQueryDescriptorRank() > 0);
 
     dtos =
         collectionsSearchMapper.searchCollections(
-            DescriptorsParams.builder().usageName(Collections.singletonList("aves")).build());
+            DescriptorsListParams.builder().usageName(Collections.singletonList("aves")).build());
     assertEquals(1, dtos.size());
     assertNotNull(dtos.get(0).getDescriptorKey());
   }
@@ -254,45 +254,51 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     List<FacetDto> facetDtos =
         collectionsSearchMapper.collectionFacet(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.PRESERVATION_TYPE).build());
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.PRESERVATION_TYPE)
+                .build());
     assertEquals(2, facetDtos.size());
     facetDtos.forEach(f -> assertEquals(1, f.getCount()));
     assertEquals(
         2,
         collectionsSearchMapper.collectionFacetCardinality(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.PRESERVATION_TYPE).build()));
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.PRESERVATION_TYPE)
+                .build()));
 
     facetDtos =
         collectionsSearchMapper.collectionFacet(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.COUNTRY).build());
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).build());
     assertEquals(1, facetDtos.size());
     assertEquals(2, facetDtos.get(0).getCount());
     assertEquals(
         1,
         collectionsSearchMapper.collectionFacetCardinality(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.COUNTRY).build()));
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.COUNTRY).build()));
 
     facetDtos =
         collectionsSearchMapper.collectionFacet(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.DESCRIPTOR_COUNTRY).build());
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.DESCRIPTOR_COUNTRY)
+                .build());
     assertEquals(1, facetDtos.size());
     assertEquals(2, facetDtos.get(0).getCount());
     assertEquals(
         1,
         collectionsSearchMapper.collectionFacetCardinality(
-            DescriptorsParams.builder()
+            DescriptorsListParams.builder()
                 .facet(CollectionFacetParameter.DESCRIPTOR_COUNTRY)
                 .build()));
 
     facetDtos =
         collectionsSearchMapper.collectionFacet(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build());
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build());
     assertEquals(2, facetDtos.size());
     facetDtos.forEach(f -> assertEquals(1, f.getCount()));
 
     assertEquals(
         2,
         collectionsSearchMapper.collectionFacetCardinality(
-            DescriptorsParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build()));
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build()));
   }
 }

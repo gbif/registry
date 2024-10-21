@@ -52,7 +52,7 @@ import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.persistence.mapper.collections.params.FullTextSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.persistence.mapper.collections.params.ListParams;
@@ -82,8 +82,8 @@ public class CollectionsSearchService {
       String query,
       boolean highlight,
       TypeParam type,
-      Boolean displayOnNHCPortal,
-      Country country,
+      List<Boolean> displayOnNHCPortal,
+      List<Country> country,
       int limit) {
     List<SearchDto> dtos =
         searchMapper.search(
@@ -221,7 +221,7 @@ public class CollectionsSearchService {
 
     Set<UUID> institutionKeys = new HashSet<>();
     if (searchRequest.getInstitution() != null) {
-      institutionKeys.add(searchRequest.getInstitution());
+      institutionKeys.addAll(searchRequest.getInstitution());
     }
     if (searchRequest.getInstitutionKeys() != null) {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());
@@ -229,8 +229,8 @@ public class CollectionsSearchService {
 
     Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
-    DescriptorsParams.DescriptorsParamsBuilder listParamsBuilder =
-        DescriptorsParams.builder()
+    DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder =
+        DescriptorsListParams.builder()
             .contentTypes(searchRequest.getContentTypes())
             .preservationTypes(searchRequest.getPreservationTypes())
             .accessionStatus(searchRequest.getAccessionStatus())
@@ -257,7 +257,7 @@ public class CollectionsSearchService {
             .objectClassification(searchRequest.getObjectClassification())
             .issues(searchRequest.getIssue());
     buildCommonParams(listParamsBuilder, searchRequest);
-    DescriptorsParams listParams = listParamsBuilder.build();
+    DescriptorsListParams listParams = listParamsBuilder.build();
 
     List<CollectionSearchDto> dtos = searchMapper.searchCollections(listParams);
     Map<UUID, CollectionSearchResponse> responsesMap = new HashMap<>();
@@ -311,13 +311,13 @@ public class CollectionsSearchService {
           .getFacets()
           .forEach(
               f -> {
-                DescriptorsParams.DescriptorsParamsBuilder facetParamsBuilder =
+                DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
                     searchRequest.isMultiSelectFacets()
-                        ? DescriptorsParams.builder()
+                        ? DescriptorsListParams.builder()
                         : listParamsBuilder;
 
-                DescriptorsParams facetParams =
-                    (DescriptorsParams)
+                DescriptorsListParams facetParams =
+                    (DescriptorsListParams)
                         facetParamsBuilder
                             .facet(f)
                             .facetMinCount(searchRequest.getFacetMinCount())
@@ -371,7 +371,7 @@ public class CollectionsSearchService {
   }
 
   private static boolean isCollectionDescriptorResult(
-      CollectionSearchDto dto, DescriptorsParams params) {
+      CollectionSearchDto dto, DescriptorsListParams params) {
     return dto.getDescriptorKey() != null
         && (dto.getQueryDescriptorRank() != null && dto.getQueryDescriptorRank() > 0
             || params.descriptorSearchWithoutQuery());

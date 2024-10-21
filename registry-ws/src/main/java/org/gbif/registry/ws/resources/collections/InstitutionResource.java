@@ -23,6 +23,19 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletResponse;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -40,6 +53,7 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.collections.Discipline;
 import org.gbif.api.vocabulary.collections.InstitutionGovernance;
 import org.gbif.api.vocabulary.collections.InstitutionType;
@@ -57,19 +71,6 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Class that acts both as the WS endpoint for {@link Institution} entities and also provides an *
@@ -139,15 +140,15 @@ public class InstitutionResource
             schema = @Schema(implementation = Discipline.class),
             in = ParameterIn.QUERY),
         @Parameter(
-           name = "sourceId",
-           description = "sourceId of MasterSourceMetadata",
-           schema = @Schema(implementation = String.class),
-           in = ParameterIn.QUERY),
+            name = "sourceId",
+            description = "sourceId of MasterSourceMetadata",
+            schema = @Schema(implementation = String.class),
+            in = ParameterIn.QUERY),
         @Parameter(
-          name = "source",
-          description = "Source attribute of MasterSourceMetadata",
-          schema = @Schema(implementation = Source.class),
-          in = ParameterIn.QUERY)
+            name = "source",
+            description = "Source attribute of MasterSourceMetadata",
+            schema = @Schema(implementation = Source.class),
+            in = ParameterIn.QUERY)
       })
   @SearchRequestParameters
   @interface InstitutionSearchParameters {}
@@ -334,31 +335,21 @@ public class InstitutionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
-            searchRequest.getGbifRegion() != null
-                ? searchRequest.getGbifRegion().stream()
-                    .map(GbifRegion::name)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCountry() != null
-                ? searchRequest.getCountry().stream()
-                    .map(Country::getIso2LetterCode)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCity(),
-            searchRequest.getAlternativeCode(),
-            searchRequest.getCode(),
-            searchRequest.getName(),
-            searchRequest.getContact() != null ? searchRequest.getContact().toString() : null,
-            searchRequest.getIdentifierType() != null
-                ? searchRequest.getIdentifierType().name()
-                : null,
-            searchRequest.getIdentifier(),
-            searchRequest.getMachineTagNamespace(),
-            searchRequest.getMachineTagName(),
-            searchRequest.getMachineTagValue(),
-            searchRequest.getFuzzyName(),
+            join(searchRequest.getGbifRegion(), GbifRegion::name),
+            join(searchRequest.getCountry(), Country::getIso2LetterCode),
+            join(searchRequest.getCity()),
+            join(searchRequest.getAlternativeCode()),
+            join(searchRequest.getCode()),
+            join(searchRequest.getName()),
+            join(searchRequest.getContact(), UUID::toString),
+            join(searchRequest.getIdentifierType(), IdentifierType::name),
+            join(searchRequest.getIdentifier()),
+            join(searchRequest.getMachineTagNamespace()),
+            join(searchRequest.getMachineTagName()),
+            join(searchRequest.getMachineTagValue()),
+            join(searchRequest.getFuzzyName()),
             searchRequest.getQ());
-    if (preFileName.length() > 0) {
+    if (!preFileName.isEmpty()) {
       preFileName += "-";
     }
 

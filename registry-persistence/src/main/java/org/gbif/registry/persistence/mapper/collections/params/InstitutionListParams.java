@@ -24,8 +24,11 @@ import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 public class InstitutionListParams extends ListParams {
 
   @Nullable List<String> types;
+
   @Nullable List<String> institutionalGovernances;
+
   @Nullable List<String> disciplines;
+
   // facets
   @Nullable InstitutionFacetParameter facet;
 }
