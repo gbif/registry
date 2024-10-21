@@ -194,7 +194,7 @@
                           c.created, c.key)
             <include refid="COLLECTION_READ_FIELDS"/>, inst.name institutionName, inst.code institutionCode, c.fulltext_search
             <if test="params.query != null" >,query</if>
-            <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+            <if test="params.fuzzyName != null">,similar_name_score(c.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score</if>
     FROM collection c
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>

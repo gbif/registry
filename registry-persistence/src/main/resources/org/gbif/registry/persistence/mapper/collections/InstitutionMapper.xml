@@ -200,7 +200,7 @@
                           i.created, i.key)
       <include refid="INSTITUTION_READ_FIELDS"/>, i.fulltext_search
     <if test="params.query != null" >,query</if>
-      <if test="params.fuzzyName != null" >,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+      <if test="params.fuzzyName != null" >,similar_name_score(i.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score</if>
     FROM institution i
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
@@ -233,7 +233,7 @@
     SELECT DISTINCT ON (<if test="params.query != null" >ts_rank_cd(i.fulltext_search, query), </if>
     <if test="params.fuzzyName != null" >similarity_score, </if> i.key)
     i.key, i.name, i.latitude, i.longitude
-    <if test="params.fuzzyName != null" >,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score</if>
+    <if test="params.fuzzyName != null" >,similar_name_score(i.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score</if>
     FROM institution i
     <if test="params.query != null" >
       <include refid="FULLTEXT_SEARCH"/>
