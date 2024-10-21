@@ -155,7 +155,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
     Set<UUID> institutionKeys = new HashSet<>();
     if (searchRequest.getInstitution() != null) {
-      institutionKeys.add(searchRequest.getInstitution());
+      institutionKeys.addAll(searchRequest.getInstitution());
     }
     if (searchRequest.getInstitutionKeys() != null) {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());

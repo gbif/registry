@@ -22,16 +22,19 @@ import io.swagger.v3.oas.annotations.extensions.Extension;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
 import org.gbif.api.model.collections.search.InstitutionSearchResponse;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.springframework.http.MediaType;
@@ -91,11 +94,12 @@ public class CollectionsSearchResource {
       @RequestParam(value = "q", required = false) String query,
       @RequestParam(value = "hl", defaultValue = "false") boolean highlight,
       @RequestParam(value = "entityType", required = false) TypeParam type,
-      @RequestParam(value = "displayOnNHCPortal", required = false) Boolean displayOnNHCPortal,
-      Country country,
+      @RequestParam(value = "displayOnNHCPortal", required = false)
+          List<Boolean> displayOnNHCPortal,
+      Country[] country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return collectionsSearchService.search(
-        query, highlight, type, displayOnNHCPortal, country, limit);
+        query, highlight, type, displayOnNHCPortal, Arrays.asList(country), limit);
   }
 
   @Operation(
@@ -129,8 +133,8 @@ public class CollectionsSearchResource {
   @ApiResponse(responseCode = "200", description = "Search successful")
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("collection/search")
-  public PagingResponse<CollectionSearchResponse> searchCollections(
-      CollectionDescriptorsSearchRequest searchRequest) {
+  public FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter>
+      searchCollections(CollectionDescriptorsSearchRequest searchRequest) {
     return collectionsSearchService.searchCollections(searchRequest);
   }
 }

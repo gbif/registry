@@ -32,25 +32,31 @@ import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.collections.search.BaseSearchResponse;
+import org.gbif.api.model.collections.search.CollectionFacet;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
 import org.gbif.api.model.collections.search.DescriptorMatch;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
 import org.gbif.api.model.collections.search.Highlight;
 import org.gbif.api.model.collections.search.InstitutionSearchResponse;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
-import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+import org.gbif.api.vocabulary.collections.CollectionsFacetParameter;
+import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.domain.collections.TypeParam;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.BaseSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
+import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.dto.InstitutionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.SearchDto;
-import org.gbif.registry.persistence.mapper.collections.params.DescriptorsParams;
+import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
 import org.gbif.registry.persistence.mapper.collections.params.FullTextSearchParams;
 import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.persistence.mapper.collections.params.ListParams;
+import org.gbif.registry.service.collections.utils.SearchUtils;
 import org.gbif.registry.service.collections.utils.Vocabularies;
 import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,8 +82,8 @@ public class CollectionsSearchService {
       String query,
       boolean highlight,
       TypeParam type,
-      Boolean displayOnNHCPortal,
-      Country country,
+      List<Boolean> displayOnNHCPortal,
+      List<Country> country,
       int limit) {
     List<SearchDto> dtos =
         searchMapper.search(
@@ -136,8 +142,8 @@ public class CollectionsSearchService {
     return responses;
   }
 
-  public PagingResponse<InstitutionSearchResponse> searchInstitutions(
-      InstitutionSearchRequest searchRequest) {
+  public FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter>
+      searchInstitutions(InstitutionSearchRequest searchRequest) {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
@@ -177,17 +183,45 @@ public class CollectionsSearchService {
                 })
             .collect(Collectors.toList());
 
-    return new PagingResponse<>(page, searchMapper.countInstitutions(listParams), results);
+    List<CollectionFacet<InstitutionFacetParameter>> facets = new ArrayList<>();
+    if (searchRequest.getFacets() != null && !searchRequest.getFacets().isEmpty()) {
+      searchRequest
+          .getFacets()
+          .forEach(
+              f -> {
+                InstitutionListParams.InstitutionListParamsBuilder facetParamsBuilder =
+                    searchRequest.isMultiSelectFacets()
+                        ? InstitutionListParams.builder()
+                        : listParamsBuilder;
+
+                InstitutionListParams facetParams =
+                    (InstitutionListParams)
+                        facetParamsBuilder
+                            .facet(f)
+                            .facetMinCount(searchRequest.getFacetMinCount())
+                            .facetPage(extractFacetPage(searchRequest, f))
+                            .build();
+
+                facets.add(
+                    createFacet(
+                        f,
+                        searchMapper.institutionFacet(facetParams),
+                        searchMapper.institutionFacetCardinality(facetParams)));
+              });
+    }
+
+    return new FacetedSearchResponse<>(
+        page, searchMapper.countInstitutions(listParams), results, facets);
   }
 
-  public PagingResponse<CollectionSearchResponse> searchCollections(
-      CollectionDescriptorsSearchRequest searchRequest) {
+  public FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter>
+      searchCollections(CollectionDescriptorsSearchRequest searchRequest) {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
     Set<UUID> institutionKeys = new HashSet<>();
     if (searchRequest.getInstitution() != null) {
-      institutionKeys.add(searchRequest.getInstitution());
+      institutionKeys.addAll(searchRequest.getInstitution());
     }
     if (searchRequest.getInstitutionKeys() != null) {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());
@@ -195,8 +229,8 @@ public class CollectionsSearchService {
 
     Vocabularies.addChildrenConcepts(searchRequest, conceptClient);
 
-    DescriptorsParams.DescriptorsParamsBuilder listParamsBuilder =
-        DescriptorsParams.builder()
+    DescriptorsListParams.DescriptorsListParamsBuilder listParamsBuilder =
+        DescriptorsListParams.builder()
             .contentTypes(searchRequest.getContentTypes())
             .preservationTypes(searchRequest.getPreservationTypes())
             .accessionStatus(searchRequest.getAccessionStatus())
@@ -223,60 +257,121 @@ public class CollectionsSearchService {
             .objectClassification(searchRequest.getObjectClassification())
             .issues(searchRequest.getIssue());
     buildCommonParams(listParamsBuilder, searchRequest);
-    DescriptorsParams listParams = listParamsBuilder.build();
+    DescriptorsListParams listParams = listParamsBuilder.build();
 
     List<CollectionSearchDto> dtos = searchMapper.searchCollections(listParams);
     Map<UUID, CollectionSearchResponse> responsesMap = new HashMap<>();
     List<CollectionSearchResponse> results = new ArrayList<>();
-    dtos.stream()
-        .forEach(
-            dto -> {
-              if (responsesMap.containsKey(dto.getKey())) {
-                CollectionSearchResponse existing = responsesMap.get(dto.getKey());
-                if (Boolean.TRUE.equals(listParams.getHighlight())) {
-                  addHighlights(existing, dto);
-                }
-                if (isCollectionDescriptorResult(dto, listParams)) {
-                  existing.getDescriptorMatches().add(addDescriptorMatch(dto));
-                }
-                return;
-              }
+    dtos.forEach(
+        dto -> {
+          if (responsesMap.containsKey(dto.getKey())) {
+            CollectionSearchResponse existing = responsesMap.get(dto.getKey());
+            if (Boolean.TRUE.equals(listParams.getHighlight())) {
+              addHighlights(existing, dto);
+            }
+            if (isCollectionDescriptorResult(dto, listParams)) {
+              existing.getDescriptorMatches().add(addDescriptorMatch(dto));
+            }
+            return;
+          }
 
-              CollectionSearchResponse response = new CollectionSearchResponse();
-              responsesMap.put(dto.getKey(), response);
-              results.add(response);
+          CollectionSearchResponse response = new CollectionSearchResponse();
+          responsesMap.put(dto.getKey(), response);
+          results.add(response);
 
-              createCommonResponse(dto, response);
-              response.setContentTypes(dto.getContentTypes());
-              response.setPersonalCollection(dto.isPersonalCollection());
-              response.setPreservationTypes(dto.getPreservationTypes());
-              response.setAccessionStatus(dto.getAccessionStatus());
-              response.setInstitutionKey(dto.getInstitutionKey());
-              response.setInstitutionName(dto.getInstitutionName());
-              response.setInstitutionCode(dto.getInstitutionCode());
-              response.setNumberSpecimens(dto.getNumberSpecimens());
-              response.setTaxonomicCoverage(dto.getTaxonomicCoverage());
-              response.setGeographicCoverage(dto.getGeographicCoverage());
-              response.setDepartment(dto.getDepartment());
-              response.setDivision(dto.getDivision());
-              response.setDisplayOnNHCPortal(dto.isDisplayOnNHCPortal());
-              response.setOccurrenceCount(dto.getOccurrenceCount());
-              response.setTypeSpecimenCount(dto.getTypeSpecimenCount());
+          createCommonResponse(dto, response);
+          response.setContentTypes(dto.getContentTypes());
+          response.setPersonalCollection(dto.isPersonalCollection());
+          response.setPreservationTypes(dto.getPreservationTypes());
+          response.setAccessionStatus(dto.getAccessionStatus());
+          response.setInstitutionKey(dto.getInstitutionKey());
+          response.setInstitutionName(dto.getInstitutionName());
+          response.setInstitutionCode(dto.getInstitutionCode());
+          response.setNumberSpecimens(dto.getNumberSpecimens());
+          response.setTaxonomicCoverage(dto.getTaxonomicCoverage());
+          response.setGeographicCoverage(dto.getGeographicCoverage());
+          response.setDepartment(dto.getDepartment());
+          response.setDivision(dto.getDivision());
+          response.setDisplayOnNHCPortal(dto.isDisplayOnNHCPortal());
+          response.setOccurrenceCount(dto.getOccurrenceCount());
+          response.setTypeSpecimenCount(dto.getTypeSpecimenCount());
 
-              if (isCollectionDescriptorResult(dto, listParams)) {
-                response.getDescriptorMatches().add(addDescriptorMatch(dto));
-              }
+          if (isCollectionDescriptorResult(dto, listParams)) {
+            response.getDescriptorMatches().add(addDescriptorMatch(dto));
+          }
 
-              if (Boolean.TRUE.equals(searchRequest.getHl())) {
-                addHighlights(response, dto);
-              }
-            });
+          if (Boolean.TRUE.equals(searchRequest.getHl())) {
+            addHighlights(response, dto);
+          }
+        });
 
-    return new PagingResponse<>(page, searchMapper.countCollections(listParams), results);
+    List<CollectionFacet<CollectionFacetParameter>> facets = new ArrayList<>();
+    if (searchRequest.getFacets() != null && !searchRequest.getFacets().isEmpty()) {
+      searchRequest
+          .getFacets()
+          .forEach(
+              f -> {
+                DescriptorsListParams.DescriptorsListParamsBuilder facetParamsBuilder =
+                    searchRequest.isMultiSelectFacets()
+                        ? DescriptorsListParams.builder()
+                        : listParamsBuilder;
+
+                DescriptorsListParams facetParams =
+                    (DescriptorsListParams)
+                        facetParamsBuilder
+                            .facet(f)
+                            .facetMinCount(searchRequest.getFacetMinCount())
+                            .facetPage(extractFacetPage(searchRequest, f))
+                            .build();
+
+                facets.add(
+                    createFacet(
+                        f,
+                        searchMapper.collectionFacet(facetParams),
+                        searchMapper.collectionFacetCardinality(facetParams)));
+              });
+    }
+
+    return new FacetedSearchResponse<>(
+        page, searchMapper.countCollections(listParams), results, facets);
+  }
+
+  private <F extends CollectionsFacetParameter> CollectionFacet<F> createFacet(
+      F f, List<FacetDto> facetDtos, long cardinality) {
+    List<CollectionFacet.Count> facetCounts =
+        facetDtos.stream()
+            .filter(
+                dto ->
+                    !Strings.isNullOrEmpty(dto.getFacet())
+                        && !"null".equalsIgnoreCase(dto.getFacet()))
+            .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
+            .collect(Collectors.toList());
+
+    CollectionFacet<F> collectionFacet = new CollectionFacet<>();
+    collectionFacet.setField(f);
+    collectionFacet.setCounts(facetCounts);
+    collectionFacet.setCardinality(cardinality);
+    return collectionFacet;
+  }
+
+  private static <F extends CollectionsFacetParameter> Pageable extractFacetPage(
+      SearchRequest<F> searchRequest, F facetParameter) {
+    if (searchRequest.getFacetPages() != null
+        && searchRequest.getFacetPages().get(facetParameter) != null) {
+      return searchRequest.getFacetPages().get(facetParameter);
+    }
+
+    int limit =
+        searchRequest.getFacetLimit() != null
+            ? searchRequest.getFacetLimit()
+            : SearchUtils.DEFAULT_FACET_LIMIT;
+
+    long offset = searchRequest.getFacetOffset() != null ? searchRequest.getFacetOffset() : 0;
+    return new PagingRequest(offset, limit);
   }
 
   private static boolean isCollectionDescriptorResult(
-      CollectionSearchDto dto, DescriptorsParams params) {
+      CollectionSearchDto dto, DescriptorsListParams params) {
     return dto.getDescriptorKey() != null
         && (dto.getQueryDescriptorRank() != null && dto.getQueryDescriptorRank() > 0
             || params.descriptorSearchWithoutQuery());
