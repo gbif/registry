@@ -561,16 +561,17 @@
   <!-- END TAGS -->
 
   <!-- IDENTIFIERS -->
-  <insert id="addIdentifier">
-    INSERT INTO collection_identifier(collection_key,identifier_key)
+  <insert id="addCollectionIdentifier">
+    INSERT INTO collection_identifier(collection_key,identifier_key,is_primary)
     VALUES(
     #{targetEntityKey,jdbcType=OTHER},
-    #{identifierKey,jdbcType=INTEGER}
+    #{identifierKey,jdbcType=INTEGER},
+    #{isPrimary,jdbcType=BOOLEAN}
     )
   </insert>
 
   <select id="listIdentifiers" resultType="Identifier">
-    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.IDENTIFIER_FIELDS"/>
+    SELECT <include refid="org.gbif.registry.persistence.mapper.IdentifierMapper.COLLECTION_IDENTIFIER_FIELDS"/>
     FROM identifier INNER JOIN collection_identifier ON identifier_key = key
     WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
     ORDER BY created DESC
@@ -592,6 +593,29 @@
     INNER JOIN identifier i ON i."key" = ci.identifier_key
     WHERE regexp_replace(i.identifier, 'http://', '') = regexp_replace(#{identifier,jdbcType=VARCHAR}, 'http://', '')
       AND c.deleted IS NULL;
+  </select>
+
+  <!-- Update existing primary identifier to false -->
+  <update id="setAllIdentifiersToNonPrimary">
+    UPDATE collection_identifier
+    SET is_primary = false
+    WHERE collection_key = #{targetEntityKey, jdbcType=OTHER}
+  </update>
+
+  <!-- Update identifier is_primary -->
+  <update id="updateIdentifier">
+    UPDATE collection_identifier
+    SET is_primary = #{primary,jdbcType=BOOLEAN}
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=OTHER}
+  </update>
+
+  <select id="areRelated" resultType="boolean">
+    SELECT EXISTS (
+    SELECT 1
+    FROM collection_identifier
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
+    AND identifier_key = #{identifierKey,jdbcType=INTEGER}
+    )
   </select>
   <!-- END IDENTIFIERS -->
 
