@@ -211,8 +211,9 @@ public class WithMyBatis {
     if (identifier.isPrimary()) {
       identifiableMapper.setAllIdentifiersToNonPrimary(targetEntityKey);
     }
-    return identifiableMapper.addCollectionIdentifier(
-        targetEntityKey, identifier.getKey(), identifier.isPrimary());
+    identifiableMapper.addCollectionIdentifier(
+      targetEntityKey, identifier.getKey(), identifier.isPrimary());
+    return identifier.getKey();
   }
 
   @Transactional

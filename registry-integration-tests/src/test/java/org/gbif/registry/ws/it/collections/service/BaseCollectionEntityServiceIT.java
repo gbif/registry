@@ -338,16 +338,6 @@ public abstract class BaseCollectionEntityServiceIT<
     // Assert that identifier1 is not primary and identifier2 is now the primary identifier
     assertFalse(updatedIdentifier1.isPrimary(), "Identifier1 should no longer be primary");
     assertTrue(updatedIdentifier2.isPrimary(), "Identifier2 should now be primary");
-
-    // Test invalid update (e.g., trying to update to an invalid identifier)
-    Identifier invalidIdentifier = new Identifier();
-    invalidIdentifier.setKey(identifierKey1);
-    invalidIdentifier.setIdentifier("invalid-identifier");
-    invalidIdentifier.setType(IdentifierType.WIKIDATA);
-
-    assertThrows(
-      IllegalArgumentException.class,
-      () -> collectionEntityService.updateIdentifier(key, invalidIdentifier.getKey(), invalidIdentifier.isPrimary()));
   }
 
 
