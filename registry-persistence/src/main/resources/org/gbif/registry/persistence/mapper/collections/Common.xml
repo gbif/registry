@@ -104,7 +104,7 @@
       <property name="values" value="params.machineTagValue"/>
       <property name="field" value="mt.value"/>
     </include>
-    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ENUM_FILTER">
       <property name="values" value="params.identifierType"/>
       <property name="field" value="id.type"/>
     </include>
@@ -137,7 +137,7 @@
     <if test="params.city != null and params.city.size > 0" >
       AND (
       <trim suffixOverrides="OR">
-        <foreach item="item" collection="params.city" separator=",">
+        <foreach item="item" collection="params.city">
           normalize_name(addr.city) = normalize_name(#{item,jdbcType=VARCHAR}) OR
           normalize_name(mail_addr.city) = normalize_name(#{item,jdbcType=VARCHAR}) OR
         </foreach>
@@ -147,8 +147,8 @@
     <if test="params.fuzzyName != null and params.fuzzyName.size > 0" >
       AND (
       <trim suffixOverrides="OR">
-        <foreach item="item" collection="params.fuzzyName" open="(" separator="," close=")">
-          similar_name(${alias}name, #{item,jdbcType=VARCHAR}) OR
+        <foreach item="item" collection="params.fuzzyName" separator="OR">
+          similar_name(${alias}name, #{item,jdbcType=VARCHAR})
         </foreach>
       </trim>
       )

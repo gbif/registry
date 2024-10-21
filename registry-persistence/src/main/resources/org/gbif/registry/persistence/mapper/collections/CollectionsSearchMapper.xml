@@ -212,7 +212,7 @@
       null AS descriptor_issues_highlight
     </if>
     <if test="params.query != null">,query</if>
-    <if test="params.fuzzyName != null">,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
+    <if test="params.fuzzyName != null">,similar_name_score(i.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score
     </if>
     FROM institution i
     <if test="params.query != null" >
@@ -298,7 +298,7 @@
       ,ts_rank_cd(c.fulltext_search, c.query) AS query_rank, ts_rank_cd(d.fulltext_search, c.query) query_descriptor_rank
     </if>
     <if test="params.query != null">,c.query</if>
-    <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
+    <if test="params.fuzzyName != null">,similar_name_score(c.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score
     </if>
     FROM(
     SELECT DISTINCT ON (
