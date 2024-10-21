@@ -209,7 +209,7 @@ public class WithMyBatis {
     checkArgument(identifier.getKey() == null, CREATE_ERROR_MESSAGE);
     identifierMapper.createIdentifier(identifier);
     if (identifier.isPrimary()) {
-      identifiableMapper.updatePrimaryIdentifier(targetEntityKey);
+      identifiableMapper.setAllIdentifiersToNonPrimary(targetEntityKey);
     }
     return identifiableMapper.addCollectionIdentifier(
         targetEntityKey, identifier.getKey(), identifier.isPrimary());
@@ -217,20 +217,19 @@ public class WithMyBatis {
 
   @Transactional
   public int updateCollectionIdentifier(
-    IdentifierMapper identifierMapper,
     PrimaryIdentifiableMapper identifiableMapper,
     UUID targetEntityKey,
-    Identifier identifier) {
-    checkArgument(identifier.getKey() != null, "Unable to update an entity with no key");
+    Integer identifierKey,
+    Boolean isPrimary) {
+    checkArgument(identifierKey != null, "Unable to update an entity with no key");
     checkArgument(
-      Boolean.TRUE.equals(identifiableMapper.areRelated(targetEntityKey, identifier.getKey())),
+      Boolean.TRUE.equals(identifiableMapper.areRelated(targetEntityKey, identifierKey)),
       "The provided identifier is not connected to the given entity");
     // is this a primary identifier? We need to make sure it only exists once per type
-    if (identifier.isPrimary()) {
-      identifiableMapper.updatePrimaryIdentifier(targetEntityKey);
+    if (isPrimary) {
+      identifiableMapper.setAllIdentifiersToNonPrimary(targetEntityKey);
     }
-    identifierMapper.updateIdentifier(identifier);
-    identifiableMapper.updateIdentifier(targetEntityKey, identifier.isPrimary(), identifier.getKey());
-    return identifier.getKey();
+    identifiableMapper.updateIdentifier(targetEntityKey, identifierKey, isPrimary);
+    return identifierKey;
   }
 }
