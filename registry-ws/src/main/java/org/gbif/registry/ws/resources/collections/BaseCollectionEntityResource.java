@@ -660,23 +660,25 @@ public abstract class BaseCollectionEntityResource<
 
   @Operation(
     operationId = "updateIdentifier",
-    summary = "Update an identifier from the record",
-    extensions =
-    @Extension(
+    summary = "Update an identifier for a specified entity",
+    extensions = @Extension(
       name = "Order",
       properties = @ExtensionProperty(name = "Order", value = "0436")))
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "204", description = "Identifier updated")
   @Docs.DefaultUnsuccessfulReadResponses
   @Docs.DefaultUnsuccessfulWriteResponses
-  @PutMapping(value = "{key}/identifier/{identifierKey}", consumes =  MediaType.APPLICATION_JSON_VALUE)
+  @PutMapping(value = "{key}/identifier/{identifierKey}", consumes = MediaType.APPLICATION_JSON_VALUE)
   @Transactional
   public int updateIdentifier(
-    @PathVariable("key") UUID entityKey, @PathVariable("identifierKey") Integer identifierKey, @RequestBody @Trim Identifier identifier) {
+    @PathVariable("key") UUID entityKey,
+    @PathVariable("identifierKey") Integer identifierKey,
+    @RequestBody Boolean isPrimary) {
     checkArgument(
-      Objects.equals(identifierKey, identifier.getKey()),
-      "The identifier key in the path has to match the key in the body");
-    return collectionEntityService.updateIdentifier(entityKey, identifier);
+      Objects.nonNull(isPrimary),
+      "The 'isPrimary' parameter must not be null."
+    );
+    return collectionEntityService.updateIdentifier(entityKey, identifierKey, isPrimary);
   }
 
   @Operation(

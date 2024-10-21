@@ -324,7 +324,7 @@ public abstract class BaseCollectionEntityServiceIT<
     // Update the identifier
     Identifier identifierUpdated = identifiers.stream().filter(i -> i.getIdentifier().equals("identifier2")).findFirst().get();
     identifierUpdated.setPrimary(true);
-    collectionEntityService.updateIdentifier(key, identifierUpdated);
+    collectionEntityService.updateIdentifier(key, identifierUpdated.getKey(), identifierUpdated.isPrimary());
 
     Identifier updatedIdentifier1 = collectionEntityService.listIdentifiers(key).stream()
       .filter(id -> id.getKey().equals(identifier1.getKey()))
@@ -347,7 +347,7 @@ public abstract class BaseCollectionEntityServiceIT<
 
     assertThrows(
       IllegalArgumentException.class,
-      () -> collectionEntityService.updateIdentifier(key, invalidIdentifier));
+      () -> collectionEntityService.updateIdentifier(key, invalidIdentifier.getKey(), invalidIdentifier.isPrimary()));
   }
 
 

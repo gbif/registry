@@ -24,20 +24,20 @@ public interface PrimaryIdentifiableMapper extends IdentifiableMapper {
    *
    * @param entityKey the UUID of the target entity whose primary identifier will be updated
    */
-  void updatePrimaryIdentifier(
+  void setAllIdentifiersToNonPrimary(
     @Param("targetEntityKey") UUID entityKey);
 
   /**
    * Updates the current primary identifier of the specified entity, making it non-primary.
    *
    * @param entityKey     the UUID of the target entity
-   * @param primary       true if the identifier is the new primary identifier; false otherwise
    * @param identifierKey the key of the identifier to update
+   * @param primary       true if the identifier is the new primary identifier; false otherwise
    */
   void updateIdentifier(
     @Param("targetEntityKey") UUID entityKey,
-    @Param("primary") boolean primary,
-    @Param("identifierKey") int identifierKey);
+    @Param("identifierKey") int identifierKey,
+    @Param("primary") boolean primary);
 
   /**
    * Checks if the specified identifier is associated with the given entity.

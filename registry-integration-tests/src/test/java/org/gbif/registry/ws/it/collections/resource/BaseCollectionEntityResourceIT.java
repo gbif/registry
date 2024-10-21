@@ -304,10 +304,10 @@ abstract class BaseCollectionEntityResourceIT<
     updatedIdentifier.setType(IdentifierType.DOI);
     updatedIdentifier.setPrimary(true);
 
-    when(getMockCollectionEntityService().updateIdentifier(entityKey, updatedIdentifier))
+    when(getMockCollectionEntityService().updateIdentifier(entityKey, updatedIdentifier.getKey(), updatedIdentifier.isPrimary()))
       .thenReturn(identifierKey);
 
-    int updatedIdentifierKeyReturned = baseClient.updateIdentifier(entityKey, identifierKey, updatedIdentifier);
+    int updatedIdentifierKeyReturned = baseClient.updateIdentifier(entityKey, identifierKey, updatedIdentifier.isPrimary());
     assertEquals(identifierKey, updatedIdentifierKeyReturned);
 
     // Verify the identifier was updated correctly
