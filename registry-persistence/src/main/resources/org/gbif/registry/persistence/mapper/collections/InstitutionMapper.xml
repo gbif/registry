@@ -586,26 +586,26 @@
   </select>
 
   <!-- Update existing primary identifier to false -->
-  <!-- Update existing primary identifier to false -->
-  <update id="updatePrimaryIdentifier">
+  <update id="setAllIdentifiersToNonPrimary">
     UPDATE institution_identifier
-    SET is_primary=false
-    WHERE institution_key=#{targetEntityKey,jdbcType=OTHER}
+    SET is_primary = false
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
   </update>
 
   <!-- Update identifier is_primary -->
   <update id="updateIdentifier">
     UPDATE institution_identifier
-    SET is_primary=#{primary,jdbcType=BOOLEAN}
-    WHERE institution_key=#{targetEntityKey,jdbcType=OTHER} AND identifier_key=#{identifierKey,jdbcType=OTHER}
+    SET is_primary = #{primary,jdbcType=BOOLEAN}
+    WHERE institution_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=OTHER}
   </update>
 
   <select id="areRelated" resultType="boolean">
-    SELECT true
+    SELECT EXISTS (
+    SELECT 1
     FROM institution_identifier
     WHERE institution_key = #{targetEntityKey,jdbcType=OTHER}
     AND identifier_key = #{identifierKey,jdbcType=INTEGER}
-    LIMIT 1
+    )
   </select>
   <!-- END IDENTIFIERS -->
 
