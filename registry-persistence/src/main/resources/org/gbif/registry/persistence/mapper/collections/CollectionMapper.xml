@@ -596,25 +596,26 @@
   </select>
 
   <!-- Update existing primary identifier to false -->
-  <update id="updatePrimaryIdentifier">
+  <update id="setAllIdentifiersToNonPrimary">
     UPDATE collection_identifier
-    SET is_primary=false
-    WHERE collection_key=#{targetEntityKey,jdbcType=OTHER}
+    SET is_primary = false
+    WHERE collection_key = #{targetEntityKey, jdbcType=OTHER}
   </update>
 
   <!-- Update identifier is_primary -->
   <update id="updateIdentifier">
     UPDATE collection_identifier
-    SET is_primary=#{primary,jdbcType=BOOLEAN}
-    WHERE collection_key=#{targetEntityKey,jdbcType=OTHER} AND identifier_key=#{identifierKey,jdbcType=OTHER}
+    SET is_primary = #{primary,jdbcType=BOOLEAN}
+    WHERE collection_key = #{targetEntityKey,jdbcType=OTHER} AND identifier_key = #{identifierKey,jdbcType=OTHER}
   </update>
 
   <select id="areRelated" resultType="boolean">
-    SELECT true
+    SELECT EXISTS (
+    SELECT 1
     FROM collection_identifier
     WHERE collection_key = #{targetEntityKey,jdbcType=OTHER}
     AND identifier_key = #{identifierKey,jdbcType=INTEGER}
-    LIMIT 1
+    )
   </select>
   <!-- END IDENTIFIERS -->
 
