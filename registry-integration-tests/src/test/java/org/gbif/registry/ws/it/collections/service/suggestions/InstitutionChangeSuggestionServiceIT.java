@@ -127,7 +127,7 @@ public class InstitutionChangeSuggestionServiceIT
     entity.setIdentifiers(Collections.singletonList(new Identifier(IdentifierType.LSID, "test")));
     entity.setAlternativeCodes(
         Collections.singletonList(new AlternativeCode(UUID.randomUUID().toString(), "test")));
-    return 5;
+    return 4;
   }
 
   @Override

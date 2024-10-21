@@ -73,6 +73,17 @@ public class BaseServiceIT extends BaseDBTest {
     }
   }
 
+  /**
+   * Resets the Spring Security context with a given principal and user roles.
+   *
+   * <p>This method sets the specified principal (user identifier) and roles
+   * for the security context, effectively simulating an authenticated user
+   * in the system for testing or execution purposes. It clears the existing
+   * security context and creates a new one with the provided principal and roles.
+   *
+   * @param principal The principal (typically the username or identifier of the user) to set in the security context.
+   * @param role      One or more {@link UserRole} values representing the roles or authorities to assign to the principal.
+   */
   protected void resetSecurityContext(String principal, UserRole... role) {
     simplePrincipalProvider.setPrincipal(principal);
     SecurityContext ctx = SecurityContextHolder.createEmptyContext();

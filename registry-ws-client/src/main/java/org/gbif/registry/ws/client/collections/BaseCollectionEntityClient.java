@@ -72,6 +72,13 @@ public interface BaseCollectionEntityClient<
   List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
 
   @RequestMapping(
+    method = RequestMethod.PUT,
+    value = "{key}/identifier/{identifierKey}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  int updateIdentifier(
+    @PathVariable("key") UUID entityKey, @PathVariable("identifierKey") Integer identifierKey, @RequestBody Boolean isPrimary);
+
+  @RequestMapping(
       method = RequestMethod.POST,
       value = "{key}/machineTag",
       consumes = MediaType.APPLICATION_JSON_VALUE)

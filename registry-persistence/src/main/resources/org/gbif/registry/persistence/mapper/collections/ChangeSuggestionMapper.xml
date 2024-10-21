@@ -53,7 +53,8 @@
     discarded_by = #{discardedBy,jdbcType=INTEGER},
     applied = #{applied,jdbcType=OTHER},
     applied_by = #{appliedBy,jdbcType=INTEGER},
-    entity_key = #{entityKey,jdbcType=INTEGER}
+    entity_key = #{entityKey,jdbcType=INTEGER},
+    create_institution = #{createInstitution,jdbcType=BOOLEAN}
   </sql>
 
   <insert id="create" parameterType="ChangeSuggestionDto" useGeneratedKeys="true" keyProperty="key">

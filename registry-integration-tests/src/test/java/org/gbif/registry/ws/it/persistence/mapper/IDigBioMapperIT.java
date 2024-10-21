@@ -102,7 +102,7 @@ public class IDigBioMapperIT extends BaseItTest {
     Identifier i = new Identifier(IdentifierType.IH_IRN, "irn1");
     i.setCreatedBy("test");
     identifierMapper.createIdentifier(i);
-    collectionMapper.addIdentifier(col1.getKey(), i.getKey());
+    collectionMapper.addCollectionIdentifier(col1.getKey(), i.getKey(), i.isPrimary());
 
     List<IdentifierDto> ids = iDigBioMapper.getIdentifiers(Collections.singleton(col1.getKey()));
     assertEquals(1, ids.size());

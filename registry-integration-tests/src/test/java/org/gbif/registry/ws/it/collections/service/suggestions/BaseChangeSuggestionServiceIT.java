@@ -181,6 +181,7 @@ public abstract class BaseChangeSuggestionServiceIT<
     // suggested changes
     int numberChanges = updateEntity(entity);
     address.setCity("city");
+    numberChanges++;
 
     R suggestion = createEmptyChangeSuggestion();
     suggestion.setSuggestedEntity(entity);
