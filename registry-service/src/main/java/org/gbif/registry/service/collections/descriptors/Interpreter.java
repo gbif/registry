@@ -338,13 +338,13 @@ public class Interpreter {
   }
 
   private static String extractValue(Map<String, String> valuesMap, String fieldName) {
-    return Optional.ofNullable(valuesMap.get(fieldName.toLowerCase()))
+    return Optional.ofNullable(valuesMap.get(fieldName))
         .filter(v -> !v.isEmpty())
         .orElse(null);
   }
 
   private static Optional<String> extractOptValue(Map<String, String> valuesMap, DwcTerm term) {
-    return Optional.ofNullable(valuesMap.get(term.prefixedName().toLowerCase()))
+    return Optional.ofNullable(valuesMap.get(term.prefixedName()))
         .filter(v -> !v.isEmpty());
   }
 

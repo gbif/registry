@@ -138,7 +138,7 @@ public class DefaultDescriptorService implements DescriptorsService {
       String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
         headersByIndex.put(i, headers[i]);
-        headersByName.put(headers[i].toLowerCase(), i);
+        headersByName.put(headers[i], i);
       }
 
       String[] values;
@@ -151,8 +151,7 @@ public class DefaultDescriptorService implements DescriptorsService {
 
         Map<String, String> valuesMap = valuesAndHeadersToMap(values, headersByName);
 
-        DescriptorDto descriptorDto = new DescriptorDto();
-        interpretDescriptor(valuesMap, descriptorDto);
+        DescriptorDto descriptorDto = interpretDescriptor(valuesMap);
         descriptorDto.setDescriptorGroupKey(descriptorGroupKey);
         descriptorsMapper.createDescriptor(descriptorDto);
 
@@ -172,7 +171,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     }
 
     return headersByName.entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), e -> values[e.getValue()]));
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> values[e.getValue()]));
   }
 
   private <T> void setResult(
@@ -388,8 +387,10 @@ public class DefaultDescriptorService implements DescriptorsService {
     while (!descriptorDtos.isEmpty()) {
       descriptorDtos.forEach(
           dto -> {
-            interpretDescriptor(verbatimDtosToMap(dto.getVerbatim()), dto);
-            descriptorsMapper.updateDescriptor(dto);
+            DescriptorDto reinterpretedDto =
+                interpretDescriptor(verbatimDtosToMap(dto.getVerbatim()));
+            reinterpretedDto.setKey(dto.getKey());
+            descriptorsMapper.updateDescriptor(reinterpretedDto);
           });
       offset += limit;
       descriptorDtos =
@@ -431,7 +432,8 @@ public class DefaultDescriptorService implements DescriptorsService {
     reinterpretCollectionDescriptorGroups(null);
   }
 
-  private void interpretDescriptor(Map<String, String> valuesMap, DescriptorDto descriptorDto) {
+  private DescriptorDto interpretDescriptor(Map<String, String> valuesMap) {
+    DescriptorDto descriptorDto = new DescriptorDto();
     // taxonomy
     InterpretedResult<Interpreter.TaxonData> taxonomyResult =
         Interpreter.interpretTaxonomy(valuesMap, nubResourceClient);
@@ -511,6 +513,8 @@ public class DefaultDescriptorService implements DescriptorsService {
         Interpreter.interpretString(valuesMap, "ltc:objectClassificationName");
     setResult(
         descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassificationName);
+
+    return descriptorDto;
   }
 
   private static Descriptor convertRecordDto(DescriptorDto dto) {
