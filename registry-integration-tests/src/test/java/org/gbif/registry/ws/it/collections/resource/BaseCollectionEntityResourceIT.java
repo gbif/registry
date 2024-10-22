@@ -13,6 +13,10 @@
  */
 package org.gbif.registry.ws.it.collections.resource;
 
+import java.util.HashMap;
+
+import java.util.Map;
+
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.Batch;
 import org.gbif.api.model.collections.CollectionEntity;
@@ -307,7 +311,11 @@ abstract class BaseCollectionEntityResourceIT<
     when(getMockCollectionEntityService().updateIdentifier(entityKey, updatedIdentifier.getKey(), updatedIdentifier.isPrimary()))
       .thenReturn(identifierKey);
 
-    int updatedIdentifierKeyReturned = baseClient.updateIdentifier(entityKey, identifierKey, updatedIdentifier.isPrimary());
+    // Create a map for the isPrimary value
+    Map<String, Boolean> isPrimaryMap = new HashMap<>();
+    isPrimaryMap.put("isPrimary", updatedIdentifier.isPrimary());
+
+    int updatedIdentifierKeyReturned = baseClient.updateIdentifier(entityKey, identifierKey, isPrimaryMap);
     assertEquals(identifierKey, updatedIdentifierKeyReturned);
 
     // Verify the identifier was updated correctly
