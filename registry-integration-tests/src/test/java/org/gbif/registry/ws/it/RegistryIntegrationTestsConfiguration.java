@@ -22,7 +22,6 @@ import org.apache.commons.beanutils.ConvertUtilsBean;
 import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.gbif.api.vocabulary.UserRole;
-import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.doi.config.TitleLookupConfiguration;
 import org.gbif.registry.events.config.VarnishPurgeConfiguration;
 import org.gbif.registry.mail.EmailSenderImpl;
