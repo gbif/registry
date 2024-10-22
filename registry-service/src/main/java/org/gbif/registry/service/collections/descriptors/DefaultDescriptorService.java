@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
@@ -60,6 +61,7 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @Service
+@Slf4j
 public class DefaultDescriptorService implements DescriptorsService {
 
   private final NubResourceClient nubResourceClient;
@@ -404,6 +406,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void reinterpretCollectionDescriptorGroups(UUID collectionKey) {
+    log.info("Starting collection descriptors reinterpretation");
     int limit = 100;
     long offset = 0;
     List<DescriptorGroup> descriptorGroups =
@@ -422,6 +425,7 @@ public class DefaultDescriptorService implements DescriptorsService {
                   .page(new PagingRequest(offset, limit))
                   .build());
     }
+    log.info("Collection descriptors reinterpretation finished");
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE})
