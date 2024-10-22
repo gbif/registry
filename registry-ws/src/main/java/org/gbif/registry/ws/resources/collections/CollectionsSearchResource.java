@@ -99,7 +99,12 @@ public class CollectionsSearchResource {
       Country[] country,
       @RequestParam(value = "limit", defaultValue = "20") int limit) {
     return collectionsSearchService.search(
-        query, highlight, type, displayOnNHCPortal, Arrays.asList(country), limit);
+        query,
+        highlight,
+        type,
+        displayOnNHCPortal,
+        country != null ? Arrays.asList(country) : null,
+        limit);
   }
 
   @Operation(
