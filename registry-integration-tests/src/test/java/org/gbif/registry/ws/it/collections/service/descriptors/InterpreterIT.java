@@ -18,7 +18,7 @@ public class InterpreterIT {
   @Test
   public void typeStatusInterpreterTest() {
     Map<String, String> valuesMap = new HashMap<>();
-    valuesMap.put("dwc:typestatus", "allotype|hyotype|foo|possibly foo");
+    valuesMap.put("dwc:typeStatus", "allotype|hyotype|foo|possibly foo");
 
     InterpretedResult<List<String>> result =
         Interpreter.interpretTypeStatus(valuesMap, conceptClient);
