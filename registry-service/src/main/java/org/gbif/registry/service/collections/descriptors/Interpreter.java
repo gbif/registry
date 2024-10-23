@@ -43,7 +43,7 @@ public class Interpreter {
   private static final MultiinputTemporalParser temporalParser = MultiinputTemporalParser.create();
   private static final CountryParser countryParser = CountryParser.getInstance();
   private static final Set<String> SUSPECTED_TYPE_STATUS_VALUES =
-      Set.of("?", "possible", "possibly", "potential", "maybe", "perhaps");
+      new HashSet<>(Arrays.asList("?", "possible", "possibly", "potential", "maybe", "perhaps"));
 
   public static InterpretedResult<List<String>> interpretStringList(
       Map<String, String> valuesMap, DwcTerm term) {
