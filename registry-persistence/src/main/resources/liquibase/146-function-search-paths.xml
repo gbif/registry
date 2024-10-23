@@ -1,0 +1,25 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+  <!-- Set the search paths to public. For security, VACUUM uses an empty search path and fails otherwise.
+       https://stackoverflow.com/questions/65237130/getting-function-does-not-exist-error-in-vacuumdb -->
+  <changeSet id="146" author="mblissett">
+    <sql>
+      ALTER FUNCTION collection_change_trigger SET search_path = public;
+      ALTER FUNCTION collection_contact_change_trigger SET search_path = public;
+      ALTER FUNCTION collection_descriptor_change_trigger SET search_path = public;
+      ALTER FUNCTION collection_descriptor_group_change_trigger SET search_path = public;
+      ALTER FUNCTION collection_descriptor_verbatim_change_trigger SET search_path = public;
+      ALTER FUNCTION contact_change_trigger SET search_path = public;
+      ALTER FUNCTION dataset_change_trigger SET search_path = public;
+      ALTER FUNCTION installation_change_trigger SET search_path = public;
+      ALTER FUNCTION institution_change_trigger SET search_path = public;
+      ALTER FUNCTION network_change_trigger SET search_path = public;
+      ALTER FUNCTION node_change_trigger SET search_path = public;
+      ALTER FUNCTION organization_change_trigger SET search_path = public;
+      ALTER FUNCTION normalize_name SET search_path = public;
+    </sql>
+  </changeSet>
+</databaseChangeLog>
