@@ -145,14 +145,15 @@
   <include file="liquibase/137-featured-image-attribution-grscicoll.xml" />
   <include file="liquibase/138-dataset-occurrence-download-created-index.xml" />
   <include file="liquibase/139-dataset-occurrence-download-created-index.xml" />
-  <include file="liquibase/140-collection-descriptors-grscicoll.xml" />
-  <include file="liquibase/141-ih-identifier-change-sugestion.xml" />
+  <include file="liquibase/140-ih-identifier-change-sugestion.xml" />
+  <include file="liquibase/141-collection-descriptors-grscicoll.xml" />
   <include file="liquibase/142-grscicoll-lookup-indexes.xml" />
   <include file="liquibase/143-removed-fields-grscicoll.xml" />
   <include file="liquibase/144-mdt-endpoint-installation-types.xml" />
   <include file="liquibase/145-contact-salutation.xml" />
-  <include file="liquibase/146-isil-clb-identifiers.xml" />
-  <include file="liquibase/147-primary-identifier-grscicoll.xml" />
-  <include file="liquibase/148-taxon-fields-collection-descriptors.xml" />
-  <include file="liquibase/149-similar-name-list-function.xml" />
+  <include file="liquibase/146-function-search-paths.xml" />
+  <include file="liquibase/147-isil-clb-identifiers.xml" />
+  <include file="liquibase/148-primary-identifier-grscicoll.xml" />
+  <include file="liquibase/149-taxon-fields-collection-descriptors.xml" />
+  <include file="liquibase/150-similar-name-list-function.xml" />
 </databaseChangeLog>
