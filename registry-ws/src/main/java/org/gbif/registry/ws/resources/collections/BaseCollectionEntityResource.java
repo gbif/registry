@@ -13,6 +13,9 @@
  */
 package org.gbif.registry.ws.resources.collections;
 
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+
+import java.util.Map;
 import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -659,9 +662,20 @@ public abstract class BaseCollectionEntityResource<
   @Operation(
     operationId = "updateIdentifier",
     summary = "Update an identifier for a specified entity",
+    description = "Updates the `isPrimary` status of an identifier. The request body should be a JSON object with a single key `isPrimary`.",
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "A JSON object containing the `isPrimary` field.",
+      required = true,
+      content = @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(name = "isPrimary", type = "boolean", example = "true"),
+        examples = @ExampleObject(value = "{\"isPrimary\": true}")
+      )
+    ),
     extensions = @Extension(
       name = "Order",
-      properties = @ExtensionProperty(name = "Order", value = "0436")))
+      properties = @ExtensionProperty(name = "Order", value = "0436"))
+  )
   @Docs.DefaultEntityKeyParameter
   @ApiResponse(responseCode = "204", description = "Identifier updated")
   @Docs.DefaultUnsuccessfulReadResponses
@@ -671,12 +685,12 @@ public abstract class BaseCollectionEntityResource<
   public int updateIdentifier(
     @PathVariable("key") UUID entityKey,
     @PathVariable("identifierKey") Integer identifierKey,
-    @RequestBody Boolean isPrimary) {
+    @RequestBody Map<String, Boolean> isPrimaryMap) {
     checkArgument(
-      Objects.nonNull(isPrimary),
+      Objects.nonNull(isPrimaryMap.get("isPrimary")),
       "The 'isPrimary' parameter must not be null."
     );
-    return collectionEntityService.updateIdentifier(entityKey, identifierKey, isPrimary);
+    return collectionEntityService.updateIdentifier(entityKey, identifierKey, isPrimaryMap.get("isPrimary"));
   }
 
   @Operation(
