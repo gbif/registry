@@ -188,7 +188,7 @@ public class BaseCollectionEntityService<
   @Transactional
   @Validated({PrePersist.class, Default.class})
   @Override
-  public int updateIdentifier(UUID entityKey, int identifierKey, Boolean isPrimary) {
+  public int updateIdentifier(UUID entityKey, int identifierKey, boolean isPrimary) {
       int key = withMyBatis.updateCollectionIdentifier(baseMapper, entityKey, identifierKey, isPrimary);
     eventManager.post(SubEntityCollectionEvent.newInstance(
       entityKey, objectClass, Identifier.class, (long) identifierKey, EventType.UPDATE));

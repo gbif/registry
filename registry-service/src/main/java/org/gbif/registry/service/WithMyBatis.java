@@ -221,7 +221,7 @@ public class WithMyBatis {
     PrimaryIdentifiableMapper identifiableMapper,
     UUID targetEntityKey,
     Integer identifierKey,
-    Boolean isPrimary) {
+    boolean isPrimary) {
     checkArgument(identifierKey != null, "Unable to update an entity with no key");
     checkArgument(
       Boolean.TRUE.equals(identifiableMapper.areRelated(targetEntityKey, identifierKey)),
