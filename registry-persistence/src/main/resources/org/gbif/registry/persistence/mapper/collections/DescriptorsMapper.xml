@@ -122,13 +122,16 @@
   <sql id="DESCRIPTOR_WRITE_FIELDS">
     collection_descriptor_group_key, usage_key, usage_name, usage_rank, taxon_classification, taxon_keys, country,
     individual_count, identified_by, date_identified, type_status, recorded_by, discipline, object_classification_name,
-    issues
+    issues, kingdom_key, kingdom_name, phylum_key, phylum_name, class_key, class_name, order_key, order_name, family_key,
+    family_name, genus_key, genus_name, species_key, species_name
   </sql>
 
   <sql id="DESCRIPTOR_READ_FIELDS">
     d.key, d.collection_descriptor_group_key, d.usage_key, d.usage_name, d.usage_rank, d.taxon_classification, d.country,
     d.individual_count, d.identified_by, d.date_identified, d.type_status, d.recorded_by, d.discipline,
-    d.object_classification_name, d.issues
+    d.object_classification_name, d.issues, d.kingdom_key, d.kingdom_name, d.phylum_key, d.phylum_name,
+    d.class_key, d.class_name, d.order_key, d.order_name, d.family_key, d.family_name, d.genus_key, d.genus_name,
+    d.species_key, d.species_name
   </sql>
 
   <sql id="DESCRIPTOR_PARAMS_CREATE">
@@ -146,7 +149,52 @@
     #{recordedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
     #{discipline,jdbcType=VARCHAR},
     #{objectClassificationName,jdbcType=VARCHAR},
-    #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}
+    #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    #{kingdomKey,jdbcType=INTEGER},
+    #{kingdomName,jdbcType=VARCHAR},
+    #{phylumKey,jdbcType=INTEGER},
+    #{phylumName,jdbcType=VARCHAR},
+    #{classKey,jdbcType=INTEGER},
+    #{className,jdbcType=VARCHAR},
+    #{orderKey,jdbcType=INTEGER},
+    #{orderName,jdbcType=VARCHAR},
+    #{familyKey,jdbcType=INTEGER},
+    #{familyName,jdbcType=VARCHAR},
+    #{genusKey,jdbcType=INTEGER},
+    #{genusName,jdbcType=VARCHAR},
+    #{speciesKey,jdbcType=INTEGER},
+    #{speciesName,jdbcType=VARCHAR}
+  </sql>
+
+  <sql id="DESCRIPTOR_PARAMS_UPDATE">
+    usage_key = #{usageKey,jdbcType=INTEGER},
+    usage_name = #{usageName,jdbcType=VARCHAR},
+    usage_rank = #{usageRank,jdbcType=VARCHAR},
+    taxon_classification = #{taxonClassification,jdbcType=OTHER,typeHandler=RankedNameListTypeHandler}::jsonb,
+    taxon_keys = #{taxonKeys,jdbcType=ARRAY,typeHandler=IntegerArrayTypeHandler},
+    country = #{country,jdbcType=VARCHAR},
+    individual_count = #{individualCount,jdbcType=INTEGER},
+    identified_by = #{identifiedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    date_identified = #{dateIdentified,jdbcType=OTHER},
+    type_status = #{typeStatus,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    recorded_by = #{recordedBy,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    discipline = #{discipline,jdbcType=VARCHAR},
+    object_classification_name = #{objectClassificationName,jdbcType=VARCHAR},
+    issues = #{issues,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler},
+    kingdom_key = #{kingdomKey,jdbcType=INTEGER},
+    kingdom_name = #{kingdomName,jdbcType=VARCHAR},
+    phylum_key =  #{phylumKey,jdbcType=INTEGER},
+    phylum_name = #{phylumName,jdbcType=VARCHAR},
+    class_key =  #{classKey,jdbcType=INTEGER},
+    class_name = #{className,jdbcType=VARCHAR},
+    order_key =  #{orderKey,jdbcType=INTEGER},
+    order_name = #{orderName,jdbcType=VARCHAR},
+    family_key = #{familyKey,jdbcType=INTEGER},
+    family_name = #{familyName,jdbcType=VARCHAR},
+    genus_key = #{genusKey,jdbcType=INTEGER},
+    genus_name = #{genusName,jdbcType=VARCHAR},
+    species_key = #{speciesKey,jdbcType=INTEGER},
+    species_name = #{speciesName,jdbcType=VARCHAR}
   </sql>
 
   <insert id="createDescriptor" parameterType="DescriptorDto" useGeneratedKeys="true" keyProperty="key">
@@ -158,6 +206,12 @@
     DELETE FROM collection_descriptor
     WHERE collection_descriptor_group_key = #{descriptorGroupKey,jdbcType=INTEGER}
   </delete>
+
+  <update id="updateDescriptor" parameterType="DescriptorDto">
+    UPDATE collection_descriptor
+    SET <include refid="DESCRIPTOR_PARAMS_UPDATE"/>
+    WHERE key = #{key,jdbcType=OTHER}
+  </update>
 
   <select id="getDescriptor" resultMap="DESCRIPTOR_DTO_MAP">
     SELECT

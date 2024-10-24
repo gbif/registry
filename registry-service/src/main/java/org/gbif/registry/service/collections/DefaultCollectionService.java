@@ -155,7 +155,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
 
     Set<UUID> institutionKeys = new HashSet<>();
     if (searchRequest.getInstitution() != null) {
-      institutionKeys.add(searchRequest.getInstitution());
+      institutionKeys.addAll(searchRequest.getInstitution());
     }
     if (searchRequest.getInstitutionKeys() != null) {
       institutionKeys.addAll(searchRequest.getInstitutionKeys());
@@ -217,6 +217,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     return LatimerCoreConverter.toObjectGroup(getCollectionView(key), conceptClient);
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public UUID createFromLatimerCore(@NotNull @Valid ObjectGroup objectGroup) {
     Collection convertedCollection = LatimerCoreConverter.fromObjectGroup(objectGroup);
@@ -228,6 +229,7 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
     return key;
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
   @Override
   public void updateFromLatimerCore(@NotNull @Valid ObjectGroup objectGroup) {
     UUID key =

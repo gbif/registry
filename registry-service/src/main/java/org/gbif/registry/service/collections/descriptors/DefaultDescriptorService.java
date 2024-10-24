@@ -1,6 +1,9 @@
 package org.gbif.registry.service.collections.descriptors;
 
 import static org.gbif.api.util.GrSciCollUtils.*;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
+import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
 
 import com.google.common.base.CharMatcher;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
@@ -32,6 +36,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.dwc.terms.DwcTerm;
@@ -44,7 +49,10 @@ import org.gbif.registry.persistence.mapper.collections.dto.VerbatimDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorGroupParams;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorParams;
 import org.gbif.registry.service.collections.batch.FileParsingUtils;
+import org.gbif.vocabulary.client.ConceptClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -53,27 +61,32 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @Service
+@Slf4j
 public class DefaultDescriptorService implements DescriptorsService {
 
   private final NubResourceClient nubResourceClient;
   private final DescriptorsMapper descriptorsMapper;
   private final EventManager eventManager;
   private final CollectionService collectionService;
+  private final ConceptClient conceptClient;
 
   @Autowired
   public DefaultDescriptorService(
       NubResourceClient nubResourceClient,
       DescriptorsMapper descriptorsMapper,
       EventManager eventManager,
-      CollectionService collectionService) {
+      CollectionService collectionService,
+      ConceptClient conceptClient) {
     this.nubResourceClient = nubResourceClient;
     this.descriptorsMapper = descriptorsMapper;
     this.eventManager = eventManager;
     this.collectionService = collectionService;
+    this.conceptClient = conceptClient;
   }
 
   @SneakyThrows
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public long createDescriptorGroup(
       @NotNull @Valid byte[] descriptorGroupFile,
@@ -127,7 +140,7 @@ public class DefaultDescriptorService implements DescriptorsService {
       String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
         headersByIndex.put(i, headers[i]);
-        headersByName.put(headers[i].toLowerCase(), i);
+        headersByName.put(headers[i], i);
       }
 
       String[] values;
@@ -138,63 +151,10 @@ public class DefaultDescriptorService implements DescriptorsService {
 
         values = FileParsingUtils.normalizeValues(headersByIndex.entrySet().size(), values);
 
-        DescriptorDto descriptorDto = new DescriptorDto();
+        Map<String, String> valuesMap = valuesAndHeadersToMap(values, headersByName);
+
+        DescriptorDto descriptorDto = interpretDescriptor(valuesMap);
         descriptorDto.setDescriptorGroupKey(descriptorGroupKey);
-
-        // taxonomy
-        InterpretedResult<Interpreter.TaxonData> taxonomyResult =
-            Interpreter.interpretTaxonomy(values, headersByName, nubResourceClient);
-        if (taxonomyResult.getResult() != null) {
-          descriptorDto.setUsageKey(taxonomyResult.getResult().getUsageKey());
-          descriptorDto.setUsageRank(taxonomyResult.getResult().getUsageRank());
-          descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
-          descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys());
-          descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
-        }
-        addIssues(descriptorDto, taxonomyResult);
-
-        // country
-        InterpretedResult<Country> countryResult =
-            Interpreter.interpretCountry(values, headersByName);
-        setResult(descriptorDto, countryResult, DescriptorDto::setCountry);
-
-        // individual count
-        InterpretedResult<Integer> individualCountResult =
-            Interpreter.interpretIndividualCount(values, headersByName);
-        setResult(descriptorDto, individualCountResult, DescriptorDto::setIndividualCount);
-
-        // identifiedBy
-        InterpretedResult<List<String>> identifiedByResult =
-            Interpreter.interpretStringList(values, headersByName, DwcTerm.identifiedBy);
-        setResult(descriptorDto, identifiedByResult, DescriptorDto::setIdentifiedBy);
-
-        // dateIdentified
-        InterpretedResult<Date> dateIdentifiedResult =
-            Interpreter.interpretDateIdentified(values, headersByName);
-        setResult(descriptorDto, dateIdentifiedResult, DescriptorDto::setDateIdentified);
-
-        // TypeStatus
-        InterpretedResult<List<String>> typeStatusResult =
-            Interpreter.interpretTypeStatus(values, headersByName);
-        setResult(descriptorDto, typeStatusResult, DescriptorDto::setTypeStatus);
-
-        // recordedBy
-        InterpretedResult<List<String>> recordedByResult =
-            Interpreter.interpretStringList(values, headersByName, DwcTerm.recordedBy);
-        setResult(descriptorDto, recordedByResult, DescriptorDto::setRecordedBy);
-
-        // TODO: create ltc terms??
-        // discipline
-        InterpretedResult<String> disciplineResult =
-            Interpreter.interpretString(values, headersByName, "ltc:discipline");
-        setResult(descriptorDto, disciplineResult, DescriptorDto::setDiscipline);
-
-        // objectClassification
-        InterpretedResult<String> objectClassificationResult =
-            Interpreter.interpretString(values, headersByName, "ltc:objectClassificationName");
-        setResult(
-            descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassificationName);
-
         descriptorsMapper.createDescriptor(descriptorDto);
 
         // verbatim fields
@@ -204,6 +164,16 @@ public class DefaultDescriptorService implements DescriptorsService {
         }
       }
     }
+  }
+
+  private static Map<String, String> valuesAndHeadersToMap(
+      String[] values, Map<String, Integer> headersByName) {
+    if (values.length == 0) {
+      return Collections.emptyMap();
+    }
+
+    return headersByName.entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> values[e.getValue()]));
   }
 
   private <T> void setResult(
@@ -223,6 +193,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     }
   }
 
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void deleteDescriptorGroup(@NotNull long key) {
     DescriptorGroup descriptorGroup = descriptorsMapper.getDescriptorGroup(key);
@@ -252,6 +223,7 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @SneakyThrows
   @Transactional
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void updateDescriptorGroup(
       @NotNull long descriptorGroupKey,
@@ -396,11 +368,159 @@ public class DefaultDescriptorService implements DescriptorsService {
 
   @Override
   public Set<String> getVerbatimNames(long descriptorGroupKey) {
-    List<VerbatimDto> dtos = descriptorsMapper.getVerbatimNames(descriptorGroupKey);
-    return dtos.stream()
+    return descriptorsMapper.getVerbatimNames(descriptorGroupKey).stream()
         .sorted(Comparator.comparing(VerbatimDto::getKey))
         .map(VerbatimDto::getFieldName)
         .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Transactional
+  @Override
+  public void reinterpretDescriptorGroup(long descriptorGroupKey) {
+    int limit = 100;
+    long offset = 0;
+    List<DescriptorDto> descriptorDtos =
+        descriptorsMapper.listDescriptors(
+            DescriptorParams.builder()
+                .descriptorGroupKey(descriptorGroupKey)
+                .page(new PagingRequest(offset, limit))
+                .build());
+    while (!descriptorDtos.isEmpty()) {
+      descriptorDtos.forEach(
+          dto -> {
+            DescriptorDto reinterpretedDto =
+                interpretDescriptor(verbatimDtosToMap(dto.getVerbatim()));
+            reinterpretedDto.setKey(dto.getKey());
+            descriptorsMapper.updateDescriptor(reinterpretedDto);
+          });
+      offset += limit;
+      descriptorDtos =
+          descriptorsMapper.listDescriptors(
+              DescriptorParams.builder()
+                  .descriptorGroupKey(descriptorGroupKey)
+                  .page(new PagingRequest(offset, limit))
+                  .build());
+    }
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
+  @Override
+  public void reinterpretCollectionDescriptorGroups(UUID collectionKey) {
+    log.info("Starting collection descriptors reinterpretation");
+    int limit = 100;
+    long offset = 0;
+    List<DescriptorGroup> descriptorGroups =
+        descriptorsMapper.listDescriptorGroups(
+            DescriptorGroupParams.builder()
+                .collectionKey(collectionKey)
+                .page(new PagingRequest(offset, limit))
+                .build());
+    while (!descriptorGroups.isEmpty()) {
+      descriptorGroups.forEach(dg -> reinterpretDescriptorGroup(dg.getKey()));
+      offset += limit;
+      descriptorGroups =
+          descriptorsMapper.listDescriptorGroups(
+              DescriptorGroupParams.builder()
+                  .collectionKey(collectionKey)
+                  .page(new PagingRequest(offset, limit))
+                  .build());
+    }
+    log.info("Collection descriptors reinterpretation finished");
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE})
+  @Async
+  @Override
+  public void reinterpretAllDescriptorGroups() {
+    reinterpretCollectionDescriptorGroups(null);
+  }
+
+  private DescriptorDto interpretDescriptor(Map<String, String> valuesMap) {
+    DescriptorDto descriptorDto = new DescriptorDto();
+    // taxonomy
+    InterpretedResult<Interpreter.TaxonData> taxonomyResult =
+        Interpreter.interpretTaxonomy(valuesMap, nubResourceClient);
+    if (taxonomyResult.getResult() != null) {
+      descriptorDto.setUsageKey(taxonomyResult.getResult().getUsageKey());
+      descriptorDto.setUsageRank(taxonomyResult.getResult().getUsageRank());
+      descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
+      descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys());
+      descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
+      if (taxonomyResult.getResult().getTaxonClassification() != null) {
+        taxonomyResult
+            .getResult()
+            .getTaxonClassification()
+            .forEach(
+                r -> {
+                  if (r.getRank() == Rank.KINGDOM) {
+                    descriptorDto.setKingdomKey(r.getKey());
+                    descriptorDto.setKingdomName(r.getName());
+                  } else if (r.getRank() == Rank.PHYLUM) {
+                    descriptorDto.setPhylumKey(r.getKey());
+                    descriptorDto.setPhylumName(r.getName());
+                  } else if (r.getRank() == Rank.CLASS) {
+                    descriptorDto.setClassKey(r.getKey());
+                    descriptorDto.setClassName(r.getName());
+                  } else if (r.getRank() == Rank.ORDER) {
+                    descriptorDto.setOrderKey(r.getKey());
+                    descriptorDto.setOrderName(r.getName());
+                  } else if (r.getRank() == Rank.FAMILY) {
+                    descriptorDto.setFamilyKey(r.getKey());
+                    descriptorDto.setFamilyName(r.getName());
+                  } else if (r.getRank() == Rank.GENUS) {
+                    descriptorDto.setGenusKey(r.getKey());
+                    descriptorDto.setGenusName(r.getName());
+                  } else if (r.getRank() == Rank.SPECIES) {
+                    descriptorDto.setSpeciesKey(r.getKey());
+                    descriptorDto.setSpeciesName(r.getName());
+                  }
+                });
+      }
+    }
+    addIssues(descriptorDto, taxonomyResult);
+
+    // country
+    InterpretedResult<Country> countryResult = Interpreter.interpretCountry(valuesMap);
+    setResult(descriptorDto, countryResult, DescriptorDto::setCountry);
+
+    // individual count
+    InterpretedResult<Integer> individualCountResult =
+        Interpreter.interpretIndividualCount(valuesMap);
+    setResult(descriptorDto, individualCountResult, DescriptorDto::setIndividualCount);
+
+    // identifiedBy
+    InterpretedResult<List<String>> identifiedByResult =
+        Interpreter.interpretStringList(valuesMap, DwcTerm.identifiedBy);
+    setResult(descriptorDto, identifiedByResult, DescriptorDto::setIdentifiedBy);
+
+    // dateIdentified
+    InterpretedResult<Date> dateIdentifiedResult = Interpreter.interpretDateIdentified(valuesMap);
+    setResult(descriptorDto, dateIdentifiedResult, DescriptorDto::setDateIdentified);
+
+    // TypeStatus
+    InterpretedResult<List<String>> typeStatusResult =
+        Interpreter.interpretTypeStatus(valuesMap, conceptClient);
+    setResult(descriptorDto, typeStatusResult, DescriptorDto::setTypeStatus);
+
+    // recordedBy
+    InterpretedResult<List<String>> recordedByResult =
+        Interpreter.interpretStringList(valuesMap, DwcTerm.recordedBy);
+    setResult(descriptorDto, recordedByResult, DescriptorDto::setRecordedBy);
+
+    // TODO: create ltc terms??
+    // discipline
+    InterpretedResult<String> disciplineResult =
+        Interpreter.interpretString(valuesMap, "ltc:discipline");
+    setResult(descriptorDto, disciplineResult, DescriptorDto::setDiscipline);
+
+    // objectClassification
+    InterpretedResult<String> objectClassificationResult =
+        Interpreter.interpretString(valuesMap, "ltc:objectClassificationName");
+    setResult(
+        descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassificationName);
+
+    return descriptorDto;
   }
 
   private static Descriptor convertRecordDto(DescriptorDto dto) {
@@ -420,12 +540,18 @@ public class DefaultDescriptorService implements DescriptorsService {
     descriptorRecord.setUsageName(dto.getUsageName());
     descriptorRecord.setUsageRank(dto.getUsageRank());
     descriptorRecord.setTaxonClassification(dto.getTaxonClassification());
-
-    Map<String, String> verbatim = new LinkedHashMap<>();
-    dto.getVerbatim().stream()
-        .sorted(Comparator.comparing(VerbatimDto::getKey))
-        .forEach(v -> verbatim.put(v.getFieldName(), v.getFieldValue()));
-    descriptorRecord.setVerbatim(verbatim);
+    descriptorRecord.setVerbatim(verbatimDtosToMap(dto.getVerbatim()));
     return descriptorRecord;
+  }
+
+  private static Map<String, String> verbatimDtosToMap(List<VerbatimDto> dtos) {
+    return dtos.stream()
+        .sorted(Comparator.comparing(VerbatimDto::getKey))
+        .collect(
+            Collectors.toMap(
+                VerbatimDto::getFieldName,
+                VerbatimDto::getFieldValue,
+                (v1, v2) -> v1,
+                LinkedHashMap::new));
   }
 }
