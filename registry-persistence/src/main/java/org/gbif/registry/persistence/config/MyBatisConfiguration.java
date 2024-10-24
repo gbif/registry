@@ -148,6 +148,7 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("CollectionSearchDto", CollectionSearchDto.class);
+      configuration.getTypeAliasRegistry().registerAlias("FacetDto", FacetDto.class);
       configuration
           .getTypeAliasRegistry()
           .registerAlias("InstitutionMatchedDto", InstitutionMatchedDto.class);

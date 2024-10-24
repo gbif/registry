@@ -154,4 +154,6 @@
   <include file="liquibase/146-function-search-paths.xml" />
   <include file="liquibase/147-isil-clb-identifiers.xml" />
   <include file="liquibase/148-primary-identifier-grscicoll.xml" />
+  <include file="liquibase/149-taxon-fields-collection-descriptors.xml" />
+  <include file="liquibase/150-similar-name-list-function.xml" />
 </databaseChangeLog>

@@ -4,6 +4,7 @@
 
   <!-- Auto-mapping and eager loading of sub resources  -->
   <resultMap id="SEARCH_DTO_MAP" type="SearchDto" autoMapping="true"/>
+  <resultMap id="FACET_DTO_MAP" type="FacetDto" autoMapping="true"/>
 
   <sql id="INSTITUTION_READ_FIELDS">
     i.key, i.code, i.name, i.description, i.alternative_codes,
@@ -49,9 +50,10 @@
           AS query ON query @@ fulltext_search
         </if>
         WHERE i.deleted IS NULL
-        <if test="params.displayOnNHCPortal != null">
-          AND i.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+          <property name="values" value="params.displayOnNHCPortal"/>
+          <property name="field" value="i.display_on_NHCPortal"/>
+        </include>
         )
         <if test="params.query != null">
           UNION ALL
@@ -65,9 +67,10 @@
           </if>
           FROM institution i
           WHERE i.deleted IS NULL AND i.code = trim(#{params.query})
-          <if test="params.displayOnNHCPortal != null">
-            AND i.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-          </if>
+          <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+            <property name="values" value="params.displayOnNHCPortal"/>
+            <property name="field" value="i.display_on_NHCPortal"/>
+          </include>
           )
         </if>
         <if test="params.query != null">
@@ -82,9 +85,10 @@
           </if>
           FROM institution i
           WHERE i.deleted IS NULL AND similarity(i.name, #{params.query}) >= 0.65
-          <if test="params.displayOnNHCPortal != null">
-            AND i.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-          </if>
+          <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+            <property name="values" value="params.displayOnNHCPortal"/>
+            <property name="field" value="i.display_on_NHCPortal"/>
+          </include>
           )
         </if>
       </if>
@@ -102,9 +106,10 @@
         </if>
         LEFT JOIN institution i ON i.key = c.institution_key
         WHERE c.deleted IS NULL
-        <if test="params.displayOnNHCPortal != null">
-          AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-        </if>
+        <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+          <property name="values" value="params.displayOnNHCPortal"/>
+          <property name="field" value="c.display_on_NHCPortal"/>
+        </include>
         )
         <if test="params.query != null">
           UNION ALL
@@ -119,9 +124,10 @@
           FROM collection c
           LEFT JOIN institution i ON i.key = c.institution_key
           WHERE c.deleted IS NULL AND c.code = trim(#{params.query})
-          <if test="params.displayOnNHCPortal != null">
-            AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-          </if>
+          <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+            <property name="values" value="params.displayOnNHCPortal"/>
+            <property name="field" value="c.display_on_NHCPortal"/>
+          </include>
           )
         </if>
         <if test="params.query != null">
@@ -137,9 +143,10 @@
           FROM collection c
           LEFT JOIN institution i ON i.key = c.institution_key
           WHERE c.deleted IS NULL AND similarity(c.name, #{params.query}) >= 0.65
-          <if test="params.displayOnNHCPortal != null">
-            AND c.display_on_NHCPortal = #{params.displayOnNHCPortal,jdbcType=BOOLEAN}
-          </if>
+          <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+            <property name="values" value="params.displayOnNHCPortal"/>
+            <property name="field" value="c.display_on_NHCPortal"/>
+          </include>
           )
         </if>
       </if>
@@ -148,8 +155,16 @@
     LEFT JOIN address ad ON ad.key = matches.address_key
     LEFT JOIN address mail ON mail.key = matches.mailing_address_key
     <where>
-      <if test="params.country != null">
-        ad.country = #{params.country,jdbcType=OTHER} OR mail.country = #{params.country,jdbcType=OTHER}
+      <if test="params.country != null and params.country.size > 0">
+        AND (ad.country IN
+        <foreach item="item" collection="params.country" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
+        OR mail.country IN
+        <foreach item="item" collection="params.country" open="(" separator="," close=")">
+          #{item,jdbcType=VARCHAR}
+        </foreach>
+        )
       </if>
     </where>
     <if test="params.query != null">
@@ -197,7 +212,7 @@
       null AS descriptor_issues_highlight
     </if>
     <if test="params.query != null">,query</if>
-    <if test="params.fuzzyName != null">,similarity(i.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
+    <if test="params.fuzzyName != null">,similar_name_score(i.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score
     </if>
     FROM institution i
     <if test="params.query != null" >
@@ -283,7 +298,7 @@
       ,ts_rank_cd(c.fulltext_search, c.query) AS query_rank, ts_rank_cd(d.fulltext_search, c.query) query_descriptor_rank
     </if>
     <if test="params.query != null">,c.query</if>
-    <if test="params.fuzzyName != null">,similarity(c.name, #{params.fuzzyName,jdbcType=VARCHAR}) AS similarity_score
+    <if test="params.fuzzyName != null">,similar_name_score(c.name, #{params.fuzzyName,jdbcType=ARRAY,typeHandler=StringArrayTypeHandler}::text[]) AS similarity_score
     </if>
     FROM(
     SELECT DISTINCT ON (
@@ -442,6 +457,218 @@
     )
     OR <include refid="TS_QUERY"/> @@ d.fulltext_search
     OR <include refid="TS_QUERY"/> @@ ds.fulltext_search
+  </sql>
+
+  <select id="institutionFacet" resultMap="FACET_DTO_MAP" resultType="FacetDto" parameterType="Pageable">
+    SELECT <include refid="INSTITUTION_FACET_FIELDS"/> AS facet, count(DISTINCT i.key)
+    FROM institution i
+    <if test="params.facet.name.equals('COUNTRY')">
+      LEFT JOIN address a ON a.key = i.address_key
+      LEFT JOIN address ma ON ma.key = i.mailing_address_key
+    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+    GROUP BY facet
+    <if test="params.facetMinCount != null">
+      HAVING COUNT(*) >= #{params.facetMinCount}
+    </if>
+    ORDER BY count(*) DESC
+    <if test="params.facetPage != null">
+      LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
+    </if>
+  </select>
+
+  <select id="institutionFacetCardinality" resultType="Long">
+    SELECT <include refid="INSTITUTION_FACET_CARDINALITY_FIELDS"/>
+    <if test="params.facet.name.equals('COUNTRY')">
+      LEFT JOIN address a ON a.key = i.address_key
+      LEFT JOIN address ma ON ma.key = i.mailing_address_key
+    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.InstitutionMapper.LIST_FILTER"/>
+  </select>
+
+  <sql id="INSTITUTION_FACET_FIELDS">
+    <choose>
+      <when test="params.facet.name.equals('COUNTRY')">
+        CASE WHEN a.country is not null THEN a.country ELSE ma.country END
+      </when>
+      <when test="params.facet.name.equals('TYPE')">
+        unnest(i.type)
+      </when>
+      <when test="params.facet.name.equals('DISCIPLINE')">
+        unnest(i.discipline)
+      </when>
+    </choose>
+  </sql>
+
+  <sql id="INSTITUTION_FACET_CARDINALITY_FIELDS">
+    <choose>
+      <when test="params.facet.name.equals('COUNTRY')">
+        COUNT(DISTINCT CASE WHEN a.country is not null THEN a.country ELSE ma.country END)
+        FROM institution i
+      </when>
+      <otherwise>
+        COUNT(DISTINCT facet)
+        FROM institution i
+        CROSS JOIN unnest(
+        <choose>
+          <when test="params.facet.name.equals('TYPE')">
+            i.type
+          </when>
+          <when test="params.facet.name.equals('DISCIPLINE')">
+            i.discipline
+          </when>
+        </choose>
+        ) AS facet
+      </otherwise>
+    </choose>
+  </sql>
+
+  <select id="collectionFacet" resultMap="FACET_DTO_MAP" resultType="FacetDto" parameterType="Pageable">
+    SELECT <include refid="COLLECTION_FACET_FIELDS"/> AS facet, count(DISTINCT c.key)
+    FROM collection c
+    <if test="params.facet.name.equals('COUNTRY')">
+      LEFT JOIN address a ON a.key = c.address_key
+      LEFT JOIN address ma ON ma.key = c.mailing_address_key
+    </if>
+    <if test="params.descriptorFacet">
+      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+      INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+    <include refid="DESCRIPTORS_FILTER"/>
+    GROUP BY facet
+    <if test="params.facetMinCount != null">
+      HAVING COUNT(*) >= #{params.facetMinCount}
+    </if>
+    ORDER BY count(*) DESC
+    <if test="params.facetPage != null">
+      LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
+    </if>
+  </select>
+
+  <select id="collectionFacetCardinality" resultType="Long">
+    SELECT <include refid="COLLECTION_FACET_CARDINALITY_FIELDS"/>
+    <if test="params.facet.name.equals('COUNTRY')">
+      LEFT JOIN address a ON a.key = c.address_key
+      LEFT JOIN address ma ON ma.key = c.mailing_address_key
+    </if>
+    <if test="params.descriptorFacet">
+      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+      INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+    <include refid="DESCRIPTORS_FILTER"/>
+  </select>
+
+  <sql id="COLLECTION_FACET_FIELDS">
+    <choose>
+      <when test="params.facet.name.equals('COUNTRY')">
+        CASE WHEN a.country is not null THEN a.country ELSE ma.country END
+      </when>
+      <when test="params.facet.name.equals('PRESERVATION_TYPE')">
+        unnest(c.preservation_type)
+      </when>
+      <when test="params.facet.name.equals('CONTENT_TYPE')">
+        unnest(c.content_type)
+      </when>
+      <when test="params.facet.name.equals('INSTITUTION_KEY')">
+        c.institution_key
+      </when>
+      <when test="params.facet.name.equals('TYPE_STATUS')">
+        unnest(cd.type_status)
+      </when>
+      <when test="params.facet.name.equals('ACCESSION_STATUS')">
+        c.accession_status
+      </when>
+      <when test="params.facet.name.equals('DESCRIPTOR_COUNTRY')">
+        cd.country
+      </when>
+      <when test="params.facet.name.equals('KINGDOM_KEY')">
+        cd.kingdom_key
+      </when>
+      <when test="params.facet.name.equals('PHYLUM_KEY')">
+        cd.phylum_key
+      </when>
+      <when test="params.facet.name.equals('CLASS_KEY')">
+        cd.class_key
+      </when>
+      <when test="params.facet.name.equals('ORDER_KEY')">
+        cd.order_key
+      </when>
+      <when test="params.facet.name.equals('FAMILY_KEY')">
+        cd.family_key
+      </when>
+      <when test="params.facet.name.equals('GENUS_KEY')">
+        cd.genus_key
+      </when>
+      <when test="params.facet.name.equals('SPECIES_KEY')">
+        cd.species_key
+      </when>
+    </choose>
+  </sql>
+
+  <sql id="COLLECTION_FACET_CARDINALITY_FIELDS">
+    <choose>
+      <when test="params.facet.name.equals('COUNTRY')">
+        COUNT(DISTINCT CASE WHEN a.country is not null THEN a.country ELSE ma.country END)
+        FROM collection c
+      </when>
+      <when test="params.facet.name.equals('PRESERVATION_TYPE')
+                  or params.facet.name.equals('CONTENT_TYPE')
+                  or params.facet.name.equals('TYPE_STATUS')">
+        COUNT(DISTINCT facet)
+        FROM collection c
+        CROSS JOIN unnest(
+        <choose>
+          <when test="params.facet.name.equals('PRESERVATION_TYPE')">
+            c.preservation_type
+          </when>
+          <when test="params.facet.name.equals('CONTENT_TYPE')">
+            c.content_type
+          </when>
+          <when test="params.facet.name.equals('TYPE_STATUS')">
+            c.type_status
+          </when>
+        </choose>
+        ) AS facet
+      </when>
+      <otherwise>
+        COUNT(DISTINCT
+        <choose>
+          <when test="params.facet.name.equals('INSTITUTION_KEY')">
+            c.institution_key
+          </when>
+          <when test="params.facet.name.equals('ACCESSION_STATUS')">
+            c.accession_status
+          </when>
+          <when test="params.facet.name.equals('DESCRIPTOR_COUNTRY')">
+            cd.country
+          </when>
+          <when test="params.facet.name.equals('KINGDOM_KEY')">
+            cd.kingdom_key
+          </when>
+          <when test="params.facet.name.equals('PHYLUM_KEY')">
+            cd.phylum_key
+          </when>
+          <when test="params.facet.name.equals('CLASS_KEY')">
+            cd.class_key
+          </when>
+          <when test="params.facet.name.equals('ORDER_KEY')">
+            cd.order_key
+          </when>
+          <when test="params.facet.name.equals('FAMILY_KEY')">
+            cd.family_key
+          </when>
+          <when test="params.facet.name.equals('GENUS_KEY')">
+            cd.genus_key
+          </when>
+          <when test="params.facet.name.equals('SPECIES_KEY')">
+            cd.species_key
+          </when>
+        </choose>
+        ) FROM collection c
+      </otherwise>
+    </choose>
   </sql>
 
 </mapper>

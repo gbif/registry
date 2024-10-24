@@ -22,12 +22,16 @@ import java.util.List;
 import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.search.CollectionFacet;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
+import org.gbif.api.model.collections.search.FacetedSearchResponse;
 import org.gbif.api.model.collections.search.Highlight;
 import org.gbif.api.model.collections.search.InstitutionSearchResponse;
-import org.gbif.api.model.common.paging.PagingResponse;
+import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.service.collections.CollectionsSearchService;
 import org.gbif.registry.ws.client.collections.CollectionsSearchClient;
 import org.gbif.registry.ws.it.fixtures.RequestTestFixture;
@@ -69,11 +73,13 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     highlight.setSnippet("snippet");
     response.setHighlights(Collections.singleton(highlight));
 
-    when(collectionsSearchService.search(q, hl, null, null, Country.SPAIN, limit))
+    when(collectionsSearchService.search(
+            q, hl, null, null, Collections.singletonList(Country.SPAIN), limit))
         .thenReturn(Collections.singletonList(response));
 
     List<CollectionsFullSearchResponse> responseReturned =
-        collectionsSearchClient.searchCrossEntities(q, hl, null, null, Country.SPAIN, limit);
+        collectionsSearchClient.searchCrossEntities(
+            q, hl, null, null, Collections.singletonList(Country.SPAIN), limit);
     assertEquals(1, responseReturned.size());
     assertEquals(response, responseReturned.get(0));
   }
@@ -89,9 +95,9 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     response.setHighlights(Collections.singleton(highlight));
 
     when(collectionsSearchService.searchInstitutions(any()))
-        .thenReturn(new PagingResponse<>(0, 20, 1L, Collections.singletonList(response)));
+        .thenReturn(new FacetedSearchResponse<>(0, 20, 1L, Collections.singletonList(response)));
 
-    PagingResponse<InstitutionSearchResponse> responseReturned =
+    FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
         collectionsSearchClient.searchInstitutions(InstitutionSearchRequest.builder().build());
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
@@ -108,12 +114,82 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     response.setHighlights(Collections.singleton(highlight));
 
     when(collectionsSearchService.searchCollections(any()))
-        .thenReturn(new PagingResponse<>(0, 20, 1L, Collections.singletonList(response)));
+        .thenReturn(new FacetedSearchResponse<>(0, 20, 1L, Collections.singletonList(response)));
 
-    PagingResponse<CollectionSearchResponse> responseReturned =
+    FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> responseReturned =
         collectionsSearchClient.searchCollections(
             CollectionDescriptorsSearchRequest.builder().build());
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
+  }
+
+  @Test
+  public void facetSearchInstitutionsTest() {
+    InstitutionSearchRequest searchRequest =
+        InstitutionSearchRequest.builder()
+            .facets(Collections.singleton(InstitutionFacetParameter.COUNTRY))
+            .offset(0L)
+            .limit(20)
+            .build();
+
+    InstitutionSearchResponse response = new InstitutionSearchResponse();
+    response.setCode("c1");
+    response.setKey(UUID.randomUUID());
+
+    CollectionFacet<InstitutionFacetParameter> facet = new CollectionFacet<>();
+    facet.setCardinality(1);
+    facet.setField(InstitutionFacetParameter.COUNTRY);
+    facet.setCounts(Collections.singletonList(new CollectionFacet.Count("ES", 2L)));
+
+    FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchResponse =
+        new FacetedSearchResponse<>(
+            new PagingRequest(),
+            1L,
+            Collections.singletonList(response),
+            Collections.singletonList(facet));
+
+    when(collectionsSearchService.searchInstitutions(searchRequest)).thenReturn(searchResponse);
+
+    FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
+        collectionsSearchClient.searchInstitutions(searchRequest);
+    assertEquals(1, responseReturned.getResults().size());
+    assertEquals(response, responseReturned.getResults().get(0));
+    assertEquals(1, responseReturned.getFacets().size());
+    assertEquals(facet, responseReturned.getFacets().get(0));
+  }
+
+  @Test
+  public void facetSearchCollectionsTest() {
+    CollectionDescriptorsSearchRequest searchRequest =
+        CollectionDescriptorsSearchRequest.builder()
+            .facets(Collections.singleton(CollectionFacetParameter.COUNTRY))
+            .offset(0L)
+            .limit(20)
+            .build();
+
+    CollectionSearchResponse response = new CollectionSearchResponse();
+    response.setCode("c1");
+    response.setKey(UUID.randomUUID());
+
+    CollectionFacet<CollectionFacetParameter> facet = new CollectionFacet<>();
+    facet.setCardinality(1);
+    facet.setField(CollectionFacetParameter.COUNTRY);
+    facet.setCounts(Collections.singletonList(new CollectionFacet.Count("ES", 2L)));
+
+    FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchResponse =
+        new FacetedSearchResponse<>(
+            new PagingRequest(),
+            1L,
+            Collections.singletonList(response),
+            Collections.singletonList(facet));
+
+    when(collectionsSearchService.searchCollections(searchRequest)).thenReturn(searchResponse);
+
+    FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> responseReturned =
+        collectionsSearchClient.searchCollections(searchRequest);
+    assertEquals(1, responseReturned.getResults().size());
+    assertEquals(response, responseReturned.getResults().get(0));
+    assertEquals(1, responseReturned.getFacets().size());
+    assertEquals(facet, responseReturned.getFacets().get(0));
   }
 }

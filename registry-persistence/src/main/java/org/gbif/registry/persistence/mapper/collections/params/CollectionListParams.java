@@ -13,12 +13,8 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
-import org.gbif.api.vocabulary.collections.Source;
-
 import java.util.List;
-
 import javax.annotation.Nullable;
-
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
@@ -29,5 +25,5 @@ public class CollectionListParams extends ListParams {
   @Nullable List<String> contentTypes;
   @Nullable List<String> preservationTypes;
   @Nullable List<String> accessionStatus;
-  @Nullable Boolean personalCollection;
+  @Nullable List<Boolean> personalCollection;
 }

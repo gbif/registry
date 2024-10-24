@@ -1,5 +1,16 @@
 package org.gbif.registry.service.collections.utils;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.common.Strings;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionEntity;
@@ -24,20 +35,6 @@ import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
-
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.elasticsearch.common.Strings;
-
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -353,8 +350,8 @@ public class LatimerCoreConverter {
         .forEach(
             ct -> {
               ConceptView conceptView =
-                  conceptClient.getFromLatestRelease(
-                      Vocabularies.COLLECTION_CONTENT_TYPE, ct, false, false);
+                  Vocabularies.getConceptLatestRelease(
+                      Vocabularies.COLLECTION_CONTENT_TYPE, ct, conceptClient);
               if (conceptView != null
                   && conceptView.getConcept().getTags().stream()
                       .anyMatch(t -> t.getName().equals("ltc:discipline"))) {

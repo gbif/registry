@@ -26,6 +26,7 @@ import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.CountryListHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.*;
@@ -64,6 +65,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
     argumentResolvers.add(new PageableHandlerMethodArgumentResolver());
     argumentResolvers.add(new CountryHandlerMethodArgumentResolver());
+    argumentResolvers.add(new CountryListHandlerMethodArgumentResolver());
     argumentResolvers.add(new PartialDateHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSuggestRequestHandlerMethodArgumentResolver());

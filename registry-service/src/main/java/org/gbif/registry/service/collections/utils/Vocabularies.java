@@ -1,6 +1,14 @@
 package org.gbif.registry.service.collections.utils;
 
 import com.google.common.base.Strings;
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.time.Duration;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -16,14 +24,18 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.ConceptListParams;
 import org.gbif.vocabulary.api.ConceptView;
 import org.gbif.vocabulary.client.ConceptClient;
-
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import org.gbif.vocabulary.model.search.LookupResult;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Vocabularies {
+
+  private static final Retry RETRY =
+      Retry.of(
+          "vocabularyCall",
+          RetryConfig.custom()
+              .maxAttempts(7)
+              .intervalFunction(IntervalFunction.ofExponentialBackoff(Duration.ofSeconds(1)))
+              .build());
 
   static final Map<String, Function<Institution, java.util.Collection<String>>>
       INSTITUTION_VOCAB_FIELDS = new HashMap<>();
@@ -45,6 +57,7 @@ public class Vocabularies {
   public static final String ACCESSION_STATUS = "AccessionStatus";
 
   public static final String PRESERVATION_TYPE = "PreservationType";
+  public static final String TYPE_STATUS = "TypeStatus";
 
   private static final Cache<String, Set<String>> childrenConceptsCache =
       new Cache2kBuilder<String, Set<String>>() {}.eternal(true).build();
@@ -122,7 +135,10 @@ public class Vocabularies {
   private static void checkConcept(
       ConceptClient conceptClient, String vocabName, String conceptValue, StringJoiner errors) {
     ConceptView conceptFound =
-        conceptClient.getFromLatestRelease(vocabName, conceptValue, false, false);
+        Retry.decorateSupplier(
+                RETRY,
+                () -> conceptClient.getFromLatestRelease(vocabName, conceptValue, false, false))
+            .get();
 
     if (conceptFound == null) {
       errors.add(conceptValue + " is not a concept of the " + vocabName + " vocabulary");
@@ -174,8 +190,16 @@ public class Vocabularies {
   private static Set<String> findChildren(
       ConceptClient conceptClient, String vocabName, String conceptName, Set<String> allChildren) {
     PagingResponse<ConceptView> result =
-        conceptClient.listConceptsLatestRelease(
-            vocabName, ConceptListParams.builder().name(conceptName).includeChildren(true).build());
+        Retry.decorateSupplier(
+                RETRY,
+                () ->
+                    conceptClient.listConceptsLatestRelease(
+                        vocabName,
+                        ConceptListParams.builder()
+                            .name(conceptName)
+                            .includeChildren(true)
+                            .build()))
+            .get();
 
     if (result.getResults() == null
         || result.getResults().isEmpty()
@@ -195,6 +219,23 @@ public class Vocabularies {
             });
 
     return allChildren;
+  }
+
+  public static ConceptView getConceptLatestRelease(
+      String vocabulary, String conceptName, ConceptClient conceptClient) {
+    return Retry.decorateSupplier(
+            RETRY, () -> conceptClient.getFromLatestRelease(vocabulary, conceptName, false, false))
+        .get();
+  }
+
+  public static List<LookupResult> lookupLatestRelease(
+      String vocabulary, String query, ConceptClient conceptClient) {
+    return Retry.decorateSupplier(
+            RETRY,
+            () ->
+                conceptClient.lookupInLatestRelease(
+                    vocabulary, ConceptClient.LookupParams.of(query, null)))
+        .get();
   }
 
   @AllArgsConstructor(staticName = "of")
