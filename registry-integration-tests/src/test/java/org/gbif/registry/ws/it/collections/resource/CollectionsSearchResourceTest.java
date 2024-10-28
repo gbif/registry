@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.model.collections.search.CollectionFacet;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
@@ -99,7 +99,8 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
         .thenReturn(new FacetedSearchResponse<>(0, 20, 1L, Collections.singletonList(response)));
 
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> responseReturned =
-        collectionsSearchClient.searchInstitutions(InstitutionSearchRequest.builder().build());
+        collectionsSearchClient.searchInstitutions(
+            InstitutionFacetedSearchRequest.builder().build());
     assertEquals(1, responseReturned.getResults().size());
     assertEquals(response, responseReturned.getResults().get(0));
   }
@@ -126,8 +127,8 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
 
   @Test
   public void facetSearchInstitutionsTest() {
-    InstitutionSearchRequest searchRequest =
-        InstitutionSearchRequest.builder()
+    InstitutionFacetedSearchRequest searchRequest =
+        InstitutionFacetedSearchRequest.builder()
             .facets(Set.of(InstitutionFacetParameter.COUNTRY))
             .offset(0L)
             .limit(20)

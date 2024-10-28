@@ -4,7 +4,8 @@ import static org.gbif.api.util.GrSciCollUtils.*;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -343,10 +344,9 @@ public class DefaultDescriptorService implements DescriptorsService {
         .query(query)
         .descriptorGroupKey(searchRequest.getDescriptorGroupKey())
         .country(searchRequest.getCountry())
-        .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
-        .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
+        .dateIdentified(parseDateRangeParameters(searchRequest.getDateIdentified()))
         .discipline(searchRequest.getDiscipline())
-        .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
+        .individualCount(parseIntegerRangeParameters(searchRequest.getIndividualCount()))
         .usageKey(searchRequest.getUsageKey())
         .usageName(searchRequest.getUsageName())
         .usageRank(searchRequest.getUsageRank())

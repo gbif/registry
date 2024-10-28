@@ -13,20 +13,21 @@
  */
 package org.gbif.registry.ws.provider;
 
-import java.util.Map;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import java.util.function.Function;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
+import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 @SuppressWarnings("NullableProblems")
-public class InstitutionSearchRequestHandlerMethodArgumentResolver
-    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver {
+public class InstitutionFacetedSearchRequestHandlerMethodArgumentResolver
+    extends InstitutionSearchRequestHandlerMethodArgumentResolver {
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
-    return InstitutionSearchRequest.class.equals(parameter.getParameterType());
+    return InstitutionFacetedSearchRequest.class.equals(parameter.getParameterType());
   }
 
   @Override
@@ -36,20 +37,15 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
 
-    InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
+    InstitutionFacetedSearchRequest searchRequest =
+        InstitutionFacetedSearchRequest.builder().build();
     fillInstitutionSearchParameters(searchRequest, webRequest);
+    fillFacetParams(searchRequest, webRequest, facetParamParser());
 
     return searchRequest;
   }
 
-  protected void fillInstitutionSearchParameters(
-      InstitutionSearchRequest searchRequest, NativeWebRequest webRequest) {
-    fillSearchRequestParams(searchRequest, webRequest);
-
-    Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
-    extractMultivalueParam(params, "type").ifPresent(searchRequest::setType);
-    extractMultivalueParam(params, "institutionalGovernance")
-        .ifPresent(searchRequest::setInstitutionalGovernance);
-    extractMultivalueParam(params, "discipline").ifPresent(searchRequest::setDisciplines);
+  private Function<String, InstitutionFacetParameter> facetParamParser() {
+    return s -> InstitutionFacetParameter.valueOf(s.toUpperCase());
   }
 }
