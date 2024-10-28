@@ -333,7 +333,10 @@ public class CollectionResourceIT
             .listCollectionDescriptors(
                 UUID.randomUUID(),
                 1L,
-                DescriptorSearchRequest.builder().q("foo").individualCount("1,10").build())
+                DescriptorSearchRequest.builder()
+                    .q("foo")
+                    .individualCount(Collections.singletonList("1,10"))
+                    .build())
             .getResults()
             .size());
   }

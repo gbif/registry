@@ -508,7 +508,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("100")
+                    .numberSpecimens(Collections.singletonList("100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -520,7 +520,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("98")
+                    .numberSpecimens(Collections.singletonList("98"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -532,7 +532,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("* , 100")
+                    .numberSpecimens(Collections.singletonList("* , 100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -544,7 +544,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("97,300")
+                    .numberSpecimens(Collections.singletonList("97,300"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -683,6 +683,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setActive(true);
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
+    collection1.setOccurrenceCount(12);
+    collection1.setTypeSpecimenCount(35);
     collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
     collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleFluidPreserved"));
     Address address = new Address();

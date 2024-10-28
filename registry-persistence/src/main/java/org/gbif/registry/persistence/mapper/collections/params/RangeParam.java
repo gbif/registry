@@ -13,11 +13,19 @@
  */
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class RangeParam {
-  Integer lowerBound;
-  Integer higherBound;
-  Integer exactValue;
+@AllArgsConstructor
+@NoArgsConstructor
+public class RangeParam<T> {
+  T lowerBound;
+  T higherBound;
+  T exactValue;
+
+  public boolean isEmpty() {
+    return lowerBound == null && higherBound == null && exactValue == null;
+  }
 }

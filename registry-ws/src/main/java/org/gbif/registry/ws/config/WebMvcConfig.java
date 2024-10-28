@@ -27,6 +27,7 @@ import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CountryListHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.InstitutionFacetedSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.*;
@@ -75,6 +76,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new NetworkRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new NodeRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
+    argumentResolvers.add(new InstitutionFacetedSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver());
   }

@@ -31,7 +31,7 @@ import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.model.collections.search.CollectionFacet;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
@@ -48,7 +48,6 @@ import org.gbif.api.service.collections.InstitutionService;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.SortOrder;
-import org.gbif.api.vocabulary.TypeStatus;
 import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
@@ -328,7 +327,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
   @Test
   public void searchInstitutionsTest() {
     PagingResponse<InstitutionSearchResponse> response =
-        searchService.searchInstitutions(InstitutionSearchRequest.builder().build());
+        searchService.searchInstitutions(InstitutionFacetedSearchRequest.builder().build());
     assertEquals(3, response.getResults().size());
     assertEquals(3, response.getCount());
 
@@ -336,7 +335,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1,
         searchService
             .searchInstitutions(
-                InstitutionSearchRequest.builder()
+                InstitutionFacetedSearchRequest.builder()
                     .country(Collections.singletonList(i1.getAddress().getCountry()))
                     .build())
             .getResults()
@@ -345,13 +344,13 @@ public class CollectionsSearchIT extends BaseServiceIT {
     assertEquals(
         1,
         searchService
-            .searchInstitutions(InstitutionSearchRequest.builder().q(i1.getName()).build())
+            .searchInstitutions(InstitutionFacetedSearchRequest.builder().q(i1.getName()).build())
             .getResults()
             .size());
 
     response =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder().q("different").hl(true).build());
+            InstitutionFacetedSearchRequest.builder().q("different").hl(true).build());
     assertEquals(1, response.getResults().size());
     assertEquals(1, response.getResults().get(0).getHighlights().size());
   }
@@ -415,7 +414,29 @@ public class CollectionsSearchIT extends BaseServiceIT {
             .descriptorCountry(Collections.singletonList(Country.AFGHANISTAN))
             .build());
     assertDescriptorSearch(
-        1, 2, CollectionDescriptorsSearchRequest.builder().individualCount("10, 50").build());
+        1,
+        2,
+        CollectionDescriptorsSearchRequest.builder()
+            .individualCount(Collections.singletonList("10, 50"))
+            .build());
+    assertDescriptorSearch(
+        1,
+        1,
+        CollectionDescriptorsSearchRequest.builder()
+            .dateIdentified(Collections.singletonList("2024-01-16"))
+            .build());
+    assertDescriptorSearch(
+        1,
+        1,
+        CollectionDescriptorsSearchRequest.builder()
+            .dateIdentified(Arrays.asList("2024-01-16,2024-01-18"))
+            .build());
+    assertDescriptorSearch(
+        1,
+        2,
+        CollectionDescriptorsSearchRequest.builder()
+            .dateIdentified(Arrays.asList("2024-01-16,2024-05-22"))
+            .build());
     assertDescriptorSearch(
         1,
         3,
@@ -426,7 +447,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         1,
         2,
         CollectionDescriptorsSearchRequest.builder()
-            .typeStatus(Arrays.asList(TypeStatus.COTYPE.name(), TypeStatus.EPITYPE.name()))
+            .typeStatus(Arrays.asList("COTYPE", "EPITYPE"))
             .build());
 
     assertDescriptorSearch(
@@ -686,7 +707,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
   public void institutionFacetsTest() {
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchResponse =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder()
+            InstitutionFacetedSearchRequest.builder()
                 .facets(Collections.singleton(InstitutionFacetParameter.TYPE))
                 .build());
     assertEquals(3, searchResponse.getResults().size());
@@ -712,7 +733,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
     searchResponse =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder()
+            InstitutionFacetedSearchRequest.builder()
                 .facets(Collections.singleton(InstitutionFacetParameter.TYPE))
                 .country(Collections.singletonList(Country.UNITED_STATES))
                 .build());
@@ -727,7 +748,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
     searchResponse =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder()
+            InstitutionFacetedSearchRequest.builder()
                 .facets(Collections.singleton(InstitutionFacetParameter.TYPE))
                 .country(Collections.singletonList(Country.UNITED_STATES))
                 .multiSelectFacets(true)
@@ -755,7 +776,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
     searchResponse =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder()
+            InstitutionFacetedSearchRequest.builder()
                 .facets(
                     new HashSet<>(
                         Arrays.asList(
@@ -777,7 +798,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
 
     searchResponse =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder()
+            InstitutionFacetedSearchRequest.builder()
                 .facets(
                     new HashSet<>(
                         Arrays.asList(
@@ -792,7 +813,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
     facetPages.put(InstitutionFacetParameter.DISCIPLINE, new PagingRequest(0, 2));
     searchResponse =
         searchService.searchInstitutions(
-            InstitutionSearchRequest.builder()
+            InstitutionFacetedSearchRequest.builder()
                 .facets(
                     new HashSet<>(
                         Arrays.asList(
