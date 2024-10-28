@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.ArrayUtils;
 import org.gbif.api.model.collections.request.FacetedSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.common.paging.Pageable;
@@ -201,9 +202,7 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
   protected <F extends CollectionsFacetParameter, T extends FacetedSearchRequest<F>>
       void fillFacetParams(
           T searchRequest, NativeWebRequest webRequest, Function<String, F> facetParamParser) {
-    final Map<String, String[]> params =
-        webRequest.getParameterMap().entrySet().stream()
-            .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Map.Entry::getValue));
+    final Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
 
     final String facetMultiSelectValue = getFirstIgnoreCase(params, PARAM_FACET_MULTISELECT);
     if (facetMultiSelectValue != null) {
@@ -284,6 +283,8 @@ public abstract class BaseGrSciCollSearchRequestHandlerMethodArgumentResolver
 
   protected Map<String, String[]> toCaseInsensitiveParams(NativeWebRequest webRequest) {
     return webRequest.getParameterMap().entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Map.Entry::getValue));
+        .collect(
+            Collectors.toMap(
+                e -> e.getKey().toLowerCase(), Map.Entry::getValue, ArrayUtils::addAll));
   }
 }
