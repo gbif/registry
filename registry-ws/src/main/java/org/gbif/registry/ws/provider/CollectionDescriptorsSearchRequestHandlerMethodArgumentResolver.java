@@ -13,14 +13,16 @@
  */
 package org.gbif.registry.ws.provider;
 
-import com.google.common.base.Strings;
+import static org.gbif.api.util.SearchTypeValidator.isDateRange;
+
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.util.SearchTypeValidator;
-import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.Country;
+import org.gbif.api.util.IsoDateParsingUtils;
 import org.gbif.api.vocabulary.Rank;
+import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -46,46 +48,46 @@ public class CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver
         CollectionDescriptorsSearchRequest.builder().build();
     fillCollectionSearchRequest(searchRequest, webRequest);
 
-    extractMultivalueParam(webRequest, "usageKey", Integer::parseInt)
+    Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
+    extractMultivalueParam(params, "usageKey", Integer::parseInt)
         .ifPresent(searchRequest::setUsageKey);
-    extractMultivalueParam(webRequest, "usageName").ifPresent(searchRequest::setUsageName);
-    extractMultivalueParam(webRequest, "usageRank", Rank::valueOf)
+    extractMultivalueParam(params, "usageName").ifPresent(searchRequest::setUsageName);
+    extractMultivalueParam(params, "usageRank", Rank::valueOf)
         .ifPresent(searchRequest::setUsageRank);
-    extractMultivalueParam(webRequest, "taxonKey", Integer::parseInt)
+    extractMultivalueParam(params, "taxonKey", Integer::parseInt)
         .ifPresent(searchRequest::setTaxonKey);
-    extractMultivalueParam(webRequest, "identifiedBy").ifPresent(searchRequest::setIdentifiedBy);
-    extractMultivalueParam(webRequest, "typeStatus").ifPresent(searchRequest::setTypeStatus);
-    extractMultivalueParam(webRequest, "recordedBy").ifPresent(searchRequest::setRecordedBy);
-    extractMultivalueParam(webRequest, "discipline").ifPresent(searchRequest::setDiscipline);
-    extractMultivalueParam(webRequest, "objectClassification")
+    extractMultivalueParam(params, "identifiedBy").ifPresent(searchRequest::setIdentifiedBy);
+    extractMultivalueParam(params, "typeStatus").ifPresent(searchRequest::setTypeStatus);
+    extractMultivalueParam(params, "recordedBy").ifPresent(searchRequest::setRecordedBy);
+    extractMultivalueParam(params, "discipline").ifPresent(searchRequest::setDiscipline);
+    extractMultivalueParam(params, "objectClassification")
         .ifPresent(searchRequest::setObjectClassification);
-    extractMultivalueParam(webRequest, "issue").ifPresent(searchRequest::setIssue);
+    extractMultivalueParam(params, "issue").ifPresent(searchRequest::setIssue);
+    extractMultivalueRangeParam(params, "individualCount")
+        .ifPresent(searchRequest::setIndividualCount);
+    extractMultivalueCountryParam(params, "descriptorCountry")
+        .ifPresent(searchRequest::setDescriptorCountry);
 
-    String[] descriptorCountries = webRequest.getParameterValues("descriptorCountry");
-    if (descriptorCountries != null && descriptorCountries.length > 0) {
-      searchRequest.setDescriptorCountry(new ArrayList<>());
-      for (String countryParam : descriptorCountries) {
-        Country country = Country.fromIsoCode(countryParam);
-        if (country == null) {
-          // if nothing found also try by enum name
-          country = VocabularyUtils.lookupEnum(countryParam, Country.class);
+    String[] dateIdentifiedParams = params.get("dateIdentified".toLowerCase());
+    if (dateIdentifiedParams != null) {
+      List<String> result = new ArrayList<>();
+      for (String di : dateIdentifiedParams) {
+        if (isDateRange(di)) {
+          IsoDateParsingUtils.parseDateRange(di);
+        } else {
+          IsoDateParsingUtils.parseDate(di);
         }
-
-        if (country != null) {
-          searchRequest.getDescriptorCountry().add(country);
-        }
+        result.add(di);
       }
+      searchRequest.setDateIdentified(result);
     }
 
-    String individualCountParam = webRequest.getParameter("individualCount");
-    if (!Strings.isNullOrEmpty(individualCountParam)) {
-      validateIntegerRange(individualCountParam, "individualCount");
-      searchRequest.setIndividualCount(individualCountParam);
-    }
-
-    Optional.ofNullable(webRequest.getParameter("dateIdentified"))
-        .ifPresent(v -> searchRequest.setDateIdentified(SearchTypeValidator.parseDateRange(v)));
+    fillFacetParams(searchRequest, webRequest, facetParamParser());
 
     return searchRequest;
+  }
+
+  private Function<String, CollectionFacetParameter> facetParamParser() {
+    return s -> CollectionFacetParameter.valueOf(s.toUpperCase());
   }
 }

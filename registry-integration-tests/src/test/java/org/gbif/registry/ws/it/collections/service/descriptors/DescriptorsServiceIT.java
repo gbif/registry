@@ -89,7 +89,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     PagingResponse<Descriptor> descriptors =
         descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(5, descriptors.getResults().size());
-    assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
+    assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 5));
 
     // check the order of the verbatim fields is the same as in the file
     descriptors

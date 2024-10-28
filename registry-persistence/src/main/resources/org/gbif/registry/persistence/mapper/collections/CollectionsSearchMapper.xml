@@ -386,30 +386,20 @@
         #{item,jdbcType=INTEGER}
       </foreach>
     </if>
-    <if test="params.individualCount != null">
-      <choose>
-        <when test="params.individualCount.exactValue != null">
-          AND d.individual_count = #{params.individualCount.exactValue,jdbcType=INTEGER}
-        </when>
-        <otherwise>
-          <if test="params.individualCount.lowerBound != null">
-            AND d.individual_count >= #{params.individualCount.lowerBound,jdbcType=INTEGER}
-          </if>
-          <if test="params.individualCount.higherBound != null">
-            AND d.individual_count &lt;= #{params.individualCount.higherBound,jdbcType=INTEGER}
-          </if>
-        </otherwise>
-      </choose>
-    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.individualCount"/>
+      <property name="field" value="d.individual_count"/>
+    </include>
     <if test="params.identifiedBy != null and params.identifiedBy.size > 0">
       AND d.identified_by &amp;&amp; ARRAY
       <foreach item="item" collection="params.identifiedBy" open="[" separator="," close="]">
         #{item,jdbcType=VARCHAR}::text
       </foreach>
     </if>
-    <if test="params.dateIdentifiedFrom != null">AND d.date_identified &gt;= #{params.dateIdentifiedFrom}</if>
-    <if test="params.dateIdentifiedBefore != null">AND d.date_identified &lt; #{params.dateIdentifiedBefore}
-    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.dateIdentified"/>
+      <property name="field" value="d.date_identified"/>
+    </include>
     <if test="params.typeStatus != null and params.typeStatus.size > 0">
       AND d.type_status &amp;&amp; ARRAY
       <foreach item="item" collection="params.typeStatus" open="[" separator="," close="]">

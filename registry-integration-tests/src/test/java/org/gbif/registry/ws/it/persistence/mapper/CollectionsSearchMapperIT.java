@@ -300,5 +300,10 @@ public class CollectionsSearchMapperIT extends BaseItTest {
         2,
         collectionsSearchMapper.collectionFacetCardinality(
             DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.TYPE_STATUS).build());
+    assertEquals(0, facetDtos.size());
   }
 }

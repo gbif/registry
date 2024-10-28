@@ -46,10 +46,10 @@ public abstract class ListParams {
   @Nullable List<String> fuzzyName;
   @Nullable List<Boolean> active;
   @Nullable List<MasterSourceType> masterSourceType;
-  @Nullable RangeParam numberSpecimens;
+  @Nullable List<RangeParam<Integer>> numberSpecimens;
   @Nullable List<Boolean> displayOnNHCPortal;
-  @Nullable RangeParam occurrenceCount;
-  @Nullable RangeParam typeSpecimenCount;
+  @Nullable List<RangeParam<Integer>> occurrenceCount;
+  @Nullable List<RangeParam<Integer>> typeSpecimenCount;
   @Nullable List<UUID> institutionKeys;
   @Nullable List<Source> source;
   @Nullable List<String> sourceId;
