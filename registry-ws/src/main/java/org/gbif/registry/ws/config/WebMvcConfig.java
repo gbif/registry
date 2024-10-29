@@ -23,6 +23,7 @@ import java.util.*;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
+import org.gbif.registry.ws.converter.CountryMessageConverter;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
@@ -191,5 +192,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .registerModule(new JavaTimeModule()))
         .withUrl(apiRootUrl)
         .build(NubResourceClient.class);
+  }
+
+  @Bean
+  public CountryMessageConverter countryMessageConverter() {
+    return new CountryMessageConverter();
   }
 }
