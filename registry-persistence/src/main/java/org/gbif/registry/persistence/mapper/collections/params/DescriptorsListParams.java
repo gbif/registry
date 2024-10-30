@@ -40,7 +40,9 @@ public class DescriptorsListParams extends CollectionListParams {
         || facet == CollectionFacetParameter.FAMILY_KEY
         || facet == CollectionFacetParameter.GENUS_KEY
         || facet == CollectionFacetParameter.SPECIES_KEY
-        || facet == CollectionFacetParameter.TYPE_STATUS;
+        || facet == CollectionFacetParameter.TYPE_STATUS
+        || facet == CollectionFacetParameter.RECORDED_BY
+        || facet == CollectionFacetParameter.OBJECT_CLASSIFICATION;
   }
 
   public boolean descriptorSearch() {
@@ -74,5 +76,12 @@ public class DescriptorsListParams extends CollectionListParams {
         || discipline != null
         || objectClassification != null
         || issues != null;
+  }
+
+  public boolean isArrayFieldFacet() {
+    return facet == CollectionFacetParameter.PRESERVATION_TYPE
+        || facet == CollectionFacetParameter.CONTENT_TYPE
+        || facet == CollectionFacetParameter.TYPE_STATUS
+        || facet == CollectionFacetParameter.RECORDED_BY;
   }
 }
