@@ -335,10 +335,7 @@ public class CollectionsSearchService {
       F f, List<FacetDto> facetDtos, long cardinality) {
     List<CollectionFacet.Count> facetCounts =
         facetDtos.stream()
-            .filter(
-                dto ->
-                    !Strings.isNullOrEmpty(dto.getFacet())
-                        && !"null".equalsIgnoreCase(dto.getFacet()))
+            .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
             .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
             .collect(Collectors.toList());
 
