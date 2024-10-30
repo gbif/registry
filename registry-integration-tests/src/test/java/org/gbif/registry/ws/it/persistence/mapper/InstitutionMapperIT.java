@@ -13,6 +13,12 @@
  */
 package org.gbif.registry.ws.it.persistence.mapper;
 
+
+import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.net.URI;
+import java.util.*;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Contact;
@@ -39,16 +45,9 @@ import org.gbif.registry.persistence.mapper.collections.params.InstitutionListPa
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
-
-import java.net.URI;
-import java.util.*;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static org.gbif.registry.ws.it.fixtures.TestConstants.PAGE;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class InstitutionMapperIT extends BaseItTest {
 
@@ -198,7 +197,7 @@ public class InstitutionMapperIT extends BaseItTest {
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
     identifier.setCreatedBy("test");
     identifierMapper.createIdentifier(identifier);
-    institutionMapper.addIdentifier(inst2.getKey(), identifier.getKey());
+    institutionMapper.addCollectionIdentifier(inst2.getKey(), identifier.getKey(), identifier.isPrimary());
 
     Institution inst3 = new Institution();
     inst3.setKey(UUID.randomUUID());
@@ -222,19 +221,33 @@ public class InstitutionMapperIT extends BaseItTest {
     masterSourceMetadata.setSourceId("test-123");
     masterSourceMetadata.setCreatedBy("test");
     metadataMapper.create(masterSourceMetadata);
-    institutionMapper.addMasterSourceMetadata(inst4.getKey(),masterSourceMetadata.getKey(),MasterSourceType.GRSCICOLL);
+    institutionMapper.addMasterSourceMetadata(
+        inst4.getKey(), masterSourceMetadata.getKey(), MasterSourceType.GRSCICOLL);
 
     Pageable page = PAGE.apply(5, 0L);
 
-    assertSearch(InstitutionListParams.builder().sourceId("test-123").source(Source.IH_IRN).build(),1,inst4.getKey());
-    assertSearch(InstitutionListParams.builder().page(page).build(), 4);
-    assertSearch(InstitutionListParams.builder().code("i1").page(page).build(), 1);
-    assertSearch(InstitutionListParams.builder().code("I1").page(page).build(), 1);
-    assertSearch(InstitutionListParams.builder().name("n2").page(page).build(), 1);
-    assertSearch(InstitutionListParams.builder().code("i2").name("n2").page(page).build(), 1);
-    assertSearch(InstitutionListParams.builder().code("i1").name("n2").page(page).build(), 0);
     assertSearch(
-        InstitutionListParams.builder().fuzzyName("nime of third institution").page(page).build(),
+        InstitutionListParams.builder()
+            .sourceId(asList("test-123"))
+            .source(asList(Source.IH_IRN))
+            .build(),
+        1,
+        inst4.getKey());
+    assertSearch(InstitutionListParams.builder().page(page).build(), 4);
+    assertSearch(InstitutionListParams.builder().code(asList("i1")).page(page).build(), 1);
+    assertSearch(InstitutionListParams.builder().code(asList("I1")).page(page).build(), 1);
+    assertSearch(InstitutionListParams.builder().name(asList("n2")).page(page).build(), 1);
+    assertSearch(
+        InstitutionListParams.builder().code(asList("i2")).name(asList("n2")).page(page).build(),
+        1);
+    assertSearch(
+        InstitutionListParams.builder().code(asList("i1")).name(asList("n2")).page(page).build(),
+        0);
+    assertSearch(
+        InstitutionListParams.builder()
+            .fuzzyName(asList("nime of third institution"))
+            .page(page)
+            .build(),
         1);
     assertSearch(
         InstitutionListParams.builder().query("nime of third institution").page(page).build(), 0);
@@ -250,17 +263,17 @@ public class InstitutionMapperIT extends BaseItTest {
             .page(page)
             .build(),
         0);
-    assertSearch(InstitutionListParams.builder().city("Odense").page(page).build(), 1);
+    assertSearch(InstitutionListParams.builder().city(asList("Odense")).page(page).build(), 0);
     assertSearch(
         InstitutionListParams.builder()
-            .city("Copenhagen")
+            .city(asList("Copenhagen"))
             .countries(Collections.singletonList(Country.DENMARK))
             .page(page)
             .build(),
         1);
     assertSearch(
         InstitutionListParams.builder()
-            .city("CPH")
+            .city(asList("CPH"))
             .countries(Collections.singletonList(Country.DENMARK))
             .page(page)
             .build(),
@@ -268,71 +281,80 @@ public class InstitutionMapperIT extends BaseItTest {
 
     // machine tags
     assertSearch(
-        InstitutionListParams.builder().machineTagNamespace("dummy").page(page).build(), 0);
+        InstitutionListParams.builder().machineTagNamespace(asList("dummy")).page(page).build(), 0);
     assertSearch(
-        InstitutionListParams.builder().machineTagName(mt.getName()).page(page).build(),
+        InstitutionListParams.builder().machineTagName(asList(mt.getName())).page(page).build(),
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionListParams.builder().machineTagName(mt.getName()).page(page).build(),
+        InstitutionListParams.builder().machineTagName(asList(mt.getName())).page(page).build(),
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionListParams.builder().machineTagValue(mt.getValue()).page(page).build(),
+        InstitutionListParams.builder().machineTagValue(asList(mt.getValue())).page(page).build(),
         1,
         inst1.getKey());
 
     assertSearch(
         InstitutionListParams.builder()
-            .machineTagName(mt.getName())
-            .machineTagName(mt.getName())
-            .machineTagValue(mt.getValue())
+            .machineTagName(asList(mt.getName()))
+            .machineTagName(asList(mt.getName()))
+            .machineTagValue(asList(mt.getValue()))
             .page(page)
             .build(),
         1,
         inst1.getKey());
 
     // identifiers
-    assertSearch(InstitutionListParams.builder().identifier("dummy").page(page).build(), 0);
+    assertSearch(InstitutionListParams.builder().identifier(asList("dummy")).page(page).build(), 0);
     assertSearch(
         InstitutionListParams.builder()
-            .machineTagName(mt.getName())
-            .machineTagName(mt.getName())
-            .machineTagValue(mt.getValue())
+            .machineTagName(asList(mt.getName()))
+            .machineTagName(asList(mt.getName()))
+            .machineTagValue(asList(mt.getValue()))
             .page(page)
             .build(),
         1,
         inst1.getKey());
 
     assertSearch(
-        InstitutionListParams.builder().identifierType(identifier.getType()).page(page).build(),
-        1,
-        inst2.getKey());
-
-    assertSearch(
-        InstitutionListParams.builder().identifier(identifier.getIdentifier()).page(page).build(),
-        1,
-        inst2.getKey());
-
-    assertSearch(
         InstitutionListParams.builder()
-            .identifierType(identifier.getType())
-            .identifier(identifier.getIdentifier())
+            .identifierType(asList(identifier.getType()))
             .page(page)
             .build(),
         1,
         inst2.getKey());
 
     assertSearch(
-        InstitutionListParams.builder().masterSourceType(MasterSourceType.IH).page(page).build(),
+        InstitutionListParams.builder()
+            .identifier(asList(identifier.getIdentifier()))
+            .page(page)
+            .build(),
+        1,
+        inst2.getKey());
+
+    assertSearch(
+        InstitutionListParams.builder()
+            .identifierType(asList(identifier.getType()))
+            .identifier(asList(identifier.getIdentifier()))
+            .page(page)
+            .build(),
+        1,
+        inst2.getKey());
+
+    assertSearch(
+        InstitutionListParams.builder()
+            .masterSourceType(asList(MasterSourceType.IH))
+            .page(page)
+            .build(),
         1,
         inst1.getKey());
 
     assertSearch(
         InstitutionListParams.builder()
-            .masterSourceType(MasterSourceType.GBIF_REGISTRY)
+            .masterSourceType(asList(MasterSourceType.GBIF_REGISTRY))
             .page(page)
             .build(),
         1,
@@ -340,7 +362,7 @@ public class InstitutionMapperIT extends BaseItTest {
 
     assertSearch(
         InstitutionListParams.builder()
-            .masterSourceType(MasterSourceType.GRSCICOLL)
+            .masterSourceType(asList(MasterSourceType.GRSCICOLL))
             .page(page)
             .build(),
         1);
@@ -434,8 +456,7 @@ public class InstitutionMapperIT extends BaseItTest {
     assertSearch(
         InstitutionListParams.builder().query("i1 n1").page(page).build(), 1, inst1.getKey());
 
-    InstitutionListParams params =
-        InstitutionListParams.builder().query("i1").page(page).build();
+    InstitutionListParams params = InstitutionListParams.builder().query("i1").page(page).build();
     List<Institution> institutions = institutionMapper.list(params);
     long count = institutionMapper.count(params);
     assertEquals(1, institutions.size());
@@ -454,7 +475,7 @@ public class InstitutionMapperIT extends BaseItTest {
     assertEquals(2, count);
 
     assertSearch(
-        InstitutionListParams.builder().alternativeCode("i1").page(page).page(page).build(),
+        InstitutionListParams.builder().alternativeCode(asList("i1")).page(page).page(page).build(),
         1,
         inst2.getKey());
   }

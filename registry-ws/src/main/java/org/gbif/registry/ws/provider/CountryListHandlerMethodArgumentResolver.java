@@ -13,20 +13,20 @@
  */
 package org.gbif.registry.ws.provider;
 
-import java.util.Map;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import java.util.Arrays;
+import org.gbif.api.util.VocabularyUtils;
+import org.gbif.api.vocabulary.Country;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-@SuppressWarnings("NullableProblems")
-public class InstitutionSearchRequestHandlerMethodArgumentResolver
-    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver {
+public class CountryListHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
-    return InstitutionSearchRequest.class.equals(parameter.getParameterType());
+    return "Country[]".equals(parameter.getParameterType().getSimpleName());
   }
 
   @Override
@@ -35,21 +35,21 @@ public class InstitutionSearchRequestHandlerMethodArgumentResolver
       ModelAndViewContainer mavContainer,
       NativeWebRequest webRequest,
       WebDataBinderFactory binderFactory) {
-
-    InstitutionSearchRequest searchRequest = InstitutionSearchRequest.builder().build();
-    fillInstitutionSearchParameters(searchRequest, webRequest);
-
-    return searchRequest;
+    final String paramName = parameter.getParameterName();
+    final String[] countryCodes =
+        paramName != null ? webRequest.getParameterMap().get(paramName) : null;
+    return countryCodes != null
+        ? Arrays.stream(countryCodes).map(this::parseCountry).toArray(Country[]::new)
+        : null;
   }
 
-  protected void fillInstitutionSearchParameters(
-      InstitutionSearchRequest searchRequest, NativeWebRequest webRequest) {
-    fillSearchRequestParams(searchRequest, webRequest);
+  private Country parseCountry(String param) {
+    Country parsed = Country.fromIsoCode(param);
 
-    Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
-    extractMultivalueParam(params, "type").ifPresent(searchRequest::setType);
-    extractMultivalueParam(params, "institutionalGovernance")
-        .ifPresent(searchRequest::setInstitutionalGovernance);
-    extractMultivalueParam(params, "discipline").ifPresent(searchRequest::setDisciplines);
+    if (parsed == null) {
+      // if nothing found also try by enum name
+      parsed = VocabularyUtils.lookupEnum(param, Country.class);
+    }
+    return parsed;
   }
 }

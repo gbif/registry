@@ -290,7 +290,56 @@ public abstract class BaseCollectionEntityServiceIT<
       () ->
         collectionEntityService.addIdentifier(
           key, new Identifier(IdentifierType.ROR, "foo")));
+
+    //add invalid ISIL identifier
+    assertThrows(
+      IllegalArgumentException.class,
+      () ->
+        collectionEntityService.addIdentifier(
+          key, new Identifier(IdentifierType.ISIL, "foo")));
   }
+
+  @Test
+  public void updateIdentifierTest() {
+    T entity = testData.newEntity();
+    UUID key = collectionEntityService.create(entity);
+
+    // Add an identifier
+    Identifier identifier1 = new Identifier();
+    identifier1.setIdentifier("identifier1");
+    identifier1.setType(IdentifierType.LSID);
+    identifier1.setPrimary(true);
+
+    Identifier identifier2 = new Identifier();
+    identifier2.setIdentifier("identifier2");
+    identifier2.setType(IdentifierType.LSID);
+
+    int identifierKey1 = collectionEntityService.addIdentifier(key, identifier1);
+    collectionEntityService.addIdentifier(key, identifier2);
+
+    // List and verify the added identifier
+    List<Identifier> identifiers = collectionEntityService.listIdentifiers(key);
+    assertEquals(2, identifiers.size());
+
+    // Update the identifier
+    Identifier identifierUpdated = identifiers.stream().filter(i -> i.getIdentifier().equals("identifier2")).findFirst().get();
+    identifierUpdated.setPrimary(true);
+    collectionEntityService.updateIdentifier(key, identifierUpdated.getKey(), identifierUpdated.isPrimary());
+
+    Identifier updatedIdentifier1 = collectionEntityService.listIdentifiers(key).stream()
+      .filter(id -> id.getKey().equals(identifier1.getKey()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Identifier1 not found"));
+    Identifier updatedIdentifier2 = collectionEntityService.listIdentifiers(key).stream()
+      .filter(id -> id.getKey().equals(identifier2.getKey()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("Identifier2 not found"));
+
+    // Assert that identifier1 is not primary and identifier2 is now the primary identifier
+    assertFalse(updatedIdentifier1.isPrimary(), "Identifier1 should no longer be primary");
+    assertTrue(updatedIdentifier2.isPrimary(), "Identifier2 should now be primary");
+  }
+
 
   @Test
   public void commentsTest() {

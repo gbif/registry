@@ -106,11 +106,11 @@ public class CollectionResourceIT
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
     CollectionSearchRequest req = CollectionSearchRequest.builder().build();
-    req.setCity("city");
-    req.setInstitution(UUID.randomUUID());
+    req.setCity(Collections.singletonList("city"));
+    req.setInstitution(Collections.singletonList(UUID.randomUUID()));
     req.setCountry(Collections.singletonList(Country.DENMARK));
     req.setGbifRegion(Collections.singletonList(GbifRegion.EUROPE));
-    req.setPersonalCollection(true);
+    req.setPersonalCollection(Collections.singletonList(true));
     req.setAccessionStatus(Collections.singletonList("Institutional"));
     req.setPreservationTypes(Arrays.asList("SampleCryopreserved", "SampleDried"));
     PagingResponse<CollectionView> result = getClient().list(req);
@@ -183,7 +183,7 @@ public class CollectionResourceIT
         .thenReturn(new PagingResponse<>(new PagingRequest(), Long.valueOf(views.size()), views));
 
     CollectionSearchRequest request = CollectionSearchRequest.builder().build();
-    request.setReplacedBy(UUID.randomUUID());
+    request.setReplacedBy(Collections.singletonList(UUID.randomUUID()));
     PagingResponse<CollectionView> result = getClient().listDeleted(request);
     assertEquals(views.size(), result.getResults().size());
   }
@@ -333,7 +333,10 @@ public class CollectionResourceIT
             .listCollectionDescriptors(
                 UUID.randomUUID(),
                 1L,
-                DescriptorSearchRequest.builder().q("foo").individualCount("1,10").build())
+                DescriptorSearchRequest.builder()
+                    .q("foo")
+                    .individualCount(Collections.singletonList("1,10"))
+                    .build())
             .getResults()
             .size());
   }

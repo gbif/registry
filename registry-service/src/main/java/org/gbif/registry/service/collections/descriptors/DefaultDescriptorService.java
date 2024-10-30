@@ -4,7 +4,8 @@ import static org.gbif.api.util.GrSciCollUtils.*;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_ADMIN_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_EDITOR_ROLE;
 import static org.gbif.registry.security.UserRoles.GRSCICOLL_MEDIATOR_ROLE;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.descriptors.Descriptor;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
@@ -35,6 +37,7 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
+import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.events.EventManager;
@@ -59,6 +62,7 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @Service
+@Slf4j
 public class DefaultDescriptorService implements DescriptorsService {
 
   private final NameUsageMatchingService nameUsageMatchingService;
@@ -137,7 +141,7 @@ public class DefaultDescriptorService implements DescriptorsService {
       String[] headers = csvReader.readNextSilently();
       for (int i = 0; i < headers.length; i++) {
         headersByIndex.put(i, headers[i]);
-        headersByName.put(headers[i].toLowerCase(), i);
+        headersByName.put(headers[i], i);
       }
 
       String[] values;
@@ -150,8 +154,7 @@ public class DefaultDescriptorService implements DescriptorsService {
 
         Map<String, String> valuesMap = valuesAndHeadersToMap(values, headersByName);
 
-        DescriptorDto descriptorDto = new DescriptorDto();
-        interpretDescriptor(valuesMap, descriptorDto);
+        DescriptorDto descriptorDto = interpretDescriptor(valuesMap);
         descriptorDto.setDescriptorGroupKey(descriptorGroupKey);
         descriptorsMapper.createDescriptor(descriptorDto);
 
@@ -171,7 +174,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     }
 
     return headersByName.entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey().toLowerCase(), e -> values[e.getValue()]));
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> values[e.getValue()]));
   }
 
   private <T> void setResult(
@@ -341,10 +344,9 @@ public class DefaultDescriptorService implements DescriptorsService {
         .query(query)
         .descriptorGroupKey(searchRequest.getDescriptorGroupKey())
         .country(searchRequest.getCountry())
-        .dateIdentifiedBefore(searchRequest.getDateIdentifiedBefore())
-        .dateIdentifiedFrom(searchRequest.getDateIdentifiedFrom())
+        .dateIdentified(parseDateRangeParameters(searchRequest.getDateIdentified()))
         .discipline(searchRequest.getDiscipline())
-        .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
+        .individualCount(parseIntegerRangeParameters(searchRequest.getIndividualCount()))
         .usageKey(searchRequest.getUsageKey())
         .usageName(searchRequest.getUsageName())
         .usageRank(searchRequest.getUsageRank())
@@ -387,8 +389,10 @@ public class DefaultDescriptorService implements DescriptorsService {
     while (!descriptorDtos.isEmpty()) {
       descriptorDtos.forEach(
           dto -> {
-            interpretDescriptor(verbatimDtosToMap(dto.getVerbatim()), dto);
-            descriptorsMapper.updateDescriptor(dto);
+            DescriptorDto reinterpretedDto =
+                interpretDescriptor(verbatimDtosToMap(dto.getVerbatim()));
+            reinterpretedDto.setKey(dto.getKey());
+            descriptorsMapper.updateDescriptor(reinterpretedDto);
           });
       offset += limit;
       descriptorDtos =
@@ -403,6 +407,7 @@ public class DefaultDescriptorService implements DescriptorsService {
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_MEDIATOR_ROLE, GRSCICOLL_EDITOR_ROLE})
   @Override
   public void reinterpretCollectionDescriptorGroups(UUID collectionKey) {
+    log.info("Starting collection descriptors reinterpretation");
     int limit = 100;
     long offset = 0;
     List<DescriptorGroup> descriptorGroups =
@@ -421,6 +426,7 @@ public class DefaultDescriptorService implements DescriptorsService {
                   .page(new PagingRequest(offset, limit))
                   .build());
     }
+    log.info("Collection descriptors reinterpretation finished");
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE})
@@ -430,7 +436,8 @@ public class DefaultDescriptorService implements DescriptorsService {
     reinterpretCollectionDescriptorGroups(null);
   }
 
-  private void interpretDescriptor(Map<String, String> valuesMap, DescriptorDto descriptorDto) {
+  private DescriptorDto interpretDescriptor(Map<String, String> valuesMap) {
+    DescriptorDto descriptorDto = new DescriptorDto();
     // taxonomy
     InterpretedResult<Interpreter.TaxonData> taxonomyResult =
         Interpreter.interpretTaxonomy(valuesMap, nameUsageMatchingService);
@@ -440,6 +447,36 @@ public class DefaultDescriptorService implements DescriptorsService {
       descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
       descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys() != null ? new ArrayList<>(taxonomyResult.getResult().getTaxonKeys()) : List.of());
       descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
+      if (taxonomyResult.getResult().getTaxonClassification() != null) {
+        taxonomyResult
+            .getResult()
+            .getTaxonClassification()
+            .forEach(
+                r -> {
+                  if (r.getRank() == Rank.KINGDOM) {
+                    descriptorDto.setKingdomKey(r.getKey());
+                    descriptorDto.setKingdomName(r.getName());
+                  } else if (r.getRank() == Rank.PHYLUM) {
+                    descriptorDto.setPhylumKey(r.getKey());
+                    descriptorDto.setPhylumName(r.getName());
+                  } else if (r.getRank() == Rank.CLASS) {
+                    descriptorDto.setClassKey(r.getKey());
+                    descriptorDto.setClassName(r.getName());
+                  } else if (r.getRank() == Rank.ORDER) {
+                    descriptorDto.setOrderKey(r.getKey());
+                    descriptorDto.setOrderName(r.getName());
+                  } else if (r.getRank() == Rank.FAMILY) {
+                    descriptorDto.setFamilyKey(r.getKey());
+                    descriptorDto.setFamilyName(r.getName());
+                  } else if (r.getRank() == Rank.GENUS) {
+                    descriptorDto.setGenusKey(r.getKey());
+                    descriptorDto.setGenusName(r.getName());
+                  } else if (r.getRank() == Rank.SPECIES) {
+                    descriptorDto.setSpeciesKey(r.getKey());
+                    descriptorDto.setSpeciesName(r.getName());
+                  }
+                });
+      }
     }
     addIssues(descriptorDto, taxonomyResult);
 
@@ -482,6 +519,8 @@ public class DefaultDescriptorService implements DescriptorsService {
         Interpreter.interpretString(valuesMap, "ltc:objectClassificationName");
     setResult(
         descriptorDto, objectClassificationResult, DescriptorDto::setObjectClassificationName);
+
+    return descriptorDto;
   }
 
   private static Descriptor convertRecordDto(DescriptorDto dto) {

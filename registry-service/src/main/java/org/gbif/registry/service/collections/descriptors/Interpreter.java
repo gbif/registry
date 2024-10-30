@@ -7,6 +7,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Range;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -139,8 +142,16 @@ public class Interpreter {
                     .map(OccurrenceIssue::getId)
                     .collect(Collectors.toList()));
 
-    if (parsed.isSuccessful()) {
-      resultBuilder.result(new Date(Instant.from(parsed.getPayload()).toEpochMilli()));
+    if (parsed.isSuccessful() && parsed.getPayload() != null) {
+      ZonedDateTime zdt;
+      if (parsed.getPayload() instanceof LocalDateTime) {
+        zdt = ((LocalDateTime) parsed.getPayload()).atZone(ZoneId.systemDefault());
+      } else if (parsed.getPayload() instanceof LocalDate) {
+        zdt = ((LocalDate) parsed.getPayload()).atStartOfDay(ZoneId.systemDefault());
+      } else {
+        zdt = Instant.from(parsed.getPayload()).atZone(ZoneId.systemDefault());
+      }
+      resultBuilder.result(new Date(zdt.toInstant().toEpochMilli()));
     }
 
     return resultBuilder.build();
@@ -332,14 +343,11 @@ public class Interpreter {
   }
 
   private static String extractValue(Map<String, String> valuesMap, String fieldName) {
-    return Optional.ofNullable(valuesMap.get(fieldName.toLowerCase()))
-        .filter(v -> !v.isEmpty())
-        .orElse(null);
+    return Optional.ofNullable(valuesMap.get(fieldName)).filter(v -> !v.isEmpty()).orElse(null);
   }
 
   private static Optional<String> extractOptValue(Map<String, String> valuesMap, DwcTerm term) {
-    return Optional.ofNullable(valuesMap.get(term.prefixedName().toLowerCase()))
-        .filter(v -> !v.isEmpty());
+    return Optional.ofNullable(valuesMap.get(term.prefixedName())).filter(v -> !v.isEmpty());
   }
 
   private static List<String> extractListValue(Map<String, String> valuesMap, DwcTerm term) {

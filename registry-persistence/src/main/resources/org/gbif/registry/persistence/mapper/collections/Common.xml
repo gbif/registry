@@ -31,4 +31,190 @@
     </if>
   </sql>
 
+  <sql id="MULTIVALUE_FILTER">
+    <if test="${values} != null and ${values}.size > 0" >
+      AND ${field} IN
+      <foreach item="item" collection="${values}" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+  </sql>
+
+  <sql id="MULTIVALUE_ENUM_FILTER">
+    <if test="${values} != null and ${values}.size > 0" >
+      AND ${field} IN
+      <foreach item="item" collection="${values}" open="(" separator="," close=")">
+        #{item,jdbcType=OTHER}
+      </foreach>
+    </if>
+  </sql>
+
+  <sql id="MULTIVALUE_BOOLEAN_FILTER">
+    <if test="${values} != null and ${values}.size > 0" >
+      AND ${field} IN
+      <foreach item="item" collection="${values}" open="(" separator="," close=")">
+        #{item,jdbcType=BOOLEAN}
+      </foreach>
+    </if>
+  </sql>
+
+  <sql id="MULTIVALUE_ARRAY_FIELD_FILTER">
+    <if test="${values} != null and ${values}.size > 0" >
+      AND ${field} &amp;&amp; ARRAY
+      <foreach item="item" collection="${values}" open="[" separator="," close="]">
+        #{item,jdbcType=VARCHAR}::text
+      </foreach>
+    </if>
+  </sql>
+
+  <sql id="MULTIVALUE_RANGE_FIELD_FILTER">
+    <if test="${values} != null and ${values}.size > 0" >
+      AND (
+      <foreach item="item" collection="${values}" separator="OR">
+        (
+        <trim prefixOverrides="AND">
+          <choose>
+            <when test="item.exactValue != null">
+              ${field} = #{item.exactValue}
+            </when>
+            <otherwise>
+              <if test="item.lowerBound != null" >
+                AND ${field} >= #{item.lowerBound}
+              </if>
+              <if test="item.higherBound != null" >
+                AND ${field} &lt;= #{item.higherBound}
+              </if>
+            </otherwise>
+          </choose>
+        </trim>
+        )
+      </foreach>
+      )
+    </if>
+  </sql>
+
+  <sql id="COMMON_LIST_FILTER">
+    <choose>
+      <when test="params.deleted != null and params.deleted">
+        ${alias}deleted IS NOT NULL
+      </when>
+      <otherwise>
+        ${alias}deleted IS NULL
+      </otherwise>
+    </choose>
+    <if test="params.code != null and params.code.size > 0" >
+      AND lower(${alias}code) IN
+      <foreach item="item" collection="params.code" separator="," open="(" close=")">
+        lower(#{item,jdbcType=VARCHAR})
+      </foreach>
+    </if>
+    <if test="params.alternativeCode != null and params.alternativeCode.size > 0" >
+      AND ${alias}alternative_codes ??|
+      <foreach item="item" collection="params.alternativeCode" separator="," open="ARRAY[" close="]::text[]">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.name"/>
+      <property name="field" value="${alias}name"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.machineTagNamespace"/>
+      <property name="field" value="mt.namespace"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.machineTagName"/>
+      <property name="field" value="mt.name"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.machineTagValue"/>
+      <property name="field" value="mt.value"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ENUM_FILTER">
+      <property name="values" value="params.identifierType"/>
+      <property name="field" value="id.type"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.identifier"/>
+      <property name="field" value="id.identifier"/>
+    </include>
+    <if test="params.countries != null and params.countries.size > 0">
+      AND (addr.country IN
+      <foreach item="item" collection="params.countries" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+      OR (addr.country IS NULL AND mail_addr.country IN
+      <foreach item="item" collection="params.countries" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>)
+      )
+    </if>
+    <if test="params.regionCountries != null and params.regionCountries.size > 0">
+      AND (addr.country IN
+      <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>
+      OR (addr.country IS NULL AND mail_addr.country IN
+      <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
+        #{item,jdbcType=VARCHAR}
+      </foreach>)
+      )
+    </if>
+    <if test="params.city != null and params.city.size > 0" >
+      AND (
+      <trim suffixOverrides="OR">
+        <foreach item="item" collection="params.city">
+          normalize_name(addr.city) = normalize_name(#{item,jdbcType=VARCHAR}) OR
+          (addr.city IS NULL AND normalize_name(mail_addr.city) = normalize_name(#{item,jdbcType=VARCHAR})) OR
+        </foreach>
+      </trim>
+      )
+    </if>
+    <if test="params.fuzzyName != null and params.fuzzyName.size > 0" >
+      AND (
+      <trim suffixOverrides="OR">
+        <foreach item="item" collection="params.fuzzyName" separator="OR">
+          similar_name(${alias}name, #{item,jdbcType=VARCHAR})
+        </foreach>
+      </trim>
+      )
+    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+      <property name="values" value="params.active"/>
+      <property name="field" value="${alias}active"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.numberSpecimens"/>
+      <property name="field" value="${alias}number_specimens"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ENUM_FILTER">
+      <property name="values" value="params.masterSourceType"/>
+      <property name="field" value="${alias}master_source"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.occurrenceCount"/>
+      <property name="field" value="${alias}occurrence_count"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.typeSpecimenCount"/>
+      <property name="field" value="${alias}type_specimen_count"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
+      <property name="values" value="params.displayOnNHCPortal"/>
+      <property name="field" value="${alias}display_on_NHCPortal"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.replacedBy"/>
+      <property name="field" value="${alias}replaced_by"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ENUM_FILTER">
+      <property name="values" value="params.source"/>
+      <property name="field" value="m.source"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_FILTER">
+      <property name="values" value="params.sourceId"/>
+      <property name="field" value="m.source_id"/>
+    </include>
+  </sql>
+
 </mapper>

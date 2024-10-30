@@ -89,7 +89,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     PagingResponse<Descriptor> descriptors =
         descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(5, descriptors.getResults().size());
-    assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
+    assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 5));
 
     // check the order of the verbatim fields is the same as in the file
     descriptors
@@ -147,6 +147,10 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     descriptors = descriptorsService.listDescriptors(DescriptorSearchRequest.builder().build());
     assertEquals(4, descriptors.getResults().size());
     assertTrue(descriptors.getResults().stream().allMatch(r -> r.getVerbatim().size() == 4));
+    descriptors =
+        descriptorsService.listDescriptors(
+            DescriptorSearchRequest.builder().usageName(Collections.singletonList("Aves")).build());
+    assertEquals(2, descriptors.getResults().size());
 
     // check the order of the verbatim fields is the same as in the file
     descriptors
@@ -238,7 +242,7 @@ public class DescriptorsServiceIT extends BaseServiceIT {
     collection.setName("n1");
     collectionService.create(collection);
 
-    Resource descriptorsFile = new ClassPathResource("collections/descriptors.csv");
+    Resource descriptorsFile = new ClassPathResource("collections/descriptors2.csv");
     long descriptorGroupKey =
         descriptorsService.createDescriptorGroup(
             StreamUtils.copyToByteArray(descriptorsFile.getInputStream()),
@@ -276,5 +280,10 @@ public class DescriptorsServiceIT extends BaseServiceIT {
         descriptorsCount,
         descriptorsService.countDescriptors(
             DescriptorSearchRequest.builder().descriptorGroupKey(descriptorGroupKey).build()));
+
+    PagingResponse<Descriptor> descriptors =
+      descriptorsService.listDescriptors(
+        DescriptorSearchRequest.builder().usageName(Collections.singletonList("Aves")).build());
+    assertEquals(2, descriptors.getResults().size());
   }
 }

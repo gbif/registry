@@ -1,14 +1,15 @@
+
 <databaseChangeLog
-    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
   <changeSet id="144" author="fmendez" runInTransaction="false">
     <sql splitStatements="false" stripComments="true">
       <![CDATA[
-      ALTER TYPE enum_installation_type ADD VALUE 'MDT_INSTALLATION';
-      ALTER TYPE enum_endpoint_type ADD VALUE 'BIOM_1_0';
-      ALTER TYPE enum_endpoint_type ADD VALUE 'BIOM_2_1';
+         ALTER TYPE enum_installation_type ADD VALUE 'MDT_INSTALLATION';
+         ALTER TYPE enum_endpoint_type ADD VALUE 'BIOM_1_0';
+         ALTER TYPE enum_endpoint_type ADD VALUE 'BIOM_2_1';
       ]]>
     </sql>
   </changeSet>

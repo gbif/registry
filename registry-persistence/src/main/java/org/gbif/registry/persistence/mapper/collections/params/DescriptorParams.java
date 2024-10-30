@@ -1,5 +1,6 @@
 package org.gbif.registry.persistence.mapper.collections.params;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -19,10 +20,9 @@ public class DescriptorParams {
   @Nullable List<String> usageRank;
   @Nullable List<String> taxonKey;
   @Nullable List<Country> country;
-  @Nullable RangeParam individualCount;
+  @Nullable List<RangeParam<Integer>> individualCount;
   @Nullable List<String> identifiedBy;
-  @Nullable Date dateIdentifiedFrom;
-  @Nullable Date dateIdentifiedBefore;
+  @Nullable List<RangeParam<LocalDate>> dateIdentified;
   @Nullable List<String> typeStatus;
   @Nullable List<String> recordedBy;
   @Nullable List<String> discipline;
