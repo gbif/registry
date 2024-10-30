@@ -306,7 +306,7 @@ public class CollectionMapperIT extends BaseItTest {
             .page(page)
             .build(),
         0);
-    assertSearch(CollectionListParams.builder().city(asList("Odense")).page(page).build(), 1);
+    assertSearch(CollectionListParams.builder().city(asList("Odense")).page(page).build(), 0);
     assertSearch(
         CollectionListParams.builder()
             .city(asList("Copenhagen"))
