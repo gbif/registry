@@ -27,19 +27,19 @@ public class DescriptorDto {
   private String usageName;
   private String usageRank;
   private List<RankedName> taxonClassification;
-  private Set<String> taxonKeys;
-  private Integer kingdomKey;
+  private List<String> taxonKeys;
+  private String kingdomKey;
   private String kingdomName;
-  private Integer phylumKey;
+  private String phylumKey;
   private String phylumName;
-  private Integer classKey;
+  private String classKey;
   private String className;
-  private Integer orderKey;
+  private String orderKey;
   private String orderName;
-  private Integer familyKey;
+  private String familyKey;
   private String familyName;
-  private Integer genusKey;
+  private String genusKey;
   private String genusName;
-  private Integer speciesKey;
+  private String speciesKey;
   private String speciesName;
 }

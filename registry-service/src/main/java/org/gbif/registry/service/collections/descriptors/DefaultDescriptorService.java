@@ -37,7 +37,6 @@ import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.service.collections.CollectionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.vocabulary.Country;
-import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.dwc.terms.DwcTerm;
 import org.gbif.registry.events.EventManager;
@@ -445,7 +444,10 @@ public class DefaultDescriptorService implements DescriptorsService {
       descriptorDto.setUsageKey(taxonomyResult.getResult().getUsageKey());
       descriptorDto.setUsageRank(taxonomyResult.getResult().getUsageRank());
       descriptorDto.setUsageName(taxonomyResult.getResult().getUsageName());
-      descriptorDto.setTaxonKeys(taxonomyResult.getResult().getTaxonKeys() != null ? new ArrayList<>(taxonomyResult.getResult().getTaxonKeys()) : List.of());
+      descriptorDto.setTaxonKeys(
+          taxonomyResult.getResult().getTaxonKeys() != null
+              ? new ArrayList<>(taxonomyResult.getResult().getTaxonKeys())
+              : null);
       descriptorDto.setTaxonClassification(taxonomyResult.getResult().getTaxonClassification());
       if (taxonomyResult.getResult().getTaxonClassification() != null) {
         taxonomyResult
@@ -453,27 +455,35 @@ public class DefaultDescriptorService implements DescriptorsService {
             .getTaxonClassification()
             .forEach(
                 r -> {
-                  if (r.getRank() == Rank.KINGDOM) {
-                    descriptorDto.setKingdomKey(r.getKey());
-                    descriptorDto.setKingdomName(r.getName());
-                  } else if (r.getRank() == Rank.PHYLUM) {
-                    descriptorDto.setPhylumKey(r.getKey());
-                    descriptorDto.setPhylumName(r.getName());
-                  } else if (r.getRank() == Rank.CLASS) {
-                    descriptorDto.setClassKey(r.getKey());
-                    descriptorDto.setClassName(r.getName());
-                  } else if (r.getRank() == Rank.ORDER) {
-                    descriptorDto.setOrderKey(r.getKey());
-                    descriptorDto.setOrderName(r.getName());
-                  } else if (r.getRank() == Rank.FAMILY) {
-                    descriptorDto.setFamilyKey(r.getKey());
-                    descriptorDto.setFamilyName(r.getName());
-                  } else if (r.getRank() == Rank.GENUS) {
-                    descriptorDto.setGenusKey(r.getKey());
-                    descriptorDto.setGenusName(r.getName());
-                  } else if (r.getRank() == Rank.SPECIES) {
-                    descriptorDto.setSpeciesKey(r.getKey());
-                    descriptorDto.setSpeciesName(r.getName());
+                  switch (r.getRank().toLowerCase()) {
+                    case "kingdom":
+                      descriptorDto.setKingdomKey(r.getKey());
+                      descriptorDto.setKingdomName(r.getName());
+                      break;
+                    case "phylum":
+                      descriptorDto.setPhylumKey(r.getKey());
+                      descriptorDto.setPhylumName(r.getName());
+                      break;
+                    case "class":
+                      descriptorDto.setClassKey(r.getKey());
+                      descriptorDto.setClassName(r.getName());
+                      break;
+                    case "order":
+                      descriptorDto.setOrderKey(r.getKey());
+                      descriptorDto.setOrderName(r.getName());
+                      break;
+                    case "family":
+                      descriptorDto.setFamilyKey(r.getKey());
+                      descriptorDto.setFamilyName(r.getName());
+                      break;
+                    case "genus":
+                      descriptorDto.setGenusKey(r.getKey());
+                      descriptorDto.setGenusName(r.getName());
+                      break;
+                    case "species":
+                      descriptorDto.setSpeciesKey(r.getKey());
+                      descriptorDto.setSpeciesName(r.getName());
+                      break;
                   }
                 });
       }
