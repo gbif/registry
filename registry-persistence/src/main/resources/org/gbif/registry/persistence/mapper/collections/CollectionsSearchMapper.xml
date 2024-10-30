@@ -464,7 +464,7 @@
     <if test="params.facetMinCount != null">
       HAVING COUNT(DISTINCT i.key) >= #{params.facetMinCount}
     </if>
-    ORDER BY count(DISTINCT i.key) DESC
+    ORDER BY count(DISTINCT i.key) DESC, facet ASC
     <if test="params.facetPage != null">
       LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
     </if>
@@ -543,7 +543,7 @@
     <if test="params.facetMinCount != null">
       HAVING COUNT(DISTINCT c.key) >= #{params.facetMinCount}
     </if>
-    ORDER BY count(DISTINCT c.key) DESC
+    ORDER BY count(DISTINCT c.key) DESC, facet ASC
     <if test="params.facetPage != null">
       LIMIT #{params.facetPage.limit} OFFSET #{params.facetPage.offset}
     </if>
