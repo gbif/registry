@@ -543,6 +543,7 @@ public class DefaultRegistryPipelinesHistoryTrackingService
       message.getInterpretTypes().add(RecordType.BASIC.name());
       message.getInterpretTypes().add(RecordType.TEMPORAL.name());
       message.getInterpretTypes().add(RecordType.TAXONOMY.name());
+      message.getInterpretTypes().add(RecordType.MULTI_TAXONOMY.name());
       message.getInterpretTypes().add(RecordType.LOCATION.name());
       message.getInterpretTypes().add(RecordType.GRSCICOLL.name());
       message.getInterpretTypes().add(RecordType.CLUSTERING.name());
