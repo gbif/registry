@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.ws.client.collections;
 
+import java.util.Map;
+
 import org.gbif.api.model.collections.CollectionEntity;
 import org.gbif.api.model.collections.Contact;
 import org.gbif.api.model.collections.MasterSourceMetadata;
@@ -70,6 +72,13 @@ public interface BaseCollectionEntityClient<
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   List<Identifier> listIdentifiers(@PathVariable("key") UUID key);
+
+  @RequestMapping(
+    method = RequestMethod.PUT,
+    value = "{key}/identifier/{identifierKey}",
+    consumes = MediaType.APPLICATION_JSON_VALUE)
+  int updateIdentifier(
+    @PathVariable("key") UUID entityKey, @PathVariable("identifierKey") Integer identifierKey, @RequestBody Map<String, Boolean> isPrimaryMap);
 
   @RequestMapping(
       method = RequestMethod.POST,

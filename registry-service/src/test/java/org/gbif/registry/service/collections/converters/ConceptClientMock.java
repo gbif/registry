@@ -13,6 +13,8 @@
  */
 package org.gbif.registry.service.collections.converters;
 
+import java.util.Collections;
+import java.util.List;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.vocabulary.api.AddTagAction;
@@ -26,9 +28,7 @@ import org.gbif.vocabulary.model.HiddenLabel;
 import org.gbif.vocabulary.model.Label;
 import org.gbif.vocabulary.model.Tag;
 import org.gbif.vocabulary.model.search.KeyNameResult;
-
-import java.util.Collections;
-import java.util.List;
+import org.gbif.vocabulary.model.search.LookupResult;
 
 public class ConceptClientMock implements ConceptClient {
   @Override
@@ -182,6 +182,16 @@ public class ConceptClientMock implements ConceptClient {
 
   @Override
   public List<KeyNameResult> suggestLatestRelease(String s, SuggestParams suggestParams) {
+    return null;
+  }
+
+  @Override
+  public List<LookupResult> lookup(String s, LookupParams lookupParams) {
+    return null;
+  }
+
+  @Override
+  public List<LookupResult> lookupInLatestRelease(String s, LookupParams lookupParams) {
     return null;
   }
 }

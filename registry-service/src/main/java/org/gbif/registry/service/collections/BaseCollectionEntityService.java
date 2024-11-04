@@ -158,7 +158,7 @@ public class BaseCollectionEntityService<
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     identifier.setCreatedBy(authentication.getName());
     int identifierKey =
-        withMyBatis.addIdentifier(identifierMapper, baseMapper, entityKey, identifier);
+        withMyBatis.addCollectionIdentifier(identifierMapper, baseMapper, entityKey, identifier);
     eventManager.post(
         SubEntityCollectionEvent.newInstance(
             entityKey, objectClass, identifier, identifierKey, EventType.CREATE));
@@ -182,6 +182,17 @@ public class BaseCollectionEntityService<
   @Override
   public List<Identifier> listIdentifiers(UUID key) {
     return baseMapper.listIdentifiers(key);
+  }
+
+  @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
+  @Transactional
+  @Validated({PrePersist.class, Default.class})
+  @Override
+  public int updateIdentifier(UUID entityKey, int identifierKey, boolean isPrimary) {
+      int key = withMyBatis.updateCollectionIdentifier(baseMapper, entityKey, identifierKey, isPrimary);
+    eventManager.post(SubEntityCollectionEvent.newInstance(
+      entityKey, objectClass, Identifier.class, (long) identifierKey, EventType.UPDATE));
+    return key;
   }
 
   @Secured({GRSCICOLL_ADMIN_ROLE, GRSCICOLL_EDITOR_ROLE, GRSCICOLL_MEDIATOR_ROLE})
@@ -422,6 +433,14 @@ public class BaseCollectionEntityService<
     if (identifier.getType() == IdentifierType.ROR
         && !IdentifierUtils.isValidRORIdentifier(identifier.getIdentifier())) {
       throw new IllegalArgumentException("Invalid ROR Identifier");
+    }
+    if (identifier.getType() == IdentifierType.ISIL
+        && !IdentifierUtils.isValidISILIdentifier(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid ISIL Identifier");
+    }
+    if (identifier.getType() == IdentifierType.CLB_DATASET_KEY
+        && !IdentifierUtils.isValidCLBDatasetKey(identifier.getIdentifier())) {
+      throw new IllegalArgumentException("Invalid CLB_DATASET_KEY");
     }
   }
 

@@ -3,9 +3,12 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-  <changeSet id="145" author="mpodolskiy">
-    <sql>
-      ALTER TABLE contact ADD COLUMN salutation TEXT;
+  <changeSet id="147" author="auzun" runInTransaction="false">
+    <sql splitStatements="false" stripComments="true">
+      <![CDATA[
+         ALTER TYPE public.enum_identifier_type ADD VALUE 'CLB_DATASET_KEY';
+         ALTER TYPE public.enum_identifier_type ADD VALUE 'ISIL';
+      ]]>
     </sql>
   </changeSet>
 </databaseChangeLog>

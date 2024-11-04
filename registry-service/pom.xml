@@ -3,7 +3,7 @@
     <parent>
         <artifactId>registry-parent</artifactId>
         <groupId>org.gbif.registry</groupId>
-        <version>3.96.23-SNAPSHOT</version>
+        <version>3.96.30-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -86,6 +86,11 @@
             <groupId>org.cache2k</groupId>
             <artifactId>cache2k-api</artifactId>
         </dependency>
+
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+      </dependency>
 
         <!-- Test dependencies -->
         <dependency>

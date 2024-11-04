@@ -38,6 +38,7 @@ import org.gbif.api.service.registry.InstallationService;
 import org.gbif.api.service.registry.NodeService;
 import org.gbif.api.service.registry.OrganizationService;
 import org.gbif.api.vocabulary.*;
+import org.gbif.api.vocabulary.collections.CollectionsSortField;
 import org.gbif.api.vocabulary.collections.IdType;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 import org.gbif.api.vocabulary.collections.Source;
@@ -139,7 +140,10 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
 
     response =
         collectionService.list(
-            CollectionSearchRequest.builder().source(Source.IH_IRN).sourceId("test-123").build());
+            CollectionSearchRequest.builder()
+                .source(Collections.singletonList(Source.IH_IRN))
+                .sourceId(Collections.singletonList("test-123"))
+                .build());
     assertEquals(1, response.getResults().size());
 
     // empty queries are ignored and return all elements
@@ -244,7 +248,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .code("c1")
+                    .code(Collections.singletonList("c1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -255,7 +259,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .name("n2")
+                    .name(Collections.singletonList("n2"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -266,8 +270,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .code("c1")
-                    .name("n1")
+                    .code(Collections.singletonList("c1"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -278,8 +282,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .code("c2")
-                    .name("n1")
+                    .code(Collections.singletonList("c2"))
+                    .name(Collections.singletonList("n1"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -290,7 +294,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .active(true)
+                    .active(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -356,7 +360,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .personalCollection(true)
+                    .personalCollection(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -369,7 +373,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .alternativeCode("alt")
+                    .alternativeCode(Collections.singletonList("alt"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -380,7 +384,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .alternativeCode("foo")
+                    .alternativeCode(Collections.singletonList("foo"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -450,7 +454,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .city("city2")
+                    .city(Collections.singletonList("city2"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -462,7 +466,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .city("foo")
+                    .city(Collections.singletonList("foo"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -491,7 +495,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .displayOnNHCPortal(true)
+                    .displayOnNHCPortal(Collections.singletonList(true))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -504,7 +508,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("100")
+                    .numberSpecimens(Collections.singletonList("100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -516,7 +520,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("98")
+                    .numberSpecimens(Collections.singletonList("98"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -528,7 +532,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("* , 100")
+                    .numberSpecimens(Collections.singletonList("* , 100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -540,7 +544,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService
             .list(
                 CollectionSearchRequest.builder()
-                    .numberSpecimens("97,300")
+                    .numberSpecimens(Collections.singletonList("97,300"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -618,7 +622,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     PagingResponse<CollectionView> response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -627,7 +631,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .institution(institutionKey2)
+                .institution(Collections.singletonList(institutionKey2))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -636,7 +640,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     response =
         collectionService.list(
             CollectionSearchRequest.builder()
-                .institution(UUID.randomUUID())
+                .institution(Collections.singletonList(UUID.randomUUID()))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -679,6 +683,8 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     collection1.setActive(true);
     collection1.setAccessionStatus(null);
     collection1.setPersonalCollection(true);
+    collection1.setOccurrenceCount(12);
+    collection1.setTypeSpecimenCount(35);
     collection1.setContentTypes(Arrays.asList("Archaeological", "Biological"));
     collection1.setPreservationTypes(Arrays.asList("SampleDried", "SampleFluidPreserved"));
     Address address = new Address();
@@ -877,7 +883,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("code1")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -887,7 +893,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("foo")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -897,7 +903,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("code2")
-                .institution(institutionKey2)
+                .institution(Collections.singletonList(institutionKey2))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -907,7 +913,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("code2")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -928,7 +934,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("Name1")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -938,7 +944,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("abcde")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -948,7 +954,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("aa1@aa.com")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -958,7 +964,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
         collectionService.list(
             CollectionSearchRequest.builder()
                 .q("aves")
-                .institution(institutionKey1)
+                .institution(Collections.singletonList(institutionKey1))
                 .limit(DEFAULT_PAGE.getLimit())
                 .offset(DEFAULT_PAGE.getOffset())
                 .build());
@@ -1020,7 +1026,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     UUID key4 = collectionService.create(collection4);
 
     CollectionSearchRequest searchRequest = CollectionSearchRequest.builder().build();
-    searchRequest.setReplacedBy(key4);
+    searchRequest.setReplacedBy(Collections.singletonList(key4));
     assertEquals(0, collectionService.listDeleted(searchRequest).getResults().size());
     collectionService.replace(key3, key4);
     assertEquals(1, collectionService.listDeleted(searchRequest).getResults().size());

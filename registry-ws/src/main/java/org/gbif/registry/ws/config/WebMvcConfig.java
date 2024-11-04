@@ -23,9 +23,12 @@ import java.util.*;
 import org.gbif.checklistbank.ws.client.NubResourceClient;
 import org.gbif.registry.domain.ws.*;
 import org.gbif.registry.security.precheck.AuthPreCheckInterceptor;
+import org.gbif.registry.ws.converter.CountryMessageConverter;
 import org.gbif.registry.ws.converter.UuidTextMessageConverter;
 import org.gbif.registry.ws.provider.CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.CollectionSearchRequestHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.CountryListHandlerMethodArgumentResolver;
+import org.gbif.registry.ws.provider.InstitutionFacetedSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.InstitutionSearchRequestHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.PartialDateHandlerMethodArgumentResolver;
 import org.gbif.registry.ws.provider.networkEntitiesList.*;
@@ -64,6 +67,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
   public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
     argumentResolvers.add(new PageableHandlerMethodArgumentResolver());
     argumentResolvers.add(new CountryHandlerMethodArgumentResolver());
+    argumentResolvers.add(new CountryListHandlerMethodArgumentResolver());
     argumentResolvers.add(new PartialDateHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new DatasetSuggestRequestHandlerMethodArgumentResolver());
@@ -73,6 +77,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     argumentResolvers.add(new NetworkRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new NodeRequestSearchParamsHandlerMethodArgumentResolver());
     argumentResolvers.add(new InstitutionSearchRequestHandlerMethodArgumentResolver());
+    argumentResolvers.add(new InstitutionFacetedSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionSearchRequestHandlerMethodArgumentResolver());
     argumentResolvers.add(new CollectionDescriptorsSearchRequestHandlerMethodArgumentResolver());
   }
@@ -187,5 +192,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .registerModule(new JavaTimeModule()))
         .withUrl(apiRootUrl)
         .build(NubResourceClient.class);
+  }
+
+  @Bean
+  public CountryMessageConverter countryMessageConverter() {
+    return new CountryMessageConverter();
   }
 }

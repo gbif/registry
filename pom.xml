@@ -11,7 +11,7 @@
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.96.23-SNAPSHOT</version>
+  <version>3.96.30-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -84,20 +84,20 @@
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>1.16.13</gbif-api.version>
+    <gbif-api.version>1.16.18</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
     <gbif-common-mybatis.version>1.4</gbif-common-mybatis.version>
     <gbif-common-ws.version>1.26</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
     <gbif-doi.version>2.17</gbif-doi.version>
-    <gbif-download-query-tools.version>1.53.1</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.53.3</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
-    <gbif-metadata-profile.version>2.4</gbif-metadata-profile.version>
+    <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
-    <gbif-vocabulary.version>1.0.5</gbif-vocabulary.version>
+    <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
     <checklistbank.version>2.128</checklistbank.version>
 
     <!-- Third party -->
@@ -131,6 +131,7 @@
     <opencsv.version>5.7.1</opencsv.version>
     <geojson.version>1.14</geojson.version>
     <avro.version>1.8.2</avro.version>
+    <resilience4j.version>1.7.0</resilience4j.version>
 
     <!-- Hadoop -->
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
@@ -687,6 +688,13 @@
         <groupId>org.cache2k</groupId>
         <artifactId>cache2k-api</artifactId>
         <version>${cache2k.version}</version>
+      </dependency>
+
+      <!-- Fault tolerance - Used for API service calls-->
+      <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+        <version>${resilience4j.version}</version>
       </dependency>
 
       <dependency>

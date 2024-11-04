@@ -46,7 +46,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -74,6 +73,7 @@ import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.GbifRegion;
+import org.gbif.api.vocabulary.IdentifierType;
 import org.gbif.api.vocabulary.Rank;
 import org.gbif.api.vocabulary.collections.AccessionStatus;
 import org.gbif.api.vocabulary.collections.CollectionContentType;
@@ -366,34 +366,22 @@ public class CollectionResource
     String preFileName =
         CsvWriter.notNullJoiner(
             "-",
-            searchRequest.getGbifRegion() != null
-                ? searchRequest.getGbifRegion().stream()
-                    .map(GbifRegion::name)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCountry() != null
-                ? searchRequest.getCountry().stream()
-                    .map(Country::getIso2LetterCode)
-                    .collect(Collectors.joining("-"))
-                : null,
-            searchRequest.getCity(),
-            searchRequest.getInstitution() != null
-                ? searchRequest.getInstitution().toString()
-                : null,
-            searchRequest.getAlternativeCode(),
-            searchRequest.getCode(),
-            searchRequest.getName(),
-            searchRequest.getContact() != null ? searchRequest.getContact().toString() : null,
-            searchRequest.getIdentifierType() != null
-                ? searchRequest.getIdentifierType().name()
-                : null,
-            searchRequest.getIdentifier(),
-            searchRequest.getMachineTagNamespace(),
-            searchRequest.getMachineTagName(),
-            searchRequest.getMachineTagValue(),
-            searchRequest.getFuzzyName(),
+            join(searchRequest.getGbifRegion(), GbifRegion::name),
+            join(searchRequest.getCountry(), Country::getIso2LetterCode),
+            join(searchRequest.getCity()),
+            join(searchRequest.getInstitution(), UUID::toString),
+            join(searchRequest.getAlternativeCode()),
+            join(searchRequest.getCode()),
+            join(searchRequest.getName()),
+            join(searchRequest.getContact(), UUID::toString),
+            join(searchRequest.getIdentifierType(), IdentifierType::name),
+            join(searchRequest.getIdentifier()),
+            join(searchRequest.getMachineTagNamespace()),
+            join(searchRequest.getMachineTagName()),
+            join(searchRequest.getMachineTagValue()),
+            join(searchRequest.getFuzzyName()),
             searchRequest.getQ());
-    if (preFileName.length() > 0) {
+    if (!preFileName.isEmpty()) {
       preFileName += "-";
     }
     return ContentDisposition.builder("attachment")
@@ -916,5 +904,65 @@ public class CollectionResource
     Preconditions.checkArgument(descriptor.getDescriptorGroupKey().equals(descriptorGroupKey));
     Preconditions.checkArgument(existingDescriptorGroup.getCollectionKey().equals(collectionKey));
     return descriptor;
+  }
+
+  @Operation(
+      operationId = "reinterpretCollectionDescriptorGroup",
+      summary = "Reinterprets a collection descriptor group",
+      description = "Reinterprets a collection descriptor group.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "Collection descriptor group reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("{collectionKey}/descriptorGroup/{key}/reinterpret")
+  public void reinterpretCollectionDescriptorGroup(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long descriptorGroupKey) {
+    DescriptorGroup existingDescriptorGroup =
+        descriptorsService.getDescriptorGroup(descriptorGroupKey);
+
+    if (existingDescriptorGroup != null) {
+      Preconditions.checkArgument(
+          existingDescriptorGroup.getCollectionKey().equals(collectionKey),
+          INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
+    }
+
+    descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey);
+  }
+
+  @Operation(
+      operationId = "reinterpretCollectionDescriptorGroups",
+      summary = "Reinterprets all the descriptor groups of the collection",
+      description = "Reinterprets all the descriptor groups of the collection",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "Collection descriptor groups reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("{collectionKey}/descriptorGroup/reinterpretAll")
+  public void reinterpretCollectionDescriptorGroups(
+      @PathVariable("collectionKey") UUID collectionKey) {
+    descriptorsService.reinterpretCollectionDescriptorGroups(collectionKey);
+  }
+
+  @Operation(
+      operationId = "reinterpretAllDescriptorGroups",
+      summary = "Reinterprets all the descriptor groups",
+      description = "Reinterprets all the descriptor groups",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0501")))
+  @ApiResponse(responseCode = "204", description = "All descriptor groups reinterpreted")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @SneakyThrows
+  @PostMapping("reinterpretAllDescriptorGroups")
+  public void reinterpretAllDescriptorGroups() {
+    descriptorsService.reinterpretAllDescriptorGroups();
   }
 }
