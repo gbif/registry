@@ -94,9 +94,10 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_1,
           LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_2,
           LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
-  private static final Set<String> DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES =
+  private static final Set<String> CAMTRAP_DP_ENDPOINT_TYPE_ALTERNATIVES =
       ImmutableSet.of(
-          EndpointType.CAMTRAP_DP.name(), LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE);
+          LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_1,
+          LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_2);
 
   /** Default constructor. */
   public LegacyDataset() {
@@ -756,15 +757,26 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
       while (serviceTypesTokenizer.hasMoreTokens() && serviceUrlsTokenizer.hasMoreTokens()) {
         String type = serviceTypesTokenizer.nextToken();
         String url = serviceUrlsTokenizer.nextToken();
-        if (type != null && url != null && DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES.contains(type)) {
-          // create endpoint
-          Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP);
-          if (endpoint != null) {
-            // set it
-            dataPackageEndpoint = endpoint;
+        if (type != null && url != null) {
+          if (CAMTRAP_DP_ENDPOINT_TYPE_ALTERNATIVES.contains(type)) {
+            // create Camtrap DP endpoint
+            Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP);
+            if (endpoint != null) {
+              // set it
+              dataPackageEndpoint = endpoint;
+            }
+            // only 1 is expected
+            break;
+          } else if (LegacyResourceConstants.COLDP_SERVICE_TYPE.equals(type)) {
+            // create ColDP enpoint
+            Endpoint endpoint = createEndpoint(url, EndpointType.COLDP);
+            if (endpoint != null) {
+              // set it
+              dataPackageEndpoint = endpoint;
+            }
+            // only 1 is expected
+            break;
           }
-          // only 1 is expected
-          break;
         }
       }
     }
@@ -772,7 +784,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
 
   /**
    * Creates a new Endpoint, or retrieves an existing Endpoint from the dataset. This method assumes
-   * that the dataset only has 1 endpoint for each type: EML and DWC_ARCHIVE.
+   * that the dataset only has 1 endpoint for each type: EML, DWC_ARCHIVE, CAMTRAP_DP or COLDP.
    *
    * @param url Endpoint URL
    * @param type Endpoint type
@@ -810,11 +822,13 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   public DatasetType resolveType() {
     if (serviceTypes != null) {
       if (serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1)
-          || serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
+          || serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)
+          || serviceTypes.contains(LegacyResourceConstants.COLDP_SERVICE_TYPE)) {
         return DatasetType.CHECKLIST;
       } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
           || serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
-          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE)) {
+          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_1)
+          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_2)) {
         return DatasetType.OCCURRENCE;
       } else if (serviceTypes.contains(LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_1)
           || serviceTypes.contains(LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_2)) {
