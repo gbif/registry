@@ -311,14 +311,14 @@ public class DatasetResource extends BaseNetworkEntityResource<Dataset, DatasetL
         @Parameter(
             name = "recordCount",
             description =
-                "Number of records of the dataset. Accepts ranges and a '*' can be used as a wildcard.",
+                "Number of records of the dataset. Accepts ranges and a `*` can be used as a wildcard.",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY,
             example = "100,*"),
         @Parameter(
             name = "modifiedDate",
             description =
-                "Date when the dataset was modified the last time. Accepts ranges and a '*' can be used as a wildcard.",
+                "Date when the dataset was modified the last time. Accepts ranges and a `*` can be used as a wildcard.",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY,
             example = "2022-05-01,*"),
