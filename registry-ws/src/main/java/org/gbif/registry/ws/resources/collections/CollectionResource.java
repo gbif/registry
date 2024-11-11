@@ -798,7 +798,7 @@ public class CollectionResource
         @Parameter(
             name = "individualCount",
             description =
-                "Individual count of the descriptor. It supports ranges and a '*' can be used as a wildcard",
+                "Individual count of the descriptor. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
