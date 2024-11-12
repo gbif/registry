@@ -54,7 +54,6 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
     extractMultivalueParam(params, "preservationType")
         .ifPresent(searchRequest::setPreservationTypes);
     extractMultivalueParam(params, "accessionStatus").ifPresent(searchRequest::setAccessionStatus);
-    extractMultivalueParam(params, "contentType").ifPresent(searchRequest::setContentTypes);
     extractMultivalueParam(params, "personalCollection", Boolean::parseBoolean)
         .ifPresent(searchRequest::setPersonalCollection);
   }
