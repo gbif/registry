@@ -90,7 +90,7 @@
     <!-- GBIF -->
     <gbif-api.version>1.17.0-SNAPSHOT</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
-    <gbif-common-mybatis.version>1.4-SNAPSHOT</gbif-common-mybatis.version>
+    <gbif-common-mybatis.version>1.4</gbif-common-mybatis.version>
     <gbif-common-ws.version>1.28-SNAPSHOT</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
     <gbif-doi.version>2.22-SNAPSHOT</gbif-doi.version>
