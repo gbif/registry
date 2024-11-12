@@ -220,11 +220,13 @@ public class IptResource {
   /**
    * Register IPT dataset, handling incoming request with path /ipt/resource. The primary contact
    * and publishing organization key are mandatory. Only after both the dataset and primary contact
-   * have been persisted is a response with {@link HttpStatus#CREATED} returned. </br> Before being
+   * have been persisted is a response with {@link HttpStatus#CREATED} returned.
+   * <p>
+   * Before being
    * persisted, the dataset is the UNSPECIFIED license. This will be replaced (if possible) by the
    * publisher assigned license when the dataset gets crawled the first time. Since IPT 2.2, the IPT
    * EML metadata document always includes a machine-readable license. See discussion at
-   * https://github.com/gbif/registry/issues/71
+   * <a href="https://github.com/gbif/registry/issues/71">GitHub</a>
    *
    * @param dataset LegacyDataset with HTTP form parameters
    * @return {@link ResponseEntity} with {@link HttpStatus#CREATED} if successful
