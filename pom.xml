@@ -94,7 +94,7 @@
     <gbif-common-ws.version>1.28-SNAPSHOT</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
     <gbif-doi.version>2.22-SNAPSHOT</gbif-doi.version>
-    <gbif-download-query-tools.version>1.53.0</gbif-download-query-tools.version>
+    <gbif-download-query-tools.version>1.54.0-SNAPSHOT</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
@@ -102,7 +102,7 @@
     <xoai.version>4.1.0-gbif-4</xoai.version>
     <gbif-occurrence.version>0.195.7-H3-SNAPSHOT</gbif-occurrence.version>
     <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
-    <checklistbank.version>2.127-SNAPSHOT</checklistbank.version>
+    <checklistbank.version>2.130-SNAPSHOT</checklistbank.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
