@@ -156,4 +156,5 @@
   <include file="liquibase/148-primary-identifier-grscicoll.xml" />
   <include file="liquibase/149-taxon-fields-collection-descriptors.xml" />
   <include file="liquibase/150-similar-name-list-function.xml" />
+  <include file="liquibase/151-indexes-collections-contacts.xml" />
 </databaseChangeLog>
