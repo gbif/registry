@@ -6,12 +6,12 @@
   <parent>
     <groupId>org.gbif</groupId>
     <artifactId>motherpom</artifactId>
-    <version>56</version>
+    <version>59</version>
   </parent>
 
   <groupId>org.gbif.registry</groupId>
   <artifactId>registry-parent</artifactId>
-  <version>3.96.30-SNAPSHOT</version>
+  <version>3.97.0-SNAPSHOT</version>
   <name>GBIF Registry Parent</name>
   <description>GBIF Registry project</description>
 
@@ -46,7 +46,7 @@
       <url>https://repository.gbif.org/content/repositories/releases</url>
     </repository>
     <snapshotRepository>
-      <id>gbif-snapshot</id>
+      <id>gbif-deploy</id>
       <url>https://repository.gbif.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
@@ -74,31 +74,35 @@
   </modules>
 
   <properties>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <java.version>11</java.version>
+
     <!-- Spring -->
     <spring-boot.version>2.3.12.RELEASE</spring-boot.version>
     <spring-boot-admin.version>2.2.4</spring-boot-admin.version>
-    <spring-cloud-openfeign.version>2.2.6.RELEASE</spring-cloud-openfeign.version>
+    <spring-cloud-openfeign.version>2.2.10.RELEASE</spring-cloud-openfeign.version>
     <spring-cloud-zookeeper.version>2.2.5.RELEASE</spring-cloud-zookeeper.version>
-    <mybatis-spring-boot-starter.version>2.1.0</mybatis-spring-boot-starter.version>
+    <mybatis-spring-boot-starter.version>2.3.2</mybatis-spring-boot-starter.version>
     <springdoc-openapi-ui.version>1.5.8</springdoc-openapi-ui.version>
     <spring-cloud-sleuth.version>2.2.8.RELEASE</spring-cloud-sleuth.version>
 
     <!-- GBIF -->
-    <gbif-api.version>1.16.18</gbif-api.version>
+    <gbif-api.version>2.0.0</gbif-api.version>
     <gbif-common.version>0.59</gbif-common.version>
-    <gbif-common-mybatis.version>1.4</gbif-common-mybatis.version>
-    <gbif-common-ws.version>1.26</gbif-common-ws.version>
+    <gbif-common-mybatis.version>2.0.0</gbif-common-mybatis.version>
+    <gbif-common-ws.version>2.0.0</gbif-common-ws.version>
     <gbif-directory.version>1.13</gbif-directory.version>
-    <gbif-doi.version>2.17</gbif-doi.version>
-    <gbif-download-query-tools.version>1.53.3</gbif-download-query-tools.version>
+    <gbif-doi.version>3.0.0</gbif-doi.version>
+    <gbif-download-query-tools.version>2.0.0</gbif-download-query-tools.version>
     <gbif-httputils.version>0.10</gbif-httputils.version>
     <gbif-metadata-profile.version>2.6</gbif-metadata-profile.version>
     <gbif-parsers.version>0.67</gbif-parsers.version>
     <gbif-postal-service.version>1.8.1</gbif-postal-service.version>
     <xoai.version>4.1.0-gbif-4</xoai.version>
-    <gbif-occurrence.version>0.195.1</gbif-occurrence.version>
-    <gbif-vocabulary.version>1.0.12</gbif-vocabulary.version>
-    <checklistbank.version>2.128</checklistbank.version>
+    <gbif-occurrence.version>0.195.8</gbif-occurrence.version>
+    <gbif-vocabulary.version>2.0.2</gbif-vocabulary.version>
+    <checklistbank.version>3.0.0</checklistbank.version>
 
     <!-- Third party -->
     <commons-digester.version>3.2</commons-digester.version>
@@ -109,7 +113,7 @@
     <elasticsearch.version>7.9.1</elasticsearch.version>
     <feign.version>10.11</feign.version>
     <findbugs-jsr305.version>3.0.1</findbugs-jsr305.version>
-    <guava.version>18.0</guava.version>
+    <guava.version>27.0-jre</guava.version>
     <hadoop.version>2.6.0-cdh5.16.2</hadoop.version>
     <hikaricp.version>3.2.0</hikaricp.version>
     <janino-logback.version>2.5.10</janino-logback.version>
@@ -118,19 +122,19 @@
     <jsr311-api.version>1.1.1</jsr311-api.version>
     <logback.version>1.2.3</logback.version>
     <logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
-    <lombok.version>1.18.20</lombok.version>
+    <lombok.version>1.18.28</lombok.version>
     <mybatis.version>3.5.0</mybatis.version>
-    <okhttp.version>4.9.1</okhttp.version>
-    <okio.version>2.10.0</okio.version>
-    <retrofit.version>2.8.0</retrofit.version>
     <slf4j.version>1.7.30</slf4j.version>
     <woodstox.version>4.4.1</woodstox.version>
-    <zookeeper.version>3.4.14</zookeeper.version>
+    <zookeeper.version>3.8.1</zookeeper.version>
+    <curator.version>5.5.0</curator.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
     <geojson.version>1.14</geojson.version>
     <avro.version>1.8.2</avro.version>
+    <jaxb-api.version>2.3.1</jaxb-api.version>
+    <swagger-annotations.version>2.2.3</swagger-annotations.version>
     <resilience4j.version>1.7.0</resilience4j.version>
 
     <!-- Hadoop -->
@@ -141,8 +145,8 @@
     <junit.version>5.9.1</junit.version>
     <mockito.version>3.3.3</mockito.version>
     <xmlunit.version>2.6.3</xmlunit.version>
-    <postgresql-testcontainers.version>1.17.6</postgresql-testcontainers.version>
-    <testcontainers-elasticsearch.version>1.17.6</testcontainers-elasticsearch.version>
+    <postgresql-testcontainers.version>1.19.8</postgresql-testcontainers.version>
+    <testcontainers-elasticsearch.version>1.19.8</testcontainers-elasticsearch.version>
     <mock-javamail.version>1.9</mock-javamail.version>
     <mybatis-spring-boot-starter-test.version>2.0.0</mybatis-spring-boot-starter-test.version>
     <reflections.version>0.9.12</reflections.version>
@@ -168,6 +172,7 @@
 
     <!-- Plugin versions -->
     <spring-boot-maven-plugin.version>${spring-boot.version}</spring-boot-maven-plugin.version>
+    <maven-shade-plugin.version>3.5.3</maven-shade-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -452,6 +457,21 @@
         </exclusions>
       </dependency>
       <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-framework</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-recipes</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-x-discovery</artifactId>
+        <version>${curator.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.mybatis</groupId>
         <artifactId>mybatis</artifactId>
         <version>${mybatis.version}</version>
@@ -530,42 +550,6 @@
       </dependency>
 
       <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>retrofit</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>converter-jackson</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>converter-simplexml</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.retrofit2</groupId>
-        <artifactId>converter-scalars</artifactId>
-        <version>${retrofit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>logging-interceptor</artifactId>
-        <version>${okhttp.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.squareup.okio</groupId>
-        <artifactId>okio</artifactId>
-        <version>${okio.version}</version>
-        <scope>runtime</scope>
-      </dependency>
-      <dependency>
         <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
         <artifactId>owasp-java-html-sanitizer</artifactId>
         <version>${owasp-java-html-sanitizer.version}</version>
@@ -577,16 +561,6 @@
         <version>${janino-logback.version}</version>
         <scope>runtime</scope>
       </dependency>
-<!--      <dependency>-->
-<!--        <groupId>ch.qos.logback</groupId>-->
-<!--        <artifactId>logback-classic</artifactId>-->
-<!--        <version>${logback.version}</version>-->
-<!--      </dependency>-->
-<!--      <dependency>-->
-<!--        <groupId>ch.qos.logback</groupId>-->
-<!--        <artifactId>logback-core</artifactId>-->
-<!--        <version>${logback.version}</version>-->
-<!--      </dependency>-->
       <dependency>
         <groupId>net.logstash.logback</groupId>
         <artifactId>logstash-logback-encoder</artifactId>
@@ -736,6 +710,18 @@
         </exclusions>
       </dependency>
 
+      <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>${jaxb-api.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.swagger.core.v3</groupId>
+        <artifactId>swagger-annotations</artifactId>
+        <version>${swagger-annotations.version}</version>
+      </dependency>
+
       <!-- Test dependencies -->
       <dependency>
         <groupId>org.mybatis.spring.boot</groupId>
@@ -825,6 +811,11 @@
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${spring-boot-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>

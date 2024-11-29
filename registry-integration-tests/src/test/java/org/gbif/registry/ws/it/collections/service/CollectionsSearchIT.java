@@ -21,10 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.SneakyThrows;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
@@ -38,7 +37,6 @@ import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
 import org.gbif.api.model.collections.search.FacetedSearchResponse;
 import org.gbif.api.model.collections.search.InstitutionSearchResponse;
 import org.gbif.api.model.common.export.ExportFormat;
-import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingRequest;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.Identifier;
@@ -637,10 +635,9 @@ public class CollectionsSearchIT extends BaseServiceIT {
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            CollectionFacetParameter.COUNTRY,
-                            CollectionFacetParameter.PRESERVATION_TYPE)))
+                    Set.of(
+                        CollectionFacetParameter.COUNTRY,
+                        CollectionFacetParameter.PRESERVATION_TYPE))
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertEquals(
@@ -658,27 +655,24 @@ public class CollectionsSearchIT extends BaseServiceIT {
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            CollectionFacetParameter.COUNTRY,
-                            CollectionFacetParameter.PRESERVATION_TYPE)))
+                    Set.of(
+                        CollectionFacetParameter.COUNTRY,
+                        CollectionFacetParameter.PRESERVATION_TYPE))
                 .facetLimit(1)
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertTrue(searchResponse.getFacets().stream().allMatch(f -> f.getCounts().size() == 1));
 
-    Map<CollectionFacetParameter, Pageable> facetPages = new HashMap<>();
-    facetPages.put(CollectionFacetParameter.PRESERVATION_TYPE, new PagingRequest(0, 2));
     searchResponse =
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            CollectionFacetParameter.COUNTRY,
-                            CollectionFacetParameter.PRESERVATION_TYPE)))
+                    Set.of(
+                        CollectionFacetParameter.COUNTRY,
+                        CollectionFacetParameter.PRESERVATION_TYPE))
                 .facetLimit(1)
-                .facetPages(facetPages)
+                .facetPages(
+                    Map.of(CollectionFacetParameter.PRESERVATION_TYPE, new PagingRequest(0, 2)))
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertEquals(
@@ -686,18 +680,16 @@ public class CollectionsSearchIT extends BaseServiceIT {
     assertEquals(
         1, searchResponse.getFacets().stream().filter(f -> f.getCounts().size() == 2).count());
 
-    facetPages = new HashMap<>();
-    facetPages.put(CollectionFacetParameter.PRESERVATION_TYPE, new PagingRequest(1, 2));
     searchResponse =
         searchService.searchCollections(
             CollectionDescriptorsSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            CollectionFacetParameter.COUNTRY,
-                            CollectionFacetParameter.PRESERVATION_TYPE)))
+                    Set.of(
+                        CollectionFacetParameter.COUNTRY,
+                        CollectionFacetParameter.PRESERVATION_TYPE))
                 .facetLimit(1)
-                .facetPages(facetPages)
+                .facetPages(
+                    Map.of(CollectionFacetParameter.PRESERVATION_TYPE, new PagingRequest(1, 2)))
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertTrue(searchResponse.getFacets().stream().allMatch(f -> f.getCounts().size() == 1));
@@ -778,10 +770,7 @@ public class CollectionsSearchIT extends BaseServiceIT {
         searchService.searchInstitutions(
             InstitutionFacetedSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            InstitutionFacetParameter.DISCIPLINE,
-                            InstitutionFacetParameter.COUNTRY)))
+                    Set.of(InstitutionFacetParameter.DISCIPLINE, InstitutionFacetParameter.COUNTRY))
                 .multiSelectFacets(true)
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
@@ -800,27 +789,19 @@ public class CollectionsSearchIT extends BaseServiceIT {
         searchService.searchInstitutions(
             InstitutionFacetedSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            InstitutionFacetParameter.COUNTRY,
-                            InstitutionFacetParameter.DISCIPLINE)))
+                    Set.of(InstitutionFacetParameter.COUNTRY, InstitutionFacetParameter.DISCIPLINE))
                 .facetLimit(1)
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertTrue(searchResponse.getFacets().stream().allMatch(f -> f.getCounts().size() == 1));
 
-    Map<InstitutionFacetParameter, Pageable> facetPages = new HashMap<>();
-    facetPages.put(InstitutionFacetParameter.DISCIPLINE, new PagingRequest(0, 2));
     searchResponse =
         searchService.searchInstitutions(
             InstitutionFacetedSearchRequest.builder()
                 .facets(
-                    new HashSet<>(
-                        Arrays.asList(
-                            InstitutionFacetParameter.COUNTRY,
-                            InstitutionFacetParameter.DISCIPLINE)))
+                    Set.of(InstitutionFacetParameter.COUNTRY, InstitutionFacetParameter.DISCIPLINE))
                 .facetLimit(1)
-                .facetPages(facetPages)
+                .facetPages(Map.of(InstitutionFacetParameter.DISCIPLINE, new PagingRequest(0, 2)))
                 .build());
     assertEquals(2, searchResponse.getFacets().size());
     assertEquals(

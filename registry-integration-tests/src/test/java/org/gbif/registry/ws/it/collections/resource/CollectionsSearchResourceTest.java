@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
@@ -128,7 +129,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
   public void facetSearchInstitutionsTest() {
     InstitutionFacetedSearchRequest searchRequest =
         InstitutionFacetedSearchRequest.builder()
-            .facets(Collections.singleton(InstitutionFacetParameter.COUNTRY))
+            .facets(Set.of(InstitutionFacetParameter.COUNTRY))
             .offset(0L)
             .limit(20)
             .build();
@@ -140,7 +141,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     CollectionFacet<InstitutionFacetParameter> facet = new CollectionFacet<>();
     facet.setCardinality(1);
     facet.setField(InstitutionFacetParameter.COUNTRY);
-    facet.setCounts(Collections.singletonList(new CollectionFacet.Count("ES", 2L)));
+    facet.setCounts(List.of(new CollectionFacet.Count("ES", 2L)));
 
     FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchResponse =
         new FacetedSearchResponse<>(
@@ -163,7 +164,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
   public void facetSearchCollectionsTest() {
     CollectionDescriptorsSearchRequest searchRequest =
         CollectionDescriptorsSearchRequest.builder()
-            .facets(Collections.singleton(CollectionFacetParameter.COUNTRY))
+            .facets(Set.of(CollectionFacetParameter.COUNTRY))
             .offset(0L)
             .limit(20)
             .build();
@@ -175,7 +176,7 @@ public class CollectionsSearchResourceTest extends BaseResourceIT {
     CollectionFacet<CollectionFacetParameter> facet = new CollectionFacet<>();
     facet.setCardinality(1);
     facet.setField(CollectionFacetParameter.COUNTRY);
-    facet.setCounts(Collections.singletonList(new CollectionFacet.Count("ES", 2L)));
+    facet.setCounts(List.of(new CollectionFacet.Count("ES", 2L)));
 
     FacetedSearchResponse<CollectionSearchResponse, CollectionFacetParameter> searchResponse =
         new FacetedSearchResponse<>(

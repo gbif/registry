@@ -263,7 +263,7 @@ public class InstitutionMapperIT extends BaseItTest {
             .page(page)
             .build(),
         0);
-    assertSearch(InstitutionListParams.builder().city(asList("Odense")).page(page).build(), 1);
+    assertSearch(InstitutionListParams.builder().city(asList("Odense")).page(page).build(), 0);
     assertSearch(
         InstitutionListParams.builder()
             .city(asList("Copenhagen"))

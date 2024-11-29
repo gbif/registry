@@ -210,7 +210,7 @@ public abstract class BaseCollectionEntityResource<
         @Parameter(
             name = "numberSpecimens",
             description =
-                "Number of specimens. It supports ranges and a '*' can be used as a wildcard",
+                "Number of specimens. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
@@ -226,13 +226,13 @@ public abstract class BaseCollectionEntityResource<
         @Parameter(
             name = "occurrenceCount",
             description =
-                "Count of occurrences linked. It supports ranges and a '*' can be used as a wildcard",
+                "Count of occurrences linked. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(
             name = "typeSpecimenCount",
             description =
-                "Count of type specimens linked. It supports ranges and a '*' can be used as a wildcard",
+                "Count of type specimens linked. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(

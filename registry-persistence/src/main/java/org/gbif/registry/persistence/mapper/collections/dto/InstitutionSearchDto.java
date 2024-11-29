@@ -12,7 +12,6 @@ import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.MasterSourceType;
 
-@SuppressWarnings("MissingOverride")
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class InstitutionSearchDto extends BaseSearchDto {

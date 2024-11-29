@@ -13,6 +13,12 @@
  */
 package org.gbif.registry.domain.ws;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.common.DOI;
@@ -21,33 +27,21 @@ import org.gbif.api.model.registry.Contact;
 import org.gbif.api.model.registry.Dataset;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.util.VocabularyUtils;
-import org.gbif.api.vocabulary.ContactType;
-import org.gbif.api.vocabulary.DatasetSubtype;
-import org.gbif.api.vocabulary.DatasetType;
-import org.gbif.api.vocabulary.EndpointType;
-import org.gbif.api.vocabulary.Language;
+import org.gbif.api.vocabulary.*;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.validator.routines.EmailValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.UUID;
 
 /**
  * Class used to create or update a Dataset for legacy (GBRDS/IPT) API. Previously known as a
@@ -94,9 +88,10 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
           LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_1,
           LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_2,
           LegacyResourceConstants.SAMPLING_EVENT_SERVICE_TYPE);
-  private static final Set<String> DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES =
+  private static final Set<String> CAMTRAP_DP_ENDPOINT_TYPE_ALTERNATIVES =
       ImmutableSet.of(
-          EndpointType.CAMTRAP_DP.name(), LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE);
+          LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_1,
+          LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_2);
 
   /** Default constructor. */
   public LegacyDataset() {
@@ -756,15 +751,26 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
       while (serviceTypesTokenizer.hasMoreTokens() && serviceUrlsTokenizer.hasMoreTokens()) {
         String type = serviceTypesTokenizer.nextToken();
         String url = serviceUrlsTokenizer.nextToken();
-        if (type != null && url != null && DATA_PACKAGE_ENDPOINT_TYPE_ALTERNATIVES.contains(type)) {
-          // create endpoint
-          Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP);
-          if (endpoint != null) {
-            // set it
-            dataPackageEndpoint = endpoint;
+        if (type != null && url != null) {
+          if (CAMTRAP_DP_ENDPOINT_TYPE_ALTERNATIVES.contains(type)) {
+            // create Camtrap DP endpoint
+            Endpoint endpoint = createEndpoint(url, EndpointType.CAMTRAP_DP);
+            if (endpoint != null) {
+              // set it
+              dataPackageEndpoint = endpoint;
+            }
+            // only 1 is expected
+            break;
+          } else if (LegacyResourceConstants.COLDP_SERVICE_TYPE.equals(type)) {
+            // create ColDP enpoint
+            Endpoint endpoint = createEndpoint(url, EndpointType.COLDP);
+            if (endpoint != null) {
+              // set it
+              dataPackageEndpoint = endpoint;
+            }
+            // only 1 is expected
+            break;
           }
-          // only 1 is expected
-          break;
         }
       }
     }
@@ -772,7 +778,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
 
   /**
    * Creates a new Endpoint, or retrieves an existing Endpoint from the dataset. This method assumes
-   * that the dataset only has 1 endpoint for each type: EML and DWC_ARCHIVE.
+   * that the dataset only has 1 endpoint for each type: EML, DWC_ARCHIVE, CAMTRAP_DP or COLDP.
    *
    * @param url Endpoint URL
    * @param type Endpoint type
@@ -810,11 +816,13 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   public DatasetType resolveType() {
     if (serviceTypes != null) {
       if (serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_1)
-          || serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)) {
+          || serviceTypes.contains(LegacyResourceConstants.CHECKLIST_SERVICE_TYPE_2)
+          || serviceTypes.contains(LegacyResourceConstants.COLDP_SERVICE_TYPE)) {
         return DatasetType.CHECKLIST;
       } else if (serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_1)
           || serviceTypes.contains(LegacyResourceConstants.OCCURRENCE_SERVICE_TYPE_2)
-          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE)) {
+          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_1)
+          || serviceTypes.contains(LegacyResourceConstants.CAMTRAP_DP_SERVICE_TYPE_2)) {
         return DatasetType.OCCURRENCE;
       } else if (serviceTypes.contains(LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_1)
           || serviceTypes.contains(LegacyResourceConstants.MATERIAL_ENTITY_SERVICE_TYPE_2)) {
@@ -909,7 +917,7 @@ public class LegacyDataset extends Dataset implements LegacyEntity {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("primaryContactType", primaryContactType)
         .add("primaryContactEmail", primaryContactEmail)
         .add("primaryContactName", primaryContactName)

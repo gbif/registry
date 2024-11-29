@@ -392,7 +392,7 @@ public class CollectionsSearchService {
       ListParams.ListParamsBuilder listParams, SearchRequest searchRequest) {
     String query =
         searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
     listParams

@@ -13,6 +13,7 @@
  */
 package org.gbif.registry.identity.model;
 
+import com.google.common.base.MoreObjects;
 import org.gbif.api.model.common.AbstractGbifUser;
 
 import java.util.HashMap;
@@ -127,7 +128,7 @@ public class UserModelMutationResult {
 
   @Override
   public String toString() {
-    return Objects.toStringHelper(this)
+    return MoreObjects.toStringHelper(this)
         .add("username", username)
         .add("email", email)
         .add("modelError", modelError)
