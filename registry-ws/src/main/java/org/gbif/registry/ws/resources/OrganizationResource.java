@@ -299,7 +299,7 @@ public class OrganizationResource
 
   @Override
   public PagingResponse<Organization> search(String query, Pageable page) {
-    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    String q = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     OrganizationListParams listParams =
         OrganizationListParams.builder().query(q).page(page).build();
     long total = organizationMapper.count(listParams);

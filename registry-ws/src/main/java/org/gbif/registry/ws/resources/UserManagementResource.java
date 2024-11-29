@@ -304,7 +304,7 @@ public class UserManagementResource {
     page = page == null ? new PagingRequest() : page;
     String q =
         Optional.ofNullable(query)
-            .map(v -> Strings.nullToEmpty(CharMatcher.WHITESPACE.trimFrom(v)))
+            .map(v -> Strings.nullToEmpty(CharMatcher.whitespace().trimFrom(v)))
             .orElse(null);
     Set<Country> countries =
         Optional.ofNullable(countryRightsOn)

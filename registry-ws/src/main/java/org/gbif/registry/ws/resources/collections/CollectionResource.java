@@ -42,7 +42,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -716,14 +715,13 @@ public class CollectionResource
   }
 
   private static Set<PosixFilePermission> filePermissions() {
-    return new HashSet<>(
-        Arrays.asList(
-            PosixFilePermission.OWNER_WRITE,
-            PosixFilePermission.OWNER_READ,
-            PosixFilePermission.OWNER_EXECUTE,
-            PosixFilePermission.OTHERS_WRITE,
-            PosixFilePermission.OTHERS_READ,
-            PosixFilePermission.OTHERS_EXECUTE));
+    return Set.of(
+        PosixFilePermission.OWNER_WRITE,
+        PosixFilePermission.OWNER_READ,
+        PosixFilePermission.OWNER_EXECUTE,
+        PosixFilePermission.OTHERS_WRITE,
+        PosixFilePermission.OTHERS_READ,
+        PosixFilePermission.OTHERS_EXECUTE);
   }
 
   private static Path zipFiles(
@@ -800,7 +798,7 @@ public class CollectionResource
         @Parameter(
             name = "individualCount",
             description =
-                "Individual count of the descriptor. It supports ranges and a '*' can be used as a wildcard",
+                "Individual count of the descriptor. It supports ranges and a `*` can be used as a wildcard",
             schema = @Schema(implementation = String.class),
             in = ParameterIn.QUERY),
         @Parameter(

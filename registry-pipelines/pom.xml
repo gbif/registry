@@ -3,7 +3,7 @@
   <parent>
     <artifactId>registry-parent</artifactId>
     <groupId>org.gbif.registry</groupId>
-    <version>3.96.30-SNAPSHOT</version>
+    <version>3.97.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -50,14 +50,6 @@
     <dependency>
       <groupId>org.gbif.occurrence</groupId>
       <artifactId>occurrence-ws-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okio</groupId>
-      <artifactId>okio</artifactId>
     </dependency>
 
     <!-- Hadoop -->

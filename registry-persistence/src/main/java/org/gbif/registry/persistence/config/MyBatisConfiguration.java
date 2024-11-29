@@ -47,26 +47,8 @@ import org.gbif.registry.persistence.mapper.collections.dto.*;
 import org.gbif.registry.persistence.mapper.collections.external.IDigBioCollectionDto;
 import org.gbif.registry.persistence.mapper.collections.external.IdentifierDto;
 import org.gbif.registry.persistence.mapper.collections.external.MachineTagDto;
-import org.gbif.registry.persistence.mapper.handler.*;
 import org.gbif.registry.persistence.mapper.dto.OrganizationGeoJsonDto;
 import org.gbif.registry.persistence.mapper.handler.*;
-import org.gbif.registry.persistence.mapper.handler.CollectionContentTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.CountryNotNullTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DOITypeHandler;
-import org.gbif.registry.persistence.mapper.handler.DisciplineArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.ExtensionArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.InstitutionGovernanceArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.LocaleTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.MetricInfoTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.OccurrenceDownloadStatusTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.PredicateTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.StepTypeArrayTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.SuggestedChangesTypeHandler;
-import org.gbif.registry.persistence.mapper.handler.UserIdsTypeHandler;
-
-import java.net.URI;
-import java.util.UUID;
-
 import org.mybatis.spring.boot.autoconfigure.ConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

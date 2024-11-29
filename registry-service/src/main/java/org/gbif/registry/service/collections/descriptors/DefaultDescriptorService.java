@@ -294,7 +294,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
     String query =
         searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
     DescriptorGroupParams params =
@@ -337,7 +337,7 @@ public class DefaultDescriptorService implements DescriptorsService {
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
     String query =
         searchRequest.getQ() != null
-            ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(searchRequest.getQ()))
+            ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(searchRequest.getQ()))
             : searchRequest.getQ();
 
     return DescriptorParams.builder()

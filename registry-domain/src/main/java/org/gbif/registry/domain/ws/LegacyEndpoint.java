@@ -13,26 +13,24 @@
  */
 package org.gbif.registry.domain.ws;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import org.gbif.api.annotation.Generated;
 import org.gbif.api.annotation.ParamName;
 import org.gbif.api.model.registry.Endpoint;
 import org.gbif.api.vocabulary.EndpointType;
 import org.gbif.registry.domain.ws.util.LegacyResourceConstants;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Strings;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.UUID;
 
 /**
  * Class used to create or update an Endpoint for legacy (GBRDS/IPT) API. Previously known as a
@@ -195,6 +193,6 @@ public class LegacyEndpoint extends Endpoint implements LegacyEntity {
   @Generated
   @Override
   public String toString() {
-    return Objects.toStringHelper(this).add("datasetKey", datasetKey).toString();
+    return MoreObjects.toStringHelper(this).add("datasetKey", datasetKey).toString();
   }
 }

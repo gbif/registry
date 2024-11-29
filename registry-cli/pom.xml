@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.gbif.registry</groupId>
     <artifactId>registry-parent</artifactId>
-    <version>3.96.30-SNAPSHOT</version>
+    <version>3.97.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>registry-cli</artifactId>
@@ -19,14 +19,17 @@
   </distributionManagement>
 
   <properties>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
+    <java.version>11</java.version>
     <main.basedir>${project.parent.basedir}</main.basedir>
     <jcommander.version>1.48</jcommander.version>
     <yammer.version>2.2.0</yammer.version>
-    <gbif-cli.version>1.0</gbif-cli.version>
-    <metainf-services.version>1.5</metainf-services.version>
+    <gbif-cli.version>1.2-SNAPSHOT</gbif-cli.version>
+    <metainf-services.version>1.11</metainf-services.version>
     <jersey.version>1.19.3</jersey.version>
     <javax.mail.version>1.4.7</javax.mail.version>
-    <guava.version>18.0</guava.version>
+    <kotlin.version>1.4.20</kotlin.version>
 
     <sonar.coverage.jacoco.xmlReportPaths>
       ${project.basedir}/../target/site/jacoco-it/jacoco.xml,${project.basedir}/../target/site/jacoco-ut/jacoco.xml
@@ -53,8 +56,8 @@
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration combine.self="override">
-          <source>1.8</source>
-          <target>1.8</target>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
         </configuration>
@@ -113,18 +116,6 @@
                 <!-- This bit merges the various META-INF/services files         -->
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
               </transformers>
-              <!--
-              <relocations>
-                <relocation>
-                  <pattern>org.codehaus.plexus.util</pattern>
-                  <shadedPattern>org.shaded.plexus.util</shadedPattern>
-                  <excludes>
-                    <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude>
-                    <exclude>org.codehaus.plexus.util.xml.pull.*</exclude>
-                  </excludes>
-                </relocation>
-              </relocations>
-              -->
             </configuration>
           </execution>
         </executions>
@@ -138,11 +129,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
@@ -183,11 +169,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-jdbc</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.squareup.retrofit2</groupId>
-      <artifactId>converter-jackson</artifactId>
     </dependency>
 
     <!-- GBIF dependencies -->
@@ -339,11 +320,6 @@
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <scope>runtime</scope>
-    </dependency>
 
     <!-- logging -->
     <dependency>
@@ -374,6 +350,23 @@
       <groupId>javax.mail</groupId>
       <artifactId>mail</artifactId>
       <version>${javax.mail.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>1.10.14</version>
+    </dependency>
+
+    <!-- needed for the datacite client -->
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib-common</artifactId>
+      <version>${kotlin.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>${kotlin.version}</version>
     </dependency>
 
     <!-- testing -->

@@ -193,7 +193,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
         @Parameter(
             name = "modified",
             description =
-                "The modified date of the dataset. Accepts ranges and a '*' can be used as a wildcard, e.g.:modified=2023-04-01,*",
+                "The modified date of the dataset. Accepts ranges and a `*` can be used as a wildcard, e.g. `modified=2023-04-01,*`",
             schema = @Schema(implementation = Range.class),
             in = ParameterIn.QUERY,
             explode = Explode.TRUE),
@@ -281,7 +281,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   @Override
   @Deprecated
   public PagingResponse<T> search(String query, Pageable page) {
-    String q = query != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(query)) : query;
+    String q = query != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(query)) : query;
     return list(BaseListParams.builder().query(q).page(page).build());
   }
 
@@ -973,7 +973,7 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   }
 
   protected String parseQuery(String q) {
-    return q != null ? Strings.emptyToNull(CharMatcher.WHITESPACE.trimFrom(q)) : q;
+    return q != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(q)) : q;
   }
 
   protected Date parseFrom(Range<LocalDate> range) {
