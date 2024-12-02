@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <property>
+    <name>hbase.tmp.dir</name>
+    <value>/tmp/hbase</value>
+    <description>Temporary directory on the local filesystem.</description>
+  </property>
+  <property>
+    <name>hfile.block.cache.size</name>
+    <value>0.2</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>c3zk1.gbif-dev.org,c3zk2.gbif-dev.org,c3zk3.gbif-dev.org</value>
+  </property>
+</configuration>
