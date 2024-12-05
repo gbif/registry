@@ -42,7 +42,7 @@ public class NameUsageMatchingServiceMock implements NameUsageMatchingService {
   }
 
   @Override
-  public Metadata getMetadata() {
+  public Metadata getMetadata(String key) {
     return null;
   }
 }
