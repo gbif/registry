@@ -30,5 +30,5 @@ public class IssuesConfig {
   @NotEmpty private String githubUser;
   @NotEmpty private String githubPassword;
   @NotEmpty public String hdfsSiteConfig;
-  @NotEmpty public String hdfsPrefix = "hdfs://ha-nn";
+  @NotEmpty public String hdfsPrefix = "hdfs://gbif-hdfs";
 }
