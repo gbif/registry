@@ -46,6 +46,13 @@ public class InstitutionFacetedSearchRequestHandlerMethodArgumentResolver
   }
 
   private Function<String, InstitutionFacetParameter> facetParamParser() {
-    return s -> InstitutionFacetParameter.valueOf(s.toUpperCase());
+    return s -> {
+      for (InstitutionFacetParameter value : InstitutionFacetParameter.values()) {
+        if (normalizeFacet(value.name()).equals(normalizeFacet(s))) {
+          return value;
+        }
+      }
+      return null;
+    };
   }
 }
