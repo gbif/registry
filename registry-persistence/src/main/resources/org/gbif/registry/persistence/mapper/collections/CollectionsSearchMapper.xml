@@ -531,7 +531,7 @@
       LEFT JOIN address ma ON ma.key = c.mailing_address_key
     </if>
     <if test="params.descriptorFacet">
-      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
@@ -621,7 +621,7 @@
         COUNT(DISTINCT CASE WHEN a.${params.facet.name} is not null THEN a.${params.facet.name} ELSE ma.${params.facet.name} END)
         FROM collection c
         <if test="params.descriptorFacet">
-          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
       </when>
@@ -632,7 +632,7 @@
         COUNT(DISTINCT facet)
         FROM collection c
         <if test="params.descriptorFacet">
-          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
         INNER JOIN unnest(
@@ -691,7 +691,7 @@
         </choose>
         ) FROM collection c
         <if test="params.descriptorFacet">
-          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key
+          INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
       </otherwise>
