@@ -221,6 +221,24 @@ public class Vocabularies {
     return allChildren;
   }
 
+  public static List<String> getVocabularyConcepts(String vocabulary, ConceptClient conceptClient) {
+    int limit = 100;
+    long offset = 0;
+    PagingResponse<ConceptView> response;
+    List<String> concepts = new ArrayList<>();
+    do {
+      ConceptListParams params = ConceptListParams.builder().limit(limit).offset(offset).build();
+      response =
+          Retry.decorateSupplier(
+                  RETRY, () -> conceptClient.listConceptsLatestRelease(vocabulary, params))
+              .get();
+      response.getResults().forEach(r -> concepts.add(r.getConcept().getName()));
+      offset += limit;
+    } while (!response.isEndOfRecords());
+
+    return concepts;
+  }
+
   public static ConceptView getConceptLatestRelease(
       String vocabulary, String conceptName, ConceptClient conceptClient) {
     return Retry.decorateSupplier(
