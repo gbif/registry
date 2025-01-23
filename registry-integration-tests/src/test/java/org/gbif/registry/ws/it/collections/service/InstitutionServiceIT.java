@@ -647,6 +647,8 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
     assertEquals(2, institutionService.suggest("II").size());
     assertEquals(1, institutionService.suggest("II2").size());
     assertEquals(1, institutionService.suggest("name2").size());
+    assertEquals(1, institutionService.suggest("Institution name2").size());
+    assertDoesNotThrow(() -> institutionService.suggest(""));
   }
 
   @Test
