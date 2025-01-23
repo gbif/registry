@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
 import org.gbif.api.model.collections.search.FacetedSearchResponse;
@@ -47,11 +47,11 @@ public interface CollectionsSearchClient {
       method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
   FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter> searchInstitutions(
-      @SpringQueryMap InstitutionSearchRequest searchRequest,
+      @SpringQueryMap InstitutionFacetedSearchRequest searchRequest,
       @RequestParam(value = "facet", required = false) Set<InstitutionFacetParameter> facets);
 
   default FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter>
-      searchInstitutions(InstitutionSearchRequest searchRequest) {
+      searchInstitutions(InstitutionFacetedSearchRequest searchRequest) {
     return searchInstitutions(searchRequest, searchRequest.getFacets());
   }
 

@@ -16,7 +16,7 @@ package org.gbif.registry.service.collections;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -184,11 +184,11 @@ public class DefaultCollectionService extends BaseCollectionEntityService<Collec
             .accessionStatus(searchRequest.getAccessionStatus())
             .personalCollection(searchRequest.getPersonalCollection())
             .masterSourceType(searchRequest.getMasterSourceType())
-            .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
+            .numberSpecimens(parseIntegerRangeParameters(searchRequest.getNumberSpecimens()))
             .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
             .replacedBy(searchRequest.getReplacedBy())
-            .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
-            .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+            .occurrenceCount(parseIntegerRangeParameters(searchRequest.getOccurrenceCount()))
+            .typeSpecimenCount(parseIntegerRangeParameters(searchRequest.getTypeSpecimenCount()))
             .deleted(deleted)
             .sourceId(searchRequest.getSourceId())
             .source(searchRequest.getSource())

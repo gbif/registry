@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.gbif.api.documentation.CommonParameters;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.model.collections.search.CollectionSearchResponse;
 import org.gbif.api.model.collections.search.CollectionsFullSearchResponse;
 import org.gbif.api.model.collections.search.FacetedSearchResponse;
@@ -121,7 +121,7 @@ public class CollectionsSearchResource {
   @ApiResponse(responseCode = "400", description = "Invalid search query provided")
   @GetMapping("institution/search")
   public PagingResponse<InstitutionSearchResponse> searchInstitutions(
-      InstitutionSearchRequest searchRequest) {
+      InstitutionFacetedSearchRequest searchRequest) {
     return collectionsSearchService.searchInstitutions(searchRequest);
   }
 

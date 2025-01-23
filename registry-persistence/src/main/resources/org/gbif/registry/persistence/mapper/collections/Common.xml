@@ -67,6 +67,32 @@
     </if>
   </sql>
 
+  <sql id="MULTIVALUE_RANGE_FIELD_FILTER">
+    <if test="${values} != null and ${values}.size > 0" >
+      AND (
+      <foreach item="item" collection="${values}" separator="OR">
+        (
+        <trim prefixOverrides="AND">
+          <choose>
+            <when test="item.exactValue != null">
+              ${field} = #{item.exactValue}
+            </when>
+            <otherwise>
+              <if test="item.lowerBound != null" >
+                AND ${field} >= #{item.lowerBound}
+              </if>
+              <if test="item.higherBound != null" >
+                AND ${field} &lt;= #{item.higherBound}
+              </if>
+            </otherwise>
+          </choose>
+        </trim>
+        )
+      </foreach>
+      )
+    </if>
+  </sql>
+
   <sql id="COMMON_LIST_FILTER">
     <choose>
       <when test="params.deleted != null and params.deleted">
@@ -117,10 +143,10 @@
       <foreach item="item" collection="params.countries" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
-      OR mail_addr.country IN
+      OR (addr.country IS NULL AND mail_addr.country IN
       <foreach item="item" collection="params.countries" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
-      </foreach>
+      </foreach>)
       )
     </if>
     <if test="params.regionCountries != null and params.regionCountries.size > 0">
@@ -128,10 +154,10 @@
       <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
-      OR mail_addr.country IN
+      OR (addr.country IS NULL AND mail_addr.country IN
       <foreach item="item" collection="params.regionCountries" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
-      </foreach>
+      </foreach>)
       )
     </if>
     <if test="params.city != null and params.city.size > 0" >
@@ -139,7 +165,7 @@
       <trim suffixOverrides="OR">
         <foreach item="item" collection="params.city">
           normalize_name(addr.city) = normalize_name(#{item,jdbcType=VARCHAR}) OR
-          normalize_name(mail_addr.city) = normalize_name(#{item,jdbcType=VARCHAR}) OR
+          (addr.city IS NULL AND normalize_name(mail_addr.city) = normalize_name(#{item,jdbcType=VARCHAR})) OR
         </foreach>
       </trim>
       )
@@ -157,55 +183,22 @@
       <property name="values" value="params.active"/>
       <property name="field" value="${alias}active"/>
     </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.numberSpecimens"/>
+      <property name="field" value="${alias}number_specimens"/>
+    </include>
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_ENUM_FILTER">
       <property name="values" value="params.masterSourceType"/>
       <property name="field" value="${alias}master_source"/>
     </include>
-    <if test="params.numberSpecimens != null" >
-      <choose>
-        <when test="params.numberSpecimens.exactValue != null">
-          AND ${alias}number_specimens = #{params.numberSpecimens.exactValue,jdbcType=INTEGER}
-        </when>
-        <otherwise>
-          <if test="params.numberSpecimens.lowerBound != null" >
-            AND ${alias}number_specimens >= #{params.numberSpecimens.lowerBound,jdbcType=INTEGER}
-          </if>
-          <if test="params.numberSpecimens.higherBound != null" >
-            AND ${alias}number_specimens &lt;= #{params.numberSpecimens.higherBound,jdbcType=INTEGER}
-          </if>
-        </otherwise>
-      </choose>
-    </if>
-    <if test="params.occurrenceCount != null" >
-      <choose>
-        <when test="params.occurrenceCount.exactValue != null">
-          AND ${alias}occurrence_count = #{params.occurrenceCount.exactValue,jdbcType=INTEGER}
-        </when>
-        <otherwise>
-          <if test="params.occurrenceCount.lowerBound != null" >
-            AND ${alias}occurrence_count >= #{params.occurrenceCount.lowerBound,jdbcType=INTEGER}
-          </if>
-          <if test="params.occurrenceCount.higherBound != null" >
-            AND ${alias}occurrence_count &lt;= #{params.occurrenceCount.higherBound,jdbcType=INTEGER}
-          </if>
-        </otherwise>
-      </choose>
-    </if>
-    <if test="params.typeSpecimenCount != null" >
-      <choose>
-        <when test="params.typeSpecimenCount.exactValue != null">
-          AND ${alias}type_specimen_count = #{params.typeSpecimenCount.exactValue,jdbcType=INTEGER}
-        </when>
-        <otherwise>
-          <if test="params.typeSpecimenCount.lowerBound != null" >
-            AND ${alias}type_specimen_count >= #{params.typeSpecimenCount.lowerBound,jdbcType=INTEGER}
-          </if>
-          <if test="params.typeSpecimenCount.higherBound != null" >
-            AND ${alias}type_specimen_count &lt;= #{params.typeSpecimenCount.higherBound,jdbcType=INTEGER}
-          </if>
-        </otherwise>
-      </choose>
-    </if>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.occurrenceCount"/>
+      <property name="field" value="${alias}occurrence_count"/>
+    </include>
+    <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+      <property name="values" value="params.typeSpecimenCount"/>
+      <property name="field" value="${alias}type_specimen_count"/>
+    </include>
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_BOOLEAN_FILTER">
       <property name="values" value="params.displayOnNHCPortal"/>
       <property name="field" value="${alias}display_on_NHCPortal"/>

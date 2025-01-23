@@ -13,9 +13,9 @@
  */
 package org.gbif.registry.ws.provider;
 
+import java.util.Map;
 import java.util.UUID;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
-import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -23,7 +23,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 @SuppressWarnings("NullableProblems")
 public class CollectionSearchRequestHandlerMethodArgumentResolver
-    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver<CollectionFacetParameter> {
+    extends BaseGrSciCollSearchRequestHandlerMethodArgumentResolver {
 
   @Override
   public boolean supportsParameter(MethodParameter parameter) {
@@ -47,20 +47,14 @@ public class CollectionSearchRequestHandlerMethodArgumentResolver
       CollectionSearchRequest searchRequest, NativeWebRequest webRequest) {
     fillSearchRequestParams(searchRequest, webRequest);
 
-    extractMultivalueParam(webRequest, "institution", UUID::fromString)
+    Map<String, String[]> params = toCaseInsensitiveParams(webRequest);
+    extractMultivalueParam(params, "institution", UUID::fromString)
         .ifPresent(searchRequest::setInstitution);
-    extractMultivalueParam(webRequest, "contentType").ifPresent(searchRequest::setContentTypes);
-    extractMultivalueParam(webRequest, "preservationType")
+    extractMultivalueParam(params, "contentType").ifPresent(searchRequest::setContentTypes);
+    extractMultivalueParam(params, "preservationType")
         .ifPresent(searchRequest::setPreservationTypes);
-    extractMultivalueParam(webRequest, "accessionStatus")
-        .ifPresent(searchRequest::setAccessionStatus);
-    extractMultivalueParam(webRequest, "contentType").ifPresent(searchRequest::setContentTypes);
-    extractMultivalueParam(webRequest, "personalCollection", Boolean::parseBoolean)
+    extractMultivalueParam(params, "accessionStatus").ifPresent(searchRequest::setAccessionStatus);
+    extractMultivalueParam(params, "personalCollection", Boolean::parseBoolean)
         .ifPresent(searchRequest::setPersonalCollection);
-  }
-
-  @Override
-  protected CollectionFacetParameter findFacetParam(String facetParam) {
-    return CollectionFacetParameter.valueOf(facetParam);
   }
 }

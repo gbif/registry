@@ -157,4 +157,5 @@
   <include file="liquibase/149-taxon-fields-collection-descriptors.xml" />
   <include file="liquibase/150-similar-name-list-function.xml" />
   <include file="liquibase/151-institution-suggest-fts.xml" />
+  <include file="liquibase/152-indexes-collections-contacts.xml" />
 </databaseChangeLog>

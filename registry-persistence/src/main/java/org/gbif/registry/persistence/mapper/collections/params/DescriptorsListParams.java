@@ -19,10 +19,9 @@ public class DescriptorsListParams extends CollectionListParams {
   @Nullable List<Rank> usageRank;
   @Nullable List<Integer> taxonKey;
   @Nullable List<Country> descriptorCountry;
-  @Nullable RangeParam individualCount;
+  @Nullable List<RangeParam<Integer>> individualCount;
   @Nullable List<String> identifiedBy;
-  @Nullable LocalDate dateIdentifiedFrom;
-  @Nullable LocalDate dateIdentifiedBefore;
+  @Nullable List<RangeParam<LocalDate>> dateIdentified;
   @Nullable List<String> typeStatus;
   @Nullable List<String> recordedBy;
   @Nullable List<String> discipline;
@@ -40,7 +39,10 @@ public class DescriptorsListParams extends CollectionListParams {
         || facet == CollectionFacetParameter.ORDER_KEY
         || facet == CollectionFacetParameter.FAMILY_KEY
         || facet == CollectionFacetParameter.GENUS_KEY
-        || facet == CollectionFacetParameter.SPECIES_KEY;
+        || facet == CollectionFacetParameter.SPECIES_KEY
+        || facet == CollectionFacetParameter.TYPE_STATUS
+        || facet == CollectionFacetParameter.RECORDED_BY
+        || facet == CollectionFacetParameter.OBJECT_CLASSIFICATION;
   }
 
   public boolean descriptorSearch() {
@@ -52,8 +54,7 @@ public class DescriptorsListParams extends CollectionListParams {
         || descriptorCountry != null
         || individualCount != null
         || identifiedBy != null
-        || dateIdentifiedFrom != null
-        || dateIdentifiedBefore != null
+        || dateIdentified != null
         || typeStatus != null
         || recordedBy != null
         || discipline != null
@@ -69,12 +70,18 @@ public class DescriptorsListParams extends CollectionListParams {
         || descriptorCountry != null
         || individualCount != null
         || identifiedBy != null
-        || dateIdentifiedFrom != null
-        || dateIdentifiedBefore != null
+        || dateIdentified != null
         || typeStatus != null
         || recordedBy != null
         || discipline != null
         || objectClassification != null
         || issues != null;
+  }
+
+  public boolean isArrayFieldFacet() {
+    return facet == CollectionFacetParameter.PRESERVATION_TYPE
+        || facet == CollectionFacetParameter.CONTENT_TYPE
+        || facet == CollectionFacetParameter.TYPE_STATUS
+        || facet == CollectionFacetParameter.RECORDED_BY;
   }
 }

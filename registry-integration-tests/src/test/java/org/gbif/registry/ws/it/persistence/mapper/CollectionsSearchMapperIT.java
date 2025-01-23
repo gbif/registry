@@ -26,19 +26,23 @@ import java.util.UUID;
 import org.gbif.api.model.collections.Address;
 import org.gbif.api.model.collections.AlternativeCode;
 import org.gbif.api.model.collections.Collection;
+import org.gbif.api.model.collections.Institution;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.vocabulary.Country;
 import org.gbif.api.vocabulary.License;
 import org.gbif.api.vocabulary.collections.CollectionFacetParameter;
+import org.gbif.api.vocabulary.collections.InstitutionFacetParameter;
 import org.gbif.registry.database.TestCaseDatabaseInitializer;
 import org.gbif.registry.persistence.mapper.collections.AddressMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.CollectionsSearchMapper;
 import org.gbif.registry.persistence.mapper.collections.DescriptorsMapper;
+import org.gbif.registry.persistence.mapper.collections.InstitutionMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionSearchDto;
 import org.gbif.registry.persistence.mapper.collections.dto.DescriptorDto;
 import org.gbif.registry.persistence.mapper.collections.dto.FacetDto;
 import org.gbif.registry.persistence.mapper.collections.params.DescriptorsListParams;
+import org.gbif.registry.persistence.mapper.collections.params.InstitutionListParams;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -53,6 +57,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
       new TestCaseDatabaseInitializer("collection");
 
   private CollectionMapper collectionMapper;
+  private InstitutionMapper institutionMapper;
   private AddressMapper addressMapper;
   private DescriptorsMapper descriptorsMapper;
   private CollectionsSearchMapper collectionsSearchMapper;
@@ -60,6 +65,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
   @Autowired
   public CollectionsSearchMapperIT(
       CollectionMapper collectionMapper,
+      InstitutionMapper institutionMapper,
       AddressMapper addressMapper,
       DescriptorsMapper descriptorsMapper,
       CollectionsSearchMapper collectionsSearchMapper,
@@ -67,6 +73,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
       EsManageServer esServer) {
     super(principalProvider, esServer);
     this.collectionMapper = collectionMapper;
+    this.institutionMapper = institutionMapper;
     this.addressMapper = addressMapper;
     this.descriptorsMapper = descriptorsMapper;
     this.collectionsSearchMapper = collectionsSearchMapper;
@@ -168,6 +175,43 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
   @Test
   public void facetsTest() {
+    UUID i1Key = UUID.randomUUID();
+    Institution i1 = new Institution();
+    i1.setKey(i1Key);
+    i1.setName("i1");
+    i1.setCode("i1");
+    i1.setTypes(Arrays.asList("ty1", "ty2"));
+    i1.setDisciplines(Arrays.asList("di1", "di2"));
+    i1.setCreatedBy("test");
+    i1.setModifiedBy("test");
+
+    Address ai1 = new Address();
+    ai1.setCountry(Country.SPAIN);
+    ai1.setCity("Oviedo");
+    addressMapper.create(ai1);
+    assertNotNull(ai1.getKey());
+    i1.setAddress(ai1);
+
+    institutionMapper.create(i1);
+
+    UUID i2Key = UUID.randomUUID();
+    Institution i2 = new Institution();
+    i2.setKey(i2Key);
+    i2.setName("i2");
+    i2.setCode("i2");
+    i2.setTypes(Collections.singletonList("ty1"));
+    i2.setCreatedBy("test");
+    i2.setModifiedBy("test");
+
+    Address ai2 = new Address();
+    ai2.setCountry(Country.SPAIN);
+    ai2.setCity("Bilbao");
+    addressMapper.create(ai2);
+    assertNotNull(ai2.getKey());
+    i2.setMailingAddress(ai2);
+
+    institutionMapper.create(i2);
+
     UUID c1Key = UUID.randomUUID();
     Collection c1 = new Collection();
     c1.setKey(c1Key);
@@ -184,6 +228,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     Address address = new Address();
     address.setCountry(Country.SPAIN);
+    address.setCity("Oviedo");
     addressMapper.create(address);
     assertNotNull(address.getKey());
     c1.setAddress(address);
@@ -207,6 +252,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     descriptorDto1.setDescriptorGroupKey(descriptorGroup.getKey());
     descriptorDto1.setUsageName("aves");
     descriptorDto1.setCountry(Country.DENMARK);
+    descriptorDto1.setRecordedBy(Arrays.asList("John", "Clint"));
     descriptorDto1.setKingdomKey(1);
     descriptorsMapper.createDescriptor(descriptorDto1);
 
@@ -214,6 +260,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     descriptorDto2.setDescriptorGroupKey(descriptorGroup.getKey());
     descriptorDto2.setKingdomKey(1);
     descriptorDto2.setCountry(Country.DENMARK);
+    descriptorDto2.setObjectClassificationName("obn1");
     descriptorsMapper.createDescriptor(descriptorDto2);
 
     UUID c2Key = UUID.randomUUID();
@@ -233,6 +280,7 @@ public class CollectionsSearchMapperIT extends BaseItTest {
 
     mailingAddress = new Address();
     mailingAddress.setCountry(Country.SPAIN);
+    mailingAddress.setCity("Bilbao");
     addressMapper.create(mailingAddress);
     assertNotNull(mailingAddress.getKey());
     c2.setMailingAddress(mailingAddress);
@@ -249,7 +297,9 @@ public class CollectionsSearchMapperIT extends BaseItTest {
     DescriptorDto descriptorDtoC2 = new DescriptorDto();
     descriptorDtoC2.setDescriptorGroupKey(descriptorGroupC2.getKey());
     descriptorDtoC2.setKingdomKey(2);
+    descriptorDtoC2.setRecordedBy(Collections.singletonList("John"));
     descriptorDtoC2.setCountry(Country.DENMARK);
+    descriptorDtoC2.setObjectClassificationName("obn1");
     descriptorsMapper.createDescriptor(descriptorDtoC2);
 
     List<FacetDto> facetDtos =
@@ -300,5 +350,92 @@ public class CollectionsSearchMapperIT extends BaseItTest {
         2,
         collectionsSearchMapper.collectionFacetCardinality(
             DescriptorsListParams.builder().facet(CollectionFacetParameter.KINGDOM_KEY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.TYPE_STATUS).build());
+    assertEquals(0, facetDtos.size());
+
+    assertEquals(
+        0,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.TYPE_STATUS).build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.CITY).build());
+    assertEquals(2, facetDtos.size());
+    assertEquals(2, facetDtos.stream().filter(f -> f.getCount() == 1).count());
+    assertEquals(
+        2,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.CITY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.RECORDED_BY).build());
+    assertEquals(2, facetDtos.size());
+    assertEquals(1, facetDtos.stream().filter(f -> f.getCount() == 1).count());
+    assertEquals(1, facetDtos.stream().filter(f -> f.getCount() == 2).count());
+    assertEquals(
+        2,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder().facet(CollectionFacetParameter.RECORDED_BY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.collectionFacet(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.OBJECT_CLASSIFICATION)
+                .build());
+    assertEquals(1, facetDtos.size());
+    assertEquals(1, facetDtos.stream().filter(f -> f.getCount() == 2).count());
+    assertEquals(
+        1,
+        collectionsSearchMapper.collectionFacetCardinality(
+            DescriptorsListParams.builder()
+                .facet(CollectionFacetParameter.OBJECT_CLASSIFICATION)
+                .build()));
+
+    // institution facets
+    facetDtos =
+        collectionsSearchMapper.institutionFacet(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.COUNTRY).build());
+    assertEquals(1, facetDtos.size());
+    assertEquals(1, facetDtos.stream().filter(f -> f.getCount() == 2).count());
+    assertEquals(
+        1,
+        collectionsSearchMapper.institutionFacetCardinality(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.COUNTRY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.institutionFacet(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.CITY).build());
+    assertEquals(2, facetDtos.size());
+    assertEquals(2, facetDtos.stream().filter(f -> f.getCount() == 1).count());
+    assertEquals(
+        2,
+        collectionsSearchMapper.institutionFacetCardinality(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.CITY).build()));
+
+    facetDtos =
+        collectionsSearchMapper.institutionFacet(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.TYPE).build());
+    assertEquals(2, facetDtos.size());
+    assertEquals(1, facetDtos.stream().filter(f -> f.getCount() == 2).count());
+    assertEquals(1, facetDtos.stream().filter(f -> f.getCount() == 1).count());
+    assertEquals(
+        2,
+        collectionsSearchMapper.institutionFacetCardinality(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.TYPE).build()));
+
+    facetDtos =
+        collectionsSearchMapper.institutionFacet(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.DISCIPLINE).build());
+    assertEquals(2, facetDtos.size());
+    assertEquals(2, facetDtos.stream().filter(f -> f.getCount() == 1).count());
+    assertEquals(
+        2,
+        collectionsSearchMapper.institutionFacetCardinality(
+            InstitutionListParams.builder().facet(InstitutionFacetParameter.DISCIPLINE).build()));
   }
 }

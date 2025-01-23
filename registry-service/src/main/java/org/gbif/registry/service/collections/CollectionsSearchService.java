@@ -13,8 +13,9 @@
  */
 package org.gbif.registry.service.collections;
 
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseDateRangeParameters;
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -29,7 +30,8 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gbif.api.model.collections.request.CollectionDescriptorsSearchRequest;
-import org.gbif.api.model.collections.request.InstitutionSearchRequest;
+import org.gbif.api.model.collections.request.FacetedSearchRequest;
+import org.gbif.api.model.collections.request.InstitutionFacetedSearchRequest;
 import org.gbif.api.model.collections.request.SearchRequest;
 import org.gbif.api.model.collections.search.BaseSearchResponse;
 import org.gbif.api.model.collections.search.CollectionFacet;
@@ -143,7 +145,7 @@ public class CollectionsSearchService {
   }
 
   public FacetedSearchResponse<InstitutionSearchResponse, InstitutionFacetParameter>
-      searchInstitutions(InstitutionSearchRequest searchRequest) {
+      searchInstitutions(InstitutionFacetedSearchRequest searchRequest) {
 
     Pageable page = searchRequest.getPage() == null ? new PagingRequest() : searchRequest.getPage();
 
@@ -241,16 +243,9 @@ public class CollectionsSearchService {
             .usageRank(searchRequest.getUsageRank())
             .taxonKey(searchRequest.getTaxonKey())
             .descriptorCountry(searchRequest.getDescriptorCountry())
-            .individualCount(parseIntegerRangeParameter(searchRequest.getIndividualCount()))
+            .individualCount(parseIntegerRangeParameters(searchRequest.getIndividualCount()))
             .identifiedBy(searchRequest.getIdentifiedBy())
-            .dateIdentifiedBefore(
-                searchRequest.getDateIdentified() != null
-                    ? searchRequest.getDateIdentified().lowerEndpoint()
-                    : null)
-            .dateIdentifiedFrom(
-                searchRequest.getDateIdentified() != null
-                    ? searchRequest.getDateIdentified().upperEndpoint()
-                    : null)
+            .dateIdentified(parseDateRangeParameters(searchRequest.getDateIdentified()))
             .typeStatus(searchRequest.getTypeStatus())
             .recordedBy(searchRequest.getRecordedBy())
             .discipline(searchRequest.getDiscipline())
@@ -340,10 +335,7 @@ public class CollectionsSearchService {
       F f, List<FacetDto> facetDtos, long cardinality) {
     List<CollectionFacet.Count> facetCounts =
         facetDtos.stream()
-            .filter(
-                dto ->
-                    !Strings.isNullOrEmpty(dto.getFacet())
-                        && !"null".equalsIgnoreCase(dto.getFacet()))
+            .filter(dto -> !Strings.isNullOrEmpty(dto.getFacet()))
             .map(dto -> new CollectionFacet.Count(dto.getFacet(), dto.getCount()))
             .collect(Collectors.toList());
 
@@ -355,7 +347,7 @@ public class CollectionsSearchService {
   }
 
   private static <F extends CollectionsFacetParameter> Pageable extractFacetPage(
-      SearchRequest<F> searchRequest, F facetParameter) {
+      FacetedSearchRequest<F> searchRequest, F facetParameter) {
     if (searchRequest.getFacetPages() != null
         && searchRequest.getFacetPages().get(facetParameter) != null) {
       return searchRequest.getFacetPages().get(facetParameter);
@@ -419,11 +411,11 @@ public class CollectionsSearchService {
         .fuzzyName(searchRequest.getFuzzyName())
         .active(searchRequest.getActive())
         .masterSourceType(searchRequest.getMasterSourceType())
-        .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
+        .numberSpecimens(parseIntegerRangeParameters(searchRequest.getNumberSpecimens()))
         .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
         .replacedBy(searchRequest.getReplacedBy())
-        .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
-        .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+        .occurrenceCount(parseIntegerRangeParameters(searchRequest.getOccurrenceCount()))
+        .typeSpecimenCount(parseIntegerRangeParameters(searchRequest.getTypeSpecimenCount()))
         .sourceId(searchRequest.getSourceId())
         .source(searchRequest.getSource())
         .sortBy(searchRequest.getSortBy())

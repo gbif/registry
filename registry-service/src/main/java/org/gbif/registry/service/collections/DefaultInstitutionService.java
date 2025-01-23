@@ -16,7 +16,7 @@ package org.gbif.registry.service.collections;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.gbif.registry.security.UserRoles.*;
 import static org.gbif.registry.service.collections.utils.ParamUtils.parseGbifRegion;
-import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameter;
+import static org.gbif.registry.service.collections.utils.ParamUtils.parseIntegerRangeParameters;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
@@ -208,11 +208,11 @@ public class DefaultInstitutionService extends BaseCollectionEntityService<Insti
         .institutionalGovernances(searchRequest.getInstitutionalGovernance())
         .disciplines(searchRequest.getDisciplines())
         .masterSourceType(searchRequest.getMasterSourceType())
-        .numberSpecimens(parseIntegerRangeParameter(searchRequest.getNumberSpecimens()))
+        .numberSpecimens(parseIntegerRangeParameters(searchRequest.getNumberSpecimens()))
         .displayOnNHCPortal(searchRequest.getDisplayOnNHCPortal())
         .replacedBy(searchRequest.getReplacedBy())
-        .occurrenceCount(parseIntegerRangeParameter(searchRequest.getOccurrenceCount()))
-        .typeSpecimenCount(parseIntegerRangeParameter(searchRequest.getTypeSpecimenCount()))
+        .occurrenceCount(parseIntegerRangeParameters(searchRequest.getOccurrenceCount()))
+        .typeSpecimenCount(parseIntegerRangeParameters(searchRequest.getTypeSpecimenCount()))
         .institutionKeys(searchRequest.getInstitutionKeys())
         .sourceId(searchRequest.getSourceId())
         .source(searchRequest.getSource())

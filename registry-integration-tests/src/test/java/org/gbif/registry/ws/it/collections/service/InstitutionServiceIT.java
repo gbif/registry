@@ -482,7 +482,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("100")
+                    .numberSpecimens(Collections.singletonList("100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -494,7 +494,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("98")
+                    .numberSpecimens(Collections.singletonList("98"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -506,7 +506,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("* , 100")
+                    .numberSpecimens(Collections.singletonList("* , 100"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())
@@ -518,7 +518,7 @@ public class InstitutionServiceIT extends BaseCollectionEntityServiceIT<Institut
         institutionService
             .list(
                 InstitutionSearchRequest.builder()
-                    .numberSpecimens("97,300")
+                    .numberSpecimens(Collections.singletonList("97,300"))
                     .limit(DEFAULT_PAGE.getLimit())
                     .offset(DEFAULT_PAGE.getOffset())
                     .build())

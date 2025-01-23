@@ -49,6 +49,7 @@ import org.gbif.registry.persistence.mapper.collections.CollectionMapper;
 import org.gbif.registry.persistence.mapper.collections.MasterSourceSyncMetadataMapper;
 import org.gbif.registry.persistence.mapper.collections.dto.CollectionDto;
 import org.gbif.registry.persistence.mapper.collections.params.CollectionListParams;
+import org.gbif.registry.persistence.mapper.collections.params.RangeParam;
 import org.gbif.registry.search.test.EsManageServer;
 import org.gbif.registry.ws.it.BaseItTest;
 import org.gbif.ws.client.filter.SimplePrincipalProvider;
@@ -170,6 +171,7 @@ public class CollectionMapperIT extends BaseItTest {
     col1.setKey(UUID.randomUUID());
     col1.setCode("c1");
     col1.setName("n1");
+    col1.setNumberSpecimens(10);
     col1.setCreatedBy("test");
     col1.setModifiedBy("test");
     col1.setMasterSource(MasterSourceType.IH);
@@ -197,6 +199,7 @@ public class CollectionMapperIT extends BaseItTest {
     col2.setKey(UUID.randomUUID());
     col2.setCode("c2");
     col2.setName("n2");
+    col2.setNumberSpecimens(110);
     col2.setCreatedBy("test");
     col2.setModifiedBy("test");
     col2.setMasterSource(MasterSourceType.GBIF_REGISTRY);
@@ -205,7 +208,8 @@ public class CollectionMapperIT extends BaseItTest {
     Identifier identifier = new Identifier(IdentifierType.IH_IRN, "test_id");
     identifier.setCreatedBy("test");
     identifierMapper.createIdentifier(identifier);
-    collectionMapper.addCollectionIdentifier(col2.getKey(), identifier.getKey(), identifier.isPrimary());
+    collectionMapper.addCollectionIdentifier(
+        col2.getKey(), identifier.getKey(), identifier.isPrimary());
 
     Collection col3 = new Collection();
     col3.setKey(UUID.randomUUID());
@@ -253,6 +257,27 @@ public class CollectionMapperIT extends BaseItTest {
             .build(),
         1,
         col5.getKey());
+    assertSearch(
+        CollectionListParams.builder()
+            .numberSpecimens(
+                Arrays.asList(new RangeParam<>(0, 20, null), new RangeParam<>(null, null, 2)))
+            .page(page)
+            .build(),
+        1);
+    assertSearch(
+        CollectionListParams.builder()
+            .numberSpecimens(
+                Arrays.asList(new RangeParam<>(0, 20, null), new RangeParam<>(null, null, 110)))
+            .page(page)
+            .build(),
+        2);
+    assertSearch(
+        CollectionListParams.builder()
+            .numberSpecimens(
+                Arrays.asList(new RangeParam<>(0, 20, null), new RangeParam<>(40, 140, null)))
+            .page(page)
+            .build(),
+        2);
     assertSearch(CollectionListParams.builder().page(page).build(), 5);
     assertSearch(CollectionListParams.builder().code(asList("c1")).page(page).build(), 1);
     assertSearch(CollectionListParams.builder().code(asList("C1")).page(page).build(), 1);
@@ -281,7 +306,7 @@ public class CollectionMapperIT extends BaseItTest {
             .page(page)
             .build(),
         0);
-    assertSearch(CollectionListParams.builder().city(asList("Odense")).page(page).build(), 1);
+    assertSearch(CollectionListParams.builder().city(asList("Odense")).page(page).build(), 0);
     assertSearch(
         CollectionListParams.builder()
             .city(asList("Copenhagen"))

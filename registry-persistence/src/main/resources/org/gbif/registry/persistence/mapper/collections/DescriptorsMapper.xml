@@ -265,35 +265,25 @@
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
-      <if test="params.taxonKey != null  and params.taxonKey.size > 0">
+      <if test="params.taxonKey != null and params.taxonKey.size > 0">
         AND d.taxon_keys &amp;&amp; ARRAY
         <foreach item="item" collection="params.taxonKey" open="[" separator="," close="]">
           #{item,jdbcType=INTEGER}
         </foreach>
       </if>
-      <if test="params.individualCount != null">
-        <choose>
-          <when test="params.individualCount.exactValue != null">
-            AND d.individual_count = #{params.individualCount.exactValue,jdbcType=INTEGER}
-          </when>
-          <otherwise>
-            <if test="params.individualCount.lowerBound != null">
-              AND d.individual_count >= #{params.individualCount.lowerBound,jdbcType=INTEGER}
-            </if>
-            <if test="params.individualCount.higherBound != null">
-              AND d.individual_count &lt;= #{params.individualCount.higherBound,jdbcType=INTEGER}
-            </if>
-          </otherwise>
-        </choose>
-      </if>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+        <property name="values" value="params.individualCount"/>
+        <property name="field" value="d.individual_count"/>
+      </include>
+      <include refid="org.gbif.registry.persistence.mapper.collections.Common.MULTIVALUE_RANGE_FIELD_FILTER">
+        <property name="values" value="params.dateIdentified"/>
+        <property name="field" value="d.date_identified"/>
+      </include>
       <if test="params.identifiedBy != null and params.identifiedBy.size > 0">
         AND d.identified_by &amp;&amp; ARRAY
         <foreach item="item" collection="params.identifiedBy" open="[" separator="," close="]">
           #{item,jdbcType=VARCHAR}::text
         </foreach>
-      </if>
-      <if test="params.dateIdentifiedFrom != null">AND d.date_identified &gt;= #{params.dateIdentifiedFrom}</if>
-      <if test="params.dateIdentifiedBefore != null">AND d.date_identified &lt; #{params.dateIdentifiedBefore}
       </if>
       <if test="params.typeStatus != null and params.typeStatus.size > 0">
         AND d.type_status &amp;&amp; ARRAY
@@ -307,19 +297,19 @@
           #{item,jdbcType=VARCHAR}::text
         </foreach>
       </if>
-      <if test="params.discipline != null  and params.discipline.size > 0">
+      <if test="params.discipline != null and params.discipline.size > 0">
         AND d.discipline IN
         <foreach item="item" collection="params.discipline" open="(" separator="," close=")">
           #{item,jdbcType=VARCHAR}
         </foreach>
       </if>
-      <if test="params.objectClassification != null  and params.objectClassification.size > 0">
+      <if test="params.objectClassification != null and params.objectClassification.size > 0">
       AND d.object_classification_name IN
       <foreach item="item" collection="params.objectClassification" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
       </foreach>
     </if>
-    <if test="params.country != null  and params.country.size > 0">
+    <if test="params.country != null and params.country.size > 0">
       AND d.country IN
       <foreach item="item" collection="params.country" open="(" separator="," close=")">
         #{item,jdbcType=VARCHAR}
