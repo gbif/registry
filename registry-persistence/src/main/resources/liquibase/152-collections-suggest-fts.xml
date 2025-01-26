@@ -7,6 +7,8 @@
     <sql splitStatements="false" stripComments="false">
       <![CDATA[
         CREATE INDEX idx_institution_fulltext_search ON institution USING gin (to_tsvector('english', code || ' ' || name));
+
+        CREATE INDEX idx_collection_fulltext_search ON collection USING gin (to_tsvector('english', code || ' ' || name));
       ]]>
     </sql>
   </changeSet>
