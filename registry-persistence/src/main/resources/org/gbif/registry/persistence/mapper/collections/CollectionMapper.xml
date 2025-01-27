@@ -560,15 +560,24 @@
 
   <!-- Simple suggest -->
   <select id="suggest" resultType="org.gbif.api.model.registry.search.collections.KeyCodeNameResult">
-    SELECT key,code,name FROM (
-    (SELECT key,code,name FROM collection WHERE code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM collection WHERE name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM collection WHERE code ilike '%'||#{q}||'%' AND NOT code ilike #{q}||'%' AND deleted IS NULL ORDER BY code LIMIT 20)
-    UNION ALL
-    (SELECT key,code,name FROM collection WHERE name ilike '%'||#{q}||'%' AND NOT name ilike #{q}||'%' AND deleted IS NULL ORDER BY name LIMIT 20)
-    ) t1 LIMIT 20
+    <if test="q != null and !q.isEmpty()">
+      SELECT key, code, name
+      FROM (
+      SELECT key, code, name,
+      to_tsvector('english', code || ' ' || name) AS document,
+      to_tsquery('english', unaccent(regexp_replace(#{q} || ':*', ' ', '&amp;', 'g'))) AS query
+      FROM collection
+      WHERE deleted IS NULL
+      ) AS subquery
+      WHERE document @@ query
+      ORDER BY ts_rank(document, query) DESC
+      LIMIT 20;
+    </if>
+    <if test="q == null or q.isEmpty()">
+      SELECT key, code, name FROM collection
+      WHERE deleted IS NULL
+      LIMIT 20;
+    </if>
   </select>
 
   <!-- COMMENTS -->

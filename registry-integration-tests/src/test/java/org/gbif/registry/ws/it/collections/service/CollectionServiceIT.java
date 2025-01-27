@@ -993,6 +993,7 @@ public class CollectionServiceIT extends BaseCollectionEntityServiceIT<Collectio
     assertEquals(2, collectionService.suggest("CC").size());
     assertEquals(1, collectionService.suggest("CC2").size());
     assertEquals(1, collectionService.suggest("name2").size());
+    assertDoesNotThrow(() -> collectionService.suggest(""));
   }
 
   @Test
