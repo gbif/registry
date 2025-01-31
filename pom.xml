@@ -128,6 +128,7 @@
     <woodstox.version>4.4.1</woodstox.version>
     <zookeeper.version>3.8.1</zookeeper.version>
     <curator.version>5.5.0</curator.version>
+    <curator-framework.version>5.5.0-disable-connectstr-updates</curator-framework.version>
     <owasp-java-html-sanitizer.version>20200713.1</owasp-java-html-sanitizer.version>
     <super-csv.version>2.4.0</super-csv.version>
     <opencsv.version>5.7.1</opencsv.version>
@@ -459,7 +460,7 @@
       <dependency>
         <groupId>org.apache.curator</groupId>
         <artifactId>curator-framework</artifactId>
-        <version>${curator.version}</version>
+        <version>${curator-framework.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.curator</groupId>
