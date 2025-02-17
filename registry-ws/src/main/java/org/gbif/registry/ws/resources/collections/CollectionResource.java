@@ -29,6 +29,7 @@ import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.annotation.ElementType;
@@ -50,6 +51,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.gbif.api.annotation.NullToNotFound;
 import org.gbif.api.annotation.Trim;
 import org.gbif.api.documentation.CommonParameters;
@@ -57,6 +59,8 @@ import org.gbif.api.model.collections.Collection;
 import org.gbif.api.model.collections.CollectionImportParams;
 import org.gbif.api.model.collections.SourceableField;
 import org.gbif.api.model.collections.descriptors.Descriptor;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestion;
+import org.gbif.api.model.collections.descriptors.DescriptorChangeSuggestionRequest;
 import org.gbif.api.model.collections.descriptors.DescriptorGroup;
 import org.gbif.api.model.collections.latimercore.ObjectGroup;
 import org.gbif.api.model.collections.request.CollectionSearchRequest;
@@ -64,12 +68,15 @@ import org.gbif.api.model.collections.request.DescriptorGroupSearchRequest;
 import org.gbif.api.model.collections.request.DescriptorSearchRequest;
 import org.gbif.api.model.collections.request.InstitutionSearchRequest;
 import org.gbif.api.model.collections.suggestions.CollectionChangeSuggestion;
+import org.gbif.api.model.collections.suggestions.Status;
+import org.gbif.api.model.collections.suggestions.Type;
 import org.gbif.api.model.collections.view.CollectionView;
 import org.gbif.api.model.common.export.ExportFormat;
 import org.gbif.api.model.common.paging.Pageable;
 import org.gbif.api.model.common.paging.PagingResponse;
 import org.gbif.api.model.registry.search.collections.KeyCodeNameResult;
 import org.gbif.api.service.collections.CollectionService;
+import org.gbif.api.service.collections.DescriptorChangeSuggestionService;
 import org.gbif.api.service.collections.DescriptorsService;
 import org.gbif.api.util.iterables.Iterables;
 import org.gbif.api.vocabulary.Country;
@@ -127,6 +134,7 @@ public class CollectionResource
 
   private final CollectionService collectionService;
   private final DescriptorsService descriptorsService;
+  private final DescriptorChangeSuggestionService descriptorChangeSuggestionService;
 
   // Prefix for the export file format
   private static final String EXPORT_FILE_NAME = "%scollections.%s";
@@ -143,7 +151,8 @@ public class CollectionResource
       CollectionChangeSuggestionService collectionChangeSuggestionService,
       CollectionBatchService batchService,
       DescriptorsService descriptorsService,
-      @Value("${api.root.url}") String apiBaseUrl) {
+      @Value("${api.root.url}") String apiBaseUrl,
+    DescriptorChangeSuggestionService descriptorChangeSuggestionService) {
     super(
         collectionMergeService,
         collectionService,
@@ -154,6 +163,7 @@ public class CollectionResource
         Collection.class);
     this.collectionService = collectionService;
     this.descriptorsService = descriptorsService;
+    this.descriptorChangeSuggestionService = descriptorChangeSuggestionService;
   }
 
   @Target({ElementType.METHOD, ElementType.TYPE})
@@ -985,7 +995,6 @@ public class CollectionResource
           existingDescriptorGroup.getCollectionKey().equals(collectionKey),
           INVALID_COLLECTION_KEY_IN_DESCRIPTOR_GROUP);
     }
-
     descriptorsService.reinterpretDescriptorGroup(descriptorGroupKey);
   }
 
@@ -1021,4 +1030,219 @@ public class CollectionResource
   public void reinterpretAllDescriptorGroups() {
     descriptorsService.reinterpretAllDescriptorGroups();
   }
+
+  @Operation(
+      operationId = "createDescriptorSuggestion",
+      summary = "Create a new descriptor change suggestion",
+      description = "Creates a new suggestion for changing a collection's descriptor.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0300")))
+  @ApiResponse(
+      responseCode = "201",
+      description = "Descriptor suggestion created, new suggestion's key returned")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public DescriptorChangeSuggestion createDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestPart("file") MultipartFile file,
+      @RequestParam("type") Type type,
+      @RequestParam("title") String title,
+      @RequestParam(value = "description", required = false) String description,
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("comments") List<String> comments,
+      @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+    if (file == null || file.isEmpty()) {
+      throw new IllegalArgumentException("File cannot be null or empty");
+    }
+
+    DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
+    request.setCollectionKey(collectionKey);
+    request.setType(type);
+    request.setTitle(title);
+    request.setDescription(description);
+    request.setFormat(format);
+    request.setComments(comments);
+    request.setProposerEmail(proposerEmail);
+
+    return descriptorChangeSuggestionService.createSuggestion(
+      file.getInputStream(),
+      file.getOriginalFilename(),
+      request);
+  }
+
+  @Operation(
+      operationId = "exportDescriptorSuggestionFile",
+      summary = "Export a descriptor suggestion file",
+      description = "Downloads the file associated with a descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0301")))
+  @ApiResponse(responseCode = "200", description = "File found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/file", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+  public ResponseEntity<Resource> exportDescriptorSuggestionFile(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") Integer key) throws IOException {
+
+    // Get the suggestion details to include in the filename
+    DescriptorChangeSuggestion suggestion = descriptorChangeSuggestionService.getSuggestion(key);
+    if (suggestion == null) {
+      throw new WebApplicationException("Descriptor suggestion was not found", HttpStatus.NOT_FOUND);
+    }
+
+    // Verify collection key matches
+    Preconditions.checkArgument(
+        suggestion.getCollectionKey().equals(collectionKey),
+        "The collection key in the path does not match the suggestion's collection key");
+
+    // Get the file content
+    InputStream stream = descriptorChangeSuggestionService.getSuggestionFile(key);
+    byte[] fileBytes = IOUtils.toByteArray(stream);
+
+    // Generate a descriptive filename
+    String extension = suggestion.getFormat() != null ?
+        suggestion.getFormat().name().toLowerCase() : "csv";
+    String filename = "descriptor_suggestion_" + suggestion.getTitle() + "." + extension;
+
+    // Create the ByteArrayResource from the file bytes
+    ByteArrayResource resource = new ByteArrayResource(fileBytes);
+
+    return ResponseEntity.ok()
+        .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+        .contentLength(fileBytes.length)
+        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(resource);
+  }
+
+  @Operation(
+      operationId = "getDescriptorSuggestion",
+      summary = "Get a descriptor change suggestion",
+      description = "Retrieves details of a single descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0302")))
+  @ApiResponse(responseCode = "200", description = "Suggestion found and returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}")
+  public DescriptorChangeSuggestion getDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key) {
+    return descriptorChangeSuggestionService.getSuggestion(key);
+  }
+
+  @Operation(
+      operationId = "applyDescriptorSuggestion",
+      summary = "Apply a descriptor change suggestion",
+      description = "Applies a pending descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0303")))
+  @ApiResponse(responseCode = "200", description = "Suggestion applied successfully")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/apply")
+  public void applyDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key) throws IOException {
+    descriptorChangeSuggestionService.applySuggestion(key);
+  }
+
+  @Operation(
+      operationId = "discardDescriptorSuggestion",
+      summary = "Discard a descriptor change suggestion",
+      description = "Discards a pending descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0304")))
+  @ApiResponse(responseCode = "200", description = "Suggestion discarded successfully")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PostMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}/discard")
+  public void discardDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key) {
+    descriptorChangeSuggestionService.discardSuggestion(key);
+  }
+
+  @Operation(
+      operationId = "updateDescriptorSuggestion",
+      summary = "Update a descriptor change suggestion",
+      description = "Updates an existing descriptor change suggestion.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0306")))
+  @ApiResponse(responseCode = "200", description = "Suggestion updated successfully")
+  @Docs.DefaultUnsuccessfulWriteResponses
+  @PutMapping(value = "{collectionKey}/descriptorGroup/suggestion/{key}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public void updateDescriptorSuggestion(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @PathVariable("key") long key,
+      @RequestPart(value = "file", required = false) MultipartFile file,
+      @RequestParam("type") Type type,
+      @RequestParam("title") String title,
+      @RequestParam("description") String description,
+      @RequestParam("format") ExportFormat format,
+      @RequestParam("comments") List<String> comments,
+      @RequestParam("proposerEmail") String proposerEmail) throws IOException {
+
+    DescriptorChangeSuggestionRequest request = new DescriptorChangeSuggestionRequest();
+    request.setCollectionKey(collectionKey);
+    request.setType(type);
+    request.setTitle(title);
+    request.setDescription(description);
+    request.setFormat(format);
+    request.setComments(comments);
+    request.setProposerEmail(proposerEmail);
+
+    descriptorChangeSuggestionService.updateSuggestion(
+      key,
+      request,
+      file != null ? file.getInputStream() : null,
+      file != null ? file.getOriginalFilename() : null);
+  }
+
+  @Operation(
+      operationId = "listDescriptorSuggestions",
+      summary = "List descriptor change suggestions",
+      description = "Lists all descriptor change suggestions for a collection.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0306")))
+  @ApiResponse(responseCode = "200", description = "List of suggestions returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "{collectionKey}/descriptorGroup/suggestion")
+  public PagingResponse<DescriptorChangeSuggestion> listDescriptorSuggestions(
+      @PathVariable("collectionKey") UUID collectionKey,
+      @RequestParam(value = "status", required = false) Status status,
+      @RequestParam(value = "type", required = false) Type type,
+      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      Pageable page) {
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, collectionKey);
+  }
+
+  @Operation(
+      operationId = "listAllDescriptorSuggestions",
+      summary = "List all descriptor change suggestions",
+      description = "Lists all descriptor change suggestions across all collections.",
+      extensions =
+          @Extension(
+              name = "Order",
+              properties = @ExtensionProperty(name = "Order", value = "0307")))
+  @ApiResponse(responseCode = "200", description = "List of suggestions returned")
+  @Docs.DefaultUnsuccessfulReadResponses
+  @GetMapping(value = "descriptorGroup/suggestion")
+  public PagingResponse<DescriptorChangeSuggestion> listAllDescriptorSuggestions(
+      @RequestParam(value = "status", required = false) Status status,
+      @RequestParam(value = "type", required = false) Type type,
+      @RequestParam(value = "proposerEmail", required = false) String proposerEmail,
+      Pageable page) {
+    return descriptorChangeSuggestionService.list(page, status, type, proposerEmail, null);
+  }
+
 }
