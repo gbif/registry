@@ -161,4 +161,5 @@
   <include file="liquibase/153-institution-suggest-fts.xml" />
   <include file="liquibase/154-new-download-fields.xml" />
   <include file="liquibase/155-grscicoll-suggestion-country.xml" />
+  <include file="liquibase/156-descriptor-suggestions.xml" />
 </databaseChangeLog>
