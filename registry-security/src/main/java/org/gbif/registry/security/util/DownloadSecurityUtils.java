@@ -71,6 +71,7 @@ public final class DownloadSecurityUtils {
       download.getRequest().setNotificationAddresses(null);
       download.getRequest().setCreator(null);
       download.setSource(null);
+      download.getRequest().setDescription(null);
     }
   }
 
