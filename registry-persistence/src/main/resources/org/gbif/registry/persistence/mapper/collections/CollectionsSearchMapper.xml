@@ -321,12 +321,12 @@
     <if test="params.descriptorSearch">
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+      <include refid="DESCRIPTORS_FILTER"/>
     </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
-    <include refid="DESCRIPTORS_FILTER"/>
     ORDER BY
     <include refid="org.gbif.registry.persistence.mapper.collections.Common.sortBy">
       <property name="alias" value="c."/>
@@ -353,12 +353,12 @@
     <if test="params.descriptorSearch">
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+      <include refid="DESCRIPTORS_FILTER"/>
     </if>
     <if test="params.query != null" >
       <include refid="COLLECTIONS_FULLTEXT_SEARCH"/>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
-    <include refid="DESCRIPTORS_FILTER"/>
   </select>
 
   <sql id="DESCRIPTORS_FILTER">
@@ -533,9 +533,10 @@
     <if test="params.descriptorFacet">
       INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
+      <include refid="DESCRIPTORS_FILTER"/>
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
-    <include refid="DESCRIPTORS_FILTER"/>
+
     <if test="!params.isArrayFieldFacet">
       AND <include refid="COLLECTION_FACET_FIELDS"/> IS NOT NULL
     </if>
@@ -556,7 +557,11 @@
       LEFT JOIN address ma ON ma.key = c.mailing_address_key
     </if>
     <include refid="org.gbif.registry.persistence.mapper.collections.CollectionMapper.LIST_FILTER"/>
+    <if test="params.descriptorFacet">
+      INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
+      INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     <include refid="DESCRIPTORS_FILTER"/>
+    </if>
   </select>
 
   <sql id="COLLECTION_FACET_FIELDS">
