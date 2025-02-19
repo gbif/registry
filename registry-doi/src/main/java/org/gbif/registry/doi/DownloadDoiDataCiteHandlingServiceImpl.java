@@ -75,7 +75,11 @@ public class DownloadDoiDataCiteHandlingServiceImpl implements DownloadDoiDataCi
             error);
       }
     } else if (FAILED_STATES.contains(download.getStatus())) {
-      doiMessageManagingService.delete(download.getDoi());
+      if (download.getDoi() == null) {
+        LOG.error(DOI_SMTP, "Failed to deleted download {}: no DOI.", download.getKey());
+      } else {
+        doiMessageManagingService.delete(download.getDoi());
+      }
     }
   }
 }
