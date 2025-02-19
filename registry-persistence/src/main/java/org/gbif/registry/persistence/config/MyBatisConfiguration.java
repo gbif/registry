@@ -222,6 +222,9 @@ public class MyBatisConfiguration {
       configuration
           .getTypeAliasRegistry()
           .registerAlias("OrganizationGeoJsonDto", OrganizationGeoJsonDto.class);
+      configuration
+        .getTypeAliasRegistry()
+        .registerAlias("MachineDescriptorTypeHandler", MachineDescriptorTypeHandler.class);
 
       // external iDigBio
       configuration.getTypeAliasRegistry().registerAlias("MachineTagDto", MachineTagDto.class);

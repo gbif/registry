@@ -973,7 +973,24 @@ public abstract class BaseNetworkEntityResource<T extends NetworkEntity, P exten
   }
 
   protected String parseQuery(String q) {
-    return q != null ? Strings.emptyToNull(CharMatcher.whitespace().trimFrom(q)) : q;
+    if (q == null || q.trim().isEmpty()) {
+      return null;
+    }
+
+    LOG.debug("Query before sanitizing: {}", q);
+
+    // Remove parentheses & single quotes; remove colons & backslashes
+    String sanitizedQuery = q
+        .replaceAll("[()']", "")
+        .replaceAll("[:\\\\]", "");
+
+    LOG.debug("Sanitized query: {}", sanitizedQuery);
+
+    String sanitizedAndTrimmedQuery = Strings.emptyToNull(CharMatcher.whitespace().trimFrom(sanitizedQuery));
+
+    LOG.debug("Sanitized and trimmed query: {}", sanitizedAndTrimmedQuery);
+
+    return sanitizedAndTrimmedQuery;
   }
 
   protected Date parseFrom(Range<LocalDate> range) {
