@@ -318,7 +318,7 @@
     addr.country AS country, mail_addr.country AS mailingCountry, addr.city AS city, mail_addr.city AS mailingCity
     <if test="params.query != null">, query</if>
     FROM collection c
-    <if test="params.descriptorSearch">
+    <if test="params.descriptorSearch or params.descriptorFacet">
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
@@ -338,7 +338,7 @@
       LIMIT #{params.page.limit} OFFSET #{params.page.offset}
     </if>
     ) AS c
-    <if test="params.descriptorSearch">
+    <if test="params.descriptorSearch or params.descriptorFacet">
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
@@ -350,7 +350,7 @@
   <select id="countCollections" resultType="Long">
     SELECT count(DISTINCT c.key)
     FROM collection c
-    <if test="params.descriptorSearch">
+    <if test="params.descriptorSearch or params.descriptorFacet">
       LEFT JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       LEFT JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
@@ -530,7 +530,7 @@
       LEFT JOIN address a ON a.key = c.address_key
       LEFT JOIN address ma ON ma.key = c.mailing_address_key
     </if>
-    <if test="params.descriptorFacet">
+    <if test="params.descriptorSearch or params.descriptorFacet">
       INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
       INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
     </if>
