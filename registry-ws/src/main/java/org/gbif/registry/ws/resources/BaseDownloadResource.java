@@ -115,6 +115,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
+import static org.gbif.api.model.occurrence.Download.Status.EXECUTING_STATUSES;
 import static org.gbif.registry.security.UserRoles.ADMIN_ROLE;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.checkUserIsInSecurityContext;
 import static org.gbif.registry.security.util.DownloadSecurityUtils.clearSensitiveData;
@@ -294,10 +295,10 @@ public class BaseDownloadResource implements OccurrenceDownloadService {
     clearSensitiveData(authentication, download);
     assertDownloadType(download);
 
-    // the doi is removed from datacite when the download is in a failed state and should be hidden.
+    // the doi is removed from datacite when the download is in a failed state or still executing and should be hidden.
     // It is also removed in the update method but old downloads still keep it in the DB
     // https://github.com/gbif/registry/issues/367
-    if (FAILED_STATES.contains(download.getStatus())) {
+    if (FAILED_STATES.contains(download.getStatus()) || EXECUTING_STATUSES.contains(download.getStatus())) {
       download.setDoi(null);
     }
 
