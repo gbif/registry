@@ -140,6 +140,7 @@ public class GRSciCollCountsUpdaterService {
     // add type specimens to the request and make the call
     Arrays.stream(TypeStatus.values())
         .filter(t -> t != TypeStatus.NOTATYPE)
+        .map(TypeStatus::name)
         .forEach(request::addTypeStatusFilter);
     SearchResponse<Occurrence, OccurrenceSearchParameter> typeSpecimenCountsResponse =
         occurrenceWsSearchClient.search(request);
