@@ -264,7 +264,7 @@
   <select id="searchCollections" resultType="CollectionSearchDto" resultMap="COLLECTION_DTO_MAP"
           parameterType="Pageable">
     SELECT c.*
-    <if test="params.descriptorSearch">
+    <if test="params.descriptorSearch or params.descriptorFacet">
       ,cd.key AS descriptorKey, cd.collection_descriptor_group_key AS descriptorGroupKey, cd.usage_key AS descriptorUsageKey,
       cd.usage_name AS descriptorUsageName, cd.usage_rank AS descriptorUsageRank, cd.country AS descriptorCountry,
       cd.individual_count AS descriptorIndividualCount, cd.identified_by AS descriptorIdentifiedBy,
@@ -281,7 +281,7 @@
       ,ts_headline(mail_address, c.query) mail_address_highlight,ts_headline(mailingCity, c.query) mail_city_highlight
       ,ts_headline(mail_province, c.query) mail_province_highlight, ts_headline(mailingCountry, c.query)
       mail_country_highlight,
-      <if test="params.descriptorSearch">
+      <if test="params.descriptorSearch or params.descriptorFacet">
         ts_headline(cd.usage_name, c.query) descriptor_usage_name_highlight,
         ts_headline(cd.country, c.query) descriptor_country_highlight,
         ts_headline(array_to_string(cd.identified_by, ' '), c.query) descriptor_identified_by_highlight,
@@ -620,7 +620,7 @@
       <when test="params.facet.name.equals('COUNTRY') or params.facet.name.equals('CITY')">
         COUNT(DISTINCT CASE WHEN a.${params.facet.name} is not null THEN a.${params.facet.name} ELSE ma.${params.facet.name} END)
         FROM collection c
-        <if test="params.descriptorFacet">
+        <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
@@ -631,7 +631,7 @@
                   or params.facet.name.equals('RECORDED_BY')">
         COUNT(DISTINCT facet)
         FROM collection c
-        <if test="params.descriptorFacet">
+        <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
@@ -690,7 +690,7 @@
           </when>
         </choose>
         ) FROM collection c
-        <if test="params.descriptorFacet">
+        <if test="params.descriptorSearch or params.descriptorFacet">
           INNER JOIN collection_descriptor_group cdg ON cdg.collection_key = c.key AND cdg.deleted IS NULL
           INNER JOIN collection_descriptor cd ON cd.collection_descriptor_group_key = cdg.key
         </if>
