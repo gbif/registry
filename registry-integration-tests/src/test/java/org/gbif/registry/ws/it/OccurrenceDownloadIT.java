@@ -546,6 +546,29 @@ public class OccurrenceDownloadIT extends BaseItTest {
     assertEquals(600L, occurrenceDownload2.getTotalRecords());
   }
 
+  /** Tests the status update of {@link Download}. */
+  @ParameterizedTest
+  @EnumSource(ServiceType.class)
+  public void testUpdateStatusFailed(ServiceType serviceType) {
+    OccurrenceDownloadService service =
+      getService(serviceType, occurrenceDownloadResource, occurrenceDownloadClient);
+    Download occurrenceDownload = getTestInstancePredicateDownload();
+    occurrenceDownload.setStatus(Status.FAILED);
+    service.create(occurrenceDownload);
+    // reload to get latest db modifications like created date
+    occurrenceDownload = service.get(occurrenceDownload.getKey());
+    occurrenceDownload.setStatus(Download.Status.FAILED);
+    occurrenceDownload.setSize(200L);
+    occurrenceDownload.setTotalRecords(600L);
+    service.update(occurrenceDownload);
+    Download occurrenceDownload2 = service.get(occurrenceDownload.getKey());
+    assertSame(Download.Status.FAILED, occurrenceDownload2.getStatus());
+    assertNotNull(occurrenceDownload2.getModified());
+    assertNull(occurrenceDownload2.getDoi());
+    assertEquals(200L, occurrenceDownload2.getSize());
+    assertEquals(600L, occurrenceDownload2.getTotalRecords());
+  }
+
   @ParameterizedTest
   @EnumSource(ServiceType.class)
   public void testDownloadUsages(ServiceType serviceType) {
